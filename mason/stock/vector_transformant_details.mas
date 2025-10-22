@@ -3,7 +3,6 @@
 $vector_id
 $transformation_id => undef
 $stock_uniquename => undef
-$stock_type => undef
 $vector_related_genes => undef
 $vector_analyzed_tissue_types => undef
 </%args>
@@ -62,7 +61,7 @@ $vector_analyzed_tissue_types => undef
 jQuery(document).ready(function(){
 
     const vector_id = "<%$vector_id%>";
-    const stock_type = "<%$stock_type%>";
+    const filter_by_transformation_id = "<%$transformation_id%>";
     let tissue_type = '';
     let assay_date = '';
 
@@ -92,10 +91,10 @@ jQuery(document).ready(function(){
             'destroy': true,
             'ajax': { 'url':  '/ajax/transformation/vector_transgenic_line_details',
                 'data': function(d) {
-                    d.stock_id = vector_id;
+                    d.vector_id = vector_id;
+                    d.filter_by_transformation_id = filter_by_transformation_id;
                     d.selected_tissue_type = tissue_type;
                     d.selected_assay_date = assay_date;
-                    d.stock_type = stock_type;
                 }
             }
         });

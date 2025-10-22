@@ -1700,16 +1700,10 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
 
-    my $stock_id = $c->req->param('stock_id');
+    my $vector_id = $c->req->param('vector_id');
+    my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
     my $selected_tissue_type = $c->req->param('selected_tissue_type');
     my $selected_assay_date = $c->req->param('selected_assay_date');
-    my $stock_type = $c->req->param('stock_type');
-    print STDERR "STOCK TYPE =".Dumper($stock_type)."\n";
-    my $vector_id;
-    my $transformation_id;
-    if ($stock_type eq 'vector_construct') {
-        $vector_id = $stock_id;
-    }
 
     my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
     my $vector_related_genes = $vector_construct->Gene;
@@ -1734,7 +1728,31 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
     foreach my $r (@$result){
         my @row = ();
         my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data_string) = @$r;
-        if ($stock_type eq 'vector_construct') {
+        if ($filter_by_transformation_id) {
+            if ($filter_by_transformation_id == $transformation_id) {
+                @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
+                if ($expression_data_string) {
+                    my $expression_info = decode_json $expression_data_string;
+                    my $tissue_date_data = $expression_info->{$selected_tissue_type}->{$selected_assay_date};
+                    my @expression_values = ();
+                    my $gene_relative_expression = $tissue_date_data->{'relative_expression_data'}->{'relative_expression_values'};
+
+                    foreach my $gene (@gene_names) {
+                        my $gene_relative_expression_value = '';
+                        $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
+                        push @expression_values, $gene_relative_expression_value;
+                    }
+                    push @row, @expression_values, $selected_tissue_type, $selected_assay_date;
+                } else {
+                    foreach my $gene (@gene_names) {
+                        my $empty_value = '';
+                        push @row, $empty_value;
+                    }
+                    push @row, ('', '');
+                }
+                push @transgenic_lines, \@row;
+            }
+        } else {
             @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
             if ($expression_data_string) {
                 my $expression_info = decode_json $expression_data_string;
