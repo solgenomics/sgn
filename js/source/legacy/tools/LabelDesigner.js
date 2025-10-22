@@ -632,6 +632,14 @@ $(document).ready(function($) {
         downloadLabels(design, download_type);
     });
 
+    jQuery('input[type="radio"][name="alignmentradio"]').click(function() {
+        var text_alignment = getAlignmentSpecs();
+        d3.select(".label-element")
+            .attr("text-anchor", text_alignment)
+            .attr("alignment-baseline", text_alignment);
+        d3.select(".selection-tools").remove()
+    });
+
 });
 
 function downloadLabels (design, download_type) {
@@ -756,11 +764,23 @@ function updateFields(data_type, source_id, data_level){
 }
 
 function changeLabelSize(width, height) {
+    var in_width = width/72;
+    var cm_width = width/72*2.54;
+    var in_height = height/72;
+    var cm_height = height/72*2.54;
     var width = width * 2.83 //convert from pixels to dots (72/inch to 8/mm)
     var height = height * 2.83 //convert from pixels to dots (72/inch to 8/mm)
     d3.select(".label-template").attr("viewBox", "0 0 " + width + " " + height);
     d3.select(".d3-bg").attr("width", width);
     d3.select(".d3-bg").attr("height", height);
+
+    d3.select("#dimensions-text").remove();
+
+    var canvas = d3.select("#d3-draw-area");
+    canvas.append("text")
+        .attr("id", "dimensions-text")
+        .text("("+in_width+" in. / "+cm_width+" cm.) x ("+in_height+" in. / "+cm_height+" cm.)");
+
     updateGrid(7);
 }
 
@@ -1181,6 +1201,8 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
      //console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
     svg = d3.select(".d3-draw-svg");
 
+    var text_alignment = getAlignmentSpecs();
+
     //get x,y coords and scale
     if ((typeof x || typeof y ) === 'undefined') {
         x = document.getElementById("d3-label-area").viewBox.baseVal.width/2;
@@ -1260,8 +1282,8 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 "font-size": font_size,
                 "font": font,
                 "style": font_styles[font],
-                "text-anchor": "middle",
-                "alignment-baseline": "middle",
+                "text-anchor": text_alignment, //middle
+                "alignment-baseline": text_alignment, //middle
             })
             .text(text)
             //console.log("Field is: "+field+" and size is: "+size+" and type is: "+type+" and font size is: "+font_size+" and font is: "+font+" and style is: "+font_styles[font]+" and text is: "+text);
@@ -1505,6 +1527,7 @@ function retrievePageParams() {
         label_height: label_sizes[label].label_height,
         start_col: document.getElementById("start_col").value,
         start_row: document.getElementById("start_row").value,
+        text_alignment : getAlignmentSpecs(),
     }
     return page_params;
 
@@ -1527,6 +1550,17 @@ function convertPageDimensions(elem_id) {
     } else if (format == 'metric') { // 28.35 pixels per cm
         return naive_dim * 28.35;
     }
+}
+
+function getAlignmentSpecs() {
+    if(jQuery('#align_left').prop('checked')) {
+        return "left";
+    } else if (jQuery('#align_right').prop('checked')) {
+        return "right";
+    }
+        
+    return "middle";
+    
 }
 
 function initializeCustomModal(add_fields) {

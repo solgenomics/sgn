@@ -396,6 +396,7 @@ __PACKAGE__->config(
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
        my $start_number = $design_params->{'start_number'} || undef;
        my $end_number = $design_params->{'end_number'} || undef;
+       my $text_alignment = $design_params->{"text_alignment"};
 
        if ($labels_to_download) {
            $start_number = $start_number || 1;
@@ -565,7 +566,7 @@ __PACKAGE__->config(
 
                                   my $barcode = $qrcode->plot( $filled_value );
                                   my $barcode_file = $barcode->write(file => $png_location);
-                                  system("convert $png_location -depth 8 $png_location");
+                                  system("convert $png_location -depth 8 $png_location"); # convert to 8 bit encoding. Won't work with default 16 bit encoding.
 
                                    my $image = $pdf->image_png($png_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
@@ -583,9 +584,16 @@ __PACKAGE__->config(
                                 my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
                                 $text->font($font, $adjusted_size);
                                 my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                my $width = $element{'width'} / $conversion_factor;
                                 my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
                                 $text->translate($elementx, $elementy);
-                                $text->text_center($filled_value);
+                                if ($text_alignment eq "middle") {
+                                    $text->text_center($filled_value);
+                                } elsif ($text_alignment eq "left") {
+                                    $text->text($filled_value);
+                                } else {
+                                    $text->text($text, -indent => -$width);
+                                }
                            }
                        }
 
