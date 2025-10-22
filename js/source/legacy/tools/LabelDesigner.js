@@ -634,7 +634,7 @@ $(document).ready(function($) {
 
     jQuery('input[type="radio"][name="alignmentradio"]').click(function() {
         var text_alignment = getAlignmentSpecs();
-        d3.select(".label-element")
+        d3.selectAll(".label-element")
             .attr("text-anchor", text_alignment)
         d3.select(".selection-tools").remove()
     });
@@ -900,6 +900,19 @@ function initializeDrawArea() {
         })
         .text('Set source, page, and label formats above to start designing.');
 
+    d3.select('body')
+    .append('div')
+    .attr('class', 'd3-tooltip')
+    .attr('id', 'label_element_tooltip')
+    .style('position', 'absolute')
+    .style('padding', '6px 10px')
+    .style('background', 'rgba(0, 0, 0, 0.7)')
+    .style('color', '#fff')
+    .style('border-radius', '4px')
+    .style('pointer-events', 'none')
+    .style('font-size', '12px')
+    .style('visibility', 'hidden');
+
     //set up grid
     var grid = svg.append("g").classed("d3-bg-grid", true);
     grid.append('g').classed("d3-bg-grid-vert", true);
@@ -923,7 +936,7 @@ function draggable(d, i) {
 function selectable(selection, resizeable) {
     this.on("mousedown", function() {
         d3.select(".selection-tools").remove();
-    })
+    });
     this.on("click", function() {
         var o = d3.select(".d3-draw-svg");
         var bb = getTransGroupBounds(this);
@@ -973,7 +986,29 @@ function selectable(selection, resizeable) {
                     stroke: "none"
                 }).call(resizer_behaviour);
         }
+    });
+    
+    this.on('mouseover', function(event, d) {
+        var value = d3.select(this).select(".label-element").attr("value");
+        var tooltip = d3.select('#label_element_tooltip');
+        tooltip
+        .style('visibility', 'visible')
+        .text(value)
+        .style('border', '1px solid red')
+        .style('z-index', '1000');
+
     })
+    .on('mousemove', function(event) {
+        var tooltip = d3.select('#label_element_tooltip');
+        var [x, y] = d3.mouse(document.body);
+        tooltip
+        .style('top', (y + 10) + 'px')
+        .style('left', (x + 10) + 'px');
+    })
+    .on('mouseout', function() {
+        var tooltip = d3.select('#label_element_tooltip');
+        tooltip.style('visibility', 'hidden');
+    });
 }
 
 function doTransform(selection, transformFunc) {
