@@ -21,7 +21,6 @@
             <div style="text-align:left;">
                 <label class='radio'><input type="radio" name="alignmentradio" id="align_left" value="left">Left-align text elements</label>
                 <label class='radio'><input type="radio" name="alignmentradio" id="align_middle" value="middle" checked>Center-align text elements</label>
-                <label class='radio'><input type="radio" name="alignmentradio" id="align_right" value="right">Right-align text elements</label>
             </div>
         </center>
     </div>

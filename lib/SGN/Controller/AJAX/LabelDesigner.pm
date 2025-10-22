@@ -591,8 +591,6 @@ __PACKAGE__->config(
                                     $text->text_center($filled_value);
                                 } elsif ($text_alignment eq "left") {
                                     $text->text($filled_value);
-                                } else {
-                                    $text->text($text, -indent => -$width);
                                 }
                            }
                        }
