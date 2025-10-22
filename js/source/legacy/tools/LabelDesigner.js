@@ -1,4 +1,3 @@
-
 var page_formats = {};
 page_formats["Select a page format"] = {};
 page_formats["US Letter PDF"] = {
@@ -490,8 +489,23 @@ $(document).ready(function($) {
         var page = d3.select("#page_format").node().value;
         var custom_label = page_formats[page].label_sizes['Custom'];
 
-        custom_label.label_width = document.getElementById("label_width").value;
-        custom_label.label_height = document.getElementById("label_height").value;
+        var format = 'imperial';
+
+        if (jQuery('#dim_cm').prop('checked')) {
+            format = 'metric';
+        }
+
+        var naive_label_width = document.getElementById("label_width").value;
+        var naive_label_height = document.getElementById("label_height").value;
+
+        if (format == 'imperial') { // 72 pixels per inch
+            custom_label.label_width = naive_label_width * 72;
+            custom_label.label_height = naive_label_height * 72;
+        } else if (format == 'metric') { // 28.35 pixels per cm
+            custom_label.label_width = naive_label_width * 28.35;
+            custom_label.label_height = naive_label_height * 28.35;
+        }
+
         changeLabelSize(custom_label.label_width, custom_label.label_height);
         $("#d3-add-and-download-div").removeAttr('style');
         enableDrawArea();
@@ -1451,8 +1465,8 @@ function retrievePageParams() {
 
     var page_params = {
         page_format: page,
-        page_width: page_formats[page].page_width || document.getElementById("page_width").value,
-        page_height: page_formats[page].page_height || document.getElementById("page_height").value,
+        page_width: page_formats[page].page_width || convertPageDimensions("page_width"),
+        page_height: page_formats[page].page_height || convertPageDimensions("page_height"),
         left_margin: label_sizes[label].left_margin,
         top_margin: label_sizes[label].top_margin,
         horizontal_gap: label_sizes[label].horizontal_gap,
@@ -1477,6 +1491,22 @@ function retrievePageParams() {
     }
     return page_params;
 
+}
+
+function convertPageDimensions(elem_id) {
+    var format = 'imperial';
+
+    if (jQuery('#dim_cm').prop('checked')) {
+        format = 'metric';
+    }
+
+    var naive_dim = document.getElementById(elem_id).value;
+
+    if (format == 'imperial') { // 72 pixels per inch
+        return naive_dim * 72;
+    } else if (format == 'metric') { // 28.35 pixels per cm
+        return naive_dim * 28.35;
+    }
 }
 
 function initializeCustomModal(add_fields) {
@@ -1620,8 +1650,8 @@ function loadDesign (list_id) {
     //console.log("page is "+page);
     switchPageDependentOptions(page);
     if (page == 'Custom') {
-        document.getElementById("page_width").value = params['page_width'];
-        document.getElementById("page_height").value = params['page_height'];
+        document.getElementById("page_width").value = params['page_width'] / 72;
+        document.getElementById("page_height").value = params['page_height'] / 72;
     }
 
     var label = params['label_format'];

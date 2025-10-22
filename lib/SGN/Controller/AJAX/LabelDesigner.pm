@@ -496,10 +496,10 @@ __PACKAGE__->config(
            version       => 0,
            level         => 'M',
            casesensitive => 1,
-           lightcolor    => Imager::Color->new(255, 255, 255),
-           darkcolor     => Imager::Color->new(0, 0, 0),
+           lightcolor    => Imager::Color->new(255, 255, 255, 255), # add alpha channel
+           darkcolor     => Imager::Color->new(0, 0, 0, 255), # add alpha channel
        );
-       my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+       my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
 
        if ($download_type eq 'pdf') {
 
@@ -564,9 +564,11 @@ __PACKAGE__->config(
                               } else { #QRCode
 
                                   my $barcode = $qrcode->plot( $filled_value );
-                                  my $barcode_file = $barcode->write(file => $jpeg_location);
+                                  my $barcode_file = $barcode->write(file => $png_location);
+                                  system("convert $png_location -depth 8 $png_location");
+                                  print STDERR "=======================\n$png_location\n=====================\n";
 
-                                   my $image = $pdf->image_jpeg($jpeg_location);
+                                   my $image = $pdf->image_png($png_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
