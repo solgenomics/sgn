@@ -390,7 +390,7 @@ __PACKAGE__->config(
        my $source_name = $c->req->param("source_name");
        my $design_json = $c->req->param("design_json");
        # decode json
-       my $json = JSON->new;
+       # my $json = JSON->new;
        #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
        my $design_params = decode_json($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
@@ -530,7 +530,7 @@ __PACKAGE__->config(
                         my $label_y = $design_params->{'page_height'} - $design_params->{'top_margin'} - ($design_params->{'label_height'} + $design_params->{'vertical_gap'}) * ($row_num-1);
 
                        foreach my $element (@$label_params) {
-                           #print STDERR "Element Dumper\n" . Dumper($element);
+                           # print STDERR "Element Dumper\n" . Dumper($element);
                            my %element = %{$element};
                            my $elementx = $label_x + ( $element{'x'} / $conversion_factor );
                            my $elementy = $label_y - ( $element{'y'} / $conversion_factor );
@@ -842,7 +842,7 @@ sub get_data {
         my $match = substr($data_level, 6);
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         my @list_data = @{$list_data};
-        my $json = JSON->new;
+        # my $json = JSON->new;
         #my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
 	my $identifier_object = decode_json($list_data[0][1]);
         my $records = $identifier_object->{'records'};

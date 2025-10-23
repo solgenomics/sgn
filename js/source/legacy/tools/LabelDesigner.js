@@ -1237,6 +1237,8 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
             .enter()
             .append("tspan")
             .attr("x", 0)
+            .attr("type", type)
+            .attr("value", field)
             .attr("dy", (d, i) => i === 0 ? "0em" : "1.2em") // line spacing
             .text(d => d);
 
@@ -1416,10 +1418,10 @@ function getLabelDetails(element) {
     let value = "";
     if (type.match(/Text/)) {
         const tspans = element.querySelectorAll("tspan");
-        if (tspans.length > 0) {
+        if (tspans.length > 1) {
             value = Array.from(tspans).map(t => t.textContent).join("\n");
         } else {
-            value = element.textContent;
+            value = element.getAttribute("value");
         }
     } else {
         value = element.getAttribute("value");
