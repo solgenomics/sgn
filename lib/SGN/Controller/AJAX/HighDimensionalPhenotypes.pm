@@ -1573,16 +1573,16 @@ sub high_dimensional_phenotypes_download_file_POST : Args(0) {
                 }
             }
             elsif ($high_dimensional_download_type eq 'identifier_metadata') {
-                my $header_string = 'transcript_name,chromosome,start_position,end_position,gene_description,notes';
+                my $header_string = 'gene_id,chromosome,pos_left,pos_right,functional_annotation,notes';
                 print $F $header_string."\n";
 
                 foreach (@identifier_names_sorted) {
                     my $chromosome = $identifier_metadata->{$_}->{chr};
-                    my $start_position = $identifier_metadata->{$_}->{start};
-                    my $end_position = $identifier_metadata->{$_}->{end};
-                    my $gene_description = $identifier_metadata->{$_}->{gene_desc};
+                    my $pos_left = $identifier_metadata->{$_}->{start};
+                    my $pos_right = $identifier_metadata->{$_}->{end};
+                    my $functional_annotation = $identifier_metadata->{$_}->{gene_desc};
                     my $notes = $identifier_metadata->{$_}->{notes};
-                    print $F "$_,$chromosome,$start_position,$end_position,$gene_description,$notes\n";
+                    print $F "$_,$chromosome,$pos_left,$pos_right,$functional_annotation,$notes\n";
                 }
             }
         }

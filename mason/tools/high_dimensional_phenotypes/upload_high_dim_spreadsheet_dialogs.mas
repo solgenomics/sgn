@@ -230,6 +230,12 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                                 </div>
                             </div>
                             
+                             <div class="form-group">
+                                <label class="col-sm-3 control-label">Nucleic Acid Extraction Method: </label>
+                                <div class="col-sm-9" >
+                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select" type = "text" placeholder="e.g. Hot borate">
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -662,7 +668,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                 <li><strong>sample_name</strong>: This should be a sample name that exists in the database. The sample can come from a sampling trial or a field trial or a genotyping plate.</li>
                 <li><strong>device_id</strong>: Optional identifier to differentiate device (e.g. serial number). Can be numeric or letter.</li>
                 <li><strong>comments</strong>: Optional comments for any information to include. Can include specific sample preparation for measurement.</li>
-                <li>All other columns are <strong>transcript names</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
+                <li>All other columns are <strong>gene ids</strong>. You can add as many columns as you want to upload, there isn't a limit.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
@@ -671,7 +677,7 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                         <td>sample_name</td>
                         <td>device_id</td>
                         <td>comments</td>
-                        <td>transcipt name columns</td>
+                        <td>gene id columns</td>
                     </tr>
                 </tbody>
             </table>
@@ -737,22 +743,22 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <h3>Upload details about the transcripts in a tabular spreadsheet (.csv) format with the following columns:</h3>
 
             <ul>
-                <li>transcript_name (required): This should be the same name as present in a column in your transcriptomics data matrix file.</li>
+                <li>gene_id (required): This should be the same name as present in a column in your transcriptomics data matrix file.</li>
                 <li>chromosome (required): The chromosome where the transcript exists.</li>
-                <li>start_position (required): The start position in base pairs of where the transcript begins.</li>
-                <li>end_position (required): The end position in base pairs of where the transcript ends.</li>
-                <li>gene_description (optional): Descriptors for gene annotations.</li>
+                <li>pos_left (required): The start position in base pairs of where the transcript begins.</li>
+                <li>pos_right (required): The end position in base pairs of where the transcript ends.</li>
+                <li>functional_annotation (optional): Descriptors for gene annotations.</li>
                 <li>notes (optional): Any additional descrptions.</li>
             </ul>
             <table class="table table-hover table-bordered table-condensed" >
                 <thead></thead>
                 <tbody>
                     <tr>
-                        <td>transcript_name</td>
+                        <td>gene_id</td>
                         <td>chromosome</td>
-                        <td>start_position</td>
-                        <td>end_position</td>
-                        <td>gene_description</td>
+                        <td>pos_left</td>
+                        <td>pos_right</td>
+                        <td>functional_annotation</td>
                         <td>notes</td>
                     </tr>
                 </tbody>
@@ -1254,7 +1260,7 @@ jQuery(document).ready(function() {
             }
             message_text += "</ul>";
             jQuery(upload_phenotype_status).html(message_text);
-
+    
             jQuery("#upload_transcriptomics_spreadsheet_submit_store").click( function() {
                 var file_input = jQuery("#upload_transcriptomics_spreadsheet_file_input").val();
                 if (file_input === '') {
@@ -1269,50 +1275,50 @@ jQuery(document).ready(function() {
                 }
             });
 
-            jQuery("#upload_transcriptomics_spreadsheet_file_form").iframePostForm({
-                json: true,
-                post: function () { },
-                timeout: 7200000,
-                complete: function (response) {
-                    jQuery('#working_msg').html("");
-                    jQuery('#working_modal').modal("hide");
+        jQuery("#upload_transcriptomics_spreadsheet_file_form").iframePostForm({
+            json: true,
+            post: function () { },
+            timeout: 7200000,
+            complete: function (response) {
+                jQuery('#working_msg').html("");
+                jQuery('#working_modal').modal("hide");
 
-                    jQuery(upload_phenotype_status).empty();
-                    jQuery(submit_store_button).attr('disabled', true);
-                    var message_text = "<hr><ul class='list-group'>";
-                    if (response.success) {
-                        var arrayLength = response.success.length;
-                        for (var i = 0; i < arrayLength; i++) {
-                            message_text += "<li class='list-group-item list-group-item-success'>";
-                            message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
-                            message_text += response.success[i];
-                            message_text += "</li>";
-                        }
+                jQuery(upload_phenotype_status).empty();
+                jQuery(submit_store_button).attr('disabled', true);
+                var message_text = "<hr><ul class='list-group'>";
+                if (response.success) {
+                    var arrayLength = response.success.length;
+                    for (var i = 0; i < arrayLength; i++) {
+                        message_text += "<li class='list-group-item list-group-item-success'>";
+                        message_text += "<span class='badge'><span class='glyphicon glyphicon-ok'></span></span>";
+                        message_text += response.success[i];
+                        message_text += "</li>";
                     }
-                    if (response.error) {
-                        var errorarrayLength = response.error.length;
-                        for (var i = 0; i < errorarrayLength; i++) {
-                            message_text += "<li class='list-group-item list-group-item-danger'>";
-                            message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
-                            message_text += response.error[i];
-                            message_text += "</li>";
-                        }
-                        if (errorarrayLength == 0) {
-                            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
-                        }
-                    } else {
+                }
+                if (response.error) {
+                    var errorarrayLength = response.error.length;
+                    for (var i = 0; i < errorarrayLength; i++) {
+                        message_text += "<li class='list-group-item list-group-item-danger'>";
+                        message_text += "<span class='badge'><span class='glyphicon glyphicon-remove'></span></span>";
+                        message_text += response.error[i];
+                        message_text += "</li>";
+                    }
+                    if (errorarrayLength == 0) {
                         message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
                     }
-                    message_text += "</ul>";
-                    jQuery(upload_phenotype_status).html(message_text);
+                } else {
+                    message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+                }
+                message_text += "</ul>";
+                jQuery(upload_phenotype_status).html(message_text);
 
-                },
-            });
+            },
+        });
         },
         error: function(){
             jQuery('#working_msg').html("");
             jQuery('#working_modal').modal("hide");
-        }
+    }
     });
 
     // VERIFY AND UPLOAD METABOLOMICS
