@@ -396,7 +396,7 @@ __PACKAGE__->config(
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
        my $start_number = $design_params->{'start_number'} || undef;
        my $end_number = $design_params->{'end_number'} || undef;
-       my $text_alignment = $design_params->{"text_alignment"};
+       my $text_alignment = $design_params->{"text_alignment"} || "middle";
 
        if ($labels_to_download) {
            $start_number = $start_number || 1;
