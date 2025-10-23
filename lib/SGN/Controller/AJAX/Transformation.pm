@@ -1806,12 +1806,15 @@ sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted
         }
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
-        if ($filter_by_transformation_id) {
-            if ($filter_by_transformation_id == $transformation_id) {
+
+        if ($obsolete_date =~ /Obsolete/) {
+            if ($filter_by_transformation_id) {
+                if ($filter_by_transformation_id == $transformation_id) {
+                    push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
+                }
+            } else {
                 push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
             }
-        } else {
-            push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
         }
     }
 
