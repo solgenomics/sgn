@@ -352,12 +352,12 @@ $field_headers => ()
 % if ($info_section_id eq 'vector_related_accessions_section'){
                                 <& /stock/vector_related_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End vector_related_accessions_section
-% if ($info_section_id eq 'vector_obsoleted_accessions_section'){
-                                <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_obsoleted_accessions_section
-% if ($info_section_id eq 'vector_transgenic_line_details_section'){
+% if ($info_section_id eq 'obsoleted_accessions_section'){
+                                <& /stock/vector_obsoleted_accessions.mas, vector_id => $vector_id, transformation_id => $transformation_id &>
+% } #End obsoleted_accessions_section
+% if ($info_section_id eq 'transgenic_line_details_section'){
                                 <& /transformation/vector_transformant_details.mas, vector_id => $vector_id, transformation_id => $transformation_id, stock_uniquename => $stock_uniquename, stock_type => $type_name, vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types &>
-% } #End vector_transgenic_line_details_section
+% } #End transgenic_line_details_section
 % if ($info_section_id eq 'related_transformation_info_section'){
                                 <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
 % } #End related_transformation_info_section

@@ -1,8 +1,7 @@
 
 <%args>
-$stock_id
-$stock_uniquename => undef
-$stock_type => undef
+$vector_id
+$transformation_id => undef
 </%args>
 
 <div style="overflow:scroll">
@@ -41,29 +40,36 @@ $stock_type => undef
 <script>
 
 jQuery(document).ready(function(){
+    const vector_id = "<%$vector_id%>";
+    const filter_by_transformation_id = "<%$transformation_id%>";
 
-        var related_stocks_table = jQuery('#vector_obsoleted_transformants_table').DataTable({
-            'ordering': false,
-            'autoWidth': false,
-            'ajax':'/stock/'+ <% $stock_id %> + '/datatables/vector_obsoleted_accessions',
-            "fnInitComplete": function(oSettings, json) {
-                //console.log(json);
-                if (!isLoggedIn()) {
-                    jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-                } else {
-                    var html = "";
-                    for(var i=0; i<json.data.length; i++){
-                        html += json.data[i][5]+"\n";
-                    }
-                    jQuery("#obsoleted_transformant_names").html(html);
-                    addToListMenu("obsoleted_transformants_to_list_menu", "obsoleted_transformant_names", {
-                        selectText: true,
-                        listType:'accessions'
-                    });
-                }
+    var related_stocks_table = jQuery('#vector_obsoleted_transformants_table').DataTable({
+        'ordering': false,
+        'autoWidth': false,
+        'ajax': { 'url':  '/ajax/transformation/vector_obsoleted_accessions',
+            'data': function(d) {
+                d.vector_id = vector_id;
+                d.filter_by_transformation_id = filter_by_transformation_id;
             }
-        });
+        },
 
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i][5]+"\n";
+                }
+                jQuery("#obsoleted_transformant_names").html(html);
+                addToListMenu("obsoleted_transformants_to_list_menu", "obsoleted_transformant_names", {
+                    selectText: true,
+                    listType:'accessions'
+                });
+            }
+        }
+    });
 
 });
 

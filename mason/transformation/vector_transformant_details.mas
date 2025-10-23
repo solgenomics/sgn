@@ -65,7 +65,7 @@ jQuery(document).ready(function(){
     let tissue_type = '';
     let assay_date = '';
 
-    jQuery('#vector_transgenic_line_details_section_onswitch').click( function() {
+    jQuery('#transgenic_line_details_section_onswitch').click( function() {
         tissue_type = jQuery('#analyzed_tissue_types_select').val();
         get_select_box('assay_dates', 'assay_date_select_div', { 'name' : 'tissue_assay_date', 'id' : 'tissue_assay_date', 'vector_stock_id': vector_id, 'assay_tissue_type': tissue_type});
 

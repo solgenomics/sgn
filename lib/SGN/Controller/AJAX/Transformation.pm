@@ -1780,7 +1780,43 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
     $c->stash->{rest}={data=>\@transgenic_lines};
 }
 
+sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted_accessions') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $vector_id = $c->req->param('vector_id');
+    my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
+    print STDERR "VECTOR ID =".Dumper($vector_id)."\n";
+    print STDERR "TRANSFORMATION ID =".Dumper($filter_by_transformation_id)."\n";
 
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $dbh = $c->dbc->dbh;
+
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_id});
+    my $result = $related_stocks->get_vector_obsoleted_accessions();
+    my @obsoleted_accessions;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
+        my $transformation_info;
+        if ($transformation_id) {
+            $transformation_info = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
+        } else {
+            $transformation_info = 'NA';
+        }
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+        if ($filter_by_transformation_id) {
+            if ($filter_by_transformation_id == $transformation_id) {
+                push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
+            }
+        } else {
+            push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
+        }
+    }
+
+    $c->stash->{rest}={data=>\@obsoleted_accessions};
+}
 
 ###
 1;#
