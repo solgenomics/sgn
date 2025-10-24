@@ -84,11 +84,7 @@ $vector_id
 %if ($control_id) {
 <& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Control Transgenic Lines</h4>", info_section_subtitle => 'View control transgenic lines of this transformation ID.', icon_class => "glyphicon glyphicon-th-list", info_section_id => "control_transgenic_lines_section", control_id => $control_id &>
 %}
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Obsoleted Transgenic Lines</h4>", info_section_subtitle => 'View obsoleted accessions (transgenic lines) and metadata.', icon_class => "glyphicon glyphicon-remove", info_section_id => "obsoleted_accessions_section", transformation_id => $transformation_id, vector_id => $vector_id &>
-
-
-<& /transformation/transgenic_line_details_section.mas, transformation_id => $transformation_id, program_name => $program_name, can_obsolete => $can_obsolete  &>
-<& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Obsoleted Transgenic Lines</h4>", info_section_subtitle => 'View obsoleted accessions (transgenic lines) and metadata.', buttons_html => '<button class="btn btn-primary btn-sm" id="obsolete_accessions_in_bulk_link" style="margin:3px">Obsolete Accessions in Bulk</button>', icon_class => "glyphicon glyphicon-remove", info_section_id => "obsoleted_accessions_section", transformation_id => $transformation_id, vector_id => $vector_id, program_name => $program_name &>
 
 <&| /page/info_section.mas, title=>"Update Status",  collapsible => 1, collapsed=>1 &>
 % if ($user_role eq "curator" ) {

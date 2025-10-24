@@ -2,18 +2,21 @@
 <%args>
 $vector_id
 $transformation_id => undef
+$program_name => undef
 </%args>
 
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="vector_obsoleted_transformants_table">
-
         <thead>
             <tr>
                 <th>Accession</th>
                 <th>Note</th>
                 <th>Date</th>
                 <th>Obsoleted by</th>
+% if (!$transformation_id) {
                 <th>Transformation ID</th>
+%}
+
             </tr>
         </thead>
 
@@ -29,6 +32,8 @@ $transformation_id => undef
         </&>
     </div>
 </div>
+
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name &>
 
 <style>
     .table th {
@@ -69,6 +74,10 @@ jQuery(document).ready(function(){
                 });
             }
         }
+    });
+
+    jQuery('#obsolete_accessions_in_bulk_link').click(function() {
+        jQuery("#obsolete_accessions_in_bulk_dialog").modal("show");
     });
 
 });
