@@ -666,14 +666,14 @@ $(document).ready(function($) {
             jQuery('#left_margin').attr('placeholder', 'In centimeters');
             jQuery('#horizontal_gap').attr('placeholder', 'In centimeters');
             jQuery('#vertical_gap').attr('placeholder', 'In centimeters');
-            jQuery('#page_width').val(page_width * 2.54);
-            jQuery('#page_height').val(page_height * 2.54);
-            jQuery('#label_width').val(label_width * 2.54);
-            jQuery('#label_height').val(label_height * 2.54);
-            jQuery('#top_margin').val(top_margin * 2.54);
-            jQuery('#left_margin').val(left_margin * 2.54);
-            jQuery('#horizontal_gap').val(horizontal_gap * 2.54);
-            jQuery('#vertical_gap').val(vertical_gap * 2.54);
+            jQuery('#page_width').val(Math.round(page_width * 2.54 * 100) / 100);
+            jQuery('#page_height').val(Math.round(page_height * 2.54 * 100) / 100);
+            jQuery('#label_width').val(Math.round(label_width * 2.54 * 100) / 100);
+            jQuery('#label_height').val(Math.round(label_height * 2.54 * 100) / 100);
+            jQuery('#top_margin').val(Math.round(top_margin * 2.54 * 100) / 100);
+            jQuery('#left_margin').val(Math.round(left_margin * 2.54 * 100) / 100);
+            jQuery('#horizontal_gap').val(Math.round(horizontal_gap * 2.54 * 100) / 100);
+            jQuery('#vertical_gap').val(Math.round(vertical_gap * 2.54 * 100) / 100);
 
             jQuery(".radio-select-metric").each(function() {
                 jQuery(this).prop("checked", true)
@@ -690,14 +690,14 @@ $(document).ready(function($) {
             jQuery('#left_margin').attr('placeholder', 'In inches');
             jQuery('#horizontal_gap').attr('placeholder', 'In inches');
             jQuery('#vertical_gap').attr('placeholder', 'In inches');
-            jQuery('#page_width').val(page_width / 2.54);
-            jQuery('#page_height').val(page_height / 2.54);
-            jQuery('#label_width').val(label_width / 2.54);
-            jQuery('#label_height').val(label_height / 2.54);
-            jQuery('#top_margin').val(top_margin / 2.54);
-            jQuery('#left_margin').val(left_margin / 2.54);
-            jQuery('#horizontal_gap').val(horizontal_gap / 2.54);
-            jQuery('#vertical_gap').val(vertical_gap / 2.54);
+            jQuery('#page_width').val(Math.round(page_width / 2.54 * 100)/100);
+            jQuery('#page_height').val(Math.round(page_height / 2.54 * 100)/100);
+            jQuery('#label_width').val(Math.round(label_width / 2.54 * 100)/100);
+            jQuery('#label_height').val(Math.round(label_height / 2.54 * 100)/100);
+            jQuery('#top_margin').val(Math.round(top_margin / 2.54 * 100)/100);
+            jQuery('#left_margin').val(Math.round(left_margin / 2.54 * 100)/100);
+            jQuery('#horizontal_gap').val(Math.round(horizontal_gap / 2.54 * 100)/100);
+            jQuery('#vertical_gap').val(Math.round(vertical_gap / 2.54 * 100)/100);
 
             jQuery(".radio-select-imperial").each(function() {
                 jQuery(this).prop("checked", true)
@@ -848,7 +848,7 @@ function changeLabelSize(width, height) {
     var canvas = d3.select("#d3-draw-area");
     canvas.append("text")
         .attr("id", "dimensions-text")
-        .text("("+in_width+" in. / "+cm_width+" cm.) x ("+in_height+" in. / "+cm_height+" cm.)");
+        .text("("+in_width.toFixed(2)+" in. / "+cm_width.toFixed(2)+" cm.) x ("+in_height.toFixed(2)+" in. / "+cm_height.toFixed(2)+" cm.)");
 
     updateGrid(7);
 }
