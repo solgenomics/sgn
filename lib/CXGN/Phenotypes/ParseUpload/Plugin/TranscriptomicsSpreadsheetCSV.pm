@@ -168,7 +168,6 @@ sub validate {
 
     my $notes_head = $columns[5];
     $notes_head =~ s/^\s+|\s+$//g; 
-    #print STDERR "gene_id_head: $gene_id_head, chromosome_head: $chromosome_head, pos_lef_head: $pos_left_head, pos_right_head: $pos_right_head, functional_anotation_head: $functional_annotation_head \n";
 
     if ($gene_id_head  ne "gene_id" ||
         $chromosome_head ne "chromosome" ||
