@@ -163,6 +163,13 @@ $vector_id => undef
 
 #specific to transformation ID page
 $control_id => undef
+$identifier_id => undef
+$identifier_name => undef
+$material_id => undef
+$material_name => undef
+$updated_status_type => undef
+$stock_type_page => undef
+$user_role => undef
 
 #Specific to activity page
 $vendor_id => undef
@@ -364,6 +371,9 @@ $field_headers => ()
 % if ($info_section_id eq 'control_transgenic_lines_section'){
                                 <& /transformation/control_transformants_section.mas, control_id => $control_id &>
 % } #End control_transgenic_lines_section
+% if ($info_section_id eq 'transformation_update_status_section'){
+                                <& /transformation/transformation_update_status_section.mas, identifier_id => $identifier_id, identifier_name => $identifier_name, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page, user_role => $user_role &>
+% } #End transformation_update_status_section
 
 
 % if ($info_section_id eq 'stock_images_section'){

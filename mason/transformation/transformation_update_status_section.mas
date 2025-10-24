@@ -1,0 +1,30 @@
+<%args>
+$identifier_id
+$identifier_name
+$material_id
+$material_name
+$updated_status_type
+$program_name
+$stock_type_page
+$user_role
+</%args>
+
+% if ($user_role eq "curator" ) {
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <button class="btn btn-sm btn-default" style="margin:3px" id ="update_status_usage_link_transformation_page" name = "update_status_usage_link">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>
+% if ($updated_status_type) {
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="reverse_status_link_transformation_page" name="reverse_status_link">Reverse Status</button>
+% } else {
+                <button class="btn btn-sm btn-primary" style="margin:3px" id="update_status_link_transformation_page" name="update_status_link">Update Status</button>
+% }
+            </div>
+        </div>
+    </div>
+% } else {
+    You need to be logged in or you do not have sufficient privileges to update status of this tracking identifier.
+% }
+
+<& /tracking_activities/update_status_dialog.mas, identifier_name => $identifier_name, identifier_id => $identifier_id, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page &>
+<& /tracking_activities/update_status_usage_info_dialog.mas &>
