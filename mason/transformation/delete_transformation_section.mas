@@ -1,0 +1,24 @@
+<%args>
+$transformation_id
+$has_associated_transformants
+</%args>
+
+% if ($has_associated_transformants) {
+    <font color="red">This transformation ID has associated transformants. Cannot delete!</font>
+% } else {
+    <button id="delete_transformation_button" class="btn btn-primary">Delete</button>
+% }
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const transformation_stock_id = "<%$transformation_id%>";
+
+    jQuery('#delete_transformation_button').click(function() {
+        deleteTransformationID(transformation_stock_id);
+    })
+
+});
+
+</script>
