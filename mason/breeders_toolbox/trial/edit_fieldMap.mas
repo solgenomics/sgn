@@ -405,6 +405,7 @@ jQuery("#correct_spatial").click(function() {
   let nseg_degree = (100 - jQuery('#nseg_ratio_select').val()) / 100;
   jQuery('#working_modal').modal('show');
   jQuery.ajax({
+    type: 'POST',
     url: '/ajax/spatial_model/correct_spatial/' + trial_id,
     data: {
       dataTableData: dataTableToPass,
