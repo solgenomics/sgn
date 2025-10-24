@@ -1177,7 +1177,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @accession_ids = @{$accession_id_hash->{transform}};
     }
 
-    my ($fh, $filename) = tempfile("BreedBaseGenotypesDownload_XXXXX");
+    my ($fh, $filename) = tempfile("breedbase_genotype_data_XXXXX");
     if ($download_format eq 'VCF') {
         $filename .= '.vcf';
     }
@@ -1310,7 +1310,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         print STDERR "using default protocol_id = $protocol_id\n";
     }
 
-    my ($fh, $filename) = tempfile("BreedBaseGeneticRelationshipMatrixDownload_XXXXX");
+    my ($fh, $filename) = tempfile("breedbase_grm_XXXXX");
     if ($download_format eq 'heatmap') {
         $filename .= '.pdf';
     }
@@ -1390,11 +1390,11 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
 
     my ($fh, $filename);
     if ($download_format eq 'results_tsv') {
-        ($fh, $filename) = tempfile("BreedBaseGWASDownloadResults_XXXXX", suffix => '.tsv');
+        ($fh, $filename) = tempfile("breedbase_gwas_results_XXXXX", suffix => '.tsv');
 
     }
     elsif ($download_format eq 'manhattan_qq_plots') {
-        ($fh, $filename) = tempfile("BreedBaseGWASDownloadManhattanAndQQPlots_XXXXX", suffix => '.pdf');
+        ($fh, $filename) = tempfile("breedbase_gwas_plots_XXXXX", suffix => '.pdf');
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
