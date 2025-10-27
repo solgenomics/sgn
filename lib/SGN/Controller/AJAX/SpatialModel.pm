@@ -348,6 +348,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     # header will have plot, accession, row, column, replicate, blockNumber, plotNumber [...traits...]
     my (undef, undef, undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
 
+    print STDERR Dumper \@trait_columns;
+
     my sub fix_trait_name {
         my $trait = shift;
 
@@ -375,7 +377,6 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     print STDERR Dumper \@traits;
 
     foreach my $trait (@traits) {
-        print STDERR "\ncheck trait name: $trait\n";
         my ($short_name, $onto) = split(/\|/,$trait);
         my $cvterm_id = $schema->resultset('Cv::Cvterm')->find({
             name => $short_name,
