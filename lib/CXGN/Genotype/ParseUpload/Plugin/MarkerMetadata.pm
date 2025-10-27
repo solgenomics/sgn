@@ -22,10 +22,11 @@ sub _validate_with_plugin {
     ## Parse the upload file
     my $parser = CXGN::File::Parse->new(
         file => $filename,
-        required_columns => [ 'Locus', 'Allele' ],
-        optional_columns => [ 'Description', 'Category', 'Reference' ],
+        required_columns => [ 'Marker', 'Allele' ],
+        optional_columns => [ 'Alias', 'Description', 'Category', 'Reference' ],
         column_aliases => {
-            'Locus' => [ 'Marker', 'Major Locus', 'Gene' ],
+            'Marker' => [ 'Major Locus', 'Gene' ],
+            'Alias' => [ 'Locus' ],
             'Allele' => [ 'Alleles' ],
             'Category' => [ 'Categories' ],
             'Reference' => [ 'References' ]
@@ -35,7 +36,8 @@ sub _validate_with_plugin {
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
     my $parsed_data = $parsed->{data};
-    my @markers = @{$parsed->{values}->{'Locus'}};
+    my @markers = @{$parsed->{values}->{'Marker'}};
+    my @aliases = @{$parsed->{values}->{'Alias'}};
     my @alleles = @{$parsed->{values}->{'Allele'}};
     my @categories = @{$parsed->{values}->{'Category'} || []};
     my @references = @{$parsed->{values}->{'Reference'} || []};
@@ -62,10 +64,11 @@ sub _validate_with_plugin {
     }
 
     # Make sure the markers don't already exist in the phenome.locus table
-    my $phs = join ',', map { "?" } @markers;
+    my @locus_names = (@markers, @aliases);
+    my $phs = join ',', map { "?" } @locus_names;
     my $q = "SELECT locus_name FROM phenome.locus WHERE locus_name IN ($phs)";
     my $h = $dbh->prepare($q);
-    $h->execute(@markers);
+    $h->execute(@locus_names);
     my @existing_loci;
     while (my ($locus_name) = $h->fetchrow_array()) {
         push @existing_loci, $locus_name;
@@ -87,24 +90,26 @@ sub _validate_with_plugin {
         push @error_messages, "The following alleles already exist in the Allele table: " . join(', ', sort @existing_alleles);
     }
 
-    # Parse each row to get unique locus and allele counts
-    my %locus_count;
+    # Parse each row to get unique marker and allele counts
+    my %marker_count;
     my %allele_count;
     foreach my $row (@$parsed_data) {
-        my $locus = $row->{'Locus'};
+        my $marker = $row->{'Marker'};
+        my $alias = $row->{'Alias'};
         my $alleles = $row->{'Allele'};
-        $locus_count{$locus}++;
+        $marker_count{$marker}++;
+        $marker_count{$alias}++ if $alias;
         foreach (@$alleles) {
             $allele_count{$_}++;
         }
     }
 
-    # Make sure there are no duplicated loci or alleles in the file
-    my @duplicated_loci;
+    # Make sure there are no duplicated markers or alleles in the file
+    my @duplicated_markers;
     my @duplicated_alleles;
-    foreach my $l (keys %locus_count) {
-        if ( $locus_count{$l} > 1 ) {
-            push @duplicated_loci, $l;
+    foreach my $m (keys %marker_count) {
+        if ( $marker_count{$m} > 1 ) {
+            push @duplicated_markers, $m;
         }
     }
     foreach my $a (keys %allele_count) {
@@ -112,8 +117,8 @@ sub _validate_with_plugin {
             push @duplicated_alleles, $a;
         }
     }
-    if ( scalar @duplicated_loci > 0 ) {
-        push @error_messages, "The following markers were included in your file more than once: " . join(', ', sort @duplicated_loci);
+    if ( scalar @duplicated_markers > 0 ) {
+        push @error_messages, "The following markers were included in your file more than once: " . join(', ', sort @duplicated_markers);
     }
     if ( scalar @duplicated_alleles > 0 ) {
         push @error_messages, "The following alleles were included in your file more than once: " . join(', ', sort @duplicated_alleles);
@@ -238,10 +243,11 @@ sub _parse_with_plugin {
     my $ontology_terms = $self->parsed_ontology_terms();
     my $existing_dbs = $self->parsed_dbs();
 
-    # Aggregate allele values by locus name
+    # Aggregate allele values by marker name
     my %marker_metadata;
     foreach my $row (@$parsed_data) {
-        my $locus = $row->{'Locus'};
+        my $marker = $row->{'Marker'};
+        my $alias = $row->{'Alias'};
         my $description = $row->{'Description'};
         my $alleles = $row->{'Allele'};
         my $category_names = $row->{'Category'};
@@ -270,8 +276,9 @@ sub _parse_with_plugin {
             }
         }
 
-        $marker_metadata{$locus} = {
-            locus => $locus,
+        $marker_metadata{$marker} = {
+            marker => $marker,
+            alias => $alias,
             description => $description,
             alleles => $alleles,
             categories => \@categories,

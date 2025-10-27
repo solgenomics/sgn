@@ -472,7 +472,7 @@ sub set_description {
 # Add metadata and alleles the markers in this protocol
 # @param param_data = a hashref of marker metadata,
 #   where the key is the marker/locus name
-#   and the value is a hashref of marker details (locus, description, categories, references, alleles)
+#   and the value is a hashref of marker details (marker, alias, description, categories, references, alleles)
 #
 sub set_marker_metadata {
     my $self = shift;
@@ -494,13 +494,15 @@ sub set_marker_metadata {
 
     foreach my $name (keys %$parsed_data) {
         my $ml = $parsed_data->{$name};
-        my $locus = $ml->{'locus'};
+        my $marker = $ml->{'marker'};
+        my $alias = $ml->{'alias'};
         my $locus_description = $ml->{'description'};
         my $allele_values = $ml->{'alleles'};
         my $trait_cvterm_ids = $ml->{'categories'};
         my $dbx_refs = $ml->{'references'};
-        my $unique_locus_name = $locus;
-        my $locus_symbol = $locus;
+        my $unique_marker_name = $marker;
+        my $unique_locus_name = (defined($alias) && $alias ne "") ? $alias : $marker;
+        my $locus_symbol = $unique_locus_name;
 
         # Add the marker to the phenome.locus table
         my $locus_obj = $phenome_schema->resultset('Locus')->find_or_create({
@@ -591,7 +593,7 @@ sub set_marker_metadata {
         # Add the Locus / Marker link
         my $q = "INSERT INTO phenome.locus_geno_marker (nd_protocol_id, marker_name, locus_id) VALUES (?,?,?)";
         my $sth = $dbh->prepare($q);
-        $sth->execute($protocol_id, $locus, $locus_id);
+        $sth->execute($protocol_id, $unique_marker_name, $locus_id);
     }
 }
 
@@ -628,7 +630,8 @@ sub get_marker_metadata {
             $alleles{$locus_name} = {
                 nd_protocol_id => $nd_protocol_id,
                 locus_id => $locus_id,
-                locus_name => $marker_name,
+                locus_name => $locus_name,
+                marker_name => $marker_name,
                 locus_description => $locus_description,
                 alleles => []
             };
