@@ -206,16 +206,16 @@ $t->while_logged_in_as("curator", sub {
         $t->find_element_ok("trial_plots_onswitch", "id", "view trial plots")->click();
         sleep(5);
 
-        $t->find_element_ok("plot_select_all", "id", "select plots")->click();
+        $t->find_element_ok("select_all_plots_btn", "id", "select plots")->click();
         sleep(1);
 
-        $t->find_element_ok("plot_data_new_list_name", "id", "find add list input");
+        $t->find_element_ok("plot_select_new_list_name", "id", "find add list input");
 
-        my $add_list_input = $t->find_element_ok("plot_data_new_list_name", "id", "find add list input test");
+        my $add_list_input = $t->find_element_ok("plot_select_new_list_name", "id", "find add list input test");
 
         $add_list_input->send_keys("plots_list");
 
-        $t->find_element_ok("plot_data_add_to_new_list", "id", "find add list button")->click();
+        $t->find_element_ok("plot_select_add_to_new_list_btn", "id", "find add list button")->click();
         sleep(1);
         $t->accept_alert_ok();
         sleep(1);
