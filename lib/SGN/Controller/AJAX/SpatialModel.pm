@@ -373,6 +373,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
     foreach my $trait (@traits) {
+        print STDERR "\ncheck trait name: $trait\n";
         my ($short_name, $onto) = split(/\|/,$trait);
         my $cvterm_id = $schema->resultset('Cv::Cvterm')->find({
             name => $short_name,
