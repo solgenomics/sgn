@@ -41,7 +41,9 @@ $vector_analyzed_tissue_types => undef
 %}
                 <th>qPCR Tissue Type</th>
                 <th>qPCR Assay Date</th>
-
+% if (!$transformation_id) {
+                <th>Transformation ID</th>
+% }
             </tr>
         </thead>
     </table>
