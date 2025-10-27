@@ -4,6 +4,7 @@ use Moose;
 use JSON;
 use Data::Dumper;
 use CXGN::Login;
+use CXGN::Job;
 use List::MoreUtils qw /any /;
 
 use CXGN::Genotype::StoreGenotypingProject;
@@ -107,8 +108,26 @@ sub genotyping_project_delete_POST : Args(1) {
             print $fh "$_\n";
         }
         close($fh);
-        my $async_delete = CXGN::Tools::Run->new();
-	$async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+        # my $async_delete = CXGN::Tools::Run->new();
+	    # $async_delete->run_async("perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id");
+        my $cmd = "perl $basepath/bin/delete_nd_experiment_entries.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -i $temp_file_nd_experiment_id";
+        my $async_delete = CXGN::Job->new({
+            people_schema => $c->dbic_schema('CXGN::People::Schema', undef, $user_id),
+            schema => $bcs_schema,
+            sp_person_id => $user_id,
+            cmd => $cmd,
+            finish_logfile => $c->config->{job_finish_log},
+            name => "genotyping project deletion",
+            job_type => 'deletion',
+            submit_page => $c->req->referer
+        });
+        eval {
+            $async_delete->submit();
+        };
+        if ($@) {
+            $c->stash->{rest} = {error => "Failed to submit background job: $@"};
+            return;
+        }
     }
     # Rebuild and refresh the materialized_markerview table
     my $async_refresh = CXGN::Tools::Run->new();
