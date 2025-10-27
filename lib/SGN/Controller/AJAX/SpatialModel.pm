@@ -350,21 +350,21 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     print STDERR Dumper \@trait_columns;
 
-    my sub fix_trait_name {
-        my $trait = shift;
+    # my sub fix_trait_name {
+    #     my $trait = shift;
 
-        $trait =~ s/_([A-Z]+(_\d+)*)_(\d+)/\|$1:$3/;
+    #     $trait =~ s/_([A-Z]+(_\d+)*)_(\d+)/\|$1:$3/;
 
-        my ($name, $onto) = split(/\|/, $trait);
+    #     my ($name, $onto) = split(/\|/, $trait);
 
-        $name = join(" ", split("_", $name));
+    #     $name = join(" ", split("_", $name));
 
-        $trait = join('|', ($name, $onto));
+    #     $trait = join('|', ($name, $onto));
 
-        return $trait;
-    }
+    #     return $trait;
+    # }
 
-    @trait_columns = map {fix_trait_name($_)} @trait_columns; #need to fix trait names!
+    # @trait_columns = map {fix_trait_name($_)} @trait_columns; #need to fix trait names!
 
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
