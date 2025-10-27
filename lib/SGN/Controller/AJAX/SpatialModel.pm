@@ -135,7 +135,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
     foreach my $t (@file_traits) { 
-	$t = make_R_trait_name($t);
+	    $t = make_R_trait_name($t);
     }
     #later i will replace the R trait name with the original trait name so save both so that it can remember the original trait name
     my %trait_hash;
@@ -364,7 +364,10 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     #     return $trait;
     # }
 
-    # @trait_columns = map {fix_trait_name($_)} @trait_columns; #need to fix trait names!
+    my $trait_hash_file = $pheno_filepath.".clean.trait_hash";
+    my $trait_hashref = retrieve $trait_hash_file;
+
+    @trait_columns = map {$trait_hashref->{$_}} @trait_columns; #need to fix trait names!
 
     my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
 
