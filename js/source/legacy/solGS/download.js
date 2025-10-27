@@ -7,304 +7,305 @@
 var solGS = solGS || function solGS() {};
 
 solGS.download = {
-  getTrainingPopRawDataFiles: function () {
-    var args = solGS.getTrainingPopArgs();
-    args = JSON.stringify(args);
+    getTrainingPopRawDataFiles: function () {
+        var args = solGS.getTrainingPopArgs();
+        args = JSON.stringify(args);
 
-    var popDataReq = jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      data: {
-        arguments: args,
-      },
-      url: "/solgs/download/training/pop/data",
-    });
+        var popDataReq = jQuery.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                arguments: args,
+            },
+            url: "/solgs/download/training/pop/data",
+        });
 
-    return popDataReq;
-  },
+        return popDataReq;
+    },
 
-  getSelectionPopRawDataFiles: function () {
-    var args = solGS.getSelectionPopArgs();
-    args = JSON.stringify(args);
+    getSelectionPopRawDataFiles: function () {
+        var args = solGS.getSelectionPopArgs();
+        args = JSON.stringify(args);
 
-    var popDataReq = jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      data: {
-        arguments: args,
-      },
-      url: "/solgs/download/selection/pop/data",
-    });
+        var popDataReq = jQuery.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                arguments: args,
+            },
+            url: "/solgs/download/selection/pop/data",
+        });
 
-    return popDataReq;
-  },
+        return popDataReq;
+    },
 
+    getTraitsAcronymFile: function () {
+        var args = solGS.getTrainingPopArgs();
+        args = JSON.stringify(args);
 
-  getTraitsAcronymFile: function () {
-    var args = solGS.getTrainingPopArgs();
-    args = JSON.stringify(args);
+        var popDataReq = jQuery.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                arguments: args,
+            },
+            url: "/solgs/download/traits/acronym",
+        });
 
-    var popDataReq = jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      data: {
-        arguments: args,
-      },
-      url: "/solgs/download/traits/acronym",
-    });
+        return popDataReq;
+    },
 
-    return popDataReq;
-  },
+    createTrainingPopDownloadLinks: function (res) {
+        var genoFiles = res.training_pop_raw_geno_file;
+        var phenoFiles = res.training_pop_raw_pheno_file;
+        var genoFileLink = '';
+        var cnt = 1;
 
-  createTrainingPopDownloadLinks: function (res) {
-    var genoFiles = res.training_pop_raw_geno_file;
-    var phenoFiles = res.training_pop_raw_pheno_file;
-    var genoFileLink = '';
-    var cnt = 1;
-    
-    genoFiles.forEach(function(genoFile) {
-      var genoFileName = genoFile.split("/").pop();
-      var genoTxt =  "Genotype data"; 
-       if (genoFiles.length > 1) { genoTxt =  genoTxt + "-"  + cnt};
-       if ( cnt > 1) { genoFileLink += ' | '};
-   
-      genoFileLink +=
-        '<a href="' + genoFile + '" download=' + genoFileName + '">' + genoTxt + "</a>";
+        genoFiles.forEach(function (genoFile) {
+            var genoFileName = genoFile.split("/").pop();
+            var popIdMatch = genoFileName.match(/genotype_data_(\d+)-GP-1/);
+            var popId = popIdMatch ? popIdMatch[1] : '';
+            var genoLinkName = "Genotype data";
 
-        cnt++;
-    })
-    
-    var phenoFileLink = '';
-    var cnt = 1;
-    
-    phenoFiles.forEach(function(phenoFile) {
-      var phenoFileName = phenoFile.split("/").pop();
-      var phenoTxt =  "Phenotype data"; 
-      if (phenoFiles.length > 1) { phenoTxt =  phenoTxt + "-"  + cnt};
-      if ( cnt > 1) { phenoFileLink += ' | '};
-    
-      phenoFileLink +=
-        '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + phenoTxt + "</a>";
+            if (genoFiles.length > 1) { genoLinkName = genoLinkName + "-" + popId; }
+            if (cnt > 1) { genoFileLink += ' | '; }
 
-        cnt++;
-    })
+            genoFileLink +=
+                '<a href="' + genoFile + '" download=' + genoFileName + '">' + genoLinkName + "</a>";
 
-    var traitsAcronymLink = this.createTraitsAcronymLinks(res);
+            cnt++;
+        });
 
-    var downloadLinks =
-      " <strong>Download training population</strong>: " +
-      genoFileLink +
-      " | " +
-      phenoFileLink + " | " + traitsAcronymLink;
+        var phenoFileLink = '';
+        var cnt = 1;
 
-    jQuery("#training_pop_download").prepend(
-      '<p style="margin-top: 20px">' + downloadLinks + "</p>"
-    );
-  },
+        phenoFiles.forEach(function (phenoFile) {
+            var phenoFileName = phenoFile.split("/").pop();
+            var phenoLinkName = "Phenotype data";
+            var popIdMatch = phenoFileName.match(/phenotype_data_(\d+)/);
+            var popId = popIdMatch ? popIdMatch[1] : '';
+            if (phenoFiles.length > 1) { phenoLinkName = phenoLinkName + "-" + popId; }
+            if (cnt > 1) { phenoFileLink += ' | '; }
 
+            phenoFileLink +=
+                '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + phenoLinkName + "</a>";
 
-  createTraitsAcronymLinks: function (res) {
-    var acronymFile = res.traits_acronym_file;
+            cnt++;
+        });
 
-    var acronymFileName = acronymFile.split("/").pop();
-    var acronymFileLink =
-      '<a href="' + acronymFile + '" download=' + acronymFileName + '">' + "Traits acronyms" + "</a>";
+        var traitsAcronymLink = this.createTraitsAcronymLinks(res);
 
-    return acronymFileLink;
+        var downloadLinks =
+            " <strong>Download training population</strong>: " +
+            genoFileLink +
+            " | " +
+            phenoFileLink + " | " + traitsAcronymLink;
 
-  },
+        jQuery("#training_pop_download").prepend(
+            '<p style="margin-top: 20px">' + downloadLinks + "</p>"
+        );
+    },
 
-  createSelectionPopDownloadLinks: function (res) {
-    var genoFile = res.selection_pop_filtered_geno_file;
-    var reportFile = res.selection_prediction_report_file;
+    createTraitsAcronymLinks: function (res) {
+        var acronymFile = res.traits_acronym_file;
 
-    var genoFileName = genoFile.split("/").pop();
-    var genoFileLink =
-    '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
-      
-    var reportFileName = reportFile.split("/").pop();
-    var reportFileLink =
-      '<a href="' + reportFile + '" download=' + reportFileName + '">' + "Analysis log" + "</a>";
+        var acronymFileName = acronymFile.split("/").pop();
+        var acronymFileLink =
+            '<a href="' + acronymFile + '" download=' + acronymFileName + '">' + "Traits acronyms" + "</a>";
 
-    var downloadLinks =
-      " <strong>Download selection population</strong>: " +
-      genoFileLink + ' | ' + reportFileLink;
+        return acronymFileLink;
+    },
 
-    jQuery("#selection_pop_download").prepend(
-      '<p style="margin-top: 20px">' + downloadLinks + "</p>"
-    );
-  },
+    createSelectionPopDownloadLinks: function (res) {
+        var genoFile = res.selection_pop_filtered_geno_file;
+        var reportFile = res.selection_prediction_report_file;
 
-  getModelInputDataFiles: function () {
-    var args = solGS.getModelArgs();
-    args = JSON.stringify(args);
+        var genoFileName = genoFile.split("/").pop();
+        var genoFileLink =
+            '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
 
-    var modelInputReq = jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      data: {
-        arguments: args,
-      },
-      url: "/solgs/download/model/input/data",
-    });
+        var reportFileName = reportFile.split("/").pop();
+        var reportFileLink =
+            '<a href="' + reportFile + '" download=' + reportFileName + '">' + "Analysis log" + "</a>";
 
-    return modelInputReq;
-  },
+        var downloadLinks =
+            " <strong>Download selection population</strong>: " +
+            genoFileLink + ' | ' + reportFileLink;
 
-  createModelInputDownloadLinks: function (res) {
-    var genoFile = res.model_geno_data_file;
-    var phenoFile = res.model_pheno_data_file;
-    var logFile = res.model_analysis_report_file;
+        jQuery("#selection_pop_download").prepend(
+            '<p style="margin-top: 20px">' + downloadLinks + "</p>"
+        );
+    },
 
-    console.log("geno file: " + genoFile);
-    console.log("pheno file: " + phenoFile);
-    console.log("log file: " + logFile);
+    getModelInputDataFiles: function () {
+        var args = solGS.getModelArgs();
+        args = JSON.stringify(args);
 
-    var genoFileName = genoFile.split("/").pop();
-    var genoFileLink =
-      '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
+        var modelInputReq = jQuery.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                arguments: args,
+            },
+            url: "/solgs/download/model/input/data",
+        });
 
-    var phenoFileName = phenoFile.split("/").pop();
-    var phenoFileLink =
-      '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
+        return modelInputReq;
+    },
 
-    var logFileName = logFile.split("/").pop();
-      var logFileLink =
-      '<a href="' + logFile + '" download=' + logFileName + '">' + "Analysis log" + "</a>";
-    var downloadLinks =
-      " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink  + " | " + logFileLink;
+    createModelInputDownloadLinks: function (res) {
+        var genoFile = res.model_geno_data_file;
+        var phenoFile = res.model_pheno_data_file;
+        var logFile = res.model_analysis_report_file;
 
-    jQuery("#model_input_data_download").prepend(
-      '<p style="margin-top: 20px">' + downloadLinks + "</p>"
-    );
-  },
+        console.log("geno file: " + genoFile);
+        console.log("pheno file: " + phenoFile);
+        console.log("log file: " + logFile);
 
-  getValidationFile: function () {
-    var args = solGS.getModelArgs();
-    args = JSON.stringify(args);
+        var genoFileName = genoFile.split("/").pop();
+        var genoFileLink =
+            '<a href="' + genoFile + '" download=' + genoFileName + '">' + "Genotype data" + "</a>";
 
-    var valDataReq = jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      data: {
-        arguments: args,
-      },
-      url: "/solgs/download/model/validation",
-    });
+        var phenoFileName = phenoFile.split("/").pop();
+        var phenoFileLink =
+            '<a href="' + phenoFile + '" download=' + phenoFileName + '">' + "Phenotype data" + "</a>";
 
-    return valDataReq;
-  },
+        var logFileName = logFile.split("/").pop();
+        var logFileLink =
+            '<a href="' + logFile + '" download=' + logFileName + '">' + "Analysis log" + "</a>";
 
-  createValidationDownloadLink: function (res) {
-    var valFileName = res.validation_file.split("/").pop();
-    var valFileLink =
-      '<a href="' +
-      res.validation_file +
-      '" download=' +
-      valFileName +
-      '">' +
-      "Download model accuracy" +
-      "</a>";
+        var downloadLinks =
+            " <strong>Download model</strong>: " + genoFileLink + " | " + phenoFileLink + " | " + logFileLink;
 
-    jQuery("#validation_download").prepend('<p style="margin-top: 20px">' + valFileLink + "</p>");
-  },
+        jQuery("#model_input_data_download").prepend(
+            '<p style="margin-top: 20px">' + downloadLinks + "</p>"
+        );
+    },
 
-  getMarkerEffectsFile: function () {
-    var args = solGS.getModelArgs();
-    args = JSON.stringify(args);
+    getValidationFile: function () {
+        var args = solGS.getModelArgs();
+        args = JSON.stringify(args);
 
-    var markerEffectsReq = jQuery.ajax({
-      type: "POST",
-      dataType: "json",
-      data: {
-        arguments: args,
-      },
-      url: "/solgs/download/model/marker/effects",
-    });
+        var valDataReq = jQuery.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                arguments: args,
+            },
+            url: "/solgs/download/model/validation",
+        });
 
-    return markerEffectsReq;
-  },
+        return valDataReq;
+    },
 
-  createMarkerEffectsDownloadLink: function (res) {
-    var effectsFileName = res.marker_effects_file.split("/").pop();
-    var effectsFileLink =
-      '<a href="' +
-      res.marker_effects_file +
-      '" download=' +
-      effectsFileName +
-      '">' +
-      "Download marker effects" +
-      "</a>";
+    createValidationDownloadLink: function (res) {
+        var valFileName = res.validation_file.split("/").pop();
+        var valFileLink =
+            '<a href="' +
+            res.validation_file +
+            '" download=' +
+            valFileName +
+            '">' +
+            "Download model accuracy" +
+            "</a>";
 
-    jQuery("#marker_effects_download").prepend(
-      '<p style="margin-top: 20px">' + effectsFileLink + "</p>"
-    );
-  },
+        jQuery("#validation_download").prepend('<p style="margin-top: 20px">' + valFileLink + "</p>");
+    },
+
+    getMarkerEffectsFile: function () {
+        var args = solGS.getModelArgs();
+        args = JSON.stringify(args);
+
+        var markerEffectsReq = jQuery.ajax({
+            type: "POST",
+            dataType: "json",
+            data: {
+                arguments: args,
+            },
+            url: "/solgs/download/model/marker/effects",
+        });
+
+        return markerEffectsReq;
+    },
+
+    createMarkerEffectsDownloadLink: function (res) {
+        var effectsFileName = res.marker_effects_file.split("/").pop();
+        var effectsFileLink =
+            '<a href="' +
+            res.marker_effects_file +
+            '" download=' +
+            effectsFileName +
+            '">' +
+            "Download marker effects" +
+            "</a>";
+
+        jQuery("#marker_effects_download").prepend(
+            '<p style="margin-top: 20px">' + effectsFileLink + "</p>"
+        );
+    },
 };
 
 jQuery(document).ready(function () {
 
-  var downloadMsgDiv = "#download_message";
-  solGS.checkPageType().done(function (res) {
-    if (res.page_type.match(/training_population/)) {
-      solGS.download.getTrainingPopRawDataFiles().done(function (res) {
-        solGS.download.createTrainingPopDownloadLinks(res);
-      });
+    var downloadMsgDiv = "#download_message";
+    solGS.checkPageType().done(function (res) {
+        if (res.page_type.match(/training_population/)) {
+            solGS.download.getTrainingPopRawDataFiles().done(function (res) {
+                solGS.download.createTrainingPopDownloadLinks(res);
+            });
 
-      solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
-        var errorMsg = "Error occured getting training pop raw data files.";
+            solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
+                var errorMsg = "Error occured getting training pop raw data files.";
+                solGS.showMessage(downloadMsgDiv, errorMsg)
+            });
+
+            solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
+                var errorMsg = "Error occured getting training pop raw data files.";
+                solGS.showMessage(downloadMsgDiv, errorMsg)
+            });
+
+        } else if (res.page_type.match(/training_model/)) {
+            solGS.download.getModelInputDataFiles().done(function (res) {
+                solGS.download.createModelInputDownloadLinks(res);
+            });
+
+            solGS.download.getModelInputDataFiles().fail(function (res) {
+                var errorMsg = "Error occured getting model input data files.";
+                solGS.showMessage(downloadMsgDiv, errorMsg)
+            });
+
+            solGS.download.getValidationFile().done(function (res) {
+                solGS.download.createValidationDownloadLink(res);
+            });
+
+            solGS.download.getValidationFile().fail(function (res) {
+                var errorMsg = "Error occured getting model validation file.";
+                solGS.showMessage("#validation_download_message", errorMsg);
+            });
+
+            solGS.download.getMarkerEffectsFile().done(function (res) {
+                solGS.download.createMarkerEffectsDownloadLink(res);
+            });
+
+            solGS.download.getMarkerEffectsFile().fail(function (res) {
+                var errorMsg = "Error occured getting marker effects file.";
+                solGS.showMessage("#marker_effects_download_message", errorMsg);
+
+            });
+        } else if (res.page_type.match(/selection_prediction/)) {
+            solGS.download.getSelectionPopRawDataFiles().done(function (res) {
+                solGS.download.createSelectionPopDownloadLinks(res);
+            });
+
+            solGS.download.getSelectionPopRawDataFiles().fail(function (res) {
+                var errorMsg = "Error occured getting selection population genotype data files.";
+                solGS.showMessage(downloadMsgDiv, errorMsg);
+            });
+        }
+    });
+
+    solGS.checkPageType().fail(function (res) {
+        var errorMsg = "Error occured checking for page type.";
         solGS.showMessage(downloadMsgDiv, errorMsg)
-      });
-
-      solGS.download.getTrainingPopRawDataFiles().fail(function (res) {
-        var errorMsg = "Error occured getting training pop raw data files.";
-        solGS.showMessage(downloadMsgDiv, errorMsg)
-      });
-
-
-    } else if (res.page_type.match(/training_model/)) {
-      solGS.download.getModelInputDataFiles().done(function (res) {
-        solGS.download.createModelInputDownloadLinks(res);
-      });
-
-      solGS.download.getModelInputDataFiles().fail(function (res) {
-        var errorMsg = "Error occured getting model input data files.";
-        solGS.showMessage(downloadMsgDiv, errorMsg)
-      });
-
-      solGS.download.getValidationFile().done(function (res) {
-        solGS.download.createValidationDownloadLink(res);
-      });
-
-      solGS.download.getValidationFile().fail(function (res) {
-        var errorMsg = "Error occured getting model validation file.";
-        solGS.showMessage("#validation_download_message", errorMsg);
-      });
-
-      solGS.download.getMarkerEffectsFile().done(function (res) {
-        solGS.download.createMarkerEffectsDownloadLink(res);
-      });
-
-      solGS.download.getMarkerEffectsFile().fail(function (res) {
-        var errorMsg = "Error occured getting marker effects file.";
-        solGS.showMessage("#marker_effects_download_message", errorMsg);
-
-      });
-    } else if (res.page_type.match(/selection_prediction/)) {
-        solGS.download.getSelectionPopRawDataFiles().done(function (res) {
-          solGS.download.createSelectionPopDownloadLinks(res);
-        });
-
-        solGS.download.getSelectionPopRawDataFiles().fail(function (res) {
-          var errorMsg = "Error occured getting selection population genotype data files.";
-          solGS.showMessage(downloadMsgDiv, errorMsg);
-        });
-      }
-  });
-
-  solGS.checkPageType().fail(function (res) {
-    var errorMsg = "Error occured checking for page type.";
-    solGS.showMessage(downloadMsgDiv, errorMsg)
-
-  });
+    });
 });
