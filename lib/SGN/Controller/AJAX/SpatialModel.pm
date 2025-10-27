@@ -369,7 +369,7 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     @trait_columns = map {$trait_hashref->{$_}} @trait_columns; #need to fix trait names!
 
-    my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
+    my @traits = grep {defined($_)} @trait_columns;
 
     # need to make a trait->cvterm_id hash here
     my $traits_to_id = {};
