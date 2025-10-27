@@ -372,6 +372,8 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
+    print STDERR Dumper \@traits;
+
     foreach my $trait (@traits) {
         print STDERR "\ncheck trait name: $trait\n";
         my ($short_name, $onto) = split(/\|/,$trait);
