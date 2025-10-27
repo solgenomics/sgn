@@ -93,8 +93,8 @@ $trial_id => undef
                 .then((value)=>{
                   if (!value) return setLocation(studyDbId); 
                   else { jQuery("#select_trial_for_selection_index option[value="+studyDbId+"]").attr('selected', 'selected'); }
-                  const hasPolygon = fieldMap.plots.features.some(plot => plot.geometry && plot._originalType === "Polygon");
-                  jQuery("#btn-save-geo-coordinates").prop("disabled", !hasPolygon); // disable save geo cooridnates button if there are only point geometries loaded
+                  const hasPoints = fieldMap.plots.features.some(plot => plot.geometry && plot._originalType === "Point");
+                  jQuery("#btn-save-geo-coordinates").prop("disabled", hasPoints); // disable save geo cooridnates button if there are only point geometries loaded
                 })  
                 .finally(() => {
                     jQuery("#btn-load-plots").prop("disabled", false);
