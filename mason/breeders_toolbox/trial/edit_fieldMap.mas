@@ -480,6 +480,7 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
 
     //save data as projectprop
     jQuery.ajax({
+        'method' : 'POST',
         'url': '/ajax/spatial_model/store_spatial_adjustments/' + trial_id,
         'data' : {
         'spatial_adjustments': projectprop_data
