@@ -2024,8 +2024,8 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
 
     my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
-    bcs_schema => $schema,
-    trial_id => $trial_id,
+        bcs_schema => $schema,
+        trial_id => $trial_id
     });
 
     my $return_error = $replace_accession_fieldmap->update_fieldmap_precheck();
@@ -2063,17 +2063,20 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
             my $plot_name = $val->{plot_name};
             my $new_plot_name = $val->{new_plot_name};
 
-            my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $accession_id, $plot_of_type_id);
+            my $old_accession_id = $schema->resultset("Stock::StockRelationship")->find({
+                subject_id => $plot_id,
+                type_id => $plot_of_type_id
+            })->object_id();
+
+            my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $accession_id, $plot_of_type_id);
             if ($replace_accession_error) {
-                $c->stash->{rest} = { error => $replace_accession_error};
-                return;
+                die "$replace_accession_error\n";
             }
 
             if ($new_plot_name) {
-                my $replace_plot_name_error = $replace_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $new_plot_name);
+                my $replace_plot_name_error = $replace_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $plot_name, $new_plot_name);
                 if ($replace_plot_name_error) {
-                    $c->stash->{rest} = { error => $replace_plot_name_error};
-                    return;
+                    die "$replace_plot_name_error\n";
                 }
             }
         }
@@ -2764,7 +2767,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
-    print "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
+    print STDERR "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
     $c->stash->{rest} = { success => 1};
 }
 

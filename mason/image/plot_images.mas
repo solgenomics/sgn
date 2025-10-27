@@ -36,7 +36,7 @@ my $dbh = $stockref->{dbh};
 </%perl>
 
 var trial_id = '<% $trial_id %>';
-var plotNames = [];
+var stockNames = [];
 
 jQuery(document).ready( function() {
 
@@ -65,7 +65,7 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#trial_images_section_onswitch').click(function() {
-        getObservationUnits();
+        getStocksWithImages();
     });
 
     jQuery('#plot_images_results').on( 'draw.dt', function () {
@@ -73,39 +73,36 @@ jQuery(document).ready( function() {
     });
 });
 
-function getObservationUnits() {
-    var trial_ids = [trial_id];
-
+function getStocksWithImages() {
     jQuery.ajax({
         method: 'GET',
-        url: '/brapi/v2/observationunits',
+        url: '/ajax/stock/get_stocks_with_images',
         data: {
-            studyDbIds: trial_ids,
-            pageSize: 10000
+            'trial_id': trial_id
         },
         beforeSend: function() {
             jQuery("#working_modal").modal("show");
         },
         success: function(response) {
-            var data = response.result.data;
-            data.forEach(function(unit) {
-                plotNames.push(unit.observationUnitName);
-            });
+            jQuery("#working_modal").modal("hide");
+            var data = response.data;
+            if (data.length > 0) {
+                stockNames.push(data);
+            } else {
+                stockNames.push("*");
+            }
             _load_stock_image_results();
         },
         error: function(response) {
-            alert('Error fetching observation units');
-        },
-        complete: function() {
-            jQuery("#working_modal").modal("hide");
+            alert('Error fetching stock names');
         }
     });
 }
 
 function _load_stock_image_results() {
-    var plotNamesString = plotNames.join(',');
+    var stockNamesString = stockNames.join(',');
 
-    plot_images_table = jQuery('#plot_images_results').DataTable({
+    stock_images_table = jQuery('#plot_images_results').DataTable({
         'destroy' : true,
         'searching' : true,
         'ordering' : true,
@@ -116,7 +113,7 @@ function _load_stock_image_results() {
         'ajax': { 'url': '/ajax/search/images',
             'type': 'POST',
             'data': function(d) {
-                d.image_stock_uniquename = plotNamesString;
+                d.image_stock_uniquename = stockNamesString;
             },
             'dataSrc': function(json) {
                 json.data.forEach(function(row) {
