@@ -3,10 +3,37 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [  ] &>
+<& /util/import_javascript.mas, classes => [  "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch" ] &>
 
 
 <div id="trial_plants_html">
+</div>
+
+<br>
+
+<button id="select_all_plants_btn" class="btn btn-primary">Select/Deselect All</button>
+
+<br>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Add plants to a list', collapsible=>1, collapsed=>0, subtitle=>'<i>Add plants in this trial to a new or exisiting list</i>'&>
+        <br>
+            <table style="width:100%">
+                <tr>
+                    <td>
+                        <input style="width:85%" class="form-control input-sm" type="text" id="plant_select_new_list_name" placeholder="New list name..."/>
+                        <input style="width:85%" class="form-control input-sm" type="text" id="plant_select_new_list_description" placeholder="New list description..."/>
+                        <button class="btn btn-primary btn-sm" id="plant_select_add_to_new_list_btn" type="button">Add selection to new list</button>
+                    </td>
+                    <td>
+                        <div id="plant_select_existing_list_name" style="width:85%"></div>
+                        <button class="btn btn-primary btn-sm" id="plant_select_add_to_existing_list_btn" type="button">Add selection to existing list</button>
+                    </td>
+                </tr>
+            </table>
+        </&>
+    </div>
 </div>
 
 <script>
@@ -15,64 +42,138 @@ jQuery(document).ready(function () {
 
     jQuery('#trial_plants_onswitch').one("click", function() {
 
-        jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/plants',
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                //console.log(response);
-                jQuery("#working_modal").modal("hide");
-
-                var html = '<table class="table borderless" alt="breeder search" border="0" ><tr><td><select multiple class="form-control" id="plant_data" name="1" size="10" style="min-width: 200px;overflow:auto;"></select></td></tr>'
-
-                html += '<tr><td><button class="btn btn-default btn-sm" id="plant_select_all" name="1">Select All</button><br><br>'
-                html += '<div class="well well-sm"><div id="plant_data_count" name="1">No Selection</div></div>'
-                html += '<div id="plant_to_list_menu"></div><td><tr></table>'
-
+        jQuery.ajax( {
+            url: '/ajax/html/select/plants_from_trial',
+            data: {trial_id: <% $trial_id %>},
+            beforeSend: function(){
+                var html = '<div class="well well-sm"><center><img src="/img/wheel.gif" /></center></div>';
                 jQuery('#trial_plants_html').html(html);
-
-                var plant = response.plants[0] || [];
-
-                plant_html = format_options_list(plant);
-                jQuery('#plant_data').html(plant_html);
-
-                var data = jQuery('#plant_data').val() || [];
-                show_list_counts('plant_data_count', response.plants[0].length, data.length);
-
-                if (jQuery('#plant_data').length) {
-                      addToListMenu('plant_to_list_menu', 'plant_data', {
-                      selectText: true,
-                      listType: 'plants'
-                    });
-                }
-
-                jQuery('#plant_select_all').click( function() { // select all plot
-                    var data_id = "plant_data";
-                    selectAllOptions(document.getElementById(data_id));
-
-                    var data = jQuery("#"+data_id).val() || [];
-                    var count_id = "plant_data_count";
-                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-                });
-
-                jQuery('#plant_data').change( function() { // update count when data selections change
-                    var data_id = jQuery(this).attr('id');
-                    var data = jQuery('#'+data_id).val() || [];
-                    var count_id = "plant_data_count";
-                    show_list_counts(count_id, jQuery('#'+data_id).text().split("\n").length-1, data.length);
-                });
-
-                jQuery('select').dblclick( function() { // open plot detail page in new window or tab on double-click
-                    window.open("../../stock/"+this.value+"/view");
-                });
             },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving plants.");
+            success: function(response) {
+                jQuery('#trial_plants_html').empty();
+                jQuery('#trial_plants_html').html(response.select);
+
+                jQuery('#plants_from_trial_select_table').DataTable({
+                    paging: false,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    scrollY: '250px',
+                    scrollCollapse: true
+                });
+                var lo = new CXGN.List();
+                jQuery('#plant_select_existing_list_name').html(lo.listSelect('plant_select_existing_list_name', ['plants'], undefined, undefined, undefined));
+            },
+            error: function(response) {
+                jQuery('#trial_plants_html').html("error");
+                alert("An error occurred");
             }
         });
+    });
 
+    jQuery('#select_all_plants_btn').click(function() {
+        let anyChecked = jQuery('.exp_design_plant_select:checkbox:checked').length > 0;
+
+        if (anyChecked) {
+            jQuery('.exp_design_plant_select').prop("checked", false);
+        } else {
+            jQuery('.exp_design_plant_select').prop("checked", true);
+        }
+    });
+
+    jQuery('#plant_select_add_to_new_list_btn').click(function() {
+        jQuery.ajax({
+            url : '/list/new',
+            data : {
+                name : jQuery('#plant_select_new_list_name').val(),
+                desc : jQuery('#plant_select_new_list_description').val()
+            },
+            beforeSend: function() {
+                jQuery('#working_modal').modal("show");
+            },
+            success : function(response) {
+                if (response.error) {
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred: " + response.error);
+                } else {
+                    let new_list_id = response.list_id;
+                    jQuery.ajax({
+                        url : '/list/type/'+new_list_id+'/plants',
+                        success: function(response) {
+                            if (response.error) {
+                                jQuery('#working_modal').modal("hide");
+                                alert("The new list was created, but an error occurred adding items to it: " + response.error);
+                            } else {
+                                jQuery.ajax({
+                                    url : '/list/add/bulk',
+                                    data : {
+                                        list_id : new_list_id,
+                                        elements : jQuery('.exp_design_plant_select:checkbox:checked')
+                                            .map(function() {
+                                                return this.id.replace('select_plant_', '');
+                                            })
+                                            .get()
+                                            .join('\t')
+                                    },
+                                    success : function(response) {
+                                        jQuery('#working_modal').modal("hide");
+                                        if (response.error) {
+                                            alert("The new list was created, but an error occurred adding items to it: " + response.error);
+                                        } else {
+                                            alert("List created.");
+                                            var lo = new CXGN.List();
+                                            jQuery('#plant_select_existing_list_name').html(lo.listSelect('plant_select_existing_list_name', ['plants'], undefined, undefined, undefined));
+                                        }
+                                    },
+                                    error : function(error) {
+                                        jQuery('#working_modal').modal("hide");
+                                        alert("The new list was created, but a server error occurred adding items to it.");
+                                    }
+                                });
+                            }
+                        },
+                        error : function() {
+                            jQuery('#working_modal').modal("hide");
+                            alert("The new list was created, but a server error occurred adding items to it.");
+                        }
+                    });
+                }
+            },
+            error : function() {
+                jQuery('#working_modal').modal("hide");
+                alert("A server error occurred making new list.");
+            }
+        })
+    });
+
+    jQuery('#plant_select_add_to_existing_list_btn').click(function() {
+        jQuery.ajax({
+            url : '/list/add/bulk',
+            data : {
+                list_id : jQuery('#plant_select_existing_list_name_list_select').val(),
+                elements : jQuery('.exp_design_plant_select:checkbox:checked')
+                    .map(function() {
+                        return this.id.replace('select_plant_', '');
+                    })
+                    .get()
+                    .join('\t')
+            },
+            beforeSend : function() {
+                jQuery('#working_modal').modal("show");
+            },
+            success : function(response) {
+                jQuery('#working_modal').modal("hide");
+                if (response.error) {
+                    alert("Error adding items to list: " + response.error);
+                } else {
+                    alert("Plants added to list.");
+                }
+            },
+            error : function() {
+                jQuery('#working_modal').modal("hide");
+                alert("Server error adding plants to list.");
+            }
+        });
     });
 
 });

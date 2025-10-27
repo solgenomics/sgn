@@ -319,7 +319,7 @@ sub get_trials_phenotype_query_jobs_args {
 
     foreach my $trial_id (@$trials) {
         my $cached = $c->controller('solGS::CachedResult')
-          ->check_cached_phenotype_data( $c, $c->stash->{trial_id} );
+          ->check_cached_phenotype_data( $c, $trial_id );
 
         if ( !$cached ) {
             my $args = $self->phenotype_trial_query_args( $c, $trial_id );
