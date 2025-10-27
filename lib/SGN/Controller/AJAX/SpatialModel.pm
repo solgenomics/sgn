@@ -348,22 +348,6 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     # header will have plot, accession, row, column, replicate, blockNumber, plotNumber [...traits...]
     my (undef, undef, undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
 
-    print STDERR Dumper \@trait_columns;
-
-    # my sub fix_trait_name {
-    #     my $trait = shift;
-
-    #     $trait =~ s/_([A-Z]+(_\d+)*)_(\d+)/\|$1:$3/;
-
-    #     my ($name, $onto) = split(/\|/, $trait);
-
-    #     $name = join(" ", split("_", $name));
-
-    #     $trait = join('|', ($name, $onto));
-
-    #     return $trait;
-    # }
-
     my $trait_hash_file = $pheno_filepath.".clean.trait_hash";
     my $trait_hashref = retrieve $trait_hash_file;
 
@@ -376,8 +360,6 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
-
-    print STDERR Dumper \@traits;
 
     foreach my $trait (@traits) {
         my ($short_name, $onto) = split(/\|/,$trait);
