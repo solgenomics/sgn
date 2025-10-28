@@ -38,6 +38,10 @@ package CXGN::VectorViewer;
 
 use Moose;
 
+#use Carp::Always;
+use Carp;
+$SIG{ __DIE__ } = \&Carp::confess;
+
 use Data::Dumper;
 use IO::String;
 use Bio::SeqIO;
@@ -98,7 +102,18 @@ sub parse_genbank {
     my @features = $s -> get_SeqFeatures();
 
     foreach my $f (@features) {
-	print STDERR "Processing primary tag: ".$f->primary_tag()." TAGS: ".join(",", $f->get_all_tags())."\n";
+	if (ref($f) && blessed($f) && $f->can("primary_tag") && $f->can("get_all_tags")) {
+	    print STDERR "Processing primary tag: ".$f->primary_tag()." TAGS: ".join(",", $f->get_all_tags())."\n";
+	}
+	else {
+	    if (ref($f)) {
+		print STDERR "SKIPPING: ".Dumper($f)."\n";
+	    }
+	    else  {
+		print STDERR "SKIPPING $f\n"; next;
+	    }
+	    next();
+	}
 	
 	my @all_tags = $f->get_all_tags();
 	if (grep /note/, @all_tags) { 
@@ -115,6 +130,14 @@ sub parse_genbank {
 		    if (exists($standard_names[0])) {
 			print STDERR "Adding $standard_names[0]...\n";
 			push @$features, [$standard_names[0], $f->start(), $f->end(), "pink", "F" ];
+		    }
+		}
+		if ($n eq "Geneious type: Concatenated sequence") {
+		    print STDERR "Adding Geneious type: Concatenated sequence\n";
+		    my @labels = $f->get_tag_values("label");
+		    if (exists($labels[0])) {
+			print STDERR "Adding $labels[0]...\n";
+			push @features, [$labels[0], $f->start(), $f->end(), "lightgray", "" ]; # we have no orientation info in the file?
 		    }
 		}
 	    }
@@ -162,13 +185,13 @@ sub parse_genbank {
 	    }
 		
 	}
-	elsif ($f->primary_tag() eq "regulatory") {
+ 	elsif ($f->primary_tag() eq "regulatory") {
 	    foreach my $tag ($f->all_tags()) {
-		if ($tag eq "standard_name") { 
-		    ($name) = $f->each_tag_value("standard_name");
-		}
+	    	if ($tag eq "standard_name") { 
+	    	    ($name) = $f->each_tag_value("standard_name");
+	    	}
 	    }
-	    push @$features, [ $name, $f->start(), $f->end(), "blue", "" ];
+	    if ($name) { push @$features, [ $name, $f->start(), $f->end(), "blue", "" ]; }
 	}
     }
     
