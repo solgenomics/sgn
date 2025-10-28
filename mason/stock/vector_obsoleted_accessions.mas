@@ -33,8 +33,6 @@ $program_name => undef
     </div>
 </div>
 
-<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name &>
-
 <style>
     .table th {
         white-space: nowrap;
@@ -74,10 +72,6 @@ jQuery(document).ready(function(){
                 });
             }
         }
-    });
-
-    jQuery('#obsolete_accessions_in_bulk_link').click(function() {
-        jQuery("#obsolete_accessions_in_bulk_dialog").modal("show");
     });
 
 });

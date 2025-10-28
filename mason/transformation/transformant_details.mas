@@ -5,6 +5,7 @@ $transformation_id => undef
 $stock_uniquename => undef
 $vector_related_genes => undef
 $vector_analyzed_tissue_types => undef
+$program_name
 </%args>
 
 <form class="form-horizontal" >
@@ -50,6 +51,7 @@ $vector_analyzed_tissue_types => undef
 </div>
 
 <& /transformation/upload_qPCR_data_dialog.mas, stock_id => $vector_id, stock_uniquename => $stock_uniquename &>
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name &>
 
 <style>
     .table th {
@@ -102,6 +104,10 @@ jQuery(document).ready(function(){
         });
 
     }
+
+    jQuery("[name='obsolete_accessions_link']").click(function() {
+        jQuery("#obsolete_accessions_in_bulk_dialog").modal("show");
+    });
 
 });
 
