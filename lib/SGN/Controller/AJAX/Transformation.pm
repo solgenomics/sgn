@@ -1453,17 +1453,29 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
 }
 
-
-sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_accession_dialog') :Args(1) {
+sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_accessions_dialog') :Args(0) {
     my $self = shift;
     my $c = shift;
-    my $transformation_stock_id = shift;
+    my $vector_id = $c->req->param('vector_id');
+    my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
 
-    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-    my $result = $transformation_obj->transformants();
-    my @sorted_names = natkeysort {($_->[1])} @$result;
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @transgenic_lines = ();
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data_string) = @$r;
+        if ($filter_by_transformation_id) {
+            if ($filter_by_transformation_id == $transformation_id) {
+                push @transgenic_lines, [$transformant_id, $transformant_name];
+            }
+        } else {
+            push @transgenic_lines, [$transformant_id, $transformant_name];
+        }
+    }
+    my @sorted_names = natkeysort {($_->[1])} @transgenic_lines;
 
     my @transformants;
     foreach my $r (@sorted_names){
@@ -1785,8 +1797,8 @@ sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted
     my $c = shift;
     my $vector_id = $c->req->param('vector_id');
     my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
-    print STDERR "VECTOR ID =".Dumper($vector_id)."\n";
-    print STDERR "TRANSFORMATION ID =".Dumper($filter_by_transformation_id)."\n";
+#    print STDERR "VECTOR ID =".Dumper($vector_id)."\n";
+#    print STDERR "TRANSFORMATION ID =".Dumper($filter_by_transformation_id)."\n";
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);

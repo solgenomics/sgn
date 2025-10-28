@@ -1,4 +1,5 @@
 <%args>
+$vector_id
 $transformation_id
 $program_name
 </%args>
@@ -65,14 +66,19 @@ $program_name
     </div>
 </div>
 
-
 <script>
 
 jQuery(document).ready(function(){
 
-    const transformation_stock_id = "<%$transformation_id%>";
+    const vector_id = "<%$vector_id%>";
+    const filter_by_transformation_id = "<%$transformation_id%>";
     const transformants_table = jQuery('#select_transformants_table').DataTable({
-        'ajax': '/ajax/transformation/set_obsolete_accession_dialog/'+transformation_stock_id,
+        'ajax': { 'url':  '/ajax/transformation/set_obsolete_accessions_dialog',
+            'data': function(d) {
+                d.vector_id = vector_id;
+                d.filter_by_transformation_id = filter_by_transformation_id;
+            }
+        },
         'autoWidth': false,
         'order': false,
         'pageLength' : 100,
