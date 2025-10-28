@@ -4,7 +4,7 @@
 
 <div class="well well-sm" style="padding: 24px">
     <p><strong>Filter Protocols by Accessions:</strong></p>
-    
+
     <div style="display: flex; gap: 12px">
         <select class="form-control" id="accession_list_select"></select>
         <button class="btn btn-primary" id="genotyping_protocol_search">Search</button>
@@ -25,6 +25,8 @@
 
 
 <script>
+var GENO_SEARCH_ACC_RESULTS = {};
+
 jQuery(document).ready(function(){
 
     var lo = new CXGN.List();
@@ -32,6 +34,7 @@ jQuery(document).ready(function(){
 
     jQuery("#genotyping_protocol_search").click(() => {
         jQuery("#genotyping_protocol_search").attr("disabled", true);
+        GENO_SEARCH_ACC_RESULTS = {};
         jQuery.ajax({
             url: '/ajax/genotyping_protocol/search/accession_list',
             data: {
@@ -41,8 +44,12 @@ jQuery(document).ready(function(){
                 if ( response?.error ) {
                     alert(response.error);
                 }
+                if ( response?.results?.counts?.ranked_genotyping_protocols?.length === 0 ) {
+                    alert("No genotyping protocols found for accessions");
+                }
                 else {
-                    displayResults(response?.results);
+                    GENO_SEARCH_ACC_RESULTS = response?.results || {};
+                    displayResults(response?.results || {});
                 }
             },
             error: (err) => {
@@ -58,7 +65,6 @@ jQuery(document).ready(function(){
 
 
 function displayResults(results) {
-    console.log(results);
     let html = "";
 
     // Display the top genotyping protocols
@@ -69,11 +75,15 @@ function displayResults(results) {
         const display = results.counts.ranked_genotyping_protocols.length < 3 ? results.counts.ranked_genotyping_protocols : 3;
         for ( let i = 0; i < display; i++ ) {
             const gen_id = results.counts.ranked_genotyping_protocols[i];
+            const count_matches = results.counts.accessions_by_genotyping_protocol[gen_id];
+            const count_missing = results.counts.accessions_total - count_matches;
             ranked_gen_table += "<tr>";
             ranked_gen_table += `<td><a href="/breeders_toolbox/protocol/${gen_id}">${results.lookups.genotyping_protocols[gen_id]}</a></td>`;
-            ranked_gen_table += `<td>${results.counts.accessions_by_genotyping_protocol[gen_id]}</td>`;
-            ranked_gen_table += `<td><a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>Create List of Matching Accessions</a><br />`;
-            ranked_gen_table += `<a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>Create List of Missing Accessions</a></td>`;
+            ranked_gen_table += `<td>${count_matches}</td>`;
+            ranked_gen_table += '<td>';
+            ranked_gen_table += (count_matches > 0 ? `<a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>Create List of ${count_matches} Matching Accessions</a><br />` : '');
+            ranked_gen_table += (count_missing > 0 ? `<a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>Create List of ${count_missing} Missing Accessions</a>` : '');
+            ranked_gen_table += '</td>';
             ranked_gen_table += "</tr>";
         }
         ranked_gen_table += "</tbody>";
@@ -90,10 +100,26 @@ function createAccessionsList() {
     let gen_id = jQuery(this).data("gen-id");
     let list_type = jQuery(this).data("list-type");
     let list_name = prompt("List Name");
+    if ( !list_name || list_name === '' ) return alert("List name required!");
 
-    // TODO: Create a list of the accessions with the specified type and genotyping protocol
-    console.log(gen_id);
-    console.log(list_type);
-    console.log(list_name);
+    // Get accessions to add to list
+    const results = GENO_SEARCH_ACC_RESULTS?.matches?.genotyping_protocols_by_accession || {};
+    const list_acc_names = [];
+    for ( let acc_id in results ) {
+        const acc_in_gen = (results[acc_id] || []).includes(gen_id);
+        if ( (acc_in_gen && list_type === "matching") || (!acc_in_gen && list_type === "missing") ) {
+            const acc_name = (GENO_SEARCH_ACC_RESULTS?.lookups?.accessions || {})[acc_id];
+            if ( acc_name && acc_name !== '' ) list_acc_names.push(acc_name)
+        }
+    }
+
+    // Add to list
+    var lo = new CXGN.List();
+    var list_id = lo.newList(list_name);
+    if ( list_id > 0 ) {
+        var elementsAdded = lo.addToList(list_id, list_acc_names.join("\n"));
+        lo.setListType(list_id, "accessions");
+        alert("Added " + elementsAdded + " list elements to list " + list_name + " and set type to accessions");
+    }
 }
 </script>

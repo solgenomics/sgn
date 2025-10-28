@@ -276,12 +276,14 @@ sub genotyping_protocol_accession_search_GET : Args(0) {
 
             # Generate lookup of genotyping protocol ids -> genotyping protocol names
             my @gen_ids = keys %acc_by_gen;
-            $ph = join(',', ('?') x @gen_ids);
-            $q = "SELECT genotyping_protocol_id, genotyping_protocol_name FROM genotyping_protocols WHERE genotyping_protocol_id IN ($ph)";
-            $h = $dbh->prepare($q);
-            $h->execute(@gen_ids);
-            while (my ($gen_id, $gen_name) = $h->fetchrow_array()) {
-                $lookup_gen{$gen_id} = $gen_name;
+            if ( scalar @gen_ids > 0 ) {
+                $ph = join(',', ('?') x @gen_ids);
+                $q = "SELECT genotyping_protocol_id, genotyping_protocol_name FROM genotyping_protocols WHERE genotyping_protocol_id IN ($ph)";
+                $h = $dbh->prepare($q);
+                $h->execute(@gen_ids);
+                while (my ($gen_id, $gen_name) = $h->fetchrow_array()) {
+                    $lookup_gen{$gen_id} = $gen_name;
+                }
             }
 
         }
