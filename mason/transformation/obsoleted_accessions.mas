@@ -68,7 +68,7 @@ jQuery(document).ready(function(){
                 jQuery("#obsoleted_transformant_names").html(html);
                 addToListMenu("obsoleted_transformants_to_list_menu", "obsoleted_transformant_names", {
                     selectText: true,
-                    listType:'accessions'
+                    listType:'obsoleted_stocks'
                 });
             }
         }
