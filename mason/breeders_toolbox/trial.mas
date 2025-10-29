@@ -319,7 +319,7 @@ jQuery(document).ready(function () {
         window.open('/tools/fieldmap?trial_id=' + id ,'_blank');
     });
 
-    let button_lable = '';
+    let button_label = '';
     const trial_stock_type = "<%$trial_stock_type%>";
     if (trial_stock_type == 'cross') {
         button_label = 'Add Additional Crosses or Plants';
