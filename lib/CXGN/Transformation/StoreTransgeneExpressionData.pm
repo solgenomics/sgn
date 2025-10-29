@@ -242,8 +242,8 @@ sub _CASS_normalized_values {
 
     foreach my $rep (keys %$CT_data) {
         my $CT_values = $CT_data->{$rep};
-        my $endogenouse_control_CT = $CT_values->{'endogenous_control'}->{$endogenous_control};
-        my $two_power_control = 2**$endogenouse_control_CT;
+        my $endogenous_control_CT = $CT_values->{'endogenous_control'}->{$endogenous_control};
+        my $two_power_control = 2**$endogenous_control_CT;
         my $target_CT_values = $CT_values->{'target'};
         foreach my $gene (keys %$target_CT_values) {
             my $normalized_value;

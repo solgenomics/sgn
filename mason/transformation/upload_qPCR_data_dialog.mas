@@ -150,7 +150,7 @@ $stock_uniquename
                     </ul>
                     <br>
                     <b>For example:</b>
-                    Cq data of an endogenouse control (geneA) and two targets (geneB and geneB). Each sample has two replicates. Note: there is no need to group the same replicate together as in the sample spreadsheet.
+                    Cq data of an endogenous control (geneA) and two targets (geneB and geneB). Each sample has two replicates. Note: there is no need to group the same replicate together as in the sample spreadsheet.
                     <br />
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
@@ -263,7 +263,7 @@ jQuery(document).ready(function(){
         let normalization_method = ''
         normalization_method = jQuery("#qPCR_normalization_method").val();
         if (normalization_method == "CASS_Delta_Cq"){
-            jQuery('#normalization_method_description_div').html('<br/><div class="well" style="text-align: center"><p>Normalized values will be calculated using the formula:<br><b>2^Cq(Endogenouse Control) / 2^Cq(Target)</b>.</p></div>');
+            jQuery('#normalization_method_description_div').html('<br/><div class="well" style="text-align: center"><p>Normalized values will be calculated using the formula:<br><b>2^Cq(Endogenous Control) / 2^Cq(Target)</b>.</p></div>');
         } else {
             jQuery('#normalization_method_description_div').html('');
         }
