@@ -115,7 +115,7 @@ jQuery(document).ready(function () {
                                             .get()
                                             .join('\t')
                                     },
-                                    success : function(response) { 
+                                    success : function(response) {
                                         jQuery('#working_modal').modal("hide");
                                         if (response.error) {
                                             alert("The new list was created, but an error occurred adding items to it: " + response.error);
@@ -174,7 +174,7 @@ jQuery(document).ready(function () {
                 alert("Server error adding plants to list.");
             }
         });
-    }); 
+    });
 
 });
 
