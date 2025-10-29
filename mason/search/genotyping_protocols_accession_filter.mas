@@ -23,6 +23,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="genotyping_protocol_accessions_list" name="genotyping_protocol_accessions_list" tabindex="-1" role="dialog" aria-labelledby="genotypingProtocolAccessionsListDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProtocolAccessionsListDialog"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <pre><code id="genotyping_protocol_accessions_list_results"></code></pre>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'' &>
+                            <br>
+                            <div style="text-align:right" id="gen_acc_results_to_list_menu"></div>
+                            <div id="gen_acc_search_result_names" style="display: none;"></div>
+                            </&>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 var GENO_SEARCH_ACC_RESULTS = {};
@@ -81,8 +109,8 @@ function displayResults(results) {
             ranked_gen_table += `<td><a href="/breeders_toolbox/protocol/${gen_id}">${results.lookups.genotyping_protocols[gen_id]}</a></td>`;
             ranked_gen_table += `<td>${count_matches}</td>`;
             ranked_gen_table += '<td>';
-            ranked_gen_table += (count_matches > 0 ? `<a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>Create List of ${count_matches} Matching Accessions</a><br />` : '');
-            ranked_gen_table += (count_missing > 0 ? `<a href='#' class='create_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>Create List of ${count_missing} Missing Accessions</a>` : '');
+            ranked_gen_table += (count_matches > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>View List of ${count_matches} Matching Accessions</a><br />` : '');
+            ranked_gen_table += (count_missing > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>View List of ${count_missing} Missing Accessions</a>` : '');
             ranked_gen_table += '</td>';
             ranked_gen_table += "</tr>";
         }
@@ -93,33 +121,33 @@ function displayResults(results) {
 
     jQuery("#genotyping_protocol_filter_results_container").show();
     jQuery("#genotyping_protocol_filter_results").html(html);
-    jQuery(".create_accessions_list").off("click").on("click", createAccessionsList);
+    jQuery(".show_accessions_list").off("click").on("click", showAccessionsList);
 }
 
-function createAccessionsList() {
+function showAccessionsList() {
     let gen_id = jQuery(this).data("gen-id");
+    let gen_name = (GENO_SEARCH_ACC_RESULTS?.lookups?.genotyping_protocols || {})[gen_id];
     let list_type = jQuery(this).data("list-type");
-    let list_name = prompt("List Name");
-    if ( !list_name || list_name === '' ) return alert("List name required!");
 
-    // Get accessions to add to list
-    const results = GENO_SEARCH_ACC_RESULTS?.matches?.genotyping_protocols_by_accession || {};
-    const list_acc_names = [];
-    for ( let acc_id in results ) {
-        const acc_in_gen = (results[acc_id] || []).includes(gen_id);
+    // Get Accessions to Display
+    const acc_names = [];
+    for ( let acc_id in (GENO_SEARCH_ACC_RESULTS?.lookups?.accessions || {}) ) {
+        const gen_ids = (GENO_SEARCH_ACC_RESULTS?.matches?.genotyping_protocols_by_accession || {})[acc_id] || [];
+        const acc_in_gen = gen_ids.includes(gen_id);
         if ( (acc_in_gen && list_type === "matching") || (!acc_in_gen && list_type === "missing") ) {
             const acc_name = (GENO_SEARCH_ACC_RESULTS?.lookups?.accessions || {})[acc_id];
-            if ( acc_name && acc_name !== '' ) list_acc_names.push(acc_name)
+            if ( acc_name && acc_name !== '' ) acc_names.push(acc_name)
         }
     }
+    acc_names.sort();
 
-    // Add to list
-    var lo = new CXGN.List();
-    var list_id = lo.newList(list_name);
-    if ( list_id > 0 ) {
-        var elementsAdded = lo.addToList(list_id, list_acc_names.join("\n"));
-        lo.setListType(list_id, "accessions");
-        alert("Added " + elementsAdded + " list elements to list " + list_name + " and set type to accessions");
-    }
+    // Show Dialog of Accessions List
+    jQuery("#genotypingProtocolAccessionsListDialog").html(list_type === "matching" ? `Accessions Found in Protocol ${gen_name}` : `Accessions Missing From Protocol ${gen_name}`);
+    jQuery("#genotyping_protocol_accessions_list_results").html(acc_names.join("\n"));
+    jQuery("#genotyping_protocol_accessions_list").modal("show");
+
+    // Enable List Tool
+    jQuery('#gen_acc_search_result_names').html(acc_names.join("\n"));
+    addToListMenu('gen_acc_results_to_list_menu', 'gen_acc_search_result_names', { listType: 'accessions' });
 }
 </script>
