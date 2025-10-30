@@ -66,8 +66,8 @@
                 </div>
                 <div class="col-md-12" id="">
                     <center>
-                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_inches2" class="radio-select-imperial" value="inch" checked>Imperial</label>
-                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_cm2" class="radio-select-metric" value="cm">Metric</label>
+                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_inches2" class="radio-select-imperial" value="inch" checked>Imperial (inches)</label>
+                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_cm2" class="radio-select-metric" value="cm">Metric (cm)</label>
                     </center>
                     <div class="col-md-1">
                     </div>
