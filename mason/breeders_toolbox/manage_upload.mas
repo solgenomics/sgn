@@ -1,4 +1,5 @@
 <%args>
+$sp_person_id
 $locations
 $geojson_locations
 $breeding_programs
@@ -22,6 +23,46 @@ $design_types => ()
 </style>
 
 <div class="container-fluid">
+
+<div class="well well-sm">
+    <h4>Archived files</h4>
+    <div style="display:flex;justify-content:flex-end;">
+        <table>
+            <tr>
+                <td>
+                    <input type="file" id="upload_facility_archive_new_file" encoding="multipart/form-data">
+                </td>
+                <td>
+                    &nbsp; <button class="btn btn-sm btn-primary" id="upload_facility_new_file_btn" disabled>Upload selected file</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <table id="upload_facility_archived_files_table">
+    </table>
+</div>
+
+<div class="well well-sm">
+<h4>In-progress uploads</h4>
+<table id="upload_facility_validated_uploads_table">
+</table>
+</div>
+
+<div class="well well-sm">
+<h4>Completed uploads</h4>
+<br>
+<button class="btn btn-sm btn-primary">Dismiss all completed uploads</button>
+<br>
+<table id="upload_facility_completed_uploads_table">
+</table>
+</div>
+
+<script>
+</script>
+
+
+<!--
+
 
 <div class="well well-sm">
 <h1>Traits</h1><br/>
@@ -67,8 +108,6 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs, design_types => $design_types &>
 
 <div class="well well-sm">
 <h1>Genotyping Plates</h1><br/>
@@ -91,7 +130,6 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities => $facilities &>
 
 <div class="well well-sm">
 <h1>Locations</h1><br/>
@@ -137,7 +175,6 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
 
 <div class="well well-sm">
 <h1>Populations</h1><br/>
@@ -185,8 +222,6 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
-<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
 <div class="well well-sm">
 <h1>Pedigrees</h1><br/>
@@ -209,7 +244,6 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/upload_pedigrees_dialogs.mas &>
 
 <div class="well well-sm">
 <h1>Crosses</h1><br/>
@@ -240,11 +274,6 @@ $design_types => ()
 </tbody>
 </table>
 </div>
-<& /breeders_toolbox/cross/cross_wishlist.mas &>
-<& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
-<& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
-<& /breeders_toolbox/cross/upload_update_crosses.mas &>
-<& /breeders_toolbox/cross/add_progenies_dialogs.mas &>
 
 <div class="well well-sm">
 <h1>Phenotypes</h1><br/>
@@ -272,11 +301,11 @@ $design_types => ()
 </tr>
 </tbody>
 </table>
-</div>
-<& /fieldbook/create_fieldbook_dialog.mas &>
-<& /fieldbook/create_trait_file_dialog.mas &>
-<& /fieldbook/upload_phenotype_fieldbook.mas &>
-<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
-<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
+
 
 </div>
+
+
+</div>
+
+-->

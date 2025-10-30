@@ -386,6 +386,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         return;
     }
+    my $sp_person_id = $c->user->get_object()->get_sp_person_id();
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my %editable_stock_props = map { $_=>1 } @editable_stock_props;
@@ -409,6 +410,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $design_type_string = $c->config->{design_types};
     my @design_types = split ',',$design_type_string;
 
+    $c->stash->{sp_person_id} = $sp_person_id;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
     $c->stash->{design_types} = \@design_types;

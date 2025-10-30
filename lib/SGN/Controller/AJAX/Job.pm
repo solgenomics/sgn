@@ -23,7 +23,8 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if ($sp_person_id ne $logged_user && $role ne "curator") {
-        die "You do not have permission to see these job logs.\n";
+        $c->stash->{rest} = {error => "You do not have permission to see these job logs.\n"} ;
+        return;
     }
 
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
@@ -151,7 +152,8 @@ sub delete :Path('/ajax/job/delete') Args(1) {
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
-        die "You do not have permission to delete this job.\n";
+        $c->stash->{rest} = {error => "You do not have permission to delete this job.\n"} ;
+        return;
     }
 
     $job->delete();
@@ -176,7 +178,8 @@ sub cancel :Path('/ajax/job/cancel') Args(1) {
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
-        die "You do not have permission to cancel this job.\n";
+        $c->stash->{rest} = {error => "You do not have permission to cancel this job.\n"} ;
+        return;
     }
 
     $job->cancel();
@@ -194,7 +197,8 @@ sub delete_dead_jobs :Path('/ajax/job/delete_dead_jobs') Args(1) {
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if ($sp_person_id ne $logged_user && $role ne "curator") {
-        die "You do not have permission to delete these job logs.\n";
+        $c->stash->{rest} = {error => "You do not have permission to delete these job logs.\n"} ;
+        return;
     }
 
     CXGN::Job->delete_dead_jobs(
@@ -217,11 +221,13 @@ sub delete_older_than :Path('/ajax/job/delete_older_than') Args(2) {
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if ($sp_person_id ne $logged_user && $role ne "curator") {
-        die "You do not have permission to delete these job logs.\n";
+        $c->stash->{rest} = {error => "You do not have permission to delete these job logs.\n"} ;
+        return;
     }
 
     if ($older_than ne "one_week" &&  $older_than ne "one_month" && $older_than ne "six_months" && $older_than ne "one_year") {
-        die "Invalid time selection: $older_than.\n";
+        $c->stash->{rest} = {error => "Invalid time selection: $older_than.\n"} ;
+        return;
     }
 
     CXGN::Job->delete_jobs_older_than(
@@ -244,7 +250,8 @@ sub delete_finished :Path('/ajax/job/delete_finished') Args(1) {
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if ($sp_person_id ne $logged_user && $role ne "curator") {
-        die "You do not have permission to delete these job logs.\n";
+        $c->stash->{rest} = {error => "You do not have permission to delete these job logs.\n"} ;
+        return;
     }
 
     CXGN::Job->delete_finished_jobs(
@@ -253,4 +260,55 @@ sub delete_finished :Path('/ajax/job/delete_finished') Args(1) {
         $sp_person_id
     );
     $c->stash->{rest} = {success => 1};
+}
+
+sub uploads_in_progress :Path('/ajax/job/uploads_in_progress') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = shift;
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
+    if ($sp_person_id ne $logged_user && $role ne "curator") {
+        $c->stash->{rest} = {error => "You do not have permission to access these upload validations.\n"} ;
+        return;
+    }
+
+    # retrieve all validation job records for this user, or all if curator
+}
+
+sub completed_uploads :Path('/ajax/job/completed_uploads') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = shift;
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
+    if ($sp_person_id ne $logged_user && $role ne "curator") {
+        $c->stash->{rest} = {error => "You do not have permission to access these finished uploads.\n"} ;
+        return;
+    }
+
+    # retrieve all finished upload jobs for this user, or all if curator
+}
+
+sub delete_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
+    if ($sp_person_id ne $logged_user && $role ne "curator") {
+        $c->stash->{rest} = {error => "You do not have permission to dismiss these finished uploads.\n"} ;
+        return;
+    }
 }
