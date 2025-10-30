@@ -1,6 +1,8 @@
 <%args>
 $stock_id
 $stock_uniquename => undef
+$vector_related_genes => undef
+$number_of_insertions => undef
 </%args>
 
 <&| /page/info_section.mas, id=>'transformation_experiment', title => 'Transformation Experiment', collapsible=>1, collapsed=>0 &>
@@ -14,6 +16,32 @@ $stock_uniquename => undef
                             <th>Plant Material</th>
                             <th>Transformation ID</th>
                             <th>Project</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'analysis_details', title => 'Analysis Details', collapsible=>1, collapsed=>0 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="col-sm-6">
+                    <table id = "transformant_number_of_insertions" class="table table-hover table-striped">
+                        <tr><td><b>Number of Insertions:</b></td><td><%$number_of_insertions%></td></tr>
+                    </table>
+                </div>
+                <table id = "transformant_analysis_details" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>qPCR Tissue Type</th>
+                            <th>qPCR Assay Date</th>
+% my @column_header = split ',',$vector_related_genes;
+% foreach my $column_header(@column_header) {
+                            <th><%$column_header. " ".'(Relative)'%></th>
+%}
                         </tr>
                     </thead>
                 </table>
