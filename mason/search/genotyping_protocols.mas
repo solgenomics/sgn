@@ -41,6 +41,15 @@
 </div>
 
 
+<br /><br />
+
+
+<&| /page/info_section.mas, id=>"protocol_search_accession_filter", title => 'Filter Protocols by Accessions', collapsible=>1, collapsed=>0 &>
+
+<& /search/genotyping_protocols_accession_filter.mas &>
+
+</&>
+
 <script>
 
 jQuery(document).ready(function () {
