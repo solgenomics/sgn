@@ -1754,13 +1754,13 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                         $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
                         push @expression_values, $gene_relative_expression_value;
                     }
-                    push @row, @expression_values, $selected_tissue_type, $selected_assay_date;
+                    push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, $transformant_name);
                 } else {
                     foreach my $gene (@gene_names) {
                         my $empty_value = '';
                         push @row, $empty_value;
                     }
-                    push @row, ('', '');
+                    push @row, ('', '', $transformant_name);
                 }
                 push @transgenic_lines, \@row;
             }
@@ -1777,13 +1777,13 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                     $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
                     push @expression_values, $gene_relative_expression_value;
                 }
-                push @row, @expression_values, $selected_tissue_type, $selected_assay_date, qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
+                push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
             } else {
                 foreach my $gene (@gene_names) {
                     my $empty_value = '';
                     push @row, $empty_value;
                 }
-                push @row, ('', '', qq{<a href="/transformation/$transformation_id">$transformation_name</a>});
+                push @row, ('', '', qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
             }
             push @transgenic_lines, \@row;
         }

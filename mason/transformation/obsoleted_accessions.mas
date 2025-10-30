@@ -16,7 +16,6 @@ $program_name => undef
 % if (!$transformation_id) {
                 <th>Transformation ID</th>
 %}
-
             </tr>
         </thead>
 
@@ -59,7 +58,7 @@ jQuery(document).ready(function(){
         "fnInitComplete": function(oSettings, json) {
             //console.log(json);
             if (!isLoggedIn()) {
-                jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                jQuery('#obsoleted_transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
             } else {
                 var html = "";
                 for(var i=0; i<json.data.length; i++){

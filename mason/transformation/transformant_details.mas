@@ -50,6 +50,16 @@ $program_name
     </table>
 </div>
 
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+        <br>
+        <div id="transformant_names" style="display:none"></div>
+        <div id="transformants_to_list_menu"></div>
+        </&>
+    </div>
+</div>
+
 <& /transformation/upload_qPCR_data_dialog.mas, stock_id => $vector_id, stock_uniquename => $stock_uniquename &>
 <& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name, vector_id => $vector_id &>
 
@@ -99,6 +109,22 @@ jQuery(document).ready(function(){
                     d.filter_by_transformation_id = filter_by_transformation_id;
                     d.selected_tissue_type = tissue_type;
                     d.selected_assay_date = assay_date;
+                }
+            },
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    var html = "";
+                    for(var i=0; i<json.data.length; i++){
+                        html += json.data[i][json.data[i].length-1]+"\n";
+                    }
+                    jQuery("#transformant_names").html(html);
+                    addToListMenu("transformants_to_list_menu", "transformant_names", {
+                        selectText: true,
+                        listType:'accessions'
+                    });
                 }
             }
         });
