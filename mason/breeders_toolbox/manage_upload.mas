@@ -27,16 +27,16 @@ $design_types => ()
 <div class="well well-sm">
     <h4>Archived files</h4>
     <div style="display:flex;justify-content:flex-end;">
-        <table>
-            <tr>
-                <td>
+        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_document_browser_file_form" name="upload_document_browser_file_form">
+            <div class="form-group">
+                <div class="col-sm-6">
                     <input type="file" id="upload_facility_archive_new_file" encoding="multipart/form-data">
-                </td>
-                <td>
-                    &nbsp; <button class="btn btn-sm btn-primary" id="upload_facility_new_file_btn" disabled>Upload selected file</button>
-                </td>
-            </tr>
-        </table>
+                </div>
+                <div class="col-sm-3">
+                    <button class="btn btn-sm btn-primary" id="upload_facility_new_file_btn">Upload selected file</button>
+                </div>
+            </div>
+        </form>
     </div>
     <table id="upload_facility_archived_files_table">
     </table>
@@ -58,6 +58,46 @@ $design_types => ()
 </div>
 
 <script>
+jQuery(document).ready(function(){
+    // fetch('/ajax/tools/documents/user_archive/', {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json'
+    //     },
+    //     body: JSON.stringify({
+    //         user_id: '<% $sp_person_id %>'
+    //     })
+    // }).then(response => {
+    //     if (!response.ok) {
+    //         alert("Bad server response");
+    //     }
+    //     return response.json();
+    // }).then(data => {
+    //     alert("Worked!");
+    //     console.log(data);
+    // }).catch(error => {
+    //     alert("Something went very wrong.");
+    // });
+
+    jQuery.ajax({
+        url: '/ajax/tools/documents/user_archive/',
+        type : 'POST',
+        data : {
+            user_id: '<% $sp_person_id %>'
+        },
+        success: function(response) {
+            if (response.error) {
+                alert("Bad server response");
+            } else {
+                alert("Worked!");
+            }
+        },
+        error : function() {
+            alert("Something went terribly wrong");
+        }
+    })
+
+});
 </script>
 
 

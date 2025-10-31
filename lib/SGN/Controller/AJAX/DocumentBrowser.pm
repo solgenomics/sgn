@@ -125,6 +125,64 @@ sub search_document_POST : Args(0) {
     $c->stash->{rest} = {success => 1, found_lines => \@found_lines, list_elements => \@list_elements};
 }
 
+sub user_archived_files : Path('/ajax/tools/documents/user_archive') : ActionClass('REST') { }
+sub user_archived_files_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user_id = $c->req->param("user_id") || undef;
+
+    print STDERR "========================\n$user_id\n=========================\n";
+
+    my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
+    if (!$user_id || ($user_id ne $logged_user && $role ne "curator")) {
+        $c->stash->{rest} = {error => "You do not have permission to view these files.\n"} ;
+        return;
+    }
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $logged_user);
+
+    my $dbh = $c->dbc->dbh();
+    my $q;
+    my @data;
+
+    if ($role eq "curator") {
+        $q = "SELECT file_id, basename, sp_person_id, first_name, last_name FROM metadata.md_files 
+        JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
+        JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id);";
+
+        my $h = $dbh->prepare($q);
+        $h->execute();
+
+        while (my ($file_id, $file_name, $user_id, $first_name, $last_name) = $h->fetchrow_array()){
+            push @data, {
+                file_id => $file_id,
+                filename => $file_name,
+                user_id => $user_id,
+                user_name => "$first_name $last_name"
+            };
+        }
+    } else {
+        $q = "SELECT file_id, basename FROM metadata.md_files 
+        JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
+        JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
+        WHERE sp_person_id=?";
+
+        my $h = $dbh->prepare($q);
+        $h->execute($user_id);
+
+        while (my ($file_id, $file_name) = $h->fetchrow_array()){
+            push @data, {
+                file_id => $file_id,
+                filename => $file_name
+            };
+        }
+    }
+
+    $c->stash->{rest} = {success => 1, data => \@data};
+    return;
+}
+
 #########
 1;
 #########

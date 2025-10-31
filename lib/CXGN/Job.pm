@@ -914,4 +914,24 @@ sub delete_finished_jobs {
     }
 }
 
+=head2 delete_finished_upload_jobs(bcs_schema, people_schema, user_id)
+
+Deletes file upload jobs that have finished for the given user
+
+=cut
+
+sub delete_finished_upload_jobs {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.\n";
+    } 
+
+    # get jobs, filter by user id, type id, status, and additional args (for what subtype of upload this is)
+    # TODO
+}
+
 1;

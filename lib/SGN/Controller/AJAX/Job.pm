@@ -278,6 +278,7 @@ sub uploads_in_progress :Path('/ajax/job/uploads_in_progress') Args(1) {
     }
 
     # retrieve all validation job records for this user, or all if curator
+    #TODO
 }
 
 sub completed_uploads :Path('/ajax/job/completed_uploads') Args(1) {
@@ -296,11 +297,13 @@ sub completed_uploads :Path('/ajax/job/completed_uploads') Args(1) {
     }
 
     # retrieve all finished upload jobs for this user, or all if curator
+    #TODO
 }
 
-sub delete_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(0) {
+sub delete_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(1) {
     my $self = shift;
     my $c = shift;
+    my $sp_person_id = shift;
 
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
@@ -311,4 +314,6 @@ sub delete_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(0) {
         $c->stash->{rest} = {error => "You do not have permission to dismiss these finished uploads.\n"} ;
         return;
     }
+
+    #TODO
 }
