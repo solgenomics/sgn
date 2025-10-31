@@ -1218,6 +1218,21 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
 }
 
 
+sub get_transformant_qPCR_data :Path('/ajax/transformation/transformant_qPCR_data') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformant_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
+    my $qPCR_data = $transformant_obj->get_transformant_qPCR_data();
+
+    $c->stash->{rest} = { data => $qPCR_data };
+
+}
+
+
 sub upload_transgenic_historical_data : Path('/ajax/transformation/upload_transgenic_historical_data') : ActionClass('REST'){ }
 
 sub upload_transgenic_historical_data_POST : Args(0) {

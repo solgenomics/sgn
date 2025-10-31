@@ -70,6 +70,46 @@ sub get_transformant_experiment_info {
 
 }
 
+sub get_transformant_qPCR_data {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformant_stock_id = $self->transformant_stock_id();
+
+    my $expression_data_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property')->cvterm_id();
+    my $data = $schema->resultset("Stock::Stockprop")->find( {
+        stock_id => $transformant_stock_id,
+        type_id => $expression_data_cvterm_id,
+    });
+
+    my @qPCR_data = ();
+    if ($data) {
+        my $expression_data_string = $data->value();
+        if ($expression_data_string) {
+            my $expression_data = decode_json $expression_data_string;
+            print STDERR "EXPRESSION INFO =".Dumper($expression_data)."\n";
+            foreach my $tissue_type (keys %$expression_data) {
+                my $tissue_type_data = $expression_data->{$tissue_type};
+                foreach my $assay_date (keys %$tissue_type_data) {
+                    my @gene_relative_values = ();
+                    my $qPCR_relative_values = $tissue_type_data->{$assay_date}->{'relative_expression_data'}->{'relative_expression_values'};
+                    print STDERR "RELATIVE VALUE =".Dumper($qPCR_relative_values)."\n";
+
+                    foreach my $gene_name (keys %$qPCR_relative_values) {
+                        my $qPCR_value = $qPCR_relative_values->{$gene_name}->{'relative_expression'};
+                        push @gene_relative_values, $qPCR_value;
+                    }
+                    push @qPCR_data, [$tissue_type, $assay_date, @gene_relative_values ]
+                }
+            }
+        }
+    }
+
+    print STDERR "qPCR DATA =".Dumper(\@qPCR_data)."\n";
+
+    return \@qPCR_data;
+
+}
+
 
 ###
 1;

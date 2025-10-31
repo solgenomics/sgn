@@ -24,7 +24,7 @@ $number_of_insertions => undef
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'analysis_details', title => 'Analysis Details', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, id=>'analysis_data', title => 'Analysis Data', collapsible=>1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -33,7 +33,7 @@ $number_of_insertions => undef
                         <tr><td><b>Number of Insertions:</b></td><td><%$number_of_insertions%></td></tr>
                     </table>
                 </div>
-                <table id = "transformant_analysis_details" class="table table-hover table-striped">
+                <table id = "transformant_qPCR_data" class="table table-hover table-striped">
                     <thead>
                         <tr>
                             <th>qPCR Tissue Type</th>
@@ -106,6 +106,15 @@ jQuery(document).ready(function(){
         'autoWidth': false,
         'searching' : false,
         'dom': 'rtip',
+        'order': false,
+        'paging': false,
+        'info': false,
+    });
+
+    const transformant_qPCR_data_table = jQuery('#transformant_qPCR_data').DataTable({
+        'ajax': '/ajax/transformation/transformant_qPCR_data/'+stock_id,
+        'autoWidth': false,
+        'searching' : false,
         'order': false,
         'paging': false,
         'info': false,
