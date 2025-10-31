@@ -1227,7 +1227,7 @@ sub get_transformant_qPCR_data :Path('/ajax/transformation/transformant_qPCR_dat
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
     my $qPCR_data = $transformant_obj->get_transformant_qPCR_data();
-
+    
     $c->stash->{rest} = { data => $qPCR_data };
 
 }
