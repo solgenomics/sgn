@@ -4,6 +4,7 @@ use strict;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use Spreadsheet::ParseODS;
+use List::MoreUtils qw|uniq|;
 
 sub type {
   return "excel";
@@ -110,7 +111,7 @@ sub parse {
         }
       }
       else {
-        $row_info{$hv} = undef;
+        $row_info{$hv} = $row_info{$hv} || undef;
       }
     }
     $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
