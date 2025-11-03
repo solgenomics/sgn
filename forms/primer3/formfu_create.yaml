@@ -21,13 +21,21 @@ elements:
                       label: "Paste source sequence below (5'->3', string of ACGTNacgtn -- other letters treated as N -- numbers and blanks ignored). FASTA format ok. Please N-out undesirable sequence (vector, ALUs, LINEs, etc.) or use a Mispriming Library (repeat library):"
                       name: PRIMER_MISPRIMING_LIBRARY
                       attributes:
-                          title: "This selection indicates what mispriming library (if any) Primer3 should use to screen for interspersed repeats or for other sequence to avoid as a location for primers. The human and rodent libraries on the web page are adapted from Repbase (J. Jurka, A.F.A. Smit, C. Pethiyagoda, et al., 1995-1996) ftp://ftp.ncbi.nih.gov/repository/repbase). The human library is humrep.ref concatenated with simple.ref, translated to FASTA format. There are two rodent libraries. One is rodrep.ref translated to FASTA format, and the other is rodrep.ref concatenated with simple.ref, translated to FASTA format.
+                          title: > "This selection indicates what mispriming library (if any) Primer3 should use to screen for interspersed repeats or for 
+			  	   other sequence to avoid as a location for primers. The human and rodent libraries on the web page are adapted from Repbase 
+				   (J. Jurka, A.F.A. Smit, C. Pethiyagoda, et al., 1995-1996) ftp://ftp.ncbi.nih.gov/repository/repbase). The human library 
+				   is humrep.ref concatenated with simple.ref, translated to FASTA format. There are two rodent libraries. One is rodrep.ref 
+				   translated to FASTA format, and the other is rodrep.ref concatenated with simple.ref, translated to FASTA format.
 
-The Drosophila library is the concatenation of two libraries from the Berkeley Drosophila Genome Project:
+                                   The Drosophila library is the concatenation of two libraries from the Berkeley Drosophila Genome Project:
 
-    1. A library of transposable elements The transposable elements of the Drosophila melanogaster euchromatin - a genomics perspective J.S. Kaminker, C.M. Bergman, B. Kronmiller, J. Carlson, R. Svirskas, S. Patel, E. Frise, D.A. Wheeler, S.E. Lewis, G.M. Rubin, M. Ashburner and S.E. Celniker Genome Biology (2002) 3(12):research0084.1-0084.20, http://www.fruitfly.org/p_disrupt/datasets/ASHBURNER/D_mel_transposon_sequence_set.fasta
+                                   1. A library of transposable elements The transposable elements of the Drosophila melanogaster euchromatin - a genomics 
+                                   perspective J.S. Kaminker, C.M. Bergman, B. Kronmiller, J. Carlson, R. Svirskas, S. Patel, E. Frise, D.A. Wheeler, 
+                                   S.E. Lewis, G.M. Rubin, M. Ashburner and S.E. Celniker Genome Biology (2002) 3(12):research0084.1-0084.20, 
+                                   http://www.fruitfly.org/p_disrupt/datasets/ASHBURNER/D_mel_transposon_sequence_set.fasta
 
-    2. A library of repetitive DNA sequences http://www.fruitfly.org/sequence/sequence_db/na_re.dros. "
+                                   2. A library of repetitive DNA sequences http://www.fruitfly.org/sequence/sequence_db/na_re.dros. "
+				   
                       options: 
                         - [ '', 'NONE' ]
                         - [ 'static/documents/primer3-libraries/human.txt', 'HUMAN' ]
