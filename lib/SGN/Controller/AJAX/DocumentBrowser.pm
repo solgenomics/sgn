@@ -131,8 +131,6 @@ sub user_archived_files_POST : Args(0) {
     my $c = shift;
     my $user_id = $c->req->param("user_id") || undef;
 
-    print STDERR "========================\n$user_id\n=========================\n";
-
     my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
     if (!$user_id || ($user_id ne $logged_user && $role ne "curator")) {
@@ -149,7 +147,8 @@ sub user_archived_files_POST : Args(0) {
     if ($role eq "curator") {
         $q = "SELECT file_id, basename, sp_person_id, first_name, last_name FROM metadata.md_files 
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
-        JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id);";
+        JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
+        WHERE basename != 'none'";
 
         my $h = $dbh->prepare($q);
         $h->execute();
@@ -166,7 +165,7 @@ sub user_archived_files_POST : Args(0) {
         $q = "SELECT file_id, basename FROM metadata.md_files 
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
-        WHERE sp_person_id=?";
+        WHERE sp_person_id=? AND basename != 'none'";
 
         my $h = $dbh->prepare($q);
         $h->execute($user_id);

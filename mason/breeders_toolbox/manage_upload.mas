@@ -33,12 +33,18 @@ $design_types => ()
                     <input type="file" id="upload_facility_archive_new_file" encoding="multipart/form-data">
                 </div>
                 <div class="col-sm-3">
-                    <button class="btn btn-sm btn-primary" id="upload_facility_new_file_btn">Upload selected file</button>
+                    <button class="btn btn-sm btn-primary" id="upload_facility_new_file_btn">Archive selected file</button>
                 </div>
             </div>
         </form>
     </div>
     <table id="upload_facility_archived_files_table">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+        </tfoot>
     </table>
 </div>
 
@@ -59,25 +65,6 @@ $design_types => ()
 
 <script>
 jQuery(document).ready(function(){
-    // fetch('/ajax/tools/documents/user_archive/', {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json'
-    //     },
-    //     body: JSON.stringify({
-    //         user_id: '<% $sp_person_id %>'
-    //     })
-    // }).then(response => {
-    //     if (!response.ok) {
-    //         alert("Bad server response");
-    //     }
-    //     return response.json();
-    // }).then(data => {
-    //     alert("Worked!");
-    //     console.log(data);
-    // }).catch(error => {
-    //     alert("Something went very wrong.");
-    // });
 
     jQuery.ajax({
         url: '/ajax/tools/documents/user_archive/',
@@ -87,15 +74,95 @@ jQuery(document).ready(function(){
         },
         success: function(response) {
             if (response.error) {
-                alert("Bad server response");
+                alert(response.error);
             } else {
-                alert("Worked!");
+                console.log(response.data);
+                if (response.data.length > 0 ) {
+                    if (response.data[0].hasOwnProperty('user_id')) {
+                        let file_tbody = jQuery('#upload_facility_archived_files_table tbody');
+                        let file_thead = jQuery('#upload_facility_archived_files_table thead');
+                        file_thead.empty();
+                        file_tbody.empty();
+                        let header_row = jQuery('<tr>');
+                        header_row.append(jQuery('<th>').text("File Name"));
+                        header_row.append(jQuery('<th>').text("Uploader"));
+                        header_row.append(jQuery('<th>').text("Upload As"));
+                        //header_row.append(jQuery('<th>').text("Delete"));
+                        header_row.append(jQuery('<th>').text("Validate"));
+                        file_thead.append(header_row);
+                        response.data.forEach(row => {
+                            let tr = jQuery("<tr>");
+                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                            tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
+                            tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
+                            //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
+                            tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-success'>Validate</button>"));
+                            file_tbody.append(tr);
+                        });
+                        jQuery('#upload_facility_archived_files_table').DataTable();
+                    } else {
+                        let file_tbody = jQuery('#upload_facility_archived_files_table tbody');
+                        let file_thead = jQuery('#upload_facility_archived_files_table thead');
+                        file_thead.empty();
+                        file_tbody.empty();
+                        let header_row = jQuery('<tr>');
+                        header_row.append(jQuery('<th>').text("File Name"));
+                        header_row.append(jQuery('<th>').text("Upload As"));
+                        //header_row.append(jQuery('<th>').text("Delete"));
+                        header_row.append(jQuery('<th>').text("Validate"));
+                        file_thead.append(header_row);
+                        response.data.forEach(row => {
+                            let tr = jQuery("<tr>");
+                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                            tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
+                            //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
+                            tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-success'>Validate</button>"));
+                            file_tbody.append(tr);
+                        });
+                        jQuery('#upload_facility_archived_files_table').DataTable();
+                    }
+                } 
             }
         },
         error : function() {
-            alert("Something went terribly wrong");
+            alert("Something went terribly wrong, check console.");
         }
-    })
+    });
+
+    function upload_type_options() {
+        return "<option value='trials'>Trials</option>"+
+            "<option value='genotyping_plate'>Genotyping Plates</option>"+
+            "<option value='genotyping_project'>Genotyping Project</option>"+
+            "<option value='locations'>Locations</option>"+
+            "<option value='accessions'>Accessions</option>"+
+            "<option value='populations'>Populations</option>"+
+            "<option value='seedlots'>Seedlots</option>"+
+            "<option value='pedigrees'>Pedigrees</option>"+
+            "<option value='crosses'>Crosses</option>"+
+            "<option value='new_progenies'>New Progeny Names</option>" +
+            "<option value='existing_progenies'>Existing Progeny Names</option>"+
+            "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
+            "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
+            "<option value='treatments'>Treatments</option>"+
+            "<option value='gps_coords'>GPS Coordinates</option>"+
+            "<option value='change_accessions'>Accession Swap</option>" +
+            "<option value='entry_numbers'>Entry Numbers</option>" +
+            "<option value='nirs'>NIRS</option>" +
+            "<option value='metabolomics'>Metabolomics</option>"+
+            "<option value='transcriptomics'>Transcriptomics</option>"+
+            "<option value='images'>Images</option>"+
+            "<option value='soil_data'>Soil Data</option>"+
+            "<option value='vectors'>Vectors</option>"
+            "<option value='subplots_by_name'>Subplots by Name</option>"+
+            "<option value='subplots_by_index'>Subplots by Index Number</option>"+
+            "<option value='subplots_per_plot'>Subplots by Num Subplots per Plot</option>"+
+            "<option value='plants_by_name'>Plants by Name</option>"+
+            "<option value='plants_by_index'>Plants by Index Number</option>"+
+            "<option value='plants_per_plot'>Plants by Num Plants per Plot</option>"+
+            "<option value='subplot_plants_by_name'>Subplot Plants by Name</option>"+
+            "<option value='subplot_plants_by_index'>Subplot Plants by Index Number</option>"+
+            "<option value='plants_per_subplot'>Plants by Num Plants per Subplot</option>";
+    }
 
 });
 </script>
