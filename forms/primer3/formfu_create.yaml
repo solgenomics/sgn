@@ -2,7 +2,7 @@
 # indicator is the field that is used to test for form submission
 indicator: submit
 # Start listing the form elements
-action: update
+action: primer3/update
 elements:
 
     - type: Block
