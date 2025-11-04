@@ -1,4 +1,8 @@
 package Bio::BLAST2::Database;
+
+use strict;
+use warnings;
+
 BEGIN {
   $Bio::BLAST2::Database::AUTHORITY = 'cpan:RBUELS';
 }
@@ -7,8 +11,6 @@ BEGIN {
 }
 # ABSTRACT: work with formatted BLAST databases
 
-use strict;
-use warnings;
 
 use POSIX;
 
