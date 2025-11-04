@@ -280,7 +280,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
             my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
             my $vector_construct = $transformant_obj->vector_construct();
             my $vector_id;
-            if ($vector_construct) {
+            if (@$vector_construct) {
                 $vector_id = $vector_construct->[0];
                 my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
                 $vector_related_genes = $vector_construct->Gene;

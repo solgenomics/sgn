@@ -1132,17 +1132,17 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     my $plant_material = $transformant_obj->plant_material();
     my $transformation_identifier = $transformant_obj->transformation_identifier();
 
-    if ($vector_construct) {
+    if (@$vector_construct) {
         $vector_id = $vector_construct->[0];
         $vector_name = $vector_construct->[1];
         $vector_link = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
     }
-    if ($plant_material) {
+    if (@$plant_material) {
         $plant_id = $plant_material->[0];
         $plant_name = $plant_material->[1];
         $plant_link = qq{<a href="/stock/$plant_id/view">$plant_name</a>};
     }
-    if ($transformation_identifier) {
+    if (@$transformation_identifier) {
         $transformation_id = $transformation_identifier->[0];
         $transformation_name = $transformation_identifier->[1];
         $transformation_link = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
@@ -1175,7 +1175,7 @@ sub get_related_transformants :Path('/ajax/transformation/related_transformants'
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
     my $transformation_identifier = $transformant_obj->transformation_identifier();
     my $transformation_id;
-    if ($transformation_identifier) {
+    if (@$transformation_identifier) {
         $transformation_id = $transformation_identifier->[0];
     }
 
@@ -1209,8 +1209,8 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
     my $transformation_identifier = $transformant_obj->transformation_identifier();
     my $transformation_id;
-    if ($transformation_identifier) {
-        $transformation_id = $transformation_identifier->[0];        
+    if (@$transformation_identifier) {
+        $transformation_id = $transformation_identifier->[0];
     }
 
     my @control_transformants;
