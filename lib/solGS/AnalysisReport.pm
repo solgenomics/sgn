@@ -841,7 +841,7 @@ sub combine_populations_message {
             $no_match
           . " can not be combined.\n"
           . "Possibly the the populations were genotyped\n"
-          . "with different marker sets or querying the data for one or more of the\n"
+          . "with different marker alleles or querying the data for one or more of the\n"
           . "populations failed. See details below:\n\n";
 
         foreach my $k ( keys %{$output_details} ) {

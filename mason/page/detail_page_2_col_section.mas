@@ -504,6 +504,9 @@ $field_headers => ()
 % if ($info_section_id eq 'genotyping_protocol_markers'){
                                 <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id, marker_info_headers => $marker_info_headers &>
 % } #End genotyping_protocol_markers
+% if ($info_section_id eq 'marker_metadata'){
+                                <& /breeders_toolbox/genotyping_protocol/marker_metadata.mas, protocol_id => $protocol_id &>
+% } #End marker_metadata
 % if ($info_section_id eq 'genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>
 % } #End genotyping_protocol_genotype_data
