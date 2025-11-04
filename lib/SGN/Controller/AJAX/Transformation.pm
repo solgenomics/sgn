@@ -1117,19 +1117,34 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     my $stock_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
+    my $vector_id;
+    my $vector_name;
+    my $plant_id;
+    my $plant_name;
+    my $transformation_id;
+    my $transformation_name;
+    my $vector_link;
+    my $plant_link;
+    my $transformation_link;
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
-    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
-    my $plant_id = $experiment_info->[0]->[0];
-    my $plant_name = $experiment_info->[0]->[1];
-    my $plant_link = qq{<a href="/stock/$plant_id/view">$plant_name</a>};
-    my $vector_id = $experiment_info->[0]->[2];
-    my $vector_name = $experiment_info->[0]->[3];
-    my $vector_link = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
-    my $transformation_id = $experiment_info->[0]->[4];
-    my $transformation_name = $experiment_info->[0]->[5];
-    my $transformation_link;
-    if ($transformation_id) {
+    my $vector_construct = $transformant_obj->vector_construct();
+    my $plant_material = $transformant_obj->plant_material();
+    my $transformation_identifier = $transformant_obj->transformation_identifier();
+
+    if ($vector_construct) {
+        $vector_id = $vector_construct->[0];
+        $vector_name = $vector_construct->[1];
+        $vector_link = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
+    }
+    if ($plant_material) {
+        $plant_id = $plant_material->[0];
+        $plant_name = $plant_material->[1];
+        $plant_link = qq{<a href="/stock/$plant_id/view">$plant_name</a>};
+    }
+    if ($transformation_identifier) {
+        $transformation_id = $transformation_identifier->[0];
+        $transformation_name = $transformation_identifier->[1];
         $transformation_link = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
     }
 
@@ -1158,8 +1173,11 @@ sub get_related_transformants :Path('/ajax/transformation/related_transformants'
     my $dbh = $c->dbc->dbh;
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
-    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
-    my $transformation_id = $experiment_info->[0]->[4];
+    my $transformation_identifier = $transformant_obj->transformation_identifier();
+    my $transformation_id;
+    if ($transformation_identifier) {
+        $transformation_id = $transformation_identifier->[0];
+    }
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
     my $result = $transformation_obj->transformants();
@@ -1189,8 +1207,11 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
     my $dbh = $c->dbc->dbh;
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
-    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
-    my $transformation_id = $experiment_info->[0]->[4];
+    my $transformation_identifier = $transformant_obj->transformation_identifier();
+    my $transformation_id;
+    if ($transformation_identifier) {
+        $transformation_id = $transformation_identifier->[0];        
+    }
 
     my @control_transformants;
     if ($transformation_id) {
@@ -1227,7 +1248,7 @@ sub get_transformant_qPCR_data :Path('/ajax/transformation/transformant_qPCR_dat
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
     my $qPCR_data = $transformant_obj->get_transformant_qPCR_data();
-    
+
     $c->stash->{rest} = { data => $qPCR_data };
 
 }
