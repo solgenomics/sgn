@@ -87,6 +87,7 @@ function load_archived_files_table() {
                     file_tfoot.empty();
                     if (response.data[0].hasOwnProperty('user_id')) {
                         let header_row = jQuery('<tr>');
+                        header_row.append(jQuery('<th>').text("Timestamp"));
                         header_row.append(jQuery('<th>').text("File Name"));
                         header_row.append(jQuery('<th>').text("Uploader"));
                         header_row.append(jQuery('<th>').text("Upload As"));
@@ -95,7 +96,8 @@ function load_archived_files_table() {
                         file_thead.append(header_row);
                         response.data.forEach(row => {
                             let tr = jQuery("<tr>");
-                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                            tr.append(jQuery("<td>").text(row.timestamp));
+                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
                             tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
                             tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
                             //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
@@ -105,6 +107,7 @@ function load_archived_files_table() {
                         jQuery('#upload_facility_archived_files_table').DataTable();
                     } else {
                         let header_row = jQuery('<tr>');
+                        header_row.append(jQuery('<th>').text("Timestamp"));
                         header_row.append(jQuery('<th>').text("File Name"));
                         header_row.append(jQuery('<th>').text("Upload As"));
                         //header_row.append(jQuery('<th>').text("Delete"));
@@ -112,7 +115,8 @@ function load_archived_files_table() {
                         file_thead.append(header_row);
                         response.data.forEach(row => {
                             let tr = jQuery("<tr>");
-                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                            tr.append(jQuery("<td>").text(row.timestamp));
+                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
                             tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
                             //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
                             tr.append(jQuery("<td>").html("<button class='btn btn-success'><span class='glyphicon glyphicon-play-circle'></span></button>"));
@@ -130,7 +134,7 @@ function load_archived_files_table() {
 }
 
 function upload_type_options() {
-    return "<option value='trials'>Trials</option>"+
+    return "<option value='trials'>Trials (Multi-trial format)</option>"+
         "<option value='genotyping_plate'>Genotyping Plates</option>"+
         "<option value='genotyping_data'>Genotyping Data</option>"+
         "<option value='locations'>Locations</option>"+
@@ -152,7 +156,7 @@ function upload_type_options() {
         "<option value='transcriptomics'>Transcriptomics</option>"+
         "<option value='images'>Images</option>"+
         "<option value='soil_data'>Soil Data</option>"+
-        "<option value='vectors'>Vectors</option>"
+        "<option value='vectors'>Vectors</option>" + 
         "<option value='subplots_by_name'>Subplots by Name</option>"+
         "<option value='subplots_by_index'>Subplots by Index Number</option>"+
         "<option value='subplots_per_plot'>Subplots by Num Subplots per Plot</option>"+

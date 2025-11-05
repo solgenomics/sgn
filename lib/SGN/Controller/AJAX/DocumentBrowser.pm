@@ -158,9 +158,11 @@ sub user_archived_files_POST : Args(0) {
         $h->execute();
 
         while (my ($file_id, $file_name, $user_id, $first_name, $last_name) = $h->fetchrow_array()){
+            $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
             push @data, {
                 file_id => $file_id,
-                filename => $file_name,
+                timestamp => $+{TIMESTAMP},
+                filename => $+{FILENAME},
                 user_id => $user_id,
                 user_name => "$first_name $last_name"
             };
@@ -175,9 +177,11 @@ sub user_archived_files_POST : Args(0) {
         $h->execute($user_id);
 
         while (my ($file_id, $file_name) = $h->fetchrow_array()){
+            $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
             push @data, {
                 file_id => $file_id,
-                filename => $file_name
+                timestamp => $+{TIMESTAMP},
+                filename => $+{FILENAME}
             };
         }
     }
