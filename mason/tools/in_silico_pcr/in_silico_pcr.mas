@@ -34,7 +34,7 @@
       <label class="blast_select_label" for="fprimer">Forward Primer </label>
       	</td>
       	<td>
-      		<input id="fprimer" class="form-control" size="65" value="CCAGCAATCCTCTTCAAAGC" name="fprimer" />
+      		<input id="fprimer" class="form-control" size="65" value="ACGATGTGATTTCTCGCTTGATGTTCTA" name="fprimer" />
           <p id="fprimer_alert" class="text-danger"></p>
       	</td>
       </tr>
@@ -49,7 +49,7 @@
         <label class="blast_select_label" for="rprimer">Reverse Primer </label>
     	</td>
     	<td>
-    		<input id="rprimer" class="form-control" size="65" value="TGATCCACTGCAAAGTACGC" name="rprimer" />
+    		<input id="rprimer" class="form-control" size="65" value="TTTCTTATTAAGGTATGATGCTAGATGTCTAA" name="rprimer" />
         <p id="rprimer_alert" class="text-danger"></p>
     	</td>
     </tr>
@@ -57,7 +57,7 @@
   		<td>
       </td>
       <td>
-  			<input id="rrevcom" type="checkbox" name="rrevcom" /> <label class="blast_select_label" for="rrevcom">Reverse Complement </label>
+  			<input id="rrevcom" type="checkbox" name="rrevcom"  checked /> <label class="blast_select_label" for="rrevcom">Reverse Complement </label>
       </td>
     </tr>
     <tr>
