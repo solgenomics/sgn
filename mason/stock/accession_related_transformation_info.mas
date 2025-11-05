@@ -24,7 +24,7 @@ $number_of_insertions => undef
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'analysis_data', title => 'Analysis Data', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, id=>'analysis_data', title => 'Number of Insertions and Expression Data', collapsible=>1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
