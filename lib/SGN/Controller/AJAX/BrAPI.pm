@@ -5521,6 +5521,22 @@ sub nirs_matrix_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub nirs_protocol	: Chained('nirs_single') PathPart('protocols') Args(0) : ActionClass('REST') { }
+
+sub nirs_protocol_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Nirs');
+	my $brapi_package_result = $brapi_module->nirs_protocols(
+		$c->stash->{nd_protocol_id},
+		$clean_inputs
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 
 =head2 brapi/v2/pedigree
 

@@ -181,7 +181,85 @@ sub search {
 # 	my %result = (data => \@data);
 # 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 # 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Nirs result constructed');
-# }
+# }\
+
+sub nirs_protocols {
+	my $self = shift;
+	my $nd_protocol_id = shift;
+	my $inputs = shift;
+	
+	my $status = $self->status;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my @data_files;
+	my $schema = $self->bcs_schema();
+	my @nirs_stock_ids;
+	my $additional_info;
+	my $device_frequency_number;
+	my $documentation_url;
+	my $external_references;
+	my @nirs_protocol_ids;
+	my @nirs_protocol_names;
+	my @nirs_protocol_descriptions;
+	my @data;
+
+	my $q = "SELECT stock_id FROM nd_protocol JOIN nd_experiment_protocol ON nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id JOIN nd_experiment_stock ON nd_experiment_protocol.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE nd_protocol.nd_protocol_id = ?;";
+	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+	$h->execute($nd_protocol_id);
+
+	while (my ($nirs_stock_id) = $h->fetchrow_array()) {
+		push @nirs_stock_ids, $nirs_stock_id;
+	}
+
+	my $high_dim_nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+
+	my $q = "SELECT name FROM nd_protocol WHERE type_id = ? AND nd_protocol_id = ?;";
+	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+	$h->execute($high_dim_nirs_protocol_cvterm_id, $nd_protocol_id);
+	while (my ($nirs_protocol_name) = $h->fetchrow_array()) {
+		push @nirs_protocol_names, $nirs_protocol_name;
+	}
+
+	my $q = "SELECT description FROM nd_protocol WHERE type_id = ? AND nd_protocol_id = ?;";
+	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+	$h->execute($high_dim_nirs_protocol_cvterm_id, $nd_protocol_id);
+	while (my ($nirs_protocol_description) = $h-> fetchrow_array()) {
+		push @nirs_protocol_descriptions, $nirs_protocol_description;
+	}
+
+	my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
+		bcs_schema=>$schema,
+#	        nd_protocol_id=>$_,
+		nd_protocol_id=>$nd_protocol_id,
+		high_dimensional_phenotype_type=>'NIRS',
+		query_associated_stocks=>0,
+		accession_list=>\@nirs_stock_ids,
+		plot_list=>undef,
+		plant_list=>undef
+	});
+	my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
+	my $example_stock = @nirs_stock_ids[0];
+	my %data_matrix = %$data_matrix;
+
+	push @data, {
+		additionalInfo => $additional_info,
+		deviceFrequencyNumber => $device_frequency_number,
+		deviceType => $data_matrix{$example_stock}->{device_type},
+		documentationURL => $documentation_url,
+		externalReferences => $external_references,
+		protocolDbId => $nd_protocol_id,
+		protocolDescription => @nirs_protocol_descriptions[0],
+		protocolTitle => @nirs_protocol_names[0]
+	};
+
+	my $total_count = 1;
+
+	my %result = (data => \@data);
+
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Nirs protocol result constructed');
+
+}
 
 sub nirs_matrix {
 	my $self = shift;
