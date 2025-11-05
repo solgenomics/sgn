@@ -27,13 +27,14 @@ $design_types => ()
 <div class="well well-sm">
     <h4>Archived files</h4>
     <div style="display:flex;justify-content:flex-end;">
-        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_document_browser_file_form" name="upload_document_browser_file_form">
+        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_facility_file_form" name="upload_facility_file_form">
             <div class="form-group">
+                <label class="col-sm-4 control-label">Archive a file: </label>
                 <div class="col-sm-6">
-                    <input type="file" id="upload_facility_archive_new_file" encoding="multipart/form-data">
+                    <input type="file" id="upload_facility_archive_new_file" name="upload_facility_archive_new_file" encoding="multipart/form-data" enctype="multipart/form-data">
                 </div>
-                <div class="col-sm-3">
-                    <button class="btn btn-sm btn-primary" id="upload_facility_new_file_btn">Archive selected file</button>
+                <div class="col-sm-2">
+                    <button type="submit" class="btn btn-primary" id="upload_facility_new_file_btn"><span class="glyphicon glyphicon-upload"></span></button>
                 </div>
             </div>
         </form>
@@ -64,8 +65,8 @@ $design_types => ()
 </div>
 
 <script>
-jQuery(document).ready(function(){
 
+function load_archived_files_table() {
     jQuery.ajax({
         url: '/ajax/tools/documents/user_archive/',
         type : 'POST',
@@ -78,17 +79,19 @@ jQuery(document).ready(function(){
             } else {
                 console.log(response.data);
                 if (response.data.length > 0 ) {
+                    let file_tbody = jQuery('#upload_facility_archived_files_table tbody');
+                    let file_thead = jQuery('#upload_facility_archived_files_table thead');
+                    let file_tfoot = jQuery('#upload_facility_archived_files_table tfoot');
+                    file_thead.empty();
+                    file_tbody.empty();
+                    file_tfoot.empty();
                     if (response.data[0].hasOwnProperty('user_id')) {
-                        let file_tbody = jQuery('#upload_facility_archived_files_table tbody');
-                        let file_thead = jQuery('#upload_facility_archived_files_table thead');
-                        file_thead.empty();
-                        file_tbody.empty();
                         let header_row = jQuery('<tr>');
                         header_row.append(jQuery('<th>').text("File Name"));
                         header_row.append(jQuery('<th>').text("Uploader"));
                         header_row.append(jQuery('<th>').text("Upload As"));
                         //header_row.append(jQuery('<th>').text("Delete"));
-                        header_row.append(jQuery('<th>').text("Validate"));
+                        header_row.append(jQuery('<th>').text("Process File"));
                         file_thead.append(header_row);
                         response.data.forEach(row => {
                             let tr = jQuery("<tr>");
@@ -96,27 +99,23 @@ jQuery(document).ready(function(){
                             tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
                             tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
                             //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
-                            tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-success'>Validate</button>"));
+                            tr.append(jQuery("<td>").html("<button class='btn btn-success'><span class='glyphicon glyphicon-play-circle'></span></button>"));
                             file_tbody.append(tr);
                         });
                         jQuery('#upload_facility_archived_files_table').DataTable();
                     } else {
-                        let file_tbody = jQuery('#upload_facility_archived_files_table tbody');
-                        let file_thead = jQuery('#upload_facility_archived_files_table thead');
-                        file_thead.empty();
-                        file_tbody.empty();
                         let header_row = jQuery('<tr>');
                         header_row.append(jQuery('<th>').text("File Name"));
                         header_row.append(jQuery('<th>').text("Upload As"));
                         //header_row.append(jQuery('<th>').text("Delete"));
-                        header_row.append(jQuery('<th>').text("Validate"));
+                        header_row.append(jQuery('<th>').text("Process File"));
                         file_thead.append(header_row);
                         response.data.forEach(row => {
                             let tr = jQuery("<tr>");
                             tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
                             tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
                             //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
-                            tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-success'>Validate</button>"));
+                            tr.append(jQuery("<td>").html("<button class='btn btn-success'><span class='glyphicon glyphicon-play-circle'></span></button>"));
                             file_tbody.append(tr);
                         });
                         jQuery('#upload_facility_archived_files_table').DataTable();
@@ -128,291 +127,71 @@ jQuery(document).ready(function(){
             alert("Something went terribly wrong, check console.");
         }
     });
+}
 
-    function upload_type_options() {
-        return "<option value='trials'>Trials</option>"+
-            "<option value='genotyping_plate'>Genotyping Plates</option>"+
-            "<option value='genotyping_project'>Genotyping Project</option>"+
-            "<option value='locations'>Locations</option>"+
-            "<option value='accessions'>Accessions</option>"+
-            "<option value='populations'>Populations</option>"+
-            "<option value='seedlots'>Seedlots</option>"+
-            "<option value='pedigrees'>Pedigrees</option>"+
-            "<option value='crosses'>Crosses</option>"+
-            "<option value='new_progenies'>New Progeny Names</option>" +
-            "<option value='existing_progenies'>Existing Progeny Names</option>"+
-            "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
-            "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
-            "<option value='treatments'>Treatments</option>"+
-            "<option value='gps_coords'>GPS Coordinates</option>"+
-            "<option value='change_accessions'>Accession Swap</option>" +
-            "<option value='entry_numbers'>Entry Numbers</option>" +
-            "<option value='nirs'>NIRS</option>" +
-            "<option value='metabolomics'>Metabolomics</option>"+
-            "<option value='transcriptomics'>Transcriptomics</option>"+
-            "<option value='images'>Images</option>"+
-            "<option value='soil_data'>Soil Data</option>"+
-            "<option value='vectors'>Vectors</option>"
-            "<option value='subplots_by_name'>Subplots by Name</option>"+
-            "<option value='subplots_by_index'>Subplots by Index Number</option>"+
-            "<option value='subplots_per_plot'>Subplots by Num Subplots per Plot</option>"+
-            "<option value='plants_by_name'>Plants by Name</option>"+
-            "<option value='plants_by_index'>Plants by Index Number</option>"+
-            "<option value='plants_per_plot'>Plants by Num Plants per Plot</option>"+
-            "<option value='subplot_plants_by_name'>Subplot Plants by Name</option>"+
-            "<option value='subplot_plants_by_index'>Subplot Plants by Index Number</option>"+
-            "<option value='plants_per_subplot'>Plants by Num Plants per Subplot</option>";
-    }
+function upload_type_options() {
+    return "<option value='trials'>Trials</option>"+
+        "<option value='genotyping_plate'>Genotyping Plates</option>"+
+        "<option value='genotyping_data'>Genotyping Data</option>"+
+        "<option value='locations'>Locations</option>"+
+        "<option value='accessions'>Accessions</option>"+
+        "<option value='populations'>Populations</option>"+
+        "<option value='seedlots'>Seedlots</option>"+
+        "<option value='pedigrees'>Pedigrees</option>"+
+        "<option value='crosses'>Crosses</option>"+
+        "<option value='new_progenies'>New Progeny Names</option>" +
+        "<option value='existing_progenies'>Existing Progeny Names</option>"+
+        "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
+        "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
+        "<option value='treatments'>Treatments</option>"+
+        "<option value='gps_coords'>GPS Coordinates</option>"+
+        "<option value='change_accessions'>Accession Swap</option>" +
+        "<option value='entry_numbers'>Entry Numbers</option>" +
+        "<option value='nirs'>NIRS</option>" +
+        "<option value='metabolomics'>Metabolomics</option>"+
+        "<option value='transcriptomics'>Transcriptomics</option>"+
+        "<option value='images'>Images</option>"+
+        "<option value='soil_data'>Soil Data</option>"+
+        "<option value='vectors'>Vectors</option>"
+        "<option value='subplots_by_name'>Subplots by Name</option>"+
+        "<option value='subplots_by_index'>Subplots by Index Number</option>"+
+        "<option value='subplots_per_plot'>Subplots by Num Subplots per Plot</option>"+
+        "<option value='plants_by_name'>Plants by Name</option>"+
+        "<option value='plants_by_index'>Plants by Index Number</option>"+
+        "<option value='plants_per_plot'>Plants by Num Plants per Plot</option>"+
+        "<option value='subplot_plants_by_name'>Subplot Plants by Name</option>"+
+        "<option value='subplot_plants_by_index'>Subplot Plants by Index Number</option>"+
+        "<option value='plants_per_subplot'>Plants by Num Plants per Subplot</option>";
+}
+
+jQuery(document).ready(function(){
+
+    load_archived_files_table();
+
+    jQuery('#upload_facility_new_file_btn').click(function(event){
+        event.preventDefault();
+        var uploadFile = jQuery("#upload_facility_archive_new_file").val();
+        if (uploadFile === '') {
+            alert("Please select a file");
+            return;
+        }
+        jQuery('#working_modal').modal("show");
+        jQuery("#upload_facility_file_form").attr("action", '/ajax/tools/documents/upload');
+        jQuery("#upload_facility_file_form").submit();
+    });
+
+    jQuery("#upload_facility_file_form").iframePostForm({
+        json: true,
+        post: function () { },
+        timeout: 7200,
+        complete: function (response) {
+            jQuery('#working_modal').modal("hide");
+            if (response.error){
+                alert("File upload failed, check console");
+            }
+            load_archived_files_table();
+        }
+    });
 
 });
 </script>
-
-
-<!--
-
-
-<div class="well well-sm">
-<h1>Traits</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="http://submit.rtbbase.org"><p>Go To Trait Request Form</p></a>
-</td>
-<td>
-<a href="/tools/onto"><p>Go To Ontology Browser</p></a>
-</td>
-<td>
-<a href="/search/traits"><p>Go To Trait Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div class="well well-sm">
-<h1>Field Trials</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="upload_trial_link"><p>Upload An Existing Trial</p></a>
-<a id="add_project_link"><p>Design A New Trial</p></a>
-</td>
-<td>
-<a href="/breeders/trials"><p>Go To Manage Trials</p></a>
-</td>
-<td>
-<a href="/search/trials"><p>Go To Trial Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div class="well well-sm">
-<h1>Genotyping Plates</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="create_genotyping_trial_link"><p>Create An IGD Genotyping Plate</p></a>
-</td>
-<td>
-<a href="/breeders/genotyping"><p>Go To Manage Genotyping Plates</p></a>
-</td>
-<td>
-<a href="/search/trials"><p>Go To Trial Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div class="well well-sm">
-<h1>Locations</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="upload_locations_link"><p>Upload Many New Locations</p></a>
-</td>
-<td>
-<a href="/breeders/locations"><p>Go To Manage Locations</p></a>
-</td>
-<td>
-<a href="/breeders/locations"><p>Go To Manage Locations</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<& /breeders_toolbox/upload_locations_dialogs.mas &>
-
-<div class="well well-sm">
-<h1>Accessions</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="add_accessions_link"><p>Add Accessions Using List</p></a>
-</td>
-<td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
-</td>
-<td>
-<a href="/search/stocks"><p>Go To Accessions Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div class="well well-sm">
-<h1>Populations</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="manage_accessions_populations_new"><p>Add New Population</p></a>
-</td>
-<td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
-</td>
-<td>
-<a href="/search/stocks"><p>Go To Stock Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<& /breeders_toolbox/manage_populations_dialogs.mas &>
-
-
-<div class="well well-sm">
-<h1>Seedlots</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
-<a name="add_seedlot_button"><p>Add A Seedlot</p></a>
-</td>
-<td>
-<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
-</td>
-<td>
-<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div class="well well-sm">
-<h1>Pedigrees</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="upload_pedigrees_link"><p>Upload Many Pedigrees</p></a>
-</td>
-<td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
-</td>
-<td>
-<a href="/search/cross"><p>Go To Search Crosses</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div class="well well-sm">
-<h1>Crosses</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Plan</th><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="create_cross_wishlist" >Create Cross Wishlist</a>
-</td>
-<td>
-<a name="upload_crosses_link"><p>Upload Many New Crosses</p></a>
-<a name="create_cross_link"><p>Add A Cross</p></a>
-<a name="upload_cross_info"><p>Upload Cross Info of Existing Crosses</p></a>
-<a name="upload_progenies_new_accessions_link"><p>Upload progeny names that are NOT in database</p></a>
-<a name="upload_progenies_existing_accessions_link"><p>Upload progeny names that already EXIST in database</p></a>
-<a name="upload_family_names_link"><p>Upload Family Names</p></a>
-</td>
-<td>
-<a href="/breeders/crosses"><p>Go To Manage Crosses Page</p></a>
-</td>
-<td>
-<a href="/search/cross"><p>Go To Search Crosses</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<div class="well well-sm">
-<h1>Phenotypes</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Collection</th><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="create_fieldbook_link"><p>Create Fieldbook Layout File</p></a>
-<a id="create_new_trait_file_link"><p>Create Fieldbook Trait File</p></a>
-<a name="create_spreadsheet_link"><p>Create Phenotyping Spreadsheet</p></a>
-</td>
-<td>
-<a id="upload_fieldbook_phenotypes_link"><p>Upload Fieldbook Database File</p></a>
-<a id="upload_spreadsheet_phenotypes_link"><p>Upload Phenotyping Spreadsheet</p></a>
-</td>
-<td>
-<a href="/breeders/phenotyping"><p>Go To Manage Phenotypes Page</p></a>
-</td>
-<td>
-<a href="/breeders/search"><p>Go To Search Wizard</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-
-
-</div>
-
-
-</div>
-
--->
