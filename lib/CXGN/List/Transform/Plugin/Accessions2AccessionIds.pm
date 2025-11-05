@@ -27,6 +27,7 @@ sub transform {
     my $schema = shift;
     my $list = shift;
 
+    my %found_hash = ();
     my @transform = ();
     my @found_ids = ();
     my @missing = ();
@@ -39,6 +40,14 @@ sub transform {
 
          @found_ids = map { $_->stock_id() } $rs->all();
          my @found_names = map { $_->uniquename() } $rs->all();
+
+         # add map of found name --> found id
+         for my $i (0 .. $#found_names) {
+            my $n = $found_names[$i];
+            my $i = $found_ids[$i];
+            $found_hash{$n} = $i;
+         }
+
          my %found_names_hash = map{$_ => 1} @found_names;
          my @not_found = grep(!defined $found_names_hash{$_}, @$list);
 
@@ -48,6 +57,8 @@ sub transform {
              foreach my $synonym ($rs->all()) {
                   push @found_ids,  $synonym->stock_id();
                   push @found_names,  $synonym->uniquename();
+                  my $syn = $synonym->stockprops({ type_id => $synonym_type_id })->first->value();
+                  $found_hash{$syn} = $synonym->stock_id();
              }
          }
 
@@ -57,7 +68,13 @@ sub transform {
         }
     }
 
-    return { transform => \@found_ids,
+    # Return ids in same order as original list
+    my @sorted_found_ids;
+    foreach (@$list) {
+        push @sorted_found_ids, $found_hash{$_};
+    }
+
+    return { transform => \@sorted_found_ids,
 	     missing => \@missing,
     };
 
