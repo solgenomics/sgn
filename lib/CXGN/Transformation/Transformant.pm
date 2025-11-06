@@ -86,8 +86,23 @@ sub get_transformant_qPCR_data {
                     my @gene_relative_values = ();
                     my $qPCR_relative_values = $tissue_type_data->{$assay_date}->{'relative_expression_data'}->{'relative_expression_values'};
                     foreach my $gene_name (@$transgenes) {
-                        my $qPCR_value = $qPCR_relative_values->{$gene_name}->{'relative_expression'};
-                        push @gene_relative_values, $qPCR_value;
+                        my $qPCR_value = "";
+                        my $number_of_replicates = "";
+                        my $standard_deviation = "";
+                        my @details = ();
+                        my $detail_string = "";
+                        $qPCR_value = $qPCR_relative_values->{$gene_name}->{'relative_expression'};
+                        push @details, $qPCR_value;
+                        $number_of_replicates = $qPCR_relative_values->{$gene_name}->{'number_of_replicates'};
+                        if ($number_of_replicates == 1) {
+                            push @details, $number_of_replicates."replicate";
+                        } else {
+                            push @details, $number_of_replicates."replicates";
+                        }
+                        $standard_deviation = $qPCR_relative_values->{$gene_name}->{'standard_deviation'};
+                        push @details, "SD: ". $standard_deviation;
+                        $detail_string = join("<br>", @details);
+                        push @gene_relative_values, $detail_string;
                     }
                     push @qPCR_data, [$tissue_type, $assay_date, @gene_relative_values ]
                 }
