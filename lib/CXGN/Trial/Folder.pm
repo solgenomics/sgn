@@ -615,7 +615,7 @@ sub get_jstree_html {
     my $self = shift;
     my $schema = shift;
     my $parent_type = shift;
-    my $project_type_of_interest = shift // 'trial';
+    my $project_type_of_interest = shift || 'trial';
     #print STDERR "Running get js tree html on project ".$self->{'name'}." at time ".localtime()."\n";
     my ($folder_type_of_interest, $local_type_of_interest, $html);
 

@@ -42,53 +42,105 @@ sub get_trials : Path('/ajax/breeders/get_trials') Args(0) {
 sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $treetype = $c->req->param('type');
 
-    my @breeding_programs;
+    print STDERR "get_trials_with_folders using TREETYPE: $treetype\n";
+    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{bcs_schema}  } );
+    my $breeding_programs = $p->get_breeding_programs();
 
-    # adjust resource nomenclature
-    #
-    my $resource = "trials";
-    if ($tree_type eq "trialtree") { $resource = "trials"; }
-    if ($tree_type eq "genotyping_trial") { $resource = "genotyping"; }
-    if ($tree_type eq "crosstrial") { $resource = "crosses"; }
+    my $html = "";
     
-    print STDERR "Figuring out user privileges for $tree_type tree...\n";
-    my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $resource);
-    print STDERR "PRIVS: ".Dumper($privs);
+    print STDERR "BREEDING PROGRAMS NOW: ".Dumper($breeding_programs);
+
+    my @user_breeding_programs;
+
+    my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $treetype);
     if (exists($privs->{read})) {
-	print STDERR "We can read trials!\n";
-	if ($privs->{read}->{require_breeding_program}) {
-	    print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
-	    @breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+     	print STDERR "We can read trials!\n";
+     	if ($privs->{read}->{require_breeding_program}) {
+     	    print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
+     	    @user_breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+
+	    $breeding_programs = \@user_breeding_programs; # limit the breeding programs to the one the user has access to
 	}
 	
-	else {
-	    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
-	    my $projects = $p->get_breeding_programs();
+    }
+
+    
+    if (@$breeding_programs == 0) { 
+	$html = "NOTHING TO DISPLAY";
+    }
+    else { 
+	my $breeding_program_id = ref($breeding_programs) ? $breeding_programs->[0]->[0] : 0;
+
+	my $folder_obj;
+	if ($breeding_program_id) { 
+	    $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $c->stash->{bcs_schema}, folder_id => $breeding_program_id });
+	}
+	
+	print STDERR "Starting trial tree refresh for $treetype at time ".localtime()."\n";
+	foreach my $project (@$breeding_programs) {
+	    my %project = ( "id" => $project->[0], "name" => $project->[1]);
+	    $html .= $folder_obj->get_jstree_html(\%project, $c->stash->{bcs_schema}, 'breeding_program', $treetype);
+	}
+	
+	print STDERR "Finished trial tree refresh for $treetype at time ".localtime()."\n";
+    }	
+
+    print STDERR "HTML CREATED: $html\n";
+    $c->stash->{rest} =  { html => $html };
+
+    # my $self = shift;
+    # my $c = shift;
+    # my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
+    # my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    # my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    # my @breeding_programs;
+
+    # # adjust resource nomenclature
+    # #
+    # my $resource = "trials";
+    # if ($tree_type eq "trialtree") { $resource = "trials"; }
+    # if ($tree_type eq "genotyping_trial") { $resource = "genotyping"; }
+    # if ($tree_type eq "crosstrial") { $resource = "crosses"; }
+    
+    # print STDERR "Figuring out user privileges for $tree_type tree...\n";
+    # my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $resource);
+    # print STDERR "PRIVS: ".Dumper($privs);
+    # if (exists($privs->{read})) {
+    # 	print STDERR "We can read trials!\n";
+    # 	if ($privs->{read}->{require_breeding_program}) {
+    # 	    print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
+    # 	    @breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+    # 	}
+	
+    # 	else {
+    # 	    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
+    # 	    my $projects = $p->get_breeding_programs();
 	    
-	    @breeding_programs = @$projects;
-	}
-    }
+    # 	    @breeding_programs = @$projects;
+    # 	}
+    # }
 	
-    print STDERR "BREEDING PROGRAMS NOW: ".Dumper(\@breeding_programs);
-    my $dir = catdir($c->config->{static_content_path}, "folder");
-    eval { make_path($dir) };
-    if ($@) {
-        print STDERR "Couldn't create $dir: $@";
-    }
-    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
+    # print STDERR "BREEDING PROGRAMS NOW: ".Dumper(\@breeding_programs);
+    # my $dir = catdir($c->config->{static_content_path}, "folder");
+    # eval { make_path($dir) };
+    # if ($@) {
+    #     print STDERR "Couldn't create $dir: $@";
+    # }
+    # my $filename = $dir."/entire_jstree_html_$tree_type.txt";
 
-    my $html = _write_cached_folder_tree($schema, $tree_type, \@breeding_programs, $filename);
+    # my $html = _write_cached_folder_tree($schema, $tree_type, \@breeding_programs, $filename);
 
-    $c->stash->{rest} = { html => $html,  status => 1 };
+    # $c->stash->{rest} = { html => $html,  status => 1 };
 }
 
 sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    print STDERR "GET TRIALS WITH FOLDERS CACHED!\n";
     my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial','genotyping_trial', 'cross', 'genotyping_project', 'activity'
     #    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     #    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
