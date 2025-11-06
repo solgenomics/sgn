@@ -68,8 +68,14 @@ $design_types => ()
 
 <div class="well well-sm">
 <h3>In-progress uploads</h3>
-<table id="upload_factory_validated_uploads_table">
-</table>
+    <table id="upload_factory_validated_uploads_table">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+        </tfoot>
+    </table>
 </div>
 
 <div class="well well-sm">
@@ -77,11 +83,72 @@ $design_types => ()
 <br>
 <button class="btn btn-sm btn-primary">Dismiss all completed uploads</button>
 <br>
-<table id="upload_factory_completed_uploads_table">
-</table>
+    <table id="upload_factory_completed_uploads_table">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+        </tfoot>
+    </table>
 </div>
 
+
+<div class="modal fade" id="upload_type_choice_dialog" name="upload_type_choice_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTypeChoiceDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTypeChoiceDialog">Available Upload Types</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>There are multiple available upload modes. Choose the upload type from the dropdown below:</b>
+                    <br>
+                    <br>
+                    <div id="upload_type_choices_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_type_choice_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="validate_upload_confirm_submit" name="validate_upload_confirm_submit" tabindex="-1" role="dialog" aria-labelledby="validateUploadConfirmSubmit">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="validateUploadConfirmSubmit">Review Submission</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Review the submission. Click 'Submit' when you are ready to start file validation.</b>
+                    <br>
+                    <br>
+                    <div id="validate_upload_review_text"></div>
+                    <div id="upload_validation_parameters" hidden></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_validate_upload_confirm_submit" type="button" class="btn btn-default" data-dismiss="modal">Close</button>&nbsp;<button class="btn btn-info" id="submit_validate_upload">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <& /file_formats/trial_upload.mas &>
+
+<& /file_formats/plant_upload.mas &>
+
+<& /file_formats/subplot_plant_upload.mas &>
+
+<& /file_formats/subplot_upload.mas &>
 
 <script>
 
@@ -115,8 +182,8 @@ function load_archived_files_table() {
                     file_thead.append(header_row);
                     response.data.forEach(row => {
                         let tr = jQuery("<tr>");
-                        tr.append(jQuery("<td>").text(row.timestamp));
-                        tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                        tr.append(jQuery("<td>").html("<div id='file_timestamp_"+row.file_id+"'>"+row.timestamp+"</div>"));
+                        tr.append(jQuery("<td>").html("<a id='file_name_"+row.file_id+"' href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
                         if (response.data[0].hasOwnProperty('user_id')) {
                             tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
                         }
@@ -162,24 +229,18 @@ function upload_type_options() {
         "<option value='images'>Images</option>"+
         "<option value='soil_data'>Soil Data</option>"+
         "<option value='vectors'>Vectors</option>" + 
-        "<option value='subplots_by_name'>Subplots by Name</option>"+
-        "<option value='subplots_by_index'>Subplots by Index Number</option>"+
-        "<option value='subplots_per_plot'>Subplots by Num Subplots per Plot</option>"+
-        "<option value='plants_by_name'>Plants by Name</option>"+
-        "<option value='plants_by_index'>Plants by Index Number</option>"+
-        "<option value='plants_per_plot'>Plants by Num Plants per Plot</option>"+
-        "<option value='subplot_plants_by_name'>Subplot Plants by Name</option>"+
-        "<option value='subplot_plants_by_index'>Subplot Plants by Index Number</option>"+
-        "<option value='plants_per_subplot'>Plants by Num Plants per Subplot</option>";
+        "<option value='subplots'>Subplots</option>"+
+        "<option value='plants'>Plants</option>";
 }
 
-function process_file(file_id, upload_type) {
+function process_file(file_data, upload_type) {
+
+    jQuery('#upload_type_choices_div').html('');
+
     switch(upload_type) {
         case 'trials' :
-            alert("Trial upload");
-            break;
         case 'trial_metadata' :
-            alert("Trial metadata upload");
+            populate_validate_submit_data(upload_type, file_data, {});
             break;
         case 'genotyping_plate' : 
             alert("genotyping plate");
@@ -250,32 +311,15 @@ function process_file(file_id, upload_type) {
         case 'vectors' : 
             alert('Vector upload');
             break;
-        case 'subplots_by_name' : 
+        case 'subplots' : 
             alert('Subplot upload');
             break;
-        case 'subplots_by_index' : 
-            alert('Subplot upload');
-            break;
-        case 'subplots_per_plot' : 
-            alert('Subplot upload');
-            break;
-        case 'plants_by_name' : 
-            alert('Plant upload');
-            break;
-        case 'plants_by_index' : 
-            alert('Plant upload');
-            break;
-        case 'plants_per_plot' : 
-            alert('plant upload');
-            break;
-        case 'subplot_plants_by_name' : 
-            alert('Plant upload');
-            break;
-        case 'subplot_plants_by_index' : 
-            alert('Plant upload');
-            break;
-        case 'plants_per_subplot' : 
-            alert('plant upload');
+        case 'plants' : 
+            display_plant_upload_choices();
+            jQuery('#plants_per_plot_div').show();
+            jQuery('#plant_choices_next_btn_div').show();
+            jQuery('#plant_upload_choices_next_btn').on('click', {file_data : file_data}, populate_plant_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         default :
             alert("Select an upload type.");
@@ -285,6 +329,9 @@ function process_file(file_id, upload_type) {
 }
 
 function display_upload_formats(upload_type) {
+
+    jQuery('#upload_type_choices_div').html('');
+
     switch(upload_type) {
         case 'trials' :
             jQuery('#multiple_trial_upload_spreadsheet_info_dialog').modal("show");
@@ -361,37 +408,134 @@ function display_upload_formats(upload_type) {
         case 'vectors' : 
             alert('Vector upload');
             break;
-        case 'subplots_by_name' : 
+        case 'subplots' : 
             alert('Subplot upload');
             break;
-        case 'subplots_by_index' : 
-            alert('Subplot upload');
-            break;
-        case 'subplots_per_plot' : 
-            alert('Subplot upload');
-            break;
-        case 'plants_by_name' : 
-            alert('Plant upload');
-            break;
-        case 'plants_by_index' : 
-            alert('Plant upload');
-            break;
-        case 'plants_per_plot' : 
-            alert('plant upload');
-            break;
-        case 'subplot_plants_by_name' : 
-            alert('Plant upload');
-            break;
-        case 'subplot_plants_by_index' : 
-            alert('Plant upload');
-            break;
-        case 'plants_per_subplot' : 
-            alert('plant upload');
+        case 'plants' : 
+            display_plant_upload_choices();
+            jQuery('#plant_upload_type_choice_select').on('change', display_plant_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         default :
             break;
     }
     return;
+}
+
+function display_validate_submit_modal(options) {
+    let text = ""; 
+    for (key in options) {
+        if (key == "parameters_json") {
+            console.log("Validation parameters: " + options[key]);
+            jQuery('#upload_validation_parameters').html(options[key]);
+        } else {
+            text += "<b>" + key + ": </b>&nbsp; " + options[key] + "<br>";
+        }
+    }
+    jQuery('#validate_upload_review_text').html(text);
+    jQuery('#validate_upload_confirm_submit').modal("show");
+}
+
+function display_plant_upload_formats() {
+    let plant_upload_type = jQuery('#plant_upload_type_choice_select').val();
+    switch(plant_upload_type) {
+        case 'plants_by_name' : 
+            jQuery('#upload_plants_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'plants_by_index' : 
+            jQuery('#upload_plants_with_index_number_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'plants_per_plot' : 
+            jQuery('#upload_plants_with_num_plants_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'subplot_plants_by_name' : 
+            jQuery('#upload_plants_subplot_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'subplot_plants_by_index' : 
+            jQuery('#upload_plants_subplot_with_index_number_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'plants_per_subplot' : 
+            jQuery('#upload_plants_subplot_with_num_plants_spreadsheet_info_dialog').modal("show");
+            break;
+        default : 
+            break;
+    }
+}
+
+function display_plant_upload_choices() {
+    jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="plant_upload_type_choice_select">'+
+                        '<option value="null_choice">Select...</option>'+
+                        '<option value="plants_by_name">Plants by name</option>'+
+                        '<option value="plants_by_index">Plants by index number</option>'+
+                        '<option value="plants_per_plot">Number of plants per plot</option>'+
+                        '<option value="subplot_plants_by_name">Subplot plants by name</option>'+
+                        '<option value="subplot_plants_by_index">Subplot plants by index number</option>'+
+                        '<option value="plants_per_subplot">Plants per subplot</option>'+
+                    '</select>' + 
+                    '<br>' + 
+                    '<div id="plants_per_plot_div" hidden>Maximum number of plants per plot/subplot: '+'<input style="width:25%" id="plant_upload_plants_per_plot" class="form-control" type="number"/></div>' + 
+                    '<br>' + 
+                    '<div id="plant_choices_next_btn_div" hidden><button class="btn btn-primary btn-small" id="plant_upload_choices_next_btn">Next</button></div>');
+}
+
+function display_subplot_upload_choices() {
+
+}
+
+function display_seedlot_upload_choices() {
+    
+}
+
+function populate_validate_submit_data(upload_type, file_data, additional_args) {
+
+    let upload_type_dict = {
+        'trials' : "Multiple Trial Upload",
+        'trial_metadata' : "Trial Metadata",
+        'plants_by_name' : "Plants by name",
+        'plants_by_index' : "Plants by index number",
+        'plants_per_plot' : "Plants by number of plants per plot",
+        'subplot_plants_by_name' : "Subplot plants by name",
+        'subplot_plants_by_index' : "Subplot plants by index number",
+        'plants_per_subplot' : "Plants by number of plants per subplot",
+    };
+
+    display_validate_submit_modal({
+        'Upload Type' : upload_type_dict[upload_type],
+        'File' : file_data.file_name,
+        'File ID' : file_data.file_id,
+        'Additional arguments' : JSON.stringify(additional_args),
+        parameters_json : {
+            upload_type : upload_type,
+            file_id : file_data.file_id,
+            additional_args : additional_args
+        }
+    });
+}
+
+function populate_plant_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let plant_upload_type = jQuery('#plant_upload_type_choice_select').val();
+    let num_plants_per_plot = jQuery('#plant_upload_plants_per_plot').val();
+    if (plant_upload_type == "null_choice") {
+        alert("Select a plant upload type");
+        return;
+    }
+    if (!num_plants_per_plot || num_plants_per_plot < 1) {
+        alert("Enter the maximum number of plants per plot/subplot.");
+        return;
+    }
+    populate_validate_submit_data(plant_upload_type, file_data, {
+        plants_per_plot : num_plants_per_plot,
+        plants_per_subplot : num_plants_per_plot
+    });
+}
+
+function submit_file_validation(options) {
+
+}
+
+function submit_file_store(options) {
+
 }
 
 jQuery(document).ready(function(){
@@ -425,9 +569,10 @@ jQuery(document).ready(function(){
 
     jQuery(document).on('click','.process-file-btn',function() {
         let file_id = jQuery(this).attr('id').replace('process_file_', '');
+        let file_name = jQuery('#file_timestamp_'+file_id).text()+"_"+jQuery('#file_name_'+file_id).text();
         let upload_type = jQuery("#upload_select_type_"+file_id).val();
 
-        process_file(file_id, upload_type);
+        process_file({file_name : file_name, file_id : file_id}, upload_type);
     });
 
     jQuery('#check_file_format_select').html(upload_type_options());
