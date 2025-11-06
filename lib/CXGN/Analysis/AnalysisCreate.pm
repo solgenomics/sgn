@@ -563,7 +563,7 @@ sub store {
         }
 
         print STDERR "Store analysis values...\n";
-        my $analysis_result_values_save;
+        my $analysis_result_values_save = {};
         if ($analysis_result_values_type eq 'analysis_result_values_match_precomputed_design') {
             while (my($field_plot_name, $trait_obj) = each %$analysis_result_values) {
                 while (my($trait_name, $val) = each %$trait_obj) {
@@ -587,15 +587,15 @@ sub store {
         }
         elsif ($analysis_result_values_type eq 'analysis_result_new_stocks') {
     
-            my $analysis_result_values_fix_plot_names;
-            my $design = $a->design()->{design};
+            my %analysis_result_values_fix_plot_names;
+            my $design = $a->design();
             foreach (values %{$design}) {
-                $analysis_result_values_fix_plot_names->{$_->{stock_name}} = $_->{plot_name};
+                $analysis_result_values_fix_plot_names{$_->{stock_name}} = $_->{plot_name};
             }
 
             while (my ($stock_name, $trait_pheno) = each %{$analysis_result_values}) {
                 while (my ($trait_name, $val) = each %{$trait_pheno}) {
-                    $analysis_result_values_save->{$analysis_result_values_fix_plot_names->{$stock_name}}->{$composed_trait_map{$trait_name}} = $val;
+                    $analysis_result_values_save->{$analysis_result_values_fix_plot_names{$stock_name}}->{$composed_trait_map{$trait_name}} = $val;
                 }
             }
         }

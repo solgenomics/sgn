@@ -947,6 +947,50 @@ sub get_image_ids {
     return @ids;
 }
 
+=head2 get_stocks_with_images()
+
+  Usage: my @stock_names_with_images = $self->get_stocks_with_images()
+  Arguments: trial_id, stock_type_name (optional)
+  Returns: a list of stock uniquenames
+  Description: a method for returning uniquenames of stocks that have associated images within a trial
+
+=cut
+
+sub get_stocks_with_images {
+    my $self = shift;
+    my $trial_id = shift;
+    my $stock_type_name = shift;
+    my $schema = $self->schema;
+
+    my @stock_names;
+
+    my $q = "
+        SELECT DISTINCT s.uniquename
+        FROM project AS p
+        JOIN nd_experiment_project AS nep ON nep.project_id = p.project_id
+        JOIN nd_experiment AS ne ON ne.nd_experiment_id = nep.nd_experiment_id
+        JOIN nd_experiment_stock AS nes ON nes.nd_experiment_id = ne.nd_experiment_id
+        JOIN stock AS s ON s.stock_id = nes.stock_id
+        JOIN phenome.stock_image AS si ON si.stock_id = s.stock_id
+        JOIN metadata.md_image AS mi ON mi.image_id = si.image_id
+        JOIN cvterm AS t ON s.type_id = t.cvterm_id
+        WHERE p.project_id = ? AND mi.obsolete = 'f'
+    ";
+
+    my @query_values = ($trial_id);
+    if ($stock_type_name) {
+        $q .= " AND t.name = ?";
+        push @query_values, $stock_type_name;
+    }
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute(@query_values);
+    while (my ($stock_name) = $h->fetchrow_array()) {
+        push @stock_names, $stock_name;
+    }
+
+    return \@stock_names;
+}
 
 =head2 get_genotypes
 

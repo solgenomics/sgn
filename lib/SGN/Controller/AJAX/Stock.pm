@@ -2758,6 +2758,22 @@ sub set_display_image_POST : Args(0) {
 
 }
 
+sub get_stocks_with_images : Path('/ajax/stock/get_stocks_with_images') : ActionClass('REST') { }
+
+sub get_stocks_with_images_GET : Args(0) {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->req->param('trial_id');
+    my $stock_type_name = $c->req->param('stock_type');
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema=> $schema});
+
+    my $stock_names = $stock->get_stocks_with_images($trial_id, $stock_type_name);
+
+    $c->stash->{rest} = { data => $stock_names };
+}
+
 
 sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST') { }
 

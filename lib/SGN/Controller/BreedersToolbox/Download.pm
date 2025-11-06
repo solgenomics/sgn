@@ -1177,12 +1177,12 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @accession_ids = @{$accession_id_hash->{transform}};
     }
 
-    my $filename = '';
+    my ($fh, $filename) = tempfile("breedbase_genotype_data_XXXXX");
     if ($download_format eq 'VCF') {
-        $filename = 'BreedBaseGenotypesDownload.vcf';
+        $filename .= '.vcf';
     }
     else {
-        $filename = 'BreedBaseGenotypesDownload.tsv';
+        $filename .=  '.tsv';
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
@@ -1310,12 +1310,12 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         print STDERR "using default protocol_id = $protocol_id\n";
     }
 
-    my $filename;
+    my ($fh, $filename) = tempfile("breedbase_grm_XXXXX");
     if ($download_format eq 'heatmap') {
-        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.pdf';
+        $filename .= '.pdf';
     }
     else {
-        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
+        $filename .= '.tsv';
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
@@ -1388,12 +1388,13 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my $filename;
+    my ($fh, $filename);
     if ($download_format eq 'results_tsv') {
-        $filename = 'BreedBaseGWASDownloadResults.tsv';
+        ($fh, $filename) = tempfile("breedbase_gwas_results_XXXXX", suffix => '.tsv');
+
     }
     elsif ($download_format eq 'manhattan_qq_plots') {
-        $filename = 'BreedBaseGWASDownloadManhattanAndQQPlots.pdf';
+        ($fh, $filename) = tempfile("breedbase_gwas_plots_XXXXX", suffix => '.pdf');
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
