@@ -1724,11 +1724,11 @@ sub upload_qPCR_data_POST : Args(0) {
                 });
 
                 my $store = $expression_data->store_qPCR_data();
-#                my $store_expression_error = $store->{error};
-#                if ($store_expression_error) {
-#                    $c->stash->{rest} = { error => "Error! Cannot store expression data of transformant: $transformant_name. "};
-#                    return;
-#                }
+                my $store_expression_error = $store->{error};
+                if ($store_expression_error) {
+                    $c->stash->{rest} = { error => "Error storing data for $transformant_name: $store_expression_error."};
+                    return;
+                }
             }
         };
 

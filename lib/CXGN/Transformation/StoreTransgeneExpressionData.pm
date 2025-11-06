@@ -137,8 +137,7 @@ sub store_qPCR_data {
 		    type_id => $accession_cvterm->cvterm_id(),
 	    });
 		if (!$transformant_stock) {
-            print STDERR "Transgenic line could not be found\n";
-            return;
+            return { error => "Transgenic line could not be found\n" };
         } else {
             $transformant_stock_id = $transformant_stock->stock_id();
 		}
@@ -148,8 +147,7 @@ sub store_qPCR_data {
 		    type_id => $vector_construct_cvterm->cvterm_id(),
 	    });
 		if (!$vector_construct_stock) {
-            print STDERR "Vector construct could not be found\n";
-            return;
+            return { error => "Vector construct could not be found\n" };
         } else {
 			$vector_construct_stock_id = $vector_construct_stock->stock_id();
 		}
@@ -187,8 +185,7 @@ sub store_qPCR_data {
             $updated_expression_data_json = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_json});
         } elsif ($previous_expression_data_stockprop_rs->count > 1) {
-            print STDERR "More than one expression data stockprop found!\n";
-            return;
+            return { error => "More than one expression data stockprop found!\n" };
         } else {
             $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
             if ($CT_expression_data) {
@@ -207,8 +204,7 @@ sub store_qPCR_data {
             $previous_assay_metadata_json = encode_json $previous_assay_metadata_hash;
             $previous_assay_metadata_stockprop_rs->first->update({value=>$previous_assay_metadata_json});
         } elsif ($previous_assay_metadata_stockprop_rs->count > 1) {
-            print STDERR "More than one assay metadata stockprop found!\n";
-            return;
+            return { error => "More than one assay metadata stockprop found!\n" };
         } else {
             my $assay_metadata = {};
             my $assay_metadata->{$tissue_type}->{$assay_date} = 1;
@@ -225,11 +221,11 @@ sub store_qPCR_data {
     };
 
     if ($transaction_error) {
-        print STDERR "Transaction error storing expression data: $transaction_error\n";
-        return;
+        return { error => $transaction_error };
+    } else {
+        return 1;
     }
 
-    return 1;
 }
 
 sub _CASS_normalized_values {
@@ -261,10 +257,15 @@ sub _CASS_normalized_values {
         $stat->add_data(@all_normalized_values);
 
         my $mean_value =  sprintf("%.6f", $stat->mean());
-        my $stddev_value = sprintf("%.6f", $stat->standard_deviation());
+        my $sd_value;
+        if ($number_of_replicates > 1) {
+            $sd_value = sprintf("%.6f", $stat->standard_deviation());
+        } else {
+            $sd_value = "NA";
+        }
         $normalized_data{$gene_name}{'relative_expression'} = $mean_value;
         $normalized_data{$gene_name}{'number_of_replicates'} = $number_of_replicates;
-        $normalized_data{$gene_name}{'standard_deviation'} = $stddev_value;
+        $normalized_data{$gene_name}{'standard_deviation'} = $sd_value;
     }
 
     return \%normalized_data;
