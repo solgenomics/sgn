@@ -82,8 +82,15 @@ sub upload_phenotype_verify_POST : Args(1) {
         composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
 
-    my $warning_status;
-    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    my ($warning_status, $verified_warning, $verified_error);
+    try {
+        ($verified_warning, $verified_error) = $store_phenotypes->verify();
+    }
+    catch {
+        $verified_error = $_;
+	print STDERR "ERROR DURING UPLOAD: $verified_error\n";
+    };
+
     if ($verified_error) {
         push @$error_status, $verified_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status };
@@ -157,7 +164,14 @@ sub upload_phenotype_store_POST : Args(1) {
     #}
     #push @$success_status, "File data verified. Plot names and trait names are valid.";
 
-    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+    my ($stored_phenotype_error, $stored_phenotype_success);
+    try {
+        ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+    }
+    catch {
+        $stored_phenotype_error = $_;
+    };
+
     if ($stored_phenotype_error) {
         push @$error_status, $stored_phenotype_error;
         $c->stash->{rest} = {success => $success_status, error => $error_status};

@@ -1,0 +1,72 @@
+
+<%args>
+$stock_id
+$stock_uniquename => undef
+$stock_type => undef
+</%args>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="vector_related_stocks_table">
+    </table>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <&| /page/info_section.mas, title => 'Copy Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+        <br>
+        <div id="transformant_names" style="display:none"></div>
+        <div id="transformants_to_list_menu"></div>
+        </&>
+    </div>
+</div>
+
+<style>
+.table th {
+    white-space: nowrap;
+}
+</style>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const related_stock_table = jQuery('#vector_related_stocks_table').DataTable({
+        'ajax':'/stock/'+ <% $stock_id %> + '/datatables/vector_related_accessions',
+        'autoWidth': false,
+        'ordering': false,
+        'columns': [
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.transformant_id+"/view'>"+row.transformant_name+"</a>"; } },
+            { title: "Plant Material", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.plant_id+"/view'>"+row.plant_name+"</a>"; } },
+            { title: "Transformation ID", "data": null, "render": function ( data, type, row ) {
+                if (row.transformation_id === null){
+                    return 'NA'
+                } else {
+                    return "<a href='/transformation/"+row.transformation_id+"'>"+row.transformation_name+"</a>";
+                }
+            }},
+            { title: "Obsolete Accession", "data": "null", "render": function ( data, type, row ) { return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>"; } },
+        ],
+
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#transformants_to_list_menu').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                let html = "";
+                for(let i=0; i<json.data.length; i++){
+                    html += json.data[i].transformant_name+"\n";
+                }
+                jQuery("#transformant_names").html(html);
+                addToListMenu("transformants_to_list_menu", "transformant_names", {
+                    selectText: true,
+                    listType:'accessions'
+                });
+            }
+        }
+    });
+
+
+});
+
+
+</script>

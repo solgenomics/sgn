@@ -5,8 +5,6 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-use SimulateC;
-
 use Data::Dumper;
 
 use CXGN::Trial;
@@ -17,6 +15,7 @@ use CXGN::Trial::Folder;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Trial::Search;
 use SGN::Model::Cvterm;
+use DateTime;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
@@ -25,8 +24,12 @@ my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
 });
 my ($result, $total_count) = $trial_search->search();
-print STDERR "ALL TRIAL =".Dumper($result)."\n";
-is_deeply($result, [
+
+
+my @sorted_result = sort { $a->{trial_id} <=> $b->{trial_id} } @$result;
+print STDERR "ALL TRIAL =".Dumper(\@sorted_result)."\n";
+
+my @test_data = (
           {
             'design' => 'RCBD',
             'breeding_program_id' => 134,
@@ -213,7 +216,13 @@ is_deeply($result, [
 		'additional_info' => undef
 
           }
-        ], 'trial search test 1');
+);
+
+my @sorted_test_data = sort { $a->{trial_id} <=> $b->{trial_id} } @test_data;
+
+print STDERR "SORTED TEST DATA = ".Dumper(\@sorted_test_data);
+
+is_deeply(\@sorted_result, \@sorted_test_data, "trial search test 1");
 
 $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
@@ -876,7 +885,7 @@ is($trial->get_name(), "anothertrial modified");
 #
 my $desc = $trial->get_description();
 
-ok($desc == "test_trial", "another test trial...");
+is($desc, "another test trial...", "description getter");
 
 $trial->set_description("blablabla");
 
@@ -979,17 +988,61 @@ my $error = $trial->set_project_type("77106");
 
 is($trial->get_project_type()->[1], "Clonal Evaluation", "set type test");
 
+# test for recently_modified_* functions
+#
+my $new_trials = CXGN::Project::get_recently_added_trials($f->bcs_schema(), $f->phenome_schema, $f->people_schema, $f->metadata_schema, 'week');
+
+print STDERR "RECENT TRIALS: ".Dumper($new_trials);
+is(scalar(@$new_trials), 2, "check that there are two recently added trials");
+
+my $now = DateTime->now();
+my $phenotype_row = $f->bcs_schema()->resultset('Phenotype::Phenotype')->find( { phenotype_id => 737043 });
+$phenotype_row->create_date($now->iso8601());
+$phenotype_row->update();
+
+my $modified_trials = CXGN::Project::get_recently_modified_trials($f->bcs_schema(), $f->phenome_schema, $f->people_schema, $f->metadata_schema, 'week');
+print STDERR "RECENTLY MODIFIED TRIALS: ".Dumper($modified_trials);
+is(scalar(@$modified_trials), 1, "check there is 1 modified trial in the database");
+
+my $accession_row = $f->bcs_schema->resultset('Stock::Stock')->find( { stock_id => 41723 });
+$accession_row->create_date($now->iso8601());
+$accession_row->update();
+
+my $new_accessions = CXGN::Project::get_recently_added_accessions($f->bcs_schema(), 'week');
+print STDERR "RECENTLY ADDED ACCESSIONS: ".Dumper($new_accessions);
+is(scalar(@$new_accessions), 1, "check that there is one new accession");
+
 print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
 print STDERR "Done.\n";
 
-my $deleted_trial;
+my $still_there = $f->bcs_schema->resultset('Project::Project')->find({ project_id => $trial_id });
+ok(!defined $still_there, "check that trial project row was deleted");
+
+my ($threw, $deleted_trial, $name) = (0);
+
+
 eval {
-     $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
+    $deleted_trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $trial_id });
+    $name = $deleted_trial->get_name();
+
 };
 
-if ($@) { print "An error occurred: $@\n"; }
-ok($@, "deleted trial id (".$@.")");
+ok($@, "Deletion was successful!");
 
+# ok(
+#     $threw
+#     || !$deleted_trial
+#     || !$deleted_trial->can('trial_id') || !$deleted_trial->trial_id
+#     || !defined $name,
+#     "cannot construct or access a deleted trial"
+# ) or do {
+#     require Data::Dumper;
+#     diag "Constructor returned trial_id=" . (
+#         ($deleted_trial && $deleted_trial->can('trial_id')) ? ($deleted_trial->trial_id // 'undef') : 'no method'
+#     ) . ", name=" . (defined $name ? $name : 'undef');
+# };
+
+$f->clean_up_db();
 
 done_testing();

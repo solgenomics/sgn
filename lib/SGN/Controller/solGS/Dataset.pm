@@ -4,6 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
+use CXGN::Dataset;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
 use POSIX qw(strftime);
@@ -20,7 +21,7 @@ __PACKAGE__->config(
     default   => 'application/json',
     stash_key => 'rest',
     map       => { 'application/json' => 'JSON',
-		   'text/html' => 'JSON' },
+           'text/html' => 'JSON' },
     );
 
 
@@ -109,7 +110,7 @@ sub get_dataset_genotypes_list {
     $dataset_id = $c->stash->{dataset_id} if !$dataset_id;
 
     my $genotypes_ids = $self->get_model($c)->get_genotypes_from_dataset($dataset_id);
-   	my $genotypes  = $c->controller('solGS::List')->transform_uniqueids_genotypes($c, $genotypes_ids);
+       my $genotypes  = $c->controller('solGS::List')->transform_uniqueids_genotypes($c, $genotypes_ids);
     $c->stash->{genotypes_list} = $genotypes;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
 
@@ -128,19 +129,19 @@ sub submit_dataset_training_data_query {
 
     if (@{$data->{categories}->{plots}})
     {
-	###### write dataset training data query job function instead...
-	$c->stash->{plots_names} = $data->{categories}->{plots};
-	$self->get_dataset_genotypes_list($c);
+    ###### write dataset training data query job function instead...
+    $c->stash->{plots_names} = $data->{categories}->{plots};
+    $self->get_dataset_genotypes_list($c);
 
-	$c->controller('solGS::List')->get_list_training_data_query_jobs_file($c);
-	$query_jobs_file = $c->stash->{list_training_data_query_jobs_file};
+    $c->controller('solGS::List')->get_list_training_data_query_jobs_file($c);
+    $query_jobs_file = $c->stash->{list_training_data_query_jobs_file};
     }
     elsif (@{$data->{categories}->{trials}})
     {
-	my $trials = $data->{categories}->{trials};
+    my $trials = $data->{categories}->{trials};
 
-	$c->controller('solGS::AsyncJob')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
-	$query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
+    $c->controller('solGS::AsyncJob')->get_training_pop_data_query_job_args_file($c, $trials, $geno_protocol);
+    $query_jobs_file  = $c->stash->{training_pop_data_query_job_args_file};
     }
 
     $c->stash->{dependent_jobs} = $query_jobs_file;
@@ -160,16 +161,16 @@ sub get_dataset_phenotype_data {
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_ids} = $data->{categories}->{plots};
+    $c->stash->{plots_ids} = $data->{categories}->{plots};
 
-	$c->controller('solGS::List')->plots_list_phenotype_file($c);
-	$c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
+    $c->controller('solGS::List')->plots_list_phenotype_file($c);
+    $c->stash->{phenotype_file} = $c->stash->{plots_list_phenotype_file};
     }
     elsif ($data->{categories}->{trials}->[0])
     {
-	my $trials = $data->{categories}->{trials};
-	$c->stash->{pops_ids_list} = $data->{categories}->{trials};
-	$c->controller('solGS::List')->get_trials_list_pheno_data($c);
+    my $trials = $data->{categories}->{trials};
+    $c->stash->{pops_ids_list} = $data->{categories}->{trials};
+    $c->controller('solGS::List')->get_trials_list_pheno_data($c);
     }
 }
 
@@ -182,23 +183,29 @@ sub create_dataset_pheno_data_query_jobs {
 
     if ($data->{categories}->{plots}->[0])
     {
-	$c->stash->{plots_ids} = $data->{categories}->{plots};
+    $c->stash->{plots_ids} = $data->{categories}->{plots};
 
-	$c->controller('solGS::List')->plots_list_phenotype_query_job($c);
-	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{plots_list_phenotype_query_job};
+    $c->controller('solGS::List')->plots_list_phenotype_query_job($c);
+    $c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{plots_list_phenotype_query_job};
     }
     elsif ($data->{categories}->{trials}->[0])
     {
-	my $trials_ids = $data->{categories}->{trials};
+    my $trials_ids = $data->{categories}->{trials};
 
-	$c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $trials_ids);
-	$c->stash->{phenotype_files_list} = $c->stash->{multi_pops_pheno_files};
-
-	$c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, $trials_ids);
-	$c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{trials_phenotype_query_jobs_args};
+    $c->controller('solGS::AsyncJob')->get_trials_phenotype_query_jobs_args($c, $trials_ids);
+    $c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{trials_phenotype_query_jobs_args};
     }
 }
 
+sub get_dataset_breeding_program {
+    my ($self, $c) = @_;
+
+    my $trials_ids = $c->controller('solGS::Dataset')->get_dataset_trials_ids($c);
+    my $program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trials_ids->[0]);
+
+    return $program_id;
+
+}
 
 sub create_dataset_geno_data_query_jobs {
     my ($self, $c) = @_;
@@ -211,16 +218,16 @@ sub create_dataset_geno_data_query_jobs {
 
     if ($data->{categories}->{accessions}->[0])
     {
-	       $self->dataset_genotype_query_jobs($c);
+           $self->dataset_genotype_query_jobs($c);
     }
     elsif ($data->{categories}->{trials}->[0])
     {
-    	my $trials_ids = $data->{categories}->{trials};
-    	$c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
-    	$c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
+        my $trials_ids = $data->{categories}->{trials};
+        $c->controller('solGS::combinedTrials')->multi_pops_geno_files($c, $trials_ids);
+        $c->stash->{genotype_files_list} = $c->stash->{multi_pops_geno_files};
 
-    	$c->controller('solGS::AsyncJob')->get_trials_genotype_query_jobs_args($c, $trials_ids, $geno_protocol);
-    	$c->stash->{dataset_geno_data_query_jobs} = $c->stash->{trials_genotype_query_jobs_args};
+        $c->controller('solGS::AsyncJob')->get_trials_genotype_query_jobs_args($c, $trials_ids, $geno_protocol);
+        $c->stash->{dataset_geno_data_query_jobs} = $c->stash->{trials_genotype_query_jobs_args};
     }
 }
 
@@ -231,19 +238,19 @@ sub dataset_genotype_query_jobs {
     my $dataset_id = $c->stash->{dataset_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-	my $pop_id = 'dataset_' . $dataset_id;
-	my $data_dir =  $c->stash->{solgs_datasets_dir};
-	my $pop_type = 'dataset';
+    my $pop_id = 'dataset_' . $dataset_id;
+    my $data_dir =  $c->stash->{solgs_datasets_dir};
+    my $pop_type = 'dataset';
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
     my $geno_file = $c->stash->{genotype_file_name};
 
     my $args = {
     'dataset_id'=>$dataset_id,
-	'data_dir'  => $data_dir,
-	'genotype_file'  => $geno_file,
-	'genotyping_protocol_id'=> $protocol_id,
-	'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
+    'data_dir'  => $data_dir,
+    'genotype_file'  => $geno_file,
+    'genotyping_protocol_id'=> $protocol_id,
+    'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
     };
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};
@@ -258,10 +265,10 @@ sub dataset_genotype_query_jobs {
     $c->stash->{report_file} = $report_file;
 
      my $config_args = {
-	'temp_dir' => $temp_dir,
-	'out_file' => $out_temp_file,
-	'err_file' => $err_temp_file,
-	'cluster_host' => 'localhost'
+    'temp_dir' => $temp_dir,
+    'out_file' => $out_temp_file,
+    'err_file' => $err_temp_file,
+    'cluster_host' => 'localhost'
      };
 
     my $config = $c->controller('solGS::AsyncJob')->create_cluster_config($c, $config_args);
@@ -269,7 +276,7 @@ sub dataset_genotype_query_jobs {
     my $args_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, "geno-data-query-job-args-file-${pop_id}");
 
     nstore $args, $args_file
-		or croak "data query script: $! serializing genotype lists genotype query details to $args_file ";
+        or croak "data query script: $! serializing genotype lists genotype query details to $args_file ";
 
         my $dbhost = $c->config->{dbhost};
         my $dbname = $c->config->{dbname};
@@ -281,15 +288,15 @@ sub dataset_genotype_query_jobs {
         .' --dbname ' . $dbname
         .' --dbuser ' . $dbuser
         .' --dbpass ' . $dbpass
-    	. ' --data_type genotype '
-    	. ' --population_type ' . $pop_type
-    	. ' --args_file ' . $args_file;
+        . ' --data_type genotype '
+        . ' --population_type ' . $pop_type
+        . ' --args_file ' . $args_file;
 
     my $job_args = {
-	'cmd' => $cmd,
-	'config' => $config,
-	'background_job'=> $background_job,
-	'temp_dir' => $temp_dir,
+    'cmd' => $cmd,
+    'config' => $config,
+    'background_job'=> $background_job,
+    'temp_dir' => $temp_dir,
     };
 
     $c->stash->{dataset_geno_data_query_jobs} = $job_args;
@@ -308,7 +315,7 @@ sub get_dataset_genotyping_protocol {
 
     if (reftype($protocol_id) eq 'ARRAY')
     {
-	$protocol_id = $protocol_id->[0];
+    $protocol_id = $protocol_id->[0];
     }
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
@@ -349,38 +356,38 @@ sub dataset_population_summary {
 
     if (!$c->user)
     {
-	my $page = "/" . $c->req->path;
-	$c->res->redirect("/solgs/login/message?page=$page");
-	$c->detach;
+    my $page = "/" . $c->req->path;
+    $c->res->redirect("/solgs/login/message?page=$page");
+    $c->detach;
     }
     else
     {
-	my $user_name = $c->user->id;
+    my $user_name = $c->user->id;
         my $protocol  = $c->controller('solGS::genotypingProtocol')->create_protocol_url($c);
 
-	if ($dataset_id)
-	{
-	    $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);
-	    my $metadata_file = $c->stash->{population_metadata_file};
+    if ($dataset_id)
+    {
+        $c->controller('solGS::Files')->population_metadata_file($c, $tmp_dir, $file_id);
+        my $metadata_file = $c->stash->{population_metadata_file};
 
-	    my @metadata = read_file($metadata_file, {binmode => ':utf8'});
+        my @metadata = read_file($metadata_file, {binmode => ':utf8'});
 
-	    my ($key, $dataset_name, $desc);
+        my ($key, $dataset_name, $desc);
 
-	    ($desc)        = grep {/description/} @metadata;
-	    ($key, $desc)  = split(/\t/, $desc);
+        ($desc)        = grep {/description/} @metadata;
+        ($key, $desc)  = split(/\t/, $desc);
 
-	    ($dataset_name)       = grep {/dataset_name/} @metadata;
-	    ($key, $dataset_name) = split(/\t/, $dataset_name);
+        ($dataset_name)       = grep {/dataset_name/} @metadata;
+        ($key, $dataset_name) = split(/\t/, $dataset_name);
 
-	    $c->stash(project_id          => $file_id,
-		      project_name        => $dataset_name,
-		      selection_pop_name => $dataset_name,
-		      project_desc        => $desc,
-		      owner               => $user_name,
-		      protocol            => $protocol,
-		);
-	}
+        $c->stash(project_id          => $file_id,
+              project_name        => $dataset_name,
+              selection_pop_name => $dataset_name,
+              project_desc        => $desc,
+              owner               => $user_name,
+              protocol            => $protocol,
+        );
+    }
     }
 }
 
@@ -472,14 +479,14 @@ sub dataset_plots_list_phenotype_file {
     my $metadata_file = $c->stash->{phenotype_metadata_file};
 
     my $args = {
-	'dataset_id'     => $dataset_id,
-	'plots_ids'      => $plots_ids,
-	'traits_file'    => $traits_file,
-	#'data_dir'       => $data_dir,
-	'phenotype_file' => $pheno_file,
-	'metadata_file'  => $metadata_file,
-	'r_temp_file'    => 'dataset-phenotype-data-query',
-	'population_type' => 'plots_list'
+    'dataset_id'     => $dataset_id,
+    'plots_ids'      => $plots_ids,
+    'traits_file'    => $traits_file,
+    #'data_dir'       => $data_dir,
+    'phenotype_file' => $pheno_file,
+    'metadata_file'  => $metadata_file,
+    'r_temp_file'    => 'dataset-phenotype-data-query',
+    'population_type' => 'plots_list'
     };
 
     $c->controller('solGS::List')->submit_list_phenotype_data_query($c, $args);
@@ -493,9 +500,9 @@ sub dataset_file_id {
 
     my $dataset_id = $c->stash->{dataset_id};
     if ( $dataset_id =~ /dataset/) {
-	return $dataset_id;
+    return $dataset_id;
     }  else {
-	return 'dataset_' . $dataset_id;
+    return 'dataset_' . $dataset_id;
     }
 
 }

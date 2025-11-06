@@ -42,8 +42,9 @@ sub analysis_detail :Path('/analyses') Args(1) {
     my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     print STDERR "Viewing analysis with id $analysis_id\n";
 
+    my $a;
     eval {
-    my $a = CXGN::Analysis->new({
+    $a = CXGN::Analysis->new({
         bcs_schema => $bcs_schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),

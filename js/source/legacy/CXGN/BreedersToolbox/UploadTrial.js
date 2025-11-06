@@ -22,6 +22,9 @@ jQuery(document).ready(function ($) {
     var trial_id;
     var plants_per_plot;
     var inherits_plot_treatments;
+    var include_plant_coordinates;
+    var num_rows;
+    var num_cols;
     jQuery('#upload_trial_trial_sourced').change(function(){
         if(jQuery(this).val() == 'yes'){
             jQuery('#upload_trial_source_trial_section').show();
@@ -52,6 +55,21 @@ jQuery(document).ready(function ($) {
         plants_per_plot = jQuery("#trial_upload_plant_entries").val();
         inherits_plot_treatments = jQuery('#trial_upload_plants_per_plot_inherit_treatments').val();
 
+        num_rows = jQuery('#trial_upload_rows_per_plot').val();
+        num_cols = jQuery('#trial_upload_cols_per_plot').val();
+        if (jQuery('#trial_upload_rows_and_columns_to_plants').is(':checked')) { 
+
+            include_plant_coordinates = 1;
+
+            if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
+                alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
+                return;
+            }
+            if (num_rows * num_cols < plants_per_plot) {
+                alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
+                return;
+            }
+        }
 
         if (trial_name === '') {
             alert("Please give a trial name");
@@ -303,6 +321,9 @@ jQuery(document).ready(function ($) {
                 data: {
                     'plants_per_plot' : plants_per_plot,
                     'inherits_plot_treatments' : inherits_plot_treatments,
+                    'include_plant_coordinates' : include_plant_coordinates,
+                    'rows_per_plot' : num_rows,
+                    'cols_per_plot' : num_cols
                 },
                 success: function(response) {
                     console.log(response);
@@ -380,4 +401,72 @@ jQuery(document).ready(function ($) {
         location.reload();
     });
 
+    jQuery('[name="update_trial_link"]').click(function() {
+        jQuery('#upload_trial_metadata_dialog').modal("show");
+    });
+    jQuery('#trial_metadata_upload_spreadsheet_format_info').click(function() {
+        jQuery('#trial_metadata_upload_spreadsheet_format_modal').modal("show");
+    });
+
+
+    jQuery('#upload_trial_metadata_dialog_submit').click(function() {
+        upload_trial_metadata_file();
+    });
+
+    jQuery('#upload_trial_metadata_success_button').click(function() {
+        jQuery('#upload_trial_metadata_dialog').modal('hide');
+        location.reload();
+    });
+
+    function upload_trial_metadata_file() {
+        jQuery("#upload_trial_metadata_warning_messages").html('');
+        jQuery("#upload_trial_metadata_error_messages").html('');
+        jQuery("#upload_trial_metadata_success_messages").html('');
+        jQuery("#upload_trial_metadata_success_button").hide();
+
+        var uploadTrialMetadataFile = jQuery("#trial_metadata_upload_file").val();
+        if ( !uploadTrialMetadataFile || uploadTrialMetadataFile === '' ) {
+            alert("No file selected");
+            return;
+        }
+
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: '/ajax/trial/upload_trial_metadata_file',
+            type: 'POST',
+            data: new FormData(jQuery("#upload_trial_metadata_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.warnings) {
+                    warnings = response.warnings;
+                    warning_html = "<li>"+warnings.join("</li><li>")+"</li>"
+                    jQuery("#upload_trial_metadata_warning_messages").show();
+                    jQuery("#upload_trial_metadata_warning_messages").html('<b>Warnings. Fix or ignore the following warnings and try again.</b><br><br><ul>'+warning_html+'</ul>');
+                }
+                else if (response.errors) {
+                    errors = response.errors;
+                    if (Array.isArray(errors)) {
+                        error_html = "<li>"+errors.join("</li><li>")+"</li>";
+                    } else {
+                        error_html = "<li>"+errors+"</li>";
+                    }
+                    jQuery("#upload_trial_metadata_error_messages").show();
+                    jQuery("#upload_trial_metadata_error_messages").html('<b>Errors found. Fix the following problems and try again.</b><br><br><ul>'+error_html+'</ul>');
+                }
+                else if (response.success) {
+                    refreshTrailJsTree(0);
+                    jQuery("#upload_trial_metadata_success_messages").show();
+                    jQuery("#upload_trial_metadata_success_messages").html("Success! All trials successfully updated.");
+                    jQuery("#upload_trial_metadata_success_button").show();
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                jQuery("#upload_trial_metadata_error_messages").html("An error occurred while trying to upload this file. Please check the formatting and try again");
+                return;
+            }
+        });
+    }
 });

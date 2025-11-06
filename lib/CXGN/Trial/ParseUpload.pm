@@ -15,9 +15,9 @@ has 'chado_schema' => (
 );
 
 has 'trial_id' => (
-  is => 'ro',
-  isa => 'Str',
-  required => 0
+    is => 'ro',
+    isa => 'Str',
+    required => 0
 );
 
 has 'filename' => (
@@ -88,6 +88,14 @@ has 'facility_identifiers_included' => (
     isa => 'Bool',
     is => 'ro',
     default => 0,
+);
+
+has 'allowed_tissue_list' => (
+    is => 'ro',
+    isa => 'Str',
+    writer => '_set_allowed_tissue_list',
+    reader => 'get_allowed_tissue_list',
+    required => 0
 );
 
 

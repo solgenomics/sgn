@@ -123,7 +123,7 @@ sub get_selection_genotypes_list_from_file {
     my ( $self, $file ) = @_;
     my @clones;
 
-    open my $fh, $file or die "Can't open file $file: $!";
+    open (my $fh, "<", $file ) || die "Can't open file $file: $!";
 
     while (<$fh>) {
         $_ =~ s/\n//;
@@ -203,6 +203,27 @@ sub get_genotypes_list_details {
 
     $c->stash->{genotypes_list} = $genotypes_names;
     $c->stash->{genotypes_ids}  = $genotypes_ids;
+
+}
+
+sub get_list_breeding_program {
+    my ($self, $c) = @_;
+    my $trials_ids = [];
+    
+    my $list_id = $c->stash->{list_id};
+    $self->stash_list_metadata($c, $list_id);
+    if ($c->stash->{list_type} eq 'trials') {
+        $self->get_list_trials_ids($c);
+        $trials_ids = $c->stash->{trials_ids};
+    } else {
+        $self->get_genotypes_list_details($c);
+        my $accessions_ids = $c->stash->{genotypes_ids};
+        $trials_ids = $c->controller('solGS::Search')->model($c)->get_trial_id_by_accession($accessions_ids->[0]);
+    }
+    
+    my $program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trials_ids->[0]);
+
+    return $program_id;
 
 }
 

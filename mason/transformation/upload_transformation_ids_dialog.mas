@@ -81,6 +81,56 @@ $trial_name
     </div>
 </div>
 
+<div class="modal fade" id="transformation_id_upload_spreadsheet_info_dialog" name="transformation_id_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTransformationIDInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTransformationIDInfoDialog">Upload Template Information For Transformation Identifiers</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>transformation_identifier</td>
+                                <td>accession_name</td>
+                                <td>vector_construct</td>
+                                <td>notes</td>
+                                <td>is_a_control</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required fields:</b>
+                    <ul>
+                        <li>transformation_identifier (must be unique)</li>
+                        <li>accession_name (must exist in the database)</li>
+                        <li>vector_construct (must exist in the database)</li>
+                    </ul>
+
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li>notes (additional information about transformation identifier)</li>
+                        <li>is_a_control (if you would like to set any transformation identifier <b>as a control</b>, please indicate "1" for the "is_a_control" column. To <b>set a control</b> for any transformation ID, please use the link "Set Transformation Control" on the transformation ID detail page.)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Transformation Identifiers", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_transformation_id_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -133,6 +183,11 @@ jQuery(document).ready(function(){
     jQuery("#dismiss_transformation_ids_saved_dialog").click(function(){
         location.reload();
     });
+
+    jQuery('#transformation_ids_upload_spreadsheet_format_info').click(function() {
+        jQuery("#transformation_id_upload_spreadsheet_info_dialog").modal("show");
+    });
+
 
 });
 

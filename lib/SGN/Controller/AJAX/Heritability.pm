@@ -12,6 +12,7 @@ use File::Copy;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
@@ -50,7 +51,7 @@ sub shared_phenotypes: Path('/ajax/heritability/shared_phenotypes') : {
 
     my $temppath = $c->config->{basepath}."/".$tempfile;
     print STDERR "***** temppath = $temppath\n";
-    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
+    my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, exclude_phenotype_outlier => $exclude_outliers, file_name => $temppath, quotes => 0);
     my $phenotype_data_ref = $ds2->retrieve_phenotypes();
 
     print STDERR Dumper(@trait_info);
@@ -142,7 +143,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     #my $temppath = $heritability_tmp_output . "/" . $tempfile;
     my $temppath = $tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, exclude_phenotype_outlier => $exclude_outliers, file_name => $temppath, quotes => 0);
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
@@ -156,32 +157,67 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     $trait_id =~ tr/ /./;
     $trait_id =~ tr/\//./;
 
-    my $cmd = CXGN::Tools::Run->new({
-            backend => $c->config->{backend},
-            submit_host=>$c->config->{cluster_host},
-            temp_base => $c->config->{cluster_shared_tempdir} . "/heritability_files",
-            queue => $c->config->{'web_cluster_queue'},
-            do_cleanup => 0,
-            # don't block and wait if the cluster looks full
-            max_cluster_jobs => 1_000_000_000,
-        });
+    my $cxgn_tools_run_config = {
+        backend => $c->config->{backend},
+        submit_host=>$c->config->{cluster_host},
+        temp_base => $c->config->{cluster_shared_tempdir} . "/heritability_files",
+        queue => $c->config->{'web_cluster_queue'},
+        do_cleanup => 0,
+        # don't block and wait if the cluster looks full
+        max_cluster_jobs => 1_000_000_000,
+    };
+    my $cmd_str = join(" ",(
+        "Rscript ",
+        $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
+        $pheno_filepath,
+        $trait_id,
+        $h2File,
+        $h2CsvFile,
+        $errorFile
+    ));
+    my $job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema, 
+        sp_person_id => $sp_person_id,
+        job_type => 'heritability_analysis',
+        name => $ds->name().' heritability analysis',
+        cmd => $cmd_str,
+        cxgn_tools_run_config => $cxgn_tools_run_config,
+        finish_logfile => $c->config->{job_finish_log},
+        results_page =>  '/tools/heritability'
+    });
+    # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
 
-        print STDERR Dumper $pheno_filepath;
+    #     print STDERR Dumper $pheno_filepath;
 
-    # my $job;
-    $cmd->run_cluster(
-            "Rscript ",
-            $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
-            $pheno_filepath,
-            $trait_id,
-            $h2File,
-            $h2CsvFile,
-            $errorFile
-    );
-    $cmd->alive;
-    $cmd->is_cluster(1);
-    $cmd->wait;
+    # # my $job;
+    # $job_record->update_status("submitted");
+    # $cmd->run_cluster(
+    #         "Rscript ",
+    #         $c->config->{basepath} . "/R/heritability/h2_blup_rscript.R",
+    #         $pheno_filepath,
+    #         $trait_id,
+    #         $h2File,
+    #         $h2CsvFile,
+    #         $errorFile,
+    #         $job_record->generate_finish_timestamp_cmd()
+    # );
+    # $cmd->alive;
+    # $cmd->is_cluster(1);
+    # $cmd->wait;
 
+    $job->submit();
+
+    while ($job->alive()) {
+        sleep(1);
+    }
+
+    my $finished = $job->read_finish_timestamp();
+	if (!$finished) {
+		$job->update_status("failed");
+	} else {
+		$job->update_status("finished");
+	}
    
     my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
     copy($h2File, $figure_path);

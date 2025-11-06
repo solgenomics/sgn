@@ -1,0 +1,235 @@
+<%args>
+
+</%args>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['qualitycontrol' ] &>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+
+<& /page/page_title.mas, title=>"Quality Control" &>
+
+
+<div id="qualitycontrol_tool">
+</div>
+
+
+<style>
+  .factor {
+  z-index:4;
+  border-style:solid;
+  border-radius:8px;
+  width:200px;
+  height:100;
+  border-color:#337ab7;
+  background-color:#337ab7;
+  color:white;
+  margin:4px
+  }
+  .factor_panel {
+  min-height:100px;
+  height:auto;
+  margin-top:0px;
+  border-style:dotted;
+  border-width:5px;
+  color:grey;
+  background-color:lightyellow;
+  }
+  .factor_interaction_panel {
+  border-style:dotted;
+  border-width:0px;
+  margin-top:20px;
+  height:auto;
+  z-index:1;
+  }
+  .model_bg {
+  margin-left:30px;
+  margin-right:30px;
+  background-color:#DDEEEE;
+  min-height:80px;
+  padding-top:10px;
+  padding-left:10px;
+  padding-bottom:10px;
+  border-radius:8px;
+  }
+
+#outliers_range .ui-slider-range { background: #5cb85c; }
+#outliers_range .ui-slider-handle { border-color: #d9534f; }                
+#outliers_range { background: #d9534f; margin-top: 0.7em;}       
+#custom-handle {
+    width: 3em;
+    height: 1.6em;
+    top: 50%;
+    margin-top: -.8em;
+    text-align: center;
+    line-height: 1.6em;
+}           
+
+</style>
+
+<div id="qualitycontrol_tool">
+</div>
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="container-fluid">
+        <&| /util/workflow.mas, id=> "quality_control_analysis_workflow" &>
+          <&| /util/workflow.mas:step, title=> "Choose Dataset" &>
+            <& /page/page_title.mas, title=>"Choose the dataset for QC" &>
+        <span style="width:240px" id="qc_dataset_select">
+        </span>
+        <div>
+          <div style="float:right">
+            <button class="btn btn-main" id="qc_analysis_prepare_button"   onclick="Workflow.complete(this);">Choose Dataset and continue</button>
+          </div>
+        </div>
+        <br />
+        <br />
+
+        </&>
+
+
+        <&| /util/workflow.mas:step, title=> "Select Trait" &>
+        <& /page/page_title.mas, title=>"Select a Trait for QC" &>
+
+        <!-- Existing checkboxes (dynamic options) -->
+        <div id="selected_variable" style="margin-bottom:50px">
+          <label for="trait_select">Select Trait:</label>
+          <select id="trait_select" name="trait_select" class="form-control">
+              <option disabled selected value>Select a trait</option>
+          </select>
+        </div>
+
+        <div id="trait_boxplot">
+        <br>
+        <br>
+        </div>
+
+        <div class="col-md-12 well" style="margin-top: 10px;">  
+            <h3>Outliers Range</h3>   
+            <div class="col-md-8">
+                <div id="outliers_range">
+                    <div id="custom-handle" class="ui-slider-handle"></div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border: 1px solid gray; margin: 20px 0;">
+        <div class="col-md-12 collapsible">
+            <div class="content">
+                <h4><b>Selecting this box, it will set fixed minimum and maximum for all locations.</b></h4>
+                <br>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                    <label for="min-limit">Minimum limit:</label>
+                    <input type="number" id="min-limit" name="min-limit" placeholder="Enter minimum" class="form-control" style="width: auto;">
+
+                    <label for="max-limit">Maximum limit:</label>
+                    <input type="number" id="max-limit" name="max-limit" placeholder="Enter maximum" class="form-control" style="width: auto;">
+                </div>
+                <br>
+                <br>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <button id="fixed-min-max" style="margin-right: 5px;">
+                        Select Fixed Min and Max
+                    </button>
+                </div>
+            </div>
+            <br>
+            <br>
+        </div>
+        <hr style="border: 1px solid gray; margin: 20px 0;">
+
+        <div id="outlier_table_container">
+            <h3>Raw Data Available</h3>
+            <table id="outlier_table" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Location ID</th>
+                        <th>Location Name</th>
+                        <th>Trial Name</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                        <th>Mean</th>
+                        <th>SD</th>
+                        <th>CV</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="cleaned_table_container">
+        <h3>Data After Filtering</h3>
+        <table id="clean_table" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Location ID</th>
+                    <th>Location Name</th>
+                    <th>Trial Name</th>
+                    <th>Min</th>
+                    <th>Max</th>
+                    <th>Mean</th>
+                    <th>SD</th>
+                    <th>CV</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <br>
+        </div>
+        <div style="float:right">
+            <button class="btn btn-main" id="qc_choose_variable"  onclick="Workflow.complete(this);">Next step</button>
+        </div>
+      </&>
+
+      <&| /util/workflow.mas:step, title=> "Other Traits as Outlier" &>
+        <& /page/page_title.mas, title=>"Set Plot as Outlier for Other Traits" &>
+
+      <div style="text-align: center;">
+          <p>This is an option to set selected plots as outliers for other traits as well.</p>
+          <p>Clicking on <b>'Select Other Traits'</b> you will see available traits in your dataset.</p>
+          <p>If you want to ignore this step, please click on <b>'Next step'</b> button.</p>
+          <button id="select_traits_button">Select Other Traits</button>
+          <div id="other_traits" style="margin-top: 20px; margin-bottom: 50px;">
+              <!-- Dynamically populated checkboxes will appear here -->
+          </div>
+          <br>
+      </div>
+      <div style="float:right">
+          <button class="btn btn-main" id="qc_other_traits"  onclick="Workflow.complete(this);">Next step</button>
+      </div>
+
+      </&>
+
+      <&| /util/workflow.mas:step, title=> "Save Outliers" &>
+        <& /page/page_title.mas, title=>"Save Outliers" &>
+      <div>
+        <div style="text-align: center;">
+          <p>This is the validation process. Trials cleaned of outliers can be used in downstream analysis.</p>
+          <p>To validate a dataset you will need privilieges as <b>CURATOR</b> or <b>BREEDER</b>.</p>
+          <p>Only <b>CURATORS</b> are allowed to restore the dataset to original values.</p>
+          <button class="btn btn-main" id="restore_outliers_button"   onclick="Workflow.complete(this);">Restore</button>
+          <button class="btn btn-main" id="store_outliers_button"   onclick="Workflow.complete(this);">Validate</button>
+        </div>
+      </&>
+        <div id="tempfile" style="display:none"></div>
+      </div>
+  </div>
+</div>
+
+
+</&>
+
+
+<script>
+
+$(document).ready( function() {
+var qualitycontrol = window.jsMod['qualitycontrol'].init("qualitycontrol");
+});
+
+</script>
+

@@ -32,13 +32,45 @@ has 'dbh' => (
 );
 
 has 'project_id' => (
-    isa => "Int",
+    isa => 'Maybe[Int]',
     is => 'rw',
 );
 
 has 'transformation_stock_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
+);
+
+has 'transformants' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_transformants',
+);
+
+has 'obsoleted_transformants' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_obsoleted_transformants',
+);
+
+has 'tracking_identifier' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+    lazy => 1,
+    builder => '_get_tracking_identifier',
+);
+
+has 'transformation_control_stock_id' => (
     isa => "Int",
     is => 'rw',
+);
+
+has 'is_a_control' => (
+    isa => 'Bool',
+    is => 'rw',
+    default => 0,
 );
 
 
@@ -55,8 +87,10 @@ sub get_active_transformations_in_project {
     my $transformation_notes_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_notes', 'stock_property')->cvterm_id();
     my $completed_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'completed_metadata', 'stock_property')->cvterm_id;
     my $terminated_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'terminated_metadata', 'stock_property')->cvterm_id;
+    my $is_a_transformation_control_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property')->cvterm_id;
+    my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value
+    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, stockprop2.value, control.stock_id, control.uniquename
         FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS transformation ON (nd_experiment_stock.stock_id = transformation.stock_id) AND transformation.type_id = ?
@@ -65,16 +99,19 @@ sub get_active_transformations_in_project {
         JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformation.stock_id) AND vector_relationship.type_id = ?
         JOIN stock AS vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
         LEFT JOIN stockprop ON (stockprop.stock_id = transformation.stock_id) AND stockprop.type_id = ?
-        LEFT JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) AND stockprop2.type_id in (?, ?)
-        WHERE nd_experiment_project.project_id = ? AND stockprop2.value IS NULL";
+        LEFT JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) AND stockprop2.type_id = ?
+        LEFT JOIN stock_relationship AS has_control ON (has_control.object_id =transformation.stock_id) AND has_control.type_id = ?
+        LEFT JOIN stock AS control on (has_control.subject_id = control.stock_id)
+        LEFT JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id in (?, ?)
+        WHERE nd_experiment_project.project_id = ? AND stockprop3.value IS NULL ORDER BY transformation.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $project_id);
+    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $control_of_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $project_id);
 
     my @transformations = ();
-    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes) = $h->fetchrow_array()){
-        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes]
+    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name) = $h->fetchrow_array()){
+        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name]
     }
 
     return \@transformations;
@@ -94,8 +131,10 @@ sub get_inactive_transformations_in_project {
     my $transformation_notes_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_notes', 'stock_property')->cvterm_id();
     my $completed_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'completed_metadata', 'stock_property')->cvterm_id;
     my $terminated_metadata_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'terminated_metadata', 'stock_property')->cvterm_id;
+    my $is_a_transformation_control_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property')->cvterm_id;
+    my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, cvterm.name
+    my $q = "SELECT transformation.stock_id, transformation.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, stockprop2.value, control.stock_id, control.uniquename, cvterm.name
         FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS transformation ON (nd_experiment_stock.stock_id = transformation.stock_id) AND transformation.type_id = ?
@@ -104,24 +143,27 @@ sub get_inactive_transformations_in_project {
         JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformation.stock_id) AND vector_relationship.type_id = ?
         JOIN stock AS vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
         LEFT JOIN stockprop ON (stockprop.stock_id = transformation.stock_id) AND stockprop.type_id = ?
-        JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) AND stockprop2.type_id in (?, ?)
-        JOIN cvterm ON (stockprop2.type_id = cvterm.cvterm_id)
+        LEFT JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) and stockprop2.type_id = ?
+        LEFT JOIN stock_relationship AS has_control ON (has_control.object_id =transformation.stock_id) AND has_control.type_id = ?
+        LEFT JOIN stock AS control on (has_control.subject_id = control.stock_id)
+        JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id in (?, ?)
+        JOIN cvterm ON (stockprop3.type_id = cvterm.cvterm_id)
         WHERE nd_experiment_project.project_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $project_id);
+    $h->execute($transformation_type_id, $plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $control_of_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $project_id);
 
     my @transformations = ();
-    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type) = $h->fetchrow_array()){
-        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $status_type]
+    while (my ($transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $status_type) = $h->fetchrow_array()){
+        push @transformations, [$transformation_id,  $transformation_name, $plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $status_type]
     }
 
     return \@transformations;
 }
 
 
-sub get_transformants {
+sub _get_transformants {
     my $self = shift;
     my $schema = $self->schema();
     my $transformation_stock_id = $self->transformation_stock_id();
@@ -132,7 +174,7 @@ sub get_transformants {
     my $q = "SELECT stock.stock_id, stock.uniquename
         FROM stock_relationship
         JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
-        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ";
+        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ORDER BY stock.stock_id ASC";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
@@ -143,11 +185,11 @@ sub get_transformants {
         push @transformants, [$stock_id,  $stock_name]
     }
 
-    return \@transformants;
+    $self->transformants(\@transformants);
 }
 
 
-sub get_obsoleted_transformants {
+sub _get_obsoleted_transformants {
     my $self = shift;
     my $schema = $self->schema();
     my $transformation_stock_id = $self->transformation_stock_id();
@@ -155,9 +197,11 @@ sub get_obsoleted_transformants {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
 
-    my $q = "SELECT stock.stock_id, stock.uniquename
+    my $q = "SELECT stock.stock_id, stock.uniquename, metadata.md_metadata.obsolete_note, metadata.md_metadata.modification_note, phenome.stock_owner.sp_person_id
         FROM stock_relationship
         JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        JOIN phenome.stock_owner ON (stock.stock_id = phenome.stock_owner.stock_id)
+        JOIN metadata.md_metadata ON (phenome.stock_owner.metadata_id = metadata.md_metadata.metadata_id)
         where stock_relationship.object_id = ? AND stock.is_obsolete != 'F' ";
 
     my $h = $schema->storage->dbh()->prepare($q);
@@ -165,11 +209,14 @@ sub get_obsoleted_transformants {
     $h->execute($transformant_of_type_id, $transformation_stock_id);
 
     my @obsoleted_transformants = ();
-    while (my ($stock_id,  $stock_name) = $h->fetchrow_array()){
-        push @obsoleted_transformants, [$stock_id,  $stock_name]
+    while (my ($stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
+        if ($obsolete_date =~ /Obsolete/) {
+            push @obsoleted_transformants, [$stock_id,  $stock_name, $obsolete_note, $obsolete_date, $sp_person_id];
+        }
     }
 
-    return \@obsoleted_transformants;
+    $self->obsoleted_transformants(\@obsoleted_transformants);
+
 }
 
 
@@ -186,26 +233,33 @@ sub get_transformation_info {
     my $transformation_notes_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_notes', 'stock_property')->cvterm_id();
     my $completed_metadata_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'completed_metadata', 'stock_property')->cvterm_id();
     my $terminated_metadata_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'terminated_metadata', 'stock_property')->cvterm_id();
+    my $is_a_transformation_control_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property')->cvterm_id();
+    my $control_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of', 'stock_relationship')->cvterm_id();
 
-    my $q = "SELECT plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, cvterm.name
+
+    my $q = "SELECT plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, stockprop.value, stockprop2.value, control.stock_id, control.uniquename, cvterm.name
         FROM stock AS transformation
         JOIN stock_relationship AS plant_relationship ON (transformation.stock_id = plant_relationship.object_id) AND plant_relationship.type_id = ?
         JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
         JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformation.stock_id) AND vector_relationship.type_id = ?
         JOIN stock AS vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
         LEFT JOIN stockprop ON (stockprop.stock_id = transformation.stock_id) AND stockprop.type_id = ?
-        LEFT JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) AND stockprop2.type_id in (?, ?)
-        LEFT JOIN cvterm ON (stockprop2.type_id = cvterm.cvterm_id)
+        LEFT JOIN stockprop AS stockprop2 ON (stockprop2.stock_id = transformation.stock_id) AND stockprop2.type_id = ?
+        LEFT JOIN stock_relationship AS has_control ON (has_control.object_id =transformation.stock_id) AND has_control.type_id = ?
+        LEFT JOIN stock AS control on (has_control.subject_id = control.stock_id)
+        LEFT JOIN stockprop AS stockprop3 ON (stockprop3.stock_id = transformation.stock_id) AND stockprop3.type_id in (?, ?)
+        LEFT JOIN cvterm ON (stockprop3.type_id = cvterm.cvterm_id)
         WHERE transformation.stock_id = ?";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $transformation_stock_id);
+    $h->execute($plant_material_of_type_id, $accession_type_id, $vector_construct_of_type_id, $vector_construct_type_id, $transformation_notes_type_id, $is_a_transformation_control_type_id, $control_of_type_id, $completed_metadata_type_id, $terminated_metadata_type_id, $transformation_stock_id);
 
     my @transformation_info = ();
-    while (my ($plant_id, $plant_name, $vector_id, $vector_name, $notes, $updated_status) = $h->fetchrow_array()){
-        push @transformation_info, [$plant_id, $plant_name, $vector_id, $vector_name, $notes, $updated_status]
+    while (my ($plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $updated_status) = $h->fetchrow_array()){
+        push @transformation_info, [$plant_id, $plant_name, $vector_id, $vector_name, $notes, $is_a_control, $control_id, $control_name, $updated_status]
     }
+    print STDERR "INFO =".Dumper(\@transformation_info)."\n";
 
     return \@transformation_info;
 
@@ -239,7 +293,7 @@ sub get_associated_projects {
 }
 
 
-sub get_tracking_identifier {
+sub _get_tracking_identifier {
     my $self = shift;
     my $schema = $self->schema();
     my $transformation_stock_id = $self->transformation_stock_id();
@@ -254,12 +308,13 @@ sub get_tracking_identifier {
 
     $h->execute($material_of_type_id, $transformation_stock_id);
 
-    my @tracking_identifiers = ();
+    my @tracking_identifier_info = ();
     while (my ($stock_id,  $stock_name) = $h->fetchrow_array()){
-        push @tracking_identifiers, [$stock_id,  $stock_name]
+        push @tracking_identifier_info, [$stock_id,  $stock_name]
     }
 
-    return \@tracking_identifiers;
+    $self->tracking_identifier(\@tracking_identifier_info);
+
 }
 
 
@@ -306,6 +361,215 @@ sub get_default_plant_material {
 
     return \@default_plant_material;
 
+}
+
+
+sub delete {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $tracking_identifier = $self->tracking_identifier();
+    my $transformants = $self->transformants();
+    my $number_of_transformants = scalar(@$transformants);
+    my $obsoleted_transformants = $self->obsoleted_transformants();
+    my $number_of_obsoleted_transformants = scalar(@$obsoleted_transformants);
+
+    eval {
+        $dbh->begin_work();
+
+        my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+        my $tracking_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", "stock_type")->cvterm_id();
+        my $transformation_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation_experiment', 'experiment_type')->cvterm_id();
+        my $tracking_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tracking_activity', 'experiment_type')->cvterm_id();
+
+        if (($number_of_transformants > 0) || ($number_of_obsoleted_transformants > 0)) {
+	        die "Transformation ID has associated transformants. Cannot delete.\n";
+        }
+
+        my $transformation_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $transformation_stock_id, type_id => $transformation_type_id});
+        if (!$transformation_rs) {
+	        die "This stock id is not a transformation ID. Cannot delete.\n";
+        }
+
+        my $transformation_experiment_id;
+        my $nd_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+            JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+            WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+        my $nd_h = $schema->storage->dbh()->prepare($nd_q);
+        $nd_h->execute($transformation_experiment_type_id, $transformation_stock_id);
+        my @nd_experiment_ids= $nd_h->fetchrow_array();
+        if (scalar @nd_experiment_ids == 1) {
+            $transformation_experiment_id = $nd_experiment_ids[0];
+        } else {
+            die "Error retrieving experiment id";
+        }
+
+        #delete the nd_experiment_md_files entries
+        my $md_files_q = "DELETE FROM phenome.nd_experiment_md_files WHERE nd_experiment_id = ?";
+        my $md_files_h = $schema->storage->dbh()->prepare($md_files_q);
+        $md_files_h->execute($transformation_experiment_id);
+
+	    # delete the nd_experiment entries
+	    my $q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
+	    my $h2 = $dbh->prepare($q2);
+	    $h2->execute($transformation_experiment_id, $transformation_experiment_type_id);
+
+	    # delete stock owner entries
+	    #
+	    my $q3 = "delete from phenome.stock_owner where stock_id=?";
+	    my $h3 = $dbh->prepare($q3);
+	    $h3->execute($transformation_stock_id);
+
+	    # delete the stock entries
+	    my $q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
+	    my $h4 = $dbh->prepare($q4);
+	    $h4->execute($transformation_stock_id, $transformation_type_id);
+
+        #if linking with tracking tool, delete tracking identifier entry
+        if (scalar @$tracking_identifier > 0) {
+            my $tracking_experiment_id;
+            my $tracking_stock_id = $tracking_identifier->[0]->[0];
+            my $tracking_nd_q = "SELECT nd_experiment.nd_experiment_id FROM nd_experiment_stock
+                JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+                WHERE nd_experiment.type_id = ? AND nd_experiment_stock.stock_id = ?";
+
+            my $tracking_nd_h = $schema->storage->dbh()->prepare($tracking_nd_q);
+            $tracking_nd_h->execute($tracking_experiment_type_id, $tracking_stock_id);
+            my @tracking_nd_experiment_ids= $tracking_nd_h->fetchrow_array();
+            if (scalar @tracking_nd_experiment_ids == 1) {
+                $tracking_experiment_id = $tracking_nd_experiment_ids[0];
+            } else {
+                die "Error retrieving experiment id";
+            }
+
+            # delete the tracking nd_experiment entries
+    	    my $tracking_q2= "delete from nd_experiment where nd_experiment.nd_experiment_id = ? AND nd_experiment.type_id = ?";
+    	    my $tracking_h2 = $dbh->prepare($tracking_q2);
+    	    $tracking_h2->execute($tracking_experiment_id, $tracking_experiment_type_id);
+
+    	    # delete tracking stock owner entries
+    	    my $tracking_q3 = "delete from phenome.stock_owner where stock_id=?";
+    	    my $tracking_h3 = $dbh->prepare($tracking_q3);
+    	    $tracking_h3->execute($tracking_stock_id);
+
+    	    # delete the tracking stock entries
+    	    my $tracking_q4 = "delete from stock where stock.stock_id=? and stock.type_id = ?";
+    	    my $tracking_h4 = $dbh->prepare($tracking_q4);
+    	    $h4->execute($tracking_stock_id, $tracking_type_id);
+        }
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting transformation id ".$transformation_stock_id."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
+}
+
+
+sub set_transformation_control {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_control_stock_id = $self->transformation_control_stock_id();
+
+    eval {
+        my $transformation_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation','stock_type')->cvterm_id();
+        my $control_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'control_of','stock_relationship')->cvterm_id();
+        my $transformation_rs = $schema->resultset("Stock::Stock")->find({stock_id => $transformation_stock_id, type_id => $transformation_cvterm_id });
+
+        if ($transformation_control_stock_id) {
+            my $previous_control = $schema->resultset('Stock::StockRelationship')->search({
+                type_id => $control_of_cvterm_id,
+                object_id => $transformation_stock_id,
+            });
+            if ($previous_control) {
+                while(my $r = $previous_control->next()){
+                    $r->delete();
+                }
+            }
+
+             $transformation_rs->find_or_create_related('stock_relationship_subjects', {
+                type_id    => $control_of_cvterm_id,
+                object_id  => $transformation_rs->stock_id(),
+                subject_id => $transformation_control_stock_id,
+            });
+        }
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while setting transformation control for stock id ".$transformation_stock_id."$@\n";
+	    return $@;
+    } else {
+	    return 0;
+    }
+
+}
+
+
+sub set_as_control {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $is_a_control = $self->is_a_control();
+
+    eval {
+        my $transformation_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformation','stock_type')->cvterm_id();
+        my $is_a_transformation_control_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a_transformation_control', 'stock_property');
+        my $transformation_rs = $schema->resultset("Stock::Stock")->find({stock_id => $transformation_stock_id, type_id => $transformation_cvterm_id });
+
+        if ($transformation_rs && $is_a_control) {
+            my $previous_stockprop_rs = $transformation_rs->stockprops({type_id=>$is_a_transformation_control_cvterm->cvterm_id});
+            if ($previous_stockprop_rs->count > 0){
+                die "This transformation ID has already been set as a control.\n";
+            } else {
+                $transformation_rs->create_stockprops({$is_a_transformation_control_cvterm->name() => $is_a_control});
+            }
+        }
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while setting transformation as a control for stock id ".$transformation_stock_id."$@\n";
+	    return $@;
+    } else {
+	    return 0;
+    }
+
+}
+
+
+sub get_transformant_details {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformant_of", "stock_relationship")->cvterm_id();
+    my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, stockprop.value
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) and stock_relationship.type_id = ?
+        LEFT JOIN stockprop ON (stock.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        where stock_relationship.object_id = ? AND stock.is_obsolete = 'F' ORDER BY stock.stock_id ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($transformant_of_type_id, $number_of_insertions_type_id, $transformation_stock_id);
+
+    my @transformant_details = ();
+    while (my ($stock_id,  $stock_name, $number_of_insertions) = $h->fetchrow_array()){
+        push @transformant_details, [$stock_id,  $stock_name, $number_of_insertions]
+    }
+
+    $self->transformants(\@transformant_details);
 }
 
 

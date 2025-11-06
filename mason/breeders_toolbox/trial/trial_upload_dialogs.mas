@@ -307,10 +307,36 @@ $design_types => ()
                                         <input class="form-control" id="trial_upload_plant_entries" name="trial_upload_plant_entries" type="text" />
                                         <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
                                     </div>
-                                    <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Management Factor(s) From Plots: </label>
+                                    <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
                                     <div class="col-sm-8" >
                                         <input name="trial_upload_plants_per_plot_inherit_treatments" id="trial_upload_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
                                     </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">Assign row and column data to plants within plots?</label>
+                                        <div class="col-sm-9" >
+                                            <input name="trial_upload_rows_and_columns_to_plants" id="trial_upload_rows_and_columns_to_plants" type="checkbox"/>
+                                            <div id="trial_upload_plant_row_column_format_dialog" style="display:none">
+                                                <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each plot.</i></p>
+                                                <table style="width:60%">
+                                                    <tr>
+                                                        <td>
+                                                            <label>Number of rows per plot</label>
+                                                        </td>
+                                                        <td>
+                                                            <input name="trial_upload_rows_per_plot" id="trial_upload_rows_per_plot" type="number"/>
+                                                        </td>
+                                                    </tr><tr>
+                                                        <td>
+                                                            <label>Number of columns per plot</label>
+                                                        </td>
+                                                        <td>
+                                                            <input name="trial_upload_cols_per_plot" id="trial_upload_cols_per_plot" type="number"/>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
                                 </div>
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
@@ -343,6 +369,8 @@ $design_types => ()
 %        $method = 'RRC';
 %    } elsif ($type eq 'DRRC'){
 %        $method = 'DRRC';
+%    } elsif ($type eq 'Un-Replicated Diagonal Design'){
+%        $method = 'URDD';
 %    } elsif ($type eq 'Augmented Row-Column'){
 %        $method = 'ARC';
 %    } elsif ($type eq 'Alpha Lattice'){
@@ -746,6 +774,7 @@ $design_types => ()
                                 <td>design_type</td>
                                 <td>description</td>
                                 <td>trial_type</td>
+                                <td>trial_stock_type</td>
                                 <td>plot_width</td>
                                 <td>plot_length</td>
                                 <td>field_size</td>
@@ -769,7 +798,7 @@ $design_types => ()
                     </table>
 
                     <b>Header as a string:</b><br/>
-                    <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
+                    <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
 
                     <b> Required fields:</b>
                     <ul>
@@ -778,9 +807,9 @@ $design_types => ()
                     <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
                     <li>year (The year the trial was held.)</li>
 
-                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), stripplot (Strip Plot / Split Block), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
+                    <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), URDD (Un-Replicated Diagonal Design), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), stripplot (Strip Plot / Split Block), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
                     <li>description (Additional text with any other relevant information about the trial.)</li>
-                    <li>accession_name (The accession being tested in the plot, must exist in the database.)</li>
+                    <li>accession_name OR cross_unique_id OR family_name (The accession, cross, or family being tested in the plot, must exist in the database.)</li>
                     <li>plot_number (A sequential number for the plot in the field (e.g. 1001, 1002, 2001, 2002). These numbers should be unique for the trial.)</li>
                     <li>block_number (A design parameter indicating which block the plot is in.)</li>
                     </ul>
@@ -789,11 +818,12 @@ $design_types => ()
                     <ul>
                     <li>plot_name (Must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>)</li>
                     <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
+                    <li>trial_stock_type (The type of stocks that are being evaluated in the trial.  Can be either 'accession', 'cross', or 'family_name'.  When not provided, 'accession' is used as the default)
                     <li>plot_width (plot width in meters)</li>
                     <li>plot_length (plot length in meters)</li>
                     <li>field_size (field size in hectares)</li>
                     <li>planting_date (Date of Planting in YYYY-MM-DD format)</li>
-                    <li>transplanting_date(The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format))</li>
+                    <li>transplanting_date(The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format)</li>
                     <li>harvest_date (Date of Harvest in YYYY-MM-DD format)</li>
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise 0 or leave blank. generally you will have accessions that are controls, so you should indicate the plots that that accession is in as a control.)</li>
                     <li>rep_number (replicate number, must be numeric)</li>
@@ -823,8 +853,128 @@ $design_types => ()
     </div>
 </div>
 
+<div class="modal fade" id="upload_trial_metadata_dialog" name="upload_trial_metadata_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTrialMetadataDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialMetadataDialog">Upload Trial Metadata</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>This upload can be used to update the metadata of trials that have <strong>already been added to the database</strong></p>
+                    <p>Any metadata provided in the upload file will replace any existing metadata.  Blank values in the upload file will leave the existing metadata unchanged.</p>
+
+                    <&| /page/explanation.mas, title=>'Template information' &>
+                        <p>
+                            <b>File format information</b>
+                            <br>
+                            <a id="trial_metadata_upload_spreadsheet_format_info">Spreadsheet format</a>
+                        </p>
+                    </&>
+
+                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_metadata_form" name="upload_trial_metadata_form">
+                        <label for="trial_metadata_upload_file" style="display: inline-block;">Trial Metadata File:</label>
+                        <input type="file" name="trial_metadata_upload_file" id="trial_metadata_upload_file" encoding="multipart/form-data" />
+                    </form>
+
+                    <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_warning_messages" class="alert-warning" role="alert"></div>
+                    <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_error_messages" class="alert-danger" role="alert"></div>
+                    <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_success_messages" class="alert-success" role="alert"></div>
+
+                    <div style="margin: 15px; text-align: center">
+                        <button style="display:none" class="btn btn-primary" id="upload_trial_metadata_success_button">Reload Page</button>
+                    </div>
+
+                    <& /help/file_upload_type.mas, type => "Trial Metadata" , optional_column => 1 &>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="upload_trial_metadata_dialog_submit" id="upload_trial_metadata_dialog_submit">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="trial_metadata_upload_spreadsheet_format_modal" name="trial_metadata_upload_spreadsheet_format_modal" tabindex="-1" role="dialog" aria-labelledby="uploadTrialMetadataInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialMetadataInfoDialog">Upload Trial Metadata Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) should contain the following:
+                    <br />
+
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>trial_name</td>
+                                <td>breeding_program</td>
+                                <td>location</td>
+                                <td>year</td>
+                                <td>transplanting_date</td>
+                                <td>planting_date</td>
+                                <td>harvest_date</td>
+                                <td>design_type</td>
+                                <td>description</td>
+                                <td>trial_type</td>
+                                <td>plot_width</td>
+                                <td>plot_length</td>
+                                <td>field_size</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <b>Required Fields:</b>
+                    <ul>
+                        <li><b>trial_name:</b> the name of the trial (must already exist in the database)</li>
+                    </ul>
+                    <br><b>Optional values:</b><br>
+                    <ul>
+                        <li>new_trial_name (A new name for the trial, must not already exist in the database)</li>
+                        <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
+                        <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
+                        <li>year (The year the trial was held.)</li>
+                        <li>transplanting_date (The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format or 'remove' to remove the date)</li>
+                        <li>planting_date (Date of Planting in YYYY-MM-DD format or 'remove' to remove the date)</li>
+                        <li>harvest_date (Date of Harvest in YYYY-MM-DD format or 'remove' to remove the date)</li>
+                        <li>design_type (The shorthand for the design type, must exist in the database. Possible values include CRD (Completely Randomized Design), RCBD (Randomized Complete Block Design), RRC (Resolvable Row-Column), DRRC (Doubly-Resolvable Row-Column), URDD (Un-Replicated Diagonal Design), ARC (Augmented Row-Column), Alpha (Alpha Lattice Design), Lattice (Lattice Design), Augmented (Augmented Design), MAD (Modified Augmented Design), greenhouse (undesigned Nursery/Greenhouse), splitplot (Split Plot), p-rep (Partially Replicated), Westcott (Westcott Design))</li>
+                        <li>description (Additional text with any other relevant information about the trial.)</li>
+                        <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
+                        <li>plot_width (plot width in meters)</li>
+                        <li>plot_length (plot length in meters)</li>
+                        <li>field_size (field size in hectares)</li>
+                    </ul>
+                </div>
+                <& /help/file_upload_type.mas, type => "Trial Metadata", optional_column => 1 &>
+            </div>
+            <div class="modal-footer">
+                <button id="close_trial_metadata_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 <script>
 jQuery(document).ready(function(){
+
+    jQuery('#trial_upload_rows_and_columns_to_plants').click( function () {
+        if (jQuery('#trial_upload_rows_and_columns_to_plants').is(':checked')){
+            jQuery('#trial_upload_plant_row_column_format_dialog').show();
+        } else {
+            jQuery('#trial_upload_plant_row_column_format_dialog').hide();
+        }
+
+    });
 
     var selectedProgram = jQuery('#trial_upload_breeding_program').val()
 

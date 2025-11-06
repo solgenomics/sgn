@@ -25,6 +25,7 @@ use CXGN::Trial::Search;
 use Try::Tiny;
 use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
+use CXGN::Stock::TissueSample::Search;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -184,12 +185,17 @@ sub get_plate_info {
         ($data, $total_count) = $trial_search->search();
 
         foreach my $plate (@$data){
-            my $plate_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $plate->{trial_id}, experiment_type => 'genotyping_layout'});
-            my $sample_names = $plate_layout->get_plot_names();
-            my $number_of_samples = '';
-            if ($sample_names){
-                $number_of_samples = scalar(@{$sample_names});
-            }
+            my $plate_id = $plate->{trial_id};
+            my @plate_list = ();
+            @plate_list = ($plate_id);
+            my $plate_samples = CXGN::Stock::TissueSample::Search->new({
+                bcs_schema => $schema,
+                plate_db_id_list => \@plate_list,
+            });
+
+            my $data = $plate_samples->get_sample_data();
+            my $number_of_samples = $data->{number_of_samples};
+            my $number_of_samples_with_data = $data->{number_of_samples_with_data};
 
             push @all_plates, {
                 plate_id => $plate->{trial_id},
@@ -198,6 +204,7 @@ sub get_plate_info {
                 plate_format => $plate->{genotyping_plate_format},
                 sample_type => $plate->{genotyping_plate_sample_type},
                 number_of_samples => $number_of_samples,
+                number_of_samples_with_data => $number_of_samples_with_data
             };
         }
     }

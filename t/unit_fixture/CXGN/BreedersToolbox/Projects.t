@@ -261,7 +261,7 @@ my $new_bp = CXGN::BreedersToolbox::Projects->new({
     description => 'test_new_bp_desc_to_edit',
 });
 my $new_bp_result = $new_bp->store_breeding_program();
-print STDERR Dumper $new_bp_result;
+#print STDERR Dumper $new_bp_result;
 ok($new_bp_result->{success});
 
 my $edit_bp = CXGN::BreedersToolbox::Projects->new({
@@ -271,7 +271,7 @@ my $edit_bp = CXGN::BreedersToolbox::Projects->new({
     description => 'test_new_bp_desc',
 });
 my $edit_bp_result = $edit_bp->store_breeding_program();
-print STDERR Dumper $edit_bp_result;
+#print STDERR Dumper $edit_bp_result;
 ok($edit_bp_result->{success});
 
 my $bp_projects = $p->get_breeding_program_with_trial($trial_id);

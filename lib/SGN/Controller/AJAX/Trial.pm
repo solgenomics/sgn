@@ -54,6 +54,7 @@ use CXGN::Contact;
 use CXGN::File::Parse;
 use CXGN::People::Person;
 use CXGN::Tools::Run;
+use CXGN::Job;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -91,7 +92,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $plot_numbering_scheme = $c->req->param('plot_numbering_scheme') || 'block_based';
     print STDERR "Setting plot_numbering_scheme to $plot_numbering_scheme\n";
     $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
-    
+
     if ($c->req->param('stock_list')) {
 	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -138,7 +139,7 @@ sub generate_experimental_design_POST : Args(0) {
 
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
-        
+
     }
 
     if ($design_type eq 'Westcott'){
@@ -180,6 +181,8 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
+
+
     my $row_in_design_number = $c->req->param('row_in_design_number');
     my $col_in_design_number = $c->req->param('col_in_design_number');
     my $no_of_rep_times = $c->req->param('no_of_rep_times');
@@ -187,6 +190,13 @@ sub generate_experimental_design_POST : Args(0) {
     my $unreplicated_stock_list = $c->req->param('unreplicated_stock_list');
     my $replicated_stock_list = $c->req->param('replicated_stock_list');
     my $no_of_sub_block_sequence = $c->req->param('no_of_sub_block_sequence');
+
+    if ($design_type eq 'URDD'){
+        if (!$row_in_design_number || !$col_in_design_number){
+            $c->stash->{rest} = { error => "You need to provide number of rows and cols for a unreplicated diagonal design."};
+            return;
+        }
+    }
 
     my @replicated_stocks;
     if ($c->req->param('replicated_stock_list')) {
@@ -204,7 +214,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
-    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "DRRC" ||$design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
+    if ($design_type eq "RCBD" || $design_type eq "RRC" || $design_type eq "DRRC" || $design_type eq "URDD" ||$design_type eq "Alpha" || $design_type eq "CRD" || $design_type eq "Lattice") {
         if (@control_names_crbd) {
             @stock_names = (@stock_names, @control_names_crbd);
         }
@@ -302,7 +312,7 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
 	$trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
-	
+
         my $design_created = 0;
         if ($use_same_layout) {
             $design_created = 1;
@@ -526,7 +536,7 @@ sub save_experimental_design_POST : Args(0) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
         return;
     }
-    
+
 
     my $user_name = $c->user()->get_object()->get_username();
     my $error;
@@ -1208,15 +1218,26 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $cmd .= " -iw" if $ignore_warnings;
 
     # Run asynchronously if email option is enabled
-    my $runner = CXGN::Tools::Run->new();
+    # my $runner = CXGN::Tools::Run->new();
+    my $job = CXGN::Job->new({
+        sp_person_id => $user_id,
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        cmd => $cmd,
+        name => "$upload_original_name multiple trial designs upload",
+        results_page => '/breeders/trials',
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log}
+    });
     if ( $email_option_enabled && $email_address ) {
-        $runner->run_async($cmd);
-        my $err = $runner->err();
-        my $out = $runner->out();
+        #$runner->run_async($cmd);
+        $job->submit();
+        #my $err = $runner->err();
+        #my $out = $runner->out();
 
-        print STDERR "Upload Trials Output (async):\n";
-        print STDERR "$err\n";
-        print STDERR "$out\n";
+        #print STDERR "Upload Trials Output (async):\n";
+        #print STDERR "$err\n";
+        #print STDERR "$out\n";
 
         $c->stash->{rest} = {background => 1};
         return;
@@ -1224,18 +1245,32 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
     # Otherwise run synchronously
     else {
-        $runner->run($cmd);
-        my $err = $runner->err();
-        my $out = $runner->out();
+        #$runner->run($cmd.$job->generate_finish_timestamp_cmd());
+        #$job->update_status("submitted");
+        #my $err = $runner->err();
+        #my $out = $runner->out();
+
+        $job->submit();
+
+        while($job->alive()) {
+            sleep(1);
+        }
+
+        my $err_file = $job->cxgn_tools_run_config->{err};
+        my $out_file = $job->cxgn_tools_run_config->{out};
 
         print STDERR "Upload Trials Output (sync):\n";
-        print STDERR "$err\n";
-        print STDERR "$out\n";
+        print STDERR "$err_file\n";
+        print STDERR "$out_file\n";
+
+        open my $err, "<", $err_file or die "No error file found!\n";
+        open my $out, "<", $out_file or die "No out file found!\n";
 
         # Collect errors and warnings from STDERR
         my @errors;
         my @warnings;
-        foreach (split(/\n/, $err)) {
+        while (<$err>) {
+            chomp;
             if ($_ =~ /^ERROR/) {
                 $_ =~ s/ERROR:? ?//;
                 push @errors, $_;
@@ -1245,13 +1280,25 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
                 push @warnings, $_;
             }
         }
+        # foreach (split(/\n/, $err)) {
+        #     if ($_ =~ /^ERROR/) {
+        #         $_ =~ s/ERROR:? ?//;
+        #         push @errors, $_;
+        #     }
+        #     elsif ($_ =~ /^WARNING/) {
+        #         $_ =~ s/WARNING:? ?//;
+        #         push @warnings, $_;
+        #     }
+        # }
 
         if ( scalar(@errors) > 0 ) {
             $c->stash->{rest} = {errors => \@errors};
+            $job->update_status("failed");
             return;
         }
         if ( scalar(@warnings) > 0 ) {
             $c->stash->{rest} = {warnings => \@warnings};
+            $job->update_status("failed");
             return;
         }
     }
@@ -1261,6 +1308,121 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     $c->stash->{rest} = {success => "1"};
     return;
 
+}
+
+
+sub upload_trial_metadata_file : Path('/ajax/trial/upload_trial_metadata_file') : ActionClass('REST') { }
+
+sub upload_trial_metadata_file_POST : Args(0) {
+    my ($self, $c)                 = @_;
+    my $upload                     = $c->req->upload('trial_metadata_upload_file');
+
+    my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $dbhost                     = $c->config->{dbhost};
+    my $dbname                     = $c->config->{dbname};
+    my $dbpass                     = $c->config->{dbpass};
+    my $basepath                   = $c->config->{basepath};
+    my $dbuser                     = $c->config->{dbuser};
+    my $time                       = DateTime->now();
+    my $timestamp                  = $time->ymd()."_".$time->hms();
+    my $upload_original_name       = $upload->filename();
+    my $upload_tempfile            = $upload->tempname;
+    my $subdirectory               = "trial_metadata";
+    my $archive_filename           = $timestamp . "_" . $upload_original_name;
+
+    # Check if user is logged in and has curator or submitter privileges
+    if (!$c->user()) {
+        $c->stash->{rest} = {errors => "You need to be logged in to update a trial." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $username = $c->user()->get_object()->get_username();
+    my @user_roles = $c->user()->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    # User must be a curator or submitter
+    if ( !(exists($has_roles{'submitter'}) || exists($has_roles{'curator'}) ) ) {
+        $c->stash->{rest} = {errors =>  "You must be a curator or submitter to update a trial." };
+        return;
+    }
+
+    # Check filename for spaces and/or slashes
+    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+        print STDERR "File name must not have spaces or slashes.\n";
+        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
+        return;
+    }
+
+    ## Store uploaded temporary file in archive
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $c->user->get_object->get_user_type()
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    # parse uploaded file with trial metadata plugin
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
+    $parser->load_plugin('TrialMetadataGeneric');
+    my $parsed_data = $parser->parse();
+
+    my @errors;
+    my @warnings;
+    if (!$parsed_data) {
+        my $parse_errors = $parser->get_parse_errors();
+        $c->stash->{rest} = { errors => $parse_errors ? $parse_errors->{'error_messages'} : ['No data returned'] };
+        return;
+    }
+
+    if ($parser->has_parse_warnings()) {
+        my $warnings = $parser->get_parse_warnings();
+        $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
+        return;
+    }
+
+    # Check breeding program permissions, if not a curator
+    if ( ! exists($has_roles{'curator'}) ) {
+        my $breeding_programs = $parsed_data->{'breeding_programs'};
+        my @missing_breeding_programs;
+        foreach my $breeding_program (@$breeding_programs) {
+            if ( ! exists($has_roles{$breeding_program}) ) {
+                push @missing_breeding_programs, $breeding_program;
+            }
+        }
+        if ( scalar(@missing_breeding_programs) > 0 ) {
+            $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
+            return;
+        }
+    }
+
+    # Update each trial
+    eval {
+        my $trial_data = $parsed_data->{'trial_data'};
+        foreach my $trial_id (keys %$trial_data) {
+            my $details = $trial_data->{$trial_id};
+            my $trial = CXGN::Project->new({ bcs_schema => $chado_schema, trial_id => $trial_id });
+            my $error = $trial->update_metadata($details);
+            die $error if $error;
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = { errors => "There was an error updating one or more trials: $@" };
+        return;
+    };
+
+    # All Done
+    $c->stash->{rest} = { success => 1 };
+    return;
 }
 
 

@@ -36,15 +36,14 @@ $locations_by_program_json
 
 <script>
 
+var breeding_program_name = "<% $breeding_program_name %>";
+var breeding_program_id = "<% $breeding_program_id %>";
+var time = "<% $timestamp %>";
+var locations = <% $locations_by_program_json %>;
+
 jQuery(document).ready(function(){
 
     jQuery('#seedlots_from_crossingtrial_section_onswitch').click(function(){
-
-        var breeding_program_name = "<% $breeding_program_name %>";
-        var breeding_program_id = "<% $breeding_program_id %>";
-        var time = "<% $timestamp %>";
-        var locations_by_program_json = <% $locations_by_program_json %>;
-
         var seedlots_crossingtrial_table = jQuery('#seedlots_from_crossingtrial_table').DataTable({
 
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/seedlots_from_crossingtrial',
@@ -58,7 +57,9 @@ jQuery(document).ready(function(){
                         return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
                     }
                 }},
-                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) { return "<a onclick='addSeedlot(\""+row.cross_name+"\", \""+breeding_program_name+"\", \""+breeding_program_id+"\", \""+locations_by_program_json+"\", \""+time+"\")' >Add</a>"; } },
+                { title: "Add New Seedlot", "data": "null", "render": function ( data, type, row ) {
+                    return `<a onclick='addSeedlot("${row.cross_name}")'>Add</a>`;
+                }},
             ]
         });
     });
@@ -118,6 +119,12 @@ jQuery(document).ready(function(){
 
         var seedlot_description = jQuery('#new_seedlot_description').val();
 
+        const cross_seedlot_material_type = jQuery('#cross_seedlot_material_type').val();
+        if (!cross_seedlot_material_type) {
+            alert ("Material type is required");
+            return;
+        }
+
         jQuery.ajax({
             url: '/ajax/breeders/seedlot-create',
             data : {
@@ -130,7 +137,9 @@ jQuery(document).ready(function(){
                 'seedlot_weight':seedlot_weight,
                 'seedlot_timestamp':seedlot_timestamp,
                 'seedlot_description':seedlot_description,
-                'seedlot_breeding_program_id':seedlot_program_id
+                'seedlot_breeding_program_id':seedlot_program_id,
+                'seedlot_material_type':cross_seedlot_material_type,
+                'no_refresh': 1,
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -155,17 +164,18 @@ jQuery(document).ready(function(){
 
 });
 
-function addSeedlot(cross_name, breeding_program_name, breeding_program_id,locations_by_program_json, time){
+function addSeedlot(cross_name){
+    get_select_box('material_types', 'cross_seedlot_material_type_div', { 'name' : 'cross_seedlot_material_type', 'id' : 'cross_seedlot_material_type' });
 
-    var locations = locations_by_program_json.split (",");
     var html = '';
     html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Cross Unique ID: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_content" name="new_seedlot_content" value="'+cross_name+'" disabled></div></div>';
     html = html + '<div class="form-group"><label class="col-sm-4 control-label">Seedlot Name: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_name" name="new_seedlot_name" placeholder="Required"></div></div>';
+    html = html + '<div class="form-group"><label class="col-sm-4 control-label">Material Type: </label><div class="col-sm-8" ><div id="cross_seedlot_material_type_div" name="cross_seedlot_material_type_div"></div></div></div>';
     html = html + '<div class="form-group"><label class="col-sm-4 control-label">Breeding Program: </label><div class="col-sm-8" ><input class="form-control" id="new_seedlot_program" name="new_seedlot_program" value="'+breeding_program_name+'" disabled></div></div>';
     html = html + '<div class="form-group"><label class="col-sm-4 control-label">Location: </label><div class="col-sm-8" ><select class="form-control" id="new_seedlot_location" name="new_seedlot_location"><option disabled value="" selected hidden>Select a location</option>';
     if (locations) {
         for (var i=0; i<locations.length; i++) {
-            html = html + '<option value='+locations[i]+'>'+locations[i]+'</option>';
+            html += `<option value="${locations[i]}">${locations[i]}</option>`;
         }
     }
     html = html + '</select></div></div>';

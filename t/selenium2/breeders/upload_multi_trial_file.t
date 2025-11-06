@@ -156,7 +156,8 @@ for my $extension ("xlsx", "xls", "csv") {
             'trial_type'       => 76515,
             'breeding_program' => 'test',
             'plot_width'       => '5',
-            'field_size'       => '8'
+            'field_size'       => '8',
+            'trial_stock_type' => 'accession'
         },
         '199275HBEPR_stom' => {
             'breeding_program' => 'test',
@@ -227,7 +228,8 @@ for my $extension ("xlsx", "xls", "csv") {
             'year'          => '1999',
             'planting_date' => '1992-09-19',
             'plot_length'   => '5',
-            'design_type'   => 'Augmented'
+            'design_type'   => 'Augmented',
+            'trial_stock_type' => 'accession'
         },
         '199934HBEPR_cara' => {
             'description'    => 'EPR',
@@ -298,7 +300,8 @@ for my $extension ("xlsx", "xls", "csv") {
             'design_type'      => 'Augmented',
             'plot_length'      => '5',
             'harvest_date'     => '2000-03-14',
-            'year'             => '1999'
+            'year'             => '1999',
+            'trial_stock_type' => 'accession'
         },
         '199947HBEPR_mora' => {
             'year'         => '1999',
@@ -369,7 +372,8 @@ for my $extension ("xlsx", "xls", "csv") {
             },
             'location'    => 'test_location',
             'trial_type'  => 76515,
-            'description' => 'EPR'
+            'description' => 'EPR',
+            'trial_stock_type' => 'accession'
         }
     };
 

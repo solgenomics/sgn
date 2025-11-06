@@ -85,6 +85,9 @@
 		</div>
 	      </div>
 	      <br />
+        <input type="checkbox" id="dataset_trait_outliers" />
+        <label>Use validated trials &nbsp; </label>          
+        <br>
 	      <br />
 
 </&>
@@ -114,7 +117,8 @@
     <div class="container form-check form-switch">
       <h4>Choose engine</h4>
       <input class="form-check-input" type="radio" id="select_engine_lme4" name="select_engine" value="lme4" checked="1" > lme4</input> |
-      <input class="form-check-input" type="radio" id="select_engine_sommer" name="select_engine" value="sommer"> sommer</input>
+      <input class="form-check-input" type="radio" id="select_engine_sommer" name="select_engine" value="sommer"> sommer</input> |
+      <input class="form-check-input" type="radio" id="select_engine_sommer" name="select_engine" value="spl2D"> sommer with spatial correction spl2D</input>
 	<br /><br />
     </div>
 
@@ -149,7 +153,7 @@
 	  <div id="interaction_factor_collection_panel" class="panel panel-default factor_interaction_panel">
 	    <!-- style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
             <div class="panel-header">
-	      Random factors with interaction<br />
+	      Fixed factors with interaction<br />
               <button  id="add_interaction_factor_button">add new interaction</button>
 	    </div>
 	    <div id="interaction_factors_collection" name="interaction_factors_collection" class="panel-body">
@@ -160,7 +164,7 @@
 	    <!--    style="border-style:dotted;border-width:0px;margin-top:20px;height:auto;z-index:1" -->
 
             <div class="panel-header">
-              Fixed factors with variable slope/intersects<br />
+              Random factors with variable slope/intersects<br />
               <button  id="add_variable_slope_intersect_button">add new variable slope/intersect</button>
 	    </div>
 	    <div id="variable_slope_intersect_collection" class="panel-body">
@@ -241,6 +245,12 @@
 </&>
 
 <script>
+
+var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
+
+if (parseInt(check_outliers) === 1) {
+    document.getElementById('dataset_trait_outliers').checked = true;
+}
 
 $(document).ready( function() {
 var mixedmodels = window.jsMod['mixedmodels'].init("mixedmodels");

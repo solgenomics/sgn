@@ -205,6 +205,7 @@ solGS.cluster = {
     var popId = clusterPop.id;
     var popName = clusterPop.name;
     var dataStr = clusterPop.data_str;
+    var tool_compatibility = clusterPop.tool_compatibility;
 
     var clusterPopId = solGS.cluster.getClusterPopId(popId, dataStr);
     var clusterTypeOpts = solGS.cluster.createClusterTypeSelect(clusterPopId);
@@ -220,7 +221,7 @@ solGS.cluster = {
     var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId);
     var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
 
-    var kNum = '<input class="form-control" type="text" placeholder="3" id="' + kNumId + '"/>';
+    var kNum = '<input class="form-control" type="text" placeholder="default" id="' + kNumId + '"/>';
 
     var clusterArgs = JSON.stringify(clusterPop);
 
@@ -228,11 +229,25 @@ solGS.cluster = {
       `<button type="button" id=${runClusterBtnId}` +
       ` class="btn btn-success" data-selected-pop='${clusterArgs}'>Run cluster</button>`;
 
+    var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
+      if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
+        compatibility_message = "(not calculated)";
+      } else {
+          if (tool_compatibility["Clustering"]['compatible'] == 0) {
+          compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
+          } else {
+              if ('warn' in tool_compatibility["Clustering"]) {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + tool_compatibility["Clustering"]['warn'] + '"></span></b>';
+              } else {
+                  compatibility_message = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+tool_compatibility["Clustering"]['types']+'"></span></b>';
+              }
+          }
+      }
     }
     var rowData = [popName,
-      dataStr, clusterPop.owner, clusterTypeOpts,
+      dataStr, compatibility_message, clusterPop.owner, clusterTypeOpts,
       dataTypeOpts, kNum, runClusterBtn, `${dataStr}_${popId}`];
 
     return rowData;
@@ -247,6 +262,7 @@ solGS.cluster = {
       "<tr>" +
       "<th>Name</th>" +
       "<th>Data structure</th>" +
+      "<th>Compatibility</th>" +
       "<th>Ownership</th>" +
       "<th>Clustering method</th>" +
       "<th>Data type</th>" +
@@ -712,7 +728,7 @@ solGS.cluster = {
 
     var dataType = jQuery("#" + dataTypeId).val() || "genotype";
     var clusterType = jQuery("#" + clusterTypeId).val() || "k-means";
-    var kNumber = jQuery("#" + kNumId).val() || 3;
+    var kNumber = jQuery("#" + kNumId).val() || 'default';
     var selectionProp = jQuery("#" + selectionPropId).val();
 
     if (typeof kNumber === "string") {
@@ -743,7 +759,7 @@ solGS.cluster = {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[7]
+        return a[8]
       }
     });
 
@@ -771,10 +787,10 @@ solGS.cluster = {
     var list = new solGSList();
     var lists = list.getLists(["accessions", "plots", "trials"]);
     lists = list.addDataStrAttr(lists);
-    lists = list.addDataTypeAttr(lists);
+    lists = list.addDataTypeAttr(lists, "");
 
     var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    datasets = solGS.dataset.addDataTypeAttr(datasets);
+    datasets = solGS.dataset.addDataTypeAttr(datasets, "Clustering");
     clusterPops = [lists, datasets];
 
     return clusterPops.flat();
@@ -910,7 +926,7 @@ solGS.cluster = {
     var pc2Axis = d3.axisLeft(pc2AxisLabel).tickSize(3);
 
     var nudgeVal = 15;
-    var axesLabelColor = "green";
+    var tickLabelColor = "#523CB5";
     var labelFs = 12;
     var yAxisHeight = pad.top + height + nudgeVal; 
 
@@ -924,9 +940,8 @@ solGS.cluster = {
       .attr("x", 15)
       .attr("dy", ".1em")
       .attr("transform", "rotate(90)")
-      .attr("fill", axesLabelColor)
-      .style("text-anchor", "start")
-      .style("fill", axesLabelColor);
+      .attr("fill", tickLabelColor)
+      .style("text-anchor", "start");
 
     clusterPlot
       .append("g")
@@ -936,7 +951,32 @@ solGS.cluster = {
       .selectAll("text")
       .attr("y", 0)
       .attr("x", -10)
-      .style("fill", axesLabelColor);
+      .attr("fill", tickLabelColor);
+
+
+    var pc1AxisMid = 0.5 * height + pad.top;
+    var pc2AxisMid = 0.5 * width + pad.left;
+    var axesLabelColor = "#523CB5";
+    clusterPlot
+        .append("g")
+        .attr("transform", "translate(" + pad.left + "," + (pc2AxisMid - 30)+ ")")
+        .append("text")
+        .text("PC2")
+        .attr("y", -40)
+        .attr("x", 0)
+        .attr("transform", "rotate(-90)")
+        .attr("font-size", labelFs)
+        .style("fill", axesLabelColor);
+
+    clusterPlot
+        .append("g")
+        .attr("transform", "translate(" + (pc1AxisMid + 30) + "," + height + ")")
+        .append("text")
+        .text("PC1")
+        .attr("y", pad.top + 60)
+        .attr("x", 0)
+        .attr("font-size", labelFs)
+        .style("fill", axesLabelColor);
 
     var grpColor = d3.scaleOrdinal(d3.schemeCategory10);
 
@@ -966,7 +1006,7 @@ solGS.cluster = {
         }
       })
       .on("mouseover", function (d) {
-        d3.select(this).attr("r", 5).style("fill", axesLabelColor);
+        d3.select(this).attr("r", 5).style("fill", tickLabelColor);
         clusterPlot
         .data(d)
           .append("text")
@@ -992,7 +1032,7 @@ solGS.cluster = {
       .attr("height", height + nudgeVal)
       .attr("width", width + nudgeVal)
       .attr("fill", "none")
-      .attr("stroke", "#523CB5")
+      .attr("stroke", axesLabelColor)
       .attr("stroke-width", 1)
       .attr("pointer-events", "none");
 
@@ -1021,7 +1061,7 @@ solGS.cluster = {
       .attr("x", 0)
       .attr("y", 15)
       .style("font-size",'12px')
-      .style("fill", axesLabelColor);
+      .style("fill", tickLabelColor);
 
      clusterPlot
         .append("g")
@@ -1057,8 +1097,8 @@ solGS.cluster = {
         .data(legendValues)
         .enter()
         .append("text")
-        .attr("fill", "#523CB5")
-        .style("fill", "#523CB5")
+        .attr("fill", axesLabelColor)
+        .style("fill", axesLabelColor)
         .attr("x", 1)
         .attr("y", function (d) {
           return 1 + d[0] * recLH + d[0] * 5;
@@ -1254,14 +1294,15 @@ jQuery(document).ready(function () {
                       .runClusterAnalysis(clusterArgs)
                       .done(function (res) {
                         if (res.result == "success") {
-                          if (res.pc_scores_groups) {
-                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv )
-                            solGS.cluster.displayClusterOutput(res);
-                          } else {
+                          if (res.cluster_type.match(/k-means/i) && !res.pc_scores_groups) {
                             var msg = "There is no cluster groups data to plot. " + 
-                            "The R clustering script did not write cluster results to output files.";
+                            "The R clustering script did not write cluster " + 
+                            "results to output files.";
 
                             solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
+                          } else {
+                            solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv )
+                            solGS.cluster.displayClusterOutput(res);    
                           }
                         } else {
                           var msg = "Error occured running the clustering. Possibly the R script failed.";
@@ -1269,7 +1310,7 @@ jQuery(document).ready(function () {
                         }
                       })
                       .fail(function () {
-                        var msg = "Error occured running the clustering";
+                        var msg = "Error occured running the clustering.";
                         solGS.cluster.cleanupFeedback(canvas, runClusterBtnId, clusterMsgDiv, msg);
                       });
                   },
@@ -1378,7 +1419,7 @@ jQuery(document).ready(function () {
 
     solGS.cluster.displayClusterPopsTable(tableId, clusterPopsRows)
  
-    jQuery("#add_new_pops").show();
+    jQuery("#create_new_list_dataset").show();
     
   }
 });

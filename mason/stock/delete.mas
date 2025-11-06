@@ -1,33 +1,34 @@
 
 <%args>
 $stock_id
+$stock_uniquename
+$is_obsolete
+$is_in_trial
 </%args>
 
-<& /util/import_javascript.mas, classes => [  ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.Stock' ] &>
 
-<button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
+% if ($is_obsolete) {
+    <button class="btn btn-primary" id="stock_detail_page_unobsolete_stock">Un-Obsolete This Stock</button>
+% } elsif (!$is_in_trial) {
+    <button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
+% } elsif ($is_in_trial) {
+%print "This stock is used in a trial, cannot obsolete";
+%}
+
+
 
 <script>
 
-    jQuery(document).ready(function () {
-        jQuery('#stock_detail_page_obsolete_stock').click(function(){
-            jQuery.ajax ({
-                url : '/stock/obsolete?stock_id=<% $stock_id %>&is_obsolete=1',
-                beforeSend : function() {
-                    jQuery('#working_modal').modal('show');
-                },
-                success: function(response){
-                    console.log(response);
-                    jQuery('#working_modal').modal('hide');
-                    alert('Successfully obsoleted!');
-                    location.reload();
-                },
-                error: function(response){
-                    jQuery('#working_modal').modal('hide');
-                    alert("Error obsoleting stock.");
-                }
-            });
-        });
+jQuery(document).ready(function () {
+    const stock_id = "<%$stock_id%>";
+    const stock_name = "<%$stock_uniquename%>";
+    jQuery('#stock_detail_page_unobsolete_stock').click(function(){
+        unObsoleteStock(stock_id, stock_name);
     });
+    jQuery('#stock_detail_page_obsolete_stock').click(function(){
+        obsoleteStock(stock_id, stock_name);
+    });
+});
 
 </script>

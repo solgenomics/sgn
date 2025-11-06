@@ -43,6 +43,8 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $random_factors = $params->{random_factors};
     my $dependent_variables = $params->{dependent_variables};
 
+    my $engine = $params->{engine};
+    
     my $mm = CXGN::MixedModels->new();
     if ($dependent_variables) {
 	$mm->dependent_variables($dependent_variables);
@@ -64,6 +66,10 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     if ($engine eq "sommer") {
 	print STDERR "Generating sommer model...\n";
 	($model, $error) = $mm->generate_model_sommer();
+    }
+    elsif($engine eq "spl2D"){
+    print STDERR "Generating sommer model with spl2D...\n";
+    ($model, $error) = $mm->generate_model_spl2D();
     }
     elsif ($engine eq "lme4") {
 	print STDERR "Generating lme4 model...\n";
@@ -87,6 +93,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
+    my $exclude_outliers = $c->req->param('dataset_trait_outliers');
 
     if (! $c->user()) {
         $c->stash->{rest} = {error=>'You must be logged in first!'};
@@ -101,7 +108,7 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
-    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, file_name => $temppath, quotes => 0);
+    my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id,exclude_dataset_outliers => $exclude_outliers, exclude_phenotype_outlier => $exclude_outliers, file_name => $temppath, quotes => 0);
     $ds->retrieve_phenotypes();
 
     # Note: file is cleaned by run_model function in CXGN::MixedModel
@@ -143,7 +150,9 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 	dependent_variable => $trait_html,
 
 	factors => \@factor_select,
+
 	tempfile => $tempfile."_phenotype.txt",
+
      };
 
     if (!@factor_select) {
@@ -163,18 +172,32 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$dependent_variables = [ $dependent_variables ];
     }
     my $model  = $params->{model};
+
+    
+
+
     my $random_factors = $params->{'random_factors[]'}; #
     if (!ref($random_factors)) {
 	$random_factors = [ $random_factors ];
     }
-    my $fixed_factors = $params->{'fixed_factors[]'}; #   "
-    if (!ref($fixed_factors)) {
-	$fixed_factors = [ $fixed_factors ];
+    my $fixed_factors = $params->{'fixed_factors[]'};
+    # If fixed_factors is not defined or is an empty string, set it to "1"
+    if (!defined $fixed_factors || $fixed_factors eq '') {
+        $fixed_factors = ["1"];  # Ensure it is an array reference
     }
+    elsif (!ref($fixed_factors)) {
+        $fixed_factors = [ $fixed_factors ];  # Wrap in an array if it's a scalar
+    }
+    
+    # print Dumper($params);
+    # print Dumper($model);
+    # print Dumper($fixed_factors);
+    # print Dumper($random_factors);
+
     
     print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
     my $engine = $params->{engine};
-    
+
     print STDERR "ENGINE = $engine\n";
     
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
@@ -183,7 +206,14 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
-    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models" );
+    my $job_record_config = {
+        user => $c->user->get_object()->get_sp_person_id(), 
+        schema => $c->dbic_schema("Bio::Chado::Schema"), 
+        people_schema => $c->dbic_schema("CXGN::People::Schema"), 
+        finish_logfile => $c->config->{job_finish_log},
+        name => "$dependent_variables mixed model computation"
+    };
+    my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $job_record_config);
     
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
@@ -238,8 +268,8 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	$method = "random";
 	($blups_data, $blups_html, $accession_names, $traits) = $self->result_file_to_hash($c, $blupfile);
     }
-
     elsif (-e $bluefile) {
+
 	$method= "fixed";
 	($blues_data, $blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $bluefile);
     }
@@ -315,6 +345,7 @@ sub result_file_to_hash {
 	    
 	}
         $html .= "</tr>"
+
     }
     $html .= "</table>";
 
@@ -364,9 +395,12 @@ sub extract_trait_data :Path('/ajax/mixedmodels/grabdata') Args(0) {
     $c->stash->{rest} = { data => \@data, trait => $trait};
 }
 
-
 sub make_R_trait_name {
     my $trait = shift;
+    if ($trait =~ /^\d/) {
+	$trait = "X".$trait;
+    }
+    $trait =~ s/\&/\_/g;
     $trait =~ s/\s/\_/g;
     $trait =~ s/\//\_/g;
     $trait =~ tr/ /./;

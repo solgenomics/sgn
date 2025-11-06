@@ -96,7 +96,6 @@ has 'config' => ( isa => "Ref",
 		  is => 'rw',
     );
 
-
 has 'dbh' => (
 		is => 'rw',
     );
@@ -161,7 +160,7 @@ sub dbic_schema {
 	return $self->people_schema();
     }
 
-    return undef;
+    return;
 }
 
 sub get_conf {
@@ -197,6 +196,11 @@ sub get_db_stats {
     $rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( {}, { columns => [ { 'cvterm_id_max' => { max => 'cvterm_id' }} ] } );
     $stats->{cvterms} = $rs->get_column('cvterm_id_max')->first();
 
+    # count cvtermprops
+    #
+    $rs = $self->bcs_schema()->resultset('Cv::Cvtermprop')->search( {}, { columns => [ { 'cvtermprop_id_max' => { max => 'cvtermprop_id' }} ] } );
+    $stats->{cvtermprops} = $rs->get_column('cvtermprop_id_max')->first();
+    
     # count users
     #
     $rs = $self->people_schema()->resultset('SpPerson')->search( {}, { columns => [ { 'sp_person_id_max' => { max => 'sp_person_id' }} ] } );
@@ -258,6 +262,12 @@ sub get_db_stats {
     $rs = $self->phenome_schema()->resultset('ProjectMdImage')->search( {}, { columns => [ { 'project_md_image_id_max' => { max => 'project_md_image_id' }} ] });
     $stats->{project_images} = defined $rs->get_column('project_md_image_id_max')->first() ? $rs->get_column('project_md_image_id_max')->first() : 0;
 
+    # count images
+    $rs = $self->metadata_schema()->resultset('MdImage')->search( {}, { columns => [ { image_id_max => { max => 'image_id' }} ] });
+    $stats->{images} = defined $rs->get_column('image_id_max')->first() ? $rs->get_column('image_id_max')->first() :0;
+
+    print STDERR "IMAGE STATS : $stats->{images}\n";
+    
     # count metadata file entries
     $rs = $self->metadata_schema()->resultset('MdFiles')->search( {}, { columns => [ { 'file_id_max' => { max => 'file_id' }} ] } );
     $stats->{metadata_files} = $rs->get_column('file_id_max')->first();
@@ -291,6 +301,16 @@ sub get_auditdb_stats {
     return $auditresults;
 }
 
+=head1 FUNCTIONS
+
+=head2 function clean_up_db()
+
+  Usage:   $f->clean_up_db();
+  Effects: removes any rows that were added to the database since the 
+           currently running test started. Should be called at the end of the test
+  Note:    Will not revert deletions or updates occuring during the test
+
+=cut
 
 # for tests that cannot use a transaction, such as unit_mech or selenium tests, this function can be used to bring
 # the database back to approx the state before the test. dbstats_start needs to contain the result of the dbstats function
@@ -303,7 +323,8 @@ sub clean_up_db {
 
     if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'cvtermprops', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
+
     foreach my $table (@deletion_order) {
 	    print STDERR "CLEANING $table...\n";
 	    my $count = $stats->{$table} - $self->dbstats_start()->{$table};
@@ -344,6 +365,10 @@ sub delete_table_entries {
 	$rs = $self->bcs_schema()->resultset('Cv::Cvterm')->search( { cvterm_id => { '>' => $previous_max_id }} );
     }
 
+    if ($table eq "cvtermprops") {
+	$rs = $self->bcs_schema()->resultset('Cv::Cvtermprop')->search( { cvtermprop_id => { '>' => $previous_max_id }} );
+    }
+    
     if ($table eq "people") { 
 	$rs = $self->people_schema()->resultset('SpPerson')->search( { sp_person_id => { '>' => $previous_max_id } } );
     }
@@ -413,6 +438,11 @@ sub delete_table_entries {
     }
 
     if ($table eq "metadata") {
+        # delete associated images first
+	my $iq = "DELETE FROM phenome.stock_image where metadata_id > ?";
+	my $ih = $self->dbh()->prepare($iq);
+	$ih->execute($previous_max_id);
+	    
         my $rs = undef;
         my $q = "DELETE FROM metadata.md_files where metadata_id > ?";
         my $h = $self->dbh()->prepare($q);
@@ -423,6 +453,11 @@ sub delete_table_entries {
         $h2->execute($previous_max_id);
     }
 
+    if ($table eq "images") {
+	my $q = "DELETE FROM metadata.md_image where image_id > ?";
+	my $h = $self->dbh()->prepare($q);
+	$h->execute($previous_max_id);
+    }
 
     my $count = 0;
     print STDERR "rs value: $rs";

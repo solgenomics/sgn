@@ -1,33 +1,31 @@
-"plot_id","range","plot","rep","accession","is_a_control","trait","value","timestamp","person","location","number",
-"test_trial21",1,2,1,"test_accession1",,"dry matter content|CO_334:0000092",42,"2016-01-07 12:08:24-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial22",1,3,1,"test_accession2",,"dry matter content|CO_334:0000092",45,"2016-01-07 12:08:26-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial23",1,4,1,"test_accession3",,"dry matter content|CO_334:0000092",41,"2016-01-07 12:08:27-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial24",1,5,1,"test_accession1",,"dry matter content|CO_334:0000092",14,"2016-01-07 12:08:46-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial25",1,6,1,"test_accession2",,"dry matter content|CO_334:0000092",25,"2016-01-07 12:08:48-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial26",1,7,1,"test_accession3",,"dry matter content|CO_334:0000092",,"2016-01-07 12:08:49-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial27",1,8,1,"test_accession1",,"dry matter content|CO_334:0000092",52,"2016-01-07 12:08:51-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial28",1,9,1,"test_accession2",,"dry matter content|CO_334:0000092",41,"2016-01-07 12:08:53-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial29",1,10,1,"test_accession3",,"dry matter content|CO_334:0000092",,"2016-01-07 12:08:55-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial210",1,11,1,"test_accession1",,"dry matter content|CO_334:0000092",12,"2016-01-07 12:08:56-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial211",1,12,1,"test_accession2",,"dry matter content|CO_334:0000092",13,"2016-01-07 12:08:58-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial212",1,13,1,"test_accession3",,"dry matter content|CO_334:0000092",42,"2016-01-07 12:09:02-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial213",1,14,1,"test_accession1",,"dry matter content|CO_334:0000092",35,"2016-01-07 12:09:04-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial214",1,15,1,"test_accession2",,"dry matter content|CO_334:0000092",32,"2016-01-07 12:09:05-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial215",1,16,1,"test_accession3",,"dry matter content|CO_334:0000092",31,"2016-01-07 12:09:07-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial21",1,2,1,"test_accession1",,"dry yield|CO_334:0000014",42,"2016-01-07 12:08:24-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial22",1,3,1,"test_accession2",,"dry yield|CO_334:0000014",45,"2016-01-07 12:08:26-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial23",1,4,1,"test_accession3",,"dry yield|CO_334:0000014",41,"2016-01-07 12:08:27-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial24",1,5,1,"test_accession1",,"dry yield|CO_334:0000014",14,"2016-01-07 12:08:46-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial25",1,6,1,"test_accession2",,"dry yield|CO_334:0000014",25,"2016-01-07 12:08:48-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial26",1,7,1,"test_accession3",,"dry yield|CO_334:0000014",0,"2016-01-07 12:08:49-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial27",1,8,1,"test_accession1",,"dry yield|CO_334:0000014",0,"2016-01-07 12:08:51-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial28",1,9,1,"test_accession2",,"dry yield|CO_334:0000014",41,"2016-01-07 12:08:53-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial29",1,10,1,"test_accession3",,"dry yield|CO_334:0000014",24,"2016-01-07 12:08:55-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial210",1,11,1,"test_accession1",,"dry yield|CO_334:0000014",12,"2016-01-07 12:08:56-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial211",1,12,1,"test_accession2",,"dry yield|CO_334:0000014",13,"2016-01-07 12:08:58-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial212",1,13,1,"test_accession3",,"dry yield|CO_334:0000014",42,"2016-01-07 12:09:02-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial213",1,14,1,"test_accession1",,"dry yield|CO_334:0000014",35,"2016-01-07 12:09:04-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial214",1,15,1,"test_accession2",,"dry yield|CO_334:0000014",32,"2016-01-07 12:09:05-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial215",1,16,1,"test_accession3",,"dry yield|CO_334:0000014",31,"2016-01-07 12:09:07-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial21",1,2,1,"test_accession1",,"fieldbook_image|CO_334:0010472","/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial21_2016-09-12-11-15-12.jpg","2016-01-07 12:10:24-0500","johndoe","42.4472 ; -76.4676",1
-"test_trial22",1,3,1,"test_accession2",,"fieldbook_image|CO_334:0010472","/storage/emulated/0/fieldBook/plot_data/test_trial/photos/test_trial22_2016-09-12-11-15-26.jpg","2016-01-07 12:10:25-0500","johndoe","42.4472 ; -76.4676",1
+plot_name,range,plot,rep,accession,is_a_control,trait,value,timestamp,person,location,number
+test_trial21,1,2,1,test_accession1,,dry matter content|CO_334:0000092,42,2016-01-07 12:08:24-0500,johndoe,42.4472 ; -76.4676,1
+test_trial22,1,3,1,test_accession2,,dry matter content|CO_334:0000092,45,2016-01-07 12:08:26-0500,johndoe,42.4472 ; -76.4676,1
+test_trial23,1,4,1,test_accession3,,dry matter content|CO_334:0000092,41,2016-01-07 12:08:27-0500,johndoe,42.4472 ; -76.4676,1
+test_trial24,1,5,1,test_accession1,,dry matter content|CO_334:0000092,14,2016-01-07 12:08:46-0500,johndoe,42.4472 ; -76.4676,1
+test_trial25,1,6,1,test_accession2,,dry matter content|CO_334:0000092,25,2016-01-07 12:08:48-0500,johndoe,42.4472 ; -76.4676,1
+test_trial26,1,7,1,test_accession3,,dry matter content|CO_334:0000092,,2016-01-07 12:08:49-0500,johndoe,42.4472 ; -76.4676,1
+test_trial27,1,8,1,test_accession1,,dry matter content|CO_334:0000092,52,2016-01-07 12:08:51-0500,johndoe,42.4472 ; -76.4676,1
+test_trial28,1,9,1,test_accession2,,dry matter content|CO_334:0000092,41,2016-01-07 12:08:53-0500,johndoe,42.4472 ; -76.4676,1
+test_trial29,1,10,1,test_accession3,,dry matter content|CO_334:0000092,,2016-01-07 12:08:55-0500,johndoe,42.4472 ; -76.4676,1
+test_trial210,1,11,1,test_accession1,,dry matter content|CO_334:0000092,12,2016-01-07 12:08:56-0500,johndoe,42.4472 ; -76.4676,1
+test_trial211,1,12,1,test_accession2,,dry matter content|CO_334:0000092,13,2016-01-07 12:08:58-0500,johndoe,42.4472 ; -76.4676,1
+test_trial212,1,13,1,test_accession3,,dry matter content|CO_334:0000092,42,2016-01-07 12:09:02-0500,johndoe,42.4472 ; -76.4676,1
+test_trial213,1,14,1,test_accession1,,dry matter content|CO_334:0000092,35,2016-01-07 12:09:04-0500,johndoe,42.4472 ; -76.4676,1
+test_trial214,1,15,1,test_accession2,,dry matter content|CO_334:0000092,32,2016-01-07 12:09:05-0500,johndoe,42.4472 ; -76.4676,1
+test_trial215,1,16,1,test_accession3,,dry matter content|CO_334:0000092,31,2016-01-07 12:09:07-0500,johndoe,42.4472 ; -76.4676,1
+test_trial21,1,2,1,test_accession1,,dry yield|CO_334:0000014,42,2016-01-07 12:08:24-0500,johndoe,42.4472 ; -76.4676,1
+test_trial22,1,3,1,test_accession2,,dry yield|CO_334:0000014,45,2016-01-07 12:08:26-0500,johndoe,42.4472 ; -76.4676,1
+test_trial23,1,4,1,test_accession3,,dry yield|CO_334:0000014,41,2016-01-07 12:08:27-0500,johndoe,42.4472 ; -76.4676,1
+test_trial24,1,5,1,test_accession1,,dry yield|CO_334:0000014,14,2016-01-07 12:08:46-0500,johndoe,42.4472 ; -76.4676,1
+test_trial25,1,6,1,test_accession2,,dry yield|CO_334:0000014,25,2016-01-07 12:08:48-0500,johndoe,42.4472 ; -76.4676,1
+test_trial26,1,7,1,test_accession3,,dry yield|CO_334:0000014,0,2016-01-07 12:08:49-0500,johndoe,42.4472 ; -76.4676,1
+test_trial27,1,8,1,test_accession1,,dry yield|CO_334:0000014,0,2016-01-07 12:08:51-0500,johndoe,42.4472 ; -76.4676,1
+test_trial28,1,9,1,test_accession2,,dry yield|CO_334:0000014,41,2016-01-07 12:08:53-0500,johndoe,42.4472 ; -76.4676,1
+test_trial29,1,10,1,test_accession3,,dry yield|CO_334:0000014,24,2016-01-07 12:08:55-0500,johndoe,42.4472 ; -76.4676,1
+test_trial210,1,11,1,test_accession1,,dry yield|CO_334:0000014,12,2016-01-07 12:08:56-0500,johndoe,42.4472 ; -76.4676,1
+test_trial211,1,12,1,test_accession2,,dry yield|CO_334:0000014,13,2016-01-07 12:08:58-0500,johndoe,42.4472 ; -76.4676,1
+test_trial212,1,13,1,test_accession3,,dry yield|CO_334:0000014,42,2016-01-07 12:09:02-0500,johndoe,42.4472 ; -76.4676,1
+test_trial213,1,14,1,test_accession1,,dry yield|CO_334:0000014,35,2016-01-07 12:09:04-0500,johndoe,42.4472 ; -76.4676,1
+test_trial214,1,15,1,test_accession2,,dry yield|CO_334:0000014,32,2016-01-07 12:09:05-0500,johndoe,42.4472 ; -76.4676,1
+test_trial215,1,16,1,test_accession3,,dry yield|CO_334:0000014,31,2016-01-07 12:09:07-0500,johndoe,42.4472 ; -76.4676,1

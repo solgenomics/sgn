@@ -1,0 +1,148 @@
+
+<%args>
+$trial_id
+$stockref => undef
+</%args>
+
+<style>
+#plot_images_results {
+    width: 100% !important;
+}
+</style>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
+
+
+<div class="well well-sm table-responsive">
+    <table id="plot_images_results" class="table table-hover table-striped">
+    <thead>
+        <tr>
+        <th>Image</th>
+        <th>File Name/Details</th>
+        <th>Description</th>
+        <th>Submitter</th>
+        <th>Associations</th>
+        <th>Accession Name</th>
+    </tr>
+    </thead>
+    </table>
+</div>
+            
+
+<script>
+
+<%perl>
+my $dbh = $stockref->{dbh};
+</%perl>
+
+var trial_id = '<% $trial_id %>';
+var stockNames = [];
+
+jQuery(document).ready( function() {
+
+    jQuery('#image_download_button').click(function () {
+        jQuery.ajax({
+            url: '/breeders/download_images',
+            type: 'POST',
+            data: {'trial_id': trial_id},
+            success: function(data) {
+                var a = document.createElement('a');
+                var url = window.URL.createObjectURL(data);
+                a.href = url;
+                a.download = 'trial_' + trial_id + '_images.tar.gz';
+                document.body.append(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            xhrFields: {
+                responseType: 'blob'
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+            }
+        });
+    });
+
+    jQuery('#trial_images_section_onswitch').click(function() {
+        getStocksWithImages();
+    });
+
+    jQuery('#plot_images_results').on( 'draw.dt', function () {
+        jQuery('a.image_search_group').colorbox();
+    });
+});
+
+function getStocksWithImages() {
+    jQuery.ajax({
+        method: 'GET',
+        url: '/ajax/stock/get_stocks_with_images',
+        data: {
+            'trial_id': trial_id
+        },
+        beforeSend: function() {
+            jQuery("#working_modal").modal("show");
+        },
+        success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            var data = response.data;
+            if (data.length > 0) {
+                stockNames.push(data);
+            } else {
+                stockNames.push("*");
+            }
+            _load_stock_image_results();
+        },
+        error: function(response) {
+            alert('Error fetching stock names');
+        }
+    });
+}
+
+function _load_stock_image_results() {
+    var stockNamesString = stockNames.join(',');
+
+    stock_images_table = jQuery('#plot_images_results').DataTable({
+        'destroy' : true,
+        'searching' : true,
+        'ordering' : true,
+        'processing' : true,
+        //'serverSide': true,
+        'scrollX': true,
+        'lengthMenu': [10,20,50,100,1000,5000],
+        'ajax': { 'url': '/ajax/search/images',
+            'type': 'POST',
+            'data': function(d) {
+                d.image_stock_uniquename = stockNamesString;
+            },
+            'dataSrc': function(json) {
+                json.data.forEach(function(row) {
+                    var imgElement = jQuery(row[0]).find('img');
+                    imgElement.attr('width', '140');
+                    var anchorElement = jQuery(row[0]);
+                    anchorElement.html(imgElement.prop('outerHTML'));
+                    row[0] = anchorElement.prop('outerHTML');
+                });
+                return json.data;
+            }
+        },
+        'columns': [
+            { 'title': 'Image', 
+              'data': 0, },
+            { 'title': 'File Name/Details', 'data': 1 },
+            { 'title': 'Description', 'data': 2 },
+            { 'title': 'Submitter', 'data': 3 },
+            { 'title': 'Associations', 'data': 4 },
+            { 'title': 'Accession Name', 'data': 5 },
+        ],
+        columnDefs: [
+            { "targets": [1,3,4], "type": 'html' },
+            { targets: [0], searchable: false }
+        ]
+    }).on('draw', function() {
+        jQuery(".image_search_group").colorbox({rel:'image_search_group'});
+    });
+}
+
+
+</script>

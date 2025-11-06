@@ -223,7 +223,44 @@ sub get_plot_plant_related_seedlots {
 }
 
 
-sub get_vector_related_stocks {
+sub get_vector_related_accessions {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+
+    my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", "stock_type")->cvterm_id();
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship')->cvterm_id();
+    my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename, stockprop.value
+        FROM stock AS transformant
+        JOIN stock_relationship AS plant_relationship ON (plant_relationship.object_id = transformant.stock_id) AND plant_relationship.type_id = ?
+        JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
+        JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformant.stock_id) AND vector_relationship.type_id = ?
+        JOIN stock as vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
+        LEFT JOIN stock_relationship AS transformation_relationship ON (transformation_relationship.subject_id = transformant.stock_id) AND transformation_relationship.type_id = ?
+        LEFT JOIN stock AS transformation ON (transformation_relationship.object_id = transformation.stock_id) AND transformation.type_id = ?
+        LEFT JOIN stockprop ON (transformant.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        WHERE vector.stock_id = ? AND transformant.is_obsolete = 'F' ORDER BY transformation.uniquename, transformant.uniquename";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $number_of_insertions_type_id, $stock_id);
+
+    my @related_stocks =();
+    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = $h->fetchrow_array()){
+        push @related_stocks, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions]
+    }
+
+    return \@related_stocks;
+
+}
+
+
+sub get_vector_obsoleted_accessions {
     my $self = shift;
     my $stock_id = $self->stock_id;
     my $schema = $self->dbic_schema();
@@ -235,26 +272,27 @@ sub get_vector_related_stocks {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship')->cvterm_id();
 
-
-    my $q = "SELECT transformant.stock_id, transformant.uniquename, vector.stock_id, vector.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename
+    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename, metadata.md_metadata.obsolete_note, metadata.md_metadata.modification_note, phenome.stock_owner.sp_person_id
         FROM stock AS transformant
+        JOIN phenome.stock_owner ON (transformant.stock_id = phenome.stock_owner.stock_id)
+        JOIN metadata.md_metadata ON (phenome.stock_owner.metadata_id = metadata.md_metadata.metadata_id)
         JOIN stock_relationship AS plant_relationship ON (plant_relationship.object_id = transformant.stock_id) AND plant_relationship.type_id = ?
         JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
         JOIN stock_relationship AS vector_relationship ON (vector_relationship.object_id = transformant.stock_id) AND vector_relationship.type_id = ?
         JOIN stock as vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
         LEFT JOIN stock_relationship AS transformation_relationship ON (transformation_relationship.subject_id = transformant.stock_id) AND transformation_relationship.type_id = ?
         LEFT JOIN stock AS transformation ON (transformation_relationship.object_id = transformation.stock_id) AND transformation.type_id = ?
-        WHERE vector.stock_id = ? ORDER BY transformation.uniquename, transformant.uniquename";
+        WHERE vector.stock_id = ? AND transformant.is_obsolete != 'F' ORDER BY transformation.uniquename, transformant.uniquename";
 
     my $h = $schema->storage->dbh->prepare($q);
     $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $stock_id);
 
-    my @related_stocks =();
-    while(my($transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = $h->fetchrow_array()){
-        push @related_stocks, [$transformant_id, $transformant_name, $vector_id, $vector_name, $plant_id, $plant_name, $transformation_id, $transformation_name]
+    my @obsoleted_accessions =();
+    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = $h->fetchrow_array()){
+        push @obsoleted_accessions, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id]
     }
 
-    return \@related_stocks;
+    return \@obsoleted_accessions;
 
 }
 

@@ -21,7 +21,7 @@ sub _validate_with_plugin {
     my %missing_accessions;
 
     # optional columns = these hard-coded columns plus any editable stock props
-    my @optional_columns = ('description', 'synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp');
+    my @optional_columns = ('description', 'synonyms', 'populationName', 'organizationName', 'locationCode', 'ploidyLevel', 'genomeStructure', 'variety', 'donor', 'donor institute', 'donor PUI', 'countryOfOriginCode', 'state', 'instituteCode', 'instituteName', 'biologicalStatusOfAccessionCode', 'notes', 'accessionNumber', 'germplasmPUI', 'germplasmSeedSource', 'typeOfGermplasmStorageCode', 'acquisitionDate', 'transgenic', 'introgression_parent', 'introgression_backcross_parent', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'number_of_insertions');
     push @optional_columns, @$editable_stockprops;
 
     my $parser = CXGN::File::Parse->new(
@@ -57,7 +57,8 @@ sub _validate_with_plugin {
         'introgression_backcross_parent' => ['introgression_backcross_parent', 'introgression_backcross_parents', 'introgression_backcross_parent(s)'],
         'introgression_chromosome' => ['introgression_chromosome', 'introgression_chromosomes', 'introgression_chromosome(s)'],
         'introgression_start_position_bp' => ['introgression_start_position_bp', 'introgression_start_position_bps', 'introgression_start_position_bp(s)'],
-        'introgression_end_position_bp' => ['introgression_end_position_bp', 'introgression_end_position_bps', 'introgression_end_position_bp(s)']
+        'introgression_end_position_bp' => ['introgression_end_position_bp', 'introgression_end_position_bps', 'introgression_end_position_bp(s)'],
+        'number_of_insertions' => ['number of insertions'],
       },
       column_arrays => [ 'synonyms' ]
     );
@@ -102,6 +103,18 @@ sub _validate_with_plugin {
     if (scalar(@species_missing) > 0) {
         push @error_messages, "The following species are not in the database as species in the organism table: ".join(',',@species_missing);
         $errors{'missing_species'} = \@species_missing;
+    }
+
+    # Check for existing non-accession stocks
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $accession_list = $parsed_values->{'accession_name'};
+    my $stocks_in_db_rs = $schema->resultset("Stock::Stock")->search({ uniquename => { -ilike => $accession_list }, type_id => { '<>' => $accession_type_id } });
+    my @stocks_existing;
+    while ( my $r=$stocks_in_db_rs->next ) {
+      push @stocks_existing, $r->uniquename;
+    }
+    if ( scalar(@stocks_existing) > 0 ) {
+      push @error_messages, "The following accession names are already used in the database (as different stock types): " . join(',', @stocks_existing);
     }
 
     #store any errors found in the parsed file to parse_errors accessor

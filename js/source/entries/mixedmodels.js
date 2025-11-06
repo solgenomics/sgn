@@ -11,8 +11,8 @@ export function init(main_div) {
 
     var dataset_id;
 
-    alert("WELCOME TO MIXED MODELS!");
-    get_select_box("datasets", "mixed_model_dataset_select", { "checkbox_name": "mixed_model_dataset_select_checkbox" });
+    // alert("WELCOME TO MIXED MODELS!");
+    get_select_box("datasets", "mixed_model_dataset_select", { "checkbox_name": "mixed_model_dataset_select_checkbox", "analysis_type":"Mixed Models", "show_compatibility":"yes" });
 
     jQuery('#mixed_model_analysis_prepare_button').removeClass('active').addClass('inactive');
 
@@ -75,11 +75,13 @@ export function init(main_div) {
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
         $('#generic_save_analysis_model_type').val('mixed_model_lmer');
+        $('#generic_save_analysis_result_values').val(adjusted_blues_data);
         $('#generic_save_analysis_result_summary_values').val(result_summary);
         $('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
         $('#generic_save_analysis_model_training_data_file').val(input_file);
         $('#generic_save_analysis_model_archived_training_data_file_type').val('mixed_model_input_data');
     });
+
 
     $(document).on('click', '#open_store_blues_dialog_button', function (e) {
         $('#generic_save_analysis_dialog').modal("show");
@@ -94,6 +96,7 @@ export function init(main_div) {
         $('#generic_save_analysis_model_application_name').val('Breedbase Mixed Model Tool');
         $('#generic_save_analysis_model_application_version').val(version);
         $('#generic_save_analysis_model_type').val('mixed_model_lmer');
+        $('#generic_save_analysis_result_values').val(blues_data);
         $('#generic_save_analysis_result_values_type').val('analysis_result_values_match_accession_names');
         $('#generic_save_analysis_result_summary_values').val(result_summary);
         $('#generic_save_analysis_model_training_data_file').val(input_file);
@@ -103,10 +106,12 @@ export function init(main_div) {
     $('#mixed_model_analysis_prepare_button').click(function () {
 
         dataset_id = get_dataset_id();
+        var dataset_trait_outliers = $('#dataset_trait_outliers').is(':checked') ? 1 : 0;
+
         if (dataset_id != false) {
             $.ajax({
                 url: '/ajax/mixedmodels/prepare',
-                data: { 'dataset_id': get_dataset_id() },
+                data: { 'dataset_id': get_dataset_id(),'dataset_trait_outliers': dataset_trait_outliers, },
                 success: function (r) {
                     if (r.error) {
                         alert(r.error);
@@ -326,60 +331,68 @@ export function init(main_div) {
             "url": '/ajax/mixedmodels/run',
             "method": "POST",
             "data": {
-                "model": model,
-                "tempfile": tempfile,
-                "dependent_variables": dependent_variables,
-                "fixed_factors": fixed_factors,
-                "random_factors": random_factors,
-                "engine": engine
-            },
-            "success": function (r) {
-                $('#working_modal').modal("hide");
-                if (r.error) { alert(r.error); }
-                else {
-                    if (r.method === 'random') {
-                        $('#mixed_models_adjusted_blups_results_div').html(r.adjusted_blups_html);
-                        $('#mixed_models_blups_results_div').html(r.blups_html);
+		"model" : model,
+		"tempfile" : tempfile,
+		"dependent_variables": dependent_variables,
+		"fixed_factors" : fixed_factors,
+		"random_factors" : random_factors,
+		"engine" : engine
+	    },
+            "success": function(r) {
+		$('#working_modal').modal("hide");
+		if (r.error) { alert(r.error);}
+		else {
+		    if (r.method === 'random') {
+			$('#mixed_models_adjusted_blups_results_div').html(r.adjusted_blups_html);
+			$('#mixed_models_blups_results_div').html( r.blups_html );
 
-                        $('#adjusted_blups_tab_link').show();
-                        $('#adjusted_blups_tab_link').addClass('active');
-                        $('#blups_tab_link').show();
+			$('#adjusted_blups_tab_link').show();
+			$('#adjusted_blups_tab_link').addClass('active');
+			$('#blups_tab_link').show();
 
-                        $('#adjusted_blues_tab_link').removeClass('active');
-                        $('#adjusted_blues_tab_link').hide();
-                        $('#blues_tab_link').hide();
-                    }
-                    else {
-                        $('#mixed_models_adjusted_blues_results_div').html(r.adjusted_blues_html);
-                        $('#mixed_models_blues_results_div').html(r.blues_html);
-
-
-                        $('#adjusted_blups_tab_link').removeClass('active');
-                        $('#adjusted_blups_tab_link').hide();
-                        $('#blups_tab_link').hide();
+			$('#adjusted_blues_tab_link').removeClass('active');
+			$('#adjusted_blues_tab_link').hide();
+			$('#blues_tab_link').hide();
+		    }
+		    else {
+	 		$('#mixed_models_adjusted_blues_results_div').html(r.adjusted_blues_html);
+			$('#mixed_models_blues_results_div').html(r.blues_html);
 
 
-                        $('#adjusted_blues_tab_link').tab('show');
-                        $('#adjusted_blues_tab_link').addClass('active');
-                        $('#blues_tab_link').show();
-                    }
-
-                    accession_names = JSON.stringify(r.accession_names);
-
-                    adjusted_blups_data = JSON.stringify(r.adjusted_blups_data);
-
-                    adjusted_blues_data = JSON.stringify(r.adjusted_blues_data);
-                    blups_data = JSON.stringify(r.blups_data);
-                    blues_data = JSON.stringify(r.blues_data);
-                    traits = JSON.stringify(r.traits);
-                    input_file = r.input_file;
-                    result_summary = '{ "method" : "Breedbase mixed model analysis tool" }';
-
-                    var model_properties_data = { "properties": { "traits": traits } };
-                    model_properties = JSON.stringify(model_properties_data);
+			$('#adjusted_blups_tab_link').removeClass('active');
+			$('#adjusted_blups_tab_link').hide();
+			$('#blups_tab_link').hide();
 
 
-                }
+			$('#adjusted_blues_tab_link').tab('show');
+			$('#adjusted_blues_tab_link').addClass('active');
+			$('#blues_tab_link').show();
+		    }
+
+		    accession_names = JSON.stringify(r.accession_names);
+
+            
+		    adjusted_blups_data = JSON.stringify(r.adjusted_blups_data);
+
+		    adjusted_blues_data = JSON.stringify(r.adjusted_blues_data);
+
+            console.log('Adjusted means:'+adjusted_blups_data);
+            console.log('Adjusted means:'+adjusted_blues_data);
+
+		    blups_data = JSON.stringify(r.blups_data);
+		    blues_data = JSON.stringify(r.blues_data);
+		    traits = JSON.stringify(r.traits);
+			console.log("Traits: "+traits);
+		    input_file = r.input_file;
+		    result_summary = '{ "method" : "Breedbase mixed model analysis tool" }';
+
+		    var model_properties_data = { "properties" : { "traits" : traits  } } ;
+			console.log("traits: "+traits);
+		    model_properties = JSON.stringify(model_properties_data);
+			//alert("Model properties: "+model_properties);
+
+
+		}
             },
             "error": function (r) {
                 alert(r);
@@ -528,23 +541,23 @@ function get_model_string() {
     var params = extract_model_parameters();
 
     //alert("PARAMS: "+JSON.stringify(params));
-    $.ajax({
-        url: '/ajax/mixedmodels/modelstring',
-        method: 'POST',
-        data: params,
-        error: function (e) {
-            alert("An error occurred" + e);
-        },
-        success: function (r) {
-            if (r.error) {
-                alert(r.error);
-            }
-            else {
-
-                console.log("ENGINE AGAIN: " + r.engine + " " + JSON.stringify(r));
-                if (r.engine == 'sommer') {
-                    jQuery('#model_string').text(r.model[0] + " , random = " + r.model[1]);
-                }
+    $.ajax( {
+	url  : '/ajax/mixedmodels/modelstring',
+	method: 'POST',
+	data : params,
+	error: function(e) {
+	    alert("An error occurred"+e);
+	},
+	success: function(r) {
+	    if (r.error) {
+		alert(error);
+	    }
+	    else {
+		//alert("MODEL STRING: "+r.model);
+		console.log("ENGINE AGAIN: "+r.engine+" "+JSON.stringify(r));
+		if (r.engine == 'sommer') {
+		    jQuery('#model_string').text(r.model[0]+" , random = " + r.model[1]);
+		}
                 else {
                     jQuery('#model_string').text(r.model);
                 }

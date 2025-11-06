@@ -224,9 +224,13 @@ has 'seedlot_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'accession_cvterm_id'  => (isa => 'Int', is => 'rw');
 
+has 'analysis_result_cvterm_id'  => (isa => 'Int', is => 'rw');
+
 has 'tissue_sample_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'tissue_sample_of_cvterm_id'  => (isa => 'Int', is => 'rw');
+
+has 'tissue_sample_index_number_cvterm_id' => (isa =>'Int', is => 'rw');
 
 has 'plot_cvterm_id' => (isa => 'Int', is => 'rw');
 
@@ -310,9 +314,13 @@ sub BUILD {
 
     $self->set_accession_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id());
 
+    $self->set_analysis_result_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'analysis_result', 'stock_type')->cvterm_id());
+
     $self->set_tissue_sample_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id());
 
     $self->set_tissue_sample_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id());
+
+    $self->set_tissue_sample_index_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_index_number', 'stock_property')->cvterm_id());
 
     $self->set_plot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id());
 
@@ -495,7 +503,6 @@ sub store {
         my $stock_rs = $chado_schema->resultset("Stock::Stock");
 
         foreach my $key (keys %design) {
-
             if ($key eq 'treatments'){
                 next;
             }
@@ -514,6 +521,10 @@ sub store {
             if ($design{$key}->{plant_names}) {
                 $plant_names = $design{$key}->{plant_names};
             }
+            my $tissue_sample_names;
+            if ($design{$key}->{tissue_sample_names}) {
+                $tissue_sample_names = $design{$key}->{tissue_sample_names};
+            }
             my $subplot_names;
             if ($design{$key}->{subplots_names}) {
                 $subplot_names = $design{$key}->{subplots_names};
@@ -522,6 +533,7 @@ sub store {
             if ($design{$key}->{subplots_plant_names}) {
                 $subplots_plant_names = $design{$key}->{subplots_plant_names};
             }
+
             my $stock_name;
             if ($design{$key}->{stock_name}) {
                 $stock_name = $design{$key}->{stock_name};
@@ -612,6 +624,7 @@ sub store {
             }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
+
             if ($stock_data{$stock_name}) {
                 $stock_id_checked = $stock_data{$stock_name}[0];
                 $organism_id_checked = $stock_data{$stock_name}[1];
@@ -621,9 +634,19 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                my $cross_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
+                my $family_name_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
+                if ($accession_stock) {
+                    $parent_stock = $accession_stock;
+                } elsif ($cross_stock) {
+                    $parent_stock = $cross_stock;
+                } elsif ($family_name_stock) {
+                    $parent_stock = $family_name_stock;
+                }
+
                 if (!$parent_stock) {
-                    die ("Error while saving trial layout: no accession found matching $stock_name");
+                    die ("Error while saving trial layout: no accession or cross or family name found matching $stock_name");
                 }
 
                 $stock_id_checked = $parent_stock->stock_id();
@@ -694,30 +717,75 @@ sub store {
 
                 # For genotyping plate, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $self->get_plot_cvterm_id){
+                    my $parent_plot_rs;
                     my $parent_plot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$self->get_plot_of_cvterm_id,
                         'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => 'object'});
-                    if ($parent_plot_accession_rs->count > 1){
-                        die "Plot $stock_id_checked is linked to more than one accession!\n"
+
+                    my $parent_plot_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plot_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => 'object'});
+
+                    my $parent_plot_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plot_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => 'object'});
+
+                    if ($parent_plot_accession_rs->count > 0) {
+                        $parent_plot_rs = $parent_plot_accession_rs;
+                    } elsif ($parent_plot_cross_rs->count > 0) {
+                        $parent_plot_rs = $parent_plot_cross_rs;
+                    } elsif ($parent_plot_family_name_rs->count > 0) {
+                        $parent_plot_rs = $parent_plot_family_name_rs;
                     }
-                    if ($parent_plot_accession_rs->count == 1){
-                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_accession_rs->first->object_id };
+
+                    if ($parent_plot_rs->count > 1){
+                        die "Plot $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+
+                    if ($parent_plot_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_rs->first->object_id };
                     }
                 }
-                # For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
+                #   For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
                 if ($stock_type_checked == $self->get_plant_cvterm_id){
+                    my $parent_plant_rs;
                     my $parent_plant_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$self->get_plant_of_cvterm_id,
                         'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => "object"});
-                    if ($parent_plant_accession_rs->count > 1){
-                        die "Plant $stock_id_checked is linked to more than one accession!\n"
+
+                    my $parent_plant_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => "object"});
+
+                    my $parent_plant_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => "object"});
+
+                    if ($parent_plant_accession_rs->count > 0) {
+                        $parent_plant_rs = $parent_plant_accession_rs;
+                    } elsif ($parent_plant_cross_rs->count > 0) {
+                        $parent_plant_rs = $parent_plant_cross_rs;
+                    } elsif ($parent_plant_family_name_rs->count > 0) {
+                        $parent_plant_rs = $parent_plant_family_name_rs;
                     }
-                    if ($parent_plant_accession_rs->count == 1){
-                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_accession_rs->first->object_id };
+
+                    if ($parent_plant_rs->count > 1){
+                        die "Plant $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+                    if ($parent_plant_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_rs->first->object_id };
                     }
                     my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -733,16 +801,38 @@ sub store {
                 }
                 # For genotyping plate, if the well tissue_sample is sourced from another tissue_sample, then we store relationships between the new tissue_sample and the source tissue_sample, and the new tissue_sample and the tissue_sample's plant if it exists, and the new tissue_sample and the tissue_sample's plot if it exists, and the new tissue sample and the tissue_sample's accession if it exists.
                 if ($stock_type_checked == $self->get_tissue_sample_cvterm_id){
+                    my $parent_tissue_sample_rs;
                     my $parent_tissue_sample_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
                         'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => "object"});
-                    if ($parent_tissue_sample_accession_rs->count > 1){
-                        die "Tissue_sample $stock_id_checked is linked to more than one accession!\n"
+
+                    my $parent_tissue_sample_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => "object"});
+
+                    my $parent_tissue_sample_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => "object"});
+
+                    if ($parent_tissue_sample_accession_rs->count > 0) {
+                        $parent_tissue_sample_rs = $parent_tissue_sample_accession_rs;
+                    } elsif ($parent_tissue_sample_cross_rs->count > 0) {
+                        $parent_tissue_sample_rs = $parent_tissue_sample_cross_rs;
+                    } elsif ($parent_tissue_sample_family_name_rs->count > 0) {
+                        $parent_tissue_sample_rs = $parent_tissue_sample_family_name_rs;
                     }
-                    if ($parent_tissue_sample_accession_rs->count == 1){
-                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_tissue_sample_accession_rs->first->object_id };
+
+                    if ($parent_tissue_sample_rs->count > 1){
+                        die "Tissue_sample $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+                    if ($parent_tissue_sample_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_tissue_sample_rs->first->object_id };
                     }
                     my $parent_plot_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -784,12 +874,12 @@ sub store {
                     nd_experiment_stocks => \@plot_nd_experiment_stocks,
                 };
                 my $plot;
-                if (! defined $plant_names || scalar $plant_names eq 0) {
+                if ((! defined $plant_names || scalar $plant_names eq 0) && (! defined $tissue_sample_names || scalar $tissue_sample_names eq 0)) {
                     $plot = $stock_rs->create($plot_params);
                 } else {
                     $plot = $stock_rs->find_or_create($plot_params);
                 }
-                $new_plot_id = $plot->stock_id();
+                $new_plot_id = $plot->stock_id(); #this is why plot is created with the same name as plant, want to associate tissue sample with plant and plot
                 $new_stock_ids_hash{$plot_name} = $new_plot_id;
 
                 my %design = %{$self->get_design()};
@@ -845,7 +935,7 @@ sub store {
                     if ($additional_info) {
                         push @plant_stock_props, { type_id => $additional_info_type_id, value => $additional_info };
                     }
-
+                   # print STDERR "stock id checked: $stock_id_checked, stock name checked: $stock_name_checked, new plot id: $new_plot_id";
                     my @plant_objects = (
                         { type_id => $self->get_plant_of_cvterm_id, subject_id => $new_plot_id }
                     );
@@ -875,6 +965,85 @@ sub store {
                 if (scalar @$plant_names > 0) {
                     my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
                     $study->create_projectprops({ 'project_has_plant_entries' => 1 });
+                }
+            }
+            # Create tissue samples entries
+            if ($tissue_sample_names) {
+                my @tissue_sample_subjects;
+                my $tissue_sample_index_number = 1;
+                foreach my $tissue_sample_name (@$tissue_sample_names) {
+                    my @tissue_sample_stockprops = (
+                        { type_id => $self->get_tissue_sample_index_number_cvterm_id, value => $tissue_sample_index_number },
+                        { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
+                        { type_id => $self->get_block_cvterm_id, value => $block_number },
+                        { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
+                    );
+                    if ($is_a_control) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
+                    }
+                    if ($range_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_range_cvterm_id, value => $range_number };
+                    }
+                    if ($row_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
+                    }
+                    if ($col_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
+                    }
+                    if ($additional_info) {
+                        push @tissue_sample_stockprops, { type_id => $additional_info_type_id, value => $additional_info };
+                    }
+
+                    #print STDERR "stock id checked: $stock_id_checked, stock name checked: $stock_name_checked";
+                    my $parent_plant_stock = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $plot_name });
+                    my $parent_plant_id;
+                    if ($parent_plant_stock) {
+                        $parent_plant_id = $parent_plant_stock->stock_id;
+                    } 
+                    #print STDERR "parent plant id: $parent_plant_id";
+                    if ($parent_plant_id) {
+                        push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $parent_plant_id };
+                    }
+                    
+                    my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.object_id'=>$parent_plant_id,
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'subject.type_id'=>$self->get_plot_cvterm_id
+                    }, {join => "subject"});
+
+                    if ($parent_plot_of_plant_rs->count > 1){
+                        die "Plant $parent_plant_id is linked to more than one plot!\n"
+                    }
+
+                    if ($parent_plot_of_plant_rs->count == 1){
+                        push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $parent_plot_of_plant_rs->first->subject_id };
+                    }
+
+                    #print STDERR "parent plot id: " . $parent_plot_of_plant_rs->first->subject_id;
+
+                    push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $stock_id_checked };
+
+                    my @tissue_sample_nd_experiment_stocks = (
+                        { type_id => $self->get_nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
+                    );
+
+                    my $tissue_sample = $stock_rs->create({
+                        organism_id => $organism_id_checked,
+                        name => $tissue_sample_name,
+                        uniquename => $tissue_sample_name,
+                        type_id => $self->get_tissue_sample_cvterm_id,
+                        stockprops => \@tissue_sample_stockprops,
+                        stock_relationship_subjects => \@tissue_sample_subjects,
+                        #stock_relationship_objects => \@tissue_sample_objects,
+                        nd_experiment_stocks => \@tissue_sample_nd_experiment_stocks,
+                    });
+                    $new_stock_ids_hash{$tissue_sample_name} = $tissue_sample->stock_id();
+                    $tissue_sample_index_number++;
+                }
+
+                if (scalar @$tissue_sample_names > 0) {
+                    my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self -> get_trial_id() });
+                    $study->create_projectprops({ 'project_has_tissue_sample_entries' => 1 });
                 }
             }
             #Create subplot entry if given. Currently this is for the splitplot trial creation.

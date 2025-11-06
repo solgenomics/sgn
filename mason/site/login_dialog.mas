@@ -43,6 +43,11 @@ $goto_url => '/'
 % }
                         <br />
 
+                        <div>
+                            <input type="checkbox" id="show_password"> Show Password
+                        </div>
+                        <br />
+
                         <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
 
                         <div>
@@ -222,6 +227,8 @@ $goto_url => '/'
 jQuery(document).ready( function() { 
 
     jQuery("#site_login_dialog").on('shown.bs.modal', function() {
+        jQuery('#show_password').prop('checked', false);
+        document.getElementById("password").type = "password";
         jQuery("#username").focus();
     });
 
@@ -266,6 +273,16 @@ jQuery(document).ready( function() {
                 }
             }
         });
+    });
+
+    jQuery('#show_password').change(function() {
+        var pwd_status = document.getElementById("password");
+        console.log('type', pwd_status.type);
+        if (pwd_status.type === "password") {
+            pwd_status.type = "text";
+        } else {
+            pwd_status.type = "password"
+        }
     });
 
     jQuery('#new_user_modal_show').click(function(){

@@ -5,6 +5,7 @@ use Moose;
 use Data::Dumper;
 use Try::Tiny;
 use SGN::Model::Cvterm;
+use CXGN::People::Schema;
 use CXGN::People::Roles;
 use JSON;
 use Encode;
@@ -12,23 +13,23 @@ use CXGN::BrAPI::v2::ExternalReferences;
 use Try::Tiny;
 
 has 'schema' => (
-		 is       => 'rw',
-		 isa      => 'DBIx::Class::Schema',
-		);
+    is       => 'rw',
+    isa      => 'DBIx::Class::Schema',
+    );
 
 has 'id' => (
-	isa => 'Maybe[Int]',
-	is => 'rw',
+    isa => 'Maybe[Int]',
+    is => 'rw',
 );
 
 has 'name' => (
     isa => 'Str',
-	is => 'rw',
+    is => 'rw',
 );
 
 has 'description' => (
     isa => 'Maybe[Str]',
-	is => 'rw',
+    is => 'rw',
 );
 
 has 'external_references' => (
@@ -191,7 +192,7 @@ sub get_trials_by_breeding_program {
     my %project_name;
     my %project_description;
     my %projects_that_are_genotyping_trials;
-    my %projects_that_are_treatment_trials; #Field Management Factors
+    my %projects_that_are_treatment_trials;
     my %projects_that_are_genotyping_data_projects;
     my %projects_that_are_drone_run_projects;
     my %projects_that_are_drone_run_band_projects;
@@ -541,7 +542,10 @@ sub store_breeding_program {
     # Add new program if no id supplied
     if (!$id) {
         try {
-            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+	    my $dbh = $self->schema()->storage()->dbh();
+	    my $people_schema = CXGN::People::Schema->connect( sub { $dbh->clone() } );
+
+            my $role = CXGN::People::Roles->new({ people_schema => $people_schema});
             my $error = $role->add_sp_role($name);
             if ($error){
                 die $error;
@@ -599,7 +603,9 @@ sub store_breeding_program {
             my $old_program = $schema->resultset("Project::Project")->search({ project_id => $id });
             my $old_name = $old_program->first->name();
 
-            my $role = CXGN::People::Roles->new({bcs_schema=>$self->schema});
+	    my $dbh = $self->schema()->storage()->dbh();
+	    my $people_schema = CXGN::People::Schema->connect( sub { $dbh->clone } );
+            my $role = CXGN::People::Roles->new({ people_schema => $people_schema });
             my $error = $role->update_sp_role($name,$old_name);
             if ($error){
                 die $error;

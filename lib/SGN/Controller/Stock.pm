@@ -160,12 +160,17 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	    $c->forward('get_stock_extended_info');
 	}
 
-	my $logged_user = $c->user;
-	my $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
-	my $user_role = 1 if $logged_user;
-	my $curator   = $logged_user->check_roles('curator') if $logged_user;
-	my $submitter = $logged_user->check_roles('submitter') if $logged_user;
-	my $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+    my $person_id;
+    my $user_role;
+    my $curator;
+    my $submitter;
+    my $sequencer;
+    my $logged_user = $c->user;
+    $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
+    $user_role = 1 if $logged_user;
+    $curator   = $logged_user->check_roles('curator') if $logged_user;
+    $submitter = $logged_user->check_roles('submitter') if $logged_user;
+    $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
 
 	my $dbh = $c->dbc->dbh;
 
@@ -182,28 +187,31 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         return;
     }
 
-	my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
-	my $type = 1 if $stock_type && !$stock_type=~ m/population/;
-	# print message if stock_id is not valid
-	unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
-	    $c->throw_404( "No stock/accession exists for that identifier." );
-	}
-	unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
-	    $c->throw_404( "No stock/accession exists for that identifier." );
-	}
+    my $type;
+    my $stock_type = $stock->get_object_row ? $stock->get_object_row->type->name : undef ;
+    $type = 1 if $stock_type && !$stock_type=~ m/population/;
+    # print message if stock_id is not valid
+    unless ( ( $stock_id =~ m /^\d+$/ ) || ($action eq 'new' && !$stock_id) ) {
+        $c->throw_404( "No stock/accession exists for that identifier." );
+    }
+    unless ( $stock->get_object_row || !$stock_id && $action && $action eq 'new' ) {
+        $c->throw_404( "No stock/accession exists for that identifier." );
+    }
 
 	print STDERR "Checkpoint 2: Elapsed ".(time() - $time)."\n";
 
-	my $props = $self->_stockprops($stock);
-	# print message if the stock is visible only to certain user roles
-	my @logged_user_roles = $logged_user->roles if $logged_user;
-	my @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
-	my $lc = List::Compare->new( {
-	    lists    => [\@logged_user_roles, \@prop_roles],
-	    unsorted => 1,
-				     } );
-	my @intersection = $lc->get_intersection;
-	if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
+    my $props = $self->_stockprops($stock);
+    # print message if the stock is visible only to certain user roles
+    my @logged_user_roles;
+    my @prop_roles;
+    @logged_user_roles = $logged_user->roles if $logged_user;
+    @prop_roles = @{ $props->{visible_to_role} } if  ref($props->{visible_to_role} );
+    my $lc = List::Compare->new( {
+        lists    => [\@logged_user_roles, \@prop_roles],
+        unsorted => 1,
+    } );
+    my @intersection = $lc->get_intersection;
+    if ( !$curator && @prop_roles  && !@intersection) { # if there is no match between user roles and stock visible_to_role props
 	    # $c->throw(is_client_error => 0,
 	    #           title             => 'Restricted page',
 	    #           message           => "Stock $stock_id is not visible to your user!",
@@ -257,6 +265,21 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$editable_stockprops .= ",PUI,organization";
     my $editable_vectorprops = $c->get_conf('editable_vector_props');
 
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
+    my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $transgenic_type_id});
+    my $is_a_transgenic_line;
+    if ($transgenic_stockprop_rs) {
+        $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+    }
+
+    my $is_in_trial;
+    my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
+    my @trial_list = $check_trial->get_trials();
+    if (scalar(@trial_list) > 0) {
+        $is_in_trial = 1;
+    }
+
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
 	$c->stash(
@@ -293,6 +316,9 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
 		editable_stock_props   => $editable_stockprops,
 		editable_vector_props   => $editable_vectorprops,
+        is_obsolete   => $obsolete,
+        is_a_transgenic_line => $is_a_transgenic_line,
+        is_in_trial => $is_in_trial,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
@@ -1031,11 +1057,11 @@ sub _stock_owner_ids {
 sub _stock_editor_info {
     my ($self,$stock) = @_;
     my @owner_info;
-    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
+    my $q = "SELECT sp_person_id, md_metadata.create_date, md_metadata.modification_note, md_metadata.obsolete_note  FROM phenome.stock_owner JOIN metadata.md_metadata USING(metadata_id) WHERE stock_id = ? ";
     my $h = $stock->get_schema->storage->dbh()->prepare($q);
     $h->execute($stock->get_stock_id);
-    while (my ($sp_person_id, $timestamp, $modification_note) = $h->fetchrow_array){
-        push @owner_info, [$sp_person_id, $timestamp, $modification_note];
+    while (my ($sp_person_id, $timestamp, $modification_note, $obsolete_note) = $h->fetchrow_array){
+        push @owner_info, [$sp_person_id, $timestamp, $modification_note, $obsolete_note];
     }
     return \@owner_info;
 }

@@ -25,7 +25,7 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
-    #print STDERR Dumper $params;
+    # print STDERR Dumper $params;
 
     my $owner_first_name;
     my $owner_last_name;
@@ -83,7 +83,8 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
-        display_pedigree=>0
+        display_pedigree=>0,
+        is_obsolete=>$params->{is_obsolete} eq 'true'
     });
     my ($result, $records_total) = $stock_search->search();
 
@@ -96,32 +97,40 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
     my @return;
     foreach (@$result){
         if (!$params->{minimal_info}){
-            my $stock_id = $_->{stock_id};
+            my $stock_id  = $_->{stock_id};
             my $uniquename = $_->{uniquename};
-            my $type = $_->{stock_type};
-            my $organism = $_->{species};
-            my $synonym_string = join ',', @{$_->{synonyms}};
+            my $type      = $_->{stock_type};
+            my $organism  = $_->{species} // '';
+            my $synonym_string = ($_->{synonyms} && @{ $_->{synonyms} || [] })
+                                   ? join(', ', @{ $_->{synonyms} })
+                                   : '';
 
-            my @return_row;
+            my $name_link;
             if ($type eq "cross"){
-                @return_row = ( "<a href=\"/cross/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string );
-            }  elsif ($type eq "family_name"){
-                @return_row = ( "<a href=\"/family/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string );
+                $name_link = qq{<a href="/cross/$stock_id">$uniquename</a>};
+            } elsif ($type eq "family_name"){
+                $name_link = qq{<a href="/family/$stock_id">$uniquename</a>};
             } elsif ($type eq "seedlot"){
-                @return_row = ( "<a href=\"/breeders/seedlot/$stock_id\">$uniquename</a>", $type, $organism, $synonym_string );
+                $name_link = qq{<a href="/breeders/seedlot/$stock_id">$uniquename</a>};
             } else {
-                @return_row = ( "<a href=\"/stock/$stock_id/view\">$uniquename</a>", $type, $organism, $synonym_string );
+                $name_link = qq{<a href="/stock/$stock_id/view">$uniquename</a>};
             }
+
+            # Start the row with Stock Id first, then the name link, etc.
+            my @return_row = ( $stock_id, $name_link, $type, $organism, $synonym_string );
+
+            # Append extra stockprop columns in the exact order requested by the client
             foreach my $property (@$stockprop_columns_view_array){
                 push @return_row, $_->{$property};
             }
+
             push @return, \@return_row;
 
         } else {
-            push @return, [$_->{stock_id}, $_->{uniquename}];
+            # unchanged: used by graphical filtering
+            push @return, [ $_->{stock_id}, $_->{uniquename} ];
         }
     }
-
     #print STDERR Dumper \@return;
     $c->stash->{rest} = { data => [ @return ], draw => $draw, recordsTotal => $records_total,  recordsFiltered => $records_total };
 }
