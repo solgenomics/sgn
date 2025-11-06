@@ -917,6 +917,7 @@ $design_types => ()
                             <tr>
                                 <td>trial_name</td>
                                 <td>breeding_program</td>
+                                <td>folder</td>
                                 <td>location</td>
                                 <td>year</td>
                                 <td>transplanting_date</td>
@@ -940,6 +941,7 @@ $design_types => ()
                     <ul>
                         <li>new_trial_name (A new name for the trial, must not already exist in the database)</li>
                         <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
+                        <li>folder (The name of the folder to display the trial in on the Manage > Field Trials page.  If the folder does not exist, a new one will be created under the trial's breeding program)
                         <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
                         <li>year (The year the trial was held.)</li>
                         <li>transplanting_date (The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format or 'remove' to remove the date)</li>

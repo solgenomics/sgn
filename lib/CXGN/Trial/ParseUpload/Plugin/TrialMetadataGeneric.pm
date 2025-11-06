@@ -9,7 +9,7 @@ use CXGN::Stock::Seedlot;
 use CXGN::Trial;
 
 my @REQUIRED_COLUMNS = qw|trial_name|;
-my @OPTIONAL_COLUMNS = qw|name breeding_program location year transplanting_date planting_date harvest_date design_type description type plot_width plot_length field_size|;
+my @OPTIONAL_COLUMNS = qw|name breeding_program folder location year transplanting_date planting_date harvest_date design_type description type plot_width plot_length field_size|;
 # Any additional columns are unsupported and will return an error
 
 # VALID DESIGN TYPES
@@ -219,6 +219,10 @@ sub _parse_with_plugin {
     my @valid_trial_types = CXGN::Trial::get_all_project_types($schema);
     my %valid_trial_types = map { @{$_}[1] => @{$_}[0] } @valid_trial_types;
 
+    # Get existing folders (set hash of folder name --> folder id)
+    my @existing_folders = CXGN::Trial::Folder->list({ bcs_schema => $schema, folder_for_trials => 1 });
+    my %folders_hash = map { @{$_}[1] => @{$_}[0] } @existing_folders;
+
     my %trial_data;
     my %breeding_programs;
     foreach my $d (@$data) {
@@ -226,6 +230,7 @@ sub _parse_with_plugin {
         my $location = $d->{'location'};
         my $breeding_program = $d->{'breeding_program'};
         my $trial_type = $d->{'type'};
+        my $folder_name = $d->{'folder'};
 
         # Get trial id
         my $rs = $schema->resultset("Project::Project")->search({ name => $trial_name });
@@ -259,6 +264,33 @@ sub _parse_with_plugin {
         if ( $trial_type ) {
             $d->{'type'} = $valid_trial_types{$trial_type};
         }
+
+        # Set folder id, if folder name is present
+        my $folder_id;
+        if ( defined $folder_name && $folder_name ne '' ) {
+
+            # use existing folder
+            if ( exists $folders_hash{$folder_name} ) {
+                $folder_id = $folders_hash{$folder_name};
+            }
+
+            # create new folder
+            else {
+                my $bp_name = defined $breeding_program && $breeding_program ne '' ? $breeding_program : $original_breeding_program;
+                my $bprs = $schema->resultset("Project::Project")->search({ name => $bp_name });
+                my $breeding_program_id = $bprs->first->project_id;
+                my $f = CXGN::Trial::Folder->create({
+                    bcs_schema => $schema,
+                    name => $folder_name,
+                    breeding_program_id => $breeding_program_id,
+                    folder_for_trials => 1
+                });
+                $folder_id = $f->folder_id();
+                $folders_hash{$folder_name} = $folder_id;
+            }
+
+        }
+        $d->{'folder'} = $folder_id;
 
         $trial_data{$trial_id} = $d;
     }
