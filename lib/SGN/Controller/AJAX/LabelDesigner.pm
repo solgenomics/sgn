@@ -390,12 +390,13 @@ __PACKAGE__->config(
        my $source_name = $c->req->param("source_name");
        my $design_json = $c->req->param("design_json");
        # decode json
-       my $json = new JSON;
+       my $json = JSON->new();
        #my $design_params = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($design_json);
        my $design_params = decode_json($design_json);
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
        my $start_number = $design_params->{'start_number'} || undef;
        my $end_number = $design_params->{'end_number'} || undef;
+       my $text_alignment = $design_params->{"text_alignment"} || "middle";
 
        if ($labels_to_download) {
            $start_number = $start_number || 1;
@@ -496,10 +497,10 @@ __PACKAGE__->config(
            version       => 0,
            level         => 'M',
            casesensitive => 1,
-           lightcolor    => Imager::Color->new(255, 255, 255),
-           darkcolor     => Imager::Color->new(0, 0, 0),
+           lightcolor    => Imager::Color->new(255, 255, 255, 255), # add alpha channel
+           darkcolor     => Imager::Color->new(0, 0, 0, 255), # add alpha channel
        );
-       my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+       my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
 
        if ($download_type eq 'pdf') {
 
@@ -544,14 +545,14 @@ __PACKAGE__->config(
                                    # initialize barcode objs
                                    my $barcode_object = Barcode::Code128->new();
                                    my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
-                                   open(PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
-                                   binmode(PNG);
+                                   open(my $PNG, ">", $png_location) or die "Can't write $png_location: $!\n";
+                                   binmode($PNG);
 
                                    $barcode_object->option("scale", $element{'size'}, "font_align", "center", "padding", 5, "show_text", 0);
                                    $barcode_object->barcode($filled_value);
                                    my $barcode = $barcode_object->gd_image();
-                                   print PNG $barcode->png();
-                                   close(PNG);
+                                   print $PNG $barcode->png();
+                                   close($PNG);
 
                                     my $image = $pdf->image_png($png_location);
                                     my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
@@ -564,9 +565,10 @@ __PACKAGE__->config(
                               } else { #QRCode
 
                                   my $barcode = $qrcode->plot( $filled_value );
-                                  my $barcode_file = $barcode->write(file => $jpeg_location);
+                                  my $barcode_file = $barcode->write(file => $png_location);
+                                  system("convert $png_location -depth 8 $png_location"); # convert to 8 bit encoding. Won't work with default 16 bit encoding.
 
-                                   my $image = $pdf->image_jpeg($jpeg_location);
+                                   my $image = $pdf->image_png($png_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
@@ -582,9 +584,14 @@ __PACKAGE__->config(
                                 my $adjusted_size = $element{'size'} / $conversion_factor; # scale to 72 pts per inch
                                 $text->font($font, $adjusted_size);
                                 my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
+                                my $width = $element{'width'} / $conversion_factor;
                                 my $elementy = $elementy - ($height/4); # adjust for img position starting at bottom
                                 $text->translate($elementx, $elementy);
-                                $text->text_center($filled_value);
+                                if ($text_alignment eq "middle") {
+                                    $text->text_center($filled_value);
+                                } elsif ($text_alignment eq "left") {
+                                    $text->text($filled_value);
+                                }
                            }
                        }
 
@@ -844,7 +851,7 @@ sub get_data {
         my $match = substr($data_level, 6);
         my $list_data = SGN::Controller::AJAX::List->retrieve_list($c, $id);
         my @list_data = @{$list_data};
-        my $json = new JSON;
+        my $json = JSON->new();
         #my $identifier_object = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_data[0][1]);
 	my $identifier_object = decode_json($list_data[0][1]);
         my $records = $identifier_object->{'records'};

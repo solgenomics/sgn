@@ -22,6 +22,7 @@ use JSON;
 use CXGN::Tools::Run;
 use CXGN::Genotype::ProtocolProp;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Genotype::ParseUpload;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -289,6 +290,140 @@ sub genotyping_protocol_details_POST : Args(0) {
 }
 
 
+sub genotyping_protocol_add_marker_metadata : Path('/ajax/genotyping_protocol/add_marker_metadata') : ActionClass('REST') { }
+
+sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $protocol_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    my $upload = $c->req->upload('upload_mla_file');
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my (@errors, %response);
+
+    if (!$c->user()) {
+        print STDERR "User not logged in... not uploading marker metadata.\n";
+        push @errors, "You need to be logged in to upload marker metadata.";
+        $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_role = $c->user->get_object->get_user_type();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => 'marker_metadata_upload',
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in archive
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        push @errors, "Could not save file $upload_original_name in archive";
+        $c->stash->{rest} = {filename => $upload_original_name, error => \@errors };
+        return;
+    }
+    unlink $upload_tempfile;
+
+    # Validate the upload file
+    my $parser = CXGN::Genotype::ParseUpload->new({
+        chado_schema => $schema,
+        filename => $archived_filename_with_path,
+        observation_unit_type_name => 'marker',
+        nd_protocol_id => $protocol_id,
+        marker_metadata_trait_ontology_root => $c->config->{marker_metadata_trait_ontology_root}
+    });
+    $parser->load_plugin('MarkerMetadata');
+    my $parsed_data = $parser->parse();
+    my $parse_errors = $parser->get_parse_errors();
+
+    if (!$parsed_data) {
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            return;
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."\n";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        return;
+    }
+
+    # Store the allele information
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $schema,
+        phenome_schema => $phenome_schema,
+        nd_protocol_id => $protocol_id,
+        sp_person_id => $user_id
+    });
+    $protocol->set_marker_metadata($parsed_data);
+
+    $c->stash->{rest} = { success => 1 };
+    return;
+}
+
+sub genotyping_protocol_get_marker_metadata : Path('/ajax/genotyping_protocol/get_marker_metadata') : ActionClass('REST') { }
+
+sub genotyping_protocol_get_marker_metadata_GET : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $protocol_id = shift;
+    my $marker_name = $c->req->param("marker_name");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    # Get the allele information
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $schema,
+        nd_protocol_id => $protocol_id
+    });
+    my $metadata = $protocol->get_marker_metadata($marker_name);
+
+    $c->stash->{rest} = $metadata || {};
+    return;
+}
+
+sub locus_marker_autocomplete : Path('/ajax/genotyping_protocol/locus_marker_autocomplete') : ActionClass('REST') { }
+
+sub locus_marker_autocomplete_GET :Args(0) {
+    my ( $self, $c ) = @_;
+
+    my $protocol_id = $c->req->param('protocol_id');
+    $protocol_id =~ s/(^\s+|\s+)$//g;
+    $protocol_id =~ s/\s+/ /g;
+
+    my $term = $c->req->param('term');
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "SELECT DISTINCT marker_name
+        FROM phenome.locus_geno_marker
+        WHERE nd_protocol_id = ?
+        AND marker_name ILIKE ?";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute($protocol_id, '%'.$term.'%');
+    while (my ($marker) = $sth->fetchrow_array ) {
+        push @response_list, $marker;
+    }
+
+    $c->stash->{rest} = \@response_list;
+}
 sub empty_protocol_delete : Path('/ajax/breeders/empty_protocol_delete') : ActionClass('REST') { }
 
 sub empty_protocol_delete_GET : Args(0) {
