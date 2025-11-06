@@ -43,9 +43,7 @@ sub transform {
 
          # add map of found name --> found id
          for my $i (0 .. $#found_names) {
-            my $n = $found_names[$i];
-            my $i = $found_ids[$i];
-            $found_hash{$n} = $i;
+            $found_hash{$found_names[$i]} = $found_ids[$i];
          }
 
          my %found_names_hash = map{$_ => 1} @found_names;
