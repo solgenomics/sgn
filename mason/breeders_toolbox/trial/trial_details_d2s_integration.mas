@@ -54,7 +54,7 @@
             <li>Copy your API Key from your D2S profile page</li>
             <li>Paste your API Key below:</li>
             <form>
-              <input class="form-control" style="margin: 15px 0" type="text" id="d2s_api_key" name="d2s_api_key" placeholder="Your D2S API Key" />
+              <input class="form-control" style="margin: 15px 0; width: 100%" type="text" id="d2s_api_key" name="d2s_api_key" placeholder="Your D2S API Key" />
             </form>
             <button id="d2s_save_button" type="button" class="btn btn-primary" style="margin: 25px 0">Save API Key</button>
           </ol>
