@@ -1787,8 +1787,21 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
 
                     foreach my $gene (@gene_names) {
                         my $gene_relative_expression_value = '';
+                        my $number_of_replicates = '';
+                        my $standard_deviation = '';
+                        my @display_info = ();
                         $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
-                        push @expression_values, $gene_relative_expression_value;
+                        push @display_info, $gene_relative_expression_value;
+                        $number_of_replicates = $gene_relative_expression->{$gene}->{'number_of_replicates'};
+                        if ($number_of_replicates == 1) {
+                            push @display_info, $number_of_replicates." replicate";
+                        } else {
+                            push @display_info, $number_of_replicates." replicates";
+                        }
+                        $standard_deviation = $gene_relative_expression->{$gene}->{'standard_deviation'};
+                        push @display_info, "SD: ". $standard_deviation;
+                        my $value_string = join("<br>", @display_info);
+                        push @expression_values, $value_string;
                     }
                     push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, $transformant_name);
                 } else {
@@ -1807,11 +1820,23 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                 my $tissue_date_data = $expression_info->{$selected_tissue_type}->{$selected_assay_date};
                 my @expression_values = ();
                 my $gene_relative_expression = $tissue_date_data->{'relative_expression_data'}->{'relative_expression_values'};
-
                 foreach my $gene (@gene_names) {
                     my $gene_relative_expression_value = '';
+                    my $number_of_replicates = '';
+                    my $standard_deviation = '';
+                    my @display_info = ();
                     $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
-                    push @expression_values, $gene_relative_expression_value;
+                    push @display_info, $gene_relative_expression_value;
+                    $number_of_replicates = $gene_relative_expression->{$gene}->{'number_of_replicates'};
+                    if ($number_of_replicates == 1) {
+                        push @display_info, $number_of_replicates." replicate";
+                    } else {
+                        push @display_info, $number_of_replicates." replicates";
+                    }
+                    $standard_deviation = $gene_relative_expression->{$gene}->{'standard_deviation'};
+                    push @display_info, "SD: ". $standard_deviation;
+                    my $value_string = join("<br>", @display_info);
+                    push @expression_values, $value_string;
                 }
                 push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
             } else {
