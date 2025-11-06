@@ -292,22 +292,39 @@ export function init(vector_id) {
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-//	alert("RETRIEVED DATA: "+JSON.stringify(r));
+	alert("RETRIEVED DATA: "+JSON.stringify(r));
+
+	if (r.error === 'The vector information you are trying to access does not exist.') {
+	    alert('turning it off');
+	    jQuery('#vector_view_offswitch').click();
+	    return;
+	}
+	else {
+	    alert('turning it on');
+	    jQuery('#vector_view_onswitch').click();
+	    
+	}
+	    
 	updateFeatureDataTable(r.features);
 	updateREsitesDataTable(r.re_sites);
 	updateMetadataDataTable(r.metadata);
 	if (r.sequence) { updateSequenceDataTable(r.sequence); } 
 
-//	alert("NOW HERE!");
+	alert("NOW HERE!");
 	metadata = r.metadata;
 	var feature_table = r.features;
 	//re_sites_table = r.re_sites;
-	//	alert("GOING TO UPDATE VECTOR USING "+JSON.stringify(r));
+		alert("GOING TO UPDATE VECTOR USING "+JSON.stringify(r));
 
 
 	var re_sites_table = getREsitesDataFromDataTable();
 	
 	updateVector(metadata, feature_table, re_sites_table);
+
+	
+	alert('LENGTHS: '+re_sites_table.length+' , '.feature_table.length);
+
+	
     },
 	    function(r) {
 		alert('An error occurred! '+JSON.stringify(r));
@@ -403,7 +420,7 @@ export function init(vector_id) {
 	jQuery('#re_site_name').focus();
     });
 
-
+   
     jQuery(window).on('beforeunload', function(){
 
 //	alert('beforeunload');
