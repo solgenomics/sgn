@@ -14,7 +14,7 @@ $design_types => ()
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
-<& /page/page_title.mas, title=>"Upload Data" &>
+<& /page/page_title.mas, title=>"Upload Factory" &>
 
 <style>
 .ui-autocomplete {
@@ -25,21 +25,38 @@ $design_types => ()
 <div class="container-fluid">
 
 <div class="well well-sm">
-    <h4>Archived files</h4>
-    <div style="display:flex;justify-content:flex-end;">
-        <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_facility_file_form" name="upload_facility_file_form">
-            <div class="form-group">
-                <label class="col-sm-4 control-label">Archive a file: </label>
-                <div class="col-sm-6">
-                    <input type="file" id="upload_facility_archive_new_file" name="upload_facility_archive_new_file" encoding="multipart/form-data" enctype="multipart/form-data">
+    <h3>Archived files</h3>
+    <table style="width:100%">
+        <tr>
+            <td>
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">Check file formatting: </label>
+                        <div class="col-sm-6">
+                            <select class="form-control form-control-sm" id="check_file_format_select"></select>
+                        </div>
+                    </div>
+                </form>
+            </td>
+            <td>
+                &nbsp; &nbsp; &nbsp; &nbsp; 
+            </td>
+            <td>
+                <div style="display:flex;justify-content:flex-end;">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Archive a file: </label>
+                            <div class="col-sm-6">
+                                <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file" encoding="multipart/form-data" enctype="multipart/form-data">
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-primary" id="upload_factory_new_file_btn"><span class="glyphicon glyphicon-floppy-open"></span></button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-sm-2">
-                    <button type="submit" class="btn btn-primary" id="upload_facility_new_file_btn"><span class="glyphicon glyphicon-upload"></span></button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <table id="upload_facility_archived_files_table">
+            </td>
+    <table id="upload_factory_archived_files_table">
         <thead>
         </thead>
         <tbody>
@@ -50,19 +67,21 @@ $design_types => ()
 </div>
 
 <div class="well well-sm">
-<h4>In-progress uploads</h4>
-<table id="upload_facility_validated_uploads_table">
+<h3>In-progress uploads</h3>
+<table id="upload_factory_validated_uploads_table">
 </table>
 </div>
 
 <div class="well well-sm">
-<h4>Completed uploads</h4>
+<h3>Completed uploads</h3>
 <br>
 <button class="btn btn-sm btn-primary">Dismiss all completed uploads</button>
 <br>
-<table id="upload_facility_completed_uploads_table">
+<table id="upload_factory_completed_uploads_table">
 </table>
 </div>
+
+<& /file_formats/trial_upload.mas &>
 
 <script>
 
@@ -77,53 +96,36 @@ function load_archived_files_table() {
             if (response.error) {
                 alert(response.error);
             } else {
-                console.log(response.data);
                 if (response.data.length > 0 ) {
-                    let file_tbody = jQuery('#upload_facility_archived_files_table tbody');
-                    let file_thead = jQuery('#upload_facility_archived_files_table thead');
-                    let file_tfoot = jQuery('#upload_facility_archived_files_table tfoot');
+                    let file_tbody = jQuery('#upload_factory_archived_files_table tbody');
+                    let file_thead = jQuery('#upload_factory_archived_files_table thead');
+                    let file_tfoot = jQuery('#upload_factory_archived_files_table tfoot');
                     file_thead.empty();
                     file_tbody.empty();
                     file_tfoot.empty();
+                    let header_row = jQuery('<tr>');
+                    header_row.append(jQuery('<th>').text("Timestamp"));
+                    header_row.append(jQuery('<th>').text("File Name"));
                     if (response.data[0].hasOwnProperty('user_id')) {
-                        let header_row = jQuery('<tr>');
-                        header_row.append(jQuery('<th>').text("Timestamp"));
-                        header_row.append(jQuery('<th>').text("File Name"));
                         header_row.append(jQuery('<th>').text("Uploader"));
-                        header_row.append(jQuery('<th>').text("Upload As"));
-                        //header_row.append(jQuery('<th>').text("Delete"));
-                        header_row.append(jQuery('<th>').text("Process File"));
-                        file_thead.append(header_row);
-                        response.data.forEach(row => {
-                            let tr = jQuery("<tr>");
-                            tr.append(jQuery("<td>").text(row.timestamp));
-                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
-                            tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
-                            tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
-                            //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
-                            tr.append(jQuery("<td>").html("<button class='btn btn-success'><span class='glyphicon glyphicon-play-circle'></span></button>"));
-                            file_tbody.append(tr);
-                        });
-                        jQuery('#upload_facility_archived_files_table').DataTable();
-                    } else {
-                        let header_row = jQuery('<tr>');
-                        header_row.append(jQuery('<th>').text("Timestamp"));
-                        header_row.append(jQuery('<th>').text("File Name"));
-                        header_row.append(jQuery('<th>').text("Upload As"));
-                        //header_row.append(jQuery('<th>').text("Delete"));
-                        header_row.append(jQuery('<th>').text("Process File"));
-                        file_thead.append(header_row);
-                        response.data.forEach(row => {
-                            let tr = jQuery("<tr>");
-                            tr.append(jQuery("<td>").text(row.timestamp));
-                            tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
-                            tr.append(jQuery("<td>").html("<select>"+upload_type_options()+"</select>"));
-                            //tr.append(jQuery("<td>").html("<button class='btn btn-danger'>Delete</button>"));
-                            tr.append(jQuery("<td>").html("<button class='btn btn-success'><span class='glyphicon glyphicon-play-circle'></span></button>"));
-                            file_tbody.append(tr);
-                        });
-                        jQuery('#upload_facility_archived_files_table').DataTable();
                     }
+                    header_row.append(jQuery('<th>').text("Upload As"));
+                    //header_row.append(jQuery('<th>').text("Delete"));
+                    header_row.append(jQuery('<th>').text("Process File"));
+                    file_thead.append(header_row);
+                    response.data.forEach(row => {
+                        let tr = jQuery("<tr>");
+                        tr.append(jQuery("<td>").text(row.timestamp));
+                        tr.append(jQuery("<td>").html("<a href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                        if (response.data[0].hasOwnProperty('user_id')) {
+                            tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
+                        }
+                        tr.append(jQuery("<td>").html("<select class='form-control form-control-sm' id='upload_select_type_"+row.file_id+"'>"+upload_type_options()+"</select>"));
+                        //tr.append(jQuery("<td>").html("<button class='btn btn-danger'><span class="glyphicon glyphicon-trash"></span></button>"));
+                        tr.append(jQuery("<td>").html("<button class='btn btn-success process-file-btn' id='process_file_"+row.file_id+"'><span class='glyphicon glyphicon-play-circle'></span></button>"));
+                        file_tbody.append(tr);
+                    });
+                    jQuery('#upload_factory_archived_files_table').DataTable();
                 } 
             }
         },
@@ -134,13 +136,16 @@ function load_archived_files_table() {
 }
 
 function upload_type_options() {
-    return "<option value='trials'>Trials (Multi-trial format)</option>"+
+    return "<option value='null_choice'>Select...</option>"+
+        "<option value='trials'>Trials (Multi-trial format)</option>"+
+        "<option value='trial_metadata'>Trial Metadata</option>"+
         "<option value='genotyping_plate'>Genotyping Plates</option>"+
         "<option value='genotyping_data'>Genotyping Data</option>"+
         "<option value='locations'>Locations</option>"+
         "<option value='accessions'>Accessions</option>"+
         "<option value='populations'>Populations</option>"+
-        "<option value='seedlots'>Seedlots</option>"+
+        "<option value='seedlot_inventory'>Seedlot Inventory</option>"+
+        "<option value='seedlot_transaction'>Seedlot Transaction</option>"+
         "<option value='pedigrees'>Pedigrees</option>"+
         "<option value='crosses'>Crosses</option>"+
         "<option value='new_progenies'>New Progeny Names</option>" +
@@ -168,23 +173,244 @@ function upload_type_options() {
         "<option value='plants_per_subplot'>Plants by Num Plants per Subplot</option>";
 }
 
+function process_file(file_id, upload_type) {
+    switch(upload_type) {
+        case 'trials' :
+            alert("Trial upload");
+            break;
+        case 'trial_metadata' :
+            alert("Trial metadata upload");
+            break;
+        case 'genotyping_plate' : 
+            alert("genotyping plate");
+            break;
+        case 'genotyping_data' : 
+            alert("genotyping data");
+            break;
+        case 'locations' : 
+            alert("location upload");
+            break;
+        case 'accessions' : 
+            alert('accession upload');
+            break;
+        case 'populations' : 
+            alert("population upload");
+            break;
+        case 'seedlot_inventory' : 
+            alert('seedlot upload');
+            break;
+        case 'seedlot_transaction' : 
+            alert('seedlot upload');
+            break;
+        case 'pedigrees' : 
+            alert('pedigree upload');
+            break;
+        case 'crosses' : 
+            alert('cross upload');
+            break;
+        case 'new_progenies' : 
+            alert('new progeny names upload');
+            break;
+        case 'existing_progenies' : 
+            alert('existing progeny names upload');
+            break;
+        case 'phenotyping_spreadsheet' : 
+            alert('phenotype upload');
+            break;
+        case 'fieldbook_phenotypes' : 
+            alert('fieldbook upload');
+            break;
+        case 'treatments' : 
+            alert('treatment upload');
+            break;
+        case 'gps_coords' : 
+            alert('GPS upload');
+            break;
+        case 'change_accessions' : 
+            alert('Accession swap upload');
+            break;
+        case 'entry_numbers' : 
+            alert('Entry numbers upload');
+            break;
+        case 'nirs' : 
+            alert('NIRS upload');
+            break;
+        case 'metabolomics' : 
+            alert('metabolomics upload');
+            break;
+        case 'transcriptomics' : 
+            alert('transcriptomics upload');
+            break;
+        case 'images' : 
+            alert('image upload');
+            break;
+        case 'soil_data' : 
+            alert('soil data upload');
+            break;
+        case 'vectors' : 
+            alert('Vector upload');
+            break;
+        case 'subplots_by_name' : 
+            alert('Subplot upload');
+            break;
+        case 'subplots_by_index' : 
+            alert('Subplot upload');
+            break;
+        case 'subplots_per_plot' : 
+            alert('Subplot upload');
+            break;
+        case 'plants_by_name' : 
+            alert('Plant upload');
+            break;
+        case 'plants_by_index' : 
+            alert('Plant upload');
+            break;
+        case 'plants_per_plot' : 
+            alert('plant upload');
+            break;
+        case 'subplot_plants_by_name' : 
+            alert('Plant upload');
+            break;
+        case 'subplot_plants_by_index' : 
+            alert('Plant upload');
+            break;
+        case 'plants_per_subplot' : 
+            alert('plant upload');
+            break;
+        default :
+            alert("Select an upload type.");
+            break;
+    }
+    return;
+}
+
+function display_upload_formats(upload_type) {
+    switch(upload_type) {
+        case 'trials' :
+            jQuery('#multiple_trial_upload_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'trial_metadata' :
+            jQuery('#trial_metadata_upload_spreadsheet_format_modal').modal("show");
+            break;
+        case 'genotyping_plate' : 
+            alert("genotyping plate");
+            break;
+        case 'genotyping_data' : 
+            alert("genotyping data");
+            break;
+        case 'locations' : 
+            alert("location upload");
+            break;
+        case 'accessions' : 
+            alert('accession upload');
+            break;
+        case 'populations' : 
+            alert("population upload");
+            break;
+        case 'seedlot_inventory' : 
+            alert('seedlot upload');
+            break;
+        case 'seedlot_transaction' : 
+            alert('seedlot upload');
+            break;
+        case 'pedigrees' : 
+            alert('pedigree upload');
+            break;
+        case 'crosses' : 
+            alert('cross upload');
+            break;
+        case 'new_progenies' : 
+            alert('new progeny names upload');
+            break;
+        case 'existing_progenies' : 
+            alert('existing progeny names upload');
+            break;
+        case 'phenotyping_spreadsheet' : 
+            alert('phenotype upload');
+            break;
+        case 'fieldbook_phenotypes' : 
+            alert('fieldbook upload');
+            break;
+        case 'treatments' : 
+            alert('treatment upload');
+            break;
+        case 'gps_coords' : 
+            alert('GPS upload');
+            break;
+        case 'change_accessions' : 
+            alert('Accession swap upload');
+            break;
+        case 'entry_numbers' : 
+            alert('Entry numbers upload');
+            break;
+        case 'nirs' : 
+            alert('NIRS upload');
+            break;
+        case 'metabolomics' : 
+            alert('metabolomics upload');
+            break;
+        case 'transcriptomics' : 
+            alert('transcriptomics upload');
+            break;
+        case 'images' : 
+            alert('image upload');
+            break;
+        case 'soil_data' : 
+            alert('soil data upload');
+            break;
+        case 'vectors' : 
+            alert('Vector upload');
+            break;
+        case 'subplots_by_name' : 
+            alert('Subplot upload');
+            break;
+        case 'subplots_by_index' : 
+            alert('Subplot upload');
+            break;
+        case 'subplots_per_plot' : 
+            alert('Subplot upload');
+            break;
+        case 'plants_by_name' : 
+            alert('Plant upload');
+            break;
+        case 'plants_by_index' : 
+            alert('Plant upload');
+            break;
+        case 'plants_per_plot' : 
+            alert('plant upload');
+            break;
+        case 'subplot_plants_by_name' : 
+            alert('Plant upload');
+            break;
+        case 'subplot_plants_by_index' : 
+            alert('Plant upload');
+            break;
+        case 'plants_per_subplot' : 
+            alert('plant upload');
+            break;
+        default :
+            break;
+    }
+    return;
+}
+
 jQuery(document).ready(function(){
 
     load_archived_files_table();
 
-    jQuery('#upload_facility_new_file_btn').click(function(event){
+    jQuery('#upload_factory_new_file_btn').click(function(event){
         event.preventDefault();
-        var uploadFile = jQuery("#upload_facility_archive_new_file").val();
+        var uploadFile = jQuery("#upload_factory_archive_new_file").val();
         if (uploadFile === '') {
             alert("Please select a file");
             return;
         }
         jQuery('#working_modal').modal("show");
-        jQuery("#upload_facility_file_form").attr("action", '/ajax/tools/documents/upload');
-        jQuery("#upload_facility_file_form").submit();
+        jQuery("#upload_factory_file_form").attr("action", '/ajax/tools/documents/upload');
+        jQuery("#upload_factory_file_form").submit();
     });
 
-    jQuery("#upload_facility_file_form").iframePostForm({
+    jQuery("#upload_factory_file_form").iframePostForm({
         json: true,
         post: function () { },
         timeout: 7200,
@@ -195,6 +421,20 @@ jQuery(document).ready(function(){
             }
             load_archived_files_table();
         }
+    });
+
+    jQuery(document).on('click','.process-file-btn',function() {
+        let file_id = jQuery(this).attr('id').replace('process_file_', '');
+        let upload_type = jQuery("#upload_select_type_"+file_id).val();
+
+        process_file(file_id, upload_type);
+    });
+
+    jQuery('#check_file_format_select').html(upload_type_options());
+
+    jQuery('#check_file_format_select').on('change', function(){
+        let upload_type = jQuery('#check_file_format_select').val();
+        display_upload_formats(upload_type);
     });
 
 });

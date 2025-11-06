@@ -39,9 +39,9 @@ sub upload_document_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
     my $upload = $c->req->upload('upload_document_browser_file_input');
-    my $upload_facility_file = $c->req->upload('upload_facility_archive_new_file');
-    if ($upload_facility_file) {
-        $upload = $upload_facility_file;
+    my $upload_factory_file = $c->req->upload('upload_factory_archive_new_file');
+    if ($upload_factory_file) {
+        $upload = $upload_factory_file;
     }
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
