@@ -292,15 +292,15 @@ export function init(vector_id) {
     jQuery.ajax({
 	url: '/vectorviewer/' + vector_id + '/retrieve',
     }).then(function(r) {
-	alert("RETRIEVED DATA: "+JSON.stringify(r));
+	//alert("RETRIEVED DATA: "+JSON.stringify(r));
 
 	if (r.error === 'The vector information you are trying to access does not exist.') {
-	    alert('turning it off');
+	  //  alert('turning it off');
 	    jQuery('#vector_view_offswitch').click();
 	    return;
 	}
 	else {
-	    alert('turning it on');
+	    //alert('turning it on');
 	    jQuery('#vector_view_onswitch').click();
 	    
 	}
@@ -310,11 +310,11 @@ export function init(vector_id) {
 	updateMetadataDataTable(r.metadata);
 	if (r.sequence) { updateSequenceDataTable(r.sequence); } 
 
-	alert("NOW HERE!");
+//	alert("NOW HERE!");
 	metadata = r.metadata;
 	var feature_table = r.features;
 	//re_sites_table = r.re_sites;
-		alert("GOING TO UPDATE VECTOR USING "+JSON.stringify(r));
+//		alert("GOING TO UPDATE VECTOR USING "+JSON.stringify(r));
 
 
 	var re_sites_table = getREsitesDataFromDataTable();
