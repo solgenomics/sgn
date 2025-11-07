@@ -446,8 +446,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         has_header => $has_header,
         search_type => $search_type,
 	    repetitive_measurements => $repetitive_measurements,
-	    phenotype_start_date => $phenotype_start_date,
-	    phenotype_end_date => $phenotype_end_date,
+	    start_date => $phenotype_start_date,
+	    end_date => $phenotype_end_date,
     });
 
     # print STDERR "Repetitive_measurements option recieved" .$repetitive_measurements  ."\n";
