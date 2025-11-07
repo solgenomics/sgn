@@ -191,7 +191,23 @@ class D2SAPI {
                         // Set additional params, depending on layer stats
                         let params = [];
                         const rasters = dp.stac_properties?.raster;
-                        if ( rasters && rasters.length === 1 ) {
+
+                        // Multi-band layers: use the first 3 bands
+                        if ( rasters && rasters.length > 1 ) {
+                            for ( let i = 0; i < 3; i++ ) {
+                                if ( rasters[i] ) {
+                                    params.push(`bidx=${i+1}`);
+                                    const min = rasters[i].stats?.minimum;
+                                    const max = rasters[i].stats?.maximum;
+                                    if ( min && max ) {
+                                        params.push(`rescale=${min},${max}`);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Single band layers
+                        else if ( rasters && rasters.length === 1 ) {
                             const min = rasters[0].stats?.minimum;
                             const max = rasters[0].stats?.maximum;
                             if ( min && max ) {
@@ -221,7 +237,6 @@ class D2SAPI {
                 }
             }
         }
-
         return orthos;
     }
 
