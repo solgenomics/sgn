@@ -6,6 +6,7 @@ use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
+use Scalar::Util qw(looks_like_number);
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -57,6 +58,7 @@ sub _validate_with_plugin {
 
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_genes = $parsed_values->{'gene'};
+    my $seen_Cq_values = $parsed_values->{'Cq'};
 
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'uniquenames', $seen_accession_names)->{'missing'}};
@@ -67,6 +69,12 @@ sub _validate_with_plugin {
     foreach my $gene_name (@$seen_genes) {
         if (!exists $valid_genes{$gene_name}) {
             push @error_messages, "Gene not in this vector construct: $gene_name.";
+        }
+    }
+
+    foreach my $Cq_value (@$seen_Cq_values) {
+        if (!looks_like_number($Cq_value)) {
+            push @error_messages, "Cq value is not a number: $Cq_value.";
         }
     }
 
