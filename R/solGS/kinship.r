@@ -83,7 +83,7 @@ createGenoData <- function(inputFiles) {
     } 
 }
 
-genoData <- genoDataFilter::createGenoData(inputFiles)  
+genoData <- createGenoData(inputFiles)  
 genoData <- genoData[order(row.names(genoData)), ]
 
 #change genotype coding to [-1, 0, 1], to use the A.mat ) if  [0, 1, 2]
