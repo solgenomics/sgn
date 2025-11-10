@@ -29,14 +29,6 @@ $design_types => ()
     <table style="width:100%">
         <tr>
             <td>
-                <form class="form-horizontal">
-                    <div class="form-group">
-                        <label class="col-sm-4 control-label">Check file formatting: </label>
-                        <div class="col-sm-6">
-                            <select class="form-control form-control-sm" id="check_file_format_select"></select>
-                        </div>
-                    </div>
-                </form>
             </td>
             <td>
                 &nbsp; &nbsp; &nbsp; &nbsp; 
@@ -103,10 +95,12 @@ $design_types => ()
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>There are multiple available upload modes. Choose the upload type from the dropdown below:</b>
+                    <b>There are additional options for this upload:</b>
                     <br>
                     <br>
                     <div id="upload_type_choices_div">
+                        <div id="plant_upload_type_choices_div" hidden>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -150,9 +144,12 @@ $design_types => ()
 
 <& /file_formats/subplot_upload.mas &>
 
+<& /file_formats/genotype_plate_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
+
     jQuery.ajax({
         url: '/ajax/tools/documents/user_archive/',
         type : 'POST',
@@ -164,35 +161,51 @@ function load_archived_files_table() {
                 alert(response.error);
             } else {
                 if (response.data.length > 0 ) {
-                    let file_tbody = jQuery('#upload_factory_archived_files_table tbody');
-                    let file_thead = jQuery('#upload_factory_archived_files_table thead');
-                    let file_tfoot = jQuery('#upload_factory_archived_files_table tfoot');
-                    file_thead.empty();
-                    file_tbody.empty();
-                    file_tfoot.empty();
+
+                    if (jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable('#upload_factory_archived_files_table')) {
+                        let dt = jQuery('#upload_factory_archived_files_table').DataTable();
+                        dt.clear().destroy();
+                    }
+
                     let header_row = jQuery('<tr>');
                     header_row.append(jQuery('<th>').text("Timestamp"));
                     header_row.append(jQuery('<th>').text("File Name"));
+
                     if (response.data[0].hasOwnProperty('user_id')) {
                         header_row.append(jQuery('<th>').text("Uploader"));
                     }
+
                     header_row.append(jQuery('<th>').text("Upload As"));
+                    header_row.append(jQuery('<th>').text("Check formatting rules"));
                     //header_row.append(jQuery('<th>').text("Delete"));
                     header_row.append(jQuery('<th>').text("Process File"));
+
+                    jQuery('#upload_factory_archived_files_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>')
+
+                    let file_tbody = jQuery('#upload_factory_archived_files_table tbody');
+                    let file_thead = jQuery('#upload_factory_archived_files_table thead');
+                    let file_tfoot = jQuery('#upload_factory_archived_files_table tfoot');
+
                     file_thead.append(header_row);
+
                     response.data.forEach(row => {
+                        archived_files_list.push({file_id : row.file_id, file_name : for.filename});
                         let tr = jQuery("<tr>");
                         tr.append(jQuery("<td>").html("<div id='file_timestamp_"+row.file_id+"'>"+row.timestamp+"</div>"));
                         tr.append(jQuery("<td>").html("<a id='file_name_"+row.file_id+"' href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
                         if (response.data[0].hasOwnProperty('user_id')) {
                             tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
                         }
-                        tr.append(jQuery("<td>").html("<select class='form-control form-control-sm' id='upload_select_type_"+row.file_id+"'>"+upload_type_options()+"</select>"));
+                        tr.append(jQuery("<td>").html("<select class='form-control form-control-sm upload-type-select' id='upload_select_type_"+row.file_id+"'>"+upload_type_options()+"</select>"));
+                        tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-primary check-format-btn' id='check_format_"+row.file_id+"'disabled>Check format</button>"));
                         //tr.append(jQuery("<td>").html("<button class='btn btn-danger'><span class="glyphicon glyphicon-trash"></span></button>"));
                         tr.append(jQuery("<td>").html("<button class='btn btn-success process-file-btn' id='process_file_"+row.file_id+"'><span class='glyphicon glyphicon-play-circle'></span></button>"));
                         file_tbody.append(tr);
                     });
-                    jQuery('#upload_factory_archived_files_table').DataTable();
+
+                    let archived_files = jQuery('#upload_factory_archived_files_table').DataTable({
+                        order : [[0, 'desc']]
+                    });
                 } 
             }
         },
@@ -240,79 +253,86 @@ function process_file(file_data, upload_type) {
     switch(upload_type) {
         case 'trials' :
         case 'trial_metadata' :
-            populate_validate_submit_data(upload_type, file_data, {});
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'genotyping_plate' : 
-            alert("genotyping plate");
+            display_genotyping_plate_upload_choices();
+            jQuery('#genotype_plate_choices_next_btn_div').show();
+            jQuery('#genotype_plate_upload_choices_next_btn').on('click', {file_data : file_data}, populate_genotyping_plate_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'genotyping_data' : 
-            alert("genotyping data");
+            //
             break;
         case 'locations' : 
-            alert("location upload");
+            //
             break;
         case 'accessions' : 
-            alert('accession upload');
+            //
             break;
         case 'populations' : 
-            alert("population upload");
+            //
             break;
         case 'seedlot_inventory' : 
-            alert('seedlot upload');
+            //
             break;
         case 'seedlot_transaction' : 
-            alert('seedlot upload');
+            //
             break;
         case 'pedigrees' : 
-            alert('pedigree upload');
+            //
             break;
         case 'crosses' : 
-            alert('cross upload');
+            //
             break;
         case 'new_progenies' : 
-            alert('new progeny names upload');
+            //
             break;
         case 'existing_progenies' : 
-            alert('existing progeny names upload');
+            //
             break;
         case 'phenotyping_spreadsheet' : 
-            alert('phenotype upload');
+            //
             break;
         case 'fieldbook_phenotypes' : 
-            alert('fieldbook upload');
+            //
             break;
         case 'treatments' : 
-            alert('treatment upload');
+            //
             break;
         case 'gps_coords' : 
-            alert('GPS upload');
+            //
             break;
         case 'change_accessions' : 
-            alert('Accession swap upload');
+           //
             break;
         case 'entry_numbers' : 
-            alert('Entry numbers upload');
+            //
             break;
         case 'nirs' : 
-            alert('NIRS upload');
+            //
             break;
         case 'metabolomics' : 
-            alert('metabolomics upload');
+            //
             break;
         case 'transcriptomics' : 
-            alert('transcriptomics upload');
+            //
             break;
         case 'images' : 
-            alert('image upload');
+            //
             break;
         case 'soil_data' : 
-            alert('soil data upload');
+            //
             break;
         case 'vectors' : 
-            alert('Vector upload');
+            //
             break;
         case 'subplots' : 
-            alert('Subplot upload');
+            display_subplot_upload_choices();
+            jQuery('#subplots_per_plot_div').show();
+            jQuery('#subplot_choices_next_btn_div').show();
+            jQuery('#subplot_upload_choices_next_btn').on('click', {file_data : file_data}, populate_subplot_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'plants' : 
             display_plant_upload_choices();
@@ -340,76 +360,80 @@ function display_upload_formats(upload_type) {
             jQuery('#trial_metadata_upload_spreadsheet_format_modal').modal("show");
             break;
         case 'genotyping_plate' : 
-            alert("genotyping plate");
+            display_genotyping_plate_upload_choices();
+            jQuery('#genotype_plate_upload_type_choice_select').on('change', display_genotyping_plate_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'genotyping_data' : 
-            alert("genotyping data");
+            //
             break;
         case 'locations' : 
-            alert("location upload");
+            //
             break;
         case 'accessions' : 
-            alert('accession upload');
+            //
             break;
         case 'populations' : 
-            alert("population upload");
+            //
             break;
         case 'seedlot_inventory' : 
-            alert('seedlot upload');
+            //
             break;
         case 'seedlot_transaction' : 
-            alert('seedlot upload');
+            //
             break;
         case 'pedigrees' : 
-            alert('pedigree upload');
+            //
             break;
         case 'crosses' : 
-            alert('cross upload');
+            //
             break;
         case 'new_progenies' : 
-            alert('new progeny names upload');
+            //
             break;
         case 'existing_progenies' : 
-            alert('existing progeny names upload');
+            //
             break;
         case 'phenotyping_spreadsheet' : 
-            alert('phenotype upload');
+            //
             break;
         case 'fieldbook_phenotypes' : 
-            alert('fieldbook upload');
+            //
             break;
         case 'treatments' : 
-            alert('treatment upload');
+            //
             break;
         case 'gps_coords' : 
-            alert('GPS upload');
+            //
             break;
         case 'change_accessions' : 
-            alert('Accession swap upload');
+            //
             break;
         case 'entry_numbers' : 
-            alert('Entry numbers upload');
+            //
             break;
         case 'nirs' : 
-            alert('NIRS upload');
+            //
             break;
         case 'metabolomics' : 
-            alert('metabolomics upload');
+            //
             break;
         case 'transcriptomics' : 
-            alert('transcriptomics upload');
+            //
             break;
         case 'images' : 
-            alert('image upload');
+            //
             break;
         case 'soil_data' : 
-            alert('soil data upload');
+            //
             break;
         case 'vectors' : 
-            alert('Vector upload');
+            //
             break;
         case 'subplots' : 
-            alert('Subplot upload');
+            display_subplot_upload_choices();
+            jQuery('#subplot_upload_type_choice_select').on('change', display_subplot_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'plants' : 
             display_plant_upload_choices();
@@ -426,7 +450,7 @@ function display_validate_submit_modal(options) {
     let text = ""; 
     for (key in options) {
         if (key == "parameters_json") {
-            console.log("Validation parameters: " + options[key]);
+            console.dir(options[key]);
             jQuery('#upload_validation_parameters').html(options[key]);
         } else {
             text += "<b>" + key + ": </b>&nbsp; " + options[key] + "<br>";
@@ -462,9 +486,43 @@ function display_plant_upload_formats() {
     }
 }
 
+function display_subplot_upload_formats() {
+    let subplot_upload_type = jQuery('#subplot_upload_type_choice_select').val();
+    switch(subplot_upload_type) {
+        case 'subplots_by_name' : 
+            jQuery('#upload_subplots_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'subplots_by_index' : 
+            jQuery('#upload_subplots_with_index_number_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'subplots_per_plot' : 
+            jQuery('#upload_subplots_with_num_subplots_spreadsheet_info_dialog').modal("show");
+            break;
+        default : 
+            break;
+    }
+}
+
+function display_genotyping_plate_upload_formats() {
+    let genotyping_plate_type = jQuery('#genotype_plate_upload_type_choice_select').val();
+    switch (genotyping_plate_type) {
+        case 'genotyping_plate_excel' : 
+            jQuery('#genotyping_trial_layout_upload_spreadsheet_info_format_dialog').modal("show");
+            break;
+        case 'genotyping_plate_default_android' : 
+            jQuery('#genotyping_trial_layout_upload_coordinate_info_format_dialog').modal("show");
+            break; 
+        case 'genotyping_plate_custom_android' : 
+            jQuery('#genotyping_trial_layout_upload_coordinate_custom_info_format_dialog').modal("show");
+            break;
+        default:
+            break;
+    }
+}
+
 function display_plant_upload_choices() {
     jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="plant_upload_type_choice_select">'+
-                        '<option value="null_choice">Select...</option>'+
+                        '<option value="null_choice">Select file type</option>'+
                         '<option value="plants_by_name">Plants by name</option>'+
                         '<option value="plants_by_index">Plants by index number</option>'+
                         '<option value="plants_per_plot">Number of plants per plot</option>'+
@@ -479,7 +537,48 @@ function display_plant_upload_choices() {
 }
 
 function display_subplot_upload_choices() {
+    jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="subplot_upload_type_choice_select">'+
+                        '<option value="null_choice">Select file type</option>'+
+                        '<option value="subplots_by_name">Subplots by name</option>'+
+                        '<option value="subplots_by_index">Subplots by index number</option>'+
+                        '<option value="subplots_per_plot">Number of subplots per plot</option>'+
+                    '</select>' + 
+                    '<br>' + 
+                    '<div id="subplots_per_plot_div" hidden>Maximum number of subplots per plot: '+'<input style="width:25%" id="subplot_upload_subplots_per_plot" class="form-control" type="number"/></div>' + 
+                    '<br>' + 
+                    '<div id="subplot_choices_next_btn_div" hidden><button class="btn btn-primary btn-small" id="subplot_upload_choices_next_btn">Next</button></div>');
+}
 
+function display_genotyping_plate_upload_choices() {
+    jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="genotype_plate_upload_type_choice_select">'+
+                        '<option value="null_choice">Select file type</option>'+
+                        '<option value="genotyping_plate_excel">Genotyping plate design made in Excel</option>'+
+                        '<option value="genotyping_plate_default_android">Default Coordinate Android Application plate design</option>'+
+                        '<option value="genotyping_plate_custom_android">Custom Coordinate Android Application plate design</option>'+
+                    '</select>' + 
+                    '<br>' + 
+                    '<div id="genotype_plate_choices_next_btn_div" hidden><button class="btn btn-primary btn-small" id="genotype_plate_upload_choices_next_btn">Next</button></div>');
+}
+
+function display_genotyping_data_upload_choices() {
+    jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="genotype_data_upload_type_choice_select">'+
+                '<option value="null_choice">Select file type</option>'+
+                '<option value="genotype_data_vcf">VCF</option>'+
+                '<option value="genotype_data_tassel">Tassel HDF5</option>'+
+                '<option value="genotype_data_intertek">Intertek</option>'+
+                '<option value="genotype_data_kasp">KASP (csv)</option>'+
+                '<option value="genotype_data_ssr">SSR</option>'+
+            '</select>'+
+            '<br>'+
+            '<div id="genotype_data_project_select_div" hidden>'+
+                '<table id="genotype_data_project_select"></table>'+
+            '</div>'+
+            '<div id="genotype_data_protocol_select_div" hidden>'+
+                '<table id="genotype_data_protocol_select"></table>'+
+            '</div>'+
+            '<div id="genotype_data_intertek_info_div" hidden>'+
+                '<select id="genotype_data_intertek_info_select"></select>'+
+            '</div>'+);
 }
 
 function display_seedlot_upload_choices() {
@@ -497,13 +596,19 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'subplot_plants_by_name' : "Subplot plants by name",
         'subplot_plants_by_index' : "Subplot plants by index number",
         'plants_per_subplot' : "Plants by number of plants per subplot",
+        'subplots_by_name' : "Subplots by name",
+        'subplots_by_index' : "Subplots by index number",
+        'subplots_per_plot' : "Subplots by number of subplots per plot",
+        'genotyping_plate_excel' : "Genotyping plate design made in Excel",
+        'genotyping_plate_default_android' : "Default Coordinate Android Application plate design",
+        'genotyping_plate_custom_android' : "Custom Coordinate Android Application plate design"
     };
 
     display_validate_submit_modal({
         'Upload Type' : upload_type_dict[upload_type],
         'File' : file_data.file_name,
         'File ID' : file_data.file_id,
-        'Additional arguments' : JSON.stringify(additional_args),
+        'Additional arguments' : additional_args ? JSON.stringify(additional_args) : "none",
         parameters_json : {
             upload_type : upload_type,
             file_id : file_data.file_id,
@@ -530,13 +635,45 @@ function populate_plant_validate_submit_data(event) {
     });
 }
 
-function submit_file_validation(options) {
+function populate_subplot_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let subplot_upload_type = jQuery('#subplot_upload_type_choice_select').val();
+    let num_subplots_per_plot = jQuery('#subplot_upload_subplots_per_plot').val();
+    if (subplot_upload_type == "null_choice") {
+        alert("Select a subplot upload type");
+        return;
+    }
+    if (!num_subplots_per_plot || num_subplots_per_plot < 1) {
+        alert("Enter the maximum number of subplots per plot/subplot.");
+        return;
+    }
+    populate_validate_submit_data(subplot_upload_type, file_data, {
+        subplots_per_plot : num_subplots_per_plot
+    });
+}
 
+function populate_genotyping_plate_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let genotype_plate_upload_type = jQuery('#genotype_plate_upload_type_choice_select').val();
+    if (genotype_plate_upload_type == "null_choice") {
+        alert("Select a genotyping plate upload type");
+        return;
+    }
+    populate_validate_submit_data(genotype_plate_upload_type, file_data);
+}
+
+function submit_file_validation(options) {
+    jQuery('.modal.fade').each(function(index, element){
+        jQuery(this).modal("hide");
+    });
+    //TODO
 }
 
 function submit_file_store(options) {
 
 }
+
+var archived_files_list = [];
 
 jQuery(document).ready(function(){
 
@@ -562,8 +699,9 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("hide");
             if (response.error){
                 alert("File upload failed, check console");
+            } else {
+                load_archived_files_table();
             }
-            load_archived_files_table();
         }
     });
 
@@ -575,12 +713,31 @@ jQuery(document).ready(function(){
         process_file({file_name : file_name, file_id : file_id}, upload_type);
     });
 
+    jQuery(document).on('click','.check-format-btn', function() {
+        let file_id = jQuery(this).attr('id').replace('check_format_', '');
+        let upload_type = jQuery("#upload_select_type_"+file_id).val();
+        display_upload_formats(upload_type);
+    });
+
+    jQuery(document).on('change', '.upload-type-select', function() {
+        let file_id = jQuery(this).attr('id').replace('upload_select_type_', '');
+        let upload_type = jQuery("#upload_select_type_"+file_id).val();
+        if (upload_type != "null_choice") {
+            jQuery('#check_format_'+file_id).prop('disabled', false);
+        } else {
+            jQuery('#check_format_'+file_id).prop('disabled', true);
+        }
+        
+    });
+
     jQuery('#check_file_format_select').html(upload_type_options());
 
     jQuery('#check_file_format_select').on('change', function(){
         let upload_type = jQuery('#check_file_format_select').val();
         display_upload_formats(upload_type);
     });
+
+    jQuery('#submit_validate_upload').on('click', submit_file_validation);
 
 });
 </script>
