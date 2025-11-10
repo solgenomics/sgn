@@ -105,9 +105,11 @@ has 'download_dir' => (is => 'ro',
 
 sub BUILD {
     my $self = shift;
-   
+
     my $download_dir = $self->download_dir();
-    chown 1200, $download_dir;
+
+    chown 1200, 1250, $download_dir;
+    chmod 0775, $download_dir;
     
     my $profile = Selenium::Firefox::Profile->new;
     $profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
