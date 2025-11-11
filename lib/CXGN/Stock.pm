@@ -948,6 +948,50 @@ sub get_image_ids {
     return @ids;
 }
 
+=head2 get_stocks_with_images()
+
+  Usage: my @stock_names_with_images = $self->get_stocks_with_images()
+  Arguments: trial_id, stock_type_name (optional)
+  Returns: a list of stock uniquenames
+  Description: a method for returning uniquenames of stocks that have associated images within a trial
+
+=cut
+
+sub get_stocks_with_images {
+    my $self = shift;
+    my $trial_id = shift;
+    my $stock_type_name = shift;
+    my $schema = $self->schema;
+
+    my @stock_names;
+
+    my $q = "
+        SELECT DISTINCT s.uniquename
+        FROM project AS p
+        JOIN nd_experiment_project AS nep ON nep.project_id = p.project_id
+        JOIN nd_experiment AS ne ON ne.nd_experiment_id = nep.nd_experiment_id
+        JOIN nd_experiment_stock AS nes ON nes.nd_experiment_id = ne.nd_experiment_id
+        JOIN stock AS s ON s.stock_id = nes.stock_id
+        JOIN phenome.stock_image AS si ON si.stock_id = s.stock_id
+        JOIN metadata.md_image AS mi ON mi.image_id = si.image_id
+        JOIN cvterm AS t ON s.type_id = t.cvterm_id
+        WHERE p.project_id = ? AND mi.obsolete = 'f'
+    ";
+
+    my @query_values = ($trial_id);
+    if ($stock_type_name) {
+        $q .= " AND t.name = ?";
+        push @query_values, $stock_type_name;
+    }
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute(@query_values);
+    while (my ($stock_name) = $h->fetchrow_array()) {
+        push @stock_names, $stock_name;
+    }
+
+    return \@stock_names;
+}
 
 =head2 get_genotypes
 
@@ -1157,7 +1201,7 @@ sub obsolete_uploaded_file {
     join metadata.md_files using(metadata_id)
     where md_metadata.obsolete=0 and md_files.file_id=? and md_metadata.create_person_id=?";
 
-    my $dbh = $self->bcs_schema->storage()->dbh();
+    my $dbh = $self->schema->storage()->dbh();
     my $h = $dbh->prepare($q);
 
     $h->execute($file_id, $user_id);
@@ -1183,6 +1227,44 @@ sub obsolete_uploaded_file {
 
     return { success => 1 };
 }
+
+=head2 get_additional_uploaded_files()
+
+Returns a list of lists of the form: [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype]
+
+Obsoleted entries are not retrieved.
+
+=cut
+
+sub get_additional_uploaded_files {
+    my $self = shift;
+
+    my @file_array;
+    my %file_info;
+
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
+    FROM phenome.stock_file
+    JOIN metadata.md_files using(file_id)
+    LEFT JOIN metadata.md_metadata as m using(metadata_id)
+    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
+    WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
+
+    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $h->execute($self->stock_id());
+
+    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
+        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
+    }
+    
+    foreach (keys %file_info){
+        push @file_array, $file_info{$_};
+    }
+    
+    print STDERR "files: " . Dumper \@file_array;
+
+    return  {success=>1, files=>\@file_array};
+}
+
 
 =head2 get_trait_list()
 

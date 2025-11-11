@@ -44,6 +44,11 @@ has 'bcs_schema' => (
     required => 1,
 );
 
+has 'phenome_schema' => (
+    isa => 'CXGN::Phenome::Schema',
+    is => 'rw'
+);
+
 has 'nd_protocol_id' => (
     isa => 'Int',
     is => 'rw',
@@ -95,6 +100,11 @@ has 'species_name' => (
 
 has 'sample_observation_unit_type_name' => (
     isa => 'Str',
+    is => 'rw'
+);
+
+has 'sp_person_id' => (
+    isa => 'Int|Undef',
     is => 'rw'
 );
 
@@ -458,7 +468,183 @@ sub set_description {
 }
 
 
+#
+# Add metadata and alleles the markers in this protocol
+# @param param_data = a hashref of marker metadata,
+#   where the key is the marker/locus name
+#   and the value is a hashref of marker details (marker, alias, description, categories, references, alleles)
+#
+sub set_marker_metadata {
+    my $self = shift;
+    my $parsed_data = shift;
+    my $schema = $self->bcs_schema();
+    my $phenome_schema = $self->phenome_schema();
+    my $dbh = $schema->storage->dbh();
+    my $species = $self->species_name();
+    my $protocol_id = $self->nd_protocol_id;
+    my $sp_person_id = $self->sp_person_id;
 
+    my $is_a_rel_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a', 'relationship')->cvterm_id();
+
+    # Get the organism to use for the loci
+    my $qs = "SELECT common_name_id FROM sgn.common_name WHERE common_name ILIKE '" . $species . "%';";
+    my $sths = $dbh->prepare($qs);
+    $sths->execute();
+    my ($common_name_id) = $sths->fetchrow_array();
+
+    foreach my $name (keys %$parsed_data) {
+        my $ml = $parsed_data->{$name};
+        my $marker = $ml->{'marker'};
+        my $alias = $ml->{'alias'};
+        my $locus_description = $ml->{'description'};
+        my $allele_values = $ml->{'alleles'};
+        my $trait_cvterm_ids = $ml->{'categories'};
+        my $dbx_refs = $ml->{'references'};
+        my $unique_marker_name = $marker;
+        my $unique_locus_name = (defined($alias) && $alias ne "") ? $alias : $marker;
+        my $locus_symbol = $unique_locus_name;
+
+        # Add the marker to the phenome.locus table
+        my $locus_obj = $phenome_schema->resultset('Locus')->find_or_create({
+            locus_name => $unique_locus_name,
+            locus_symbol => $locus_symbol,
+            description => $locus_description,
+            common_name_id => $common_name_id || 1,
+        });
+        my $locus_id = $locus_obj->locus_id();
+
+        # Add the locus trait categories
+        foreach my $cvterm_id (@$trait_cvterm_ids) {
+
+            # get dbxref id of trait cvterm
+            my $cvterm = $schema->resultset("Cv::Cvterm")->find({ cvterm_id => $cvterm_id });
+            my $dbxref_id = $cvterm->dbxref_id();
+
+            # add dbxref to locus, if found
+            if ( defined $dbxref_id ) {
+
+                # Add locus dbxref reference
+                my $locus_dbxref = $phenome_schema->resultset("LocusDbxref")->find_or_create({
+                    locus_id => $locus_id,
+                    dbxref_id => $dbxref_id,
+                    obsolete => 'FALSE',
+                    sp_person_id => $sp_person_id
+                });
+                my $locus_dbxref_id = $locus_dbxref->locus_dbxref_id();
+
+                # Add locus dbxref evidence reference
+                my $locus_dbxref_evidence = $phenome_schema->resultset("LocusDbxrefEvidence")->find_or_create({
+                    locus_dbxref_id => $locus_dbxref_id,
+                    relationship_type_id => $is_a_rel_id,
+                    evidence_code_id => $dbxref_id,
+                    sp_person_id => $sp_person_id
+                });
+
+            }
+
+        }
+
+        # Add the locus dbx refs
+        foreach my $ref (@$dbx_refs) {
+            my $db_id = $ref->{'db'};
+            my $entity = $ref->{'entity'};
+
+            # Create dbx ref
+            my $dbxref = $schema->resultset("General::Dbxref")->find_or_create({
+                db_id => $db_id,
+                accession => $entity
+            });
+            my $dbxref_id = $dbxref->dbxref_id();
+
+            # add dbxref to locus, if found
+            if ( defined $dbxref_id ) {
+
+                # Add locus dbxref reference
+                my $locus_dbxref = $phenome_schema->resultset("LocusDbxref")->find_or_create({
+                    locus_id => $locus_id,
+                    dbxref_id => $dbxref_id,
+                    obsolete => 'FALSE',
+                    sp_person_id => $sp_person_id
+                });
+                my $locus_dbxref_id = $locus_dbxref->locus_dbxref_id();
+
+                # Add locus dbxref evidence reference
+                my $locus_dbxref_evidence = $phenome_schema->resultset("LocusDbxrefEvidence")->find_or_create({
+                    locus_dbxref_id => $locus_dbxref_id,
+                    relationship_type_id => $is_a_rel_id,
+                    evidence_code_id => $dbxref_id,
+                    sp_person_id => $sp_person_id
+                });
+
+            }
+        }
+
+        # Add each allele value for the locus
+        foreach my $av (@$allele_values) {
+            my $av_symbol = $av;
+            $locus_obj->create_related('alleles', {
+                allele_name => $av,
+                allele_symbol => $av_symbol,
+                sp_person_id => $sp_person_id,
+                is_default => 0
+            });
+        }
+
+        # Add the Locus / Marker link
+        my $q = "INSERT INTO phenome.locus_geno_marker (nd_protocol_id, marker_name, locus_id) VALUES (?,?,?)";
+        my $sth = $dbh->prepare($q);
+        $sth->execute($protocol_id, $unique_marker_name, $locus_id);
+    }
+}
+
+#
+# Get the metadata allele values for the marker(s) in this protocol
+# @param marker_name = only return the alleles for this particular marker
+# @return an array of hashes with the keys: nd_protocol_id, locus_id, marker_name, allele_id, allele_name
+#
+sub get_marker_metadata {
+    my $self = shift;
+    my $marker_name = shift;
+    my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage->dbh();
+    my $protocol_id = $self->nd_protocol_id;
+
+    my $q = "SELECT nd_protocol_id, locus.locus_id, locus.locus_name, marker_name, locus.description, allele.allele_id, allele_name ";
+    $q .= "FROM phenome.locus_geno_marker ";
+    $q .= "LEFT JOIN phenome.locus ON (locus_geno_marker.locus_id = locus.locus_id) ";
+    $q .= "LEFT JOIN phenome.allele ON (allele.locus_id = locus.locus_id) ";
+    $q .= "WHERE nd_protocol_id = ? ";
+    $q .= "AND marker_name = ?" if $marker_name;
+
+    my $sth = $dbh->prepare($q);
+    if ( $marker_name ) {
+        $sth->execute($protocol_id, $marker_name);
+    }
+    else {
+        $sth->execute($protocol_id);
+    }
+
+    my %alleles;
+    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name) = $sth->fetchrow_array()) {
+        if ( ! exists($alleles{$locus_name}) ) {
+            $alleles{$locus_name} = {
+                nd_protocol_id => $nd_protocol_id,
+                locus_id => $locus_id,
+                locus_name => $locus_name,
+                marker_name => $marker_name,
+                locus_description => $locus_description,
+                alleles => []
+            };
+        }
+
+        push @{$alleles{$locus_name}->{'alleles'}}, { 
+            allele_id => $allele_id,
+            allele_name => $allele_name
+        };
+    }
+
+    return \%alleles;
+}
 
 
 1;

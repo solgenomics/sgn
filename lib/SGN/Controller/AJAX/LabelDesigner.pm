@@ -396,6 +396,7 @@ __PACKAGE__->config(
        my $labels_to_download = $design_params->{'labels_to_download'} || undef;
        my $start_number = $design_params->{'start_number'} || undef;
        my $end_number = $design_params->{'end_number'} || undef;
+       my $text_alignment = $design_params->{"text_alignment"} || "middle";
 
        if ($labels_to_download) {
            $start_number = $start_number || 1;
@@ -496,10 +497,10 @@ __PACKAGE__->config(
            version       => 0,
            level         => 'M',
            casesensitive => 1,
-           lightcolor    => Imager::Color->new(255, 255, 255),
-           darkcolor     => Imager::Color->new(0, 0, 0),
+           lightcolor    => Imager::Color->new(255, 255, 255, 255), # add alpha channel
+           darkcolor     => Imager::Color->new(0, 0, 0, 255), # add alpha channel
        );
-       my ($jpeg_location, $jpeg_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.jpg');
+       my ($png_location, $png_uri) = $c->tempfile( TEMPLATE => [ 'barcode', 'bc-XXXXX'], SUFFIX=>'.png');
 
        if ($download_type eq 'pdf') {
 
@@ -564,9 +565,10 @@ __PACKAGE__->config(
                               } else { #QRCode
 
                                   my $barcode = $qrcode->plot( $filled_value );
-                                  my $barcode_file = $barcode->write(file => $jpeg_location);
+                                  my $barcode_file = $barcode->write(file => $png_location);
+                                  system("convert $png_location -depth 8 $png_location"); # convert to 8 bit encoding. Won't work with default 16 bit encoding.
 
-                                   my $image = $pdf->image_jpeg($jpeg_location);
+                                   my $image = $pdf->image_png($png_location);
                                    my $height = $element{'height'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $width = $element{'width'} / $conversion_factor ; # scale to 72 pts per inch
                                    my $elementy = $elementy - ($height/2); # adjust for img position sarting at bottom
@@ -591,7 +593,11 @@ __PACKAGE__->config(
                                 foreach my $line (@lines) {
                                     $text->font($font, $adjusted_size);
                                     $text->translate($elementx, $start_y);
-                                    $text->text_center($line);
+                                    if ($text_alignment eq "middle") {
+                                        $text->text_center($filled_value);
+                                    } elsif ($text_alignment eq "left") {
+                                        $text->text($filled_value);
+                                    }
                                     $start_y -= $line_spacing;
                                 }
                            }

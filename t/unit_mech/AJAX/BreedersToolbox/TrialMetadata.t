@@ -15,6 +15,7 @@ use JSON::XS;
 use URI::Encode qw(uri_encode uri_decode);
 use CXGN::Chado::Stock;
 use CXGN::Trial;
+use LWP::UserAgent;
 local $Data::Dumper::Indent = 0;
 
 my $f = SGN::Test::Fixture->new();
@@ -28,6 +29,7 @@ $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe",
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
 
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'Kasese solgs trial'})->project_id();
 
@@ -179,6 +181,19 @@ is_deeply($response, {'design' => {'8' => {'rep_number' => '2','plot_name' => 't
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/edit_management_factor_details?description=test&schedule=test&type=Fertilizer&completions=%5B%5D&start_date=&end_date=&action=add');
 $response = decode_json $mech->content;
 is_deeply($response, {'success' => 1}, "get add management factor page");
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_plot_accessions', ['old_accession' => 'test_accession3', 'new_accession' => 'test_accession1', 'old_plot_id' => '38866', 'old_plot_name' => 'test_trial210', 'new_plot_name' => "test_trial210_afterchange", 'override' => 'check']);
+$response = decode_json $mech->content;
+is_deeply($response, {success => 1});
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/plots');
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is_deeply($response, {'plots' => [[[38857,'test_trial21'],[38858,'test_trial22'],[38859,'test_trial23'],[38860,'test_trial24'],[38861,'test_trial25'],[38862,'test_trial26'],[38863,'test_trial27'],[38864,'test_trial28'],[38865,'test_trial29'],[38866,'test_trial210_afterchange'],[38867,'test_trial211'],[38868,'test_trial212'],[38869,'test_trial213'],[38870,'test_trial214'],[38871,'test_trial215']]]}, "check plots");
+
+$mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_plot_accessions', ['old_accession' => 'test_accession1', 'new_accession' => 'test_accession3', 'old_plot_id' => '38866', 'old_plot_name' => 'test_trial210_afterchange', 'new_plot_name' => "test_trial210", 'override' => 'check']);
+$response = decode_json $mech->content;
+is_deeply($response, {success => 1});
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/get_management_regime');
 $response = decode_json $mech->content;

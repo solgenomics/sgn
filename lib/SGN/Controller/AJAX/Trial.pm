@@ -95,7 +95,7 @@ sub generate_experimental_design_POST : Args(0) {
     my $plot_numbering_scheme = $c->req->param('plot_numbering_scheme') || 'block_based';
     print STDERR "Setting plot_numbering_scheme to $plot_numbering_scheme\n";
     $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
-    
+
     if ($c->req->param('stock_list')) {
 	@stock_names = @{_parse_list_from_json($c->req->param('stock_list'))};
     }
@@ -145,7 +145,7 @@ sub generate_experimental_design_POST : Args(0) {
 
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
-        
+
     }
 
     if ($design_type eq 'Westcott'){
@@ -187,7 +187,7 @@ sub generate_experimental_design_POST : Args(0) {
         }
     }
 
-    
+
 
     my $row_in_design_number = $c->req->param('row_in_design_number');
     my $col_in_design_number = $c->req->param('col_in_design_number');
@@ -542,7 +542,7 @@ sub save_experimental_design_POST : Args(0) {
         $c->stash->{rest} = {error =>  "You have insufficient privileges to add a trial." };
         return;
     }
-    
+
 
     my $user_name = $c->user()->get_object()->get_username();
     my $error;

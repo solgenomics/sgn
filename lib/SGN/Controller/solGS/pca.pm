@@ -136,6 +136,7 @@ sub prepare_pca_output_response {
             my $loadings_file   = $c->stash->{download_loadings};
             my $variances_file  = $c->stash->{download_variances};
             my $scores_file     = $c->stash->{download_scores};
+            my $report_file    = $c->stash->{download_report_file};
 
             my $output_link = '/pca/analysis/' . $file_id;
             my $trials_names;
@@ -166,6 +167,7 @@ sub prepare_pca_output_response {
                     "loadings_file"   => $loadings_file,
                     "scree_data_file" => $scree_data_file,
                     "scree_plot_file" => $scree_plot_file,
+                    "report_file"     => $report_file,
                     "status"          => 'success',
                     "cached"          => 1,
                     "pca_pop_id"      => $c->stash->{pca_pop_id},
@@ -348,11 +350,13 @@ sub pca_output_files {
     $self->pca_scree_data_file($c);
     $self->pca_scree_plot_file($c);
     $self->combined_pca_trials_data_file($c);
+    $c->controller('solGS::Files')->analysis_report_file($c);
 
     my $file_list = join( "\t",
         $c->stash->{pca_scores_file},     $c->stash->{pca_loadings_file},
         $c->stash->{pca_scree_data_file}, $c->stash->{pca_scree_plot_file},
         $c->stash->{pca_variances_file},  $c->stash->{combined_pca_data_file},
+        $c->{stash}->{"pca_analysis_report_file"}
     );
 
     my $tmp_dir = $c->stash->{pca_temp_dir};
@@ -429,7 +433,7 @@ sub pca_geno_input_files {
     my ( $self, $c ) = @_;
 
     my $data_type = $c->stash->{data_type};
-    my $files;
+    my $files = [];
 
     if ( $data_type =~ /genotype/i ) {
         if ( $c->req->referer =~
@@ -602,12 +606,13 @@ sub prep_pca_download_files {
     $self->pca_variances_file($c);
     $self->pca_scree_data_file($c);
     $self->pca_scree_plot_file($c);
-
+    $c->controller('solGS::Files')->analysis_report_file($c);
     my $scores_file     = $c->stash->{pca_scores_file};
     my $loadings_file   = $c->stash->{pca_loadings_file};
     my $scree_data_file = $c->stash->{pca_scree_data_file};
     my $scree_plot_file = $c->stash->{pca_scree_plot_file};
     my $variances_file  = $c->stash->{pca_variances_file};
+    my $analysis_report_file = $c->stash->{pca_analysis_report_file};
 
     $scores_file = $c->controller('solGS::Files')
       ->copy_to_tempfiles_subdir( $c, $scores_file, 'pca' );
@@ -619,12 +624,15 @@ sub prep_pca_download_files {
       ->copy_to_tempfiles_subdir( $c, $scree_plot_file, 'pca' );
     $variances_file = $c->controller('solGS::Files')
       ->copy_to_tempfiles_subdir( $c, $variances_file, 'pca' );
+    $analysis_report_file = $c->controller('solGS::Files')
+      ->copy_to_tempfiles_subdir( $c, $analysis_report_file, 'pca' );
 
     $c->stash->{download_scores}     = $scores_file;
     $c->stash->{download_loadings}   = $loadings_file;
     $c->stash->{download_scree_data} = $scree_data_file;
     $c->stash->{download_scree_plot} = $scree_plot_file;
     $c->stash->{download_variances}  = $variances_file;
+    $c->stash->{download_report_file}= $analysis_report_file;
 
 }
 

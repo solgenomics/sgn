@@ -228,6 +228,58 @@ sub add_image_locus_display_order_POST {
     }
 }
 
+sub scan_barcode : Path('/ajax/image/scan_barcode') : Args(0) : ActionClass('REST') { }
+
+sub scan_barcode_POST {
+    my ($self, $c) = @_;
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+
+    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+    my @results;
+    my $stock_exists;
+    my $valid_barcode;
+    my $multiple_codes;
+
+    foreach my $upload (@uploads) {
+        my $filename = $upload->filename;
+        my $file_path = $upload->tempname;
+        my @barcode_data = CXGN::Image->read_barcode($file_path);
+
+        if (@barcode_data > 1) {
+            $multiple_codes = "true";
+        } elsif (@barcode_data == 1) {
+            $multiple_codes = "false";
+        } else {
+            $valid_barcode = "false"
+        }
+
+        my $stock_id = $barcode_data[0]->{data};
+
+        if ($stock_id) {
+            $valid_barcode = "true";
+
+            my $stock_found = $schema->resultset('Stock::Stock')->find({stock_id => $stock_id });
+            if ($stock_found) {
+                $stock_exists = "true";
+            } else {
+                $stock_exists = "false";
+            }
+        } else {
+            $valid_barcode = "false"
+        }
+
+        my $exif = CXGN::Image->extract_exif_info($file_path);
+        my $create_date;
+        if ($exif) {
+            $create_date = $exif->{"CreateDate"};
+        }
+        push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode, timestamp => $create_date, multiple_codes => $multiple_codes };
+    }
+    $c->stash->{rest} = { images => \@results };
+}
+
 sub verify_exif : Path('/ajax/image/verify_exif') : Args(0) : ActionClass('REST') { }
 
 sub verify_exif_POST {
@@ -275,11 +327,8 @@ sub verify_exif_POST {
             }
             # Get cvterm_id of recorded trait
             my $cvterm_name = $decoded_json->{observation_variable}->{observation_variable_name};
-            $cvterm_name =~ s/\|[^|]+$//;
-            my $q = "SELECT cvterm_id FROM cvterm join dbxref USING (dbxref_id) JOIN db USING (db_id) WHERE db.name = ? AND cvterm.name = ?";
-            my $h = $schema->storage->dbh->prepare($q);
-            $h->execute($c->config->{trait_ontology_db_name},  $cvterm_name);
-            my ($cvterm_id) = $h->fetchrow_array();
+            my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $cvterm_name);
+            my $cvterm_id = $trait_cvterm->cvterm_id();
 
             $decoded_json->{stock_name} = $stock_name;
             if ($cvterm_id) {
@@ -291,7 +340,6 @@ sub verify_exif_POST {
             push @results, { filename => $filename, exif => undef, status => "no_exif" };
         }
     }
-
     $c->stash->{rest} = { images => \@results };
 }
 

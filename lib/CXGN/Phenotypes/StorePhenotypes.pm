@@ -655,7 +655,7 @@ sub check_measurement {
         }
 
         #check that trait value is valid for trait name (but only if we have a trait_value)
-        if ((defined($trait_value) && $trait_value ne '') && exists($self->check_trait_format()->{$trait_cvterm_id})) { 
+        if ((defined($trait_value) && $trait_value ne '' && $trait_value ne 'NA' && $trait_value ne '.') && exists($self->check_trait_format()->{$trait_cvterm_id})) { 
             # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
             if ($self->check_trait_format()->{$trait_cvterm_id} =~ m/numeric|counter|percent|boolean/i ) {
                 my $trait_format_checked = looks_like_number($trait_value);
@@ -669,7 +669,7 @@ sub check_measurement {
                 # print STDERR "the trait minimum: Trait Minimum for trait $trait_name: ", (defined $trait_min ? $trait_min : undef), "\n";
                 # print STDERR "the trait maximum: Trait Maximum for trait $trait_name: ", (defined $trait_max ? $trait_max : undef), "\n";
 
-                if (defined $trait_min && $trait_value < $trait_min) {
+                if (defined $trait_min && $trait_value ne '' && $trait_value < $trait_min) {
                     $error_message .= "<small>For trait '$trait_name' the trait value $trait_value should not be smaller than the defined trait_minimum, $trait_min.</small><hr>";
                 } else {
                     # print STDERR "the trait min and trait value : No minimum value defined for trait '$trait_name' (cvterm_id: $trait_cvterm_id).\n";
@@ -906,6 +906,7 @@ sub store {
         my @overwritten_values;
         my $new_count = 0;
         my $skip_count = 0;
+	my $previously_stored_skip_count = 0;
         my $overwrite_count = 0;
         my $remove_count = 0;
 
@@ -1135,6 +1136,7 @@ sub store {
                         print STDERR "RESULT FROM STORE: ".Dumper($result)."\n";
 
                         if (exists($result->{skip_count}) && $result->{skip_count} > 0) { $skip_count++; }
+			if (exists($result->{previously_stored_skip_count}) && $result->{previously_stored_skip_count} > 0) { $previously_stored_skip_count++ };
                         if (exists($result->{remove_count}) && $result->{remove_count} > 0) { $remove_count++; }
                         if (exists($result->{new_count})   && $result->{new_count}   > 0) { $new_count++; }
                         if (exists($result->{overwrite_count}) && $result->{overwrite_count} > 0) { $overwrite_count++; }
@@ -1270,7 +1272,9 @@ sub store {
         $success_message = 'All values in your file have been successfully processed!<br><br>';
         $success_message .= "$new_count new values stored<br>";
         $success_message .= "$skip_count previously stored values skipped<br>";
+###	$success_message .= "of which $previously_stored_skip_count were skipped because a value had previously been stored.";
         $success_message .= "$overwrite_count previously stored values overwritten<br>";
+
         $success_message .= "$remove_count previously stored values removed<br><br>";
         my %files_with_overwritten_values = map {$_->[0] => 1} @overwritten_values;
         my $obsoleted_files = $self->check_overwritten_files_status(keys %files_with_overwritten_values);

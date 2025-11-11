@@ -416,6 +416,10 @@ jQuery(document).ready(function ($) {
         jQuery('#upload_genotypes_dialog').modal('show');
     });
 
+    jQuery('button[name="upload_marker_metadata_link"]').click(function() {
+        jQuery("#upload_marker_metadata_dialog").modal("show");
+    })
+
     jQuery('#upload_genotype_submit').click(function () {
         submit_genotype_data_upload()
     });
