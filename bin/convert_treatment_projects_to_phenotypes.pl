@@ -170,6 +170,8 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		trial_id => $trial_id
 	});
 
+	next if ref($trial) ne 'CXGN::PhenotypingTrial'; #Skip if this is not a phentyping trial
+
 	my $treatment_trials = $trial->get_treatment_projects();
 
 	next if !$treatment_trials; #skip if there are no treatment trials. Don't waste time getting plots or anything.
