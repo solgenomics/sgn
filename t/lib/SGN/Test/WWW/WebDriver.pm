@@ -97,7 +97,12 @@ has 'user_data' => ( is => 'rw',
 has 'download_dir' => (is => 'ro',
 		       isa => 'Str',
 		       default => sub {
-			   return "/downloads/";
+			   if (defined($ENV{TEMP_DIR})) {
+			       return $ENV{TEMP_DIR};
+			   }
+			   else { 
+			       return "/downloads/";
+			   }
 		       }
     );
 
