@@ -339,11 +339,8 @@ sub verify_exif_POST {
             }
             # Get cvterm_id of recorded trait
             my $cvterm_name = $decoded_json->{observation_variable}->{observation_variable_name};
-            $cvterm_name =~ s/\|[^|]+$//;
-            my $q = "SELECT cvterm_id FROM cvterm join dbxref USING (dbxref_id) JOIN db USING (db_id) WHERE db.name = ? AND cvterm.name = ?";
-            my $h = $schema->storage->dbh->prepare($q);
-            $h->execute($c->config->{trait_ontology_db_name},  $cvterm_name);
-            my ($cvterm_id) = $h->fetchrow_array();
+            my $trait_cvterm = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $cvterm_name);
+            my $cvterm_id = $trait_cvterm->cvterm_id();
 
             $decoded_json->{stock_name} = $stock_name;
             if ($cvterm_id) {
