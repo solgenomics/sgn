@@ -40,10 +40,20 @@ jobs:
           - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
         options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
+
+        
+        
     steps:
       - name: Checkout sgn
         uses: actions/checkout@v4
-    
+
+      - name: Create and export TEMP_DIR variable
+        run: |
+          # Create the directory first (important for bind mounts to work)
+          mkdir -p ${{ runner.temp }}/downloads
+          # Export the value to make it available to subsequent steps' shell sessions
+          echo "TEMP_DIR=${{ runner.temp }}/downloads" >> $GITHUB_ENV
+
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
       
