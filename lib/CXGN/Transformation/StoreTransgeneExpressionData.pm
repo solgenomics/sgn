@@ -263,15 +263,22 @@ sub _CASS_normalized_values {
         $stat->add_data(@all_normalized_values);
 
         my $mean_value =  sprintf("%.6f", $stat->mean());
-        my $sd_value;
+        my $stdevp_value;
         if ($number_of_replicates > 1) {
-            $sd_value = sprintf("%.6f", $stat->standard_deviation());
+            my $sum_of_squared_differences;
+            foreach my $normalized_value (@all_normalized_values) {
+                my $squared_difference;
+                $squared_difference = ($normalized_value - $mean_value) ** 2;
+                $sum_of_squared_differences += $squared_difference;
+            }
+            $stdevp_value = sqrt($sum_of_squared_differences/$number_of_replicates);
+            $stdevp_value =  sprintf("%.6f", $stdevp_value);
         } else {
-            $sd_value = "NA";
+            $stdevp_value = "NA";
         }
         $normalized_data{$gene_name}{'relative_expression'} = $mean_value;
         $normalized_data{$gene_name}{'number_of_replicates'} = $number_of_replicates;
-        $normalized_data{$gene_name}{'standard_deviation'} = $sd_value;
+        $normalized_data{$gene_name}{'stdevp'} = $stdevp_value;
     }
 
     return \%normalized_data;

@@ -1793,7 +1793,7 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                         } else {
                             push @display_info, $number_of_replicates." replicates";
                         }
-                        $standard_deviation = $gene_relative_expression->{$gene}->{'standard_deviation'};
+                        $standard_deviation = $gene_relative_expression->{$gene}->{'stdevp'};
                         push @display_info, "SD: ". $standard_deviation;
                         my $value_string = join("<br>", @display_info);
                         push @expression_values, $value_string;
@@ -1828,7 +1828,7 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                     } else {
                         push @display_info, $number_of_replicates." replicates";
                     }
-                    $standard_deviation = $gene_relative_expression->{$gene}->{'standard_deviation'};
+                    $standard_deviation = $gene_relative_expression->{$gene}->{'stdevp'};
                     push @display_info, "SD: ". $standard_deviation;
                     my $value_string = join("<br>", @display_info);
                     push @expression_values, $value_string;
