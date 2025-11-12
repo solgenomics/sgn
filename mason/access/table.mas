@@ -146,8 +146,8 @@ jQuery(document).ready( function() {
 	var resource=jQuery('#resource_select').val();
 	var level = jQuery('#level_select').val();
 	var role = jQuery('#role_select').val();
-	var require_breeding_program = jQuery('#require_breeding_program').val();
-	var require_ownership = jQuery('#require_ownership').val();
+	var require_breeding_program = jQuery('#require_breeding_program').is(':checked');
+	var require_ownership = jQuery('#require_ownership').is(':checked');
 	add_privilege(resource, level, role, require_breeding_program, require_ownership);
     });
 });

@@ -121,8 +121,12 @@ sub add_privilege :Path('/ajax/access/add_privilege') Args(0) {
     my $require_ownership = $c->req->param('require_ownership');
 
     print STDERR "REQUIRE BREEDING PROGRAM: $require_breeding_program. REQUIRE OWNERSHIP: $require_ownership\n";
-    
-    my $r = $c->stash->{access}->add_privilege($resource, $role, $level, $require_breeding_program, $require_ownership);
+
+    my $require_breeding_program_flag =  $require_breeding_program eq "true" ?  1 : 0;
+    my $require_ownership_flag = $require_ownership eq "true" ? 1 : 0;
+
+    print STDERR "BP FLAG $require_breeding_program_flag. O FLAG: $require_ownership_flag\n";
+    my $r = $c->stash->{access}->add_privilege($resource, $role, $level, $require_breeding_program_flag, $require_ownership_flag);
 
     $c->stash->{rest} = $r;
 }
