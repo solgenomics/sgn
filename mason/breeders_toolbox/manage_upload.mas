@@ -285,6 +285,12 @@ function process_file(file_data, upload_type) {
                 },
             });
             // also populate the select dropdown with the file choices
+            let intertek_info_select = jQuery('#genotype_data_intertek_info_select');
+            intertek_info_select.empty();
+            archived_files_list.forEach(item => {
+                const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
+                intertek_info_select.append(opt);
+            });
             jQuery('#genotype_data_upload_type_choice_select').on('change', display_genotyping_data_upload_additional_choices);
             jQuery('#genotype_data_upload_choices_next_btn').on('click', {file_data : file_data}, populate_genotyping_data_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
@@ -480,7 +486,7 @@ function display_validate_submit_modal(options) {
             console.dir(options[key]);
             jQuery('#upload_validation_parameters').html(options[key]);
         } else {
-            text += "<b>" + key + ": </b>&nbsp; " + options[key] + "<br>";
+            text += "<b>" + key + ": </b>&nbsp; <p style='white-space:pre'>" + options[key] + "</p><br>";
         }
     }
     jQuery('#validate_upload_review_text').html(text);
@@ -621,13 +627,13 @@ function display_genotyping_data_upload_choices() {
             '</select>'+
             '<br>'+
             '<div style="overflow-x: auto;" id="genotype_data_project_select_div" hidden>'+
-                '<br><br><p><b>Select a genotyping project:</b></p><br><table id="genotype_data_project_select"><thead><th>Select</th><th>Genotyping Project</th><th>Description</th><th>Breeding Program</th><th>Year</th><th>Location</th><th>Genotyping Facility</th></thead><tbody></tbody><tfoot></tfoot></table>'+
+                '<br><br><p><b>Select a genotyping project:</b></p><br><table style="width:100%;" id="genotype_data_project_select"><thead><th>Select</th><th>Genotyping Project</th><th>Description</th><th>Breeding Program</th></thead><tbody></tbody><tfoot></tfoot></table>'+
             '</div>'+
             '<div style="overflow-x: auto;" id="genotype_data_protocol_select_div" hidden>'+
-                '<br><br><p><b>Select a genotyping protocol:</b></p><br><table id="genotype_data_protocol_select"><thead><th>Select</th><th>Protocol</th><th>Header</th><th># of Markers</th><th>Description</th><th>Ref. Genome</th><th>Species</th><th>Sample Unit</th><th>Create Date</th></thead><tbody></tbody><tfoot></tfoot></table>'+
+                '<br><br><p><b>Select a genotyping protocol:</b></p><br><table style="width:100%;" id="genotype_data_protocol_select"><thead><th>Select</th><th>Protocol</th></thead><tbody></tbody><tfoot></tfoot></table>'+
             '</div>'+
             '<div id="genotype_data_intertek_info_div" hidden>'+
-                '<select id="genotype_data_intertek_info_select"></select>'+
+                '<br><br><p><b>Select Intertek information file:</b></p><br><select id="genotype_data_intertek_info_select"></select>'+
             '</div>'+
             '<br><br><div id="genotype_data_choices_next_btn_div" hidden><button class="btn btn-primary" id="genotype_data_upload_choices_next_btn">Next</button></div>');
 }
@@ -676,7 +682,7 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'Upload Type' : upload_type_dict[upload_type],
         'File' : file_data.file_name,
         'File ID' : file_data.file_id,
-        'Additional arguments' : additional_args ? JSON.stringify(additional_args) : "none",
+        'Additional arguments' : additional_args ? JSON.stringify(additional_args, null, 2) : "none",
         parameters_json : {
             upload_type : upload_type,
             file_id : file_data.file_id,
@@ -730,15 +736,63 @@ function populate_genotyping_plate_validate_submit_data(event) {
     populate_validate_submit_data(genotype_plate_upload_type, file_data);
 }
 
+function populate_genotyping_data_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let selected_projects = [];
+    jQuery('input[name="upload_genotyping_data_project_select"]:checked').each(function() {
+        selected_projects.push({id : jQuery(this).val(), name : jQuery(this).attr('trial_name')});
+    });
+    if (selected_projects.length > 1){
+        alert('Only select one genotyping project!');
+        return;
+    } else if (selected_projects.length < 1) {
+        alert ('Please select a genotyping project.');
+        return;
+    }
+
+    let selected_protocols = [];
+    jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
+        selected_protocols.push({id : jQuery(this).val(), name : jQuery(this).attr('protocol_name')});
+    });
+    if (selected_protocols.length > 1){
+        alert('Only select one genotyping protocol!');
+        return;
+    } else if (selected_protocols.length < 1) {
+        alert ('Please select a genotyping protocol.');
+        return;
+    }
+
+    let genotype_data_format = jQuery('#genotype_data_upload_type_choice_select').val();
+    if (genotype_data_format == "null_choice") {
+        alert("Select a genotyping data upload type");
+        return;
+    }
+
+    if (genotype_data_format == "genotype_data_intertek") {
+        let intertek_info_file = {id: jQuery('#genotype_data_intertek_info_select').val(), name : jQuery('#genotype_data_intertek_info_select option:selected').text()};
+        populate_validate_submit_data(genotype_data_format, file_data, {
+            intertek_info_file_id : intertek_info_file.id,
+            intertek_info_file_name : intertek_info_file.name,
+            genotyping_protocol_id : selected_protocols[0].id,
+            genotyping_project_id : selected_projects[0].id,
+            genotyping_protocol_name : selected_protocols[0].name,
+            genotyping_project_name : selected_projects[0].name
+        });
+    } else {
+        populate_validate_submit_data(genotype_data_format, file_data, {
+            genotyping_protocol_id : selected_protocols[0].id,
+            genotyping_project_id : selected_projects[0].id,
+            genotyping_protocol_name : selected_protocols[0].name,
+            genotyping_project_name : selected_projects[0].name
+        });
+    }
+}
+
 function submit_file_validation(options) {
     jQuery('.modal.fade').each(function(index, element){
         jQuery(this).modal("hide");
     });
     //TODO
-}
-
-function populate_genotyping_data_validate_submit_data() {
-    alert("Placeholder. WIP");
 }
 
 function submit_file_store(options) {

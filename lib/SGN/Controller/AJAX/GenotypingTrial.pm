@@ -488,7 +488,7 @@ sub get_genotyping_data_projects_GET : Args(0) {
     foreach (@$data){
         my @res;
         if ($checkbox_select_name){
-            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{trial_id}'>";
+            push @res, "<input type='checkbox' name='$checkbox_select_name' trial_name='$_->{trial_name}' value='$_->{trial_id}'>";
         }
         push @res, (
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
@@ -525,7 +525,7 @@ sub get_genotyping_data_protocols_GET : Args(0) {
     foreach (@$data){
         my @res;
         if ($checkbox_select_name){
-            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{protocol_id}'>";
+            push @res, "<input type='checkbox' name='$checkbox_select_name' protocol_name='$_->{protocol_name}' value='$_->{protocol_id}'>";
         }
         my $num_markers = $_->{marker_count};
         my @trimmed;
