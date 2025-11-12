@@ -170,11 +170,11 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 		trial_id => $trial_id
 	});
 
-	next if ref($trial) ne 'CXGN::PhenotypingTrial'; #Skip if this is not a phentyping trial
+	next if (ref($trial) ne 'CXGN::PhenotypingTrial'); #Skip if this is not a phenotyping trial
 
 	my $treatment_trials = $trial->get_treatment_projects();
 
-	next if !$treatment_trials; #skip if there are no treatment trials. Don't waste time getting plots or anything.
+	next if (! @{$treatment_trials}); #skip if there are no treatment trials. Don't waste time getting plots or anything.
 
 	my $parent_observation_units = $trial->get_plots(); #get all plots
 
@@ -260,6 +260,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 
 			foreach my $child (@{$plot_contents}) {
 				next if ($child->{type} eq "accession"); #dont want to assign a phenotype to an accession, that would be bad
+				next if (! $child->{name}); # skip if we have no name
 				$treatment_values_hash->{$child->{name}}->{$treatment_full_name} = $treatment_values_hash->{$plot_name}->{$treatment_full_name};
 				$phenotype_store_stock_list{$child->{name}} = 1;
 			}
@@ -289,7 +290,7 @@ my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
 	metadata_schema => $metadata_schema,
 	phenome_schema => $phenome_schema,
 	user_id => $signing_user_id,
-	stock_list => [keys(%phenotype_store_stock_list)],
+	stock_list => [grep {defined($_) && $_ ne ''} keys(%phenotype_store_stock_list)],
 	trait_list => [keys(%trial_treatments)],
 	values_hash => $treatment_values_hash,
 	metadata_hash => $phenotype_metadata

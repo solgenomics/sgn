@@ -6434,6 +6434,7 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     my $number_of_plants_array = decode_json $number_of_plants_json;
     my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema', undef, $user_id);
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -6453,7 +6454,38 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         return;
     }
 
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id});
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+    my $site_basedir = getcwd();
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $dbh = $c->dbc->dbh();
+
+    my $p = CXGN::People::Person->new($dbh, $user_id);
+    my $user_name = $p->get_username;
+
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $c->config->{dbhost},
+        dbuser => $c->config->{dbuser},
+        dbname => $c->config->{dbname},
+        dbpass => $c->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => $user_id,
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => $user_name,
+            date => $timestamp
+        }
+    };
+
+    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id, metadata_schema => $metadata_schema});
     my $result;
     if ($addition_type eq 'new_accessions') {
         eval {
@@ -6469,7 +6501,7 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
         }
     } elsif ($addition_type eq 'additional_plants') {
         eval {
-            $result = $trial->add_additional_plants_for_greenhouse($stock_list, $number_of_plants_array, $user_id);
+            $result = $trial->add_additional_plants_for_greenhouse($stock_list, $number_of_plants_array, $user_id, $phenotype_store_config);
         };
         if ($@) {
             $c->stash->{rest} = { error => "An error occurred while adding additional plants: $@" };

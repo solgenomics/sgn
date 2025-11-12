@@ -3456,6 +3456,7 @@ sub save_plant_entries {
     my $inherits_plot_treatments = shift;
     my $user_id = shift;
     my $phenotype_store_config = shift;
+    my $add_additional_plants = shift;
 
     my $chado_schema = $self->bcs_schema();
 
@@ -3474,7 +3475,6 @@ sub save_plant_entries {
     foreach my $row (@{$treatment_data}) {
         $plot_pheno->{$row->{obsunit_uniquename}}->{$row->{trait_name}} = $row->{phenotype_value};
     }
-    my $add_additional_plants = shift;
 
     my $create_plant_entities_txn = sub {
         my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
@@ -3497,11 +3497,11 @@ sub save_plant_entries {
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
+        # my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+        #     type_id => $has_plants_cvterm,
+        #     value => $plants_per_plot,
+        #     project_id => $self->get_trial_id(),
+        # });
 
         if (!$add_additional_plants) {
             my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({

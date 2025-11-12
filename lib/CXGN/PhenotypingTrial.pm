@@ -346,12 +346,12 @@ sub get_crossing_experiments_from_field_trial {
  Desc:         add additional accessions or crosses or families for existing greenhouse trial
  Ret:
  Args:
- Side Effects:
+ Side Effects: Treatments are NOT added automatically when calling this, since this adds new plots/accessions. Users will have to add treatments to the new stocks afterwards. 
  Example:
 
 =cut
 
-sub add_additional_stocks_for_greenhouse {
+sub add_additional_stocks_for_greenhouse { 
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $stock_list = shift;
@@ -470,9 +470,11 @@ sub add_additional_stocks_for_greenhouse {
 sub add_additional_plants_for_greenhouse {
     my $self = shift;
     my $schema = $self->bcs_schema;
+    my $metadata_schema = $self->metadata_schema;
     my $stock_list = shift;
     my $number_of_plants_list = shift;
     my $user_id = shift;
+    my $phenotype_store_config = shift;
     my $trial_id = $self->get_trial_id();
     my $add_additional_plants = '1';
 
@@ -530,9 +532,9 @@ sub add_additional_plants_for_greenhouse {
             }
         }
 
-        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id, metadata_schema => $metadata_schema });
 
-        $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
+        $greenhouse_trial->save_plant_entries($info,'' ,1 ,$user_id, $phenotype_store_config, $add_additional_plants); #TODO: Add phenotypestore config hash
 
         my $new_layout = CXGN::Trial::TrialLayout->new({
             schema => $schema,
