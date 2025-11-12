@@ -119,7 +119,7 @@ sub store_qPCR_data {
 
     my $coderef = sub {
         if ($CT_expression_data && (!$relative_expression_data)) {
-            if ($normalization_method eq "CASS") {
+            if ($normalization_method eq "CASS_Delta_Cq") {
                 $relative_expression_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
                 print STDERR "DERIVED RELATIVE EXPRESSION DATA =".Dumper($relative_expression_data)."\n";
                 $normalized_values_derived_from = 'calculated using CASS normalization method';
