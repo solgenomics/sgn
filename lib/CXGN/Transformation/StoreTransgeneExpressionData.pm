@@ -115,7 +115,6 @@ sub store_qPCR_data {
 	my $notes = $self->get_notes();
 	my $operator_id = $self->get_operator_id();
 	my $normalized_values_derived_from;
-    print STDERR "CT EXPRESSION DATA =".Dumper($CT_expression_data)."\n";
 
     my $coderef = sub {
         if ($CT_expression_data && (!$relative_expression_data)) {
@@ -140,7 +139,7 @@ sub store_qPCR_data {
 	    });
         if (!$transformant_stock) {
             print STDERR "Transgenic line could not be found\n";
-        return;
+            return;
         } else {
             $transformant_stock_id = $transformant_stock->stock_id();
 		}

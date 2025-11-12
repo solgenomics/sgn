@@ -186,6 +186,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     $c->stash->{vector_related_genes} = $vector_related_genes;
     $c->stash->{vector_analyzed_tissue_types} = $vector_analyzed_tissue_types;
     $c->stash->{vector_id} = $vector_id;
+    $c->stash->{vector_name} = $vector_name;
 
     $c->stash->{template} = '/transformation/transformation.mas';
 

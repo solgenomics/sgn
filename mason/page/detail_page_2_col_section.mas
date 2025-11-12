@@ -163,6 +163,7 @@ $default_plant_material_name => undef
 #specific to transformation ID page
 $transformation_id => undef
 $vector_id => undef
+$vector_name => undef
 $control_id => undef
 $identifier_id => undef
 $identifier_name => undef
@@ -369,7 +370,7 @@ $field_headers => ()
                                 <& /transformation/obsoleted_accessions.mas, vector_id => $vector_id, transformation_id => $transformation_id, program_name => $program_name &>
 % } #End obsoleted_accessions_section
 % if ($info_section_id eq 'transgenic_line_details_section'){
-                                <& /transformation/transformant_details.mas, vector_id => $vector_id, transformation_id => $transformation_id, stock_uniquename => $stock_uniquename, stock_type => $type_name, vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types, program_name => $program_name &>
+                                <& /transformation/transformant_details.mas, vector_id => $vector_id, transformation_id => $transformation_id, vector_name => $vector_name, stock_type => $type_name, vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types, program_name => $program_name &>
 % } #End transgenic_line_details_section
 % if ($info_section_id eq 'related_transformation_info_section'){
                                 <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, vector_related_genes => $vector_related_genes, number_of_insertions => $number_of_insertions &>

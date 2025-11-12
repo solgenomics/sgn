@@ -1,8 +1,8 @@
 
 <%args>
-$vector_id
 $transformation_id => undef
-$stock_uniquename => undef
+$vector_id
+$vector_name
 $vector_related_genes => undef
 $vector_analyzed_tissue_types => undef
 $program_name
@@ -60,7 +60,7 @@ $program_name
     </div>
 </div>
 
-<& /transformation/upload_qPCR_data_dialog.mas, stock_id => $vector_id, stock_uniquename => $stock_uniquename &>
+<& /transformation/upload_qPCR_data_dialog.mas, vector_id => $vector_id, vector_name => $vector_name &>
 <& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name, vector_id => $vector_id &>
 
 <style>

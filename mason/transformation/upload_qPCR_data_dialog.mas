@@ -1,6 +1,6 @@
 <%args>
-$stock_id
-$stock_uniquename
+$vector_id
+$vector_name
 </%args>
 
 <div class="modal fade" id="upload_qPCR_data_dialog" name="upload_qPCR_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadqPCRDataDialog">
@@ -58,8 +58,8 @@ $stock_uniquename
                             <label class="col-sm-4 control-label">Upload File (Cq values): </label>
                             <div class="col-sm-8" >
                                 <input type="file" name="Cq_qPCR_data_file" id="Cq_qPCR_data_file" encoding="multipart/form-data" />
-                                <input name="qPCR_data_vector_id" id="qPCR_data_vector_id" type="hidden" value="<% $stock_id %>">
-                                <input name="qPCR_data_vector_name" id="qPCR_data_vector_name" type="hidden" value="<% $stock_uniquename %>">
+                                <input name="qPCR_data_vector_id" id="qPCR_data_vector_id" type="hidden" value="<% $vector_id %>">
+                                <input name="qPCR_data_vector_name" id="qPCR_data_vector_name" type="hidden" value="<% $vector_name %>">
                             </div>
                         </div>
                     </form>
@@ -327,7 +327,8 @@ jQuery(document).ready(function(){
                 alert(response.error);
                 return;
             }
-            if (response.success) {
+            if (response.success == 1) {
+                jQuery('#upload_qPCR_data_dialog').modal('hide');
                 jQuery('#qPCR_data_saved_dialog_message').modal("show");
             }
         }

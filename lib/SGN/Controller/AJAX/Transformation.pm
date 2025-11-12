@@ -1570,6 +1570,7 @@ sub upload_qPCR_data_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
     my $vector_id = $c->req->param('qPCR_data_vector_id');
     my $vector_construct_name = $c->req->param('qPCR_data_vector_name');
+
     my $tissue_type = $c->req->param('qPCR_tissue_type');
     my $endogenous_control = $c->req->param('qPCR_endogenous_control');
     my $normalization_method = $c->req->param('qPCR_normalization_method');
@@ -1707,7 +1708,6 @@ sub upload_qPCR_data_POST : Args(0) {
                 } elsif ($normalized_upload) {
                     $relative_expression_data = $parsed_data->{$transformant_name};
                 }
-                print STDERR "CT UPLOAD =".Dumper($CT_expression_data)."\n";
 
                 my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
                     chado_schema => $schema,
@@ -1734,7 +1734,7 @@ sub upload_qPCR_data_POST : Args(0) {
         }
     }
 
-    $c->stash->{rest} = {success => "1",};
+    $c->stash->{rest} = {success => "1"};
 }
 
 sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transgenic_line_details') :Args(0) {
