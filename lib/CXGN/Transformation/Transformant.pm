@@ -99,8 +99,8 @@ sub get_transformant_qPCR_data {
                         } else {
                             push @details, $number_of_replicates."replicates";
                         }
-                        $standard_deviation = $qPCR_relative_values->{$gene_name}->{'standard_deviation'};
-                        push @details, "SD: ". $standard_deviation;
+                        $standard_deviation = $qPCR_relative_values->{$gene_name}->{'stdevp'};
+                        push @details, "stdevp: ". $standard_deviation;
                         $detail_string = join("<br>", @details);
                         push @gene_relative_values, $detail_string;
                     }
