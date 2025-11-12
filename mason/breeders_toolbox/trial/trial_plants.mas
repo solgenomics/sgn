@@ -14,6 +14,12 @@ $trial_id
 <button id="select_all_plants_btn" class="btn btn-primary">Select/Deselect All</button>
 
 <br>
+<br>
+
+<button id="delete_plants_btn" class="btn btn-primary">Delete All Plants</button>
+
+<br>
+<br>
 
 <div class="panel panel-default">
     <div class="panel-body">
@@ -79,6 +85,11 @@ jQuery(document).ready(function () {
         } else {
             jQuery('.exp_design_plant_select').prop("checked", true);
         }
+    });
+
+    jQuery('#delete_plants_btn').click( function() { // delete selected plots
+        alert("delete plants");
+        jQuery('#delete_plants_dialog').modal("show");
     });
 
     jQuery('#plant_select_add_to_new_list_btn').click(function() {
