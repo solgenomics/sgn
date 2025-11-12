@@ -146,6 +146,8 @@ $design_types => ()
 
 <& /file_formats/genotype_plate_upload.mas &>
 
+<& /file_formats/genotype_data_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -188,8 +190,10 @@ function load_archived_files_table() {
 
                     file_thead.append(header_row);
 
+                    archived_files_list = response.data;
+
                     response.data.forEach(row => {
-                        archived_files_list.push({file_id : row.file_id, file_name : for.filename});
+                        //archived_files_list.push({file_id : row.file_id, file_name : for.filename});
                         let tr = jQuery("<tr>");
                         tr.append(jQuery("<td>").html("<div id='file_timestamp_"+row.file_id+"'>"+row.timestamp+"</div>"));
                         tr.append(jQuery("<td>").html("<a id='file_name_"+row.file_id+"' href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
@@ -262,7 +266,28 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'genotyping_data' : 
-            //
+            display_genotyping_data_upload_choices();
+            jQuery('#genotype_data_choices_next_btn_div').show();
+            jQuery('#genotype_data_project_select_div').show();
+            jQuery('#genotype_data_protocol_select_div').show();
+            let dt = jQuery('#genotype_data_project_select').DataTable();
+            dt.clear().destroy();
+            jQuery('#genotype_data_project_select').DataTable( {
+                'ajax': {
+                    'url':'/ajax/genotyping_data/projects?select_checkbox_name=upload_genotyping_data_project_select',
+                },
+            });
+            dt = jQuery('#genotype_data_protocol_select').DataTable();
+            dt.clear().destroy();
+            jQuery('#genotype_data_protocol_select').DataTable( {
+                'ajax': {
+                    'url':'/ajax/genotyping_data/protocols?select_checkbox_name=upload_genotyping_data_protocol_select',
+                },
+            });
+            // also populate the select dropdown with the file choices
+            jQuery('#genotype_data_upload_type_choice_select').on('change', display_genotyping_data_upload_additional_choices);
+            jQuery('#genotype_data_upload_choices_next_btn').on('click', {file_data : file_data}, populate_genotyping_data_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'locations' : 
             //
@@ -365,7 +390,9 @@ function display_upload_formats(upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'genotyping_data' : 
-            //
+            display_genotyping_data_upload_choices();
+            jQuery('#genotype_data_upload_type_choice_select').on('change', display_genotyping_data_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'locations' : 
             //
@@ -520,6 +547,29 @@ function display_genotyping_plate_upload_formats() {
     }
 }
 
+function display_genotyping_data_upload_formats() {
+    let genotyping_data_type = jQuery('#genotype_data_upload_type_choice_select').val();
+    switch (genotyping_data_type) {
+        case 'genotype_data_vcf' : 
+            jQuery('#upload_genotype_vcf_spreadsheet_info_format_dialog').modal("show");
+            break;
+        case 'genotype_data_tassel' : 
+            jQuery('#upload_genotype_tassel_hdf5_spreadsheet_info_format_dialog').modal("show");
+            break; 
+        case 'genotype_data_intertek' : 
+            jQuery('#upload_genotype_intertek_spreadsheet_info_format_dialog').modal("show");
+            break;
+        case 'genotype_data_ssr' : 
+            jQuery('#upload_ssr_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'genotype_data_kasp' : 
+            jQuery('#upload_genotype_kasp_spreadsheet_info_format_dialog').modal("show");
+            break;
+        default:
+            break;
+    }
+}
+
 function display_plant_upload_choices() {
     jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="plant_upload_type_choice_select">'+
                         '<option value="null_choice">Select file type</option>'+
@@ -533,7 +583,7 @@ function display_plant_upload_choices() {
                     '<br>' + 
                     '<div id="plants_per_plot_div" hidden>Maximum number of plants per plot/subplot: '+'<input style="width:25%" id="plant_upload_plants_per_plot" class="form-control" type="number"/></div>' + 
                     '<br>' + 
-                    '<div id="plant_choices_next_btn_div" hidden><button class="btn btn-primary btn-small" id="plant_upload_choices_next_btn">Next</button></div>');
+                    '<div id="plant_choices_next_btn_div" hidden><button class="btn btn-primary" id="plant_upload_choices_next_btn">Next</button></div>');
 }
 
 function display_subplot_upload_choices() {
@@ -546,7 +596,7 @@ function display_subplot_upload_choices() {
                     '<br>' + 
                     '<div id="subplots_per_plot_div" hidden>Maximum number of subplots per plot: '+'<input style="width:25%" id="subplot_upload_subplots_per_plot" class="form-control" type="number"/></div>' + 
                     '<br>' + 
-                    '<div id="subplot_choices_next_btn_div" hidden><button class="btn btn-primary btn-small" id="subplot_upload_choices_next_btn">Next</button></div>');
+                    '<div id="subplot_choices_next_btn_div" hidden><button class="btn btn-primary" id="subplot_upload_choices_next_btn">Next</button></div>');
 }
 
 function display_genotyping_plate_upload_choices() {
@@ -557,7 +607,7 @@ function display_genotyping_plate_upload_choices() {
                         '<option value="genotyping_plate_custom_android">Custom Coordinate Android Application plate design</option>'+
                     '</select>' + 
                     '<br>' + 
-                    '<div id="genotype_plate_choices_next_btn_div" hidden><button class="btn btn-primary btn-small" id="genotype_plate_upload_choices_next_btn">Next</button></div>');
+                    '<div id="genotype_plate_choices_next_btn_div" hidden><button class="btn btn-primary" id="genotype_plate_upload_choices_next_btn">Next</button></div>');
 }
 
 function display_genotyping_data_upload_choices() {
@@ -570,15 +620,28 @@ function display_genotyping_data_upload_choices() {
                 '<option value="genotype_data_ssr">SSR</option>'+
             '</select>'+
             '<br>'+
-            '<div id="genotype_data_project_select_div" hidden>'+
-                '<table id="genotype_data_project_select"></table>'+
+            '<div style="overflow-x: auto;" id="genotype_data_project_select_div" hidden>'+
+                '<br><br><p><b>Select a genotyping project:</b></p><br><table id="genotype_data_project_select"><thead><th>Select</th><th>Genotyping Project</th><th>Description</th><th>Breeding Program</th><th>Year</th><th>Location</th><th>Genotyping Facility</th></thead><tbody></tbody><tfoot></tfoot></table>'+
             '</div>'+
-            '<div id="genotype_data_protocol_select_div" hidden>'+
-                '<table id="genotype_data_protocol_select"></table>'+
+            '<div style="overflow-x: auto;" id="genotype_data_protocol_select_div" hidden>'+
+                '<br><br><p><b>Select a genotyping protocol:</b></p><br><table id="genotype_data_protocol_select"><thead><th>Select</th><th>Protocol</th><th>Header</th><th># of Markers</th><th>Description</th><th>Ref. Genome</th><th>Species</th><th>Sample Unit</th><th>Create Date</th></thead><tbody></tbody><tfoot></tfoot></table>'+
             '</div>'+
             '<div id="genotype_data_intertek_info_div" hidden>'+
                 '<select id="genotype_data_intertek_info_select"></select>'+
-            '</div>'+);
+            '</div>'+
+            '<br><br><div id="genotype_data_choices_next_btn_div" hidden><button class="btn btn-primary" id="genotype_data_upload_choices_next_btn">Next</button></div>');
+}
+
+function display_genotyping_data_upload_additional_choices() {
+    let genotyping_data_type = jQuery('#genotype_data_upload_type_choice_select').val();
+    switch (genotyping_data_type) {
+        case 'genotype_data_intertek' : 
+            jQuery('#genotype_data_intertek_info_div').show();
+            break;
+        default :
+            jQuery('#genotype_data_intertek_info_div').hide();
+            break;
+    }
 }
 
 function display_seedlot_upload_choices() {
@@ -601,7 +664,12 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'subplots_per_plot' : "Subplots by number of subplots per plot",
         'genotyping_plate_excel' : "Genotyping plate design made in Excel",
         'genotyping_plate_default_android' : "Default Coordinate Android Application plate design",
-        'genotyping_plate_custom_android' : "Custom Coordinate Android Application plate design"
+        'genotyping_plate_custom_android' : "Custom Coordinate Android Application plate design",
+        'genotype_data_vcf' : "VCF genotyping data",
+        'genotype_data_tassel' : "Tassel HDF5 genotyping data",
+        'genotype_data_intertek' : "Intertek genotyping data",
+        'genotype_data_kasp' : "KASP genotyping data",
+        'genotype_data_ssr' : "SSR genotyping data"
     };
 
     display_validate_submit_modal({
@@ -667,6 +735,10 @@ function submit_file_validation(options) {
         jQuery(this).modal("hide");
     });
     //TODO
+}
+
+function populate_genotyping_data_validate_submit_data() {
+    alert("Placeholder. WIP");
 }
 
 function submit_file_store(options) {
