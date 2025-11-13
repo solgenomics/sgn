@@ -37,9 +37,8 @@ $vector_name
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables", "CXGN.Stock", "CXGN.Transformation"] &>
+<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables", "CXGN.Stock", "CXGN.Transformation", "jquery.iframe-post-form"] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 
 <& /page/page_title.mas, title => "Details for transformation '$transformation_name'" &>
 
