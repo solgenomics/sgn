@@ -251,7 +251,7 @@ $vector_name
 
 jQuery(document).ready(function(){
 
-    jQuery('#upload_qPCR_data_link').click(function() {
+    jQuery("[name='upload_qPCR_data_link']").click(function() {
         get_select_box('tissue_types', 'qPCR_tissue_type_div', { 'name' : 'qPCR_tissue_type', 'id' : 'qPCR_tissue_type' , 'empty' : 1});
         get_select_box('endogenous_controls', 'qPCR_endogenous_control_div', { 'name' : 'qPCR_endogenous_control', 'id' : 'qPCR_endogenous_control' , 'empty' : 1});
         get_select_box('qPCR_normalization_methods', 'qPCR_normalization_methods_div', { 'name' : 'qPCR_normalization_method', 'id' : 'qPCR_normalization_method' , 'empty' : 1});
