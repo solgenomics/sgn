@@ -52,8 +52,8 @@ page_formats["US Letter PDF"] = {
                 top_margin: 36.7,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             },
             'CASS [1" x 5 1/4"]': {
                 label_width: 378,
@@ -121,8 +121,8 @@ page_formats["A4 PDF"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -141,8 +141,8 @@ page_formats["Zebra printer file"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -159,8 +159,8 @@ page_formats["Custom"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -1614,8 +1614,8 @@ function retrievePageParams() {
         top_margin: label_sizes[label].top_margin || convertPageDimensions("top_margin"),
         horizontal_gap: label_sizes[label].horizontal_gap || convertPageDimensions("horizontal_gap"),
         vertical_gap: label_sizes[label].vertical_gap || convertPageDimensions("vertical_gap"),
-        number_of_columns: label_sizes[label].number_of_columns,
-        number_of_rows: label_sizes[label].number_of_rows,
+        number_of_columns: (label == "Custom" || page == "Custom") ? document.getElementById("number_of_columns").value : label_sizes[label].number_of_columns,
+        number_of_rows: (label == "Custom" || page == "Custom") ? document.getElementById("number_of_rows").value : label_sizes[label].number_of_rows,
         plot_filter: document.getElementById("plot_filter").value,
         sort_order_1: document.getElementById("sort_order_1").value,
         sort_order_2: document.getElementById("sort_order_2").value,
@@ -1832,6 +1832,18 @@ function loadDesign (list_id) {
         enableDrawArea();
     }
 
+    var text_alignment = params['text_alignment'];
+    d3.selectAll(".label-element")
+            .attr("text-anchor", text_alignment)
+    d3.select(".selection-tools").remove();
+
+    if (text_alignment == "left") {
+        jQuery('#align_left').prop("checked", true);
+    } else {
+        jQuery('#align_middle').prop("checked", true);
+    }
+
+    
     saveAdditionalOptions(
         params['top_margin'],
         params['left_margin'],
