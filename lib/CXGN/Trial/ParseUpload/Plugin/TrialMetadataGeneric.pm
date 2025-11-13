@@ -137,9 +137,9 @@ sub _validate_with_plugin {
         if ($_ =~ /\s/) {
             push @error_messages, "new_trial_name <strong>$_</strong> must not contain spaces.";
         }
-        # if ($_ =~ /\// || $_ =~ /\\/) {
-        #     push @warning_messages, "trial_name <strong>$_</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.";
-        # }
+        if ($_ =~ /\// || $_ =~ /\\/) {
+            push @warning_messages, "trial_name <strong>$_</strong> contains slashes. Note that slashes can cause problems for third-party applications; however, trial names can be saved with slashes if you ignore warnings.";
+        }
     }
     if (scalar(@already_used_new_trial_names) > 0) {
         push @error_messages, "New Trial Name(s) <strong>".join(', ',@already_used_new_trial_names)."</strong> are invalid because they are already used in the database.";
@@ -152,6 +152,21 @@ sub _validate_with_plugin {
         push @error_messages, "Breeding program(s) <strong>".join(', ',@breeding_programs_missing)."</strong> are not in the database.";
     }
 
+    # Folder: should already exist in the database
+    # return missing folder names as a warning, that can be overriden by the user
+    my @existing_folders = CXGN::Trial::Folder->list({ bcs_schema => $schema, folder_for_trials => 1 });
+    my %folders_hash = map { @{$_}[1] => @{$_}[0] } @existing_folders;
+    my $entered_folders = $parsed_values->{'folder'};
+    my @missing_folders;
+    foreach my $f (@$entered_folders) {
+        if ( ! exists $folders_hash{$f} ) {
+            push @missing_folders, $f;
+        }
+    }
+    if ( scalar @missing_folders > 0 ) {
+        push @warning_messages, "The following folders do not exist and will be created if warnings are ignored: " . join(', ', @missing_folders);
+    }
+
     # Location: Transform location abbreviations/codes to full names
     my $locations_hashref = $validator->validate($schema,'locations',$parsed_values->{'location'});
     my @codes = @{$locations_hashref->{'codes'}};
@@ -160,7 +175,7 @@ sub _validate_with_plugin {
         my $location_code = $code->[0];
         my $found_location_name = $code->[1];
         $location_code_map{$location_code} = $found_location_name;
-        # push @warning_messages, "File location <strong>$location_code</strong> matches the code for the location named <strong>$found_location_name</strong> and will be substituted if you ignore warnings.";
+        push @warning_messages, "File location <strong>$location_code</strong> matches the code for the location named <strong>$found_location_name</strong> and will be substituted if you ignore warnings.";
     }
     $self->_set_location_code_map(\%location_code_map);
 
@@ -265,32 +280,20 @@ sub _parse_with_plugin {
             $d->{'type'} = $valid_trial_types{$trial_type};
         }
 
-        # Set folder id, if folder name is present
-        my $folder_id;
+        # Set folder info (including id, if the folder already exists)
+        my %folder_info;
         if ( defined $folder_name && $folder_name ne '' ) {
-
-            # use existing folder
+            my $bp_name = defined $breeding_program && $breeding_program ne '' ? $breeding_program : $original_breeding_program;
+            my $bprs = $schema->resultset("Project::Project")->search({ name => $bp_name });
+            my $bp_id = $bprs->first->project_id;
             if ( exists $folders_hash{$folder_name} ) {
-                $folder_id = $folders_hash{$folder_name};
+                %folder_info = ( type => 'exists', name => $folder_name, id => $folders_hash{$folder_name}, breeding_program_name => $bp_name, breeding_program_id => $bp_id );
             }
-
-            # create new folder
             else {
-                my $bp_name = defined $breeding_program && $breeding_program ne '' ? $breeding_program : $original_breeding_program;
-                my $bprs = $schema->resultset("Project::Project")->search({ name => $bp_name });
-                my $breeding_program_id = $bprs->first->project_id;
-                my $f = CXGN::Trial::Folder->create({
-                    bcs_schema => $schema,
-                    name => $folder_name,
-                    breeding_program_id => $breeding_program_id,
-                    folder_for_trials => 1
-                });
-                $folder_id = $f->folder_id();
-                $folders_hash{$folder_name} = $folder_id;
+                %folder_info = ( type => 'missing', name => $folder_name, breeding_program => $bp_name, breeding_program_id => $bp_id );
             }
-
         }
-        $d->{'folder'} = $folder_id;
+        $d->{'folder'} = \%folder_info;
 
         $trial_data{$trial_id} = $d;
     }

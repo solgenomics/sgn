@@ -5781,8 +5781,10 @@ sub update_metadata {
         if ($details->{facility_status}) { $self->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
         if ($details->{raw_data_link}) { $self->set_raw_data_link($details->{raw_data_link}); }
         if ($details->{folder}) {
-            my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->bcs_schema(), folder_id => $self->get_trial_id() });
-            $folder->associate_parent($details->{folder});
+            if ( $details->{folder}->{type} eq 'exists' ) {
+                my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->bcs_schema(), folder_id => $self->get_trial_id() });
+                $folder->associate_parent($details->{folder}->{id});
+            }
         }
     };
     if ($@) {
