@@ -5743,7 +5743,7 @@ sub get_recently_modified_projects {
 #	return [];
 #    }
 
-    if ($type eq "trialtree") { $type = "phenotyping_trial"; }
+    if ($type eq "trialtree" || $type eq "trial" || $type eq "trials") { $type = "phenotyping_trial"; }
 
     print STDERR "TYPE NOW: $type\n";
     
@@ -5763,16 +5763,21 @@ sub get_recently_modified_projects {
 
     my $create_clause = "";
 
-    if ($last_refresh_date || !$hard_refresh) {
+    if ($last_refresh_date) {
 	$create_clause = " and create_date > ? ";
     }
-	
+
+    if ($hard_refresh) {
+	$last_refresh_date = "1900-01-01T00:00:00";
+    }
+    
     my $q = "select distinct(project.project_id), project.create_date from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm.cvterm_id) where $clause{$type} $create_clause  group by project.project_id order by create_date";
 
     print STDERR "QUERY = $q\n";
     
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
+    print STDERR "LAST REFRESH DATE = $last_refresh_date\n";
     if ($last_refresh_date) { 
 	$h->execute($last_refresh_date);
     }
