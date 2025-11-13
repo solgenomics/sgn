@@ -159,8 +159,10 @@ if (parseInt(check_outliers) === 1) {
 
 jQuery(document).ready(function() {
 
-  jQuery('#trial_download_phenotypes_button').click( function () {
+  jQuery('#phenotyping_trial_download_phenotypes_button').click( function () {
+
     jQuery('#download_trial_phenotypes_dialog').modal("show");
+
     data_level_change_traits();
   });
 
@@ -170,6 +172,7 @@ jQuery(document).ready(function() {
 
   jQuery('#download_trial_phenotypes_submit_button').click( function () {
     var trial_ids = "<% $trial_ids %>";
+    alert('TRIAL IDS = '+ trial_ids);
     var trial_id_array = trial_ids.split(",");
     var speed = jQuery("#download_trial_phenotypes_speed").val();
     var format = jQuery("#download_trial_phenotypes_format").val();
@@ -192,6 +195,7 @@ jQuery(document).ready(function() {
 });
 
 function data_level_change_traits() {
+
     get_select_box('traits', 'download_trial_phenotypes_traits', { 'name' : 'download_trial_phenotypes_traits_select', 'id' : 'download_trial_phenotypes_traits_select', 'trial_ids':'<% $trial_ids %>', 'data_level':jQuery('#download_trial_phenotypes_level_option').val(), 'multiple': true });
     get_select_box('phenotyped_trait_components', 'download_trial_phenotypes_trait_components', { 'name' : 'download_trial_phenotypes_trait_components_select', 'id' : 'download_trial_phenotypes_trait_components_select', 'trial_ids':'<% $trial_ids %>', 'data_level':jQuery('#download_trial_phenotypes_level_option').val() });
 }

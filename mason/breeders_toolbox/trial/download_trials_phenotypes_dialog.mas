@@ -166,11 +166,11 @@ jQuery(document).ready(function() {
     });
 
     jQuery('#download_trials_phenotypes_submit_button').click( function () {
-        var selected = jQuery('#trial_list').jstree('get_bottom_selected');
+        var selected = jQuery('#phenotyping_trial_list').jstree('get_bottom_selected');
         var trial_ids = selected.join(",");
         var trial_id_array = trial_ids.split(",");
         var format = jQuery("#download_trials_phenotypes_format").val();
-		var repetitive_measurements = jQuery("#download_repetitive_measurements_trials_option").val();
+	var repetitive_measurements = jQuery("#download_repetitive_measurements_trials_option").val();
         var timestamp = jQuery("#download_trials_phenotypes_timestamp_option").val();
         var data_level = jQuery("#download_trials_phenotypes_level_option").val();
         var trait_contains = jQuery("#download_trials_phenotype_trait_contains").val();
