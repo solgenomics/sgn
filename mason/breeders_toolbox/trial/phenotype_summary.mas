@@ -400,8 +400,16 @@ input[type="text"] {
 
                     jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
+
+		    let trait_value = jQuery('#trial_summary_hist_dropdown').val();
+
+		    if (trait_value == null) {
+			jQuery('#working_modal').modal("hide");
+			return;
+		    }			
+
                     jQuery.ajax( {
-                        url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+jQuery("#trial_summary_hist_dropdown").val()+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+                        url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+trait_value+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
                         type: 'POST',
                         success: function(response){
                             jQuery("#working_modal").modal("hide");

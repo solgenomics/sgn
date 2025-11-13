@@ -86,11 +86,9 @@ $user_can_modify => undef
            <button class="btn btn-default" id="upload_plant_entries_button">Upload plant entries using plant_name</button>
            <button class="btn btn-default" id="upload_plant_entries_with_index_number_button">Upload plant entries using plant index number</button>
            <button class="btn btn-default" id="trial_upload_plants_with_num_plants_button">Upload plant entries using number of plants per plot</button>
-<<<<<<< HEAD
-% } elsif (!$has_plant_entries && $has_subplot_entries ) {
-=======
+
 % } elsif ($has_subplot_entries && !$has_plant_entries) {
->>>>>>> master
+
            <br /><br />
            <p><strong>Add Plants to Subplots:</strong></p>
            <button class="btn btn-default" id="create_plant_entries_subplots_button">Add plant entries</button>
