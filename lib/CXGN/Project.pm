@@ -5743,7 +5743,7 @@ sub get_recently_modified_projects {
 #	return [];
 #    }
 
-    if ($type eq "trialtree" || $type eq "trial" || $type eq "trials") { $type = "phenotyping_trial"; }
+    #if ($type eq "trialtree" || $type eq "trial" || $type eq "trials") { $type = "phenotyping_trial"; }
 
     print STDERR "TYPE NOW: $type\n";
     

@@ -33,18 +33,18 @@ $hard_refresh => undef
   <thead>
     <tr>
       <th>Information</th>
-      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_trialtree_button" name="refresh_jstree_html">Refresh</button></th>
+      <th>Breeding Programs -- Folders -- Trials&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_phenotyping_trial_button" name="refresh_jstree_html">Refresh</button></th>
     </tr>
   </thead>
   <tbody>
   <tr>
     <td>
         <h4>Search</h4>
-        <input type="text" class="form-control input-sm" id="trialtree_search" placeholder="Search" />
+        <input type="text" class="form-control input-sm" id="phenotyping_trial_search" placeholder="Search" />
         <hr>
       <h4>Download Trial Phenotypes</h4>
       <h5><i>Select multiple trials by holding 'Ctrl'.</i></h5>
-      <button class="btn btn-primary" id="trials_download_phenotypes_button" disabled="disabled" title="First Select Trial(s) to Download">Download Phenotypes</button>
+      <button class="btn btn-primary" id="phenotyping_trial_download_phenotypes_button" disabled="disabled" title="First Select Trial(s) to Download">Download Phenotypes</button>
       <hr>
       <h5><i>Double click<br />trial (&nbsp;<span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
       <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;)</i></h5>
@@ -67,7 +67,7 @@ $hard_refresh => undef
       <br />
     </td>
     <td>
-        <div id="trialtree_list" >[loading...]</div>
+        <div id="phenotyping_trial_list" >[loading...]</div>
     </td>
   </tr>
   </tbody>
@@ -79,7 +79,10 @@ $hard_refresh => undef
 jQuery.noConflict();
 
 jQuery(document).ready(function($) {    
-    
+
+
+
+
     //determine if there are any new trials
     // for testing: //localStorage.setItem('trial_tree_last_refresh', '2023-01-01');
     
@@ -110,7 +113,7 @@ jQuery(document).ready(function($) {
     // }
 
     
-    // jQuery('#refresh_jstree_html_trialtree_button').click(function(){
+    // jQuery('#refresh_jstree_html_phenotyping_trial_button').click(function(){
     // 	alert('hello!');
     // 	get_trial_tree().then( function(r) { alert('now loading new tree'); format_trial_tree(r.html) });
 	
@@ -121,10 +124,10 @@ jQuery(document).ready(function($) {
     var htmltree = window.jsMod['htmltree'];
     var hard_refresh = <% $hard_refresh || '""' %>;
     //    alert('HARD REFRESH = '+hard_refresh);
-    htmltree.init("trialtree", <% $hard_refresh %>);
-    //htmltree.init_events('trialtree');	
+    htmltree.init("phenotyping_trial", <% $hard_refresh %>);
+    //htmltree.init_events('phenotyping_trial');	
 
-//    htmltree.init_tree('trialtree');
+//    htmltree.init_tree('phenotyping_trial');
 
 //       jQuery('#trial_list').on("changed.jstree", function (e, data) {
 //     //console.log(data);

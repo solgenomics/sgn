@@ -54,7 +54,18 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 
     my @user_breeding_programs;
 
-    my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $treetype);
+    my $priv_check;
+    if ($treetype eq "phenotyping_trial" || $treetype eq "transformation_trial" || $treetype eq "tracking_trial") {
+	$priv_check = "trials";
+    }
+    if ($treetype eq "genotyping_trial" || $treetype eq "genotyping_project") {
+	$priv_check = "genotyping";
+    }
+    if ($treetype eq "crossing_trial") {
+	$priv_check = "crosses";
+    }
+    
+    my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $priv_check);
     if (exists($privs->{read})) {
      	print STDERR "We can read trials!\n";
      	if ($privs->{read}->{require_breeding_program}) {

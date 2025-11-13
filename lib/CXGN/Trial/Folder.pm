@@ -615,18 +615,16 @@ sub get_jstree_html {
     my $self = shift;
     my $schema = shift;
     my $parent_type = shift;
-    my $project_type_of_interest = shift || 'trial';
+    my $project_type_of_interest = shift || 'phenotyping_trial';
 
-    if ($project_type_of_interest eq 'trialtree') { $project_type_of_interest = 'trial'; }
-    
     #print STDERR "Running get js tree html on project ".$self->{'name'}." at time ".localtime()."\n";
     my ($folder_type_of_interest, $local_type_of_interest, $html);
 
-    if ($project_type_of_interest eq 'trial') {
+    if ($project_type_of_interest eq 'phenotyping_trial') {
         $local_type_of_interest = 'design'; # there is no 'trial' project prop, so using this as a proxy
         $folder_type_of_interest = 'folder_for_trials';
     }
-    elsif ($project_type_of_interest eq 'cross') {
+    elsif ($project_type_of_interest eq 'crossing_trial') {
         $local_type_of_interest = 'crossing_trial';
         $folder_type_of_interest = 'folder_for_crosses';
     }
@@ -656,7 +654,7 @@ sub get_jstree_html {
         foreach my $child (sort keys %children) {
             #print STDERR "Working on child ".$children{$child}->{'name'}."\n";
 
-            if ($project_type_of_interest eq 'trial' && $children{$child}->{'analysis_experiment'}) {
+            if ($project_type_of_interest eq 'phenotyping_trial' && $children{$child}->{'analysis_experiment'}) {
                 $html .= _jstree_li_html($schema, 'analyses', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
 #            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'genotype_data_project'}) {
@@ -665,7 +663,7 @@ sub get_jstree_html {
 #			elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'pcr_genotype_data_project'}) {
 #                $html .= _jstree_li_html($schema, 'pcr_genotyping_data_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
 #            }
-            elsif ($project_type_of_interest eq 'trial' && $children{$child}->{'sampling_trial'}) {
+            elsif ($project_type_of_interest eq 'phenotyping_trial' && $children{$child}->{'sampling_trial'}) {
                 $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($project_type_of_interest eq 'genotyping_project' && $children{$child}->{'genotype_data_project'}) {
@@ -701,7 +699,7 @@ sub _jstree_li_html {
     # print STDERR "TYPE =".Dumper($type)."\n";
 
     my $url = '#';
-    if ($type eq 'trial' || $type eq 'genotyping_trial' || $type eq 'sampling_trial') {
+    if ($type eq 'phenotyping_trial' || $type eq 'genotyping_trial' || $type eq 'sampling_trial') {
         $url = "/breeders/trial/".$id;
     } elsif ($type eq 'folder') {
         $url = "/folder/".$id;
