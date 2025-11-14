@@ -1632,6 +1632,7 @@ function retrievePageParams() {
         start_col: document.getElementById("start_col").value,
         start_row: document.getElementById("start_row").value,
         text_alignment : getAlignmentSpecs(),
+        page_units : getPageUnits()
     }
     return page_params;
 
@@ -1672,6 +1673,13 @@ function getAlignmentSpecs() {
         return "left";
     }   
     return "middle";
+}
+
+function getPageUnits() {
+    if(jQuery('#dim_inches').prop('checked')) {
+        return "imperial";
+    }   
+    return "metric";
 }
 
 function initializeCustomModal(add_fields) {
@@ -1810,21 +1818,39 @@ function loadDesign (list_id) {
         }
     }
 
+     var page_units = params['page_units'];
+
+    if (page_units == "imperial") {
+        jQuery(".radio-select-metric").each(function() {
+            jQuery(this).prop("checked", false)
+        });
+        jQuery(".radio-select-imperial").each(function() {
+            jQuery(this).prop("checked", true)
+        });
+    } else {
+        jQuery(".radio-select-metric").each(function() {
+            jQuery(this).prop("checked", true)
+        });
+        jQuery(".radio-select-imperial").each(function() {
+            jQuery(this).prop("checked", false)
+        });
+    }
+
     var page = params['page_format'];
     document.getElementById('page_format').value = page;
     //console.log("page is "+page);
     switchPageDependentOptions(page);
     if (page == 'Custom') {
-        document.getElementById("page_width").value = params['page_width'] / 72;
-        document.getElementById("page_height").value = params['page_height'] / 72;
+        document.getElementById("page_width").value = convertPixelsToPageDimensions(params['page_width']);
+        document.getElementById("page_height").value = convertPixelsToPageDimensions(params['page_height']);
     }
 
     var label = params['label_format'];
     document.getElementById('label_format').value = label;
     switchLabelDependentOptions(label);
     if (label == 'Custom') {
-        document.getElementById("label_width").value = params['label_width'];
-        document.getElementById("label_height").value = params['label_height'];
+        document.getElementById("label_width").value = convertPixelsToPageDimensions(params['label_width']);
+        document.getElementById("label_height").value = convertPixelsToPageDimensions(params['label_height']);
         page_formats[page].label_sizes['Custom'].label_width = params['label_width'];
         page_formats[page].label_sizes['Custom'].label_height = params['label_height'];
         changeLabelSize(params['label_width'], params['label_height']);
@@ -1843,7 +1869,6 @@ function loadDesign (list_id) {
         jQuery('#align_middle').prop("checked", true);
     }
 
-    
     saveAdditionalOptions(
         params['top_margin'],
         params['left_margin'],
