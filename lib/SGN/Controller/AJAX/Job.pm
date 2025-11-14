@@ -74,7 +74,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             schema => $bcs_schema,
             people_schema => $people_schema,
             sp_job_id => $job_id,
-            finish_logfile -> $c->config->{job_finish_log};
+            finish_logfile -> $c->config->{job_finish_log}
         });
         my $actions_html = "<span id=\"$job_id\" style=\"display: none;\"></span><button id=\"dismiss_job_$job_id\" onclick=\"jsMod['job'].dismiss_job($job_id);\" class=\"btn btn-small btn-danger\">Dismiss</button>";
         my $status = $job->check_status();
