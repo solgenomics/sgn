@@ -36,6 +36,10 @@ eval {
     });
 };
 
+if ($@) {
+    print STDERR "Error making jobs: $@\n";
+}
+
 ok($@ eq '', "Check for successful object creation");
 
 ok($job->name() eq "unit_fixture test job", 'Check for correct arg parsing');
