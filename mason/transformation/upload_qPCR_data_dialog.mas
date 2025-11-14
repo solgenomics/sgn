@@ -145,7 +145,7 @@ $vector_name
                     <ul>
                         <li>accession_name (must exist in the database)</li>
                         <li>replicate_number (If there is no replicate, please indicate 1. If any sample has replicates, the derived normalized value is an average value.)</li>
-                        <li>gene (gene names in the spreadsheet must be stored in the database as genes in the vector construct or the selected endogenous control)</li>
+                        <li>gene (gene names in the spreadsheet must be stored in the database as genes in the vector construct or the selected endogenous control. <b>Each vector construct can be associated with more than one gene by using comma-separated values (e.g., geneA,geneB,geneC).</b>)</li>
                         <li>Cq (Cq values are used to calculate normalized values, both Cq and the derived normalized values are stored in the database)</li>
                     </ul>
                     <br>
