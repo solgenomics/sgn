@@ -10,7 +10,7 @@ my $t = SGN::Test::Fixture->new();
 
 $t->dbh()->begin_work();
 
-my $job_finish_log = $t->config->{job_finish_log} ? $t->config->{job_finish_log} : '/home/production/volume/logs/job_finish.log';
+my $job_finish_log = $t->config->{job_finish_log};
 
 my $job;
 
@@ -66,8 +66,6 @@ SKIP: {
     };
     ok($@ !~ m/No such file or directory/, 'Making sure DB deletion worked, making sure job finish log was handled right');
 };
-
-system('rm /home/production/volume/logs/job_finish.log');
 
 $t->dbh->rollback();
 
