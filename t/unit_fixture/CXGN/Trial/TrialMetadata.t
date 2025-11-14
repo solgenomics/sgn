@@ -37,7 +37,7 @@ for my $extension ("xls", "xlsx", "csv") {
                 'plot_width' => undef,
                 'plot_length' => undef,
                 'field_size' => undef,
-                'folder' => undef
+                'folder' => {}
             },
             '137' => {
                 'trial_name' => 'test_trial',
@@ -54,7 +54,7 @@ for my $extension ("xls", "xlsx", "csv") {
                 'plot_width' => '1.5',
                 'plot_length' => '1',
                 'field_size' => '10',
-                'folder' => undef
+                'folder' => {}
             }
         },
         'breeding_programs' => [
