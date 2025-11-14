@@ -1699,40 +1699,43 @@ sub upload_qPCR_data_POST : Args(0) {
     }
 
     if ($parsed_data){
-        eval {
-            foreach my $transformant_name (keys %$parsed_data) {
-                my $CT_expression_data;
-                my $relative_expression_data;
-                if ($CT_upload) {
-                    $CT_expression_data = $parsed_data->{$transformant_name};
-                } elsif ($normalized_upload) {
-                    $relative_expression_data = $parsed_data->{$transformant_name};
-                }
-
-                my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
-                    chado_schema => $schema,
-                    transformant_name => $transformant_name,
-                    vector_construct_name => $vector_construct_name,
-                    tissue_type => $tissue_type,
-                    CT_expression_data => $CT_expression_data,
-                    relative_expression_data => $relative_expression_data,
-                    endogenous_control => $endogenous_control,
-                    normalization_method => $normalization_method,
-                    assay_date => $assay_date,
-                    notes => $notes,
-                    operator_id => $user_id,
-                });
-
-                my $store = $expression_data->store_qPCR_data();
+        foreach my $transformant_name (keys %$parsed_data) {
+            my $CT_expression_data;
+            my $relative_expression_data;
+            my $error;
+            if ($CT_upload) {
+                $CT_expression_data = $parsed_data->{$transformant_name};
+            } elsif ($normalized_upload) {
+                $relative_expression_data = $parsed_data->{$transformant_name};
             }
-        };
 
-        if ($@) {
-            $c->stash->{rest} = { success => 0, error => $@ };
-            print STDERR "An error condition occurred, was not able to store relative expression data. ($@).\n";
-            return;
+            my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
+                chado_schema => $schema,
+                transformant_name => $transformant_name,
+                vector_construct_name => $vector_construct_name,
+                tissue_type => $tissue_type,
+                CT_expression_data => $CT_expression_data,
+                relative_expression_data => $relative_expression_data,
+                endogenous_control => $endogenous_control,
+                normalization_method => $normalization_method,
+                assay_date => $assay_date,
+                notes => $notes,
+                operator_id => $user_id,
+            });
+
+            my $return = $expression_data->store_qPCR_data();
+            if (!$return){
+                $error = "The error storing qPCR data for: $transformant_name";
+            }
+            if ($return->{error}){
+                $error = $return->{error};
+            }
+            if ($error) {
+                $c->stash->{rest} = { error => $error};
+                return;
+            }
         }
-    }
+    };
 
     $c->stash->{rest} = {success => "1"};
 }

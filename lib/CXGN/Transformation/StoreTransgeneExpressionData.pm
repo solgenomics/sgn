@@ -104,23 +104,24 @@ sub store_qPCR_data {
     my $self = shift;
     my $schema = $self->get_chado_schema();
     my $transaction_error;
-	my $transformant_name = $self->get_transformant_name();
-	my $vector_construct_name = $self->get_vector_construct_name();
-	my $CT_expression_data = $self->get_CT_expression_data();
-	my $relative_expression_data = $self->get_relative_expression_data();
-	my $tissue_type = $self->get_tissue_type();
-	my $assay_date = $self->get_assay_date();
-	my $endogenous_control = $self->get_endogenous_control();
-	my $normalization_method = $self->get_normalization_method();
-	my $notes = $self->get_notes();
-	my $operator_id = $self->get_operator_id();
-	my $normalized_values_derived_from;
+    my $transformant_name = $self->get_transformant_name();
+    my $vector_construct_name = $self->get_vector_construct_name();
+
+    my $CT_expression_data = $self->get_CT_expression_data();
+    my $relative_expression_data = $self->get_relative_expression_data();
+    my $tissue_type = $self->get_tissue_type();
+    my $assay_date = $self->get_assay_date();
+    my $endogenous_control = $self->get_endogenous_control();
+    my $normalization_method = $self->get_normalization_method();
+    my $notes = $self->get_notes();
+    my $operator_id = $self->get_operator_id();
+    my $normalized_values_derived_from;
+    my %return;
 
     my $coderef = sub {
         if ($CT_expression_data && (!$relative_expression_data)) {
             if ($normalization_method eq "CASS_Delta_Cq") {
                 $relative_expression_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
-                print STDERR "DERIVED RELATIVE EXPRESSION DATA =".Dumper($relative_expression_data)."\n";
                 $normalized_values_derived_from = 'calculated using CASS normalization method';
             }
         } elsif ((!$CT_expression_data) && $relative_expression_data ) {
@@ -138,8 +139,8 @@ sub store_qPCR_data {
 		    type_id => $accession_cvterm->cvterm_id(),
 	    });
         if (!$transformant_stock) {
-            print STDERR "Transgenic line could not be found\n";
-            return;
+            $return{error} = "Transgenic line cound not be found in the database: $transformant_name!";
+            return \%return;
         } else {
             $transformant_stock_id = $transformant_stock->stock_id();
 		}
@@ -149,8 +150,8 @@ sub store_qPCR_data {
 		    type_id => $vector_construct_cvterm->cvterm_id(),
 	    });
         if (!$vector_construct_stock) {
-            print STDERR "Vector construct could not be found\n";
-            return;
+            $return{error} = "Vector construct cound not be found in the database: $vector_construct_name!";
+            return \%return;
         } else {
 			$vector_construct_stock_id = $vector_construct_stock->stock_id();
 		}
@@ -188,8 +189,8 @@ sub store_qPCR_data {
             $updated_expression_data_json = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_json});
         } elsif ($previous_expression_data_stockprop_rs->count > 1) {
-            print STDERR "More than one expression data stockprop found!\n";
-            return;
+            $return{error} = "More than one expression data stockprop found for: $transformant_name!";
+            return \%return;
         } else {
             $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
             if ($CT_expression_data) {
@@ -208,8 +209,8 @@ sub store_qPCR_data {
             $previous_assay_metadata_json = encode_json $previous_assay_metadata_hash;
             $previous_assay_metadata_stockprop_rs->first->update({value=>$previous_assay_metadata_json});
         } elsif ($previous_assay_metadata_stockprop_rs->count > 1) {
-            print STDERR "More than one assay metadata stockprop found!\n";
-            return;
+            $return{error} = "More than one assay metadata stockprop found for vector construct: $vector_construct_name!";
+            return \%return;
         } else {
             my $assay_metadata = {};
             my $assay_metadata->{$tissue_type}->{$assay_date} = 1;
@@ -226,8 +227,8 @@ sub store_qPCR_data {
     };
 
     if ($transaction_error) {
-        print STDERR "Transaction error storing qPCR data: $transaction_error\n";
-        return;
+        $return{error} = "Transaction error storing qPCR data for $transformant_name: $transaction_error\n";
+        return \%return;
     }
 
     return 1;
