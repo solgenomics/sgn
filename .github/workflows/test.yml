@@ -19,6 +19,7 @@ jobs:
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+	- ${{ github.workspace }}:/downloads
       options: --network-alias test_breedbase
 
     services:
@@ -38,6 +39,7 @@ jobs:
         volumes:
           - ${{ github.workspace }}:/home/production/cxgn/sgn
           - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+	  - ${{ github.workspace }}:/downloads
         options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
 
