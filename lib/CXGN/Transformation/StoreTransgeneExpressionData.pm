@@ -229,9 +229,10 @@ sub store_qPCR_data {
     if ($transaction_error) {
         $return{error} = "Transaction error storing qPCR data for $transformant_name: $transaction_error\n";
         return \%return;
+    } else {
+        $return{success} = 1;
+        return \%return;
     }
-
-    return 1;
 }
 
 sub _CASS_normalized_values {

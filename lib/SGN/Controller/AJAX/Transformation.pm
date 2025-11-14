@@ -1783,6 +1783,50 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                     my @expression_values = ();
                     my $gene_relative_expression = $tissue_date_data->{'relative_expression_data'}->{'relative_expression_values'};
 
+                    if ($gene_relative_expression) {
+                        foreach my $gene (@gene_names) {
+                            my $gene_relative_expression_value = '';
+                            my $number_of_replicates = '';
+                            my $standard_deviation = '';
+                            my @display_info = ();
+                            $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
+                            push @display_info, $gene_relative_expression_value;
+                            $number_of_replicates = $gene_relative_expression->{$gene}->{'number_of_replicates'};
+                            if ($number_of_replicates == 1) {
+                                push @display_info, $number_of_replicates." replicate";
+                            } else {
+                                push @display_info, $number_of_replicates." replicates";
+                            }
+                            $standard_deviation = $gene_relative_expression->{$gene}->{'stdevp'};
+                            push @display_info, "stdevp: ". $standard_deviation;
+                            my $value_string = join("<br>", @display_info);
+                            push @expression_values, $value_string;
+                        }
+                        push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, $transformant_name);
+                    } else {
+                        foreach my $gene (@gene_names) {
+                            my $empty_value = '';
+                            push @row, $empty_value;
+                        }
+                        push @row, ('', '', $transformant_name);
+                    }
+                } else {
+                    foreach my $gene (@gene_names) {
+                        my $empty_value = '';
+                        push @row, $empty_value;
+                    }
+                    push @row, ('', '', $transformant_name);
+                }
+                push @transgenic_lines, \@row;
+            }
+        } else {
+            @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
+            if ($expression_data_string) {
+                my $expression_info = decode_json $expression_data_string;
+                my $tissue_date_data = $expression_info->{$selected_tissue_type}->{$selected_assay_date};
+                my @expression_values = ();
+                my $gene_relative_expression = $tissue_date_data->{'relative_expression_data'}->{'relative_expression_values'};
+                if ($gene_relative_expression) {
                     foreach my $gene (@gene_names) {
                         my $gene_relative_expression_value = '';
                         my $number_of_replicates = '';
@@ -1801,42 +1845,14 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                         my $value_string = join("<br>", @display_info);
                         push @expression_values, $value_string;
                     }
-                    push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, $transformant_name);
+                    push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
                 } else {
                     foreach my $gene (@gene_names) {
                         my $empty_value = '';
                         push @row, $empty_value;
                     }
-                    push @row, ('', '', $transformant_name);
+                    push @row, ('', '', qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
                 }
-                push @transgenic_lines, \@row;
-            }
-        } else {
-            @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
-            if ($expression_data_string) {
-                my $expression_info = decode_json $expression_data_string;
-                my $tissue_date_data = $expression_info->{$selected_tissue_type}->{$selected_assay_date};
-                my @expression_values = ();
-                my $gene_relative_expression = $tissue_date_data->{'relative_expression_data'}->{'relative_expression_values'};
-                foreach my $gene (@gene_names) {
-                    my $gene_relative_expression_value = '';
-                    my $number_of_replicates = '';
-                    my $standard_deviation = '';
-                    my @display_info = ();
-                    $gene_relative_expression_value = $gene_relative_expression->{$gene}->{'relative_expression'};
-                    push @display_info, $gene_relative_expression_value;
-                    $number_of_replicates = $gene_relative_expression->{$gene}->{'number_of_replicates'};
-                    if ($number_of_replicates == 1) {
-                        push @display_info, $number_of_replicates." replicate";
-                    } else {
-                        push @display_info, $number_of_replicates." replicates";
-                    }
-                    $standard_deviation = $gene_relative_expression->{$gene}->{'stdevp'};
-                    push @display_info, "stdevp: ". $standard_deviation;
-                    my $value_string = join("<br>", @display_info);
-                    push @expression_values, $value_string;
-                }
-                push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
             } else {
                 foreach my $gene (@gene_names) {
                     my $empty_value = '';
