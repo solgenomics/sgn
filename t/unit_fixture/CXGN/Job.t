@@ -72,5 +72,6 @@ SKIP: {
 };
 
 $t->dbh->rollback();
+$t->clean_up_db();
 
 done_testing();
