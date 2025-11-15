@@ -19,6 +19,19 @@ sub onto_browser : Path('/tools/onto') :Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (!$c->user()) {
+	# redirect to login page
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "ontologies")) {
+	$c->stash->{template} = '/access/access_denied.mas';
+        $c->stash->{data_type} = 'ontology';
+        $c->stash->{message} = $message;
+        $c->detach();
+    }
+
     my $root_nodes = $c->config->{onto_root_namespaces};
     my @namespaces = split ",", $root_nodes;
     foreach my $n (@namespaces) {
@@ -31,7 +44,6 @@ sub onto_browser : Path('/tools/onto') :Args(0) {
     $c->stash->{expand} = $c->req->param("expand");
 
     $c->stash->{template} = '/ontology/standalone.mas';
-
 }
 
 sub compose_trait : Path('/tools/compose') :Args(0) {
@@ -43,6 +55,15 @@ sub compose_trait : Path('/tools/compose') :Args(0) {
       $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
       return;
     }
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "ontologies")) {
+	$c->stash->{template} = '/access/access_denied.mas';
+        $c->stash->{data_type} = 'ontology';
+        $c->stash->{message} = $message;
+        $c->detach();
+    }
+
+
     my $variable_conf = $c->config->{composable_variables};
     my @composable_cvs = split ",", $c->config->{composable_cvs};
     my $dbh = $c->dbc->dbh();
