@@ -14,6 +14,7 @@ use CXGN::BreedingProgram ; # the BP object
 use SGN::Model::Cvterm; # maybe need this for the projectprop.type_id breeding_program
 use URI::FromHash 'uri';
 use JSON;
+use List::Util qw| any|;
 
 ##use CXGN::People::Roles;
 
@@ -35,15 +36,46 @@ sub get_breeding_program : Chained('/') PathPart('breeders/program') CaptureArgs
 
     my $schema = $self->schema;
 
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "breeding_programs")) {
+	$c->stash->{template} = '/access/access_denied.mas';
+        $c->stash->{data_type} = 'breeding program';
+        $c->stash->{message} = $message;
+        $c->detach();
+    }
+
+    # check if the user has restricted breeding program access
+    #
+    my @user_breeding_programs;
+    my $p =  $c->stash->{access}->user_privileges($c->stash->{user_id}, "breeding_programs");
+    if (exists($p->{read})) {
+        if ($p->{read}->{require_breeding_program}) {
+            print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
+            @user_breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+	    
+	    my @user_breeding_program_ids = map { $_->[0] } @user_breeding_programs;
+	    print STDERR "USER BREEDING PROGRAMS: ".Dumper(\@user_breeding_programs);
+
+	    if (! (any { $_ eq $program_id } @user_breeding_program_ids)) {
+			$c->stash->{template} = '/access/access_denied.mas';
+			$c->stash->{data_type} = 'certain breeding program';
+			$c->stash->{message} = "You do not have access to this breeding program or it does not exist.";
+			$c->detach();
+	    }
+	}
+    }
+    
+    
+    
     my $program;
     eval {
 	$program = CXGN::BreedingProgram->new( { schema=> $schema , program_id => $program_id } );
     };
     if ($@) {
-	$c->stash->{template} = 'system_message.txt';
+	$c->stash->{template} = 'system_message.mas';
 	$c->stash->{message} = "The requested breeding program ($program_id) does not exist";
 	return;
     }
+
     $c->stash->{user} = $c->user();
     $c->stash->{program} = $program;
 }
@@ -59,7 +91,7 @@ sub program_info : Chained('get_breeding_program') PathPart('') Args(0) {
     my $program = $c->stash->{program};
 
     if (!$program) {
-	$c->stash->{message} = "The requested breeding program does not exist or has been deleted.";
+	$c->stash->{message} = "The requested breeding program does not exist, has been deleted, or the object of the identifier not a breeding program.";
 	$c->stash->{template} = 'generic_message.mas';
 	return;
     }

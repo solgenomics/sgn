@@ -29,15 +29,31 @@ has 'schema' => (
 sub BUILD {
     my $self = shift;
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id;
-    my $row = $self->schema->resultset("Project::Project")->find(
-	{ project_id             => $self->get_program_id(),
+
+    print STDERR "BREEDING PROGRAM CVTERM ID: $breeding_program_cvterm_id\n";
+
+    $self->schema->storage->debug(1);
+    my $rs = $self->schema->resultset("Project::Project")->search(
+	{ 'me.project_id'             => $self->get_program_id(),
 	  'projectprops.type_id' => $breeding_program_cvterm_id },
 	{ join => 'projectprops' }
 	);
-    $self->set_project_object($row);
-    if (!$row) {
+
+    if ($rs->count() > 1) { print STDERR  "Multiple projectprop attributes for trial!!!"; }
+
+    if ($rs->count() == 0) {
 	die "The breeding program  ".$self->get_program_id()." does not exist";
     }
+
+    if ($rs->count() == 1) {
+	print STDERR "We have a breeding program!\n";
+    }
+    
+    my $row = $rs->next();
+    
+    $self->schema->storage->debug(0);
+    $self->set_project_object($row);
+
 }
 
 =head2 accessors get_program_id()

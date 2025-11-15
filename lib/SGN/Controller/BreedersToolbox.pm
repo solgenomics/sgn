@@ -37,18 +37,45 @@ sub manage_breeding_programs : Path("/breeders/manage_programs") :Args(0) {
 	return;
     }
 
-    if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", "breeding_programs" )) {
+    # determine if the user requires association with a breeding program in order to view it
+    #
+    my @user_breeding_programs;
+    
+    my $p =  $c->stash->{access}->user_privileges($c->stash->{user_id}, "breeding_programs");
+    if (exists($p->{read})) {
+        if ($p->{read}->{require_breeding_program}) {
+            print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
+            @user_breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
+
+	    print STDERR "USER BREEDING PROGRAMS: ".Dumper(\@user_breeding_programs);
+        }
+    }
+    
+    
+    if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "breeding_programs" )) {
 	$c->stash->{data_type} = "breeding program";
+	$c->stash->{message} = $message;
 	$c->stash->{template} = "/access/access_denied.mas";
-	return;
+	$c->detach();
     }
     
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
     my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $schema } );
 
-    my $breeding_programs = $projects->get_breeding_programs();
+    my $breeding_programs;
 
+    # if the user has breeding program requirements, only show those programs,
+    # otherwise show all programs
+    #
+    if (@user_breeding_programs) {
+	$breeding_programs = \@user_breeding_programs;
+    }
+    else { 
+	$breeding_programs = $projects->get_breeding_programs();
+    }
+
+    print STDERR "BREEDING PROGRAMS: ".Dumper($breeding_programs);
     $c->stash->{breeding_programs} = $breeding_programs;
     $c->stash->{user} = $c->user();
 
