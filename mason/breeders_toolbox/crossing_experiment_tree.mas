@@ -5,9 +5,10 @@ $user_id => undef
 @locations => ()
 @roles => ()
 $odk_service => undef
+$hard_refresh => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.Crosses', 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
+    <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form','CXGN.BreedersToolbox.Crosses', 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'], entries => [ 'htmltree' ] &>
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
@@ -20,20 +21,20 @@ $odk_service => undef
 <& /breeders_toolbox/folder/folder_set.mas, project_type=>'crossing_experiment' &>
 <& /breeders_toolbox/folder/folder_new.mas, project_type=>'crossing_experiment' &>
 <& /breeders_toolbox/folder/folder_move.mas, project_type=>'crossing_experiment' &>
-<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crosses_list', folder_tree_refresh_name => 'refresh_crosses_jstree_html' &>
+<& /breeders_toolbox/folder/folders_edit.mas, folder_tree_type => 'Cross', folder_tree_identifier => 'crossing_experiment_list', folder_tree_refresh_name => 'refresh_crosses_jstree_html' &>
 
 <table class="table table-bordered">
     <thead>
         <tr>
             <th>Information</th>
-            <th>Breeding Programs -- Folders -- Crossing Experiments&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crosses_jstree_html_trialtree_button" name="refresh_crosses_jstree_html">Refresh</button></th>
+            <th>Breeding Programs -- Folders -- Crossing Experiments&nbsp;&nbsp;&nbsp;&nbsp;<button class="btn btn-sm btn-default" id="refresh_crossing_trial_button" name="refresh_jstree_html">Refresh</button></th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>
                 <h4>Search</h4>
-                <input type="text" class="form-control input-sm" id="cross_tree_search" placeholder="Search" />
+                <input type="text" class="form-control input-sm" id="crossing_tria_search" placeholder="Search" />
                 <hr>
 
                 <h5><i>Double click<br />crossing experiment (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
@@ -56,7 +57,7 @@ $odk_service => undef
                 <br />
             </td>
             <td>
-                <div id="crosses_list" >[loading...]</div>
+                <div id="crossing_trial_list" >[loading...]</div>
             </td>
         </tr>
     </tbody>
@@ -70,37 +71,45 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    alert('get tree from local storage...');
-    var html = localStorage.getItem('html_crosses_tree');
-    if (html !== null) {
-	alert("HTML NOW: "+html);
-	format_crosses_tree(html);
-    }
+    alert('hello crossing trials!');
+    var htmltree = window.jsMod['htmltree'];
+    var hard_refresh = <% $hard_refresh || '""' %>;
+    alert('HARD REFRESH = '+hard_refresh);
+    htmltree.init("crossing_trial", <% $hard_refresh %>);
+    alert('DONE!');
+    //htmltree.init_events('phenotyping_trial');
 
-    //alert(html);
-    if (html === null) {
-	alert('HTML NOT DEFINED! FETCHING...');
-	get_crosses_tree().then( function(r) { 
-	    html = localStorage.getItem('html_crosses_tree');
-	    format_crosses_tree(html);
-	});
-    }
+    // alert('get tree from local storage...');
+  //   var html = localStorage.getItem('html_crossing_experiment_tree');
+  //   if (html !== null) {
+  // 	alert("HTML NOW: "+html);
+  // 	format_crosses_tree(html);
+  //   }
+
+  //   //alert(html);
+  //   if (html === null) {
+  // 	alert('HTML NOT DEFINED! FETCHING...');
+  // 	get_crosses_tree().then( function(r) { 
+  // 	    html = localStorage.getItem('html_crossing_experiment_tree');
+  // 	    format_crosses_tree(html);
+  // 	});
+  //   }
 
     
-    jQuery('#refresh_crosses_jstree_html_trialtree_button').click(function(){
-	alert('hello!');
-	get_crosses_tree();
-    });
+  //   jQuery('#refresh_crosses_jstree_html_trialtree_button').click(function(){
+  // 	alert('hello!');
+  // 	get_crosses_tree();
+  //   });
 
     
-    jQuery('#crosses_datatable').DataTable({
-        destroy: true,
-        scrollY:        '30vh',
-            scrollCollapse: true,
-            paging:         false,
-    });
+  //   jQuery('#crosses_datatable').DataTable({
+  //       destroy: true,
+  //       scrollY:        '30vh',
+  //           scrollCollapse: true,
+  //           paging:         false,
+  //   });
 
-  //   jQuery.ajax( {
+  // //   jQuery.ajax( {
   //     url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',
   //     success: function(response) {
   //       var html = '<ul>'+response.html+'</ul>';
@@ -134,77 +143,77 @@ jQuery(document).ready(function($) {
   //     }
   // });
 
-    jQuery("#cross_tree_search").keyup(function() {
-        var v = jQuery("#cross_tree_search").val();
-        jQuery("#crosses_list").jstree(true).search(v);
-    });
+//     jQuery("#cross_tree_search").keyup(function() {
+//         var v = jQuery("#cross_tree_search").val();
+//         jQuery("#crosses_list").jstree(true).search(v);
+//     });
 
-    jQuery('#crosses_list').on("changed.jstree", function (e, data) {
-        //console.log(data);
-        if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
-            jQuery("#folder_edit_options").show();
-        }
-        else {
-            jQuery("#folder_edit_options").hide();
-        }
-    });
+//     jQuery('#crosses_list').on("changed.jstree", function (e, data) {
+//         //console.log(data);
+//         if ($('#trial_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+//             jQuery("#folder_edit_options").show();
+//         }
+//         else {
+//             jQuery("#folder_edit_options").hide();
+//         }
+//     });
 
-    jQuery("#crosses_list").delegate("li", "dblclick", function(event){
-        var node = $("#crosses_list").jstree("get_node", this);
-        //console.log(node);
-        if (node.id.substr(0,1) !== 'j') {
-            if (node.type == 'folder') {
-                window.open('/folder/'+node.id);
-                event.stopPropagation();
-            } else if (node.type == 'cross') {
-                window.open('/breeders_toolbox/trial/'+node.id);
-                event.stopPropagation();
-            }
-        }
-    });
+//     jQuery("#crosses_list").delegate("li", "dblclick", function(event){
+//         var node = $("#crosses_list").jstree("get_node", this);
+//         //console.log(node);
+//         if (node.id.substr(0,1) !== 'j') {
+//             if (node.type == 'folder') {
+//                 window.open('/folder/'+node.id);
+//                 event.stopPropagation();
+//             } else if (node.type == 'cross') {
+//                 window.open('/breeders_toolbox/trial/'+node.id);
+//                 event.stopPropagation();
+//             }
+//         }
+//     });
 
-});
+// });
 
 
-function get_crosses_tree() {
-    alert('get_trial_tree');
-    return jQuery.ajax( {
-	url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',  
-    }).then(  function(r) { localStorage.setItem('html_crosses_tree', r.html); });
-}
+// function get_crosses_tree() {
+//     alert('get_trial_tree');
+//     return jQuery.ajax( {
+// 	url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',  
+//     }).then(  function(r) { localStorage.setItem('html_crosses_tree', r.html); });
+// }
 
-function format_crosses_tree(treehtml) {
-    alert('format_crosses_tree');
+// function format_crosses_tree(treehtml) {
+//     alert('format_crosses_tree');
     
-    var html = '<ul>'+treehtml+'</ul>';
+//     var html = '<ul>'+treehtml+'</ul>';
     
-    jQuery('#crosses_list').html(html);
+//     jQuery('#crosses_list').html(html);
 
-    alert("HTML "+html);
-    //console.log(html);
-    jQuery('#crosses_list').jstree( {
-	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
-	"valid_children" : [ "folder", "trial", "breeding_program" ],
-	"types" : {
-	    "breeding_program" : {
-		"icon": 'glyphicon glyphicon-briefcase text-info',
-	    },
-	    "folder" : {
-		"icon": 'glyphicon glyphicon-folder-open text-danger',
-	    },
-	    "trial" : {
-		"icon": 'glyphicon glyphicon-leaf text-success',
-	    },
+//     alert("HTML "+html);
+//     //console.log(html);
+//     jQuery('#crosses_list').jstree( {
+// 	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
+// 	"valid_children" : [ "folder", "trial", "breeding_program" ],
+// 	"types" : {
+// 	    "breeding_program" : {
+// 		"icon": 'glyphicon glyphicon-briefcase text-info',
+// 	    },
+// 	    "folder" : {
+// 		"icon": 'glyphicon glyphicon-folder-open text-danger',
+// 	    },
+// 	    "trial" : {
+// 		"icon": 'glyphicon glyphicon-leaf text-success',
+// 	    },
 
-	},
-	"search" : {
-	    "case_insensitive" : true,
-	},
-	"plugins" : ["html_data","types","search"],
+// 	},
+// 	"search" : {
+// 	    "case_insensitive" : true,
+// 	},
+// 	"plugins" : ["html_data","types","search"],
 	
-    });
+//     });
     
-}
+});
 
 
 </script>
