@@ -3,6 +3,8 @@ package SGN::Controller::Cvterm;
 
 #use CXGN::Chado::Cvterm; #DEPRECATE this !! 
 use CXGN::Cvterm;
+use URI::FromHash 'uri';
+use Data::Dumper;
 
 use Moose;
 
@@ -33,7 +35,7 @@ sub view_cvterm : Chained('get_cvterm') PathPart('view') Args(0) {
     my ( $self, $c, $action) = @_;
     my $cvterm = $c->stash->{cvterm};
     my $cvterm_id = $cvterm ? $cvterm->cvterm_id : undef ;
-   
+
     my $bcs_cvterm = $cvterm->cvterm;
 
     my ($person_id, $user_role, $curator, $submitter, $sequencer);
@@ -74,6 +76,20 @@ Path part: /cvterm/<cvterm_id>
 
 sub get_cvterm : Chained('/')  PathPart('cvterm')  CaptureArgs(1) {
     my ($self, $c, $cvterm_id) = @_;
+
+    print STDERR "GET CVTERM $cvterm_id...\n";
+    if (!$c->user()) {
+      # redirect to login page
+      $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+      $c->detach();
+    }
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "ontologies")) {
+	$c->stash->{template} = '/access/access_denied.mas';
+        $c->stash->{data_type} = 'ontology';
+        $c->stash->{message} = $message;
+        $c->detach();
+    }
 
     my $identifier_type = $c->stash->{identifier_type}
         || $cvterm_id =~ /[^-\d]/ ? 'accession' : 'cvterm_id';
