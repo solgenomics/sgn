@@ -304,7 +304,7 @@ sub denied {
 
     # do not allow anything if no privileges are set
     #
-    my $denied = 0;
+    my $denied = '';
 
     if (! $sp_person_id) {
 	return "Login required for this activity. ";
