@@ -5755,10 +5755,10 @@ sub get_recently_modified_projects {
     my %clause = (
 	all => " ",
 	phenotyping_trial => " cvterm.cv_id in (select cv_id from cv where name='project_type') and (cvterm.name not in ('analysis_metadata_json', 'genotyping_trial', 'genotyping_project', 'crossing_trial'))  ",
-	genotyping_plate => "  cvterm.cv_id in (select cv_id where name='project_property')  and projectprop.value in ('genotyping_plate', 'folder_for_genotyping_trials', 'breeding_program') ",
-	gentoyping_project => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('genotyping_project', 'folder_for_genotyping_projects', 'breeding_program')  ",
-	crossing_trial => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value in ('crossing_trial', 'folder_for_crossing_trials', 'breeding_program') ",
-	analysis_experiment => " cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'analysis_experiment' ",
+	genotyping_trial => "  cvterm.cv_id in (select cv_id from cv where name='project_type')  and projectprop.value in ('genotyping_plate', 'folder_for_genotyping_trials', 'genotyping_trial', 'breeding_program') ",
+	genotyping_project => "  cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value in ('genotyping_project', 'folder_for_genotyping_projects', 'breeding_program')  ",
+	crossing_trial => "  cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value in ('crossing_trial', 'folder_for_crossing_trials', 'breeding_program') ",
+	analysis_experiment => " cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value = 'analysis_experiment' ",
     );
 
     my $create_clause = "";
