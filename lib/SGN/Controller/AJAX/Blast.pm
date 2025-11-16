@@ -345,7 +345,8 @@ sub check : Path('/tools/blast/check') Args(2) {
     my $job_record = CXGN::Job->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_job_id => $job_record_id
+        sp_job_id => $job_record_id,
+        finish_logfile => $c->config->{job_finish_log}
     });
 
     # my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
