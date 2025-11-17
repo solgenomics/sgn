@@ -3,6 +3,8 @@ $vector_id
 $vector_name
 </%args>
 
+<& /util/import_javascript.mas, classes => [  'moment_min', 'daterangepicker', 'CXGN.Trial' ] &>
+
 <div class="modal fade" id="upload_qPCR_data_dialog" name="upload_qPCR_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadqPCRDataDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -37,7 +39,7 @@ $vector_name
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Assay Date: </label>
                             <div class="col-sm-8">
-                                <input class="form-control" type="text" id="assay_date" name="assay_date" placeholder="YYYY-MM-DD"/>
+                                <input class="form-control" id="assay_date" name="assay_date" title="assay_date" type="text" />
                             </div>
                         </div>
                         <div class="form-group">
@@ -255,9 +257,22 @@ jQuery(document).ready(function(){
         get_select_box('tissue_types', 'qPCR_tissue_type_div', { 'name' : 'qPCR_tissue_type', 'id' : 'qPCR_tissue_type' , 'empty' : 1});
         get_select_box('endogenous_controls', 'qPCR_endogenous_control_div', { 'name' : 'qPCR_endogenous_control', 'id' : 'qPCR_endogenous_control' , 'empty' : 1});
         get_select_box('qPCR_normalization_methods', 'qPCR_normalization_methods_div', { 'name' : 'qPCR_normalization_method', 'id' : 'qPCR_normalization_method' , 'empty' : 1});
-
         jQuery("#upload_qPCR_data_dialog").modal("show");
     });
+
+    let assay_date_element = jQuery("#assay_date");
+    set_daterangepicker_default (assay_date_element);
+    jQuery('input[title="assay_date"]').daterangepicker(
+        {
+            "singleDatePicker": true,
+            "showDropdowns": true,
+            "autoUpdateInput": false,
+        },
+        function(start){
+            assay_date_element.val(start.format('YYYY-MM-DD'));
+        }
+    );
+
 
     jQuery(document).on('change', '#qPCR_normalization_methods_div', function () {
         let normalization_method = ''
