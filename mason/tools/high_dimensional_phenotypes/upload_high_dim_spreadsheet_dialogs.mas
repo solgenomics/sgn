@@ -6,6 +6,15 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
 <!--button class="btn btn-primary" name="upload_high_dim_phenotypes_spreadsheet_link">Upload High Dimensional Data</button-->
 
+<%perl>
+my @instrument_model_options = split ",", $c->config->{instrument_model_options};
+my @library_method_options = split ",", $c->config->{library_method_options};
+my @layout_options = split ",", $c->config->{layout_options};
+my @mapping_software_options = split ",", $c->config->{mapping_software_options};
+my @sequencing_platform_options = split ",", $c->config->{sequencing_platform_options};
+my @na_extraction_method_options = split ",", $c->config->{na_extraction_method_options};
+</%perl>
+
 <div class="modal fade" id="upload_high_dim_phenotypes_spreadsheet_dialog" name="upload_high_dim_phenotypes_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
@@ -170,21 +179,48 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Instrument Model: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_instrument_model_select" type="text" placeholder="e.g. NextSeq 500">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_instrument_model_select">
+                                    <option value="blank"></option>
+                                    <%perl>
+                                    foreach my $model_option (@instrument_model_options) {
+                                    </%perl>
+                                    <option value="<% $model_option %>"><% $model_option %></option>
+                                    <%perl>
+                                    }
+                                    </%perl>
+                                    </select>
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Layout: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_layout_select" type = "text" placeholder="e.g. Paired end">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_layout_select" type = "text" placeholder="e.g. Paired end">
+                                    <option value="blank"></option>
+                                    <%perl>
+                                    foreach my $option (@layout_options) {
+                                    </%perl>
+                                    <option value="<% $option %>"><% $option %></option>
+                                    <%perl>
+                                    }
+                                    </%perl>
+                                    </select>
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Library Method: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_library_method_select" type = "text" placeholder="e.g. 3'RNA-seq">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_library_method_select">
+                                    <option value="blank"></option>
+                                    <%perl>
+                                    foreach my $option (@library_method_options) {
+                                    </%perl>
+                                    <option value="<% $option %>"><% $option %></option>
+                                    <%perl>
+                                    }
+                                    </%perl>
+                                    </select>
                                 </div>
                             </div>
 
@@ -198,7 +234,16 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Mapping Software: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_mapping_software_select" type = "text" placeholder="e.g. HISAT2">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_mapping_software_select" type = "text" placeholder="e.g. HISAT2">
+                                    <option value="blank"></option>
+                                    <%perl>
+                                    foreach my $option (@mapping_software_options) {
+                                    </%perl>
+                                    <option value="<% $option %>"><% $option %></option>
+                                    <%perl>
+                                    }
+                                    </%perl>
+                                    </select>
                                 </div>
                             </div>
 
@@ -212,7 +257,16 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Sequencing Platform: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_platform_select" type = "text" placeholder="e.g. Illumina">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_platform_select" type = "text" placeholder="e.g. Illumina">
+                                    <option value="blank"></option>
+                                    <%perl>
+                                    foreach my $option (@sequencing_platform_options) {
+                                    </%perl>
+                                    <option value="<% $option %>"><% $option %></option>
+                                    <%perl>
+                                    }
+                                    </%perl>
+                                    </select>
                                 </div>
                             </div>
 
@@ -226,14 +280,16 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Nucleic Acid Extraction Method: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select" type = "text" placeholder="e.g. Hot borate">
-                                </div>
-                            </div>
-                            
-                             <div class="form-group">
-                                <label class="col-sm-3 control-label">Nucleic Acid Extraction Method: </label>
-                                <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select" type = "text" placeholder="e.g. Hot borate">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_nucleic_acid_extraction_method_select" type = "text" placeholder="e.g. Hot borate">
+                                    <option value="blank"></option>
+                                    <%perl>
+                                    foreach my $option (@na_extraction_method_options) {
+                                    </%perl>
+                                    <option value="<% $option %>"><% $option %></option>
+                                    <%perl>
+                                    }
+                                    </%perl>
+                                    </select>
                                 </div>
                             </div>
 
