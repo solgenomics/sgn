@@ -5,28 +5,46 @@ $program_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+  <div id="crossing_information_div">
 
-<table id="program_cross_table" class="display">
-    <thead>
+    <table id="program_cross_table" class="display">
+      <thead>
         <tr>
-            <th>Cross Unique ID</th>
-            <th>Female Parent</th>
-            <th>Male Parent</th>
-            <th>Cross Type</th>
+          <th>Cross Unique ID</th>
+          <th>Female Parent</th>
+          <th>Male Parent</th>
+          <th>Cross Type</th>
         </tr>
-    </thead>
-</table>
+      </thead>
+    </table>
+
+  </div>
 
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#program_cross_table').DataTable( {
-        'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/crosses',
-    });
+    jQuery.ajax( {
+	url : '/ajax/breeders/program/'+ <% $program_id %> + '/crosses'
+    }).then(
+	function(r) {
+	    alert('hello 5!');
+	    if (r.error) {
+		jQuery('#crossing_information_div').html(r.error);
+	    }
+	    else {
+		jQuery('#program_cross_table').DataTable( {
+		    'autoWidth': false,
+		    'data' : r.data
+		});
+	    }
+	},
+
+	function(r) {
+	    jQuery('#crossing_information_div').html('An error occurred while retrieving the crossing information.');
+	}
+    );
 
 });
-
 
 </script>

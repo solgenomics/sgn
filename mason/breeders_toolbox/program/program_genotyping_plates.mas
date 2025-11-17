@@ -6,6 +6,8 @@ $program_id
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
+<div id="genotyping_plate_information">
+
 <table id="program_genotyping_plates" class="display">
     <thead>
         <tr>
@@ -15,15 +17,29 @@ $program_id
     </thead>
 </table>
 
+</div>
+
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#program_genotyping_plates').DataTable({
-        'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/genotyping_plates',
-    });
-
+    jQuery.ajax( {
+	url:  '/ajax/breeders/program/'+ <% $program_id %> + '/genotyping_plates',
+    }).then(
+	function(r) {
+	    alert('returned3 : '+JSON.stringify(r));
+	    if (r.error) {
+		jQuery('#genotyping_plate_information').html('You do not have access to genotyping data.');
+	    }
+	    else { 
+		jQuery('#program_genotyping_plates').DataTable({
+		    'autoWidth': false,
+		    'data' : r.data,
+		    
+		});
+	    }
+	}
+    );
 });
 
 

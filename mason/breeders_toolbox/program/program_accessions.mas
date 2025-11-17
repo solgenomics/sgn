@@ -4,28 +4,39 @@ $program_id
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+  <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<table id="accession_summary_data" class="display">
-    <thead>
-        <tr>
+    <div id="accession_information_div">
+
+      <table id="accession_summary_data" class="display">
+	<thead>
+	  <tr>
             <th>Accession name</th>
             <th>Description</th>
-        </tr>
-    </thead>
-</table>
-
+	  </tr>
+	</thead>
+      </table>
+    </div>
 
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#accession_summary_data').DataTable({
-        'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/accessions',
-        "order": [[ 1, "desc" ], [0, "asc" ]],
+jQuery.ajax( {
+    url : '/ajax/breeders/program/'+ <% $program_id %> + '/accessions',
+}).then(
+    function(r) {
+	if (r.error) {
+	    jQuery('#accession_information_div').html(r.error);
+	}
+	else {
+	    jQuery('#accession_summary_data').DataTable({
+		'autoWidth': false,
+		'data' : r.data,
+		"order": [[ 1, "desc" ], [0, "asc" ]],
+	    });
+	}
     });
-
 });
 
 

@@ -5,25 +5,42 @@ $program_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<div id="program_crossing_information_table_div">
 
-<table id="program_crossing_experiments" class="display">
+  <table id="program_crossing_experiments" class="display">
     <thead>
-        <tr>
-            <th>Crossing Experiment Name</th>
-            <th>Description</th>
-        </tr>
+      <tr>
+        <th>Crossing Experiment Name</th>
+        <th>Description</th>
+      </tr>
     </thead>
-</table>
+  </table>
+
+</div>
 
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#program_crossing_experiments').DataTable( {
-        'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/crossing_experiments',
-    });
+    jQuery.ajax( {
+	url :  '/ajax/breeders/program/'+ <% $program_id %> + '/crossing_experiments'
+    }).then(
+	function(r) {
+	    if (r.error) {
+		jQuery('#program_crossing_information_table_div').html('You do not have access to crossing data.');
+	    }
+	    else {
+		jQuery('#program_crossing_experiments').DataTable( {
+		    'autoWidth': false,
+		    'data' : r.data,
+		});
+	    }
+	},
+	function(r) {
+	    alert('An error occurred fetching the crossing data.');
+	}
+    )
+});		       
 
-});
 
 </script>

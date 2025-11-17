@@ -5,27 +5,41 @@ $program_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-
-<table id="program_seedlot_table" class="display">
+<div id="seedlot_information_table_div">
+  
+  <table id="program_seedlot_table" class="display">
     <thead>
-        <tr>
-            <th>Seedlot Name</th>
-            <th>Content</th>
-            <th>Content Type</th>
-        </tr>
+      <tr>
+	<th>Seedlot Name</th>
+	<th>Content</th>
+	<th>Content Type</th>
+      </tr>
     </thead>
-</table>
+  </table>
+
+</div>
 
 <script>
 
 jQuery(document).ready(function () {
-
-    jQuery('#program_seedlot_table').DataTable( {
-        'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/seedlots',
-    });
-
+    jQuery.ajax( {
+	url :  '/ajax/breeders/program/'+ <% $program_id %> + '/seedlots'
+    }).then(
+	function(r) {
+	    if (r.error) {
+		jQuery('#seedlot_information_table_div').html(r.error);
+	    }
+	    else {
+		jQuery('#program_seedlot_table').DataTable( {
+		    'autoWidth': false,
+		    'data': r.data
+		});
+	    }
+	},
+	function(r) {
+	    alert('An error occurred retrieving the seedlot data.');
+	}
+    );
 });
-
 
 </script>

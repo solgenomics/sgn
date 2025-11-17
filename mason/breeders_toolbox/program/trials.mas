@@ -6,6 +6,7 @@ $program_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<div id="trial_summary_data_table_div">
 
 <table id="trial_summary_data_<% $program_id %>" class="display">
     <thead>
@@ -16,15 +17,30 @@ $program_id
     </thead>
 </table>
 
+</div>
+
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_summary_data_<% $program_id %>').DataTable( {
-        'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/field_trials',
-    });
-
+    jQuery.ajax( {
+	url: '/ajax/breeders/program/'+<% $program_id %> + '/field_trials',
+    }).then(
+	function(r) {
+	    if (r.error) {
+		alert('error');
+		jQuery('#trial_summary_data_table_div').html(r.error);
+	    }
+	    else {
+		jQuery('#trial_summary_data_<% $program_id %>').DataTable( {
+		    'destroy' : true,
+		    'autoWidth': false,
+		    'data': r.data,
+		});
+	    }
+	},
+	function(r) { alert('an error occured reading trial info'); }
+    );
 });
 
 </script>

@@ -5,28 +5,45 @@ $program_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<div id="product_profile_information_div">
 
-<table id="product_profile_table" class="display">
+  <table id="product_profile_table" class="display">
     <thead>
-        <tr>
-            <th>Product Profile Name</th>
-            <th>Scope</th>
-            <th>Trait</th>
-            <th>Submitter</th>
-            <th>Date (Y-M-D)</th>
-        </tr>
+      <tr>
+        <th>Product Profile Name</th>
+        <th>Scope</th>
+        <th>Trait</th>
+        <th>Submitter</th>
+        <th>Date (Y-M-D)</th>
+      </tr>
     </thead>
-</table>
+  </table>
+
+</div>
 
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#product_profile_table').DataTable( {
-        'autoWidth': false,
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/product_profiles',
-        'order': false,
-    });
+    jQuery.ajax( {
+	url : '/ajax/breeders/program/'+ <% $program_id %> + '/product_profiles'
+    }).then(
+	function(r) {
+	    if (r.error) {
+		jQuery('#product_profile_information_div').html(r.error);
+	    }
+	    else {
+		jQuery('#product_profile_table').DataTable( {
+		    'autoWidth': false,
+		    'data' : r.data,
+		    'order': false,
+		});
+	    }
+	},
+	function(r) {
+	    jQuery('#product_profile_information_div').html('An error occurred retrieving the product profile information.');
+	}
+    );
 
 });
 

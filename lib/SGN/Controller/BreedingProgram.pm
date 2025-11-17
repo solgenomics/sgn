@@ -36,6 +36,12 @@ sub get_breeding_program : Chained('/') PathPart('breeders/program') CaptureArgs
 
     my $schema = $self->schema;
 
+    if (!$c->user()) {
+	# redirect to login page
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
     if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "breeding_programs")) {
 	$c->stash->{template} = '/access/access_denied.mas';
         $c->stash->{data_type} = 'breeding program';
@@ -51,20 +57,18 @@ sub get_breeding_program : Chained('/') PathPart('breeders/program') CaptureArgs
         if ($p->{read}->{require_breeding_program}) {
             print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
             @user_breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
-	    
+
 	    my @user_breeding_program_ids = map { $_->[0] } @user_breeding_programs;
 	    print STDERR "USER BREEDING PROGRAMS: ".Dumper(\@user_breeding_programs);
 
 	    if (! (any { $_ eq $program_id } @user_breeding_program_ids)) {
-			$c->stash->{template} = '/access/access_denied.mas';
-			$c->stash->{data_type} = 'certain breeding program';
-			$c->stash->{message} = "You do not have access to this breeding program or it does not exist.";
-			$c->detach();
+		$c->stash->{template} = '/access/access_denied.mas';
+		$c->stash->{data_type} = 'certain breeding program';
+		$c->stash->{message} = "You do not have access to this breeding program or it does not exist.";
+		$c->detach();
 	    }
 	}
     }
-    
-    
     
     my $program;
     eval {
@@ -96,7 +100,6 @@ sub program_info : Chained('get_breeding_program') PathPart('') Args(0) {
 	return;
     }
     $c->stash->{template} = '/breeders_toolbox/breeding_program.mas';
-
 }
 
 
@@ -122,7 +125,6 @@ sub profile_detail : Path('/profile') Args(1) {
     $c->stash->{user_id} = $c->user ? $c->user->get_object()->get_sp_person_id() : undef;
     $c->stash->{profile_id} = $profile_id;
     $c->stash->{template} = '/breeders_toolbox/program/profile_detail.mas';
-
 }
 
 

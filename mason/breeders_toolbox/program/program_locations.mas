@@ -5,29 +5,32 @@ $program_id
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
+<div id="location_information_div">
 
-<div class="well well-sm">
+  <div class="well well-sm">
     <div class="panel panel-default">
-        <div class="panel-body">
-            <&| /page/info_section.mas, title=>"Location Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
-                <table class="table table-hover table-bordered" id="program_location_table">
-                    <thead>
-                        <tr>
-                            <th>Id</th>
-                            <th>Name</th>
-                            <th>Abbreviation</th>
-                            <th>Country</th>
-                            <th>Type</th>
-                            <th>Altitude(m)</th>
-                            <th>Trials</th>
-                            <th>Nearest NOAA Station ID</th>
-                        </tr>
-                    </thead>
-                </table>
-            </&>
-        </div>
+      <div class="panel-body">
+        <&| /page/info_section.mas, title=>"Location Info", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+          <table class="table table-hover table-bordered" id="program_location_table">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Abbreviation</th>
+                <th>Country</th>
+                <th>Type</th>
+                <th>Altitude(m)</th>
+                <th>Trials</th>
+                <th>Nearest NOAA Station ID</th>
+              </tr>
+            </thead>
+          </table>
+      </div>
     </div>
+  </div>
 </div>
+
+</&>
 
 <script>
 
@@ -39,6 +42,12 @@ jQuery(document).ready(function (){
             // put working animation handling here
         },
         success: function(response){
+
+	    if (response.error) {
+		jQuery('#location_information_div').html("You do not have access to location data");
+		return;
+	    }
+
             var export_message = window.location.href + ' location data.';
             locationJSON = JSON.parse(response.data);
             //console.log("Data is "+JSON.stringify(locationJSON, null, 2));
@@ -71,6 +80,5 @@ jQuery(document).ready(function (){
         }
     });
 });
-
 
 </script>

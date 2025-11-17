@@ -58,7 +58,6 @@ __PACKAGE__->config(
 
 =cut
 
-
 sub ajax_breeding_program : Chained('/')  PathPart('ajax/breeders/program')  CaptureArgs(1) {
     my ($self, $c, $program_id) = @_;
 
@@ -67,7 +66,6 @@ sub ajax_breeding_program : Chained('/')  PathPart('ajax/breeders/program')  Cap
 
     $c->stash->{schema} = $schema;
     $c->stash->{program} = $program;
-
 }
 
 
@@ -75,6 +73,11 @@ sub program_trials :Chained('ajax_breeding_program') PathPart('trials') Args(0) 
     my $self = shift;
     my $c = shift;
     my $program = $c->stash->{program};
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "trials")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
 
     my $trials = $program->get_trials();
 
@@ -84,7 +87,7 @@ sub program_trials :Chained('ajax_breeding_program') PathPart('trials') Args(0) 
 	my $name = $trial->name;
 	my $id = $trial->project_id;
 	my $description = $trial->description;
-        push @formatted_trials, [ '<a href="/breeders/trial/'.$id.'">'.$name.'</a>', $description ];
+        push @formatted_trials, [ '<a href="/breeders/trial/'.$id.'">'.$name.' blablba</a>', $description ];
     }
     $c->stash->{rest} = { data => \@formatted_trials };
 }
@@ -93,11 +96,17 @@ sub program_trials :Chained('ajax_breeding_program') PathPart('trials') Args(0) 
 sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
+
     my $program = $c->stash->{program};
     my $program_id = $program->get_program_id;
     my $schema = $c->stash->{schema};
     my $round = Math::Round::Var->new(0.01);
     my $dbh = $c->dbc->dbh();
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
 
     my $trials = $program->get_trials;
     my @trial_ids;
@@ -151,7 +160,6 @@ sub phenotype_summary : Chained('ajax_breeding_program') PathPart('phenotypes') 
 
 	    my @return_array;
 
-
 	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($program_id, $trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
 	    push @phenotype_data, \@return_array;
 	}
@@ -169,6 +177,7 @@ sub traits_assayed : Chained('ajax_breeding_program') PathPart('traits_assayed')
     $c->stash->{rest} = { traits_assayed => \@traits_assayed };
 }
 
+
 sub trait_phenotypes : Chained('ajax_breeding_program') PathPart('trait_phenotypes') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -185,10 +194,12 @@ sub trait_phenotypes : Chained('ajax_breeding_program') PathPart('trait_phenotyp
     my $display = $c->req->param('display') || 'plot' ;
     my $trials = $program->get_trials;
     my @trial_ids;
+
     while (my $trial = $trials->next() ) {
 	my $trial_id = $trial->project_id;
 	push @trial_ids , $trial_id;
     }
+
     my $trait = $c->req->param('trait');
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema=> $schema,
@@ -212,6 +223,10 @@ sub accessions : Chained('ajax_breeding_program') PathPart('accessions') Args(0)
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my @formatted_accessions;
 
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "stocks")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
 
     foreach my $id ( @$accessions ) {
 	my $acc =  my $row = $schema->resultset("Stock::Stock")->find(
@@ -229,16 +244,26 @@ sub accessions : Chained('ajax_breeding_program') PathPart('accessions') Args(0)
 sub program_locations :Chained('ajax_breeding_program') PathPart('locations') Args(0){
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "locations")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
     my $program = $c->stash->{program};
     my $program_locations = $program->get_locations_with_details();
     $c->stash->{rest} = {data => $program_locations};
-
 }
 
 
 sub program_field_trials :Chained('ajax_breeding_program') PathPart('field_trials') Args(0){
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "trials")) {
+	$c->stash->{rest} = { error => $message." (2)" };
+	$c->detach();
+    }
 
     my $start_date = $c->req->param("start_date");
     my $end_date = $c->req->param("end_date");
@@ -262,13 +287,18 @@ sub program_field_trials :Chained('ajax_breeding_program') PathPart('field_trial
     }
 
     $c->stash->{rest} = {data => \@field_trial_data};
-
 }
 
 
 sub program_genotyping_plates :Chained('ajax_breeding_program') PathPart('genotyping_plates') Args(0){
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "genotyping")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
     my $program = $c->stash->{program};
     my $program_id = $program->get_program_id;
     my $schema = $c->stash->{schema};
@@ -289,13 +319,18 @@ sub program_genotyping_plates :Chained('ajax_breeding_program') PathPart('genoty
     }
 
     $c->stash->{rest} = {data => \@genotyping_plate_data};
-
 }
 
 
 sub program_crossing_experiments :Chained('ajax_breeding_program') PathPart('crossing_experiments') Args(0){
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "crosses")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
     my $program = $c->stash->{program};
     my $program_id = $program->get_program_id;
     my $schema = $c->stash->{schema};
@@ -316,7 +351,6 @@ sub program_crossing_experiments :Chained('ajax_breeding_program') PathPart('cro
     }
 
     $c->stash->{rest} = {data => \@crossing_experiment_data};
-
 }
 
 
@@ -325,6 +359,11 @@ sub program_crosses :Chained('ajax_breeding_program') PathPart('crosses') Args(0
     my $c = shift;
     my $program = $c->stash->{program};
     my $result = $program->get_crosses;
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "crosses")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
 
     my @cross_data;
     foreach my $r (@$result){
@@ -335,13 +374,18 @@ sub program_crosses :Chained('ajax_breeding_program') PathPart('crosses') Args(0
     }
 
     $c->stash->{rest} = {data => \@cross_data};
-
 }
 
 
 sub program_seedlots :Chained('ajax_breeding_program') PathPart('seedlots') Args(0){
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "seedlots")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
     my $program = $c->stash->{program};
     my $result = $program->get_seedlots;
 #    print STDERR "SEEDLOTS =".Dumper($result)."\n";
@@ -358,7 +402,6 @@ sub program_seedlots :Chained('ajax_breeding_program') PathPart('seedlots') Args
     }
 
     $c->stash->{rest} = {data => \@seedlot_data};
-
 }
 
 
@@ -407,6 +450,11 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
     my $program_id = $program->get_program_id;
     my $schema = $c->stash->{schema};
 
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "phenotyping")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
+    }
+
     my $profile_obj = CXGN::BreedersToolbox::ProductProfile->new({ bcs_schema => $schema, parent_id => $program_id });
     my $profiles = $profile_obj->get_product_profile_info();
 #    print STDERR "PRODUCT PROFILE RESULTS =".Dumper($profiles)."\n";
@@ -438,7 +486,6 @@ sub get_product_profiles :Chained('ajax_breeding_program') PathPart('product_pro
 #    print STDERR "TRAIT LIST =".Dumper(\@profile_summary)."\n";
 
     $c->stash->{rest} = {data => \@profile_summary};
-
 }
 
 
@@ -505,7 +552,6 @@ sub get_profile_detail :Path('/ajax/breeders/program/profile_detail') :Args(1) {
     }
 #    print STDERR "ALL DETAILS =".Dumper(\@all_details)."\n";
     $c->stash->{rest} = {data => \@all_details};
-
 }
 
 
@@ -612,7 +658,6 @@ sub create_profile_template_POST : Args(0) {
         file => $file_destination,
         file_id => $file_id,
     };
-
 }
 
 
@@ -734,7 +779,7 @@ sub upload_profile_POST : Args(0) {
     $profile->product_profile_submitter($user_name);
     $profile->product_profile_uploaded_date($uploaded_date);
     $profile->parent_id($program_id);
-	my $project_prop_id = $profile->store_by_rank();
+    my $project_prop_id = $profile->store_by_rank();
 
     if ($@) {
         $c->stash->{rest} = { error => $@ };
@@ -743,7 +788,6 @@ sub upload_profile_POST : Args(0) {
     }
 
     $c->stash->{rest} = { success => 1 };
-
 }
 
 
@@ -789,7 +833,6 @@ sub get_autogenerated_name_metadata :Chained('ajax_breeding_program') PathPart('
     }
 
     $c->stash->{rest} = {data => \@autogenerated_name_metadata};
-
 }
 
 

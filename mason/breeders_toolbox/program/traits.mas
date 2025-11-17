@@ -6,55 +6,57 @@ $collapse_phenotypes_section => 1
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
 
+  <div id="phenotype_information_div">
+    
+    <div class="well well-sm table-responsive">
+      <center><h4>Raw Data Statistics</h4></center>
+      <br/>
+      
+      <div id="pheno_summary_table_div">
+	<table id="phenotype_summary_data_<% $program_id %>" class="display">
+	  <thead>
+            <tr>
+              <th>Trait</th>
+              <th>Mean</th>
+              <th>Min</th>
+              <th>Max</th>
+              <th>Std Dev</th>
+              <th>CV</th>
+              <th>Count</th>
+              <th>Histogram</th>
+            </tr>
+	  </thead>
+	  <tbody>
+	  </tbody>
+	</table>
+      </div>
+    </div>
 
-<div class="well well-sm table-responsive">
-  <center><h4>Raw Data Statistics</h4></center>
-  <br/>
 
-  <div id="pheno_summary_table_div">
-    <table id="phenotype_summary_data_<% $program_id %>" class="display">
-      <thead>
-        <tr>
-          <th>Trait</th>
-          <th>Mean</th>
-          <th>Min</th>
-          <th>Max</th>
-          <th>Std Dev</th>
-          <th>CV</th>
-          <th>Count</th>
-          <th>Histogram</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-
-<div class="well well-sm" id="raw_data_histogram_well">
-  <center><h4>Raw Data Histogram</h4></center><hr>
-  <div id="program_summary_hist_div">
-    <div class="row">
-      <div class="col-sm-8">
-        <form class="form-horizontal">
-          <div class="form-group form-group-sm">
-            <label for="program_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
-            <div class="col-sm-10">
-              <div id="traits_assayed_dropdown">
+    <div class="well well-sm" id="raw_data_histogram_well">
+      <center><h4>Raw Data Histogram</h4></center><hr>
+      <div id="program_summary_hist_div">
+	<div class="row">
+	  <div class="col-sm-8">
+            <form class="form-horizontal">
+              <div class="form-group form-group-sm">
+		<label for="program_summary_hist_dropdown" class="col-sm-2 control-label">Select:</label>
+		<div class="col-sm-10">
+		  <div id="traits_assayed_dropdown">
+		  </div>
+		</div>
               </div>
-            </div>
-          </div>
-      </div>
-      <div class="col-sm-4" id="traits_assayed_histogram_cvterm_link">
+	  </div>
+	  <div class="col-sm-4" id="traits_assayed_histogram_cvterm_link">
+	  </div>
+	</div>
+	
+	<div id="program_summary_hist">
+	</div>
+
       </div>
     </div>
-
-    <div id="program_summary_hist">
-    </div>
-
   </div>
-</div>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
@@ -67,19 +69,16 @@ var draw_histogram = stackedObservationPhenotypeHistogram.draw;
 
 jQuery(document).ready(function () {
 
-%  if ($collapse_phenotypes_section){
+% if ($collapse_phenotypes_section){
+
     jQuery('#program_traits_assayed_onswitch').click( function() {
-        jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( {
-            'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
-        });
-        trait_summary_hist_display_change("<% $program_id %>");
+	
+	populate_phenotype_table_and_histogram(<% $program_id %>);
     });
-%  } else {
-    jQuery("#phenotype_summary_data_<% $program_id %>").DataTable( {
-        'ajax': '/ajax/breeders/program/'+ <% $program_id %> + '/phenotypes',
-    });
-    trait_summary_hist_display_change("<% $program_id %>");
-%  }
+
+% } else {
+    populate_phenotype_table_and_histogram(<% $program_id %>);
+% }
     ///clicking on the histogram glyph from the dataTable
     /// scrolls down to the histogram div
     ///
@@ -94,6 +93,30 @@ jQuery(document).ready(function () {
         }
     });
 });
+
+function populate_phenotype_table_and_histogram(program_id) {
+    jQuery.ajax( {
+	url :  '/ajax/breeders/program/'+ program_id + '/phenotypes'
+    }).then(
+	function(r) {
+	    alert('hello!');
+	    if (r.error) {
+		jQuery('#phenotype_information_div').html(r.error);
+		return;
+	    }
+	    else { 
+		alert('is that so?');
+		jQuery("#phenotype_summary_data_"+program_id).DataTable( {
+		    'data' : r.data
+		});
+		trait_summary_hist_display_change(program_id);
+	    }
+        },
+	function(r) {
+	    alert('an error occurred retrieving the phenotype summary data.');
+	}
+    );
+}
 
 
 ///
