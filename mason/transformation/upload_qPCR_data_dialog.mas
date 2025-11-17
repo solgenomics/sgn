@@ -3,7 +3,7 @@ $vector_id
 $vector_name
 </%args>
 
-<& /util/import_javascript.mas, classes => [  'moment_min', 'daterangepicker', 'CXGN.Trial' ] &>
+<& /util/import_javascript.mas, classes => [  'moment_min', 'daterangepicker' ] &>
 
 <div class="modal fade" id="upload_qPCR_data_dialog" name="upload_qPCR_data_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadqPCRDataDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -260,19 +260,16 @@ jQuery(document).ready(function(){
         jQuery("#upload_qPCR_data_dialog").modal("show");
     });
 
-    let assay_date_element = jQuery("#assay_date");
-    set_daterangepicker_default (assay_date_element);
     jQuery('input[title="assay_date"]').daterangepicker(
         {
             "singleDatePicker": true,
             "showDropdowns": true,
-            "autoUpdateInput": false,
+            "autoUpdateInput": true,
+            locale: {
+                format: 'YYYY-MM-DD'
+            },
         },
-        function(start){
-            assay_date_element.val(start.format('YYYY-MM-DD'));
-        }
     );
-
 
     jQuery(document).on('change', '#qPCR_normalization_methods_div', function () {
         let normalization_method = ''
@@ -356,6 +353,8 @@ jQuery(document).ready(function(){
         jQuery('#assay_date').val('');
         jQuery('#qPCR_notes').val('');
         jQuery('#qPCR_normalization_methods_div').val('');
+        jQuery('#assay_date').data('daterangepicker').setStartDate(new Date);
+        jQuery('#assay_date').data('daterangepicker').setEndDate(new Date);
 
     });
 
