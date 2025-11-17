@@ -120,4 +120,4 @@ diag explain $store_response;
 ok(!$store_response->{error}, "No errors in store");
 ok($store_response->{nd_protocol_id}, "Protocol ID returned");
 
-done_testing;
+done_testing();
