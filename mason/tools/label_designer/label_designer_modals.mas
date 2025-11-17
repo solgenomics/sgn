@@ -66,21 +66,21 @@
                 </div>
                 <div class="col-md-12" id="">
                     <center>
-                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_inches2" class="radio-select-imperial" value="inch" checked>Imperial (inches)</label>
-                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_cm2" class="radio-select-metric" value="cm">Metric (cm)</label>
+                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_inches2" class="radio-select-imperial" value="inch">Imperial (inches)</label>
+                        <label class='radio'><input type="radio" name="dimoptradio2" id="dim_cm2" class="radio-select-metric" value="cm" checked>Metric (cm)</label>
                     </center>
                     <div class="col-md-1">
                     </div>
                     <div class="col-md-5">
                         <center>
                             <br><label>Top Margin:</label><br>
-                            <input class="form-control" placeholder="In inches" type="number" id="top_margin" style="max-width: 100%;">
+                            <input class="form-control"  type="number" id="top_margin" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             <br><label>Left Margin:</label><br>
-                            <input class="form-control" placeholder="In inches" type="number" id="left_margin" style="max-width: 100%;">
+                            <input class="form-control"  type="number" id="left_margin" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
@@ -90,13 +90,13 @@
                     <div class="col-md-5">
                         <center>
                             <br><label>Horizontal Gap:</label><br>
-                            <input class="form-control" placeholder="In inches" type="number" id="horizontal_gap" style="max-width: 100%;">
+                            <input class="form-control"  type="number" id="horizontal_gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-5">
                         <center>
                             <br><label>Vertical Gap:</label><br>
-                            <input class="form-control" placeholder="In inches" type="number" id="vertical_gap" style="max-width: 100%;">
+                            <input class="form-control" type="number" id="vertical_gap" style="max-width: 100%;">
                         </center>
                     </div>
                     <div class="col-md-1"></div>
