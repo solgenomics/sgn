@@ -211,7 +211,7 @@ sub observations_store {
         return CXGN::BrAPI::JSONResponse->return_error($status, "Error: Your request could not be processed correctly.", 500);
     }
     if ($stored_observation_success) {
-        #if no error refresh matviews 
+        #if no error refresh matviews
         # my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         # my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
@@ -252,7 +252,7 @@ sub _search {
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
     my $start_date = $params->{observationTimeStampRangeStart}->[0] || undef;
     my $end_date = $params->{observationTimeStampRangeEnd}->[0] || undef;
-    my $repetitive_measurements_type = $params->{repetitiveMeasurementsType} || 'average'; #use default to average 
+    my $repetitive_measurements_type = $params->{repetitiveMeasurementsType} || 'average'; #use default to average
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     # observationUnitLevelName
     # observationUnitLevelOrder
@@ -284,9 +284,9 @@ sub _search {
             order_by=>"plot_number",
             #include_timestamp=>1,
             start_date => $start_date,
-	        end_date => $end_date,
+	    end_date => $end_date,
             repetitive_measurements => $repetitive_measurements_type,
-	        include_dateless_items => 1
+	    include_dateless_items => 1
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
@@ -295,7 +295,8 @@ sub _search {
     my $counter = 0;
 
     foreach (@$data){
-        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || $_->{phenotype_value} eq '0' ) {
+        if ( (exists($_->{phenotype_value}) && defined($_->{phenotype_value}) &&
+	      ( ($_->{phenotype_value} ne "")  || $_->{phenotype_value} eq '0') ) ) {
             my $observation_id = "$_->{phenotype_id}";
             my $additional_info;
             my $external_references;
@@ -304,25 +305,25 @@ sub _search {
                 year => $_->{year},
                 season => $_->{year},
                 seasonDbId => $_->{year}
-            );
+		);
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
             #since, the collect_date as stored as the timestamp in the database, we need to convert it to the correct format
-	        if ($obs_timestamp) {
+	    if ($obs_timestamp) {
                 my ($obs_date, $obs_time) = split / /, $obs_timestamp;
-		        my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
-		        my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
-		        my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
+		my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
+		my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
+		my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
 
-		        if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
-		            my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
-		            my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
-		            my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
+		if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) {
+		    my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
+		    my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
+		    my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
 
 
-		            if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
-		            if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
-		        }
-	        }
+		    if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
+		    if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
+		}
+	    }
 
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
@@ -354,5 +355,3 @@ sub _search {
 
 
 1;
-
-
