@@ -349,7 +349,6 @@ sub _search {
         }
     }
 
-    # print STDERR "Values of all the params: " . Dumper(\@data_window) . "\n";
     return (\@data_window,$counter);
 }
 
