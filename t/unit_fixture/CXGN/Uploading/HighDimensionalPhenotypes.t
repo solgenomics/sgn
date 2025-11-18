@@ -64,7 +64,6 @@ is($verify_message_hash->{success}->[0], 'File transcriptomics_data_matrix saved
 is($verify_message_hash->{success}->[1], 'File transcriptomics_details saved in archive.');
 is($verify_message_hash->{success}->[2], 'File valid: transcriptomics_data_matrix.');
 is($verify_message_hash->{success}->[3], 'File data successfully parsed.');
-print STDERR "hash message 4:" . Dumper $verify_message_hash->{success}->[4];
 is($verify_message_hash->{success}->[4], 'File data verified. Plot names and trait names are valid.');
 
 # POST to STORE endpoint
