@@ -145,54 +145,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="seedlot_upload_inventory_spreadsheet_info_dialog" name="seedlot_upload_inventory_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSeedlotInventoryInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotInventoryInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>Seedlots may be uploaded in a CSV file (.csv)</b>
-                    <br />
-                    (Excel .xls and .xlsx format not supported)
-                    <br /><br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>box_id</td>
-                                <td>seed_id</td>
-                                <td>inventory_date</td>
-                                <td>inventory_person</td>
-                                <td>weight_gram</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <ul>
-                    <li>box_id (the name of the box that the seedlot is in. also called box_name.)</li>
-                    <li>seed_id (unique identifier for the seedlot. must exist in the database. also called seedlot_name)</li>
-                    <li>inventory_date (a timestamp for when the seedlot was inventoried)</li>
-                    <li>inventory_person (the name of the person doing the inventory. can be any name. also called operator_name)</li>
-                    <li>weight_gram (the weight in grams of the seedlot)</li>
-                    </ul>
-
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_seedlot_info_upload_inventory_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<& /file_formats/seedlot_upload.mas &>
 
 
 <script>

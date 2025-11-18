@@ -12,6 +12,13 @@ $management_factor_types => ()
 $design_types => ()
 </%args>
 
+<%perl>
+    my $user_role = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+    }
+</%perl>
+
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
 <& /page/page_title.mas, title=>"Upload Factory" &>
@@ -134,8 +141,6 @@ $design_types => ()
     </div>
 </div>
 
-
-
 <& /file_formats/trial_upload.mas &>
 
 <& /file_formats/plant_upload.mas &>
@@ -147,6 +152,12 @@ $design_types => ()
 <& /file_formats/genotype_plate_upload.mas &>
 
 <& /file_formats/genotype_data_upload.mas &>
+
+<& /file_formats/location_upload.mas &>
+
+<& /file_formats/accession_upload.mas, editable_stock_props => $editable_stock_props, editable_stock_props_definitions => $editable_stock_props_definitions &>
+
+<& /file_formats/seedlot_upload.mas &>
 
 <script>
 
@@ -296,16 +307,18 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'locations' : 
-            //
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'accessions' : 
-            //
+            display_accession_upload_choices();
+            jQuery('#accession_upload_choices_next_btn').on('click', {file_data : file_data}, populate_accession_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'populations' : 
             //
             break;
         case 'seedlot_inventory' : 
-            //
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'seedlot_transaction' : 
             //
@@ -401,16 +414,18 @@ function display_upload_formats(upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'locations' : 
-            //
+            jQuery('#location_file_upload_form_div').hide();
+            jQuery('#upload_locations_dialog_submit_btn_div').hide();
+            jQuery('#upload_locations_dialog').modal("show");
             break;
         case 'accessions' : 
-            //
+            jQuery('#accessions_upload_spreadsheet_format_modal').modal("show");
             break;
         case 'populations' : 
             //
             break;
         case 'seedlot_inventory' : 
-            //
+            jQuery('#seedlot_upload_inventory_spreadsheet_info_dialog').modal("show");
             break;
         case 'seedlot_transaction' : 
             //
@@ -486,7 +501,7 @@ function display_validate_submit_modal(options) {
             console.dir(options[key]);
             jQuery('#upload_validation_parameters').html(options[key]);
         } else {
-            text += "<b>" + key + ": </b>&nbsp; <p style='white-space:pre'>" + options[key] + "</p><br>";
+            text += "<b>" + key + ": </b>&nbsp; <p style='white-space:pre'>" + options[key] + "</p>";
         }
     }
     jQuery('#validate_upload_review_text').html(text);
@@ -650,6 +665,30 @@ function display_genotyping_data_upload_additional_choices() {
     }
 }
 
+function display_accession_upload_choices() {
+    let fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>';
+    if ('<% $user_role %>' == "curator"){
+        fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions"></input>';
+    }
+
+    jQuery('#upload_type_choices_div').html('<div class="form-group">' +
+        '<label class="col-sm-4 control-label">Use Fuzzy Search: </label>' + 
+        '<div class="col-sm-8">' + 
+        fuzzy_search + 
+        '<br/>' + 
+        '<small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>' + 
+        '</div>' + 
+        '</div>' + 
+        '<div class="form-group">' + 
+        '<label class="col-sm-4 control-label">Append Synonyms:</label>' + 
+        '<div class="col-sm-8">' + 
+        '<input type="checkbox" id="append_synonyms" name="append_synonyms" checked />' + 
+        '<br />' + 
+        '<small>When checked, add synonyms of existing accession entries to the synonyms already stored in the database.  When not checked, remove any existing synonyms of existing accession entries and store only the synonyms in the upload file.</small>' + 
+        '</div>' + '</div>' + 
+        '<button class="btn btn-primary" id="accession_upload_choices_next_btn">Next</button>');
+}
+
 function display_seedlot_upload_choices() {
     
 }
@@ -675,7 +714,10 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'genotype_data_tassel' : "Tassel HDF5 genotyping data",
         'genotype_data_intertek' : "Intertek genotyping data",
         'genotype_data_kasp' : "KASP genotyping data",
-        'genotype_data_ssr' : "SSR genotyping data"
+        'genotype_data_ssr' : "SSR genotyping data",
+        'locations' : "Locations",
+        'accessions' : "Accessions",
+        'seedlot_inventory' : "Seedlot inventory"
     };
 
     display_validate_submit_modal({
@@ -788,6 +830,17 @@ function populate_genotyping_data_validate_submit_data(event) {
     }
 }
 
+function populate_accession_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let fuzzy_search = jQuery('#fuzzy_check_upload_accessions').prop('checked');
+    let append_synonyms = jQuery('#append_synonyms').prop('checked');
+
+    populate_validate_submit_data('accessions', file_data, {
+        use_fuzzy_search : fuzzy_search,
+        append_synonyms : append_synonyms
+    });
+}
+
 function submit_file_validation(options) {
     jQuery('.modal.fade').each(function(index, element){
         jQuery(this).modal("hide");
@@ -796,7 +849,7 @@ function submit_file_validation(options) {
 }
 
 function submit_file_store(options) {
-
+    
 }
 
 var archived_files_list = [];

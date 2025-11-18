@@ -122,72 +122,7 @@ $editable_stock_props_definitions
   </div>
 </div>
 
-<div class="modal fade" id="accessions_upload_spreadsheet_format_modal" name="accessions_upload_spreadsheet_format_modal" tabindex="-1" role="dialog" aria-labelledby="uploadAccessionsInfoDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadAccessionsInfoDialog">Upload Accessions Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) must contain the <b>accession_name</b> and <b>species_name</b> columns. Additional information can be included by selecting optional column(s) (see below). :
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>accession_name</td>
-                                <td>species_name</td>
-                                <td>population_name</td>
-                                <td>synonym</td>
-				<td>description</td>
-%  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
-%                               print "<td>$editable_stockprop</td>";
-% }
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Comma Separated Fields:</b>
-                    <ul>
-                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: organization_name, synonym
-%  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
-%                   print ", $editable_stockprop";
-%  }
-                    </li>
-                    </ul>
-
-                    <b>Required Fields:</b>
-                    <ul>
-                    <li>accession_name (must be unique)</li>
-                    <li>species_name (must exist in the database)</li>
-                    </ul>
-                    <b>Optional Fields:</b>
-                    <ul>
-		    <li>description - a free text description of the stock.</li>
-                    <li>population_name (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
-                    <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
-%  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
-%    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
-%                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
-%    } else {
-%                   print "<li>$editable_stockprop (no definition available)</li>";
-%    }
-%  }
-                    </ul>
-                </div>
-                <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
-            </div>
-            <div class="modal-footer">
-                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<& /file_formats/accession_upload.mas, editable_stock_props => $editable_stock_props, editable_stock_props_definitions => $editable_stock_props_definitions &>
 
 <div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-xl" role="document">

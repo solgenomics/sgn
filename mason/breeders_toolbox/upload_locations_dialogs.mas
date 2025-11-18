@@ -3,77 +3,7 @@
 
 <& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min','buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min'] &>
 
-<div class="modal fade" id="upload_locations_dialog" name="upload_locations_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadLocationsDialog">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadLocationsDialog">Upload Locations</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-                <b>Header:</b><br>
-                The first row (header) must contain the following:
-                <br>
-                <table class="table table-bordered table-hover">
-                  <tbody>
-                  <tr>
-                    <td>Name</td>
-                    <td>Abbreviation</td>
-                    <td>Country Code</td>
-                    <td>Country Name</td>
-                    <td>Program</td>
-                    <td>Type</td>
-                    <td>Latitude</td>
-                    <td>Longitude</td>
-                    <td>Elevation</td>
-                    <td>NOAA Station ID</td>
-                  </tr>
-                  </tbody>
-                </table>
-                <b>Required values:</b><br>
-                <b>Name:</b> must not conflict with an existing location name<br>
-                <b>Abbreviation:</b> used in the map and in uploads, must not conflict with an existing abbreviation<br>
-                <b>Country Code:</b> must be an <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO Alpha-3 country code</a><br>
-                <b>Country Name:</b> must be an uppercase english short name from the <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3">ISO standard</a><br>
-                <b>Program:</b> must be an exisiting Breeding Program in the database, or multiple breeding programs separated by '&'<br>
-                <b>Type:</b> must be one of the following: Town, Farm, Field, Greenhouse, Screenhouse, Lab, Storage, Other<br>
-                <b>Latitude:</b> (in degrees) must be a number between 90 and -90.<br>
-                <b>Longitude:</b> (in degrees) must be a number between 180 and -180.<br>
-                <b>Elevation:</b> (in meters) must be a number between -418 (Dead Sea) and 8,848 (Mt. Everest).<br>
-                <br><b>Optional values:</b><br>
-                <b>NOAA Station ID:</b> The NOAA Station ID that is nearest and most relevant to the location. <a href="https://www.ncdc.noaa.gov/cdo-web/search" target="_blank">Search Here</a><br>
-
-          <& /help/file_upload_type.mas, type => "Locations" , optional_column => 1 &>
-          <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_locations_form" name="upload_locations_form">
-    <label for="locations_upload_file" style="display: inline-block;">Location File:</label>
-    <input type="file" name="locations_upload_file" id="locations_upload_file" encoding="multipart/form-data" />
-  </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="upload_locations_dialog_submit" id="upload_locations_dialog_submit">Upload</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="locations_result_dialog" tabindex="-1" role="dialog" aria-labelledby="locationsResultDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content ui-front">
-            <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="locationsResultDialog">Results</h4>
-            </div>
-            <div id="locations_result_body" class="container-fluid">
-            </div>
-            <div class="modal-footer">
-                <button id="locations_result_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<& /file_formats/location_upload.mas &>
 
 <script defer="defer">
 
