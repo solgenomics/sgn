@@ -105,7 +105,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
 	return;
     }
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial = $c->stash->{trial};
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
@@ -156,7 +156,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     my $type = "trials";
     if ($trial_type_name eq "crossing_trial") { $type = "crosses"; }
     if ($trial_type_name eq "activity_record") { $type = "trials"; }
-    if ($trial_type_name eq "transformation_project") { $type => "trials"; }
+    if ($trial_type_name eq "transformation_project") { $type = "trials"; }
 
     if (! $c->stash->{access}->grant( $c->stash->{user_id}, "read", $type, undef, $c->stash->{breeding_program_id})) {
 	$c->stash->{template} = '/access/access_denied.mas';
@@ -165,7 +165,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     #$c->stash->{user_can_modify} = ($user->check_roles("submitter") && $user->check_roles($c->stash->{breeding_program_name})) || $user->check_roles("curator") ;
     $c->stash->{user_can_modify} = $c->stash->{access}->grant( $c->stash->{user_id}, "write", $type );
-    
+
     $c->stash->{year} = $trial->get_year();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
@@ -457,7 +457,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	$c->stash->{can_write_phenotyping}= $c->stash->{access}->grant($c->stash->{user_id}, "write", "phenotyping");
 	$c->stash->{can_read_genotyping} = $c->stash->{access}->grant($c->stash->{user_id}, "read", "genotyping");
 	$c->stash->{can_write_genotyping}= $c->stash->{access}->grant($c->stash->{user_id}, "write", "genotyping");
-	
+
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
