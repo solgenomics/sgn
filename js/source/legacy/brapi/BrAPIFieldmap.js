@@ -2599,7 +2599,8 @@
 		  });
 		}
 	  
-		//Shape Point plots into polygons
+		/*
+		//Shape Point plots into polygons (We want to display single points without creating a polygon)
 		if (plots_points.length > 0) {
 		  const centroids = turf.featureCollection(
 			plots_points
@@ -2632,7 +2633,8 @@
 			}
 		  }
 		}
-	  
+	  	*/
+
 		// Set shaped flag
 		data.plots_shaped = (plots_polygons.length + plots_points.length > 0);
 	  
@@ -2686,7 +2688,6 @@
 		}
 	  
 		// Final plots
-		data.plots = [...plots_polygons, ...plots_points]; // omit missing
 		return data;
 	  }
 	  
@@ -2831,11 +2832,9 @@
 
 			let params = {};
 			this.plots.features.forEach((plot)=>{
-				if (plot._originalType === "Polygon") {
-					params[plot.properties.observationUnitDbId] = {
+				params[plot.properties.observationUnitDbId] = {
 					observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: this.opts.brapi_levelName }}
-					};
-				}
+				};
 			});
 
 			return new Promise((resolve, reject)=> {

@@ -135,7 +135,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     print STDERR "FIELDS: ".Dumper(\@file_traits);
 
     foreach my $t (@file_traits) { 
-	$t = make_R_trait_name($t);
+	    $t = make_R_trait_name($t);
     }
     #later i will replace the R trait name with the original trait name so save both so that it can remember the original trait name
     my %trait_hash;
@@ -158,9 +158,12 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 
     my $last_index = scalar(@new_header)-1;
 
-    #while(<$PF>) {
-	#chomp;
-	#my @f = split /\t/;
+    while(<$PF>) {
+        chomp;
+        my @f = split /\t/;
+        print $CLEAN join("\t",@f[0..$last_index]), "\n";
+    }
+    
     my $cxgn_tools_run_config = {
         backend => $c->config->{backend},
         submit_host=>$c->config->{cluster_host},
@@ -172,7 +175,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     };
     my $cmd_str = join(" ", (
         "Rscript ",
-        $c->config->{basepath} . "/R/spatial_modeling.R",
+        $c->config->{basepath} . "/R/spatial_correlation_check.R",
         $pheno_filepath.".clean",
         "'".$si_traits."'"
     ));
@@ -345,23 +348,12 @@ sub correct_spatial: Path('/ajax/spatial_model/correct_spatial') Args(1) {
     # header will have plot, accession, row, column, replicate, blockNumber, plotNumber [...traits...]
     my (undef, undef, undef, undef, undef, undef, undef, @trait_columns) = split(/\s+/, $header);
 
-    my sub fix_trait_name {
-        my $trait = shift;
+    my $trait_hash_file = $pheno_filepath.".clean.trait_hash";
+    my $trait_hashref = retrieve $trait_hash_file;
 
-        $trait =~ s/_([A-Z]+(_\d+)*)_(\d+)/\|$1:$3/;
+    @trait_columns = map {$trait_hashref->{$_}} @trait_columns; #need to fix trait names!
 
-        my ($name, $onto) = split(/\|/, $trait);
-
-        $name = join(" ", split("_", $name));
-
-        $trait = join('|', ($name, $onto));
-
-        return $trait;
-    }
-
-    @trait_columns = map {fix_trait_name($_)} @trait_columns; #need to fix trait names!
-
-    my @traits = grep {$_ !~ /_spatially_corrected|_spatial_adjustment/} @trait_columns;
+    my @traits = grep {defined($_)} @trait_columns;
 
     # need to make a trait->cvterm_id hash here
     my $traits_to_id = {};

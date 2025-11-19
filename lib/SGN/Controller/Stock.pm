@@ -304,6 +304,13 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $related_stock_link = qq{<a href="/stock/$related_stock_id/view">$related_stock_name</a>},
     }
 
+    my $is_in_trial;
+    my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
+    my @trial_list = $check_trial->get_trials();
+    if (scalar(@trial_list) > 0) {
+        $is_in_trial = 1;
+    }
+
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
 	$c->stash(
@@ -344,6 +351,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         is_a_transgenic_line => $is_a_transgenic_line,
         derived_accession_relationship => $derived_accession_relationship,
         related_stock_link => $related_stock_link,
+        is_in_trial => $is_in_trial,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),

@@ -2552,30 +2552,14 @@ sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart
         $c->detach();
     }
 
+    print STDERR "AJAX/Stock: retrieve additional files...\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $stock_id = $c->stash->{stock_row}->stock_id();
-    my @file_array;
-    my %file_info;
+    my $stock = CXGN::Stock->new({schema=>$schema,stock_id=>$stock_id});
+    print STDERR "Calling backend function...\n";
+    my $data = $stock->get_additional_uploaded_files();
 
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
-    FROM phenome.stock_file
-    JOIN metadata.md_files using(file_id)
-    LEFT JOIN metadata.md_metadata as m using(metadata_id)
-    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
-    WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
-
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($stock_id);
-
-    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
-        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
-    }
-    foreach (keys %file_info){
-        push @file_array, $file_info{$_};
-    }
-    print STDERR "files: " . Dumper \@file_array;
-
-    $c->stash->{rest} = {success=>1, files=>\@file_array};
-    return;
+    $c->stash->{rest} = $data;
 }
 
 sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPart('obsolete_uploaded_additional_file') Args(1) {
@@ -2650,7 +2634,7 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
     my @related_accessions;
 
     foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
         push @related_accessions, {
             transformant_id => $transformant_id,
             transformant_name => $transformant_name,
@@ -2694,6 +2678,31 @@ sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datata
 
     $c->stash->{rest}={data=>\@obsoleted_accessions};
 }
+
+
+sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('datatables/vector_transgenic_line_details') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @transgenic_lines;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
+        push @transgenic_lines, {
+            transformant_id => $transformant_id,
+            transformant_name => $transformant_name,
+            number_of_insertions => $number_of_insertions
+        };
+    }
+
+    $c->stash->{rest}={data=>\@transgenic_lines};
+}
+
 
 =head2 set_display_image
 
@@ -2826,6 +2835,76 @@ sub add_derived_accessions_using_list_POST : Args(0) {
 
 }
 
+
+sub get_stocks_with_images : Path('/ajax/stock/get_stocks_with_images') : ActionClass('REST') { }
+
+sub get_stocks_with_images_GET : Args(0) {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->req->param('trial_id');
+    my $stock_type_name = $c->req->param('stock_type');
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema=> $schema});
+
+    my $stock_names = $stock->get_stocks_with_images($trial_id, $stock_type_name);
+
+    $c->stash->{rest} = { data => $stock_names };
+}
+
+
+sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST') { }
+
+sub stock_obsolete_in_bulk_GET {
+    my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $program_name = $c->req->param('program_name');
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to obsolete stocks" };
+        $c->detach();
+    }
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to obsolete stocks." };
+        return;
+    }
+
+    my $stock_name_string = $c->req->param('stock_names');
+    my $stock_name_array = decode_json $stock_name_string;
+    my $obsolete_note  = $c->req->param('obsolete_note');
+    my $is_obsolete = '1';
+
+    foreach my $stock_name (@$stock_name_array) {
+        my $stock = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name });
+        if ($stock) {
+            my $stock_id = $stock->stock_id();
+            try {
+                my $stock_obj = CXGN::Stock->new({
+                    schema=>$schema,
+                    stock_id=>$stock_id,
+                    is_saving=>1,
+                    sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                    user_name => $c->user()->get_object()->get_username(),
+                    modification_note => "Obsolete at ".localtime,
+                    is_obsolete => $is_obsolete,
+                    obsolete_note => $obsolete_note,
+                });
+                my $saved_stock_id = $stock_obj->store();
+            } catch {
+                $c->stash->{rest} = { error => "Failed: $_" }
+            };
+        } else {
+            $c->stash->{rest} = { error => "Not a valid stock: $stock_name" };
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 1;

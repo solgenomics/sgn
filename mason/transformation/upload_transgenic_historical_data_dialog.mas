@@ -110,6 +110,7 @@ $default_plant_material_name => undef
                                 <td>batch_number</td>
                                 <td>is_a_control</td>
                                 <td>existing_accession</td>
+                                <td>number_of_insertions</td>
                             </tr>
                         </tbody>
                     </table>
@@ -125,6 +126,7 @@ $default_plant_material_name => undef
                     <ul>
                         <li>is_a_control (if you would like to set any new accession as a control for any batch, please indicate "1" for the "is_a_control" column.)</li>
                         <li>existing_accession (If you previously added/uploaded transgenic accessions without linking to a transformation ID and you would like to link those names to a transformation ID, please indicate "1" for the "existing_accession" column.)</li>
+                        <li>number_of_insertions (You can indicate number of transgene insertions during transgenic historical data upload.)</li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Transgenic Historical Data", optional_column => 1 &>

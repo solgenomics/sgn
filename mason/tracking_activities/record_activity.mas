@@ -13,6 +13,7 @@ $project_id => undef
 $activity_type => undef
 $program_name => undef
 $source_info => undef
+$can_obsolete => undef
 
 </%args>
 
@@ -126,7 +127,7 @@ $source_info => undef
 % }
 
 % if ($identifier_id && ($material_type eq 'transformation')) {
-    <& /transformation/transformants_section.mas, transformation_id => $material_stock_id &>
+    <& /transformation/transformants_section.mas, transformation_id => $material_stock_id, program_name => $program_name, can_obsolete => $can_obsolete &>
     <& /transformation/obsoleted_transformants_section.mas, transformation_id => $material_stock_id &>
 % }
 
