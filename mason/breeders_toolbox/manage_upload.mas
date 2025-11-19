@@ -336,7 +336,10 @@ function process_file(file_data, upload_type) {
             populate_validate_submit_data(upload_type, file_data);
             break;
         case 'seedlot_transaction' : 
-            //
+            display_seedlot_transaction_choices();
+            jQuery('#seedlot_transaction_next_btn_div').show();
+            jQuery('#seedlot_transaction_next_btn').on('click', {file_data : file_data}, populate_seedlot_transaction_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'pedigrees' : 
             //
@@ -448,7 +451,9 @@ function display_upload_formats(upload_type) {
             jQuery('#seedlot_upload_inventory_spreadsheet_info_dialog').modal("show");
             break;
         case 'seedlot_transaction' : 
-            //
+            display_seedlot_transaction_choices();
+            jQuery('#upload_seedlot_transaction_type_select').on('change', display_seedlot_transaction_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'pedigrees' : 
             //
@@ -622,6 +627,27 @@ function display_seedlot_upload_formats() {
     }
 }
 
+function display_seedlot_transaction_upload_formats() {
+    let seedlot_transaction_type = jQuery('#upload_seedlot_transaction_type_select').val();
+    switch (seedlot_transaction_type) {
+        case 'exist_to_exist' :
+            jQuery('#seedlots_to_seedlots_info_dialog').modal("show");
+            break;
+        case 'exist_to_new' : 
+            jQuery('#seedlots_to_new_seedlots_info_dialog').modal("show");
+            break;
+        case 'exist_to_plots' : 
+            jQuery('#seedlots_to_plots_info_dialog').modal("show");
+            break;
+        case 'exist_to_unspecified' : 
+            jQuery('#seedlots_to_unspecified_names_info_dialog').modal("show");
+            break;
+        default :
+            break;
+    }
+    return;
+}
+
 function display_plant_upload_choices() {
     jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="plant_upload_type_choice_select">'+
                         '<option value="null_choice">Select file type</option>'+
@@ -769,6 +795,19 @@ function display_seedlot_upload_choices() {
         '</div><br><br>' + '<div class="seedlot-upload-options" hidden><button class="btn btn-primary" id="seedlot_upload_choices_next_btn">Next</button></div>');
 }
 
+function display_seedlot_transaction_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<select class="form-control" id="upload_seedlot_transaction_type_select">' + 
+            '<option value="null_choice">Select a transaction type...</option>' + 
+            '<option value="exist_to_exist">Existing seedlot to existing seedlot</option>' + 
+            '<option value="exist_to_new">Existing seedlot to new seedlot</option>' + 
+            '<option value="exist_to_plots">Existing seedlot to plot</option>' + 
+            '<option value="exist_to_unspecified">Existing seedlot to unspecified seeds/plots</option>' + 
+        '</select><br>' + 
+        '<div id="seedlot_transaction_next_btn_div" hidden><button id="seedlot_transaction_next_btn" class="btn btn-primary">Next</button></div>'
+    );
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -794,7 +833,11 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'locations' : "Locations",
         'accessions' : "Accessions",
         'seedlots' : "Seedlots",
-        'seedlot_inventory' : "Seedlot inventory"
+        'seedlot_inventory' : "Seedlot inventory",
+        'exist_to_exist' : "Transact existing seedlots to existing seedlots",
+        'exist_to_new' : "Transact existing seedlots to new seedlots",
+        'exist_to_plots' : "Transact existing seedlots to plots",
+        'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots"
     };
 
     display_validate_submit_modal({
@@ -950,6 +993,17 @@ function populate_seedlot_validate_submit_data(event) {
         storage_location : storage_location,
         organization_name : organization_name
     });
+}
+
+function populate_seedlot_transaction_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let transaction_type = jQuery('#upload_seedlot_transaction_type_select').val();
+    if (transaction_type == "null_choice") {
+        alert("Please select a transaction type.");
+        return;
+    }
+
+    populate_validate_submit_data(transaction_type, file_data, {});
 }
 
 function submit_file_validation(options) {
