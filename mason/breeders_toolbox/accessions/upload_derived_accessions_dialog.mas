@@ -76,7 +76,7 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>derived_from</td>
+                                <td>original_name</td>
                                 <td>derived_accession_name</td>
                                 <td>description</td>
                             </tr>
@@ -85,7 +85,7 @@
 
                     <b>Required fields:</b>
                     <ul>
-                        <li>transformation_identifier (must be unique)</li>
+                        <li>original_name (must be in the database. Stock type can be accession, plant or tissue sample)</li>
                         <li>derived_accession_name (must NOT exist in the database)</li>
                         <li>description</li>
                     </ul>

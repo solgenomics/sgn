@@ -2836,6 +2836,134 @@ sub add_derived_accessions_using_list_POST : Args(0) {
 }
 
 
+sub upload_derived_accessions_file : Path('/stock/upload_derived_accessions_file') : ActionClass('REST') { }
+
+sub upload_derived_accessions_file_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('derived_accessions_file');
+    my $upload_type = 'DerivedAccessionsGeneric';
+
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "derived_accessions_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload derived accessions'};
+        $c->detach();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    my @stock_props = ('');
+    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser->load_plugin($upload_type);
+    $parsed_data = $parser->parse();
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    if ($parsed_data) {
+        foreach my $each_info (@$derived_accession_info) {
+            my $new_accession_stock_id;
+            my $stock_name = $each_info->{'stock_name'};
+            my $derived_accession_name = $each_info->{'derived_accession_name'};
+            my $accession_description = $each_info->{'accession_description'};
+            my $derived_from_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_name})->stock_id();
+
+            my $add_derived_accession = CXGN::Stock::AddDerivedAccession->new({
+                chado_schema => $schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                derived_from_stock_id => $derived_from_stock_id,
+                derived_accession_name => $derived_accession_name,
+                description => $accession_description,
+                owner_id => $user_id,
+            });
+
+            my $new_accession = $add_derived_accession->add_derived_accession();
+        }
+
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+    }
+
+
+    $c->stash->{rest} = {success => "1",};
+}
+
+
 sub get_stocks_with_images : Path('/ajax/stock/get_stocks_with_images') : ActionClass('REST') { }
 
 sub get_stocks_with_images_GET : Args(0) {
