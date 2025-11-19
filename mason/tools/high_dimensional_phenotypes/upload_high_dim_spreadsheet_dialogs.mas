@@ -13,6 +13,7 @@ my @layout_options = split ",", $c->config->{layout_options};
 my @mapping_software_options = split ",", $c->config->{mapping_software_options};
 my @sequencing_platform_options = split ",", $c->config->{sequencing_platform_options};
 my @na_extraction_method_options = split ",", $c->config->{na_extraction_method_options};
+my @sequencing_center_options = split ",", $c->config->{genotyping_facilities};
 </%perl>
 
 <div class="modal fade" id="upload_high_dim_phenotypes_spreadsheet_dialog" name="upload_high_dim_phenotypes_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addHighDimDataDialog">
@@ -250,7 +251,16 @@ my @na_extraction_method_options = split ",", $c->config->{na_extraction_method_
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">Sequencing Center: </label>
                                 <div class="col-sm-9" >
-                                    <input class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_center_select" type = "text" placeholder="e.g. Cornell University Institute of Biotechnology">
+                                    <select class="form-control" id="high_dim_data_upload_transcriptomics_sequencing_center_select" type = "text" placeholder="e.g. Cornell University Institute of Biotechnology">
+                                    <option value="blank"></option>
+                                    <%perl>
+                                    foreach my $option (@sequencing_center_options) {
+                                    </%perl>
+                                    <option value="<% $option %>"><% $option %></option>
+                                    <%perl>
+                                    }
+                                    </%perl>
+                                    </select>
                                 </div>
                             </div>
                             
