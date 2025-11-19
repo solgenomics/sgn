@@ -10,6 +10,7 @@ $editable_stock_props_definitions => {}
 $facilities => ()
 $management_factor_types => ()
 $design_types => ()
+$default_seedlot_material_type => undef
 </%args>
 
 <%perl>
@@ -19,7 +20,7 @@ $design_types => ()
     }
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
 <& /page/page_title.mas, title=>"Upload Factory" &>
 
@@ -239,6 +240,7 @@ function upload_type_options() {
         "<option value='locations'>Locations</option>"+
         "<option value='accessions'>Accessions</option>"+
         "<option value='populations'>Populations</option>"+
+        "<option value='seedlots'>Seedlots</option>"+
         "<option value='seedlot_inventory'>Seedlot Inventory</option>"+
         "<option value='seedlot_transaction'>Seedlot Transaction</option>"+
         "<option value='pedigrees'>Pedigrees</option>"+
@@ -316,6 +318,19 @@ function process_file(file_data, upload_type) {
             break;
         case 'populations' : 
             //
+            break;
+        case 'seedlots' : 
+            display_seedlot_upload_choices();
+            jQuery('.seedlot-upload-options').each(function() {
+                jQuery(this).show();
+            });
+            get_select_box('material_types', 'upload_seedlot_material_type_div', { 'name' : 'upload_seedlot_material_type', 'id' : 'upload_seedlot_material_type' });
+            get_select_box('breeding_programs', 'upload_seedlot_breeding_program_div', { 'name' : 'upload_seedlot_breeding_program_id', 'id' : 'upload_seedlot_breeding_program_id' });
+            jQuery('#seedlot_upload_choices_next_btn').on('click', {file_data : file_data}, populate_seedlot_validate_submit_data);
+            jQuery("#upload_seedlot_location").autocomplete({
+                source: '/ajax/stock/geolocation_autocomplete'
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'seedlot_inventory' : 
             populate_validate_submit_data(upload_type, file_data);
@@ -423,6 +438,11 @@ function display_upload_formats(upload_type) {
             break;
         case 'populations' : 
             //
+            break;
+        case 'seedlots' : 
+            display_seedlot_upload_choices();
+            jQuery('#upload_seedlots_type_select').on('change', display_seedlot_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'seedlot_inventory' : 
             jQuery('#seedlot_upload_inventory_spreadsheet_info_dialog').modal("show");
@@ -591,6 +611,17 @@ function display_genotyping_data_upload_formats() {
     }
 }
 
+function display_seedlot_upload_formats() {
+    let seedlot_upload_type = jQuery('#upload_seedlots_type_select').val();
+    if (seedlot_upload_type == "from_accession") {
+        jQuery('#seedlot_upload_spreadsheet_info_dialog').modal('show');
+    } else if (seedlot_upload_type == "from_cross") {
+        jQuery('#seedlot_upload_spreadsheet_harvested_info_dialog').modal('show');
+    } else {
+        return;
+    }
+}
+
 function display_plant_upload_choices() {
     jQuery('#upload_type_choices_div').html('<select style="width:50%" class="form-control form-control-sm" id="plant_upload_type_choice_select">'+
                         '<option value="null_choice">Select file type</option>'+
@@ -690,7 +721,52 @@ function display_accession_upload_choices() {
 }
 
 function display_seedlot_upload_choices() {
-    
+
+    let seedlot_material_type = ' <div class="form-group seedlot-upload-options" hidden>' + 
+                                    '<label class="col-sm-3 control-label">Material Type: </label>' + 
+                                    '<div class="col-sm-9" >' + 
+                                        '<div id="upload_seedlot_material_type_div"></div>' + 
+                                    '</div>' + 
+                                '</div><br><br>';
+    if ("<%$default_seedlot_material_type%>" != ""){
+        seedlot_material_type = '<div class="form-group seedlot-upload-options" hidden>' + 
+                                    '<label class="col-sm-3 control-label" >Material Type: </label>' + 
+                                    '<div class="col-sm-9">' + 
+                                        '<input class="form-control" name="upload_seedlots_default_material_type" id="upload_seedlots_default_material_type" disabled value="'+"<% $default_seedlot_material_type %>"+'">' + 
+                                    '</div>' + 
+                                '</div><br><br>';
+    }
+
+    jQuery('#upload_type_choices_div').html(
+        '<div class="form-group seedlot-upload-options">'+
+            '<label class="col-sm-3 control-label">Seedlot type: </label>' + 
+                '<div class="col-sm-9">' + 
+                    '<select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">' + 
+                        '<option value="">Select...</option>' + 
+                        '<option value="from_accession">Seedlots for named accessions</option>' + 
+                        '<option value="from_cross">Seedlots harvested from crosses</option>' + 
+                    '</select>' + 
+                '</div>' + 
+        '</div><br><br>' + 
+        seedlot_material_type + 
+        '<div class="form-group seedlot-upload-options" hidden>' + 
+            '<label class="col-sm-3 control-label">Breeding Program: </label>' + 
+            '<div class="col-sm-9" >' + 
+                '<div id="upload_seedlot_breeding_program_div"></div>' + 
+            '</div>' + 
+        '</div><br><br>' + 
+        '<div class="form-group seedlot-upload-options" hidden>' + 
+            '<label class="col-sm-3 control-label">Location of seedlot storage: </label>' + 
+            '<div class="col-sm-9" >' + 
+                '<input class="form-control" name="upload_seedlot_location" id="upload_seedlot_location" placeholder="Required">' + 
+            '</div>' + 
+        '</div><br><br>' + 
+        '<div class="form-group seedlot-upload-options" hidden>' + 
+            '<label class="col-sm-3 control-label">Organization Name: </label>' + 
+            '<div class="col-sm-9" >' + 
+                '<input class="form-control" name="upload_seedlot_organization_name" id="upload_seedlot_organization_name" placeholder="Optional">' + 
+            '</div>' + 
+        '</div><br><br>' + '<div class="seedlot-upload-options" hidden><button class="btn btn-primary" id="seedlot_upload_choices_next_btn">Next</button></div>');
 }
 
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
@@ -717,6 +793,7 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'genotype_data_ssr' : "SSR genotyping data",
         'locations' : "Locations",
         'accessions' : "Accessions",
+        'seedlots' : "Seedlots",
         'seedlot_inventory' : "Seedlot inventory"
     };
 
@@ -838,6 +915,40 @@ function populate_accession_validate_submit_data(event) {
     populate_validate_submit_data('accessions', file_data, {
         use_fuzzy_search : fuzzy_search,
         append_synonyms : append_synonyms
+    });
+}
+
+function populate_seedlot_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let seedlot_type = jQuery('#upload_seedlots_type_select').val();
+    let material_type = jQuery('#upload_seedlot_material_type').val();
+    let breeding_program_select = jQuery('#upload_seedlot_breeding_program_id option:selected');
+    let breeding_program_id = breeding_program_select.val();
+    let breeding_program_name = breeding_program_select.text();
+    let storage_location = jQuery("#upload_seedlot_location").val();
+    let organization_name = jQuery('#upload_seedlot_organization_name').val();
+
+
+    if (seedlot_type != "from_accession" && seedlot_type != "from_cross") {
+        alert("Please select a seedlot source type");
+        return;
+    }
+    if (storage_location == null || storage_location == "") {
+        alert("Please select a seedlot storage location.");
+        return;
+    }
+    if (!breeding_program_id) {
+        alert("Please select a breeding program.");
+        return;
+    }
+
+    populate_validate_submit_data('seedlots', file_data, {
+        seedlot_type : seedlot_type,
+        material_type : material_type,
+        breeding_program_id : breeding_program_id,
+        breeding_program_name : breeding_program_name,
+        storage_location : storage_location,
+        organization_name : organization_name
     });
 }
 
