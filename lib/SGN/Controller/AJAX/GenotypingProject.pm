@@ -30,6 +30,7 @@ sub genotyping_project_delete_POST : Args(1) {
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
         if (!$user_info[0]) {
+	    print STDERR "error - no user_info\n";
             $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
             return;
         }
@@ -38,7 +39,9 @@ sub genotyping_project_delete_POST : Args(1) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+	print STDERR "found user name $user_name\n";
     } else {
+	print STDERR "error - no session_id\n";
         if (!$c->user()) {
             $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
             return;
@@ -103,7 +106,10 @@ sub genotyping_project_delete_POST : Args(1) {
         # Delete from nd_experiment asynchronously because it takes long
         my $dir = $c->tempfiles_subdir('/genotype_data_delete_nd_experiment_ids');
         my $temp_file_nd_experiment_id = "$basepath/".$c->tempfile( TEMPLATE => 'genotype_data_delete_nd_experiment_ids/fileXXXX');
-        open (my $fh, "> :encoding(UTF-8)", $temp_file_nd_experiment_id ) || die ("\nERROR: the file $temp_file_nd_experiment_id could not be found\n" );
+        open (my $fh, "> :encoding(UTF-8)", $temp_file_nd_experiment_id ) or do {
+	    $c->stash->{rest} = { error => "Could not open temp file $temp_file_nd_experiment_id: $!" };
+	    return;
+	};
         foreach (@{$genotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}) {
             print $fh "$_\n";
         }
