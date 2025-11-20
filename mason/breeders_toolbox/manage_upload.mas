@@ -160,6 +160,8 @@ $default_seedlot_material_type => undef
 
 <& /file_formats/seedlot_upload.mas &>
 
+<& /file_formats/pedigree_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -342,7 +344,7 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'pedigrees' : 
-            //
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'crosses' : 
             //
@@ -456,7 +458,7 @@ function display_upload_formats(upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'pedigrees' : 
-            //
+            jQuery('#pedigrees_upload_spreadsheet_info_dialog').modal("show");
             break;
         case 'crosses' : 
             //
@@ -837,7 +839,8 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'exist_to_exist' : "Transact existing seedlots to existing seedlots",
         'exist_to_new' : "Transact existing seedlots to new seedlots",
         'exist_to_plots' : "Transact existing seedlots to plots",
-        'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots"
+        'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
+        'pedigrees' : "Pedigrees"
     };
 
     display_validate_submit_modal({
