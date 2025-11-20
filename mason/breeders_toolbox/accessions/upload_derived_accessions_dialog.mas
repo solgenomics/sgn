@@ -58,6 +58,27 @@
     </div>
 </div>
 
+<div class="modal fade" id="upload_derived_accessions_error_display" name="upload_derived_accessions_error_display" tabindex="-1" role="dialog" aria-labelledby="uploadDerivedAccessionsErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadDerivedAccessionsErrorDialog">Upload Derived Accessions Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="derived_accession_upload_spreadsheet_info_dialog" name="derived_accession_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadDerivedAccessionsInfoDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
@@ -106,6 +127,51 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_derived_accession_file_link').click(function() {
         jQuery("#upload_derived_accessions_dialog").modal("show");
+    });
+
+    jQuery('#derived_accession_upload_spreadsheet_format_info').click(function(){
+        jQuery("#derived_accession_upload_spreadsheet_info_dialog").modal("show");
+    });
+
+    jQuery("#upload_derived_accessions_submit").click(function(){
+        var uploadFile = jQuery("#derived_accessions_file").val();
+
+        jQuery('#upload_derived_accessions_form').attr("action", "/stock/upload_derived_accessions_file");
+
+        if (uploadFile === ''){
+            alert("Please select a file");
+            return;
+        }
+
+        jQuery("#upload_derived_accessions_form").submit();
+        jQuery("#upload_derived_accessions_dialog").modal("hide");
+    });
+
+    jQuery('#upload_derived_accessions_form').iframePostForm({
+        json: true,
+        post: function(){
+            jQuery("#working_modal").modal("show");
+        },
+        complete: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_derived_accessions_error_display tbody").html('');
+                jQuery("#upload_derived_accessions_error_display tbody").append(response.error_string);
+                jQuery("#upload_derived_accessions_error_display").modal("show");
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                jQuery('#derived_accessions_saved_dialog_message').modal("show");
+            }
+        }
+    });
+
+    jQuery("#dismiss_derived_accessions_saved_dialog").click(function(){
+        location.reload();
     });
 
 });
