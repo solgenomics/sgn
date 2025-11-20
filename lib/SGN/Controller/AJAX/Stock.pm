@@ -2934,6 +2934,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
     }
 
     if ($parsed_data) {
+        my $derived_accession_info = $parsed_data->{'derived_accession_info'};
         foreach my $each_info (@$derived_accession_info) {
             my $new_accession_stock_id;
             my $stock_name = $each_info->{'stock_name'};
@@ -2958,7 +2959,6 @@ sub upload_derived_accessions_file_POST : Args(0) {
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     }
-
 
     $c->stash->{rest} = {success => "1",};
 }
