@@ -101,10 +101,12 @@ has 'download_dir' => (is => 'ro',
 			   }
     );
 
-
+our $webdriver_instance;
 
 sub BUILD {
     my $self = shift;
+
+    $webdriver_instance = $self;
 
     my $download_dir = $self->download_dir();
 
@@ -121,6 +123,14 @@ sub BUILD {
     
 
     $self->driver($driver);
+}
+
+END {
+    if ($webdriver_instance && $webdriver_instance->driver) {
+        eval {
+            $webdriver_instance->driver->quit;
+        };
+    }
 }
 
 sub login_as { 
