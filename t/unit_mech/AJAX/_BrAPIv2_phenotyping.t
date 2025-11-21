@@ -32,9 +32,9 @@ $response = decode_json $mech->content;
 #1
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 #2
-is($response->{'userDisplayName'}, 'Jane Doe');
+is($response->{'userDisplayName'}, 'Jane Doe', 'user name test');
 #3
-is($response->{'expires_in'}, '7200');
+is($response->{'expires_in'}, '7200', 'expiration test');
 
 $mech->delete_ok('http://localhost:3010/brapi/v2/token');
 $response = decode_json $mech->content;
@@ -48,7 +48,7 @@ $response = decode_json $mech->content;
 #5
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 #6
-is($response->{'userDisplayName'}, 'Jane Doe');
+is($response->{'userDisplayName'}, 'Jane Doe', 'user display name test');
 #7
 is($response->{'expires_in'}, '7200');
 my $access_token = $response->{access_token};
