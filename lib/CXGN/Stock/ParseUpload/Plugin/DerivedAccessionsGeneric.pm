@@ -2,7 +2,6 @@ package CXGN::Stock::ParseUpload::Plugin::DerivedAccessionsGeneric;
 
 use Moose::Role;
 use CXGN::File::Parse;
-use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
@@ -51,14 +50,13 @@ sub _validate_with_plugin {
     my $seen_derived_accession_names = $parsed_values->{'derived_accession_name'};
 
     my $original_names_validator = CXGN::List::Validate->new();
-    my @original_names_missing = @{$original_names_validator->validate($schema,'accessions_or_plants_or_tissue_samples',$seen_original_name)->{'missing'}};
+    my @original_names_missing = @{$original_names_validator->validate($schema,'accessions_or_plants_or_tissue_samples',$seen_original_names)->{'missing'}};
 
     if (scalar(@original_names_missing) > 0) {
         push @error_messages, "The following original names are not in the database, or are not in the database as accession names, plant names or tissue sample names: ".join(',',@original_names_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => $seen_derived_accession_names }
     });
 
@@ -84,12 +82,6 @@ sub _parse_with_plugin {
     my $parsed_data = $parsed->{data};
     my %parsed_result;
     my @derived_accession_info;
-
-    my $accession_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $plot_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-    my $plant_stock_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
     foreach my $row (@$parsed_data) {
         my $original_name = $row->{'original_name'};
