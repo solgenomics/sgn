@@ -1167,7 +1167,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
         if ($accession_list_id) {
             $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-        }
+        } else {
+	    $accession_data = [];
+	}
 
         @accession_list = map { $_->[1] } @$accession_data;
 
@@ -1177,7 +1179,8 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @accession_ids = @{$accession_id_hash->{transform}};
     }
 
-    my ($fh, $filename) = tempfile("breedbase_genotype_data_XXXXX");
+    my $num = sprintf("%05d", int(rand(100000)));
+    my $filename = "breedbase_genotype_data_" . $num;
     if ($download_format eq 'VCF') {
         $filename .= '.vcf';
     }
