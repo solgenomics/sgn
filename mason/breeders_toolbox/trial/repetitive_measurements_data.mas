@@ -137,9 +137,9 @@ jQuery(document).ready(function() {
         .then((final) => {
             jQuery('#working_modal').modal('hide');
         })
-        .fail(() => {
+        .fail((xhr) => {
             jQuery('#working_modal').modal('hide'); // Hide modal on error
-            alert('An error occurred'); // Show error message
+            alert(`An error occurred retrieving repetitive measurement data: ${xhr}`); // Show error message
         });
     });
 
