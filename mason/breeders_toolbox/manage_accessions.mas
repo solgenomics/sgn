@@ -8,7 +8,7 @@ $editable_stock_props_definitions => {}
 $show_grafting_interface => ''
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'CXGN.BreedersToolbox.UploadGrafts', 'CXGN.BreedersToolbox.UploadRenameAccessions' ] &>
+<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'CXGN.BreedersToolbox.UploadGrafts', 'CXGN.BreedersToolbox.UploadRenameAccessions', 'CXGN.BreedersToolbox.DerivedAccessions'] &>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
@@ -27,7 +27,7 @@ $show_grafting_interface => ''
 <& /breeders_toolbox/upload_graft_dialogs.mas &>
 <& /breeders_toolbox/manage_populations_dialogs.mas &>
 <& /breeders_toolbox/trial/add_derived_accessions_using_list_dialog.mas &>
-<& /breeders_toolbox/accessions/upload_derived_accessions_dialog.mas &>
+<& /breeders_toolbox/upload_derived_accessions_dialog.mas &>
 
 </br>
 <button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button>
