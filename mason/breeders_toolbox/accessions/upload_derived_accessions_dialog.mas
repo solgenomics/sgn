@@ -147,18 +147,23 @@ jQuery(document).ready(function(){
         jQuery("#upload_derived_accessions_dialog").modal("hide");
     });
 
+
     jQuery('#upload_derived_accessions_form').iframePostForm({
-        json: true,
+        json: false,
         post: function(){
             jQuery("#working_modal").modal("show");
         },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
+        complete: function (r) {
+            var clean_r = r.replace('<pre>', '');
+            clean_r = clean_r.replace('</pre>', '');
+            var response = JSON.parse(clean_r);
+            console.log(response);
+            jQuery('#working_modal').modal("hide");
+            var html;
             if (response.error_string) {
-                jQuery("#upload_derived_accessions_error_display tbody").html('');
-                jQuery("#upload_derived_accessions_error_display tbody").append(response.error_string);
-                jQuery("#upload_derived_accessions_error_display").modal("show");
-                return;
+                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error_string+'</p>';
+                jQuery("#upload_derived_accessions_error_display tbody").html(html);
+                jQuery("#upload_derived_accessions_error_display").modal('show');
             }
             if (response.error) {
                 alert(response.error);
