@@ -3,8 +3,16 @@ $trial_id
 $trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues'] &>
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'statistics/simple_statistics', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues'] &>
 
+<script>
+
+const regression = d3.regressionLinear()
+  .x(d => d.x)
+  .y(d => d.y)
+  .domain([0, 100]);
+
+</script>
 <style>
 .small-graph svg {
     display: flex;
@@ -405,7 +413,7 @@ jQuery(document).ready(function() {
 			showXAxis: false, 
 			showYAxis: false, 
 			showDots: false, 
-			showTitle: false
+			showTitle: false,
 		};
 
 		//draw a line graph based on the repetitive_values for each obs_unit_name 
@@ -437,7 +445,8 @@ jQuery(document).ready(function() {
 			showXAxis:true, 
 			showYAxis:true, 
 			showTitle:true,
-			showDots: true
+			showDots: true,
+            drawOls: true,
 		};
 		
 		//draw the line by connecting all the values for the larger graph

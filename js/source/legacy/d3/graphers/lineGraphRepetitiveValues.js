@@ -18,6 +18,9 @@
     */
 
     exports.drawLineGraph = function(data, container, layout, trait_name, label_observation_unit_name, options) {
+
+        console.log(`repetitive values ${JSON.stringify(options)}`)
+
         // set the default layout for the large graph 
         layout = layout || {
             "width": 800,
@@ -182,6 +185,65 @@
             .text(label_observation_unit_name);
         }
 
+
+        if (options.drawOls) {
+            console.log('drawing OLS line ...');
+            const lsData = data.map(function(d, i) {
+                return [i, d.value];
+            });
+            // console.log(`ols data: ${JSON.stringify(lsData)}`);
+
+            
+            // console.log(`raw data: ${JSON.stringify(data)}`);
+
+            var line = ss.linear_regression()
+            .data(lsData)
+            .line(); 
+    
+            var lineParams = ss.linear_regression()
+                .data(lsData)
+            
+            var alpha = lineParams.b();
+            alpha     =  Math.round(alpha*100) / 100;
+            
+            var beta = lineParams.m();
+            beta     = Math.round(beta*100) / 100;
+            
+            var sign; 
+            if (beta > 0) {
+                sign = ' + ';
+            } else {
+                sign = ' - ';
+            };
+
+            var equation = `y = ${alpha} ${sign} ${beta}x`; 
+
+            var rq = ss.r_squared(lsData, line);
+            rq     = Math.round(rq*100) / 100;
+            rq     = `R-squared = +${rq}`;
+
+
+            svg.append("g")
+                .attr("id", "equation")
+                .append("text")
+                .text(equation)
+                .attr("x", 20)
+                .attr("y", 30)
+                .style("fill", "#86B404")
+                .style("font-weight", "bold");  
+            
+            svg.append("g")
+                .attr("id", "rsquare")
+                .append("text")
+                .text(rq)
+                .attr("x", 20)
+                .attr("y", 50)
+                .style("fill", "#86B404")
+                .style("font-weight", "bold");  
+
+
+        }
     };
 
+    
 }(typeof exports === 'undefined' ? this.lineGraphRepetitiveValues = {} : exports));
