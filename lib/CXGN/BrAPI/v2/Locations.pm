@@ -100,7 +100,7 @@ sub search {
     # if ( (%institute_names_arrayref && !exists($institute_names_arrayref{$_->[]}))) { next; }
     if ( (%location_names_arrayref && !exists($location_names_arrayref{$_->[1]}))) { next; }
     if ( (%location_types_arrayref && !exists($location_types_arrayref{$_->[8]}))) { next; }
-    if ( $altitude_max && $_->[4] > $altitude_max ) { next; } 
+    if ( $altitude_max && $_->[4] > $altitude_max ) { next; }
     if ( $altitude_min && $_->[4] < $altitude_min ) { next; }
 
 		# combine referenceID and referenceSource into AND check as used by bi-api filter
@@ -198,9 +198,11 @@ sub get_response {
 	my @data_files;
 
 	if ($array) {
+	    print STDERR "Preparing array for return data\n";
 		my %result = (data => \@data);
 		return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Locations list result constructed');
 	} else {
+	    print STDERR "Whetever this does.\n";
 		$pagination = CXGN::BrAPI::Pagination->pagination_response(1,$page_size,$page);
 		return CXGN::BrAPI::JSONResponse->return_success($data[0], $pagination, \@data_files, $status, 'Locations object result constructed');
 	}
@@ -208,8 +210,8 @@ sub get_response {
 
 
 sub store {
-	my $self = shift;
-	my $data = shift;
+    my $self = shift;
+    my $data = shift;
 
     my $page_size = $self->page_size;
     my $page = $self->page;
@@ -217,85 +219,88 @@ sub store {
     my $schema = $self->bcs_schema();
     my @location_ids;
 
-	foreach my $params (@{$data}) {
-		my $id = $params->{locationDbId} || undef;
-		my $name = $params->{locationName};
-		my $abbreviation =  $params->{abbreviation} || undef;
-		my $country_name =  $params->{countryName} || undef;
-		my $country_code =  $params->{countryCode} || undef;
-		my $program_id =  $params->{additionalInfo}->{programDbId}  || undef;
-		my $type =  $params->{locationType} || undef;
-		my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
-		my $latitude = $geo_coordinates->[1] || undef;
-		my $longitude = $geo_coordinates->[0] || undef;
-		my $altitude  = $geo_coordinates->[2]|| undef;
-		my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
-		my $external_references = $params->{externalReferences};
-		my $program_name;
+    print STDERR "DATA IN LOCATION OBJECT: ".Dumper($data);
 
-		if ($id) {
-			my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({nd_geolocation_id => $id});
-			if (!$location) {
-				my $err_string = sprintf('Location %s does not exist.',$id);
-				warn $err_string;
-				return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
-			}
-		}
+    foreach my $params (@{$data}) {
+	my $id =  $params->{locationDbId};
+	my $name = $params->{locationName};
+	print STDERR "\n\nNAME ===== $name\n\n\n";
+	my $abbreviation =  $params->{abbreviation} || undef;
+	my $country_name =  $params->{countryName} || undef;
+	my $country_code =  $params->{countryCode} || undef;
+	my $program_id =  exists($params->{additionalInfo}) && ref($params->{additionalInfo}) eq "HashRef" ? $params->{additionalInfo}->{programDbId} : undef;
+	my $type =  $params->{locationType} || undef;
+	my $geo_coordinates = $params->{coordinates}->{geometry}->{coordinates} || undef;
+	my $latitude = $geo_coordinates->[1] || undef;
+	my $longitude = $geo_coordinates->[0] || undef;
+	my $altitude  = $geo_coordinates->[2]|| undef;
+	my $noaa_station_id    = $params->{additionalInfo}->{noaaStationId} || undef;
+	my $external_references = $params->{externalReferences};
+	my $program_name;
 
-		my $existing_name_count = 0;
-		if($id) {
-			$existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name, nd_geolocation_id => { '!=' => $id } })->count();
-		} else {
-			$existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name })->count();
-		}
-		if ($existing_name_count > 0) {
-			my $err_string = sprintf('Location name %s already exists.', $name );
-			warn $err_string;
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 409);
-		}
-
-		if ($program_id) {
-			my $program = $schema->resultset('Project::Project')->find({project_id => $program_id});
-			if (!$program) {
-				my $err_string = sprintf('Program %s does not exist.',$program_id);
-				warn $err_string;
-				return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
-			}
-			$program_name = $program->name();
-		}
-
-		print STDERR "Creating location object\n";
-
-		my $location = CXGN::Location->new( {
-			bcs_schema => $schema,
-			nd_geolocation_id => $id,
-			name => $name,
-			abbreviation => $abbreviation,
-			country_name => $country_name,
-			country_code => $country_code,
-			breeding_programs => $program_name,
-			location_type => $type,
-			latitude => $latitude,
-			longitude => $longitude,
-			altitude => $altitude,
-			noaa_station_id => $noaa_station_id,
-			external_references => $external_references
-		});
-
-		my $store = $location->store_location();
-
-		if ($store->{'error'}) {
-			my $err_string = $store->{'error'};
-			warn $err_string;
-			return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 500);
-		} else {
-			push @location_ids, $store->{'nd_geolocation_id'};
-		}
+	if ($id) {
+	    my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({nd_geolocation_id => $id});
+	    if (!$location) {
+		my $err_string = sprintf('Location %s does not exist.',$id);
+		warn $err_string;
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
+	    }
 	}
 
-	# Retrieve our new locations
-	my $locations = CXGN::Trial::get_all_locations($schema, \@location_ids);
-	return $self->get_response($locations, 1);
+	my $existing_name_count = 0;
+	if($id) {
+	    $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name, nd_geolocation_id => { '!=' => $id } })->count();
+	} else {
+	    $existing_name_count = $schema->resultset('NaturalDiversity::NdGeolocation')->search({ description => $name })->count();
+	}
+	if ($existing_name_count > 0) {
+	    my $err_string = sprintf('Location name %s already exists.', $name );
+	    warn $err_string;
+	    return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 409);
+	}
+
+	if ($program_id) {
+	    my $program = $schema->resultset('Project::Project')->find({project_id => $program_id});
+	    if (!$program) {
+		my $err_string = sprintf('Program %s does not exist.',$program_id);
+		warn $err_string;
+		return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 404);
+	    }
+	    $program_name = $program->name();
+	}
+
+	print STDERR "Creating location object\n";
+
+	my $location = CXGN::Location->new( {
+	    bcs_schema => $schema,
+	    nd_geolocation_id => $id,
+	    name => $name,
+	    abbreviation => $abbreviation,
+	    country_name => $country_name,
+	    country_code => $country_code,
+	    breeding_programs => $program_name,
+	    location_type => $type,
+	    latitude => $latitude,
+	    longitude => $longitude,
+	    altitude => $altitude,
+	    noaa_station_id => $noaa_station_id,
+	    external_references => $external_references
+					    });
+
+	my $store = $location->store_location();
+
+	if ($store->{'error'}) {
+	    my $err_string = $store->{'error'};
+	    warn $err_string;
+	    return CXGN::BrAPI::JSONResponse->return_error($self->status, $err_string, 500);
+	} else {
+	    push @location_ids, $store->{'nd_geolocation_id'};
+	}
+    }
+
+    # Retrieve our new locations
+    my $locations = CXGN::Trial::get_all_locations($schema, \@location_ids);
+    return $self->get_response($locations, 1);
 }
 
 1;
