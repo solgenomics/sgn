@@ -101,30 +101,31 @@ sub add_derived_accession {
         my $derived_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_accession', 'stock_property');
 
         my $derived_from_stock = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $derived_from_stock_id});
-        my $stock_type = $derived_from_stock->type_id();
-        my $organism_id = $derived_from_stock->organism_id();
+        my $derived_from_stock_type_id = $derived_from_stock->type_id();
+        my $derived_from_organism_id = $derived_from_stock->organism_id();
 
         my $original_stock_id;
         my $cross_type;
         my $female_stock_id;
         my $male_stock_id;
-        if ($stock_type == $accession_cvterm_id) {
+        my $derived_from_stock_type_name;
+        if ($derived_from_stock_type_id == $accession_cvterm_id) {
             $original_stock_id = $derived_from_stock_id;
-        } elsif ($stock_type == $plant_cvterm_id) {
+            $derived_from_stock_type_name = 'accession';
+        } elsif ($derived_from_stock_type_id == $plant_cvterm_id) {
             my $stock_plant_relationship = $schema->resultset("Stock::StockRelationship")->find ({
                 subject_id => $derived_from_stock_id,
                 type_id => $plant_of_cvterm_id,
             });
-
             $original_stock_id = $stock_plant_relationship->object_id();
-
-        } elsif ($stock_type == $tissue_sample_cvterm_id) {
+            $derived_from_stock_type_name = 'plant';
+        } elsif ($derived_from_stock_type_id == $tissue_sample_cvterm_id) {
             my $accession_tissue_sample_relationship = $schema->resultset("Stock::StockRelationship")->find ({
                 subject_id => $derived_from_stock_id,
                 type_id => $tissue_sample_of_cvterm_id,
             });
-
             $original_stock_id = $accession_tissue_sample_relationship->object_id();
+            $derived_from_stock_type_name = 'tissue_sample';
         }
 
         my $original_stock_type_id = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $original_stock_id})->type_id();
@@ -149,7 +150,7 @@ sub add_derived_accession {
         }
 
         my $derived_accession_stock = $schema->resultset("Stock::Stock")->create({
-            organism_id => $organism_id,
+            organism_id => $derived_from_organism_id,
             name => $derived_accession_name,
             uniquename => $derived_accession_name,
             type_id => $accession_cvterm_id,
@@ -163,7 +164,7 @@ sub add_derived_accession {
                 type_id => $derived_from_cvterm_id,
                 object_id => $derived_from_stock_id,
                 subject_id => $derived_accession_stock_id,
-                value => $stock_type
+                value => $derived_from_stock_type_name
 			});
 
             $derived_accession_stock->create_stockprops({$derived_accession_cvterm->name() => 'is_a_derived_accession'});
