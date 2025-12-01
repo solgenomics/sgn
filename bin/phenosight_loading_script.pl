@@ -108,7 +108,7 @@ print STDOUT "Database connection ok!\n";
 my @errors;
 
 ### Get list of all trials
-my $program_id = 134;
+#my $program_id = 134;
 #my $program = CXGN::BreedingProgram->new( { schema=> $chado_schema , program_id => $program_id } );
 
 #my $trials = $program->get_trials();
@@ -225,7 +225,7 @@ my $coderef = sub {
                     }
                 }
 ###                # Temporarily, for testing - set $trail_saved to 0 so it runs the code anyway:
-###                $trial_saved = 0;
+                $trial_saved = 0;
                 ### Move on to save the trial if not present:
                 if ($trial_saved == 0) {
                     print STDERR "No trial match for $exp_name; proceed to parse and load\n";
@@ -462,6 +462,32 @@ my $coderef = sub {
 #                    print STDERR "The trial info hash:\n";
 #                    print STDERR Dumper(%trial_info_hash) . "\n";
 #                    }
+
+                    # Retrieve breeding programs:
+                    my $projects = CXGN::BreedersToolbox::Projects->new( { schema=> $chado_schema } );
+                    my $breeding_programs = $projects->get_breeding_programs();
+                    print STDERR "The breeding programs:\n";
+                    print STDERR Dumper($breeding_programs) . "\n";
+
+                    my $breeding_program_exists = 0;
+                    foreach my $bp (@$breeding_programs) {
+                        print STDERR Dumper($bp->[1]) . "\n";
+
+                        if ($bp->[1] eq $phenosight_metadata_hash{'ps_owner'}) { 
+                            $breeding_program_exists = 1;
+                            last;
+                        }
+                    }
+                    if ($breeding_program_exists == 0) {
+                        my $p = CXGN::BreedersToolbox::Projects->new({
+                            schema => $chado_schema,
+                            name => $phenosight_metadata_hash{'ps_owner'},
+                            description => $phenosight_metadata_hash{'ps_owner'} . " Phenosight",
+                        });
+
+		                my $new_program = $p->store_breeding_program();
+                    }
+
 
 
                     #my $entry_numbers = $trial_design->{'entry_numbers'};
@@ -755,12 +781,8 @@ my $coderef = sub {
 
                         }
                     }
-
-                    print STDERR "The image files:" . "\n";
-                    print STDERR Dumper(@image_file_names) . "\n";
                 }
             } else {
-
             }
 
         }
