@@ -263,7 +263,11 @@ $addition_type = 'additional_plants';
 $mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$greenhouse_trial_id.'/add_additional_stocks_for_greenhouse', [ 'stock_names'=>$json->encode(\@greenhouse_accessions_2), 'number_of_plants'=>$json->encode(\@greenhouse_num_plants_2), 'addition_type'=> $addition_type ]);
 my $response = decode_json $mech->content;
 
-is($response->{'success'}, '1');
+print STDERR "\n=======================================\n";
+print STDERR Dumper $response->{error};
+print STDERR "\n=======================================\n";
+
+is($response->{'success'}, '1'); #46
 
 #checking greenhouse design after adding additional plants
 my $greenhouse_trial_layout_3;
@@ -332,7 +336,7 @@ is_deeply(\@plot_names_3, [
     'greenhouse_1_accession_for_greenhouse8_8'
 ], "check plot names");
 
-is_deeply(\@plant_names_3, [
+is_deeply(\@plant_names_3, [ #51
     'greenhouse_1_accession_for_greenhouse1_1_plant_1',
     'greenhouse_1_accession_for_greenhouse2_2_plant_1',
     'greenhouse_1_accession_for_greenhouse3_3_plant_1',

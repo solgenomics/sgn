@@ -49,12 +49,12 @@ $design_types => ()
                             </&>
                             <&| /util/workflow.mas:step, title=> "File Formatting" &>
                                 <ul class="nav nav-pills nav-justified" id="upload_trial_designs_tab_select">
-                                    <li class="active" id="upload_single_trial_design_tab"><a data-toggle="tab" href="#single_tab">Single Trial Design</a></li>
-                                    <li id="upload_multiple_trial_designs_tab"><a data-toggle="tab" href="#multiple_tab">Multiple Trial Designs</a></li>
+                                    <li id="upload_single_trial_design_tab"><a data-toggle="tab" href="#single_tab">Single Trial Design</a></li>
+                                    <li class="active" id="upload_multiple_trial_designs_tab"><a data-toggle="tab" href="#multiple_tab">Multiple Trial Designs</a></li>
                                 </ul>
                                 <div class="tab-content">
 
-                                    <div id="single_tab" class="tab-pane fade in active">
+                                <div id="single_tab" class="tab-pane fade">
                                         <hr>
                                         <center>
                                             <&| /page/explanation.mas, title=>'Template information' &>
@@ -70,7 +70,7 @@ $design_types => ()
                                         <& /help/file_upload_type.mas, type => "Single Trial Designs", optional_column => 1 &>
                                     </div>
 
-                                    <div id="multiple_tab" class="tab-pane fade">
+                                    <div id="multiple_tab" class="tab-pane fade in active">
                                         <hr>
                                         <center>
                                             <&| /page/explanation.mas, title=>'Template information' &>
@@ -730,7 +730,7 @@ $design_types => ()
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). The value for each plot should be 1 if the treatment was applied or empty.)</li>
+                    <li>Experimental treatments are handled in much the same way as phenotypes, and can be uploaded from the trial detail page after trial creation. They may also be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code></li>
                     </ul>
 
                     <hr />
@@ -838,7 +838,7 @@ $design_types => ()
 
                     <b>Treatments:</b>
                     <ul>
-                    <li>treatment columns (additional column(s) that specify the name of a treatment (e.g. inoculated, drought, etc). the value for each plot should be 1 if the treatment was applied or empty if not applied.)</li>
+                    <li>Experimental treatments are handled in much the same way as phenotypes, and can be uploaded from the trial detail page after trial creation. They may also be included as additional columns in a trial upload, formatted as <code>experimental treatment|EXPERIMENT_TREATMENT:0000001</code></li>
                     </ul>
 
                     <hr />

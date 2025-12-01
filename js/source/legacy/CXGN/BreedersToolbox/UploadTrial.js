@@ -220,6 +220,7 @@ jQuery(document).ready(function ($) {
                     return;
                 }
                 if (response.success) {
+                    add_plants_per_plot();
                     refreshTrailJsTree(0);
                     jQuery("#upload_trial_error_display_second_try").hide();
                     jQuery('#trial_upload_show_repeat_upload_button').hide();
@@ -229,7 +230,6 @@ jQuery(document).ready(function ($) {
                     Workflow.skip('#upload_trial_error_display_second_try', false);
                     Workflow.focus("#trial_upload_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_upload_workflow");
-                    add_plants_per_plot();
                 }
             },
             error: function() {
