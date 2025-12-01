@@ -537,7 +537,7 @@ sub calls : Chained('brapi') PathPart('calls') Args(0) : ActionClass('REST') { }
 sub calls_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "genotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Calls');
@@ -657,7 +657,7 @@ sub seasons : Chained('brapi') PathPart('seasons') Args(0) : ActionClass('REST')
 sub seasons_POST {
 	my $self = shift;
 	my $c = shift;
-	my ($auth, $user_id) = _authenticate_user($c);
+	my ($auth, $user_id) = _authenticate_user($c, "phenotyping", "write");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $postedData = $clean_inputs;
 	my @data;
@@ -684,7 +684,7 @@ sub seasons_GET {
 sub seasons_process {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    my ($auth) = _authenticate_user($c, "phenotyping", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
@@ -707,7 +707,7 @@ sub season_fetch : Chained('season_single') PathPart('') Args(0) : ActionClass('
 sub season_fetch_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Seasons');
@@ -781,7 +781,7 @@ sub study_types_GET {
 sub study_types_process {
 	my $self = shift;
 	my $c = shift;
-    my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "trials", "read");
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Studies');
 	my $brapi_package_result = $brapi_module->study_types();
@@ -865,7 +865,7 @@ sub germplasm_search_old  : Chained('brapi') PathPart('germplasm-search') Args(0
 sub germplasm_search_old_GET {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    my ($auth) = _authenticate_user($c, "stocks", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
@@ -885,7 +885,7 @@ sub germplasm_search_old_GET {
 sub germplasm_search_old_POST {
     my $self = shift;
     my $c = shift;
-    # my ($auth) = _authenticate_user($c);
+    my ($auth) = _authenticate_user($c, "stocks", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Germplasm');
@@ -1609,7 +1609,7 @@ sub genotype_fetch_POST {
 sub genotype_fetch_GET {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    my ($auth) = _authenticate_user($c, "genotyping", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
@@ -1629,7 +1629,7 @@ sub genotype_fetch_GET {
 sub markerprofiles_methods : Chained('brapi') PathPart('markerprofiles/methods') Args(0) {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "genotyping", "read");
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Markerprofiles');
 	my $brapi_package_result = $brapi_module->markerprofiles_methods();
@@ -4354,6 +4354,7 @@ sub variants_detail :  Chained('variants_single') PathPart('') Args(0) ActionCla
 sub variants_detail_GET {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, "genotyping", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Variants');
@@ -4368,12 +4369,14 @@ sub variants_calls_detail : Chained('variants_single') PathPart('calls') Args(0)
 sub variants_calls_detail_POST {
 	my $self = shift;
 	my $c = shift;
-	#my $auth = _authenticate_user($c);
+	my $auth = _authenticate_user($c, "genotyping", "write");
+	# ... ?
 }
 
 sub variants_calls_detail_GET {
 	my $self = shift;
 	my $c = shift;
+	print STDERR "VARIANTS CALL DETAIL GET\n";
 	my ($auth) = _authenticate_user($c, "genotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
@@ -4394,6 +4397,7 @@ sub variants_search_save  : Chained('brapi') PathPart('search/variants') Args(0)
 sub variants_search_save_POST {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, "genotyping", "read");
     save_results($self,$c,$c->stash->{clean_inputs},'Variants');
 }
 
@@ -4401,6 +4405,7 @@ sub variants_search_retrieve : Chained('brapi') PathPart('search/variants') Args
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, "genotyping", "read");
     retrieve_results($self, $c, $search_id, 'Variants');
 }
 
@@ -4855,14 +4860,15 @@ sub callsets_GET {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('CallSets');
-	my $brapi_package_result = $brapi_module->search({
+	my $brapi_package_result = $brapi_module->search(
+	    {
 		variantSetDbId => $clean_inputs->{variantSetDbId},
-        sampleDbId => $clean_inputs->{sampleDbId},
-        callSetName => $clean_inputs->{callSetName},
-        # studyDbId => $clean_inputs->{studyDbId},
-        germplasmDbId => $clean_inputs->{germplasmDbId},
-        callSetDbId => $clean_inputs->{callSetDbId},
-	});
+		sampleDbId => $clean_inputs->{sampleDbId},
+		callSetName => $clean_inputs->{callSetName},
+		# studyDbId => $clean_inputs->{studyDbId},
+		germplasmDbId => $clean_inputs->{germplasmDbId},
+		callSetDbId => $clean_inputs->{callSetDbId},
+	    });
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -4878,7 +4884,7 @@ sub callsets_fetch : Chained('callsets_single') PathPart('') Args(0) : ActionCla
 sub callsets_fetch_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c, "genotying", "read");
+	my ($auth) = _authenticate_user($c, "genotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('CallSets');
