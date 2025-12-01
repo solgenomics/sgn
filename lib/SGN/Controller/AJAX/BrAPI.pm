@@ -112,6 +112,8 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	    $page = $current_page || $page || 0;
 	    $page_size = $current_page_size || $page_size || $DEFAULT_PAGE_SIZE;
 	    $session_token = $current_session_token|| $session_token;
+
+	    print STDERR "PAGE $page PAGE SIZE $page_size CURRENT PAGE $current_page SESSION TOKEN $session_token\n";
 	}
 
 	push @status, { 'INFO' => "BrAPI base call found with page=$page, pageSize=$page_size" };
@@ -119,16 +121,16 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	my $brapi = CXGN::BrAPI->new({
 		version => $version,
 		brapi_module_inst => {
-			context => $c,
-			bcs_schema => $c->stash->{bcs_schema},
-			metadata_schema => $c->stash->{metadata_schema},
-			phenome_schema => $c->stash->{phenome_schema},
-			people_schema => $c->stash->{people_schema},
-			page_size => $page_size,
-			page => $page,
-			status => \@status
+		    context => $c,
+		    bcs_schema => $c->stash->{bcs_schema},
+		    metadata_schema => $c->stash->{metadata_schema},
+		    phenome_schema => $c->stash->{phenome_schema},
+		    people_schema => $c->stash->{people_schema},
+		    page_size => $page_size,
+		    page => $page,
+		    status => \@status
 		}
-	});
+				     });
 	$self->brapi_module($brapi);
 	$self->bcs_schema($c->stash->{bcs_schema});
 
@@ -137,23 +139,27 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
 	$c->stash->{session_token} = $session_token;
 
+	print STDERR "REQUEST DATA: ".Dumper($c->request->data);
+
 	if (defined $c->request->data){
-		# All POST requests accept for search methods require a json array body
-		if ($c->request->method eq "POST" && index($c->request->env->{REQUEST_URI}, "search") == -1){
-			if (ref $c->request->data ne 'ARRAY') {
-				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON array body required', 400);
-				_standard_response_construction($c, $response);
-			}
-			$c->stash->{clean_inputs} = _clean_inputs($c->req->params,$c->request->data);
-		} elsif ($c->request->method eq "PUT") {
-			if (ref $c->request->data eq 'ARRAY') {
-				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON hash body required', 400);
-				_standard_response_construction($c, $response);
-			}
-			$c->stash->{clean_inputs} = $c->request->data;
-		} else {
-			$c->stash->{clean_inputs} = $c->request->data;
+	    # All POST requests accept for search methods require a json array body
+	    if ($c->request->method eq "POST" && index($c->request->env->{REQUEST_URI}, "search") == -1){
+		if (ref $c->request->data ne 'ARRAY') {
+		    print STDERR "ARRAY EXPECTED FOR POST. ERROR!\n";
+		    my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON array body required', 400);
+		    _standard_response_construction($c, $response);
 		}
+		$c->stash->{clean_inputs} = _clean_inputs($c->req->params,$c->request->data);
+	    } elsif ($c->request->method eq "PUT") {
+		print STDERR "JSON HASH BODY REQUIRED! ERROR!\n";
+		if (ref $c->request->data eq 'ARRAY') {
+		    my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON hash body required', 400);
+		    _standard_response_construction($c, $response);
+		}
+		$c->stash->{clean_inputs} = $c->request->data;
+	    } else {
+		$c->stash->{clean_inputs} = $c->request->data;
+	    }
 	}
 	else {
 		$c->stash->{clean_inputs} = _clean_inputs($c->req->params);
@@ -166,16 +172,21 @@ sub _clean_inputs {
 	my $params = shift;
 	my $alldata = shift;
 
+	print STDERR "CLEANING INPUT WITH DATA: ".Dumper($alldata);
+	print STDERR "CLEAN INPUT WITH PARAMS: ".Dumper($params);
+
 	if($alldata){
-		my %data = ref $alldata eq 'ARRAY' ? map { $_ => $_} @{$alldata} : %{$alldata};
-		%$params = $params ? (%data, %$params) : %data;
+	    my %data = ref $alldata eq 'ARRAY' ? map { $_ => $_} @{$alldata} : %{$alldata};
+	    print STDERR "ALLDATA NOW: ".Dumper(\%data);
+
+	    %$params = $params ? (%data, %$params) : %data;
 	}
 
-	foreach (keys %$params){
+ 	foreach (keys %$params){
 		my $values = $params->{$_};
 		my $ret_val;
 		if (ref \$values eq 'SCALAR' || ref $values eq 'ARRAY'){
-
+		    print STDERR "CLEANING values array...\n";
 			if (ref \$values eq 'SCALAR') {
 				push @$ret_val, $values;
 			} elsif (ref $values eq 'ARRAY'){
@@ -188,6 +199,7 @@ sub _clean_inputs {
 			$params->{$_} = $ret_val;
 		}
 		elsif (ref $values eq 'HASH') {
+		    print STDERR "values variable is already a hash, thanks!\n";
 			$params->{$_} = $values;
 		}
 		else {
@@ -199,49 +211,49 @@ sub _clean_inputs {
 }
 
 sub _validate_request {
-	my $c = shift;
-	my $data_type = shift;
-	my $data = shift;
-	my $required_fields = shift;
-	my $required_field_prefix = shift;
+    my $c = shift;
+    my $data_type = shift;
+    my $data = shift;
+    my $required_fields = shift;
+    my $required_field_prefix = shift;
 
-	if ($required_fields) {
-		# Validate each array element
-		if ($data_type eq 'ARRAY') {
-			foreach my $object (values %{$data}) {
-				# Ignore the query params if they were passed in. Their included in the body
-				if (ref($object) eq 'HASH') {
-					_validate_request($c, 'HASH', $object, $required_fields);
-				}
-			}
+    if ($required_fields) {
+	# Validate each array element
+	if ($data_type eq 'ARRAY') {
+	    foreach my $object (values %{$data}) {
+		# Ignore the query params if they were passed in. Their included in the body
+		if (ref($object) eq 'HASH') {
+		    _validate_request($c, 'HASH', $object, $required_fields);
 		}
-
-		# Check all of our fields
-		foreach my $required_field (@{$required_fields}) {
-			# Check if the required field has another level or not
-			if (ref($required_field) eq 'HASH') {
-				# Check the field keys and recurse
-				foreach my $sub_req_field (keys %{$required_field}) {
-					if ($data_type eq 'HASH') {
-						if (!$data->{$sub_req_field}) {
-							_missing_field_response($c, $sub_req_field, $required_field_prefix);
-						} else {
-							my $sub_data = $data->{$sub_req_field};
-							_validate_request($c, 'HASH', $sub_data, $required_field->{$sub_req_field},
-								$required_field_prefix ? sprintf("%s.%s", $required_field_prefix, $sub_req_field): $sub_req_field);
-						}
-					}
-				}
-				next;
-			}
-
-			if ($data_type eq 'HASH') {
-				if (!$data->{$required_field}) {
-					_missing_field_response($c, $required_field, $required_field_prefix);
-				}
-			}
-		}
+	    }
 	}
+
+	# Check all of our fields
+	foreach my $required_field (@{$required_fields}) {
+	    # Check if the required field has another level or not
+	    if (ref($required_field) eq 'HASH') {
+		# Check the field keys and recurse
+		foreach my $sub_req_field (keys %{$required_field}) {
+		    if ($data_type eq 'HASH') {
+			if (!$data->{$sub_req_field}) {
+			    _missing_field_response($c, $sub_req_field, $required_field_prefix);
+			} else {
+			    my $sub_data = $data->{$sub_req_field};
+			    _validate_request($c, 'HASH', $sub_data, $required_field->{$sub_req_field},
+					      $required_field_prefix ? sprintf("%s.%s", $required_field_prefix, $sub_req_field): $sub_req_field);
+			}
+		    }
+		}
+		next;
+	    }
+
+	    if ($data_type eq 'HASH') {
+		if (!$data->{$required_field}) {
+		    _missing_field_response($c, $required_field, $required_field_prefix);
+		}
+	    }
+	}
+    }
 }
 
 sub _missing_field_response {
@@ -262,14 +274,15 @@ sub _authenticate_user {
 
     my $status = $c->stash->{status};
 
-    print STDERR "STATUS = ".Dumper($status);
+    print STDERR "RESOURCE: $resource. ACCESS LEVEL: $access_level. STATUS = ".Dumper($status);
     my $user_id;
     my $user_type;
     my $user_pref;
     my $expired;
     my $wildcard = 'any';
 
-    ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+    #($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+    $user_id = $c->stash->{user_id};
 
     my %server_permission;
     my $rc = eval{
@@ -286,37 +299,41 @@ sub _authenticate_user {
     # Will still throw error if auth is required
 
     if ($c->config->{brapi_default_user} && $c->config->{brapi_require_login} == 0) {
-		$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
+	print STDERR "USING BRAPI DEFAULT USER OR NO LOGIN REQUIRED\n";
+	$user_id = CXGN::People::Person->get_person_by_username($c->dbc->dbh, $c->config->{brapi_default_user});
 
-		$user_type = $c->config->{brapi_default_user_role};
-		if (! defined $user_id) {
-			my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
-			_standard_response_construction($c, $brapi_package_result, 500);
-		}
+	$user_type = $c->config->{brapi_default_user_role};
+	if (! defined $user_id) {
+	    print STDERR "USER NOT DEFINED. GOODBYE!\n";
+	    my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'Default brapi user was not found');
+	    _standard_response_construction($c, $brapi_package_result, 500);
 	}
-
+    }
+    print STDERR "BRAPI REQUIRES LOGIN: ".$c->config->{brapi_require_login}."\n";
+#    print STDERR "SERVER PERMISSIONS ".Dumper(\%server_permission);
 	# If our brapi config is set to authenticate or the controller calling this asks for forcing of
     # authentication or serverinfo call method request auth, we authenticate.
     my $login = CXGN::Login->new($c->dbc->dbh);
-    if ($c->config->{brapi_require_login} == 1 || !exists($server_permission{$wildcard})){
-
+    if ($c->config->{brapi_require_login} == 1) {  #####|| !exists($server_permission{$wildcard})){
+	print STDERR "BRAPI REQUIRES LOGIN WORKFLOW\n";
 	if ($resource) {
 	    my $privileges =  $c->stash->{access}->user_privileges($user_id, $resource);
 	    $c->stash->{privileges} = $privileges;
 	}
 
 	if ($c->stash->{session_token}) {
-	    ($user_id, $user_type, $user_pref, $expired) = $login->query_from_cookie($c->stash->{session_token});
-	    print STDERR "LOGGING IN USER: ".$user_id." : ".$user_type." : ".$expired;
+	    #($user_id, $user_type, $user_pref, $expired) = $login->query_from_cookie($c->stash->{session_token});
+
+	    print STDERR "WE SHOULD ALREADY BE LOGGED IN WITH: ".$user_id." : ".$user_type." : ".$expired."\n";
 	}
 	else {
 	    print STDERR "GET USER ID FROM LOGIN...\n";
 	    if ($c->user) {
 		$user_id = $c->stash->{user_id};
-		($user_type) = $c->user->get_object->get_user_type();
+		#($user_type) = $c->user->get_object->get_user_type();
 
 		my $cookie_string = $login->get_login_cookie();
-		print STDERR "USER ID: $user_id, EXPIRED: $expired, USER TYPE: $user_type\n";
+		print STDERR "NEW LOGIN FOR USER ID: $user_id, EXPIRED: $expired\n";
 		$c->stash->{session_token} = $login->get_login_cookie();
 	    }
 	}
@@ -325,18 +342,21 @@ sub _authenticate_user {
 	#
 	my $http_code = 200;
 
-	if (!$user_id || $expired || !exists($server_permission{$wildcard})) {
+	if (!$user_id || $expired) { #### || !exists($server_permission{$wildcard})) {
 	    $http_code = 401;
 	}
 
 	my $message;
+
+	print STDERR "USER ID IN STASH: ". $c->stash->{user_id}."\n";
 	if ($message = $c->{stash}->{access}->denied($c->stash->{user_id}, $access_level, $resource, $owner_id, $breeding_programs)) {
+	    print STDERR "ACCESS DENIED: $message\n";
 	    $http_code = 403;
 	}
 
-        if (!$user_id || $message || $expired || !exists($server_permission{$wildcard})) {
-
-	    my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, 'You must login and have permission to access this BrAPI call.');
+        if (!$user_id || $message || $expired) {  #### !exists($server_permission{$wildcard})) {
+	    print STDERR "LOGIN INFO NOW: USER_ID $user_id MESSAGE $message EXPIRED $expired\n";
+	    my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error($status, $message);
 
 	    _standard_response_construction($c, $brapi_package_result, $http_code);
 	}
@@ -432,26 +452,26 @@ sub authenticate_token_POST {
 }
 
 sub process_authenticate_token {
-	my $self = shift;
-	my $c = shift;
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Authentication');
-	my $brapi_package_result = $brapi_module->login(
-		$clean_inputs->{grant_type}->[0],
-		$clean_inputs->{password}->[0],
-		$clean_inputs->{username}->[0],
-		$clean_inputs->{client_id}->[0],
+    my $self = shift;
+    my $c = shift;
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Authentication');
+    my $brapi_package_result = $brapi_module->login(
+	$clean_inputs->{grant_type}->[0],
+	$clean_inputs->{password}->[0],
+	$clean_inputs->{username}->[0],
+	$clean_inputs->{client_id}->[0],
 	);
 
-	my $status = $brapi_package_result->{status};
-	my $pagination = $brapi_package_result->{pagination};
-	my $result = $brapi_package_result->{result};
-	my $datafiles = $brapi_package_result->{datafiles};
+    my $status = $brapi_package_result->{status};
+    my $pagination = $brapi_package_result->{pagination};
+    my $result = $brapi_package_result->{result};
+    my $datafiles = $brapi_package_result->{datafiles};
 
-	my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
-	my %response = (metadata=>\%metadata, access_token=>$result->{access_token}, userDisplayName=>$result->{userDisplayName}, expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
-	$c->stash->{rest} = \%response;
+    my %metadata = (pagination=>$pagination, status=>$status, datafiles=>$datafiles);
+    my %response = (metadata=>\%metadata, access_token=>$result->{access_token}, userDisplayName=>$result->{userDisplayName}, expires_in=>$CXGN::Login::LOGIN_TIMEOUT);
+    $c->stash->{rest} = \%response;
     $c->detach();
 }
 
@@ -589,7 +609,7 @@ sub serverinfo : Chained('brapi') PathPart('serverinfo') Args(0) : ActionClass('
 sub serverinfo_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	#my ($auth) = _authenticate_user($c); # this call doesn't require authentication
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('ServerInfo');
@@ -966,16 +986,21 @@ sub germplasm_single  : Chained('brapi') PathPart('germplasm') CaptureArgs(1) {
 sub germplasm_detail  : Chained('germplasm_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub germplasm_detail_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c, "stocks", "read");
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c, "stocks", "read");
+
+    my $brapi_package_result;
+
+    if ($auth) {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-	my $brapi_package_result = $brapi_module->germplasm_detail(
-		$c->stash->{stock_id},$c
-	);
-	_standard_response_construction($c, $brapi_package_result);
+	$brapi_package_result = $brapi_module->germplasm_detail(
+	    $c->stash->{stock_id},$c
+	    );
+    }
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub germplasm_detail_PUT {
@@ -1043,16 +1068,24 @@ MCPD CALL NO LONGER IN BRAPI SPEC
 sub germplasm_mcpd  : Chained('germplasm_single') PathPart('mcpd') Args(0) : ActionClass('REST') { }
 
 sub germplasm_mcpd_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c, "stocks", "read");
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c, "stocks", "read");
+
+    my $brapi_package_result;
+
+    if ($auth) {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-	my $brapi_package_result = $brapi_module->germplasm_mcpd(
-		$c->stash->{stock_id}
-	);
-	_standard_response_construction($c, $brapi_package_result);
+	$brapi_package_result = $brapi_module->germplasm_mcpd(
+	    $c->stash->{stock_id}
+	    );
+    }
+    else {
+	$brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to post Observation Variables");
+    }
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1189,23 +1222,33 @@ sub trials_search_retrieve : Chained('brapi') PathPart('search/trials') Args(1) 
 sub germplasm_pedigree : Chained('germplasm_single') PathPart('pedigree') Args(0) : ActionClass('REST') { }
 
 sub germplasm_pedigree_POST {
-	my $self = shift;
-	my $c = shift;
-	#my $auth = _authenticate_user($c);
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c, "pedigrees", "write");
 }
 
 sub germplasm_pedigree_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c, "pedigree", "read");
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c, "pedigrees", "read");
+
+    my $brapi_package_result;
+    if ($auth) {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Germplasm');
-	my $brapi_package_result = $brapi_module->germplasm_pedigree({
+	$brapi_package_result = $brapi_module->germplasm_pedigree(
+	    {
 		stock_id => $c->stash->{stock_id},
 		notation => $clean_inputs->{notation}->[0]
-	});
-	_standard_response_construction($c, $brapi_package_result);
+	    });
+
+    }
+    else {
+	$brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to post Observation Variables");
+
+    }
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 
@@ -1885,7 +1928,7 @@ sub people : Chained('brapi') PathPart('people') Args(0) : ActionClass('REST') {
 sub people_GET {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c);
+    my ($auth) = _authenticate_user($c, "community", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('People');
@@ -1906,7 +1949,7 @@ sub people_detail  : Chained('people_single') PathPart('') Args(0) : ActionClass
 sub people_detail_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "community", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('People');
@@ -1919,6 +1962,7 @@ sub people_search_save : Chained('brapi') PathPart('search/people') Args(0) : Ac
 sub people_search_save_POST {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, "community", "read");
     save_results($self,$c,$c->stash->{clean_inputs},'People');
 }
 
@@ -1926,6 +1970,7 @@ sub people_search_retrieve  : Chained('brapi') PathPart('search/people') Args(1)
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, "community", "read");
     retrieve_results($self, $c, $search_id, 'People');
 }
 
@@ -1972,73 +2017,117 @@ sub programs_list_POST {
 	my $self = shift;
 	my $c = shift;
 	my ($auth,$user_id) = _authenticate_user($c, "breeding_programs", "write");
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $data = $clean_inputs;
-	my @all_programs;
-	foreach my $program (values %{$data}) {
-		push @all_programs, $program;
-	}
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Programs');
 
-	my $brapi_package_result = $brapi_module->store(\@all_programs, $user_id);
+	my $brapi_package_result;
+
+	if (! $auth) {
+	  $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to post Observation Variables");
+	}
+	else {
+	    my $clean_inputs = $c->stash->{clean_inputs};
+	    my $data = $clean_inputs;
+	    my @all_programs;
+	    foreach my $program (values %{$data}) {
+		push @all_programs, $program;
+	    }
+	    my $brapi = $self->brapi_module;
+	    my $brapi_module = $brapi->brapi_wrapper('Programs');
+
+	    $brapi_package_result = $brapi_module->store(\@all_programs, $user_id);
+	}
+
 	_standard_response_construction($c, $brapi_package_result);
 }
 
 sub programs_list_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c, "breeding_programs", "read");
+    my $self = shift;
+    my $c = shift;
+
+    print STDERR "PROGRAMS LIST GET\n";
+
+    my $brapi_package_result;
+
+    my ($auth) = _authenticate_user($c, "breeding_programs", "read");
+
+    if (! $auth) {
+	print STDERR "AUTH DENIED\n";
+	$brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to post Observation Variables");
+    }
+    else {
+	print STDERR "AUTH SUCCEEDED\n";
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
-	my $brapi_package_result = $brapi_module->search({
+	$brapi_package_result = $brapi_module->search(
+	    {
 		program_names => $clean_inputs->{programName},
 		programNames => $clean_inputs->{programName},
 		abbreviations => $clean_inputs->{abbreviation},
 		externalReferenceIDs => $clean_inputs->{externalReferenceID},
 		externalReferenceSources => $clean_inputs->{externalReferenceSource},
 		commonCropNames => $clean_inputs->{commonCropName},
-        crop => $c->config->{supportedCrop}
-	});
-	_standard_response_construction($c, $brapi_package_result);
+		crop => $c->config->{supportedCrop}
+	    });
+    }
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub programs_single  : Chained('brapi') PathPart('programs') CaptureArgs(1) {
-	my $self = shift;
-	my $c = shift;
-	my $program_id = shift;
-
+    my $self = shift;
+    my $c = shift;
+    my $program_id = shift;
+    my ($auth,  $user_id, $user_type, $user_pref, $expired) = _authenticate_user($c, "breeding_programs", "read");
+    if (! $auth) {
+	my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error(403, 'You must login and have permission to access this BrAPI call.');
+	$c->detach();
+    }
+    else {
 	$c->stash->{program_id} = $program_id;
+    }
 }
 
 sub programs_detail  : Chained('programs_single') PathPart('') Args(0) : ActionClass('REST') { }
 
 sub programs_detail_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c, "breeding_programs", "read");
+    my $self = shift;
+    my $c = shift;
+    my ($auth, $user_id) = _authenticate_user($c, "breeding_programs", "read");
+
+    my $brapi_package_result;
+    if (! $auth) {
+	$brapi_package_result = CXGN::BrAPI::JSONResponse->return_error(403, 'You must login and have permission to access this BrAPI call.');
+    }
+    else {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Programs');
-	my $brapi_package_result = $brapi_module->detail(
-		$c->stash->{program_id},
-		$c->config->{supportedCrop}
-	);
-	_standard_response_construction($c, $brapi_package_result);
+	$brapi_package_result = $brapi_module->detail(
+	    $c->stash->{program_id},
+	    $c->config->{supportedCrop}
+	    );
+    }
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub programs_detail_PUT {
 	my $self = shift;
 	my $c = shift;
+	print STDERR "PROGRAM DETAIL PUT!\n";
 	my ($auth,$user_id) = _authenticate_user($c, "breeding_programs", "write");
-	my $user_id = undef;
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $data = $clean_inputs;
-	$data->{programDbId} = $c->stash->{program_id};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('Programs');
-	my $brapi_package_result = $brapi_module->update($data,$user_id);
+	print STDERR "AUTH: $auth. USER ID: $user_id\n";
+	my $brapi_package_result;
+	if ($auth) {
+	    my $clean_inputs = $c->stash->{clean_inputs};
+	    my $data = $clean_inputs;
+	    $data->{programDbId} = $c->stash->{program_id};
+	    my $brapi = $self->brapi_module;
+	    my $brapi_module = $brapi->brapi_wrapper('Programs');
+	    $brapi_package_result = $brapi_module->update($data,$user_id);
+	}
+	else {
+	    $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to post Observation Variables");
+	}
+
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -2046,15 +2135,36 @@ sub programs_search_save : Chained('brapi') PathPart('search/programs') Args(0) 
 
 sub programs_search_save_POST {
     my $self = shift;
-    my $c = shift; #print $self;
-    save_results($self,$c,$c->stash->{clean_inputs},'Programs');
+    my $c = shift;
+
+    my ($auth,$user_id) = _authenticate_user($c, "breeding_programs", "read");
+    if ($auth) {
+	save_results($self,$c,$c->stash->{clean_inputs},'Programs');
+    }
+    else {
+	my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], 'You must login and have permission to access this BrAPI call.');
+	_standard_response_construction($c, $brapi_package_result, 403);
+    }
+
 }
 
-sub programs_search_retrieve  : Chained('brapi') PathPart('search/programs') Args(1) {
+sub programs_search_retrieve : Chained('brapi') PathPart('search/programs') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
-    retrieve_results($self, $c, $search_id, 'Programs');
+
+    print STDERR "SEARCH ID NOW: $search_id\n";
+
+    my ($auth, $user_id) = _authenticate_user($c, "breeding_programs", "read");
+    if ($auth) {
+	print STDERR "SUCCESSFULLY AUTHORIZED!\n";
+	retrieve_results($self, $c, $search_id, 'Programs');
+    }
+    else {
+	print STDERR "NOT AUHTORIZED! SORRY!\n";
+	my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], 'You must login and have permission to access this BrAPI call.');
+	_standard_response_construction($c, $brapi_package_result, 403);
+    }
 }
 
 
@@ -2176,7 +2286,7 @@ sub studies  : Chained('brapi') PathPart('studies') Args(0) : ActionClass('REST'
 sub studies_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c, "trials", "read");
+    my ($auth) = _authenticate_user($c, "trials", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
@@ -3333,19 +3443,26 @@ sub maps_markerpositions_retrieve : Chained('brapi') PathPart('search/markerposi
 sub locations_list : Chained('brapi') PathPart('locations') Args(0) : ActionClass('REST') { }
 
 sub locations_list_POST {
-	my $self = shift;
-	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c, "locations", "write");
+    my $self = shift;
+    my $c = shift;
+    my $brapi_package_result;
+
+    my ($auth,$user_id) = _authenticate_user($c, "locations", "write");
+
+    if ($auth) {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
+	print STDERR "LOCATION LIST: ".Dumper($data);
 	my @all_locations;
 	foreach my $location (values %{$data}) {
-		push @all_locations, $location;
+	    push @all_locations, $location;
+	    print STDERR "LOCATIONS LISTIFIED: ".Dumper(\@all_locations);
 	}
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Locations');
-	my $brapi_package_result = $brapi_module->store(\@all_locations,$user_id);
+	$brapi_package_result = $brapi_module->store(\@all_locations, $user_id);
 	_standard_response_construction($c, $brapi_package_result);
+    }
 }
 
 sub locations_list_GET {
@@ -3374,13 +3491,16 @@ sub locations_detail_GET {
 }
 
 sub locations_detail_PUT {
-	my $self = shift;
-	my $c = shift;
-	my $location_id = shift;
-	my ($auth,$user_id) = _authenticate_user($c, "locations", "write");
-	my $user_id = undef;
+    my $self = shift;
+    my $c = shift;
+    my $location_id = shift;
+    my ($auth,$user_id) = _authenticate_user($c, "locations", "write");
+    $user_id= undef;
+    my $brapi_package_result;
+    if ($auth) {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $data = $clean_inputs;
+	print STDERR "DATA NOW: ".Dumper($data);
 	my @all_locations;
 	$data->{locationDbId} = $location_id;
 	push @all_locations, $data;
@@ -3389,7 +3509,8 @@ sub locations_detail_PUT {
 	my $brapi_package_result = $brapi_module->store(\@all_locations,$user_id);
 	# Format the response to be single hash
 	$brapi_package_result->{result} = $brapi_package_result->{result}->{data}[0];
-	_standard_response_construction($c, $brapi_package_result);
+    }
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub locations_search_save  : Chained('brapi') PathPart('search/locations') Args(0) : ActionClass('REST') { }
@@ -5380,10 +5501,18 @@ sub seedlots_GET {
 	my $self = shift;
 	my $c = shift;
 	my ($auth) = _authenticate_user($c, "seedlots", "read");
-	my $clean_inputs = $c->stash->{clean_inputs};
-	my $brapi = $self->brapi_module;
-	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
-	my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+	my $brapi_package_result;
+
+	if ($auth) {
+	    my $clean_inputs = $c->stash->{clean_inputs};
+	    my $brapi = $self->brapi_module;
+	    my $brapi_module = $brapi->brapi_wrapper('SeedLots');
+	    $brapi_package_result = $brapi_module->search($clean_inputs);
+	}
+	else {
+	    $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Not configured to post Observation Variables");
+	}
 	_standard_response_construction($c, $brapi_package_result);
 }
 
@@ -5461,30 +5590,71 @@ sub seedlot_single_fetch_GET {
 }
 
 sub seedlot_single_fetch_PUT {
-	my $self = shift;
-	my $c = shift;
-	my ($auth,$user_id) = _authenticate_user($c, "seedlots", "write");
+    my $self = shift;
+    my $c = shift;
+
+    print STDERR "SEEDLOT SINGLE FETCH PUT!\n";
+
+    # to figure out owners, instantiate Seedlot object
+
+    my ($auth, $user_id, $owner_id);
+    if ($c->stash->{access}->user_privileges($c->stash->{user_id}, "seedlots" )->{write}->{require_ownership} == 1) {
+	print STDERR "REQUIRES OWNERSHIP!\n";
+
+	my $seedlot = CXGN::Stock::Seedlot->new( schema => $c->stash->{bcs_schema}, phenome_schema => $c->stash->{phenome_schema}, seedlot_id => $c->stash->{seedLotDbId});
+
+	print STDERR "figure out owners...\n";
+
+	($owner_id) = $seedlot -> owners(); # assuming only one owner possible for seedlot right now
+	print STDERR "OWNER ID: $owner_id\n";
+    }
+    else {
+	$owner_id = undef;
+    }
+
+    ($auth,$user_id) = _authenticate_user($c, "seedlots", "write", $owner_id);
+
+    print STDERR "AUTH NOW: $auth. USER ID: $user_id OWNER_ID: $owner_id\n";
+
+    my $brapi_package_result;
+
+    if ($auth) {
 	my $clean_inputs = $c->stash->{clean_inputs};
+
+	print STDERR "CLEAN INPUTS NOW: ".Dumper($clean_inputs);
+
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
-	my $brapi_package_result = $brapi_module->update_seedlot($c->stash->{seedLotDbId}, $clean_inputs,$c,$user_id);
-	my $status = $brapi_package_result->{status};
-	my $http_status_code = _get_http_status_code($status);
-	_standard_response_construction($c, $brapi_package_result);
+	$brapi_package_result = $brapi_module->update_seedlot($c->stash->{seedLotDbId}, $clean_inputs,$c,$user_id);
+    }
+    else {
+	$brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Missing permissions to access this call.");
+    }
+    my $status = $brapi_package_result->{status};
+    my $http_status_code = _get_http_status_code($status);
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub seedlot_single_transaction_fetch : Chained('seedlot_single') PathPart('transactions') Args(0) : ActionClass('REST') { }
 
 
 sub seedlot_single_transaction_fetch_GET {
-	my $self = shift;
-	my $c = shift;
-	my ($auth) = _authenticate_user($c, "seedlots", "read");
+    my $self = shift;
+    my $c = shift;
+    my ($auth) = _authenticate_user($c, "seedlots", "read");
+
+    my $brapi_package_result;
+
+    if ($auth) {
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('SeedLots');
-	my $brapi_package_result = $brapi_module->transactions($c->stash->{seedLotDbId}, $clean_inputs);
-	_standard_response_construction($c, $brapi_package_result);
+	$brapi_package_result = $brapi_module->transactions($c->stash->{seedLotDbId}, $clean_inputs);
+    }
+    else {
+	$brapi_package_result = CXGN::BrAPI::JSONResponse->return_error([], "Missing permission s to access this call.");
+    }
+    _standard_response_construction($c, $brapi_package_result);
 }
 
 sub breedingmethods : Chained('brapi') PathPart('breedingmethods') Args(0) : ActionClass('REST') { }
@@ -5492,7 +5662,7 @@ sub breedingmethods : Chained('brapi') PathPart('breedingmethods') Args(0) : Act
 sub breedingmethods_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    # my $auth = _authenticate_user($c); # this call doesn't require authentication
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('BreedingMethods');
@@ -5564,7 +5734,7 @@ sub pedigree : Chained('brapi') PathPart('pedigree') Args(0) : ActionClass('REST
 sub pedigree_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c, 'pedigree', 'read');
+	my ($auth) = _authenticate_user($c, 'pedigrees', 'read');
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Pedigree');
@@ -5637,7 +5807,7 @@ sub retrieve_results {
     my $c = shift;
     my $search_id = shift;
     my $search_type = shift;
-    my $auth = _authenticate_user($c);
+    #my $auth = _authenticate_user($c); # at this point already authorized
 
     my $clean_inputs = $c->stash->{clean_inputs};
     my $tempfiles_subdir = $c->config->{basepath} . $c->tempfiles_subdir('brapi_searches');
