@@ -3506,7 +3506,7 @@ sub locations_detail_PUT {
 	push @all_locations, $data;
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Locations');
-	my $brapi_package_result = $brapi_module->store(\@all_locations,$user_id);
+	$brapi_package_result = $brapi_module->store(\@all_locations,$user_id);
 	# Format the response to be single hash
 	$brapi_package_result->{result} = $brapi_package_result->{result}->{data}[0];
     }
