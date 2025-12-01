@@ -21,7 +21,7 @@ $related_stock_link
 % if ($derived_accession_relationship eq 'is_a_derived_accession') {
         <b>Derived from: </b>
 % } elsif ($derived_accession_relationship eq 'has_a_derived_accession') {
-        <b>Converted to: </b>
+        <b>Derived Accession: </b>
 % }
             <br/>
             <% $related_stock_link %>

@@ -53,7 +53,7 @@ sub _validate_with_plugin {
     my @original_names_missing = @{$original_names_validator->validate($schema,'accessions_or_plants_or_tissue_samples',$seen_original_names)->{'missing'}};
 
     if (scalar(@original_names_missing) > 0) {
-        push @error_messages, "The following original names are not in the database, or are not in the database as accession names, plant names or tissue sample names: ".join(',',@original_names_missing);
+        push @error_messages, "The following accessions or plants or tissue samples are not in the database: ".join(',',@original_names_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
