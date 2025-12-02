@@ -70,10 +70,9 @@ sub genotyping_project_delete_POST : Args(1) {
         JOIN nd_experiment_genotype USING(genotype_id)
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN nd_experiment_project USING(nd_experiment_id)
-        WHERE project_id = $project_id AND nd_experiment.type_id = $geno_cvterm_id;
-    ";
+        WHERE project_id = ? AND nd_experiment.type_id = ?;";
     my $h = $bcs_schema->storage->dbh()->prepare($q);
-    $h->execute();
+    $h->execute($project_id, $geno_cvterm_id);
 
     my $count = 0;
     my %genotype_ids_and_nd_experiment_ids_to_delete;
@@ -82,16 +81,22 @@ sub genotyping_project_delete_POST : Args(1) {
         push @{$genotype_ids_and_nd_experiment_ids_to_delete{nd_experiment_ids}}, $nd_experiment_id;
 	$count++;
     }
-    print STDERR "$count genotypes to be deleted\n";
+    print STDERR "$count genotypes to be deleted for project $project_id\n";
 
     # Cascade will delete from genotypeprop
     if ($genotype_ids_and_nd_experiment_ids_to_delete{genotype_ids}->[0]) {
         my $genotype_id_sql = join (",", @{$genotype_ids_and_nd_experiment_ids_to_delete{genotype_ids}});
 
-        my $del_geno_q = "DELETE from genotype WHERE genotype_id IN ($genotype_id_sql);";
-        my $h_del_geno = $bcs_schema->storage->dbh()->prepare($del_geno_q);
-	$h_del_geno->execute();
-	#print STDERR "$del_geno_q\n";
+	#my $del_geno_q = "DELETE from genotype WHERE genotype_id IN ($genotype_id_sql);";
+	my $dbh = $bcs_schema->storage->dbh;
+	my $del_geno_q = "DELETE from genotype USING nd_experiment_genotype, nd_experiment, nd_experiment_project
+	                  WHERE genotype.genotype_id = nd_experiment_genotype.genotype_id
+			  AND nd_experiment_genotype.nd_experiment_id = nd_experiment.nd_experiment_id
+			  AND nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id
+			  AND nd_experiment.type_id = ?
+			  AND nd_experiment_project.project_id = ?";
+	my $deleted_rows = $dbh->do($del_geno_q, undef, $geno_cvterm_id, $project_id);
+	print STDERR "deleted $deleted_rows genotypes for project $project_id\n";
     }
 
     # delete project
@@ -125,7 +130,7 @@ sub genotyping_project_delete_POST : Args(1) {
             finish_logfile => $c->config->{job_finish_log},
             name => "genotyping project deletion",
             job_type => 'deletion',
-            submit_page => $c->req->referer
+            submit_page => ($c->req->referer ? $c->req->referer->as_string : undef)
         });
         eval {
             $async_delete->submit();
