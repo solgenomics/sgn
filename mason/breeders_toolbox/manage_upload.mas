@@ -18,6 +18,10 @@ $default_seedlot_material_type => undef
     if ($c->user) {
         $user_role = $c->user->get_object()->get_user_type();
     }
+
+    my $cross_additional_info_string = $c->config->{cross_additional_info};
+    my @cross_additional_info = split ',',$cross_additional_info_string;
+    my $additional_info;
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
@@ -161,6 +165,8 @@ $default_seedlot_material_type => undef
 <& /file_formats/seedlot_upload.mas &>
 
 <& /file_formats/pedigree_upload.mas &>
+
+<& /file_formats/cross_upload.mas &>
 
 <script>
 
@@ -347,7 +353,18 @@ function process_file(file_data, upload_type) {
             populate_validate_submit_data(upload_type, file_data);
             break;
         case 'crosses' : 
-            //
+            display_cross_upload_choices();
+            jQuery('#cross_upload_next_btn').on('click', {file_data : file_data}, populate_cross_validate_submit_data);
+            get_select_box('breeding_programs', 'upload_crosses_breeding_program_select_div', { 'name' : 'upload_crosses_breeding_program_id', 'id' : 'upload_crosses_breeding_program_id', 'empty': 1 });
+            jQuery('#upload_crosses_breeding_program_select_div').on('change', function () {
+                let breeding_program_id = jQuery("#upload_crosses_breeding_program_id").val();
+                if (breeding_program_id != null && breeding_program_id != '') {
+                    get_select_box('projects', 'upload_crosses_crossing_experiment_select_div', { 'name' : 'upload_crosses_crossing_experiment_id', 'id' : 'upload_crosses_crossing_experiment_id', 'breeding_program_id' : breeding_program_id, 'get_crossing_trials': '1', 'empty':1});
+                } else {
+                    jQuery('#upload_crosses_crossing_experiment_select_div').html('');
+                }
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'new_progenies' : 
             //
@@ -461,7 +478,7 @@ function display_upload_formats(upload_type) {
             jQuery('#pedigrees_upload_spreadsheet_info_dialog').modal("show");
             break;
         case 'crosses' : 
-            //
+            jQuery('#cross_spreadsheet_info_dialog').modal("show");
             break;
         case 'new_progenies' : 
             //
@@ -810,6 +827,16 @@ function display_seedlot_transaction_choices() {
     );
 }
 
+function display_cross_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<div id="upload_crosses_breeding_program_select_div"></div>' + 
+        '<br>' + 
+        '<div id="upload_crosses_crossing_experiment_select_div"></div>' + 
+        '<br>'  +
+        '<button id="cross_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -840,7 +867,8 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'exist_to_new' : "Transact existing seedlots to new seedlots",
         'exist_to_plots' : "Transact existing seedlots to plots",
         'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
-        'pedigrees' : "Pedigrees"
+        'pedigrees' : "Pedigrees",
+        'crosses' : "Crosses"
     };
 
     display_validate_submit_modal({
@@ -1007,6 +1035,31 @@ function populate_seedlot_transaction_validate_submit_data(event) {
     }
 
     populate_validate_submit_data(transaction_type, file_data, {});
+}
+
+function populate_cross_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let breeding_program_select = jQuery('#upload_crosses_breeding_program_id option:selected');
+    let breeding_program_id = breeding_program_select.val();
+    let breeding_program_name = breeding_program_select.text();
+    let cross_exp_select = jQuery('#upload_crosses_crossing_experiment_id option:selected');
+    let cross_exp_id = cross_exp_select.val();
+    let cross_exp_name = cross_exp_select.text();
+
+    if (!breeding_program_id) {
+        alert ("Please select a breeding program.");
+        return;
+    }
+    if (!cross_exp_id) {
+        alert("Please select a crossing experiment.");
+        return;
+    }
+    populate_validate_submit_data('crosses', file_data, {
+        breeding_program_id : breeding_program_id,
+        breeding_program_name : breeding_program_name,
+        crossing_experiment_id : cross_exp_id,
+        crossing_experiment_name : cross_exp_name
+    });
 }
 
 function submit_file_validation(options) {

@@ -1,0 +1,73 @@
+% my $cross_additional_info_string = $c->config->{cross_additional_info};
+% my @cross_additional_info = split ',',$cross_additional_info_string;
+% my $additional_info;
+
+<div class="modal fade" id="cross_spreadsheet_info_dialog" name="cross_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="crossSpreadsheetInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="crossSpreadsheetInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <br>
+                    <b>Header:</b>
+                    <br>
+                    To set up crosses in the database, please provide required information. The first row (header) must contain the following:
+                    <br>
+
+                    <table class="table table-bordered table-hover" id = "cross_parents_header">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>cross_combination</td>
+                                <td>cross_type</td>
+                                <td>female_parent</td>
+                                <td>male_parent</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <style>
+                        ul.a {text-indent};
+                    </style>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
+                        <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, doubled_haploid, dihaploid_induction)</li>
+                        <ul class="a">
+                            <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
+                            <li><b>self:</b> A self pollinated individual plant.</li>
+                            <li><b>open:</b> An individual plant pollinated by a group of plants or open pollinated (pollen may be from a group with known or unknown members).</li>
+                            <li><b>backcross:</b> An individual plant pollinated by one of its parents.</li>
+                            <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
+                            <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
+                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
+                            <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
+                            <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
+                            <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
+                            <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
+                        </ul>
+                        <li><b>female_parent:</b> Female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
+                        <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, backcross, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
+                    </ul>
+                    <b>Optional columns (additional parent info):</b> You can add additional parent info after male_plant column by using one or more of these column headers.
+                    <ul>
+% foreach $additional_info(@cross_additional_info){
+                        <li><%$additional_info%></li>
+%}
+                    </ul>
+                    <b>Additional cross information:</b>
+                    <ul>
+                        <li>After cross unique ids are stored in the database, you can add field crossing data (e.g. pollination date, total number of flowers pollinated, total number of fruits set) or progenies to each cross unique id.</li>
+                        <li>Field crossing data and progenies can be uploaded via links in crossing experiment detail page or can be added directly in each cross detail page.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
