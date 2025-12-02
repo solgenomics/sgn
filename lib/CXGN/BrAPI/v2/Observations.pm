@@ -84,6 +84,7 @@ sub observations_store {
     my $status = $self->status;
     my %result;
 
+
     #print STDERR "OBSERVATIONS_MODULE: User id is $user_id and type is $user_type\n";
     if (!$user_id) {
         print STDERR 'Must provide user_id to upload phenotypes! Please contact us!';
@@ -91,7 +92,9 @@ sub observations_store {
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must provide user_id to upload phenotypes! Please contact us!', 403);
     }
 
-    if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
+
+    #if ($user_type ne 'submitter' && $user_type ne 'sequencer' && $user_type ne 'curator') {
+    if ($c->stash->{access}->denied($user_id, "write", "phenotyping")) {
         print STDERR 'Must have submitter privileges to upload phenotypes! Please contact us!';
         push @$status, {'403' => 'Permission Denied. Must have correct privilege.'};
         return CXGN::BrAPI::JSONResponse->return_error($status, 'Must have submitter privileges to upload phenotypes! Please contact us!', 403);
