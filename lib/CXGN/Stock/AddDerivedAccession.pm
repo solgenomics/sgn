@@ -88,66 +88,22 @@ sub add_derived_accession {
 
     my $coderef = sub {
         my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-        my $cross_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
-        my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
-        my $plant_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-        my $tissue_sample_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
         my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
         my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
-        my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-        my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
         my $offspring_of_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
         my $derived_from_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_from', 'stock_relationship')->cvterm_id();
-        my $derived_accession_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_accession', 'stock_property');
+        my $derived_accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_accession', 'stock_property');
 
         my $derived_from_stock = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $derived_from_stock_id});
-        my $derived_from_stock_type_id = $derived_from_stock->type_id();
-        my $derived_from_organism_id = $derived_from_stock->organism_id();
+        my $original_stock_info = $self->_get_original_stock_info($derived_from_stock_id);
 
-        my $original_stock_id;
-        my $cross_type;
-        my $female_stock_id;
-        my $male_stock_id;
-        my $derived_from_stock_type_name;
-        if ($derived_from_stock_type_id == $accession_cvterm_id) {
-            $original_stock_id = $derived_from_stock_id;
-            $derived_from_stock_type_name = 'accession';
-        } elsif ($derived_from_stock_type_id == $plant_cvterm_id) {
-            my $stock_plant_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-                subject_id => $derived_from_stock_id,
-                type_id => $plant_of_cvterm_id,
-            });
-            $original_stock_id = $stock_plant_relationship->object_id();
-            $derived_from_stock_type_name = 'plant';
-        } elsif ($derived_from_stock_type_id == $tissue_sample_cvterm_id) {
-            my $accession_tissue_sample_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-                subject_id => $derived_from_stock_id,
-                type_id => $tissue_sample_of_cvterm_id,
-            });
-            $original_stock_id = $accession_tissue_sample_relationship->object_id();
-            $derived_from_stock_type_name = 'tissue_sample';
-        }
-
-        my $original_stock_type_id = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $original_stock_id})->type_id();
-
-        my $female_parent_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-            object_id => $original_stock_id,
-            type_id => $female_parent_cvterm_id,
-        });
-
-        if ($female_parent_relationship) {
-            $female_stock_id = $female_parent_relationship->subject_id();
-            $cross_type = $female_parent_relationship->value();
-        }
-
-        my $male_parent_relationship = $schema->resultset("Stock::StockRelationship")->find ({
-            object_id => $original_stock_id,
-            type_id => $male_parent_cvterm_id,
-        });
-
-        if ($male_parent_relationship) {
-            $male_stock_id = $male_parent_relationship->subject_id();
-        }
+        my $derived_from_stock_type_name = $original_stock_info->{'derived_from_stock_type_name'};
+        my $derived_from_organism_id = $original_stock_info->{'derived_from_organism_id'};
+        my $original_stock_id = $original_stock_info->{'original_stock_id'};
+        my $original_stock_type = $original_stock_info->{'original_stock_type'};
+        my $female_parent_stock_id = $original_stock_info->{'female_parent_stock_id'};
+        my $male_parent_stock_id = $original_stock_info->{'male_parent_stock_id'};
+        my $cross_type = $original_stock_info->{'cross_type'};
 
         my $derived_accession_stock = $schema->resultset("Stock::Stock")->create({
             organism_id => $derived_from_organism_id,
@@ -170,24 +126,24 @@ sub add_derived_accession {
             $derived_accession_stock->create_stockprops({$derived_accession_cvterm->name() => 'is_a_derived_accession'});
             $derived_from_stock->create_stockprops({$derived_accession_cvterm->name() => 'has_a_derived_accession'});
 
-            if ($female_stock_id) {
+            if ($female_parent_stock_id) {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
                     type_id => $female_parent_cvterm_id,
                     object_id => $derived_accession_stock_id,
-                    subject_id => $female_stock_id,
+                    subject_id => $female_parent_stock_id,
                     value => $cross_type,
                 });
             }
 
-            if ($male_stock_id) {
+            if ($male_parent_stock_id) {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
                     type_id => $male_parent_cvterm_id,
                     object_id => $derived_accession_stock_id,
-                    subject_id => $male_stock_id,
+                    subject_id => $male_parent_stock_id,
                 });
             }
 
-            if ($original_stock_type_id == $cross_cvterm_id) {
+            if ($original_stock_type eq 'cross') {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
                     type_id => $offspring_of_cvterm_id,
                     object_id => $original_stock_id,
@@ -232,6 +188,8 @@ sub _get_original_stock_info {
     my $tissue_sample_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+    my $family_female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
+    my $family_male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
     my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $offspring_of_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
@@ -269,26 +227,26 @@ sub _get_original_stock_info {
         $h1->execute($female_parent_cvterm_id, $male_parent_cvterm_id, $original_stock_id);
         ($female_parent_stock_id, $cross_type, $male_parent_stock_id) = $h1->fetchrow_array();
     } elsif (($derived_from_stock_type_id == $plant_cvterm_id) || ($derived_from_stock_type_id == $tissue_sample_cvterm_id)) {
-        my $q = "SELECT stock.stock_id, cvterm.name, female_parent.subject_id, female_parent.value, male_parent.subject_id
+        my $q2 = "SELECT stock.stock_id, cvterm.name, female_parent.subject_id, female_parent.value, male_parent.subject_id
             FROM stock
             JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?
             JOIN cvterm on (stock.type_id = cvterm.cvterm_id)
-            LEFT JOIN stock_relationship AS female_parent ON (stock.stock_id = female_parent.object_id) AND female_parent.type_id = ?
-            LEFT JOIN stock_relationship AS male_parent ON (stock.stock_id = male_parent.object_id) AND male_parent.type_id = ?
+            LEFT JOIN stock_relationship AS female_parent ON (stock.stock_id = female_parent.object_id) AND female_parent.type_id IN (?,?)
+            LEFT JOIN stock_relationship AS male_parent ON (stock.stock_id = male_parent.object_id) AND male_parent.type_id IN (?,?)
             WHERE stock_relationship.subject_id = ? and stock.type_id IN (?,?,?)";
 
-        my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($relationship_type_id, $female_parent_cvterm_id, $male_parent_cvterm_id, $derived_from_stock_id, $accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id);
-        ($original_stock_id, $original_stock_type, $female_parent_stock_id, $cross_type, $male_parent_stock_id) = $h->fetchrow_array();
+        my $h2 = $schema->storage->dbh()->prepare($q2);
+        $h2->execute($relationship_type_id, $female_parent_cvterm_id, $family_female_parent_cvterm_id, $male_parent_cvterm_id, $family_male_parent_cvterm_id, $derived_from_stock_id, $accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id);
+        ($original_stock_id, $original_stock_type, $female_parent_stock_id, $cross_type, $male_parent_stock_id) = $h2->fetchrow_array();
     }
 
-    $original_stock_info{'derived_from_stock_type_name'} = $original_stock_id;
-    $original_stock_info{'derived_from_organism_id'} = $original_stock_id;
+    $original_stock_info{'derived_from_stock_type_name'} = $derived_from_stock_type_name;
+    $original_stock_info{'derived_from_organism_id'} = $derived_from_organism_id;
     $original_stock_info{'original_stock_id'} = $original_stock_id;
-    $original_stock_info{'original_stock_type'} = $original_stock_id;
-    $original_stock_info{'female_parent_stock_id'} = $original_stock_id;
-    $original_stock_info{'male_parent_stock_id'} = $original_stock_id;
-    $original_stock_info{'cross_type'} = $original_stock_id;
+    $original_stock_info{'original_stock_type'} = $original_stock_type;
+    $original_stock_info{'female_parent_stock_id'} = $female_parent_stock_id;
+    $original_stock_info{'male_parent_stock_id'} = $male_parent_stock_id;
+    $original_stock_info{'cross_type'} = $cross_type;
 
     return \%original_stock_info;
 }
