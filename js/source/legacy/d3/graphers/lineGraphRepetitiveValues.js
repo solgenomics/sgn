@@ -71,6 +71,7 @@
             .domain([d3.min(data, function(d) { return d.value; }), d3.max(data, function(d) {return d.value; })])
             .nice()
             .range([height, 0]);
+        
 
         // add the x-axis
         if (options.showXAxis) {
@@ -188,15 +189,20 @@
 
         if (options.drawOls) {
             console.log('drawing OLS line ...');
+            allDates = data.map(d => d.date);
+            // uniqueDates = [...new Set(dates)];
+            const uniqueDates = [...new Map(allDates.map(d => [d.toDateString(), d])).values()];
+
+            console.log(`dates count: ${allDates.length}`);
+            console.log(`unique dates count: ${uniqueDates.length}`);
+            console.log(`unique dates: ${JSON.stringify(uniqueDates)}`);
+
             const lsData = data.map(function(d, i) {
-                return [i, d.value];
+                const idx = uniqueDates.findIndex(ud => ud.toDateString() === d.date.toDateString());
+                return [idx, d.value];
             });
-            // console.log(`ols data: ${JSON.stringify(lsData)}`);
 
-            
-            // console.log(`raw data: ${JSON.stringify(data)}`);
-
-            var line = ss.linear_regression()
+            var olsRegression = ss.linear_regression()
             .data(lsData)
             .line(); 
     
@@ -218,10 +224,30 @@
 
             var equation = `y = ${alpha} ${sign} ${beta}x`; 
 
-            var rq = ss.r_squared(lsData, line);
+            var rq = ss.r_squared(lsData, olsRegression);
             rq     = Math.round(rq*100) / 100;
-            rq     = `R-squared = +${rq}`;
+            rq     = `R-squared = ${rq}`;
 
+            var olsLine = d3.line()
+            .x(function(d) {return x(d[0]); })
+            .y(function(d) {return y(d[1]); })
+   
+            var lsPredictions = []; 
+            console.log(`lsData for OLS: ${JSON.stringify(lsData)}`);         
+            jQuery.each(data, function (i, x)  {
+                const idx = uniqueDates.findIndex(ud => ud.toDateString() === x.date.toDateString());
+                var  y = olsRegression(parseFloat(idx)); 
+                lsPredictions.push([x.date, y]); 
+        
+            });
+            console.log(`ols points: ${JSON.stringify(lsPredictions)}`);
+            olsColor = '#86B404';
+
+            svg.append("path")
+                .attr("d", olsLine(lsPredictions))
+                .attr('stroke', olsColor)
+                .attr('stroke-width', 2)
+                .attr('fill', 'none');
 
             svg.append("g")
                 .attr("id", "equation")
@@ -229,7 +255,7 @@
                 .text(equation)
                 .attr("x", 20)
                 .attr("y", 30)
-                .style("fill", "#86B404")
+                .style("fill", olsColor)
                 .style("font-weight", "bold");  
             
             svg.append("g")
@@ -238,10 +264,8 @@
                 .text(rq)
                 .attr("x", 20)
                 .attr("y", 50)
-                .style("fill", "#86B404")
-                .style("font-weight", "bold");  
-
-
+                .style("fill", olsColor)
+                .style("font-weight", "bold");
         }
     };
 
