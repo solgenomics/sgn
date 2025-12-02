@@ -382,7 +382,9 @@ is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','mess
 
 # POST /observations
 $data = '[ {"observationUnitDbId": 41294,  "uploadedBy": "Jane Doe", "observationTimeStamp": "2019-01-05T14:47:23Z", "observationVariableDbId":"70741", "season": "2011",   "value": "15", "externalReferences" : [{ "referenceId": "doi:10.155454/12341234", "referenceSource" : "DOI" } ], "additionalInfo" : { "year" : "2011" } } ]';
+
 $mech->post('http://localhost:3010/brapi/v2/observations/', Content => $data);
+
 $response = decode_json $mech->content;
 
 my $column = $f->bcs_schema()->resultset('Phenotype::Phenotype')->get_column('phenotype_id');
@@ -402,14 +404,14 @@ is_deeply($response,{'metadata' => { 'datafiles' => [], 'status' => [ {   'messa
 # PUT /observations
 $data = '{ "740336":  { "observationUnitDbId": "41284",  "collector": "Jane Doe", "observationTimeStamp": "2020-01-01T14:47:23-07:00", "observationVariableDbId":"77559", "season": "2011",  "value": "value 5", "observationUnitName" : "CASS_6Genotypes_103", "externalReferences" : [{ "referenceId": "doi:10.155454/5555", "referenceSource" : "DOI" } ], "additionalInfo" : { "year" : "2011" } }}';
 #it need same variable and unit, only updates values or collector
-$resp = $ua->put("http://localhost:3010/brapi/v2/observations/", Content => $data);
+$resp = $mech->put("http://localhost:3010/brapi/v2/observations/", content_type => 'application/json', content => $data);
 $response = decode_json $resp->{_content};
 
 # 19 Test will be fixed when repeted and modified obsverations are allowed
 is_deeply($response, {'metadata' => {'pagination' => {'currentPage' => 0,'totalCount' => 1,'pageSize' => 10,'totalPages' => 1},'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Observations','messageType' => 'INFO'},{'messageType' => 'info','message' => 'Request structure is valid'},{'messageType' => 'info','message' => 'Request data is valid'},{'messageType' => 'info','message' => 'File for incoming brapi obserations saved in archive.'},{'messageType' => 'INFO','message' => 'All values in your file have been successfully processed!<br><br>0 new values stored<br>0 previously stored values skipped<br>1 previously stored values overwritten<br>0 previously stored values removed<br><br>'}]},'result' => {'data' => [{'germplasmName' => 'IITA-TMS-IBA980581','observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16','observationUnitName' => 'CASS_6Genotypes_103','observationTimeStamp' => '2020-01-01T14:47:23-07:00','germplasmDbId' => 41283,'collector' => 'Jane Doe','observationDbId' => 740336,'studyDbId' => 165,'observationLevel' => 'plot','observationUnitDbId' => 41284,'observationVariableDbId' => '77559','value' => 'value 5','uploadedBy' => 'Jane Doe', 'externalReferences' => [{ "referenceId" => "doi:10.155454/5555", "referenceSource" => "DOI" } ], "additionalInfo" => { "year" => "2011" }  }]}}, "PUT observations test");
 
 $data = '{ "observationUnitDbId": 39548,  "collector": "John Doe", "observationTimeStamp": "2023-01-01T14:47:23-06:10", "observationVariableDbId":"70741", "season": "2011",  "value": "500", "externalReferences" : [{ "referenceId": "doi:10.155454/200" , "referenceSource" : "DOI" } ] }';
-$resp = $ua->put("http://localhost:3010/brapi/v2/observations/737987", Content => $data);
+$resp = $mech->put("http://localhost:3010/brapi/v2/observations/737987", content_type=> 'application/json', content => $data);
 $response = decode_json $resp->{_content};
 #print STDERR "\n\n--update" . Dumper$response;
 
@@ -535,7 +537,7 @@ if (defined $image_id) {
     die "Image ID not found for image name 'image_0AA0231.jpg'.\n";
 }
 
-$resp = $ua->put("http://localhost:3010/brapi/v2/images/$image_id", Content => $data);
+$resp = $mech->put("http://localhost:3010/brapi/v2/images/$image_id", content_type => 'application/json', content => $data);
 $response = decode_json $resp->{_content};
 #print STDERR "\n\n" . Dumper$response;
 is_deeply($response->{result}->{data}->[0]->{observationUnitDbId} , '38843');
@@ -566,7 +568,7 @@ is_deeply($response, $expected, "POST observationunits test" );
 #Test observationunits put
 $data = '{ "'.$stock_id.'":  { "observationUnitName":"Testing Plot", "studyDbId": "165","studyName": "CASS_6Genotypes_Sampling_2015", "germplasmDbId": "41281", "germplasmName": "IITA-TMS-IBA011412", "externalReferences" :[], "observationUnitPosition": {"entryType": "TEST", "geoCoordinates": { "geometry": { "coordinates": [ -76.506042, 42.417373, 10 ], "type": "Point" }, "type": "Feature" }, "observationLevel": { "levelName": "plot", "levelOrder": 2, "levelCode": "Plot_123" }, "observationLevelRelationships": [ { "levelCode": "Rep_1", "levelName": "rep", "levelOrder": 0 }, { "levelCode": "Block_12", "levelName": "block", "levelOrder": 1 }, { "levelCode": "Plot_123", "levelName": "plot", "levelOrder": 2 } ], "positionCoordinateX": "74", "positionCoordinateXType": "GRID_COL", "positionCoordinateY": "03", "positionCoordinateYType": "GRID_ROW" }} }';
 
-$resp = $ua->put("http://localhost:3010/brapi/v2/observationunits/", Content => $data);
+$resp = $mech->put("http://localhost:3010/brapi/v2/observationunits/", content_type => 'application/json', content => $data);
 $response = decode_json $resp->{_content};
 is_deeply($response, {'metadata' => {'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'message' => 'Observation Units search result constructed','messageType' => 'INFO'}]},'result' => {'data' => [{'observationUnitDbId' => $stock_id, 'observationUnitPUI' => 'http://localhost:3010/stock/'. $stock_id .'/view', 'locationDbId' => '23','programDbId' => '134','observationUnitName' => 'Testing Plot','locationName' => 'test_location','trialDbId' => '165','studyDbId' => '165','germplasmDbId' => '41281','crossDbId'=>undef,'crossName'=>undef,'observationUnitPosition' => {'positionCoordinateYType' => 'GRID_ROW','observationLevel' => {'levelOrder' => 2,'levelCode' => 'Plot_123','levelName' => 'plot'},'positionCoordinateY' => 3,'observationLevelRelationships' => [{'levelName' => 'rep','levelCode' => 'Rep_1','levelOrder' => 0}, {'levelCode' => 'Block_12','levelOrder' => 1,'levelName' =>'block'},{'levelCode' => 'Plot_123','levelOrder' => 2,'levelName' => 'plot'}],'positionCoordinateX' => 74,'entryType' => 'test','positionCoordinateXType' => 'GRID_COL','geoCoordinates' => {'type' => 'Feature','geometry' => {'coordinates' => ['-76.506042','42.417373',10],'type' => 'Point'}}},'trialName' => 'CASS_6Genotypes_Sampling_2015','studyName' => 'CASS_6Genotypes_Sampling_2015','germplasmName' => 'IITA-TMS-IBA011412','programName' => 'test','treatments' => [{'factor' => 'No ManagementFactor','modality' => undef}],'externalReferences' => [],'observations' => [],'additionalInfo' =>  {'field' => 'Field2'},'seedLotDbId' => undef, 'seedLotName' => undef,'plotImageDbIds' => []}]}}, "observationunits put test");
 
@@ -582,7 +584,7 @@ is_deeply($response,  {'metadata' => {'status' => [{'messageType' => 'INFO','mes
 
 
 $data = '{ "additionalInfo": { "control": 1 }, "germplasmDbId": "41280", "germplasmName": "TMEB693", "locationDbId": "23", "locationName": "test_location", "observationUnitName": "CASS_6Genotypes_202", "observationUnitPUI": "10", "programDbId": "134", "programName": "test", "seedLotDbId": "", "studyDbId": "165", "studyName": "CASS_6Genotypes_Sampling_2015", "treatments": [], "trialDbId": "165", "trialName": "", "observationUnitPosition": {"entryType": "test", "geoCoordinates": { "geometry": { "coordinates": [   -76.506042,   42.417373,   157 ], "type": "Point" }, "type": "Feature" }, "observationLevel": { "levelName": "plot", "levelOrder": 2, "levelCode": "10" }, "observationLevelRelationships": [ { "levelCode": "Rep_2", "levelName": "rep", "levelOrder": 0 }, { "levelCode": "Block_12", "levelName": "block", "levelOrder": 1 }, { "levelCode": "10", "levelName": "plot", "levelOrder": 2 } ], "positionCoordinateX": "75", "positionCoordinateXType": "GRID_COL", "positionCoordinateY": "30", "positionCoordinateYType": "GRID_ROW" }, "externalReferences": [{ "referenceID": "doi:10.155454/12341234", "referenceSource": "DOI" }] }';
-$resp = $ua->put("http://localhost:3010/brapi/v2/observationunits/41300", Content => $data);
+$resp = $mech->put("http://localhost:3010/brapi/v2/observationunits/41300", content_type => 'application/json', content => $data);
 $response = decode_json $resp->{_content};
 #print STDERR "\n\n Observation Unit Response is : " . Dumper $response;
 my $expected = {'metadata' => {'pagination' => {'totalCount' => 1,'pageSize' => 10,'currentPage' => 0,'totalPages' => 1},'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationUnits','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Observation Units search result constructed'}],'datafiles' => []},'result' => {'data' => [{'treatments' => [{'factor' => 'No ManagementFactor','modality' => undef}],'studyName' => 'CASS_6Genotypes_Sampling_2015','trialName' => 'CASS_6Genotypes_Sampling_2015','plotImageDbIds' => [],'observationUnitPosition' => {'observationLevel' => {'levelCode' => '10','levelName' => 'plot','levelOrder' => 2},'positionCoordinateX' => 75,'entryType' => 'test','positionCoordinateY' => 30,'geoCoordinates' => {'geometry' => {'coordinates' => ['-76.506042','42.417373',157],'type' => 'Point'},'type' => 'Feature'},'positionCoordinateXType' => 'GRID_COL','observationLevelRelationships' => [{'levelName' => 'rep','levelCode' => 'Rep_2','levelOrder' => 0}, {'levelOrder' => 1,'levelCode' => 'Block_12','levelName' => 'block'},{'levelCode' => '10','levelName' => 'plot','levelOrder' => 2}],'positionCoordinateYType' => 'GRID_ROW'},'locationDbId' => '23','seedLotDbId' => undef,'studyDbId' => '165','observationUnitPUI' => 'http://localhost:3010/stock/41300/view','additionalInfo' => undef,'externalReferences' => [{ 'referenceId'=> 'doi:10.155454/12341234', 'referenceSource'=> 'DOI' }],'observations' => [],'programName' => 'test','trialDbId' => '165','germplasmName' => 'TMEB693','germplasmDbId' => '41280','crossDbId'=>undef,'crossName'=>undef,'programDbId' => '134','locationName' => 'test_location','seedLotName' => undef,'observationUnitName' => 'CASS_6Genotypes_202','observationUnitDbId' => '41300'}]}};
