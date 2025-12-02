@@ -15,7 +15,7 @@ CXGN::UploadFile - an object to handle uploading files
     timestamp => '2016-09-24_10:30:30',
     user_id => 41,
     user_role => 'curator', ### deprecated, use has_upload_permissions
-    has_upload_permissions => 1, 
+    has_upload_permissions => 1,
  });
  my $uploaded_file = $uploader->archive();
  my $md5 = $uploader->get_md5($uploaded_file);
@@ -82,7 +82,7 @@ has 'user_id' => (isa => "Int",
     required => 0
 );
 
-has 'user_role' => (isa => "Str",
+has 'user_role' => (isa => "Maybe[Str]",
     is => 'rw',
     required => 0
 );
@@ -122,7 +122,7 @@ sub archive {
 	print STDERR "USER ROLE: ".$self->user_role()." HAS UPLOAD PERMISSIONS: ".$self->has_upload_permissions()."\n";
         die  "You have insufficient privileges to archive a file.\n". Dumper $self->user_role;
     }
-    
+
     # if (!$subdirectory || !$tempfile || !$archive_filename ) {
     #     print STDERR "File archive failed: incomplete information to archive file.\n";
     # 	die "File archive failed: incomplete information to archive file.\n";
