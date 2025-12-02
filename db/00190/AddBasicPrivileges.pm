@@ -40,7 +40,7 @@ has '+description' => ( default => <<'' );
 Adds privileges that imitate the old privileges
 
 has '+prereq' => (
-    
+
   );
 
 sub patch {
@@ -102,6 +102,11 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 1, 2);
+
+-- curator for images
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (4, 1, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (4, 1, 2);
 
 -- curator for trials
 
@@ -180,6 +185,11 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 3, 1);
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (1, 3, 2);
+
+-- submitter for images:
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (4, 3, 1);
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (4, 3, 2);
+
 
 -- submitter for phentoyping (read and write):
 
@@ -261,6 +271,11 @@ insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level
 -- user for genotyping
 
 insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (3, 4, 1);
+
+-- user for images
+
+insert into sgn_people.sp_privilege (sp_resource_id, sp_role_id, sp_access_level_id) values (4, 4, 1);
+
 
 -- user for phenotyping
 
