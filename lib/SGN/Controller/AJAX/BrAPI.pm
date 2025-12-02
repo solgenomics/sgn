@@ -4073,12 +4073,11 @@ sub observations_PUT {
     #my $version = $c->request->captures->[0];
     my $version = $c->stash->{brapi_version};
 
-    my ($auth) = _authenticate_user($c, "phenotyping", "write");
+    my ($auth, $user_id, $user_type) = _authenticate_user($c, "phenotyping", "write");
 
     my $brapi_package_result;
     if ($version eq 'v2'){
 #	my $force_authenticate = $c->config->{brapi_observations_require_login};
-	my ($auth,$user_id,$user_type) = _authenticate_user($c, "phenotyping", "write");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my %observations = %$clean_inputs;
 	my @all_observations;
@@ -4463,19 +4462,21 @@ sub observations_search  : Chained('brapi') PathPart('observations-search') Args
 sub observations_search_POST {
 	my $self = shift;
 	my $c = shift;
+	my ($auth) = _authenticate_user($c, "phenotyping", "write");
 	observations_search_process($self, $c);
 }
 
 sub observations_search_GET {
 	my $self = shift;
 	my $c = shift;
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	observations_search_process($self, $c);
 }
 
 sub observations_search_process {
 	my $self = shift;
 	my $c = shift;
-	# my ($auth) = _authenticate_user($c);
+
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Observations');
@@ -4775,6 +4776,7 @@ sub image_search_save  : Chained('brapi') PathPart('search/images') Args(0) : Ac
 sub image_search_save_POST {
     my $self = shift;
     my $c = shift; #print "--\n-" ; print Dumper($self); print "--\n-" ;
+    my ($auth) = _authenticate_user($c, 'images', 'read');
     save_results($self,$c,$c->stash->{clean_inputs},'Images');
 }
 
@@ -4782,6 +4784,7 @@ sub image_search_retrieve : Chained('brapi') PathPart('search/images') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, 'images', 'read');
     retrieve_results($self, $c, $search_id, 'Images');
 }
 
@@ -5122,6 +5125,7 @@ sub variantsets_search_save  : Chained('brapi') PathPart('search/variantsets') A
 sub variantsets_search_save_POST {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     save_results($self,$c,$c->stash->{clean_inputs},'VariantSets');
 }
 
@@ -5129,6 +5133,7 @@ sub variantsets_search_retrieve : Chained('brapi') PathPart('search/variantsets'
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     retrieve_results($self, $c, $search_id, 'VariantSets');
 }
 
@@ -5186,6 +5191,7 @@ sub calls_search_save  : Chained('brapi') PathPart('search/calls') Args(0) : Act
 sub calls_search_save_POST {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     save_results($self,$c,$c->stash->{clean_inputs},'Calls');
 }
 
@@ -5193,6 +5199,7 @@ sub calls_search_retrieve : Chained('brapi') PathPart('search/calls') Args(1) {
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     retrieve_results($self, $c, $search_id, 'Calls');
 }
 
@@ -5278,6 +5285,7 @@ sub referencesets_search  : Chained('brapi') PathPart('search/referencesets') Ar
 sub referencesets_search_POST {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     save_results($self,$c,$c->stash->{clean_inputs},'ReferenceSets');
 }
 
@@ -5285,6 +5293,7 @@ sub referencesets_search_retrieve : Chained('brapi') PathPart('search/references
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     retrieve_results($self, $c, $search_id, 'ReferenceSets');
 }
 
@@ -5370,6 +5379,7 @@ sub reference_search  : Chained('brapi') PathPart('search/references') Args(0) :
 sub reference_search_POST {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     save_results($self,$c,$c->stash->{clean_inputs},'References');
 }
 
@@ -5377,6 +5387,7 @@ sub reference_search_retrieve : Chained('brapi') PathPart('search/references') A
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, 'genotyping', 'read');
     retrieve_results($self, $c, $search_id, 'Referenced');
 }
 
@@ -5761,6 +5772,7 @@ sub pedigree_search  : Chained('brapi') PathPart('search/pedigree') Args(0) : Ac
 sub pedigree_search_POST {
     my $self = shift;
     my $c = shift;
+    my ($auth) = _authenticate_user($c, 'pedigrees', 'read');
     save_results($self,$c,$c->stash->{clean_inputs},'Pedigree');
 }
 
@@ -5768,6 +5780,7 @@ sub pedigree_search_retrieve : Chained('brapi') PathPart('search/pedigree') Args
     my $self = shift;
     my $c = shift;
     my $search_id = shift;
+    my ($auth) = _authenticate_user($c, 'pedigrees', 'read');
     retrieve_results($self, $c, $search_id, 'Pedigree');
 }
 
@@ -5780,15 +5793,15 @@ sub save_results {
     my $search_params = shift;
     my $search_type = shift;
 
-	my %server_permission;
-	my $rc = eval{
-		my $server_permission = $c->config->{"brapi_GET"};
-		my @server_permission  = split ',', $server_permission;
-		%server_permission = map { $_ => 1 } @server_permission;
-	1; };
-	if($rc && !$server_permission{'any'}){
-	    my $auth = _authenticate_user($c);
-	}
+	# my %server_permission;
+	# my $rc = eval{
+	# 	my $server_permission = $c->config->{"brapi_GET"};
+	# 	my @server_permission  = split ',', $server_permission;
+	# 	%server_permission = map { $_ => 1 } @server_permission;
+	# 1; };
+	# if($rc && !$server_permission{'any'}){
+	#     my $auth = _authenticate_user($c);
+	# }
 
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper($search_type);
