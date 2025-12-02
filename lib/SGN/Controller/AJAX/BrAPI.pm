@@ -1721,7 +1721,7 @@ sub allelematrix_GET {
 sub allelematrix_search_process {
     my $self = shift;
     my $c = shift;
-    my ($auth) = _authenticate_user($c,  "genotyping", "search");
+    my ($auth) = _authenticate_user($c, "genotyping", "read");
 
     my $clean_inputs = $c->stash->{clean_inputs};
     my $format = $clean_inputs->{format}->[0];
