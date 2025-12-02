@@ -366,12 +366,12 @@ function process_file(file_data, upload_type) {
             });
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
-        case 'new_progenies' : 
-            //
-            break;
-        case 'existing_progenies' : 
-            //
-            break;
+        // case 'new_progenies' : 
+        //     //
+        //     break;
+        // case 'existing_progenies' : 
+        //     //
+        //     break;
         case 'phenotyping_spreadsheet' : 
             //
             break;
@@ -480,12 +480,12 @@ function display_upload_formats(upload_type) {
         case 'crosses' : 
             jQuery('#cross_spreadsheet_info_dialog').modal("show");
             break;
-        case 'new_progenies' : 
-            //
-            break;
-        case 'existing_progenies' : 
-            //
-            break;
+        // case 'new_progenies' : 
+        //     //
+        //     break;
+        // case 'existing_progenies' : 
+        //     //
+        //     break;
         case 'phenotyping_spreadsheet' : 
             //
             break;
