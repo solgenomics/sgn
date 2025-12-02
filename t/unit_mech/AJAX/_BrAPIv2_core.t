@@ -225,6 +225,14 @@ print STDERR "\n\nlocations call response : " . Dumper \$response;
 $expected = {'result' => {'data' => [{'locationType' => 'Field','externalReferences' => [],'countryCode' => 'PER','instituteName' => '','documentationURL' => undef,'instituteAddress' => '','locationName' => 'Location 2','siteStatus' => undef,'slope' => undef,'exposure' => undef,'coordinateUncertainty' => undef,'abbreviation' => 'L2','additionalInfo' => {'noaa_station_id' => 'PALMIRA','geodetic datum' => undef},'coordinates' => {'type' => 'Feature','geometry' => {'coordinates' => ['-77','42',123],'type' => 'Point'}},'countryName' => 'Peru','environmentType' => undef,'coordinateDescription' => undef,'topography' => undef,'locationDbId' => '25'}]},'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'totalPages' => 1,'pageSize' => 10,'currentPage' => 0},'datafiles' => []}} ;
 is_deeply($response, $expected, "locations search post test"  );
 
+# rename the location to what it was before so that other tests don't trip over it
+#
+my $row = $f->bcs_schema->resultset("NaturalDiversity::NdGeolocation")->find( { description => 'Location 2' });
+$row->description('NA');
+$row->update();
+
+print STDERR "RENAMED LOCATION 2 BACK TO NA\n";
+
 $mech->get_ok('http://localhost:3010/brapi/v2/people');
 $response = decode_json $mech->content;
 print STDERR "\n\n People in the brapi response: " . Dumper $response;
