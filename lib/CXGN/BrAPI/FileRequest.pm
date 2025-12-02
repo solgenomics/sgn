@@ -18,6 +18,7 @@ use File::Spec::Functions;
 use List::MoreUtils qw(uniq);
 use DateTime;
 use CXGN::UploadFile;
+use CXGN::People::Schema;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -33,7 +34,7 @@ has 'user_id' => (
 
 has 'user_type' => (
     is => 'ro',
-    isa => 'Str',
+    isa => 'Maybe[Str]',
     required => 1,
 );
 
@@ -108,6 +109,10 @@ sub observations {
         }
     close $fh;
 
+    my $people_schema = CXGN::People::Schema->connect( sub { return $schema->storage->dbh(); } );
+    my $access = CXGN::Access->new( { schema => $schema, people_schema => $people_schema });
+    my $write_access = $access->grant($user_id, "write", "phenotyping") || $access->grant($user_id, "write", "genotyping") || $access->grant($user_id, "write", "trials");
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -115,7 +120,8 @@ sub observations {
         archive_filename => $archive_filename,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_type
+        user_role => $user_type,
+	has_upload_permissions => $write_access,
     });
     my $archived_filename_with_path = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
