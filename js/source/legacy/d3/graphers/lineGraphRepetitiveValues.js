@@ -19,8 +19,6 @@
 
     exports.drawLineGraph = function(data, container, layout, trait_name, label_observation_unit_name, options) {
 
-        console.log(`repetitive values ${JSON.stringify(options)}`)
-
         // set the default layout for the large graph 
         layout = layout || {
             "width": 800,
@@ -186,65 +184,58 @@
             .text(label_observation_unit_name);
         }
 
-
+        // draw a trendline using ordinary least squares (OLS) regression
         if (options.drawOls) {
-            console.log('drawing OLS line ...');
             allDates = data.map(d => d.date);
-            // uniqueDates = [...new Set(dates)];
             const uniqueDates = [...new Map(allDates.map(d => [d.toDateString(), d])).values()];
-
-            console.log(`dates count: ${allDates.length}`);
-            console.log(`unique dates count: ${uniqueDates.length}`);
-            console.log(`unique dates: ${JSON.stringify(uniqueDates)}`);
 
             const lsData = data.map(function(d, i) {
                 const idx = uniqueDates.findIndex(ud => ud.toDateString() === d.date.toDateString());
                 return [idx, d.value];
             });
 
-            var olsRegression = ss.linear_regression()
-            .data(lsData)
-            .line(); 
-    
-            var lineParams = ss.linear_regression()
+            const olsRegression = ss.linear_regression()
                 .data(lsData)
+                .line(); 
+    
+            const lineParams = ss.linear_regression()
+                .data(lsData);
             
-            var alpha = lineParams.b();
-            alpha     =  Math.round(alpha*100) / 100;
+            let alpha = lineParams.b();
+            alpha =  Math.round(alpha*100) / 100;
             
-            var beta = lineParams.m();
-            beta     = Math.round(beta*100) / 100;
+            let beta = lineParams.m();
+            beta = Math.round(beta*100) / 100;
             
-            var sign; 
+            let sign; 
             if (beta > 0) {
                 sign = ' + ';
             } else {
                 sign = ' - ';
             };
 
-            var equation = `y = ${alpha} ${sign} ${beta}x`; 
+            const equation = `y = ${alpha} ${sign} ${beta}x`; 
 
-            var rq = ss.r_squared(lsData, olsRegression);
-            rq     = Math.round(rq*100) / 100;
-            rq     = `R-squared = ${rq}`;
+            let rq = ss.r_squared(lsData, olsRegression);
+            rq = Math.round(rq*100) / 100;
+            rq = `R\u00B2 = ${rq}`;
 
-            var olsLine = d3.line()
-            .x(function(d) {return x(d[0]); })
-            .y(function(d) {return y(d[1]); })
+            const olsLine = d3.line()
+                .x(function(d) {return x(d[0]); })
+                .y(function(d) {return y(d[1]); })
    
-            var lsPredictions = []; 
-            console.log(`lsData for OLS: ${JSON.stringify(lsData)}`);         
+            let olsPredictions = []; 
             jQuery.each(data, function (i, x)  {
-                const idx = uniqueDates.findIndex(ud => ud.toDateString() === x.date.toDateString());
-                var  y = olsRegression(parseFloat(idx)); 
-                lsPredictions.push([x.date, y]); 
+                let idx = uniqueDates.findIndex(ud => ud.toDateString() === x.date.toDateString());
+                let  predictedValue = olsRegression(parseFloat(idx)); 
+                olsPredictions.push([x.date, predictedValue]); 
         
             });
-            console.log(`ols points: ${JSON.stringify(lsPredictions)}`);
-            olsColor = '#86B404';
+
+            const olsColor = '#86B404';
 
             svg.append("path")
-                .attr("d", olsLine(lsPredictions))
+                .attr("d", olsLine(olsPredictions))
                 .attr('stroke', olsColor)
                 .attr('stroke-width', 2)
                 .attr('fill', 'none');
