@@ -110,8 +110,8 @@ sub BUILD {
 
     my $download_dir = $self->download_dir();
 
-    #chown 1200, 1250, $download_dir;
-    #chmod 0777, $download_dir;
+    chown 1200, 1250, $download_dir;
+    chmod 0777, $download_dir;
     
     my $profile = Selenium::Firefox::Profile->new;
     $profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
@@ -123,14 +123,6 @@ sub BUILD {
     
 
     $self->driver($driver);
-}
-
-END {
-    if ($webdriver_instance && $webdriver_instance->driver) {
-        eval {
-            $webdriver_instance->driver->quit;
-        };
-    }
 }
 
 sub login_as { 

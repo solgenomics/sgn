@@ -16,6 +16,7 @@ jobs:
         PGPASSWORD: postgres
         SGN_TEST_SERVER: http://test_breedbase:3010
         SGN_REMOTE_SERVER_ADDR: selenium
+        PGHOST: breedbase_db
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
