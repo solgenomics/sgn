@@ -168,6 +168,8 @@ $default_seedlot_material_type => undef
 
 <& /file_formats/change_accessions_upload.mas &>
 
+<& /file_formats/entry_numbers_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -390,7 +392,7 @@ function process_file(file_data, upload_type) {
             populate_validate_submit_data(upload_type, file_data);
             break;
         case 'entry_numbers' : 
-            //
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'nirs' : 
             //
@@ -504,7 +506,7 @@ function display_upload_formats(upload_type) {
             jQuery('#change_accessions_upload_file_format').modal("show");
             break;
         case 'entry_numbers' : 
-            //
+            jQuery('#trial_entry_numbers_upload_format').modal("show");
             break;
         case 'nirs' : 
             //
@@ -889,7 +891,8 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'crosses' : "Crosses",
         'gps_polygon' : "GPS coordinate polygons",
         'gps_point' : "GPS coordinate points",
-        'change_accessions' : "Accession swap"
+        'change_accessions' : "Accession swap",
+        'entry_numbers' : "Entry numbers"
     };
 
     display_validate_submit_modal({
