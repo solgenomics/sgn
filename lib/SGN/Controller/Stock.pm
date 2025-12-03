@@ -25,6 +25,7 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Chado::Publication;
 use CXGN::Genotype::DownloadFactory;
+use CXGN::Stock::RelatedStocks;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -272,6 +273,18 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     if ($transgenic_stockprop_rs) {
         $is_a_transgenic_line = $transgenic_stockprop_rs->value();
     }
+
+
+    my $derived_accession_relationship = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $stock_id});
+    my $derived_accession_relationship_info = $derived_accession_relationship->get_derived_accession_relationship();
+    print STDERR "RELATIONSHIP INFO =".Dumper($derived_accession_relationship_info)."\n";
+    if (@$derived_accession_relationship_info) {
+        print STDERR "INFO =".Dumper('yes')."\n";
+    } else {
+        print STDERR "INFO =".Dumper('no')."\n";
+    }
+
+
 
     my $derived_accession_relationship;
     my $related_stock_name;
