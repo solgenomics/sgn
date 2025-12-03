@@ -274,47 +274,22 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $is_a_transgenic_line = $transgenic_stockprop_rs->value();
     }
 
-
-    my $derived_accession_relationship = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $stock_id});
-    my $derived_accession_relationship_info = $derived_accession_relationship->get_derived_accession_relationship();
-    print STDERR "RELATIONSHIP INFO =".Dumper($derived_accession_relationship_info)."\n";
-    if (@$derived_accession_relationship_info) {
-        print STDERR "INFO =".Dumper('yes')."\n";
-    } else {
-        print STDERR "INFO =".Dumper('no')."\n";
-    }
-
-
-
     my $derived_accession_relationship;
-    my $related_stock_name;
-    my $related_stock_id;
     my $related_stock_link;
-    my $derived_accession_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_accession', 'stock_property')->cvterm_id;
-    my $derived_from_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_from', 'stock_relationship')->cvterm_id();
-    my $derived_accession_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $derived_accession_type_id});
-    if ($derived_accession_stockprop_rs) {
-        $derived_accession_relationship = $derived_accession_stockprop_rs->value();
-        if ($derived_accession_relationship eq 'is_a_derived_accession') {
-            my $derived_accession_relationship_rs = $schema->resultset('Stock::StockRelationship')->find({
-                type_id => $derived_from_type_id,
-                subject_id => $stock_id,
-            });
-
-            $related_stock_id = $derived_accession_relationship_rs->object_id();
-        } elsif ($derived_accession_relationship eq 'has_a_derived_accession') {
-            my $derived_accession_relationship_rs = $schema->resultset('Stock::StockRelationship')->find({
-                type_id => $derived_from_type_id,
-                object_id => $stock_id,
-            });
-            $related_stock_id = $derived_accession_relationship_rs->subject_id();
+    my $derived_accession_relationship_obj = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $stock_id});
+    my $derived_accession_relationship_info = $derived_accession_relationship_obj->get_derived_accession_relationship();
+    if (@$derived_accession_relationship_info) {
+        my $derived_from_stock_id = $derived_accession_relationship_info->[0]->[0];
+        my $derived_from_stock_name = $derived_accession_relationship_info->[0]->[1];
+        my $derived_accession_stock_id = $derived_accession_relationship_info->[0]->[3];
+        my $derived_accession_name = $derived_accession_relationship_info->[0]->[4];
+        if ($stock_id == $derived_accession_stock_id) {
+            $derived_accession_relationship = 'is_a_derived_accession';
+            $related_stock_link = qq{<a href="/stock/$derived_from_stock_id/view">$derived_from_stock_name</a>},
+        } elsif ($stock_id == $derived_from_stock_id) {
+            $derived_accession_relationship = 'has_a_derived_accession';
+            $related_stock_link = qq{<a href="/stock/$derived_accession_stock_id/view">$derived_accession_name</a>},
         }
-
-        my $related_stock_rs = $schema->resultset('Stock::Stock')->find({
-                stock_id => $related_stock_id,
-        });
-        $related_stock_name = $related_stock_rs->uniquename();
-        $related_stock_link = qq{<a href="/stock/$related_stock_id/view">$related_stock_name</a>},
     }
 
     my $is_in_trial;

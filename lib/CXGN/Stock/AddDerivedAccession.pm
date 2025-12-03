@@ -92,9 +92,7 @@ sub add_derived_accession {
         my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
         my $offspring_of_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
         my $derived_from_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_from', 'stock_relationship')->cvterm_id();
-        my $derived_accession_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_accession', 'stock_property');
 
-        my $derived_from_stock = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $derived_from_stock_id});
         my $original_stock_info = $self->_get_original_stock_info($derived_from_stock_id);
 
         my $derived_from_stock_type_name = $original_stock_info->{'derived_from_stock_type_name'};
@@ -122,9 +120,6 @@ sub add_derived_accession {
                 subject_id => $derived_accession_stock_id,
                 value => $derived_from_stock_type_name
 			});
-
-            $derived_accession_stock->create_stockprops({$derived_accession_cvterm->name() => 'is_a_derived_accession'});
-            $derived_from_stock->create_stockprops({$derived_accession_cvterm->name() => 'has_a_derived_accession'});
 
             if ($female_parent_stock_id) {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {

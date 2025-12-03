@@ -17,8 +17,8 @@
                             <ul>
                                 <li>List must be accessions, plants or tissue samples list type</li>
                                 <li>Names in the list must exist in the database</li>
-                                <li>The provided derived accession names must not exist in the database</li>
-                                <li>Description provided will be stored as description for the derived accession</li>
+                                <li>Derived accession names must not exist in the database</li>
+                                <li>Description provided will be stored as description for the specify derived accession</li>
                             </ul>
                             <hr>
                             <center>
