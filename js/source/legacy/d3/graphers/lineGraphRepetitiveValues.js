@@ -57,7 +57,7 @@
         // Set the x-axis scale
         var xExtent = d3.extent(data, function(d) { return d.date; });
         var xPadding = 0.05 * (xExtent[1] - xExtent[0]);
-        var x = d3.scaleTime()
+        var xAxisScale = d3.scaleTime()
         .domain([
             d3.timeMillisecond.offset(xExtent[0], -xPadding),
             d3.timeMillisecond.offset(xExtent[1], xPadding)
@@ -65,7 +65,7 @@
         .range([0, width]);
 
         // Set the y-axis scale
-        var y = d3.scaleLinear()
+        var yAxisScale = d3.scaleLinear()
             .domain([d3.min(data, function(d) { return d.value; }), d3.max(data, function(d) {return d.value; })])
             .nice()
             .range([height, 0]);
@@ -75,7 +75,7 @@
         if (options.showXAxis) {
             svg.append("g")
             .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x)
+            .call(d3.axisBottom(xAxisScale)
             .tickFormat(d3.timeFormat("%Y-%m-%d")))
             .selectAll("text")
             .attr("transform", "rotate(-45)") //the labels will be at 45 degree angle because of the space !!
@@ -85,12 +85,12 @@
         // Add y-axis
         if (options.showYAxis) {
             svg.append("g")
-                .call(d3.axisLeft(y));
+                .call(d3.axisLeft(yAxisScale));
         }
 
         var line = d3.line()
-            .x(function(d) {return x(d.date); })
-            .y(function(d) {return y(d.value); })
+            .x(function(d) {return xAxisScale(d.date); })
+            .y(function(d) {return yAxisScale(d.value); })
             .curve(d3.curveMonotoneX); //this will make the line 
 
         // Draw line path
@@ -119,16 +119,16 @@
             // The visible circle (red, radius=4)
             dotsGroup
                 .append("circle")
-                  .attr("cx", function(d) { return x(d.date); })
-                  .attr("cy", function(d) { return y(d.value); })
+                  .attr("cx", function(d) { return xAxisScale(d.date); })
+                  .attr("cy", function(d) { return yAxisScale(d.value); })
                   .attr("r", 4)
                   .attr("fill", "red");
 
             // The invisible circle (bigger radius) to capture hover events
             dotsGroup
             .append("circle")
-                .attr("cx", function(d) { return x(d.date); })
-                .attr("cy", function(d) { return y(d.value); })
+                .attr("cx", function(d) { return xAxisScale(d.date); })
+                .attr("cy", function(d) { return yAxisScale(d.value); })
                 .attr("r", 10)                        // bigger radius
                 .style("fill", "none")
                 .style("pointer-events", "all")       // ensure it can receive events
@@ -221,15 +221,13 @@
             rq = `R\u00B2 = ${rq}`;
 
             const olsLine = d3.line()
-                .x(function(d) {return x(d[0]); })
-                .y(function(d) {return y(d[1]); })
+                .x(function(d) {return xAxisScale(d[0]); })
+                .y(function(d) {return yAxisScale(d[1]); })
    
-            let olsPredictions = []; 
-            jQuery.each(data, function (i, x)  {
-                let idx = uniqueDates.findIndex(ud => ud.toDateString() === x.date.toDateString());
-                let  predictedValue = olsRegression(parseFloat(idx)); 
-                olsPredictions.push([x.date, predictedValue]); 
-        
+            const olsPredictions = data.map(d => {
+                const idx = uniqueDates.findIndex(ud => ud.toDateString() === d.date.toDateString());
+                const predictedValue = olsRegression(Number(idx));
+                return [d.date, predictedValue];
             });
 
             const olsColor = '#86B404';
