@@ -97,7 +97,7 @@ $message_hash = decode_json $message;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 
 my $protocol_id1 = $message_hash->{nd_protocol_id};
 my $project_id1 = $message_hash->{project_id};
@@ -127,7 +127,11 @@ $response = $ua->post(
 
 ok($response->is_success);
 $message = $response->decoded_content;
-$message_hash = decode_json $message;
+eval { $message_hash = decode_json $message };
+if ($@) {
+    diag "Failed to decode JSON: $@";
+    exit 1;
+}
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
 ok($message_hash->{nd_protocol_id});
@@ -168,7 +172,11 @@ $response = $ua->post(
     );
 ok($response->is_success);
 $message = $response->decoded_content;
-$message_hash = decode_json $message;
+eval { $message_hash = decode_json $message };
+if ($@) {
+    die "Failed to decode JSON: $@";
+    exit 1;
+}
 print STDERR Dumper $message_hash;
 
 my ($after_deleting_genotyping_project, $data2) = $genotypes_search->get_genotype_info();

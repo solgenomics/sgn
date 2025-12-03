@@ -1,5 +1,5 @@
 use strict;
-use strict;
+use warnings;
 use lib 't/lib';
 
 use Test::More;
@@ -695,7 +695,7 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	ok($trial_create, "check that trial_create worked");
 	my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->name();
-	ok($project_name eq "Trial_upload_test", "check that trial_create really worked");
+	ok($project_name eq "Trial_upload_with_seedlot_test", "check that trial_create really worked");
 
 	my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
 	ok($project_desc eq "Trial Upload Test", "check that trial_create really worked");
