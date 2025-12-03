@@ -1,4 +1,5 @@
 use strict;
+use strict;
 use lib 't/lib';
 
 use Test::More;
@@ -208,10 +209,10 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	ok($save->{'trial_id'}, "check that trial_create worked");
 	my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->name();
-	ok($project_name == "Trial_upload_test", "check that trial_create really worked");
+	ok($project_name eq "Trial_upload_test", "check that trial_create really worked");
 
 	my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
-	ok($project_desc == "Trial Upload Test", "check that trial_create really worked");
+	ok($project_desc eq "Trial Upload Test", "check that trial_create really worked");
 
 	my $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
 	my $post1_project_diff = $post_project_count - $pre_project_count;
@@ -460,10 +461,10 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	ok($save->{'trial_id'}, "check that trial_create worked");
 	my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->name();
-	ok($project_name == "test_genotyping_trial_upload", "check that trial_create really worked for igd trial");
+	ok($project_name eq "test_genotyping_trial_upload", "check that trial_create really worked for igd trial");
 
 	my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
-	ok($project_desc == "Test Genotyping Plate Upload", "check that trial_create really worked for igd trial");
+	ok($project_desc eq "Test Genotyping Plate Upload", "check that trial_create really worked for igd trial");
 
 	$post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
 	my $post2_project_diff = $post_project_count - $pre_project_count;
@@ -694,10 +695,10 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	ok($trial_create, "check that trial_create worked");
 	my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->name();
-	ok($project_name == "Trial_upload_test", "check that trial_create really worked");
+	ok($project_name eq "Trial_upload_test", "check that trial_create really worked");
 
 	my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
-	ok($project_desc == "Trial Upload Test", "check that trial_create really worked");
+	ok($project_desc eq "Trial Upload Test", "check that trial_create really worked");
 
 	my $post_project_count = $c->bcs_schema->resultset('Project::Project')->search({})->count();
 	my $post1_project_diff = $post_project_count - $pre_project_count;
@@ -1391,7 +1392,7 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	ok($save_with_management_factor->{'trial_id'}, "check that trial_create worked with treatment");
 	my $project_name_with_management_factor = $c->bcs_schema()->resultset('Project::Project')->find({ project_id => $save_with_management_factor->{'trial_id'} })->name();
-	ok($project_name_with_management_factor == "Trial_upload_test_with_management_factor", "check that trial_create really worked");
+	ok($project_name_with_management_factor eq "Trial_upload_test_with_management_factor", "check that trial_create really worked");
 
 	my $trial_with_management_factor = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $save_with_management_factor->{'trial_id'} });
 	my $management_factors = $trial_with_management_factor->get_treatments();
@@ -1605,10 +1606,10 @@ for my $extension ("xls", "xlsx", "csv") {
 
 	ok($save->{'trial_id'}, "check that trial_create worked");
 	my $project_name = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->name();
-	ok($project_name == $trial_name, "check that trial_create really worked");
+	ok($project_name eq $trial_name, "check that trial_create really worked");
 
 	my $project_desc = $c->bcs_schema()->resultset('Project::Project')->search({}, { order_by => { -desc => 'project_id' } })->first()->description();
-	ok($project_desc == "Trial Upload Test Flexible", "check that trial_create really worked");
+	ok($project_desc eq "Trial Upload Test Flexible", "check that trial_create really worked");
 
 	$f->clean_up_db();
 }
