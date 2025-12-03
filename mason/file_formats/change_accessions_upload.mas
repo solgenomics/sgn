@@ -1,0 +1,42 @@
+<div class="modal fade" id="change_accessions_upload_file_format" name="change_accessions_upload_file_format" tabindex="-1" role="dialog" aria-labelledby="changeAccessionsUploadFileFormat">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Upload a CSV file (.csv)</b>
+                    <br/><br/>
+
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <b>Header:</b><br>
+                            The first row (header) must contain the columns 'plot_name' and 'accession_name'.<br>
+                            An optional additional column, 'new_plot_name' can be added to change the plot names:<br>
+
+                            <table style="margin-top: 3%;" class="table table-bordered table-hover">
+                                <tbody>
+                                <tr>
+                                <td>plot_name</td>
+                                <td>accession_name</td>
+                                <td>new_plot_name (optional)</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        
+                            <b>Required columns:</b><br>
+                            <b>plot_name:</b> name of plot to change the accession for<br>
+                            <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
+                            <br><b>Optional column:</b><br>
+                            <b>new_plot_name:</b> new name for plot.<br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

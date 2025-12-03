@@ -18,10 +18,6 @@ $default_seedlot_material_type => undef
     if ($c->user) {
         $user_role = $c->user->get_object()->get_user_type();
     }
-
-    my $cross_additional_info_string = $c->config->{cross_additional_info};
-    my @cross_additional_info = split ',',$cross_additional_info_string;
-    my $additional_info;
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
@@ -168,6 +164,10 @@ $default_seedlot_material_type => undef
 
 <& /file_formats/cross_upload.mas &>
 
+<& /file_formats/gps_upload.mas &>
+
+<& /file_formats/change_accessions_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -253,12 +253,12 @@ function upload_type_options() {
         "<option value='seedlot_transaction'>Seedlot Transaction</option>"+
         "<option value='pedigrees'>Pedigrees</option>"+
         "<option value='crosses'>Crosses</option>"+
-        "<option value='new_progenies'>New Progeny Names</option>" +
-        "<option value='existing_progenies'>Existing Progeny Names</option>"+
+        // "<option value='new_progenies'>New Progeny Names</option>" +
+        // "<option value='existing_progenies'>Existing Progeny Names</option>"+
         "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
         "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
         "<option value='treatments'>Treatments</option>"+
-        "<option value='gps_coords'>GPS Coordinates</option>"+
+        "<option value='gps_coords'>Plot GPS Coordinates</option>"+
         "<option value='change_accessions'>Accession Swap</option>" +
         "<option value='entry_numbers'>Entry Numbers</option>" +
         "<option value='nirs'>NIRS</option>" +
@@ -382,10 +382,12 @@ function process_file(file_data, upload_type) {
             //
             break;
         case 'gps_coords' : 
-            //
+            display_gps_upload_options();
+            jQuery('#gps_upload_next_btn').on('click', {file_data : file_data}, populate_gps_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'change_accessions' : 
-           //
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'entry_numbers' : 
             //
@@ -496,10 +498,10 @@ function display_upload_formats(upload_type) {
             //
             break;
         case 'gps_coords' : 
-            //
+            jQuery('#upload_plot_gps_spreadsheet_info_dialog').modal("show");
             break;
         case 'change_accessions' : 
-            //
+            jQuery('#change_accessions_upload_file_format').modal("show");
             break;
         case 'entry_numbers' : 
             //
@@ -837,6 +839,22 @@ function display_cross_upload_choices() {
     );
 }
 
+function display_gps_upload_options() {
+    jQuery('#upload_type_choices_div').html(
+        '<div class="form-group">' + 
+            '<label class="col-sm-3 control-label">Coordinates Type: </label>' + 
+            '<div class="col-sm-9">' + 
+                '<select class="form-control" id="upload_gps_coordinate_type" name="upload_gps_coordinate_type">' + 
+                    '<option value="polygon">Polygon</option>' + 
+                    '<option value="point">Point</option>' + 
+                '</select>'+ 
+            '</div>' + 
+        '</div>' + 
+        '<br>' + 
+        '<button id="gps_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -868,7 +886,10 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'exist_to_plots' : "Transact existing seedlots to plots",
         'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
         'pedigrees' : "Pedigrees",
-        'crosses' : "Crosses"
+        'crosses' : "Crosses",
+        'gps_polygon' : "GPS coordinate polygons",
+        'gps_point' : "GPS coordinate points",
+        'change_accessions' : "Accession swap"
     };
 
     display_validate_submit_modal({
@@ -1060,6 +1081,16 @@ function populate_cross_validate_submit_data(event) {
         crossing_experiment_id : cross_exp_id,
         crossing_experiment_name : cross_exp_name
     });
+}
+
+function populate_gps_validate_submit_data(event) { 
+    let file_data = event.data.file_data;
+    let coord_type = jQuery('#upload_gps_coordinate_type').val();
+    if (coord_type == "polygon") { 
+        populate_validate_submit_data("gps_polygon", file_data);
+    } else {
+        populate_validate_submit_data("gps_point", file_data);
+    }
 }
 
 function submit_file_validation(options) {
