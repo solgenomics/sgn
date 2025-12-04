@@ -170,6 +170,10 @@ $default_seedlot_material_type => undef
 
 <& /file_formats/entry_numbers_upload.mas &>
 
+<& /file_formats/phenotype_upload.mas &>
+
+<& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -259,7 +263,8 @@ function upload_type_options() {
         // "<option value='existing_progenies'>Existing Progeny Names</option>"+
         "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
         "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
-        "<option value='treatments'>Treatments</option>"+
+        "<option value='datacollector_spreadsheet'>Datacollector Spreadsheet</option>"+
+        "<option value='treatments' disabled>Treatments</option>"+
         "<option value='gps_coords'>Plot GPS Coordinates</option>"+
         "<option value='change_accessions'>Accession Swap</option>" +
         "<option value='entry_numbers'>Entry Numbers</option>" +
@@ -380,6 +385,9 @@ function process_file(file_data, upload_type) {
         case 'fieldbook_phenotypes' : 
             //
             break;
+        case 'datacollector_spreadsheet' : 
+            //
+            break;
         case 'treatments' : 
             //
             break;
@@ -491,7 +499,10 @@ function display_upload_formats(upload_type) {
         //     //
         //     break;
         case 'phenotyping_spreadsheet' : 
-            //
+            jQuery('#phenotype_upload_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'datacollector_spreadsheet' : 
+            jQuery('#phenotype_upload_datacollector_info_dialog').modal("show");
             break;
         case 'fieldbook_phenotypes' : 
             //
@@ -1156,7 +1167,7 @@ jQuery(document).ready(function(){
     jQuery(document).on('change', '.upload-type-select', function() {
         let file_id = jQuery(this).attr('id').replace('upload_select_type_', '');
         let upload_type = jQuery("#upload_select_type_"+file_id).val();
-        if (upload_type != "null_choice") {
+        if (upload_type != "null_choice" && upload_type != "fieldbook_phenotypes") {
             jQuery('#check_format_'+file_id).prop('disabled', false);
         } else {
             jQuery('#check_format_'+file_id).prop('disabled', true);
