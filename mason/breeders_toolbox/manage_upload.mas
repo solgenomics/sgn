@@ -176,6 +176,8 @@ $default_seedlot_material_type => undef
 
 <& /file_formats/high_dimensional_phenotype_upload.mas &>
 
+<& /file_formats/image_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -542,7 +544,7 @@ function display_upload_formats(upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'images' : 
-            //
+            jQuery('#upload_images_info_dialog').modal("show");
             break;
         case 'soil_data' : 
             //
