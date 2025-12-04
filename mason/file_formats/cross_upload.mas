@@ -71,3 +71,138 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="upload_progenies_new_spreadsheet_info_dialog" name="upload_progenies_new_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesNewInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
+                    </b>
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>progeny_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <br>
+                        <b>-cross_unique_id</b> (must exist in the database)
+                    <br>
+                        <b>-progeny_name</b> (accession names must NOT already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_progenies_exist_spreadsheet_info_dialog" name="upload_progenies_exist_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadProgeniesInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadProgeniesExistInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Progenies of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
+                    </b>
+                    <br><br>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>progeny_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>
+                        Required columns:
+                    </b>
+                    <br>
+                        <b>-cross_unique_id</b> (must exist in the database)
+                    <br>
+                        <b>-progeny_name</b> (accession names must already EXIST in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                    <br>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="upload_family_name_spreadsheet_info_dialog" name="upload_family_name_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadFamilyNameInfoDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadFamilyNameInfoDialog">Template Information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>
+                        Family Name of existing crosses may be uploaded in an Excel file (.xls or .xlsx)
+                    </b>
+                    <br>
+                    <b>Family Types:</b>
+                        <ul>
+                            <li>same parents (the family includes only crosses with the same female parent and the same male parent)</li>
+                            <li>reciprocal parents (the family includes reciprocal crosses)</li>
+                            (All families in the same file must have the same family type.)
+                        </ul>
+                    <b>
+                        Header:
+                    </b>
+                    <br>
+                        The first row (header) must contain the following:
+                    <br>
+                    <table class="table table-bordered table-hover">
+                        <tbody>
+                            <tr>
+                                <td>cross_unique_id</td>
+                                <td>family_name</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required columns:</b>
+                    <ul>
+                        <li>cross_unique_id (must exist in the database)</li>
+                        <li>family_name (may be new family name or family name already stored in the database. If you would like to use family name previously stored in the database, please check the name carefully)</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

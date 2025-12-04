@@ -174,6 +174,8 @@ $default_seedlot_material_type => undef
 
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 
+<& /file_formats/high_dimensional_phenotype_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -259,8 +261,9 @@ function upload_type_options() {
         "<option value='seedlot_transaction'>Seedlot Transaction</option>"+
         "<option value='pedigrees'>Pedigrees</option>"+
         "<option value='crosses'>Crosses</option>"+
-        // "<option value='new_progenies'>New Progeny Names</option>" +
-        // "<option value='existing_progenies'>Existing Progeny Names</option>"+
+        "<option value='new_progenies'>New Progeny Names</option>" +
+        "<option value='existing_progenies'>Existing Progeny Names</option>"+
+        "<option value='family_names'>Cross Family Names</option>" + 
         "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
         "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
         "<option value='datacollector_spreadsheet'>Datacollector Spreadsheet</option>"+
@@ -373,12 +376,15 @@ function process_file(file_data, upload_type) {
             });
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
-        // case 'new_progenies' : 
-        //     //
-        //     break;
-        // case 'existing_progenies' : 
-        //     //
-        //     break;
+        case 'new_progenies' : 
+            //
+            break;
+        case 'existing_progenies' : 
+            //
+            break;
+        case 'family_names' : 
+            //
+            break;
         case 'phenotyping_spreadsheet' : 
             //
             break;
@@ -492,12 +498,15 @@ function display_upload_formats(upload_type) {
         case 'crosses' : 
             jQuery('#cross_spreadsheet_info_dialog').modal("show");
             break;
-        // case 'new_progenies' : 
-        //     //
-        //     break;
-        // case 'existing_progenies' : 
-        //     //
-        //     break;
+        case 'new_progenies' : 
+            jQuery('#upload_progenies_new_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'existing_progenies' : 
+            jQuery('#upload_progenies_exist_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'family_names' : 
+            jQuery('#upload_family_name_spreadsheet_info_dialog').modal("show");
+            break;
         case 'phenotyping_spreadsheet' : 
             jQuery('#phenotype_upload_spreadsheet_info_dialog').modal("show");
             break;
@@ -505,10 +514,10 @@ function display_upload_formats(upload_type) {
             jQuery('#phenotype_upload_datacollector_info_dialog').modal("show");
             break;
         case 'fieldbook_phenotypes' : 
-            //
+            // nothing, there is no file format since the file has to be exported from the fieldbook app.
             break;
         case 'treatments' : 
-            //
+            // not implemented yet, need to wait for treatments to merge into master branch. 
             break;
         case 'gps_coords' : 
             jQuery('#upload_plot_gps_spreadsheet_info_dialog').modal("show");
@@ -520,13 +529,17 @@ function display_upload_formats(upload_type) {
             jQuery('#trial_entry_numbers_upload_format').modal("show");
             break;
         case 'nirs' : 
-            //
+            jQuery('#upload_nirs_spreadsheet_info_dialog').modal("show");
             break;
         case 'metabolomics' : 
-            //
+            display_metabolomics_upload_choices();
+            jQuery('#metabolomics_upload_type_choice_select').on('change', display_metabolomics_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'transcriptomics' : 
-            //
+            display_transcriptomics_upload_choices();
+            jQuery('#transcriptomics_upload_type_choice_select').on('change', display_transcriptomics_upload_formats);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'images' : 
             //
@@ -678,6 +691,26 @@ function display_seedlot_transaction_upload_formats() {
             break;
         default :
             break;
+    }
+    return;
+}
+
+function display_metabolomics_upload_formats() {
+    let file_type = jQuery('#metabolomics_upload_type_choice_select').val();
+    if (file_type == "metabolomics_spreadsheet"){
+        jQuery('#upload_metabolomics_spreadsheet_info_dialog').modal("show");
+    } else if (file_type == "metabolite_details") {
+        jQuery('#upload_transcriptomics_metabolite_details_spreadsheet_info_dialog').modal("show");
+    }
+    return;
+}
+
+function display_transcriptomics_upload_formats() {
+    let file_type = jQuery('#transcriptomics_upload_type_choice_select').val();
+    if (file_type == "transcriptomics_spreadsheet"){
+        jQuery('#upload_transcriptomics_spreadsheet_info_dialog').modal("show");
+    } else if (file_type == "transcript_details") {
+        jQuery('#upload_transcriptomics_transcript_details_spreadsheet_info_dialog').modal("show");
     }
     return;
 }
@@ -865,6 +898,44 @@ function display_gps_upload_options() {
         '</div>' + 
         '<br>' + 
         '<button id="gps_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
+function display_metabolomics_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<div class="form-group">' + 
+            '<label class="col-sm-7 control-label">There are two metabolomics files uploaded at once: </label>' + 
+            '<div class="col-sm-5">' + 
+                '<select class="form-control" id="metabolomics_upload_type_choice_select" name="metabolomics_upload_type_choice_select">' + 
+                    '<option value>Select...</option>' + 
+                    '<option value="metabolomics_spreadsheet">Metabolomics spreadsheet</option>' + 
+                    '<option value="metabolite_details">Metabolite details</option>' + 
+                '</select>'+ 
+            '</div>' + 
+        '</div>' + 
+        '<br>' + 
+        '<div id="metabolomics_upload_next_btn_div" hidden>' + 
+        '   <button id="metabolomics_upload_next_btn" class="btn btn-primary">Next</button>' + 
+        '</div>'
+    );
+}
+
+function display_transcriptomics_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<div class="form-group">' + 
+            '<label class="col-sm-7 control-label">There are two transcriptomics files uploaded at once: </label>' + 
+            '<div class="col-sm-5">' + 
+                '<select class="form-control" id="transcriptomics_upload_type_choice_select" name="transcriptomics_upload_type_choice_select">' + 
+                    '<option value>Select...</option>' + 
+                    '<option value="transcriptomics_spreadsheet">Transcriptomics spreadsheet</option>' + 
+                    '<option value="transcript_details">Transcript details</option>' + 
+                '</select>'+ 
+            '</div>' + 
+        '</div>' + 
+        '<br>' + 
+        '<div id="transcriptomics_upload_next_btn_div" hidden>' + 
+        '   <button id="transcriptomics_upload_next_btn" class="btn btn-primary">Next</button>' + 
+        '</div>'
     );
 }
 
