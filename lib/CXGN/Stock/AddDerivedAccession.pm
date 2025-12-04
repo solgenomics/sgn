@@ -121,28 +121,43 @@ sub add_derived_accession {
                 value => $derived_from_stock_type_name
 			});
 
-            if ($female_parent_stock_id) {
+            if (($original_stock_type eq 'cross') || ($original_stock_type eq 'family_name')) {
+                if ($female_parent_stock_id) {
+                    $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
+                        type_id => $female_parent_cvterm_id,
+                        object_id => $derived_accession_stock_id,
+                        subject_id => $female_parent_stock_id,
+                        value => $cross_type,
+                    });
+                }
+
+                if ($male_parent_stock_id) {
+                    $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
+                        type_id => $male_parent_cvterm_id,
+                        object_id => $derived_accession_stock_id,
+                        subject_id => $male_parent_stock_id,
+                    });
+                }
+
+                if ($original_stock_type eq 'cross') {
+                    $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
+                        type_id => $offspring_of_cvterm_id,
+                        object_id => $original_stock_id,
+                        subject_id => $derived_accession_stock_id,
+                    });
+                }
+            } elsif ($original_stock_type eq 'accession') {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
                     type_id => $female_parent_cvterm_id,
                     object_id => $derived_accession_stock_id,
-                    subject_id => $female_parent_stock_id,
-                    value => $cross_type,
+                    subject_id => $original_stock_id,
+                    value => 'derived',
                 });
-            }
 
-            if ($male_parent_stock_id) {
                 $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
                     type_id => $male_parent_cvterm_id,
                     object_id => $derived_accession_stock_id,
-                    subject_id => $male_parent_stock_id,
-                });
-            }
-
-            if ($original_stock_type eq 'cross') {
-                $derived_accession_stock->find_or_create_related('stock_relationship_objects', {
-                    type_id => $offspring_of_cvterm_id,
-                    object_id => $original_stock_id,
-                    subject_id => $derived_accession_stock_id,
+                    subject_id => $original_stock_id,
                 });
             }
         }
@@ -221,6 +236,7 @@ sub _get_original_stock_info {
         my $h1 = $schema->storage->dbh()->prepare($q1);
         $h1->execute($female_parent_cvterm_id, $male_parent_cvterm_id, $original_stock_id);
         ($female_parent_stock_id, $cross_type, $male_parent_stock_id) = $h1->fetchrow_array();
+
     } elsif (($derived_from_stock_type_id == $plant_cvterm_id) || ($derived_from_stock_type_id == $tissue_sample_cvterm_id)) {
         my $q2 = "SELECT stock.stock_id, cvterm.name, female_parent.subject_id, female_parent.value, male_parent.subject_id
             FROM stock
