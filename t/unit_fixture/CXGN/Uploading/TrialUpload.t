@@ -1395,25 +1395,27 @@ for my $extension ("xls", "xlsx", "csv") {
 	ok($project_name_with_management_factor eq "Trial_upload_test_with_management_factor", "check that trial_create really worked");
 
 	my $trial_with_management_factor = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $save_with_management_factor->{'trial_id'} });
+
 	my $management_factors = $trial_with_management_factor->get_treatments();
 	#print STDERR Dumper $management_factors;
-	is(scalar(@$management_factors), 2);
 
-	my $trial_management_factor1 = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $management_factors->[0]->[0] });
-	my $management_factor_name1 = $trial_management_factor1->name();
-	#print STDERR Dumper $management_factor_name1;
-	is($management_factor_name1, "Trial_upload_test_with_management_factor_fert_factor1");
-	my $management_factor_plots1 = $trial_management_factor1->get_plots();
-	#print STDERR Dumper $management_factor_plots1;
-	is(scalar(@$management_factor_plots1), 6);
+        my @treatments = @$management_factors;
 
-	my $trial_management_factor2 = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $management_factors->[1]->[0] });
-	my $management_factor_name2 = $trial_management_factor2->name();
-	#print STDERR Dumper $management_factor_name2;
-	is($management_factor_name2, "Trial_upload_test_with_management_factor_manage_factor2");
-	my $management_factor_plots2 = $trial_management_factor2->get_plots();
-	#print STDERR Dumper $management_factor_plots2;
-	is(scalar(@$management_factor_plots2), 3);
+        my %trial_by_name;
+        for my $row (@treatments) {
+            my ($trial_id, $trial_name) = @$row;
+            my $trial = CXGN::Trial->new({ bcs_schema => $c->bcs_schema, trial_id => $trial_id });
+            $trial_by_name{$trial_name} = $trial;
+        }
+
+        ok(exists $trial_by_name{"Trial_upload_test_with_management_factor_fert_factor1"},"fert_factor1 trial exists");
+        ok(exists $trial_by_name{"Trial_upload_test_with_management_factor_manage_factor2"},"manage_factor2 trial exists");
+
+        my $plots1 = $trial_by_name{"Trial_upload_test_with_management_factor_fert_factor1"}->get_plots();
+        is(scalar(@$plots1), 6, "fert_factor1 has 6 plots");
+
+        my $plots2 = $trial_by_name{"Trial_upload_test_with_management_factor_manage_factor2"}->get_plots();
+        is(scalar(@$plots2), 3, "manage_factor2 has 3 plots");
 
 	#test deleting genotyping project with genotyping plate
 	my $schema = $f->bcs_schema();
