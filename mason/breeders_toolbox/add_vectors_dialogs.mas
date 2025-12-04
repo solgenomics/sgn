@@ -71,65 +71,6 @@ $editable_stock_props_definitions
   </div>
 </div>
 
-<div class="modal fade" id="vectors_upload_spreadsheet_format_modal" name="vectors_upload_spreadsheet_format_modal" tabindex="-1" role="dialog" aria-labelledby="uploadVectorsInfoDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadVectorsInfoDialog">Upload Vectors Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>Vectors may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br /><br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>uniquename </td>
-                                <td>species_name</td>
-%  foreach my $editable_stockprop (@$editable_vector_props) {
-%                               print "<td>$editable_stockprop</td>";
-% }
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Comma Separated Fields:</b>
-                    <ul>
-                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: 
-                    </li>
-                    </ul>
-
-                    <b>Required Fields:</b>
-                    <ul>
-                    <li>name (must be unique)</li>
-                    <li>species_name (must exist in the database)</li>
-                    </ul>
-                    <b>Optional Fields:</b>
-                    <ul>
-%  foreach my $editable_stockprop (@$editable_vector_props) {
-%    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
-%                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
-%    } else {
-%                   print "<li>$editable_stockprop (no definition available)</li>";
-%    }
-%  }
-                    </ul>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="review_absent_dialog" name="review_absent_dialog" tabindex="-1" role="dialog" aria-labelledby="reviewAbsentDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
@@ -231,6 +172,8 @@ $editable_stock_props_definitions
 <form id="add_vector_fuzzy_match_download" method="post" action="/ajax/accession_list/fuzzy_download" target="TheWindow">
     <input type="hidden" name="fuzzy_response" value="" />
 </form>
+
+<& /file_formats/vector_upload.mas, editable_vector_props => $editable_vector_props, editable_stock_props_definitions => $editable_stock_props_definitions &>
 
 <style>
 .ui-autocomplete {

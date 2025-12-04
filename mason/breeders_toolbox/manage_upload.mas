@@ -11,6 +11,7 @@ $facilities => ()
 $management_factor_types => ()
 $design_types => ()
 $default_seedlot_material_type => undef
+$editable_vector_props
 </%args>
 
 <%perl>
@@ -178,6 +179,10 @@ $default_seedlot_material_type => undef
 
 <& /file_formats/image_upload.mas &>
 
+<& /file_formats/soil_data_upload.mas &>
+
+<& /file_formats/vector_upload.mas, editable_vector_props => $editable_vector_props, editable_stock_props_definitions => $editable_stock_props_definitions &>
+
 <script>
 
 function load_archived_files_table() {
@@ -257,7 +262,7 @@ function upload_type_options() {
         "<option value='genotyping_data'>Genotyping Data</option>"+
         "<option value='locations'>Locations</option>"+
         "<option value='accessions'>Accessions</option>"+
-        "<option value='populations'>Populations</option>"+
+        //"<option value='populations'>Populations</option>"+
         "<option value='seedlots'>Seedlots</option>"+
         "<option value='seedlot_inventory'>Seedlot Inventory</option>"+
         "<option value='seedlot_transaction'>Seedlot Transaction</option>"+
@@ -336,9 +341,9 @@ function process_file(file_data, upload_type) {
             jQuery('#accession_upload_choices_next_btn').on('click', {file_data : file_data}, populate_accession_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
-        case 'populations' : 
-            //
-            break;
+        // case 'populations' : 
+        //     //
+        //     break;
         case 'seedlots' : 
             display_seedlot_upload_choices();
             jQuery('.seedlot-upload-options').each(function() {
@@ -478,9 +483,9 @@ function display_upload_formats(upload_type) {
         case 'accessions' : 
             jQuery('#accessions_upload_spreadsheet_format_modal').modal("show");
             break;
-        case 'populations' : 
-            //
-            break;
+        // case 'populations' : 
+        //     //
+        //     break;
         case 'seedlots' : 
             display_seedlot_upload_choices();
             jQuery('#upload_seedlots_type_select').on('change', display_seedlot_upload_formats);
@@ -547,10 +552,10 @@ function display_upload_formats(upload_type) {
             jQuery('#upload_images_info_dialog').modal("show");
             break;
         case 'soil_data' : 
-            //
+            jQuery('#upload_soil_data_spreadsheet_format_dialog').modal("show");
             break;
         case 'vectors' : 
-            //
+            jQuery('#vectors_upload_spreadsheet_format_modal').modal("show");
             break;
         case 'subplots' : 
             display_subplot_upload_choices();

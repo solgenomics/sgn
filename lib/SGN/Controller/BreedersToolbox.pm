@@ -412,6 +412,8 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my $default_seedlot_material_type = $c->config->{default_seedlot_material_type};
 
+    my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
+
     $c->stash->{sp_person_id} = $sp_person_id;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
@@ -425,6 +427,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     $c->stash->{preferred_species} = $c->config->{preferred_species};
     $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
     $c->stash->{default_seedlot_material_type} = $default_seedlot_material_type;
+    $c->stash->{editable_vector_props} = \@editable_vector_props;
 }
 
 sub manage_file_share_dump :Path("/breeders/file_share_dump") Args(0) {
