@@ -276,14 +276,26 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 
     my $derived_accession_relationship;
     my $related_stock_link;
+    my $original_stock_link;
     my $derived_accession_relationship_obj = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $stock_id});
     my $derived_accession_relationship_info = $derived_accession_relationship_obj->get_derived_accession_relationship();
     if (@$derived_accession_relationship_info) {
         my $derived_from_stock_id = $derived_accession_relationship_info->[0]->[0];
         my $derived_from_stock_name = $derived_accession_relationship_info->[0]->[1];
+        my $derived_from_stock_type = $derived_accession_relationship_info->[0]->[2];
         my $derived_accession_stock_id = $derived_accession_relationship_info->[0]->[3];
         my $derived_accession_name = $derived_accession_relationship_info->[0]->[4];
         if ($stock_id == $derived_accession_stock_id) {
+            if (($derived_from_stock_type eq 'plant') || ($derived_from_stock_type eq 'tissue_sample')) {
+                my $original_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $derived_from_stock_id});
+                my $original_stock_info = $original_stock->get_original_derived_from_stock();
+                my $original_stock_id = $original_stock_info->{'original_stock_id'};
+                my $original_stock_name = $original_stock_info->{'original_stock_name'};
+                my $original_stock_type = $original_stock_info->{'original_stock_type'};
+                
+
+            }
+
             $derived_accession_relationship = 'is_a_derived_accession';
             $related_stock_link = qq{<a href="/stock/$derived_from_stock_id/view">$derived_from_stock_name</a>},
         } elsif ($stock_id == $derived_from_stock_id) {

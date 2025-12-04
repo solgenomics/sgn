@@ -350,7 +350,34 @@ sub get_derived_accession_relationship {
     return\@derived_accession_relationship_info;
 }
 
+sub get_original_derived_from_stock {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+    my %original_stock_info;
 
+    my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock_relationship.type_id IN (?,?)
+        JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+        WHERE stock_relationship.subject_id = ? AND stock.type_id IN (?,?,?) ";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $stock_id, $accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id);
+    my ($original_stock_id, $original_stock_name, $original_stock_type) = $h->fetchrow_array();
+
+    $original_stock_info{'original_stock_id'} = $original_stock_id;
+    $original_stock_info{'original_stock_name'} = $original_stock_name;
+    $original_stock_info{'original_stock_type'} = $original_stock_type;
+
+    return \%original_stock_info;
+}
 
 
 1;
