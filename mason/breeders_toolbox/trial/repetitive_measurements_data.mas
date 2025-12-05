@@ -308,7 +308,7 @@ jQuery(document).ready(function() {
                 };
             }
             var dateOnly = parseDateIgnoreTimeZone(item.observationTimeStamp);
-            console.log(`unique_id_accession: ${observation_units_map[item.germplasmName]}`)
+            //console.log(`unique_id_accession: ${observation_units_map[item.germplasmName]}`)
             observation_units_map[unique_key].values.push({
 				value: parseFloat(item.value),
 				date: dateOnly
@@ -319,10 +319,10 @@ jQuery(document).ready(function() {
         var end_date = new Date(jQuery('#repetitive_measurement_end_date').val());
 
         var observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
-        console.log(`Observation Level: ${observation_level}`)
-        console.log("the trait is: ", trait_name);
-        console.log("the start date of this trait is: ", start_date);
-        console.log("the end date of this trait is: ", end_date);
+        //console.log(`Observation Level: ${observation_level}`)
+        //console.log("the trait is: ", trait_name);
+        //console.log("the start date of this trait is: ", start_date);
+        //console.log("the end date of this trait is: ", end_date);
 
         /*
 		just a note:if user select the 'all values' option in the UI, the output values will be separated by comma ",".
@@ -330,7 +330,7 @@ jQuery(document).ready(function() {
 		*/
 
         for (var unique_id in observation_units_map) {
-            console.log(`unique_id: ${unique_id}`)
+            //console.log(`unique_id: ${unique_id}`)
             var group = observation_units_map[unique_id];
             //sort the repetitive values arrray by collect_date!!
             group.values.sort((a, b) => a.date - b.date);
@@ -425,16 +425,14 @@ jQuery(document).ready(function() {
 			var group = observation_units_map[observationUnitKey];
 			var graph_data = group.values;
             var label_observation_unit_name = group.observationUnitName;
-			var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
-
+            var trait_name = jQuery('#select_trait_for_repetitive_data_and_plot').find(":selected").text();
+            
 			open_large_graph(graph_data, trait_name, label_observation_unit_name);
 		});
 	}
 
 	//here, the larger graph function, it has all the graph info - titles, axis labels and will open in the new window !!
 	function open_large_graph(data, trait_name, label_observation_unit_name) {
-		//use trait_name for the title of the graph 
-        //console.log("all values in the data object:", data);
 		jQuery('#title_trait_name').text(trait_name);
 		//clear any previous content
 		jQuery('#large_graph_container').html('');
