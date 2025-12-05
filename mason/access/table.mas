@@ -37,13 +37,8 @@
 }
 </style>
 
-
-
-
-<& /page/page_title.mas, title => 'Access table' &>
-  
-
-    
+<& /page/page_title.mas, title => 'Manage Role Privileges' &>
+      
   <div id="add_new_privilege_modal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -112,10 +107,12 @@
       </div>
     </div>
   </div>
-  
-  
+
+<div style="float:right">
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_new_role_modal" id="add_new_role_button">Add new role</button> &nbsp;
     
   <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_new_privilege_modal" id="add_new_privilege_button" >Add new privilege</button>
+  </div>
   <br />
   <br />
 
