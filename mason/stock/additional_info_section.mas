@@ -24,7 +24,9 @@ $original_stock_link
         </br>
         <b>Direct Source: </b><% $related_stock_link %>
         </br>
+% if ($original_stock_link) {
         <b>Original Source: </b><% $original_stock_link %>
+% }
 % } elsif ($derived_accession_relationship eq 'has_a_derived_accession') {
         <b>Derived Accession: </b>
         <br/>
