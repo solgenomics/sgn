@@ -46,9 +46,9 @@ $editable_vector_props
                 <div style="display:flex;justify-content:flex-end;">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Archive a file: </label>
+                            <label class="col-sm-4 control-label">Archive files: </label>
                             <div class="col-sm-6">
-                                <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file" encoding="multipart/form-data" enctype="multipart/form-data">
+                                <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file[]" multiple>
                             </div>
                             <div class="col-sm-2">
                                 <button type="submit" class="btn btn-primary" id="upload_factory_new_file_btn"><span class="glyphicon glyphicon-floppy-open"></span></button>
@@ -384,13 +384,15 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'new_progenies' : 
-            //
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'existing_progenies' : 
-            //
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'family_names' : 
-            //
+            display_family_names_upload_choices();
+            jQuery('#family_names_upload_next_btn').on('click', {file_data:file_data}, populate_family_names_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'phenotyping_spreadsheet' : 
             //
@@ -946,6 +948,23 @@ function display_transcriptomics_upload_choices() {
     );
 }
 
+function display_family_names_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<div class="form-group">'+
+            '<label class="col-sm-3 control-label">Family Type: </label>'+
+            '<div class="col-sm-8">'+
+                '<select class="form-control" id="family_type_option">'+
+                    '<option value>Select a family type</option>'+
+                    '<option value="same_parents">Include only crosses with the same female parent and the same male parent</option>'+
+                    '<option value="reciprocal_parents">Include reciprocal crosses</option>'+
+                '</select>'+
+            '</div>'+
+        '</div>'+
+        '<br><br>' + 
+        '<button id="family_names_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -981,7 +1000,10 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'gps_polygon' : "GPS coordinate polygons",
         'gps_point' : "GPS coordinate points",
         'change_accessions' : "Accession swap",
-        'entry_numbers' : "Entry numbers"
+        'entry_numbers' : "Entry numbers",
+        'new_progenies' : 'Progeny relationships for new accessions',
+        'existing_progenies' : 'Progeny relationships for existing accessions',
+        'family_names' : 'Family names of existing crosses'
     };
 
     display_validate_submit_modal({
@@ -1185,6 +1207,17 @@ function populate_gps_validate_submit_data(event) {
     }
 }
 
+function populate_family_names_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let family_type = jQuery('#family_type_option').val();
+    if (family_type != "same_parents" && family_type != "reciprocal_parents") {
+        alert("Select a family type.");
+        return;
+    } 
+
+    populate_validate_submit_data('family_names', file_data, {family_type : family_type});
+}
+
 function submit_file_validation(options) {
     jQuery('.modal.fade').each(function(index, element){
         jQuery(this).modal("hide");
@@ -1204,11 +1237,14 @@ jQuery(document).ready(function(){
 
     jQuery('#upload_factory_new_file_btn').click(function(event){
         event.preventDefault();
-        var uploadFile = jQuery("#upload_factory_archive_new_file").val();
-        if (uploadFile === '') {
-            alert("Please select a file");
+        var uploadFiles = document.getElementById('upload_factory_archive_new_file').files;
+        if (!uploadFiles || uploadFiles.length === 0) {
+            alert("Please select at least one file.");
             return;
         }
+
+        console.log(uploadFiles);
+
         jQuery('#working_modal').modal("show");
         jQuery("#upload_factory_file_form").attr("action", '/ajax/tools/documents/upload');
         jQuery("#upload_factory_file_form").submit();
@@ -1217,7 +1253,7 @@ jQuery(document).ready(function(){
     jQuery("#upload_factory_file_form").iframePostForm({
         json: true,
         post: function () { },
-        timeout: 7200,
+        timeout: 180,
         complete: function (response) {
             jQuery('#working_modal').modal("hide");
             if (response.error){

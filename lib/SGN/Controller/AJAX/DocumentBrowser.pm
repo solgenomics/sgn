@@ -38,16 +38,6 @@ sub upload_document_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
 
-    my $upload = $c->req->upload('upload_document_browser_file_input');
-    my $upload_factory_file = $c->req->upload('upload_factory_archive_new_file');
-    if ($upload_factory_file) {
-        $upload = $upload_factory_file;
-    }
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
-    
     if (!$c->user){
         $c->stash->{rest} = { error => 'Must be logged in!' };
         $c->detach;
@@ -56,37 +46,53 @@ sub upload_document_POST : Args(0) {
     my $user_id = $c->user->get_object->get_sp_person_id;
     my $user_type = $c->user->get_object->get_user_type();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => 'document_browser',
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    if (!$archived_filename_with_path){
-        $c->stash->{rest} = { error => 'Problem archiving the file!' };
-        $c->detach;
-    }
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$md5){
-        $c->stash->{rest} = { error => 'Problem retrieving file md5!' };
-        $c->detach;
+    my $uploads = $c->req->upload('upload_document_browser_file_input');
+    my $factory_uploads = $c->req->uploads->{'upload_factory_archive_new_file[]'};
+
+    if ($factory_uploads) {
+        $uploads = $factory_uploads;
     }
 
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $file_row = $metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'document_browser',
-            md5checksum => $md5->hexdigest(),
-            metadata_id => $md_row->metadata_id(),
+    $uploads = [$uploads] unless ref($uploads) eq 'ARRAY';
+
+    foreach my $upload (@$uploads) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => 'document_browser',
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type
         });
-    $file_row->insert();
+        my $archived_filename_with_path = $uploader->archive();
+        if (!$archived_filename_with_path){
+            $c->stash->{rest} = { error => 'Problem archiving the files!' };
+            $c->detach;
+        }
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$md5){
+            $c->stash->{rest} = { error => 'Problem retrieving file md5 checksums!' };
+            $c->detach;
+        }
+
+        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+        $md_row->insert();
+        my $file_row = $metadata_schema->resultset("MdFiles")
+            ->create({
+                basename => basename($archived_filename_with_path),
+                dirname => dirname($archived_filename_with_path),
+                filetype => 'document_browser',
+                md5checksum => $md5->hexdigest(),
+                metadata_id => $md_row->metadata_id(),
+            });
+        $file_row->insert();
+    }
 
     $c->stash->{rest} = {success => 'Successfully saved file!'};
 }
