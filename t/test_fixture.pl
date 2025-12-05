@@ -81,7 +81,8 @@ if ($list_config) {
 }
 
 my $db_user_password = $config->{dbpass};
-my $dbhost = $config->{dbhost} || 'localhost';
+print STDERR "dbhost: $config->{dbhost}";
+my $dbhost = $config->{dbhost} || 'breedbase_db';
 my $dbport = $config->{dbport} || '5432';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
 print "Using $dbhost:$dbport\n";
