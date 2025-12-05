@@ -18,6 +18,26 @@
 % }    
     <br />	
     <br	/>
+    <button id="logout_and_log_back_in_button" class="btn btn-primary" >Log out and log in as another user</button>
     
   </div>
     
+
+<script>
+
+jQuery(window).ready( function() { 
+    jQuery('#logout_and_log_back_in_button').click( function() {
+	jQuery.ajax({
+	    url: '/ajax/user/logout',
+	}).then(
+	    function(r) {
+		window.location.reload();
+	    },
+	    function(r) {
+		alert('an error occurred!');
+	    }
+	);
+    });
+});
+
+</script>
