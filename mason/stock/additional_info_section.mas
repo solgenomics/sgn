@@ -13,6 +13,7 @@ $allele_div
 $is_owner
 $derived_accession_relationship
 $related_stock_link
+$original_stock_link
 </%args>
 
 % if ($derived_accession_relationship) {
@@ -20,11 +21,15 @@ $related_stock_link
         <div class="panel-body panel-body-sm">
 % if ($derived_accession_relationship eq 'is_a_derived_accession') {
         <b>Derived from: </b>
+        </br>
+        <b>Direct Source: </b><% $related_stock_link %>
+        </br>
+        <b>Original Source: </b><% $original_stock_link %>
 % } elsif ($derived_accession_relationship eq 'has_a_derived_accession') {
         <b>Derived Accession: </b>
+        <br/>
+        <% $related_stock_link %>
 % }
-            <br/>
-            <% $related_stock_link %>
         </div>
     </div>
 % }

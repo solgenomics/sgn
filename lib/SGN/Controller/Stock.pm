@@ -292,15 +292,20 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
                 my $original_stock_id = $original_stock_info->{'original_stock_id'};
                 my $original_stock_name = $original_stock_info->{'original_stock_name'};
                 my $original_stock_type = $original_stock_info->{'original_stock_type'};
-                
-
+                if ($original_stock_type eq 'cross') {
+                    $original_stock_link = qq{<a href = "/cross/$original_stock_id">$original_stock_name</a>}."(cross)";
+                } elsif ($original_stock_type eq 'family_name') {
+                    $original_stock_link = qq{<a href = "/family/$original_stock_id/">$original_stock_name</a>}."(family name)";
+                } else {
+                    $original_stock_link = qq{<a href="/stock/$original_stock_id/view">$original_stock_name</a>}."(accession)";
+                }
             }
-
+            my $type = "(".$derived_from_stock_type.")";
             $derived_accession_relationship = 'is_a_derived_accession';
-            $related_stock_link = qq{<a href="/stock/$derived_from_stock_id/view">$derived_from_stock_name</a>},
+            $related_stock_link = qq{<a href="/stock/$derived_from_stock_id/view">$derived_from_stock_name</a>}.$type;
         } elsif ($stock_id == $derived_from_stock_id) {
             $derived_accession_relationship = 'has_a_derived_accession';
-            $related_stock_link = qq{<a href="/stock/$derived_accession_stock_id/view">$derived_accession_name</a>},
+            $related_stock_link = qq{<a href="/stock/$derived_accession_stock_id/view">$derived_accession_name</a>};
         }
     }
 
@@ -351,6 +356,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         is_a_transgenic_line => $is_a_transgenic_line,
         derived_accession_relationship => $derived_accession_relationship,
         related_stock_link => $related_stock_link,
+        original_stock_link => $original_stock_link,
         is_in_trial => $is_in_trial,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
