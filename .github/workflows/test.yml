@@ -73,10 +73,10 @@ jobs:
       # selenium tests for a moment as separate folders - will change once full solgs are ready 
       # but anyway, it will is still fully functional for tests purpose
       - name: Run selenium tests 01_list
-        run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
+        run: /entrypoint.sh --nopatch t/selenium2/01_list
 
       - name: Run selenium tests 02_trial
-        run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
+        run: /entrypoint.sh --nopatch t/selenium2/02_trial
 
       - name: Run selenium tests dataset
         run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
