@@ -52,7 +52,7 @@ sub name_var :Path('/test/') :Args(0) {
 	my @errors;
 
     # to generate temporary file name for the analysis
-    my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+    my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
     #my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
     
     print STDERR Dumper($filename);
@@ -165,7 +165,7 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             		    elsif ($line =~ m/^\s+\*+/ ) {
             				$logo = 0;
-					my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+					my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
 					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             			if ($freq_tab == 1) {
@@ -180,7 +180,7 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             			elsif ($line =~ m/^site\s+/ ) {
             				$freq_tab = 0;
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
 					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             			if ($prob_tab == 1 && $line !~ m/^Background\sprobability\smodel/) {
@@ -195,7 +195,7 @@ sub name_var :Path('/test/') :Args(0) {
             			elsif ($line =~ m/^Background\sprobability\smodel/ ) {
 				        $prob_tab = 0;
 					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             			if ($BGPM_tab == 1) {
             				$BGPM_tab_switch++;
@@ -208,7 +208,7 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             			elsif ($line =~ m/^\s+\d\.\d+\s\d\.\d+\s/ ) {
             				$BGPM_tab = 0;
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
 					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             			if ($sum_indv_tab == 1 ) {
@@ -223,7 +223,7 @@ sub name_var :Path('/test/') :Args(0) {
             			}
             			elsif ($line =~ m/^Log\sFragmentation\sportion\sof\sMAP\sfor\smotif\s/ ) {
             				$sum_indv_tab = 0;
-            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/static/documents/tempfiles/motifs_finder/");
+            				my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
 					#my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
             			}
             	}
