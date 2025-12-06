@@ -54,7 +54,7 @@ sub name_var :Path('/test/') :Args(0) {
     # to generate temporary file name for the analysis
     my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
     #my ($fh, $filename) =tempfile("XXXXX", DIR => "$basePath/motifs_finder/");
-    
+
     print STDERR Dumper($filename);
 	if ($sequence !~ /^>/ && $seq_file eq '')  {
 		push ( @errors , "Please, paste sequences or attach sequence file.<br/>Ensure your sequence conform with 'usage help' description.\n");
@@ -250,39 +250,39 @@ sub name_var :Path('/test/') :Args(0) {
 
           my @values_motif;
           my $motif_table_value;
-          foreach $filename (@motif_table_file){
+          foreach my $filename (@motif_table_file){
         	$motif_table_value = get_result_table($filename);
         	push @values_motif, $motif_table_value;
           }
           my $freq_tab_value;
           my @value_freq_tab;
-          foreach $filename (@freq_tab) {
+          foreach my $filename (@freq_tab) {
         	$freq_tab_value = get_freq_table($filename);
         	push @value_freq_tab, $freq_tab_value;
           }
           my $prob_tab_value;
           my @value_prob_tab;
 
-          foreach $filename (@prob_tab) {
+          foreach my $filename (@prob_tab) {
         	$prob_tab_value = get_prob_table($filename);
         	push @value_prob_tab, $prob_tab_value;
           }
           my $BGPM_tab_value;
           my @value_BGPM_tab;
-          foreach $filename (@BGPM_tab) {
+          foreach my $filename (@BGPM_tab) {
             $BGPM_tab_value = get_BGPM_table($filename);
         	push @value_BGPM_tab, $BGPM_tab_value;
           }
           my $sum_indv_tab_value;
           my @value_sum_indv_tab;
-          foreach $filename (@sum_indv_tab) {
+          foreach my $filename (@sum_indv_tab) {
         	$sum_indv_tab_value = get_sum_indv_table($filename);
         	push @value_sum_indv_tab, $sum_indv_tab_value;
           }
 
         # To run weblogo
         my $cmd;
-        foreach $filename (@motif_element){
+        foreach my $filename (@motif_element){
         	$cmd = "$cluster_shared_bindir/weblogo/seqlogo -F PNG -d 0.5 -T 1 -b -e -B 2 -h 5 -w 18 -y bits -a -M -n -Y -c -f $filename -o ".$filename."_weblogo";
         	push (@logo_image, basename($filename."_weblogo.png"));
         	my $error = system($cmd);
@@ -305,9 +305,9 @@ sub name_var :Path('/test/') :Args(0) {
 
         $c->stash->{template} = 'tools/motifs_finder/motif_output.mas';
     }
+}
 
-
-    sub download_file :Path('/result/') :Args(0) {
+sub download_file :Path('/result/') :Args(0) {
         my ($self, $c) = @_;
     	my $params = $c->req->body_params();
     	my $filename = $c->req->param("file_name");
@@ -505,7 +505,7 @@ sub name_var :Path('/test/') :Args(0) {
     	$html_sum_indv_table;
     }
 
-}
+
 
 =encoding utf8
 
