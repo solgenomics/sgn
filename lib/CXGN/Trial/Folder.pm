@@ -617,7 +617,7 @@ sub get_jstree_html {
     my $parent_type = shift;
     my $project_type_of_interest = shift || 'phenotyping_trial';
 
-    #print STDERR "Running get js tree html on project ".$self->{'name'}." at time ".localtime()."\n";
+    print STDERR "Running get js tree html on project ".$self->{'name'}." at time ".localtime()." with $project_type_of_interest\n";
     my ($folder_type_of_interest, $local_type_of_interest, $html);
 
     if ($project_type_of_interest eq 'phenotyping_trial') {
@@ -696,14 +696,14 @@ sub _jstree_li_html {
     my $type = shift;
     my $id = shift;
     my $name = shift;
-    # print STDERR "TYPE =".Dumper($type)."\n";
+    print STDERR "TYPE =".Dumper($type)."\n";
 
     my $url = '#';
     if ($type eq 'phenotyping_trial' || $type eq 'genotyping_trial' || $type eq 'sampling_trial') {
         $url = "/breeders/trial/".$id;
     } elsif ($type eq 'folder') {
         $url = "/folder/".$id;
-    } elsif ($type eq 'cross') {
+    } elsif ($type eq 'crossing_trial') {
         $url = "/cross/".$id;
     } elsif ($type eq 'analyses') {
         $url = "/analyses/".$id;
