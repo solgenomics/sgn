@@ -25,7 +25,7 @@ $sum => ""
 			#print "<b>Motif Sequence logo $logoID[$i], for Length $logowidth[$i]</b>\n <br/>";
 			print "<b>Motif Sequence logo $logoID[$i]</b>\n <br/>";
 			#print "<img src= \"/export/prod/tmp/motifs_finder/$logo[$i]\"><br/><br/><br/>";
-			print "<img src= \"/static/documents/tempfiles/motifs_finder/$logo[$i]\" ><br/><br/><br/>";
+			print "<img src= \"/documents/tempfiles/motifs_finder/$logo[$i]\" ><br/><br/><br/>";
 		 	print "<b>Motif Table </b><br/>$motif_tab[$i]\n <br/><br/>" ;
 			print "<b>Motif Model (residue frequence x 100)</b><br\>$freq_tab[$i]\n <br\> ";
 			print "<b>Motif Probabilty Model </b><br\>$prob_tab[$i]\n <br/>" ;
