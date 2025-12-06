@@ -9,11 +9,11 @@ export function init(tree_type, hard_refresh) {
     //alert("STARTING..."+tree_type+" refresh="+hard_refresh);
 
 
-    
+
     var html = '';
 
-    
-    
+
+
     init_events(tree_type);
     // check if we have no last refresh date or hard_refresh is true
     // fetch the tree from the back end and store it in the browser
@@ -24,16 +24,16 @@ export function init(tree_type, hard_refresh) {
 
     if (hard_refresh === 1 || last_refresh_date === null) {
 	//alert("refresh date is not set or hard_refresh is 1");
-	jQuery.ajax({ 
+	jQuery.ajax({
 	    url: '/ajax/breeders/recently_modified_projects',
 	    data: { 'type' : tree_type, 'hard_refresh' : hard_refresh },
 	}).then( function(r) {
 	    //alert("NEW TRIALS 1: "+JSON.stringify(r));
-	    
+
 	    if (r.data.length > 0) {
 		get_html_tree(tree_type);
 
-	    }   
+	    }
 	});
     }
 
@@ -62,7 +62,7 @@ export function init_events(tree_type) {
     jQuery('#refresh_'+tree_type+'_button').click(function() {
 	get_html_tree(tree_type);
     });
-    
+
 
     jQuery('#'+tree_type+'_list').on("changed.jstree", function (e, data) {
 	//alert('CLICK!!! ON type '+tree_type+ ' NODE: '+data.node.data.jstree.type);
@@ -90,18 +90,22 @@ export function init_events(tree_type) {
             window.open('/folder/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'breeding_program') {
+	    alert('type is breeding_program!');
             window.open('/breeders/program/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'analyses') {
             window.open('/analyses/'+node.id);
             event.stopPropagation();
-        } else if (node.type == 'trial') {
+        } else if (node.type == 'phenotyping_trial') {
+	    alert('type is phentoyping trial!');
             window.open('/breeders_toolbox/trial/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'sampling_trial') {
             window.open('/breeders_toolbox/trial/'+node.id);
             event.stopPropagation();
-        }
+        } else if (node.type == 'crossing_trial') {
+	    window.open('/breeders/crosses/'+node.id);
+	}
       }
     });
 
@@ -122,15 +126,15 @@ export function get_timestamp() {
     return timestamp;
 }
 
-    
+
 export function get_html_tree(tree_type) {
-    //alert('get_html_tree with tree type '+tree_type);
+    alert('get_html_tree with tree type '+tree_type);
     return jQuery.ajax( {
-	url: '/ajax/breeders/get_trials_with_folders?type='+tree_type,  
+	url: '/ajax/breeders/get_trials_with_folders?type='+tree_type,
     }).then(  function(r) {
 	//alert("adding new html and timestamp to localstorage" + r.html);
 	localStorage.setItem(tree_type, r.html);
-	localStorage.setItem(tree_type+'_last_refresh', get_timestamp());	
+	localStorage.setItem(tree_type+'_last_refresh', get_timestamp());
 	format_html_tree(r.html, tree_type);
     }, function () { alert('an error occurred '+JSON.stringify(r)); } );
 }
@@ -138,12 +142,12 @@ export function get_html_tree(tree_type) {
 export function format_html_tree(treehtml, tree_type) {
 
     var html = '<ul>'+treehtml+'</ul>';
-    
+
     jQuery('#'+tree_type+'_list').html(html);
-    
+
     jQuery('#'+tree_type+'_list').jstree( {
 	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
-	"valid_children" : [ "folder", "trial", "breeding_program", "analyses", "sampling_trial" ],
+	"valid_children" : [ "folder", "trial", "breeding_program", "analyses", "sampling_trial", "crossing_trial"],
 	"types" : {
 	    "breeding_program" : {
 		"icon": 'glyphicon glyphicon-briefcase text-info',
@@ -159,17 +163,15 @@ export function format_html_tree(treehtml, tree_type) {
 	    },
 	    "sampling_trial" : {
 		"icon": 'glyphicon glyphicon-th text-success',
-	    }
+	    },
+	    "crossing_trial" : {
+                "icon": 'glyphicon glyphicon-grain text-success',
+            }
 	},
 	"search" : {
 	    "case_insensitive" : true,
 	},
 	"plugins" : ["html_data","types","search"],
-	
-    });    
+
+    });
 }
-
-
-
-
-
