@@ -316,6 +316,15 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         $is_in_trial = 1;
     }
 
+    my $is_a_parent;
+    my $female_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name => "female_parent" })->cvterm_id();
+    my $male_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" })->cvterm_id();
+    my $progeny_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $stock_id, type_id => { -in => [ $female_parent_type_id, $male_parent_type_id] } });
+    my $progeny_count = $progeny_rs->count();
+    if ($progeny_count > 0){
+        $is_a_parent = 1;
+    }
+
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
 	################
 	$c->stash(
@@ -358,6 +367,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         related_stock_link => $related_stock_link,
         original_stock_link => $original_stock_link,
         is_in_trial => $is_in_trial,
+        is_a_parent => $is_a_parent,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
