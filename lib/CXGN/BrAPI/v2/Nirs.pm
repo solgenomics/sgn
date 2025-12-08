@@ -266,57 +266,6 @@ sub nirs_protocols {
 
 	}
 	 
-=head2 test2
-	my $q = "SELECT stock_id FROM nd_protocol JOIN nd_experiment_protocol ON nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id JOIN nd_experiment_stock ON nd_experiment_protocol.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE nd_protocol.nd_protocol_id = ?;";
-	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-	$h->execute(@$nd_protocol_id_arrayref);
-
-	while (my ($nirs_stock_id) = $h->fetchrow_array()) {
-		push @nirs_stock_ids, $nirs_stock_id;
-	}
-
-	
-
-	my $q = "SELECT name FROM nd_protocol WHERE type_id = ? AND nd_protocol_id = ?;";
-	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-	$h->execute($high_dim_nirs_protocol_cvterm_id, $nd_protocol_id);
-	while (my ($nirs_protocol_name) = $h->fetchrow_array()) {
-		push @nirs_protocol_names, $nirs_protocol_name;
-	}
-
-	my $q = "SELECT description FROM nd_protocol WHERE type_id = ? AND nd_protocol_id = ?;";
-	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-	$h->execute($high_dim_nirs_protocol_cvterm_id, $nd_protocol_id);
-	while (my ($nirs_protocol_description) = $h-> fetchrow_array()) {
-		push @nirs_protocol_descriptions, $nirs_protocol_description;
-	}
-
-	my $phenotypes_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
-		bcs_schema=>$schema,
-#	        nd_protocol_id=>$_,
-		nd_protocol_id=>$nd_protocol_id,
-		high_dimensional_phenotype_type=>'NIRS',
-		query_associated_stocks=>0,
-		accession_list=>\@nirs_stock_ids,
-		plot_list=>undef,
-		plant_list=>undef
-	});
-	my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
-	my $example_stock = @nirs_stock_ids[0];
-	my %data_matrix = %$data_matrix;
-	print STDERR "test data matrix: " . Dumper %data_matrix;
-
-	push @data, {
-		additionalInfo => $additional_info,
-		deviceFrequencyNumber => $device_frequency_number,
-		deviceType => $data_matrix{$example_stock}->{device_type},
-		documentationURL => $documentation_url,
-		externalReferences => $external_references,
-		protocolDbId => $nd_protocol_id,
-		protocolDescription => @nirs_protocol_descriptions[0],
-		protocolTitle => @nirs_protocol_names[0]
-	};
-=cut
 	my $total_count = 1;
 
 	my %result = (data => \@data);
@@ -328,7 +277,6 @@ sub nirs_protocols {
 
 sub nirs_instances {
 	my $self = shift;
-	#my $nd_protocol_id = shift;
 	my $inputs = shift;
 	my $instance_id_arrayref = $inputs->{instanceDbId} || ($inputs->{instanceDbIds} || ());
 	my $instance_id = @$instance_id_arrayref[0];
@@ -354,12 +302,8 @@ sub nirs_instances {
 	my @data;
 	my $device_serial_num;
 
-	print STDERR "stock id arrayref: " . Dumper @$stock_id_arrayref;
-	print STDERR "protocol id arrayref:" . Dumper @$nd_protocol_id_arrayref;
-	if (! (@$stock_id_arrayref)) {
-		print STDERR "no stock id arrayref2";
+	if (! defined($stock_id_arrayref)) {
 		if (!(@$nd_protocol_id_arrayref)) {
-			print STDERR "protocol arrayref not defiend";
 			if (! (@$instance_id_arrayref)) {
 				my $q = "SELECT nd_protocol_id from nd_protocol where type_id = ?";
 				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
@@ -376,13 +320,10 @@ sub nirs_instances {
 				}
 			}
 		} elsif (@$nd_protocol_id_arrayref) {
-			print STDERR "just protocolId";
 			@nirs_protocol_ids = @$nd_protocol_id_arrayref;
 		}
 	} else {
-		print STDERR  "there is stock id";
 		if (!(@$instance_id_arrayref) && !(@$nd_protocol_id_arrayref)) {
-			print STDERR "just obsunit triggered";
 			foreach my $stock_id (@$stock_id_arrayref) {
 				my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM nd_experiment_stock JOIN nd_experiment_protocol USING (nd_experiment_id) JOIN nd_protocol USING (nd_protocol_id) WHERE nd_experiment_stock.stock_id = ?";
 				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
@@ -403,20 +344,17 @@ sub nirs_instances {
 			}
 		}
 	}
-	print STDERR "instance id arrayref :" . Dumper @$instance_id_arrayref;
 	if (@$instance_id_arrayref) {
 		if (@$nd_protocol_id_arrayref || @$stock_id_arrayref) {
 			foreach my $protocol_id (@nirs_protocol_ids) {
-				print STDERR "trigger 1";
 				my $q = "SELECT DISTINCT metadata.md_files.file_id, nd_protocol.nd_protocol_id, nd_protocol.create_date, nd_protocolprop.value AS header_column_names FROM metadata.md_files JOIN phenome.nd_experiment_md_files ON metadata.md_files.file_id = phenome.nd_experiment_md_files.file_id JOIN nd_experiment ON phenome.nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id WHERE nd_protocol.nd_protocol_id = ? AND metadata.md_files.file_id = ? AND nd_protocolprop.type_id = $protocolprop_type_cvterm_id AND nd_protocol.type_id = $high_dim_nirs_protocol_cvterm_id";
 				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
 				$h->execute($protocol_id, $instance_id);
 				while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
 					my $props = decode_json $props_json;
 					my $header_col_names = $props->{header_column_names};
-					print STDERR "instance_ids: $instance_id";
 					push @data, {
-						columnHeaders => $col_headers,
+						columnHeaders => $header_col_names,
 						deviceSerialNumber => $device_serial_num,
 						instanceDbId => $instance_id,
 						protocolDbId => $protocol_id,
@@ -425,16 +363,12 @@ sub nirs_instances {
 				}
 			}
 		} else {
-			print STDERR "trigger 1";
 			my $q = "SELECT DISTINCT metadata.md_files.file_id, nd_protocol.nd_protocol_id, nd_protocol.create_date, nd_protocolprop.value AS header_column_names FROM metadata.md_files JOIN phenome.nd_experiment_md_files ON metadata.md_files.file_id = phenome.nd_experiment_md_files.file_id JOIN nd_experiment ON phenome.nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id WHERE metadata.md_files.file_id = ? AND nd_protocolprop.type_id = $protocolprop_type_cvterm_id AND nd_protocol.type_id = $high_dim_nirs_protocol_cvterm_id";
 			my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
 			$h->execute($instance_id);
 			while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
 				my $props = decode_json $props_json;
 				my $header_col_names = $props->{header_column_names};
-				print STDERR "props: " . Dumper $props . "\n";
-				print STDERR "header col: " . Dumper $header_col_names; 
-				#print STDERR "instance_ids: $instance_id";
 				push @data, {
 					columnHeaders => $header_col_names,
 					deviceSerialNumber => $device_serial_num,
@@ -445,8 +379,6 @@ sub nirs_instances {
 			}
 		}
 	} else {
-		#print STDERR "nirs protocol ids: @nirs_protocol_ids";
-		print STDERR "trigger 2: @nirs_protocol_ids";
 		foreach my $protocol_id (@nirs_protocol_ids) {
 			my $q = "SELECT DISTINCT metadata.md_files.file_id, nd_protocol.nd_protocol_id, nd_protocol.create_date, nd_protocolprop.value AS header_column_names FROM metadata.md_files JOIN phenome.nd_experiment_md_files ON metadata.md_files.file_id = phenome.nd_experiment_md_files.file_id JOIN nd_experiment ON phenome.nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id WHERE nd_protocol.nd_protocol_id = ? AND nd_protocolprop.type_id = $protocolprop_type_cvterm_id AND nd_protocol.type_id = $high_dim_nirs_protocol_cvterm_id";
 			my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
@@ -454,9 +386,8 @@ sub nirs_instances {
 			while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
 				my $props = decode_json $props_json;
 				my $header_col_names = $props->{header_column_names};
-				print STDERR "instance_ids: $instance_id";
 				push @data, {
-					columnHeaders => $col_headers,
+					columnHeaders => $header_col_names,
 					deviceSerialNumber => $device_serial_num,
 					instanceDbId => $instance_id,
 					protocolDbId => $protocol_id,
@@ -469,7 +400,6 @@ sub nirs_instances {
 	my $total_count = 1;
 
 	my %result = (data => \@data);
-	print STDERR "result: " . Dumper %result;
 
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Nirs instance result constructed');
