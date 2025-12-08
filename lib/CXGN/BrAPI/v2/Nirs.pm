@@ -5,6 +5,7 @@ use Data::Dumper;
 use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::JSONResponse;
 use SGN::Model::Cvterm;
+use JSON; 
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 
 extends 'CXGN::BrAPI::v2::Common';
@@ -185,9 +186,10 @@ sub search {
 
 sub nirs_protocols {
 	my $self = shift;
-	my $nd_protocol_id = shift;
 	my $inputs = shift;
-	
+	my $nd_protocol_id_arrayref = $inputs->{protocolDbId} || ($inputs->{protocolDbIds} || ());
+	my $stock_id_arrayref = $inputs->{observationUnitDbId} || ($inputs->{observationUnitDbIds} || ());
+	my $nd_protocol_id = @$nd_protocol_id_arrayref[0];
 	my $status = $self->status;
 	my $page_size = $self->page_size;
 	my $page = $self->page;
@@ -201,17 +203,79 @@ sub nirs_protocols {
 	my @nirs_protocol_ids;
 	my @nirs_protocol_names;
 	my @nirs_protocol_descriptions;
+	my @device_types;
+    my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
+	my $high_dim_nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
 	my @data;
 
+	if (! defined($stock_id_arrayref)) {
+		if (!(@$nd_protocol_id_arrayref)) {
+			my $q = "SELECT nd_protocol_id from nd_protocol where type_id = ?";
+			my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+			$h->execute($high_dim_nirs_protocol_cvterm_id);
+			while (my ($nirs_protocol_id) = $h->fetchrow_array()) {
+				push @nirs_protocol_ids, $nirs_protocol_id;
+			}
+		} else {
+			@nirs_protocol_ids = @$nd_protocol_id_arrayref;
+		}
+	} else {
+		if (!(@$nd_protocol_id_arrayref)) {
+			foreach my $stock_id (@$stock_id_arrayref) {
+				my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM nd_experiment_stock JOIN nd_experiment_protocol USING (nd_experiment_id) JOIN nd_protocol USING (nd_protocol_id) WHERE nd_experiment_stock.stock_id = ?";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($stock_id);
+				while (my ($nirs_protocol_id) = $h->fetchrow_array()) {
+					push @nirs_protocol_ids, $nirs_protocol_id;
+				}
+			}
+		} else {
+			foreach my $stock_id (@$stock_id_arrayref) {
+				my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM nd_experiment_stock JOIN nd_experiment_protocol USING (nd_experiment_id) JOIN nd_protocol USING (nd_protocol_id) WHERE nd_experiment_stock.stock_id = ? AND nd_protocol.nd_protocol_id = ?";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($stock_id, $nd_protocol_id);
+				while (my ($nirs_protocol_id) = $h->fetchrow_array()) {
+					push @nirs_protocol_ids, $nirs_protocol_id;
+				}
+			}
+		}
+	}
+		
+	foreach my $protocol_id (@nirs_protocol_ids) {
+		my $q = "SELECT nd_protocol.name, nd_protocol.description, nd_protocolprop.value
+		FROM nd_protocol
+		JOIN nd_protocolprop USING(nd_protocol_id)
+		WHERE nd_protocol.nd_protocol_id = ? AND nd_protocol.type_id=$high_dim_nirs_protocol_cvterm_id AND nd_protocolprop.type_id=$protocolprop_type_cvterm_id";
+		my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+		$h->execute($protocol_id);
+		while (my ($nirs_protocol_name, $nirs_protocol_description, $props_json) = $h->fetchrow_array()) {
+			my $props = decode_json $props_json;
+			my $device_type = $props->{device_type};
+
+			push @data, {
+			additionalInfo => $additional_info,
+			deviceFrequencyNumber => $device_frequency_number,
+			deviceType => $device_type,
+			documentationURL => $documentation_url,
+			externalReferences => $external_references,
+			protocolDbId => $protocol_id,
+			protocolDescription => $nirs_protocol_description,
+			protocolTitle => $nirs_protocol_name
+			};
+		}
+
+	}
+	 
+=head2 test2
 	my $q = "SELECT stock_id FROM nd_protocol JOIN nd_experiment_protocol ON nd_protocol.nd_protocol_id = nd_experiment_protocol.nd_protocol_id JOIN nd_experiment_stock ON nd_experiment_protocol.nd_experiment_id=nd_experiment_stock.nd_experiment_id WHERE nd_protocol.nd_protocol_id = ?;";
 	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
-	$h->execute($nd_protocol_id);
+	$h->execute(@$nd_protocol_id_arrayref);
 
 	while (my ($nirs_stock_id) = $h->fetchrow_array()) {
 		push @nirs_stock_ids, $nirs_stock_id;
 	}
 
-	my $high_dim_nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+	
 
 	my $q = "SELECT name FROM nd_protocol WHERE type_id = ? AND nd_protocol_id = ?;";
 	my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
@@ -240,6 +304,7 @@ sub nirs_protocols {
 	my ($data_matrix, $identifier_metadata, $identifier_names) = $phenotypes_search->search();
 	my $example_stock = @nirs_stock_ids[0];
 	my %data_matrix = %$data_matrix;
+	print STDERR "test data matrix: " . Dumper %data_matrix;
 
 	push @data, {
 		additionalInfo => $additional_info,
@@ -251,13 +316,163 @@ sub nirs_protocols {
 		protocolDescription => @nirs_protocol_descriptions[0],
 		protocolTitle => @nirs_protocol_names[0]
 	};
-
+=cut
 	my $total_count = 1;
 
 	my %result = (data => \@data);
 
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Nirs protocol result constructed');
+
+}
+
+sub nirs_instances {
+	my $self = shift;
+	#my $nd_protocol_id = shift;
+	my $inputs = shift;
+	my $instance_id_arrayref = $inputs->{instanceDbId} || ($inputs->{instanceDbIds} || ());
+	my $instance_id = @$instance_id_arrayref[0];
+	my $nd_protocol_id_arrayref = $inputs->{protocolDbId} || ($inputs->{protocolDbIds} || ());
+	my $nd_protocol_id = @$nd_protocol_id_arrayref[0];
+	my $stock_id_arrayref = $inputs->{observationUnitDbId} || ($inputs->{observationUnitDbIds} || ());
+	my $status = $self->status;
+	my $page_size = $self->page_size;
+	my $page = $self->page;
+	my @data_files;
+	my $schema = $self->bcs_schema();
+	my @nirs_stock_ids;
+	my $additional_info;
+	my $device_frequency_number;
+	my $documentation_url;
+	my $external_references;
+	my @nirs_protocol_ids;
+	my @nirs_protocol_names;
+	my @nirs_instance_ids;
+	my $col_headers;
+	my $protocolprop_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
+	my $high_dim_nirs_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_nirs_protocol', 'protocol_type')->cvterm_id();
+	my @data;
+	my $device_serial_num;
+
+	print STDERR "stock id arrayref: " . Dumper @$stock_id_arrayref;
+	print STDERR "protocol id arrayref:" . Dumper @$nd_protocol_id_arrayref;
+	if (! (@$stock_id_arrayref)) {
+		print STDERR "no stock id arrayref2";
+		if (!(@$nd_protocol_id_arrayref)) {
+			print STDERR "protocol arrayref not defiend";
+			if (! (@$instance_id_arrayref)) {
+				my $q = "SELECT nd_protocol_id from nd_protocol where type_id = ?";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($high_dim_nirs_protocol_cvterm_id);
+				while (my ($nirs_protocol_id) = $h->fetchrow_array()) {
+					push @nirs_protocol_ids, $nirs_protocol_id;
+				}
+			} else {
+				my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM metadata.md_files JOIN phenome.nd_experiment_md_files ON metadata.md_files.file_id = phenome.nd_experiment_md_files.file_id JOIN nd_experiment ON phenome.nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id WHERE metadata.md_files.file_id = ? AND nd_protocolprop.type_id = $protocolprop_type_cvterm_id AND nd_protocol.type_id = $high_dim_nirs_protocol_cvterm_id";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($instance_id);
+				while (my ($nirs_protocol_id) = $h->fetchrow_array()) {
+					push @nirs_protocol_ids, $nirs_protocol_id;
+				}
+			}
+		} elsif (@$nd_protocol_id_arrayref) {
+			print STDERR "just protocolId";
+			@nirs_protocol_ids = @$nd_protocol_id_arrayref;
+		}
+	} else {
+		print STDERR  "there is stock id";
+		if (!(@$instance_id_arrayref) && !(@$nd_protocol_id_arrayref)) {
+			print STDERR "just obsunit triggered";
+			foreach my $stock_id (@$stock_id_arrayref) {
+				my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM nd_experiment_stock JOIN nd_experiment_protocol USING (nd_experiment_id) JOIN nd_protocol USING (nd_protocol_id) WHERE nd_experiment_stock.stock_id = ?";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($stock_id);
+				while (my ($nirs_protocol_id) = $h->fetchrow_array()) {
+					push @nirs_protocol_ids, $nirs_protocol_id;
+				}
+			}
+		}
+		if (!(@$instance_id_arrayref) || @$nd_protocol_id_arrayref) {
+			foreach my $stock_id (@$stock_id_arrayref) {
+				my $q = "SELECT DISTINCT nd_protocol.nd_protocol_id FROM nd_experiment_stock JOIN nd_experiment_protocol USING (nd_experiment_id) JOIN nd_protocol USING (nd_protocol_id) WHERE nd_experiment_stock.stock_id = ? AND nd_protocol.nd_protocol_id = ?";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($stock_id, $nd_protocol_id);
+				while (my ($nirs_protocol_id) = $h->fetchrow_array()) {
+					push @nirs_protocol_ids, $nirs_protocol_id;
+				}
+			}
+		}
+	}
+	print STDERR "instance id arrayref :" . Dumper @$instance_id_arrayref;
+	if (@$instance_id_arrayref) {
+		if (@$nd_protocol_id_arrayref || @$stock_id_arrayref) {
+			foreach my $protocol_id (@nirs_protocol_ids) {
+				print STDERR "trigger 1";
+				my $q = "SELECT DISTINCT metadata.md_files.file_id, nd_protocol.nd_protocol_id, nd_protocol.create_date, nd_protocolprop.value AS header_column_names FROM metadata.md_files JOIN phenome.nd_experiment_md_files ON metadata.md_files.file_id = phenome.nd_experiment_md_files.file_id JOIN nd_experiment ON phenome.nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id WHERE nd_protocol.nd_protocol_id = ? AND metadata.md_files.file_id = ? AND nd_protocolprop.type_id = $protocolprop_type_cvterm_id AND nd_protocol.type_id = $high_dim_nirs_protocol_cvterm_id";
+				my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+				$h->execute($protocol_id, $instance_id);
+				while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
+					my $props = decode_json $props_json;
+					my $header_col_names = $props->{header_column_names};
+					print STDERR "instance_ids: $instance_id";
+					push @data, {
+						columnHeaders => $col_headers,
+						deviceSerialNumber => $device_serial_num,
+						instanceDbId => $instance_id,
+						protocolDbId => $protocol_id,
+						uploadTimestamp => $create_date
+					};
+				}
+			}
+		} else {
+			print STDERR "trigger 1";
+			my $q = "SELECT DISTINCT metadata.md_files.file_id, nd_protocol.nd_protocol_id, nd_protocol.create_date, nd_protocolprop.value AS header_column_names FROM metadata.md_files JOIN phenome.nd_experiment_md_files ON metadata.md_files.file_id = phenome.nd_experiment_md_files.file_id JOIN nd_experiment ON phenome.nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id WHERE metadata.md_files.file_id = ? AND nd_protocolprop.type_id = $protocolprop_type_cvterm_id AND nd_protocol.type_id = $high_dim_nirs_protocol_cvterm_id";
+			my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+			$h->execute($instance_id);
+			while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
+				my $props = decode_json $props_json;
+				my $header_col_names = $props->{header_column_names};
+				print STDERR "props: " . Dumper $props . "\n";
+				print STDERR "header col: " . Dumper $header_col_names; 
+				#print STDERR "instance_ids: $instance_id";
+				push @data, {
+					columnHeaders => $header_col_names,
+					deviceSerialNumber => $device_serial_num,
+					instanceDbId => $instance_id,
+					protocolDbId => $protocol_id,
+					uploadTimestamp => $create_date
+				};
+			}
+		}
+	} else {
+		#print STDERR "nirs protocol ids: @nirs_protocol_ids";
+		print STDERR "trigger 2: @nirs_protocol_ids";
+		foreach my $protocol_id (@nirs_protocol_ids) {
+			my $q = "SELECT DISTINCT metadata.md_files.file_id, nd_protocol.nd_protocol_id, nd_protocol.create_date, nd_protocolprop.value AS header_column_names FROM metadata.md_files JOIN phenome.nd_experiment_md_files ON metadata.md_files.file_id = phenome.nd_experiment_md_files.file_id JOIN nd_experiment ON phenome.nd_experiment_md_files.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_protocol ON nd_experiment.nd_experiment_id = nd_experiment_protocol.nd_experiment_id JOIN nd_protocol ON nd_experiment_protocol.nd_protocol_id = nd_protocol.nd_protocol_id JOIN nd_protocolprop ON nd_protocol.nd_protocol_id = nd_protocolprop.nd_protocol_id WHERE nd_protocol.nd_protocol_id = ? AND nd_protocolprop.type_id = $protocolprop_type_cvterm_id AND nd_protocol.type_id = $high_dim_nirs_protocol_cvterm_id";
+			my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
+			$h->execute($protocol_id);
+			while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
+				my $props = decode_json $props_json;
+				my $header_col_names = $props->{header_column_names};
+				print STDERR "instance_ids: $instance_id";
+				push @data, {
+					columnHeaders => $col_headers,
+					deviceSerialNumber => $device_serial_num,
+					instanceDbId => $instance_id,
+					protocolDbId => $protocol_id,
+					uploadTimestamp => $create_date
+				};
+			}
+		}
+	}
+
+	my $total_count = 1;
+
+	my %result = (data => \@data);
+	print STDERR "result: " . Dumper %result;
+
+	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
+	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Nirs instance result constructed');
 
 }
 
@@ -506,3 +721,5 @@ sub nirs_detail {
 	my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
 	return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Nirs detail result constructed');
 }
+
+1;
