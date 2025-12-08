@@ -85,7 +85,7 @@ print STDERR "dbhost: $config->{dbhost}";
 my $dbhost = $config->{dbhost} || 'breedbase_db';
 my $dbport = $config->{dbport} || '5432';
 my $db_postgres_password = $config->{DatabaseConnection}->{sgn_test}->{password};
-print "Using $dbhost:$dbport\n";
+print STDERR "Using $dbhost:$dbport\n";
 my $test_dsn = $config->{DatabaseConnection}->{sgn_test}->{dsn};
 my $catalyst_server_port = 3010;
 
