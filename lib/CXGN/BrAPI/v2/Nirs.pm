@@ -39,7 +39,7 @@ sub search {
 	}
 	print STDERR Dumper @nirs_protocol_ids;
 
-	for $nd_protocol_id (@nirs_protocol_ids) {
+	for my $nd_protocol_id (@nirs_protocol_ids) {
 #	$nd_protocol_id = @nirs_protocol_ids[0];
 	print STDERR Dumper $nd_protocol_id;
 
