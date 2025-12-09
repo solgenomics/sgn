@@ -2279,7 +2279,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
-        WHERE stock_relationship.type_id=?), 
+        WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)), 
     stockprops AS (
         SELECT
             stock_id,
@@ -2295,11 +2295,10 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     SELECT plot.plot_id, plot.plot_name, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms
     FROM plot 
     LEFT JOIN stockprops AS plotprops ON plotprops.stock_id=plot.plot_id
-    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id
-    WHERE plot.plot_id = ANY(?);"; 
+    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id;"; 
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
-    $h->execute($plot_of_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, \@plots);
+    $h->execute($plot_of_id, \@plots, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
 
     my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates (row,column)</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
@@ -2362,7 +2361,7 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
         (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
             JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=?),
+        WHERE stock_relationship.type_id=? AND mysubplot.stock_id = ANY(?)),
     plot AS 
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
@@ -2370,11 +2369,10 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name, stockprop.value
     FROM subplot 
     JOIN plot ON plot.subplot_id=subplot.subplot_id
-    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?)
-    WHERE subplot.subplot_id = ANY(?);"; 
+    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?);"; 
 
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
-    $h->execute($subplot_of_id, $subplot_of_id, $synonym_id, \@subplots);
+    $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
 
     my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
@@ -2459,7 +2457,7 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
             JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=?), 
+        WHERE stock_relationship.type_id=? AND myplant.stock_id = ANY(?)), 
     plot AS 
         (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
             JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
@@ -2480,10 +2478,10 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     LEFT JOIN stockprops AS plantprops ON (plant.plant_id=plantprops.stock_id)
     LEFT JOIN stockprops AS synonyms ON (synonyms.stock_id=plant.accession_id)
     $subplot_join
-    WHERE plant.plant_id = ANY(?);"; 
+    ;"; 
 
     my $h = $schema->storage()->dbh()->prepare($plants_q);
-    $h->execute($plant_of_id, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id, \@plants);
+    $h->execute($plant_of_id, \@plants, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id);
 
     my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
