@@ -1284,7 +1284,8 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
-    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
+    my ($accession_data, $id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
 
     $trial_id_string = $c->req->param("trial_ids");
