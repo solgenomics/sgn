@@ -2464,24 +2464,26 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
             JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
             WHERE stock_relationship.type_id=?),
-    row_number AS 
-        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?), 
-    col_number AS 
-        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?) 
+    stockprops AS (
+        SELECT
+            stock_id,
+            MAX(value) FILTER (WHERE type_id = ?) AS row_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS col_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS synonyms
+        FROM stockprop
+        WHERE type_id IN (?, ?, ?)
+        GROUP BY stock_id)
     $subplot_q
-    SELECT plant.plant_id, plant.plant_name, plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, plant.accession_id, plant.accession_name, synonyms.value $subplot_select
+    SELECT plant.plant_id, plant.plant_name, plot.plot_id, plot.plot_name, plantprops.row_number, plantprops.col_number, plant.accession_id, plant.accession_name, synonyms.synonyms $subplot_select
     FROM plant
-    LEFT JOIN row_number ON plant.plant_id=row_number.plant_id 
-    LEFT JOIN col_number ON col_number.plant_id=plant.plant_id
     JOIN plot ON plot.plant_id=plant.plant_id
+    LEFT JOIN stockprops AS plantprops ON (plant.plant_id=plantprops.stock_id)
+    LEFT JOIN stockprops AS synonyms ON (synonyms.stock_id=plant.accession_id)
     $subplot_join
-    LEFT JOIN stockprop AS synonyms ON (synonyms.stock_id=plant.accession_id AND synonyms.type_id=?)
     WHERE plant.plant_id = ANY(?);"; 
 
     my $h = $schema->storage()->dbh()->prepare($plants_q);
-    $h->execute($plant_of_id, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, \@plants);
+    $h->execute($plant_of_id, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id, \@plants);
 
     my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
