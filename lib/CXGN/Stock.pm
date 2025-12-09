@@ -1604,6 +1604,19 @@ sub get_parents {
     return \%parents;
 }
 
+sub check_progenies {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $stock_id = $self->stock_id();
+
+    my $female_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name => "female_parent" })->cvterm_id();
+    my $male_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" })->cvterm_id();
+    my $progeny_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $stock_id, type_id => { -in => [ $female_parent_type_id, $male_parent_type_id] } });
+    my $progeny_count = $progeny_rs->count();
+
+    return $progeny_count;
+}
+
 sub _store_stockprop {
     my $self = shift;
     my $type = shift;

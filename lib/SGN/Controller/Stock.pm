@@ -310,17 +310,14 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     }
 
     my $is_in_trial;
-    my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
-    my @trial_list = $check_trial->get_trials();
+    my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
+    my @trial_list = $stock_obj->get_trials();
     if (scalar(@trial_list) > 0) {
         $is_in_trial = 1;
     }
 
     my $is_a_parent;
-    my $female_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name => "female_parent" })->cvterm_id();
-    my $male_parent_type_id = $schema->resultset("Cv::Cvterm")->find( { name=> "male_parent" })->cvterm_id();
-    my $progeny_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $stock_id, type_id => { -in => [ $female_parent_type_id, $male_parent_type_id] } });
-    my $progeny_count = $progeny_rs->count();
+    my $progeny_count = $stock_obj->check_progenies();
     if ($progeny_count > 0){
         $is_a_parent = 1;
     }
