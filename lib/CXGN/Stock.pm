@@ -1093,7 +1093,7 @@ sub associate_owner {
     return $id;
 }
 
-=head2 remove_owner() 
+=head2 remove_owner()
 
   Usage: $self->remove_owner($owner_sp_person_id)
   Desc: removes entry in phenome.stock_owner
@@ -1112,10 +1112,10 @@ sub remove_owner {
 	print STDERR "Cannot remove owner from stock that has no stock_id\n";
 	return;
     }
-    
+
     my $h = $self->schema()->storage()->dbh()->prepare($q);
 
-    eval { 
+    eval {
 	$h->execute($self->stock_id, $owner_id);
     };
 
@@ -1254,11 +1254,11 @@ sub get_additional_uploaded_files {
     while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
         $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
     }
-    
+
     foreach (keys %file_info){
         push @file_array, $file_info{$_};
     }
-    
+
     print STDERR "files: " . Dumper \@file_array;
 
     return  {success=>1, files=>\@file_array};
@@ -1317,7 +1317,15 @@ sub get_trait_list {
 
 sub get_trials {
     my $self = shift;
-    my $dbh = $self->schema()->storage()->dbh();
+    my $schema = $self->schema();
+    my $dbh = $schema->storage()->dbh();
+    my $stock_id = $self->stock_id();
+
+    my $plot_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $tissue_sample_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
 
     my $geolocation_q = "SELECT nd_geolocation_id, description FROM nd_geolocation;";
     my $geolocation_h = $dbh->prepare($geolocation_q);
@@ -1328,15 +1336,18 @@ sub get_trials {
         $geolocations{$nd_geolocation_id} = $description;
     }
 
-    my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
-    my $q = "select distinct(project.project_id), project.name, projectprop.value from stock as accession join stock_relationship on
-	(accession.stock_id=stock_relationship.object_id) JOIN stock as plot on (plot.stock_id=stock_relationship.subject_id)
-	JOIN nd_experiment_stock ON (plot.stock_id=nd_experiment_stock.stock_id) JOIN nd_experiment_project USING(nd_experiment_id)
-	JOIN project USING (project_id) LEFT JOIN projectprop ON (project.project_id=projectprop.project_id)
-	where projectprop.type_id=$geolocation_type_id AND accession.stock_id=?;";
+    my $q = "SELECT distinct(project.project_id), project.name, projectprop.value
+    FROM stock as accession
+    JOIN stock_relationship on (accession.stock_id=stock_relationship.object_id) AND stock_relationship.type_id IN (?,?)
+    JOIN stock on (stock.stock_id=stock_relationship.subject_id) AND stock.type_id IN (?,?)
+	JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
+    JOIN nd_experiment_project USING (nd_experiment_id)
+	JOIN project USING (project_id)
+    LEFT JOIN projectprop ON (project.project_id=projectprop.project_id)
+	WHERE projectprop.type_id=? AND accession.stock_id=?;";
 
     my $h = $dbh->prepare($q);
-    $h->execute($self->stock_id());
+    $h->execute($plot_of_type_id, $tissue_sample_type_id, $plot_type_id, $tissue_sample_type_id, $geolocation_type_id, $stock_id);
 
     my @trials;
     while (my ($project_id, $project_name, $nd_geolocation_id) = $h->fetchrow_array()) {
