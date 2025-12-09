@@ -53,7 +53,6 @@ $response = $ua->post(
 
 my $verify_message = $response->decoded_content;
 my $verify_message_hash = decode_json $verify_message;
-print STDERR "message hash test:" . Dumper $verify_message_hash;
 
 is($verify_message_hash->{success}->[0], 'File nirs_data_matrix saved in archive.');
 is($verify_message_hash->{success}->[1], 'File valid: nirs_data_matrix.');
@@ -76,7 +75,6 @@ $response = $ua->post(
 #print STDERR "test response2" . Dumper $response;
 my $store_message = $response->decoded_content;
 my $store_message_hash = decode_json $store_message;
-print STDERR "store hash test:" .  Dumper $store_message_hash;
 
 is($store_message_hash->{success}->[0], 'File nirs_data_matrix saved in archive.');
 is($store_message_hash->{success}->[1], 'File valid: nirs_data_matrix.');
@@ -86,7 +84,8 @@ is($store_message_hash->{success}->[5], 'Aggregated file data verified. Plot nam
 
 $mech->get_ok('http://localhost:3010/brapi/v2/nirs/protocols');
 $response = decode_json $mech->content;
-is_deeply($response, { metadata => { pagination => { currentPage => 0, pageSize => 10, totalPages => 1, totalCount => 1 }, status => [ { messageType => 'INFO', message => 'BrAPI base call found with page=0, pageSize=10' }, { messageType => 'INFO', message => 'Loading CXGN::BrAPI::v2::Nirs' }, { message => 'Nirs protocol result constructed', messageType => 'INFO' } ], datafiles => [] }, result => { data => [ { protocolTitle => 'NIRS Protocol', protocolDbId => 2, additionalInfo => undef, documentationURL => undef, deviceFrequencyNumber => undef, protocolDescription => 'Default NIRS protocol', deviceType => 'SCIO', externalReferences => undef }, { protocolTitle => 'Test Protocol', protocolDbId => 3, deviceFrequencyNumber => undef, documentationURL => undef, additionalInfo => undef, protocolDescription => 'Test Desc', deviceType => 'SCIO', externalReferences => undef } ] } });
+my $protocol_id = $response->{result}{data}[1]{protocolDbId};
+is_deeply($response, { metadata => { pagination => { currentPage => 0, pageSize => 10, totalPages => 1, totalCount => 1 }, status => [ { messageType => 'INFO', message => 'BrAPI base call found with page=0, pageSize=10' }, { messageType => 'INFO', message => 'Loading CXGN::BrAPI::v2::Nirs' }, { message => 'Nirs protocol result constructed', messageType => 'INFO' } ], datafiles => [] }, result => { data => [ { protocolTitle => 'NIRS Protocol', protocolDbId => 2, additionalInfo => undef, documentationURL => undef, deviceFrequencyNumber => undef, protocolDescription => 'Default NIRS protocol', deviceType => 'SCIO', externalReferences => undef }, { protocolTitle => 'Test Protocol', protocolDbId => $protocol_id, deviceFrequencyNumber => undef, documentationURL => undef, additionalInfo => undef, protocolDescription => 'Test Desc', deviceType => 'SCIO', externalReferences => undef } ] } });
 
 my $rs = $f->bcs_schema()->resultset('Stock::Stock')->search( undef, { columns => [ { stock_id => { max => "stock_id" }} ]} );
 my $row = $rs->next();
@@ -97,28 +96,30 @@ my $stock = $schema->resultset('Stock::Stock')->find({
 });
 
 my $tissue_id = $stock ? $stock->stock_id : undef;
-print STDERR "tissue id: $tissue_id";
 
 $mech->get_ok('http://localhost:3010/brapi/v2/nirs/protocols?protocolDbId=2');
 $response = decode_json $mech->content;
-print STDERR "protcols params response: " . Dumper $response;
 
 is_deeply($response, { metadata => { status => [ { message => 'BrAPI base call found with page=0, pageSize=10', messageType => 'INFO' }, { messageType => 'INFO', message => 'Loading CXGN::BrAPI::v2::Nirs' }, { messageType => 'INFO', message => 'Nirs protocol result constructed' } ], pagination => { pageSize => 10, totalCount => 1, totalPages => 1, currentPage => 0 }, datafiles => [] }, result => { data => [ { protocolTitle => 'NIRS Protocol', protocolDbId => '2', additionalInfo => undef, documentationURL => undef, protocolDescription => 'Default NIRS protocol', deviceType => 'SCIO', externalReferences => undef, deviceFrequencyNumber => undef } ] } });
 
 $mech->get_ok('http://localhost:3010/brapi/v2/nirs/instances');
 $response = decode_json $mech->content;
-print STDERR "instances response: " . Dumper $response;
+#print STDERR "instances response: " . Dumper $response;
 my $timestamp = $response->{result}{data}[0]{uploadTimestamp};
 my $col_headers = $response->{result}{data}[0]{columnHeaders};
+$protocol_id = $response->{result}{data}[0]{protocolDbId};
+my $instance_id = $response->{result}{data}[0]{instanceDbId};
 
-is_deeply($response, { metadata => { datafiles => [], pagination => { currentPage => 0, pageSize => 10, totalCount => 1, totalPages => 1 }, status => [ { messageType => 'INFO', message => 'BrAPI base call found with page=0, pageSize=10' }, { message => 'Loading CXGN::BrAPI::v2::Nirs', messageType => 'INFO' }, { messageType => 'INFO', message => 'Nirs instance result constructed' } ] }, result => { data => [ { protocolDbId => 3, deviceSerialNumber => undef, columnHeaders => $col_headers, uploadTimestamp => $timestamp, instanceDbId => 6 } ] } });
+is_deeply($response, { metadata => { datafiles => [], pagination => { currentPage => 0, pageSize => 10, totalCount => 1, totalPages => 1 }, status => [ { messageType => 'INFO', message => 'BrAPI base call found with page=0, pageSize=10' }, { message => 'Loading CXGN::BrAPI::v2::Nirs', messageType => 'INFO' }, { messageType => 'INFO', message => 'Nirs instance result constructed' } ] }, result => { data => [ { protocolDbId => $protocol_id, deviceSerialNumber => undef, columnHeaders => $col_headers, uploadTimestamp => $timestamp, instanceDbId => $instance_id } ] } });
 
-$mech->get_ok('http://localhost:3010/brapi/v2/nirs/instances?protocolDbId=3&instanceDbId=6');
+$mech->get_ok('http://localhost:3010/brapi/v2/nirs/instances?protocolDbId=' . $protocol_id . '&instanceDbId=' . $instance_id);
 $response = decode_json $mech->content;
 $timestamp = $response->{result}{data}[0]{uploadTimestamp};
 $col_headers = $response->{result}{data}[0]{columnHeaders};
+$protocol_id = $response->{result}{data}[0]{protocolDbId};
+$instance_id = $response->{result}{data}[0]{instanceDbId};
 
-is_deeply($response, { metadata => { datafiles => [], pagination => { currentPage => 0, pageSize => 10, totalCount => 1, totalPages => 1 }, status => [ { messageType => 'INFO', message => 'BrAPI base call found with page=0, pageSize=10' }, { message => 'Loading CXGN::BrAPI::v2::Nirs', messageType => 'INFO' }, { messageType => 'INFO', message => 'Nirs instance result constructed' } ] }, result => { data => [ { protocolDbId => 3, deviceSerialNumber => undef, columnHeaders => $col_headers, uploadTimestamp => $timestamp, instanceDbId => 6 } ] } });
+is_deeply($response, { metadata => { datafiles => [], pagination => { currentPage => 0, pageSize => 10, totalCount => 1, totalPages => 1 }, status => [ { messageType => 'INFO', message => 'BrAPI base call found with page=0, pageSize=10' }, { message => 'Loading CXGN::BrAPI::v2::Nirs', messageType => 'INFO' }, { messageType => 'INFO', message => 'Nirs instance result constructed' } ] }, result => { data => [ { protocolDbId => $protocol_id, deviceSerialNumber => undef, columnHeaders => $col_headers, uploadTimestamp => $timestamp, instanceDbId => $instance_id } ] } });
 
 $f->clean_up_db();
 
