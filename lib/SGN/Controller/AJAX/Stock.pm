@@ -1701,8 +1701,14 @@ sub _stock_project_phenotypes {
 sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock_id = $c->stash->{stock}->get_stock_id();
 
-    my @trials = $c->stash->{stock}->get_trials();
+    my $stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $stock_id
+    );
+    my @trials = $stock->get_trials();
 
     my @formatted_trials;
     foreach my $t (@trials) {
