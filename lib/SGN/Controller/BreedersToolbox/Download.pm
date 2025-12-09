@@ -1131,8 +1131,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
     my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
-    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
+    my ($id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
+    my $accession_data = [];
 
     $trial_id_string = $c->req->param("trial_ids");
     if ($trial_id_string){
@@ -1167,16 +1169,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
         if ($accession_list_id) {
             $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
-        } else {
-	    $accession_data = [];
-	}
-
-        @accession_list = map { $_->[1] } @$accession_data;
-
-        my $t = CXGN::List::Transform->new();
-        my $acc_t = $t->can_transform("accessions", "accession_ids");
-        my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
-        @accession_ids = @{$accession_id_hash->{transform}};
+            @accession_list = map { $_->[1] } @$accession_data;
+        
+            my $t = CXGN::List::Transform->new();
+            my $acc_t = $t->can_transform("accessions", "accession_ids");
+            my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+            @accession_ids = @{$accession_id_hash->{transform}};
+        }
     }
 
     my $num = sprintf("%05d", int(rand(100000)));
