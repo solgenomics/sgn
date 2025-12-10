@@ -2923,15 +2923,14 @@ sub upload_derived_accessions_file_POST : Args(0) {
     $parsed_data = $parser->parse();
 
     if (!$parsed_data){
-        my $return_error = '';
+        my $return_error;
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
         } else {
             $parse_errors = $parser->get_parse_errors();
-            my $error_messages = $parse_errors->{'error_messages'};
-            foreach my $error_string (@$error_messages){
-                $return_error .= $error_string.";"." ";
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
             }
         }
 

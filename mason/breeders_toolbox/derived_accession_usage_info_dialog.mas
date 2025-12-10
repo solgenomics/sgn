@@ -1,0 +1,62 @@
+<%args>
+
+</%args>
+
+<div class="modal fade" id="derived_accession_usage_info_dialog" name="derived_accession_usage_info_dialog" tabindex="-1" role="dialog" aria-labelledby="derivedAccessionUsageInfoDialog">
+    <div class="modal-dialog modal-xl " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="derivedAccessionUsageInfoDialog">Derived Accession</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <h4>
+                        What are derived accessions:
+                    </h4>
+                    <p>In some cases, you may want to add new accession names that have special linkage relationships to other stock types in the database. For example, after preliminary phenotypic screening of progenies derived from different crosses in a trial, you may want to change selected plant names to accession names. </p>
+                    <h4>
+                        Allowed Stock Types:
+                    </h4>
+                    <p>Derived accession (stored as accession stock type) can be linked to another accession, or plant or tissue sample in the database. </p>
+                    <ul>
+                        <li><b>Derived from accession</b>: e.g., new accession derived from another accession because of a mutation.</li>
+                        <li><b>Derived from plant</b>: e.g., new accessions derived from plants originated from crosses or family names in trials.</li>
+                        <li><b>Derived from tissue sample: </b>e.g., new accessions derived from tissue samples via tissue culture.</li>
+                    </ul>
+                    <h4>
+                        Linkage between derived accession, direct source and original source:
+                    </h4>
+                    <p>Relationship between each derived accession and its source is displayed on the accession detail page and the source detail page </p>
+                    <ul>
+                        <li><b>Additional Info Section:</b>both direct source of that derived accession and its origin are displayed on the Additional Info section. If the direct source is a plant or tissue sample, the original source will also be provided (e.g., if the direct source is a plant in a trial, the original source of that plant name can be accession, cross or family name).</li>
+                        <li><b>Pedigree:</b>Derived accession which has another accession as direct source or as original source is linked to the source a progeny of that source accession with 'derived' cross type. For any derived accession having a cross or family name as original source, female parent, male parent and cross type of that cross or family name are used as female parent, male parent and cross type of the derived accession. In case where the original source is a cross, the derived accession is stored as a progeny of that cross as well.</li>
+                    </ul>
+                    <h4>
+                        How to add derived accessions:
+                    </h4>
+                    <ul>
+                        <li><b>Using a List:</b>You can add derived accessions by using a list of accessions, plants or tissue samples as sources of new accessions. Then providing new accession name and description of each new accession. Please see 'Using a List' link.</li>
+                        <li><b>Upload a File:</b>To upload derived accessions, please provide original_name (accession name, plant name or tissue sample name), derived_accession_name and description.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button id="close_derived_accession_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#about_derived_accessions_link').click(function(){
+        jQuery('#derived_accession_usage_info_dialog').modal("show");
+    });
+
+});
+
+</script>
