@@ -1178,15 +1178,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         }
     }
 
-    my $num = sprintf("%05d", int(rand(100000)));
-    my $filename = "breedbase_genotype_data_" . $num;
-    if ($download_format eq 'VCF') {
-        $filename .= '.vcf';
-    }
-    else {
-        $filename .=  '.tsv';
-    }
-
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
     $return_only_first_genotypeprop_for_stock = $c->req->param('include_duplicate_genotypes') eq 'true' ? 0 : 1;
     my $marker_set_list_id = $c->req->param('marker_set_list_id');
@@ -1265,6 +1256,17 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         expires => '+1m',
     };
 
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR=> $c->config->{cluster_shared_tempdir});
+    my $filename = basename($file_path);
+    # my $num = sprintf("%05d", int(rand(100000)));
+    # my $filename = "breedbase_genotype_data_" . $num;
+    if ($download_format eq 'VCF') {
+        $filename .= '.vcf';
+    }
+    else {
+        $filename .=  '.tsv';
+    }
+
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
 }
@@ -1313,14 +1315,6 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         print STDERR "using default protocol_id = $protocol_id\n";
     }
 
-    my ($fh, $filename) = tempfile("breedbase_grm_XXXXX");
-    if ($download_format eq 'heatmap') {
-        $filename .= '.pdf';
-    }
-    else {
-        $filename .= '.tsv';
-    }
-
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
@@ -1355,6 +1349,18 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         value => $dl_token,
         expires => '+1m',
     };
+
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR=> $c->config->{cluster_shared_tempdir});
+    my $filename = basename($file_path);
+    print STDERR "temp file for grm download: $file_path\n";
+    print STDERR "filename for grm download: $filename\n";
+
+    if ($download_format eq 'heatmap') {
+        $filename .= '.pdf';
+    }
+    else {
+        $filename .= '.tsv';
+    }
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
@@ -1391,20 +1397,12 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my ($fh, $filename);
-    if ($download_format eq 'results_tsv') {
-        ($fh, $filename) = tempfile("breedbase_gwas_results_XXXXX", suffix => '.tsv');
-
-    }
-    elsif ($download_format eq 'manhattan_qq_plots') {
-        ($fh, $filename) = tempfile("breedbase_gwas_plots_XXXXX", suffix => '.pdf');
-    }
-
-    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
-
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
     mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
+    
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
     my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
     my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_gwas_grm_XXXXX", DIR=> $tmp_gwas_dir);
     my ($pheno_tempfile_fh, $pheno_tempfile) = tempfile("wizard_download_gwas_pheno_XXXXX", DIR=> $tmp_gwas_dir);
@@ -1439,6 +1437,16 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         value => $dl_token,
         expires => '+1m',
     };
+
+    my ($fh, $filename, $file_path);
+    if ($download_format eq 'results_tsv') {
+        ($fh, $file_path) = tempfile("breedbase_gwas_results_XXXXX", suffix => '.tsv', DIR=> $tmp_gwas_dir);
+        $filename = basename($file_path);
+    }
+    elsif ($download_format eq 'manhattan_qq_plots') {
+        ($fh, $file_path) = tempfile("breedbase_gwas_plots_XXXXX", suffix => '.pdf', DIR=> $tmp_gwas_dir);
+        $filename = basename($file_path);
+    }
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
