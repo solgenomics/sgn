@@ -264,14 +264,14 @@ input[type="text"] {
 
         jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
             init_summary_table(type);
-        });
+        
 
 %  if ($trial_stock_type eq 'analysis_instance') {
         trait_summary_hist_display_change('analysis_instance');
 %  } else {
         trait_summary_hist_display_change('plot');
 %  }
-
+        });
         jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
             //console.log("scrolling histo into view");
             var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
