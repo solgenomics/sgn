@@ -328,6 +328,11 @@ input[type="text"] {
                 'pageLength','copy', 'excel', 'csv', 'pdf'
             ],
             "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+            "processing": true,
+            'language':{
+                "zeroRecords": " ",
+                "processing": "Loading..."
+            }
         });
 
         summary_table.clear().draw();
