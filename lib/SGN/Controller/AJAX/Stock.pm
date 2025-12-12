@@ -2830,8 +2830,6 @@ sub add_derived_accessions_using_list_POST : Args(0) {
         });
 
         my $new_accession = $add_derived_accession->add_derived_accession();
-#        $new_accession_stock_id = $new_accession->{accession_stock_id};
-
     }
 
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -2962,7 +2960,6 @@ sub upload_derived_accessions_file_POST : Args(0) {
 
         my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
         my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
     }
 
     $c->stash->{rest} = {success => "1",};

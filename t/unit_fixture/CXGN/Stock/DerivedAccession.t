@@ -204,7 +204,31 @@ $mech->post_ok("http://localhost:3010/stock/$derived_accession_2_id/pedigreestri
 $response = decode_json $mech->content;
 is($response->{'pedigree_string'},'UG120007/UG120007');
 
+#delete added new stocks
+my $cross2_id = $schema->resultset("Stock::Stock")->find({'uniquename' => 'cross2' })->stock_id;
+my $cross3_id = $schema->resultset("Stock::Stock")->find({'uniquename' => 'cross3' })->stock_id;
+my @new_stock_ids = ($cross1_id, $cross2_id, $cross3_id, $derived_accession_1_id, $derived_accession_2_id);
 
+my $dbh = $schema->storage->dbh;
+my $q = "delete from phenome.stock_owner where stock_id=?";
+my $h = $dbh->prepare($q);
+
+foreach my $id (@new_stock_ids){
+    my $row  = $schema->resultset('Stock::Stock')->find({stock_id=>$id});
+    $h->execute($id);
+    $row->delete();
+}
+
+my $trial = CXGN::Trial->new({
+    bcs_schema => $schema,
+    metadata_schema => $metadata_schema,
+    phenome_schema => $phenome_schema,
+    trial_id => $greenhouse_trial_id
+});
+
+$trial->delete_metadata();
+$trial->delete_field_layout();
+$trial->delete_project_entry();
 
 $f->clean_up_db();
 done_testing();
