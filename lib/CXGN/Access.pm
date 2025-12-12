@@ -114,15 +114,15 @@ sub check_user {
     my $q = "SELECT sp_access_level.name FROM sgn_people.sp_privilege join sgn_people.sp_access_level using(sp_access_level_id) join sgn_people.sp_person_roles using(sp_role_id) where sp_resource_id = (SELECT sp_resource_id FROM sgn_people.sp_resource where name=?) and sgn_people.sp_person_roles.sp_person_id = ? ";
     my $h = $self->people_schema()->storage()->dbh()->prepare($q);
     $h->execute($resource, $sp_person_id);
-    
+
     my @privileges;
     while (my ($level) = $h->fetchrow_array()) {
 	push @privileges, $level;
     }
-    
+
     print STDERR "PRIVLEGES FOR $resource and $sp_person_id are ". join(", ", @privileges)."\n";
 
-    return @privileges;    
+    return @privileges;
 }
 
 sub user_privileges {
@@ -133,7 +133,7 @@ sub user_privileges {
     my $q = "SELECT sp_access_level.name, require_ownership, require_breeding_program FROM sgn_people.sp_privilege join sgn_people.sp_access_level using(sp_access_level_id) join sgn_people.sp_person_roles using(sp_role_id) where sp_resource_id = (SELECT sp_resource_id FROM sgn_people.sp_resource where name=?) and sgn_people.sp_person_roles.sp_person_id = ? ";
     my $h = $self->people_schema()->storage()->dbh()->prepare($q);
     $h->execute($resource, $sp_person_id);
-    
+
     my %privileges;
     while (my ($level, $require_ownership, $require_breeding_program) = $h->fetchrow_array()) {
 	$privileges{$level}->{require_ownership} =  $require_ownership;
@@ -141,7 +141,7 @@ sub user_privileges {
     }
     print STDERR "user_privileges for $resource: ".Dumper(\%privileges);
     return \%privileges;
-    
+
 }
 
 sub check_ownership {
@@ -161,10 +161,10 @@ sub check_ownership {
 
     my $require_ownership = $privileges->{$access_level}->{require_ownership};
     my $require_breeding_program = $privileges->{$access_level}->{require_breeding_program};
-    
+
     my $ownership_checks_out;
     my $bps_checks_out;
-    
+
     if ($require_ownership) {
 	print STDERR "OWNERSHIP IS REQUIRED!\n";
 	if ($owner_id == $sp_person_id) {
@@ -175,21 +175,21 @@ sub check_ownership {
 
     my @user_breeding_program_info = $self->get_breeding_program_ids_for_user($sp_person_id);
     my @user_breeding_program_ids = map { $_->[0] } @user_breeding_program_info;
-    
+
     print STDERR "BP INFO: ".Dumper(\@user_breeding_program_info);
-    
+
     if ($require_breeding_program) {
 	# user has to be associated to all breeding programs in the list
 	#
 	my $match_count = 0;
 	print STDERR "BREEDING PROGRAM IS REQUIRED! (required breeding program ids: ". join(", ", @user_breeding_program_ids)."\n";
-	foreach my $bp_id (@$object_breeding_program_ids) { 
+	foreach my $bp_id (@$object_breeding_program_ids) {
 	    if (any { $_ == $bp_id } @user_breeding_program_ids ) {
 		print STDERR "Breeding program checks out\n";
 		$match_count++;
 	    }
 	}
-	
+
 	if ($match_count == @$object_breeding_program_ids) {
 	    $bps_checks_out = 1;
 	}
@@ -200,7 +200,7 @@ sub check_ownership {
 	print STDERR "Ownership & bp constraints not required... returning 1\n";
 	return 1;
     }
-    
+
     if ($require_ownership && $require_breeding_program) {
 	return $ownership_checks_out && $bps_checks_out;
     }
@@ -241,11 +241,11 @@ sub get_breeding_program_ids_for_user {
 
     return @role_info;
 }
-	
+
 
 =head3 grant()
 
-   Arguments: $sp_person_id (integer), requested_role, resource, owner_id, breeding_program_id 
+   Arguments: $sp_person_id (integer), requested_role, resource, owner_id, breeding_program_id
 
 =cut
 
@@ -263,19 +263,19 @@ sub grant {
     if (! $sp_person_id) {
 	return 0;
     }
-    
+
     # do not allow anything if no privileges are set
     #
     if (!@privileges) {
 	return 0;
-    }    
-    
+    }
+
     my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_ids);
 
     print STDERR "Ownerships check: $ownerships_check_out\n";
-    
+
     my $privileges_check_out;
-    
+
     if (grep { /$access_level/ } @privileges) {
 	print STDERR "Privileges check out\n";
 	$privileges_check_out = 1;
@@ -312,13 +312,13 @@ sub denied {
     if (!@privileges) {
 	$denied = "No privileges set for this activity. "
     }
-		
+
     my $ownerships_check_out = $self->check_ownership($sp_person_id, $resource, $access_level, $owner_id, $breeding_program_ids);
 
     print STDERR "Ownerships check: $ownerships_check_out\n";
-    
+
     my $privileges_check_out;
-    
+
     if (grep { /$access_level/ } @privileges) {
 	print STDERR "Privileges check out ".Dumper(\@privileges)."\n";
 	$privileges_check_out = 1;
@@ -326,7 +326,7 @@ sub denied {
 
     if (! $privileges_check_out ) { $denied .= "Required privileges not available."; }
     if (! $ownerships_check_out ) { $denied .= "Ownerships do not match."; }
-	
+
     return $denied;
 }
 
@@ -351,7 +351,7 @@ sub denied {
 sub privileges_table {
     my $self = shift;
 
-    my $q = "SELECT sp_privilege.sp_privilege_id, sp_privilege.sp_resource_id, sp_resource.name, sp_access_level.sp_access_level_id, sp_access_level.name, sp_roles.sp_role_id, sp_roles.name, sp_privilege.require_breeding_program, sp_privilege.require_ownership FROM sgn_people.sp_privilege LEFT join sgn_people.sp_access_level using(sp_access_level_id) LEFT join sgn_people.sp_resource using(sp_resource_id) LEFT join  sgn_people.sp_roles using(sp_role_id) order by sp_resource.name";
+    my $q = "SELECT sp_privilege.sp_privilege_id, sp_privilege.sp_resource_id, sp_resource.name, sp_access_level.sp_access_level_id, sp_access_level.name, sp_roles.sp_role_id, sp_roles.name, sp_privilege.require_breeding_program, sp_privilege.require_ownership FROM sgn_people.sp_roles LEFT JOIN sgn_people.sp_privilege using(sp_role_id) LEFT join sgn_people.sp_access_level using(sp_access_level_id) LEFT join sgn_people.sp_resource using(sp_resource_id) where sp_roles.name not in (SELECT name from project) order by sp_resource.name";
     my $h =  $self->people_schema()->storage()->dbh()->prepare($q);
     $h->execute();
     my @data;
@@ -368,7 +368,7 @@ sub privileges_table {
 	    require_breeding_program => $require_breeding_program,
 	    require_ownership => $require_ownership,
 	};
-    }	      
+    }
     return @data;
 }
 
@@ -393,7 +393,7 @@ sub add_privilege {
     my $require_ownership = shift;
 
     my $error = "";
-       
+
     my $resource_row = $self->people_schema->resultset("SpResource")->find( { name => $resource });
     if (! $resource_row) {
 	$error = "Resource $resource does not exist. ";
@@ -410,7 +410,7 @@ sub add_privilege {
     }
 
     my $row;
-    if (! $error) { 
+    if (! $error) {
 	$row = {
 	    sp_role_id => $role_row->sp_role_id(),
 	    sp_access_level_id => $access_level_row->sp_access_level_id(),
@@ -418,7 +418,7 @@ sub add_privilege {
 	    require_breeding_program => $require_breeding_program,
 	    require_ownership => $require_ownership,
 	};
-	
+
 	$row = $self->people_schema->resultset("SpPrivilege")->find_or_create($row);
     }
 
@@ -435,7 +435,7 @@ sub add_privilege {
 
     Deletes the privilege with id $privilege_id
     Argument: $privilege_id (integer)
-    Returns:  hashref with success => 1 if success, error => $error_string 
+    Returns:  hashref with success => 1 if success, error => $error_string
               otherwise
 
 =cut
@@ -451,7 +451,7 @@ sub delete_privilege {
     }
 
     $row->delete();
-    
+
     return { success => 1 };
 
 }
@@ -484,7 +484,7 @@ sub delete_resource {
     my $row = $self->people_schema()->resultset('SpResource')
 	->find({ sp_resource_id => $resource_id });
 
-    if ($row) { 
+    if ($row) {
 	$row->delete();
 	return { success => 1 };
     }
@@ -517,7 +517,7 @@ sub delete_access_level {
     my $row = $self->people_schema()->resultset('SpAccessLevel')
 	->find({ sp_access_level_id => $access_level_id });
 
-    if ($row) { 
+    if ($row) {
 	$row->delete();
 	return { success => 1 };
     }
