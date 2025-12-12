@@ -10,6 +10,7 @@ use CXGN::Cross;
 use JSON;
 use LWP::UserAgent;
 use CXGN::Stock::AddDerivedAccession;
+use CXGN::Stock::RelatedStocks;
 
 my $f = SGN::Test::Fixture->new();
 my $mech = Test::WWW::Mechanize->new;
@@ -119,9 +120,6 @@ foreach my $plot_num (keys %$greenhouse_trial_design) {
 @stocks = sort @stocks;
 @all_plant_names = sort @all_plant_names;
 
-print STDERR "STOCKS =".Dumper(\@stocks)."\n";
-print STDERR "PLANT NAMES =".Dumper(\@all_plant_names)."\n";
-
 is_deeply(\@stocks, [
     'UG120007',
     'cross1',
@@ -154,8 +152,30 @@ my $add_derived_accession_1 = CXGN::Stock::AddDerivedAccession->new({
 
 ok($add_derived_accession_1->add_derived_accession());
 
+#check relationship
 my $derived_accession_1_id = $schema->resultset("Stock::Stock")->find({'uniquename' => 'derived_accession_1' })->stock_id;
-print STDERR "DERIVED ACCESSION 1 ID =".Dumper($derived_accession_1_id)."\n";
+my $derived_accession_1_relationship = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $derived_accession_1_id});
+my $derived_accession_1_relationship_info = $derived_accession_1_relationship->get_derived_accession_relationship();
+my $derived_from_stock_name_1 = $derived_accession_1_relationship_info->[0]->[1];
+my $derived_from_stock_type_1 = $derived_accession_1_relationship_info->[0]->[2];
+is($derived_from_stock_name_1, 'cross_greenhouse_cross1_1_plant_1');
+is ($derived_from_stock_type_1, 'plant');
+
+#check pedigree
+my $level = 'Parents';
+$mech->post_ok("http://localhost:3010/stock/$derived_accession_1_id/pedigreestring?level=$level");
+$response = decode_json $mech->content;
+is($response->{'pedigree_string'},'UG120001/UG120002');
+
+#check if the derived accession is a progeny of cross1
+my $cross1_stock_id = $schema->resultset("Stock::Stock")->find({'uniquename' => 'cross1' })->stock_id;
+$mech->post_ok("http://localhost:3010/cross/ajax/relationships/$cross1_stock_id");
+$response = decode_json $mech->content;
+my $progenies = $response->{'progeny'};
+my $number_of_progenies = scalar @$progenies;
+is($number_of_progenies, 1);
+my $progeny_name = $progenies->[0]->[0];
+is($progeny_name, 'derived_accession_1');
 
 #test adding derived accession from a plant with accession origin
 my $add_derived_accession_2 = CXGN::Stock::AddDerivedAccession->new({
@@ -170,8 +190,20 @@ my $add_derived_accession_2 = CXGN::Stock::AddDerivedAccession->new({
 
 ok($add_derived_accession_2->add_derived_accession());
 
+#check relationship
 my $derived_accession_2_id = $schema->resultset("Stock::Stock")->find({'uniquename' => 'derived_accession_2' })->stock_id;
-print STDERR "DERIVED ACCESSION 2 ID =".Dumper($derived_accession_2_id)."\n";
+my $derived_accession_2_relationship = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $derived_accession_2_id});
+my $derived_accession_2_relationship_info = $derived_accession_2_relationship->get_derived_accession_relationship();
+my $derived_from_stock_name_2 = $derived_accession_2_relationship_info->[0]->[1];
+my $derived_from_stock_type_2 = $derived_accession_2_relationship_info->[0]->[2];
+is($derived_from_stock_name_2, 'cross_greenhouse_UG120007_4_plant_1');
+is ($derived_from_stock_type_2, 'plant');
+
+#check pedigree
+$mech->post_ok("http://localhost:3010/stock/$derived_accession_2_id/pedigreestring?level=$level");
+$response = decode_json $mech->content;
+is($response->{'pedigree_string'},'UG120007/UG120007');
+
 
 
 $f->clean_up_db();
