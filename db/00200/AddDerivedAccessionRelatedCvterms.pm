@@ -12,7 +12,7 @@ this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
-This patch adds 'derived_from' stock_relationship cvterm and derived_accession stock_property cvterm
+This patch adds 'derived_from' stock_relationship cvterm
 This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
 
 =head1 AUTHOR
@@ -38,7 +38,7 @@ extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This patch adds the 'derived_from' stock_relationship cvterm and derived_accession stock_property cvterm
+This patch adds the 'derived_from' stock_relationship cvterm
 
 has '+prereq' => (
 	default => sub {
@@ -63,9 +63,6 @@ sub patch {
         'stock_relationship' => [
             'derived_from',
         ],
-        'stock_property' => [
-            'derived_accession',
-        ]
     };
 
     foreach my $t (keys %$terms){
