@@ -49,6 +49,7 @@ $trial_stock_type => undef
             <select class="form-control" id="repetitive_measurement_observation_level" style="min-width: 160px; padding: 4px;">
                 <option value="plot">Plots</option>
                 <option value="plant">Plants</option>
+                <option value="accession">Accessions</option>
                 <option value="subplot">Subplots</option>
                 <option value="tissue_sample">Tissue Samples</option>
             </select>
@@ -130,16 +131,15 @@ jQuery(document).ready(function() {
 
         var repetitive_observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
         var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
-        //alert("now fetching repetitive_trait_id, repetitive_start_date, repetitive_end_date, repetitive_observation_level")
         get_repetitive_measurement_data(trial_id, selectedTraitId, repetitive_start_date, repetitive_end_date, repetitive_observation_level)
         .then((result) => fetch_repetitive_measurement_dataTable(result.result.searchResultsDbId))
         .then((result) => show_repetitive_measurement_values(result.result, repetitive_measurement_level))
         .then((final) => {
             jQuery('#working_modal').modal('hide');
         })
-        .fail(() => {
+        .fail((xhr) => {
             jQuery('#working_modal').modal('hide'); // Hide modal on error
-            alert('An error occurred'); // Show error message
+            alert(`An error occurred retrieving repetitive measurement data: ${xhr}`); // Show error message
         });
     });
 
@@ -284,8 +284,14 @@ jQuery(document).ready(function() {
         var data = [];
         observation_units_map = {};
 
+        var observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
         result.data.forEach(function(item) {
             var unique_key = item.observationUnitName + '|' + item.germplasmName;
+            if (observation_level == 'accession') {
+                unique_key = item.germplasmName;
+            } 
+
+            //console.log(`unique_id_accession: ${observation_units_map[item.germplasmName]}`)
             if (!observation_units_map[unique_key]) {
                 observation_units_map[unique_key] ={
                     observationUnitName: item.observationUnitName,
@@ -294,18 +300,21 @@ jQuery(document).ready(function() {
                 };
             }
             var dateOnly = parseDateIgnoreTimeZone(item.observationTimeStamp);
+            console.log(`unique_id_accession: ${observation_units_map[item.germplasmName]}`)
             observation_units_map[unique_key].values.push({
 				value: parseFloat(item.value),
 				date: dateOnly
 			});
         });
-		
 		var trait_name = jQuery('#selectRawDataTrait').find(":selected").text();
         var start_date = new Date(jQuery('#repetitive_measurement_start_date').val());
         var end_date = new Date(jQuery('#repetitive_measurement_end_date').val());
-        //console.log("the trait is: ", trait_name);
-        //console.log("the start date of this trait is: ", start_date);
-        //console.log("the end date of this trait is: ", end_date);
+
+        var observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
+        console.log(`Observation Level: ${observation_level}`)
+        console.log("the trait is: ", trait_name);
+        console.log("the start date of this trait is: ", start_date);
+        console.log("the end date of this trait is: ", end_date);
 
         /*
 		just a note:if user select the 'all values' option in the UI, the output values will be separated by comma ",".
@@ -313,54 +322,70 @@ jQuery(document).ready(function() {
 		*/
 
         for (var unique_id in observation_units_map) {
+            console.log(`unique_id: ${unique_id}`)
             var group = observation_units_map[unique_id];
             //sort the repetitive values arrray by collect_date!!
             group.values.sort((a, b) => a.date - b.date);
             var values = group.values.map(d => d.value); //store only the value for each object !!
-            var valueToShow = '';
-
-            if (repetitive_measurement_level === 'first') {
-                valueToShow = values[0];
-            } else if(repetitive_measurement_level === 'last') {
-                valueToShow = values[values.length -1];
-            } else if(repetitive_measurement_level === 'average') {
-                var sum = values.reduce((a, b) => a + b, 0) ;
-                var avg = sum / values.length;
-                valueToShow = avg.toFixed(2);
-            } else if(repetitive_measurement_level === 'sum') {
-                var sum_values = values.reduce((a,b) => a + b, 0);
-                valueToShow = sum_values.toFixed(2);
-            } else if(repetitive_measurement_level === 'all') {
-                valueToShow = values.join(', ');
-            }
+            var valueToShow = get_values_to_show(values, repetitive_measurement_level);
 
 			var repetitive_line_graph = (repetitive_measurement_level === 'all') ?
                 `<div class="small-graph" data-observation="${unique_id}"></div>`
                 : 'Select "All values" option to view graph';
 
-            data.push([group.observationUnitName, group.germplasmName, valueToShow, repetitive_line_graph]);
+            if (observation_level == 'accession') {
+                data.push([group.germplasmName, valueToShow, repetitive_line_graph]);
+            } else {
+                data.push([group.observationUnitName, group.germplasmName, valueToShow, repetitive_line_graph]);
+            }
         }
 
-        jQuery('#repetitive_measurement_data_table').DataTable( {
-		   'destroy': true,
-		   'columns': [
-		       { title: 'Observation Unit Name'},
+        var tableCols = [
+                { title: 'Observation Unit Name'},
+                { title: 'Accession Name' },
+                { title: 'Repetitive Values' },
+                { title: 'Repetitive Line Graph'}
+        ];
+
+        if (observation_level == 'accession') {
+            tableCols = [
 		       { title: 'Accession Name' },
                { title: 'Repetitive Values' },
-			   { title: 'Repetitive line graph'}
-		   ],
-		   'data' : data,
-		   'drawCallback':function(settings) {
-				jQuery('.small-graph').each(function() {
-					var container = jQuery(this);
-					var observationUnitKey = container.data('observation');
-					var group = observation_units_map[observationUnitKey];
-					var small_graph_data = group.values;
+			   { title: 'Repetitive Line Graph'}
+		   ];
+        } 
 
-					draw_small_graph(container, small_graph_data);
-				});
-		   	}
-		});
+        // clear any existing DataTable and table contents and rebuild
+        var $table = jQuery('#repetitive_measurement_data_table');
+        if (jQuery.fn.dataTable.isDataTable('#repetitive_measurement_data_table')) {
+            try {
+                $table.DataTable().clear().destroy();
+            } catch (e) {
+                console.log(`Error clearing data table...${e}`)
+            }
+                
+            $table.empty();
+        }
+
+        $table.DataTable({
+            data: data,
+            columns: tableCols,
+            destroy: true,
+            paging: true,
+            searching: true,
+            info: true,
+            autoWidth: false,
+            drawCallback: function(settings) {
+                jQuery('.small-graph').each(function() {
+                    var container = jQuery(this);
+                    var observationUnitKey = container.data('observation');
+                    var group = observation_units_map[observationUnitKey];
+                    var small_graph_data = group.values;
+
+                    draw_small_graph(container, small_graph_data);
+                });
+            }
+        });
     }
 
 	/*
@@ -418,5 +443,26 @@ jQuery(document).ready(function() {
 		//draw the line by connecting all the values for the larger graph
 		lineGraphRepetitiveValues.drawLineGraph(data, "#large_graph_container", null, trait_name, label_observation_unit_name, options); 
 	}
+
+    function get_values_to_show (values, repetitive_measurement_level) {
+        var valuesToShow = '';
+        if (repetitive_measurement_level === 'first') {
+                valueToShow = values[0];
+            } else if(repetitive_measurement_level === 'last') {
+                valueToShow = values[values.length -1];
+            } else if(repetitive_measurement_level === 'average') {
+                var sum = values.reduce((a, b) => a + b, 0) ;
+                var avg = sum / values.length;
+                valueToShow = avg.toFixed(2);
+            } else if(repetitive_measurement_level === 'sum') {
+                var sum_values = values.reduce((a,b) => a + b, 0);
+                valueToShow = sum_values.toFixed(2);
+            } else if(repetitive_measurement_level === 'all') {
+                valueToShow = values.join(', ');
+            }
+
+        return valueToShow;
+
+    }
 });
 </script>
