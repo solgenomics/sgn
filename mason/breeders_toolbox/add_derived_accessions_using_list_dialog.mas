@@ -44,7 +44,7 @@
                                     </div>
                                     <div id="derived_accession_section" style="display:none">
                                         <div class="form-group">
-                                            <label class="control-label col-sm-4">Select a List of original material:</label>
+                                            <label class="control-label col-sm-4">Select a List of source materials:</label>
                                             <div class="col-sm-8" >
                                                 <div class="input-group">
                                                     <select class="form-control" id="derived_from_list_select"></select>
@@ -117,7 +117,7 @@ jQuery(document).ready(function(){
     function add_derived_accessions_form (derived_from_list_id) {
         const derived_from_list = list.getList(derived_from_list_id);
 
-        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Original Name</th><th>New Accession Name</th><th>Description</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Source Name</th><th>New Accession Name</th><th>Description</th></tr></thead><tbody>';
         for (var i=0; i<derived_from_list.length; i++){
             html = html + '<tr><td>' + derived_from_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="accession_description" id="accession_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
         };

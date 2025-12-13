@@ -14,7 +14,8 @@
                     <h4>
                         What are derived accessions:
                     </h4>
-                    <p>In some cases, you may want to add new accession names that have special linkage relationships to other stock types in the database. For example, after preliminary phenotypic screening of progenies derived from different crosses in a trial, you may want to change selected plant names to accession names. </p>
+                    <p>In some cases, you may want to add new accession names that have special relationships to other stock types in the database. For example, after preliminary phenotypic screening of progenies derived from different crosses in a trial, you may want to add new accession names for some plants in that trial. </p>
+                    <br>
                     <h4>
                         Allowed Stock Types:
                     </h4>
@@ -24,14 +25,16 @@
                         <li><b>Derived from plant</b>: e.g., new accessions derived from plants originated from crosses or family names in trials.</li>
                         <li><b>Derived from tissue sample: </b>e.g., new accessions derived from tissue samples via tissue culture.</li>
                     </ul>
+                    <br>
                     <h4>
                         Linkage between derived accession, direct source and original source:
                     </h4>
-                    <p>Relationship between each derived accession and its source is displayed on the accession detail page and the source detail page </p>
+                    <p>Relationship between each derived accession and its source is displayed on accession detail page and its source detail page (accession/plant/tissue sample) </p>
                     <ul>
                         <li><b>Additional Info Section:</b>both direct source of that derived accession and its origin are displayed on the Additional Info section. If the direct source is a plant or tissue sample, the original source will also be provided (e.g., if the direct source is a plant in a trial, the original source of that plant name can be accession, cross or family name).</li>
-                        <li><b>Pedigree:</b>Derived accession which has another accession as direct source or as original source is linked to the source a progeny of that source accession with 'derived' cross type. For any derived accession having a cross or family name as original source, female parent, male parent and cross type of that cross or family name are used as female parent, male parent and cross type of the derived accession. In case where the original source is a cross, the derived accession is stored as a progeny of that cross as well.</li>
+                        <li><b>Pedigree:</b>Derived accession which has another accession as direct source or as original source is linked to the source a progeny of that source accession with 'derived' cross type. For any derived accession having a cross or family name as original source, female parent, male parent and cross type of that cross or family name are used as female parent, male parent and cross type of the derived accession. In case where the original source is a cross, the derived accession is stored as a progeny of that cross.</li>
                     </ul>
+                    <br>
                     <h4>
                         How to add derived accessions:
                     </h4>

@@ -17,10 +17,10 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'original_name', 'derived_accession_name', 'description'],
+        required_columns => [ 'source_name', 'derived_accession_name', 'description'],
         optional_columns => [],
         column_aliases => {
-            'original_name' => ['original name', 'Original Name'],
+            'source_name' => ['source name', 'Source Name'],
             'derived_accession_name' => ['derived accession name', 'Derived Accession Name'],
         }
     );
@@ -46,14 +46,14 @@ sub _validate_with_plugin {
         return;
     }
 
-    my $seen_original_names = $parsed_values->{'original_name'};
+    my $seen_source_names = $parsed_values->{'source_name'};
     my $seen_derived_accession_names = $parsed_values->{'derived_accession_name'};
 
-    my $original_names_validator = CXGN::List::Validate->new();
-    my @original_names_missing = @{$original_names_validator->validate($schema,'accessions_or_plants_or_tissue_samples',$seen_original_names)->{'missing'}};
+    my $source_names_validator = CXGN::List::Validate->new();
+    my @source_names_missing = @{$source_names_validator->validate($schema,'accessions_or_plants_or_tissue_samples',$seen_source_names)->{'missing'}};
 
-    if (scalar(@original_names_missing) > 0) {
-        push @error_messages, "The following accessions or plants or tissue samples are not in the database: ".join(',',@original_names_missing);
+    if (scalar(@source_names_missing) > 0) {
+        push @error_messages, "The following accessions or plants or tissue samples are not in the database: ".join(',',@source_names_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
@@ -84,11 +84,11 @@ sub _parse_with_plugin {
     my @derived_accession_info;
 
     foreach my $row (@$parsed_data) {
-        my $original_name = $row->{'original_name'};
+        my $source_name = $row->{'source_name'};
         my $derived_accession_name = $row->{'derived_accession_name'};
         my $description = $row->{'description'};
         push @derived_accession_info, {
-            'stock_name' => $original_name,
+            'stock_name' => $source_name,
             'derived_accession_name' => $derived_accession_name,
             'accession_description' => $description,
         }
