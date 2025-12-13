@@ -181,7 +181,7 @@ sub add_derived_accession {
         });
     }
 
-    return { success=>1, derived_accession_stock_id=>$derived_accession_stock_id };
+    return { success=>1 };
 
 }
 
