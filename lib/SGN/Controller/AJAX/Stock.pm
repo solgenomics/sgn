@@ -2940,7 +2940,7 @@ sub upload_derived_accessions_file_POST : Args(0) {
         } else {
             $parse_errors = $parser->get_parse_errors();
             foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."<br>";
+                $return_error .= $error_string.";"."\n";
             }
         }
 
