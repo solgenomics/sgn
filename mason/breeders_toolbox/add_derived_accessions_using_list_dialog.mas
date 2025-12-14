@@ -145,6 +145,10 @@ jQuery(document).ready(function(){
                 alert("please provide new accession name for:" + stock_name);
                 return;
             }
+            if (accession_description === '') {
+                alert("please provide description for:" + derived_accession_name);
+                return;
+            }
             derived_accession_info.push({'stock_name':stock_name, 'derived_accession_name':derived_accession_name, 'accession_description':accession_description});
             all_new_names.push(derived_accession_name);
         }
