@@ -38,7 +38,7 @@ jQuery(document).ready(function(){
             jQuery('#working_modal').modal("hide");
             var html;
             if (response.error_string) {
-                html = '<h3>The Following Issues Were Identified</h3><p class="bg-warning">'+response.error_string+'</p>';
+                html = '<h4>The following issues were identified</h4><p class="bg-warning">'+response.error_string+'</p>';
                 jQuery("#upload_derived_accessions_error_display tbody").html(html);
                 jQuery("#upload_derived_accessions_error_display").modal('show');
             }
