@@ -225,9 +225,50 @@ my $coderef = sub {
                     }
                 }
 ###                # Temporarily, for testing - set $trail_saved to 0 so it runs the code anyway:
-                $trial_saved = 0;
+###                $trial_saved = 0;
+
+
+                # Parse the ExpDesign file for accession, species and plot
+                my $ExpDesign_path = $exp_dir . "/ExpDesign.tsv";
+                my $expdesign_parser = CXGN::File::Parse->new(file => $ExpDesign_path, type => 'tsv');
+                my $expdesign_parsed = $expdesign_parser->parse();
+                my $expdesign_parsed_errors = $expdesign_parsed->{errors};
+
+                # Parser has errors, print error messages and quit
+                if ( $expdesign_parsed_errors && scalar(@$expdesign_parsed_errors) > 0 ) {
+                    print STDERR Dumper(@$expdesign_parsed_errors) . "\n";
+                    print STDERR "Failed to read expdesign file." . "\n";
+                    foreach (@$expdesign_parsed_errors) {
+                        push @errors, $_;
+                    }
+                    exit();
+                }
+
+                my $expdesign_columns = $expdesign_parsed->{columns};
+                my $expdesign_data = $expdesign_parsed->{data};
+                my $expdesign_values = $expdesign_parsed->{values};
+                print STDERR Dumper($expdesign_columns) . "\n";
+                print STDERR Dumper($expdesign_data) . "\n"; # These are the rows w/data
+                print STDERR Dumper($expdesign_values) . "\n";                    
+
+                my $all_species = $expdesign_values->{'Species'};
+                print STDERR Dumper($all_species) . "\n";
+                # Insert a check to exit if species is Arabidopsis (temporary, develop way to incorporate this species' design)
+                my $is_athal = 0;
+                foreach my $species (@$all_species) {
+                    if (lc($species) eq "arabidopsis thaliana") {
+                        print STDERR "Phenosight database is not currently set up to process $species data" . "\n";                    
+                        $is_athal = 1;
+                    }      
+                    else {
+                        print STDERR "$species can be loaded in Phenosight database" . "\n";                    
+
+                    }              
+                }
+
                 ### Move on to save the trial if not present:
-                if ($trial_saved == 0) {
+                ### And it is not arabidopsis (temporarily)
+                if ($trial_saved == 0 && $is_athal == 0) {
                     print STDERR "No trial match for $exp_name; proceed to parse and load\n";
                     my $parser = CXGN::File::Parse->new(file => $PS2_path, type => 'txt');
                     my $parsed = $parser->parse();
@@ -278,32 +319,6 @@ my $coderef = sub {
 #                    print STDERR "@$plot_ids are the plots;\n";
                     print STDERR "@plot_uniquenames are the plots;\n";
 
-
-                    # Parse the ExpDesign file for accession, species and plot
-                    my $PS2_path = $exp_dir . "/ExpDesign.tsv";
-                    my $expdesign_parser = CXGN::File::Parse->new(file => $PS2_path, type => 'tsv');
-                    my $expdesign_parsed = $expdesign_parser->parse();
-                    my $expdesign_parsed_errors = $expdesign_parsed->{errors};
-
-                    # Parser has errors, print error messages and quit
-                    if ( $expdesign_parsed_errors && scalar(@$expdesign_parsed_errors) > 0 ) {
-                        print STDERR Dumper(@$expdesign_parsed_errors) . "\n";
-                        print STDERR "Failed to read expdesign file." . "\n";
-                        foreach (@$expdesign_parsed_errors) {
-                            push @errors, $_;
-                        }
-                        exit();
-                    }
-
-                    my $expdesign_columns = $expdesign_parsed->{columns};
-                    my $expdesign_data = $expdesign_parsed->{data};
-                    my $expdesign_values = $expdesign_parsed->{values};
-                    print STDERR Dumper($expdesign_columns) . "\n";
-                    print STDERR Dumper($expdesign_data) . "\n"; # These are the rows w/data
-                    print STDERR Dumper($expdesign_values) . "\n";                    
-
-                    my $all_species = $expdesign_values->{'Species'};
-                    print STDERR Dumper($all_species) . "\n";                    
 
                     foreach my $species (@$all_species) {
                         my $organism = $chado_schema->resultset("Organism::Organism")->find( {
