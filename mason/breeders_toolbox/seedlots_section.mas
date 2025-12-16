@@ -42,10 +42,11 @@ jQuery(document).ready(function(){
             'processing': true,
             'serverSide': true,
             'lengthMenu': [10,20,50,100,1000],
-            'ajax': { 'url': '/ajax/breeders/seedlots',
+            'ajax': { 'url': '/ajax/stock/accession_related_seedlots',
                       'data': function(d) {
 % if ($stock_type eq 'accession'){
                          d.contents_accession = "<% $stock_uniquename %>";
+                         d.contents_accession_stock_id = "<% $stock_id %>"
 % } elsif ($stock_type eq 'cross'){
                         d.contents_cross = "<% $stock_uniquename %>";
 % }

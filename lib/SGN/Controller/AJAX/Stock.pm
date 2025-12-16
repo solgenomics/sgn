@@ -2829,4 +2829,27 @@ sub stock_obsolete_in_bulk_GET {
 }
 
 
+sub get_accession_related_seedlots : Path('/ajax/stock/accession_related_seedlots') : ActionClass('REST') { }
+
+sub get_accession_related_seedlots_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $params = $c->req->params() || {};
+    my $accession_stock_id = $params->{contents_accession_stock_id};
+    print STDERR "ACCESSION STOCK ID =".Dumper($accession_stock_id)."\n";
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+    my @accession_seedlots;
+
+    my $accession_related_seedlots = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$accession_stock_id});
+    my $seedlots = $accession_related_seedlots->get_accession_related_seedlots();
+    print STDERR "SEEDLOTS =".Dumper($seedlots)."\n";
+
+    $c->stash->{rest} = { data => \@accession_seedlots };
+
+
+
+}
+
+
+
 1;
