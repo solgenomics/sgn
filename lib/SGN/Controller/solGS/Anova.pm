@@ -162,9 +162,7 @@ sub create_anova_phenodata_file {
         $c->controller('solGS::AsyncJob')->run_async($c);
     }
 
-    my $pheno_file = $self->trial_phenotype_file($c);
-
-    return $pheno_file;
+    return $self->trial_phenotype_file($c);
 
 }
 
@@ -189,9 +187,8 @@ sub get_trial_design {
         }
     );
 
-    my $design = $trial->get_design_type();
+    return $trial->get_design_type();
 
-    return $design;
 
 }
 
