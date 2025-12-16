@@ -400,7 +400,16 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'fieldbook_phenotypes' : 
-            //
+            display_fieldbook_upload_choices();
+            jQuery('#fieldbook_upload_next_btn').on('click', {file_data:file_data}, populate_fieldbook_validate_submit_data);
+            let fieldbook_zipfile_select = jQuery('#upload_fieldbook_images_select');
+            archived_files_list.forEach(item => {
+                if (item.filename.includes(".zip")) {
+                    const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
+                    fieldbook_zipfile_select.append(opt);
+                }
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'datacollector_spreadsheet' : 
             //
@@ -1000,7 +1009,34 @@ function display_phenotyping_spreadsheet_upload_choices() {
         '</div>' + 
         '</form>' + 
         '<br><br>' + 
-        '<button id="phenotyping_spreadsheet_upload_next_btn" class="btn btn-primary">Next></button>'
+        '<button id="phenotyping_spreadsheet_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
+function display_fieldbook_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<form class="form-horizontal" style="width:60%">' + 
+            '<div class="form-group">'+
+                '<label class="col-sm-6 control-label">Data Level: </label>'+
+                '<div class="col-sm-6" >'+
+                    '<select class="form-control" id="upload_fieldbook_data_level" name="upload_fieldbook_data_level">'+
+                       ' <option value="plots">Plots</option>'+
+                        '<option value="plants">Subplots</option>'+
+                       ' <option value="subplots">Plants</option>'+
+                    '</select>'+
+               ' </div>'+
+            '</div>'+
+            '<div class="form-group">' +
+                '<label class="col-sm-6 control-label">Optional: Images ZipFile (.zip):</label>' + 
+                 '<div class="col-sm-6" >'+
+                    '<select class="form-control" id="upload_fieldbook_images_select" name="upload_fieldbook_images_select">'+
+                       ' <option value>Select...</option>'+
+                    '</select>'+
+               ' </div>'+
+            '</div>' +
+        '</form>' + 
+        '<br><br>' + 
+        '<button id="fieldbook_upload_next_btn" class="btn btn-primary">Next</button>'
     );
 }
 
@@ -1043,7 +1079,9 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'new_progenies' : 'Progeny relationships for new accessions',
         'existing_progenies' : 'Progeny relationships for existing accessions',
         'family_names' : 'Family names of existing crosses',
-        'phenotyping_spreadsheet' : "Phenotyping spreadsheet"
+        'phenotyping_spreadsheet' : "Phenotyping spreadsheet",
+        'fieldbook_phenotypes' : "Field Book phenotypes",
+
     };
 
     display_validate_submit_modal({
@@ -1269,6 +1307,28 @@ function populate_phenotyping_spreadsheet_validate_submit_data(event) {
         spreadsheet_format : spreadsheet_format,
         data_level : data_level
     });
+}
+
+function populate_fieldbook_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let images_zipfile_select = jQuery('#upload_fieldbook_images_select option:selected');
+    let images_zipfile_id = images_zipfile_select.val();
+    let images_zipfile_name = images_zipfile_select.text();
+    let data_level = jQuery('#upload_fieldbook_data_level').val();
+
+    if (images_zipfile_id) {
+        populate_validate_submit_data('fieldbook_phenotypes', file_data, {
+            images_zipfile_id : images_zipfile_id,
+            images_zipfile : images_zipfile_name,
+            data_level : data_level
+        });
+    } else {
+        populate_validate_submit_data('fieldbook_phenotypes', file_data, {
+            data_level : data_level
+        });
+    }
+
+    
 }
 
 function submit_file_validation(options) {
