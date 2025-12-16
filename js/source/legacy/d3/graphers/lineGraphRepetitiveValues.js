@@ -23,7 +23,7 @@
         layout = layout || {
             "width": 800,
             "height": 400,
-            "margin": { "top": 20, "right": 30, "bottom": 100, "left": 80 }
+            "margin": { "top": 20, "right": 80, "bottom": 100, "left": 80 }
         };
 
         options = options || {
@@ -208,10 +208,11 @@
             beta = Math.round(beta*100) / 100;
             
             let sign; 
-            if (beta > 0) {
-                sign = ' + ';
-            } else {
+            if (beta < 0) {
+                beta = Math.abs(beta);
                 sign = ' - ';
+            } else {
+                sign = ' + ';
             };
 
             const equation = `y = ${alpha} ${sign} ${beta}x`; 
@@ -230,7 +231,7 @@
                 return [d.date, predictedValue];
             });
 
-            const olsColor = '#86B404';
+            const olsColor = "#6A1B9A";
 
             svg.append("path")
                 .attr("d", olsLine(olsPredictions))
@@ -242,18 +243,20 @@
                 .attr("id", "equation")
                 .append("text")
                 .text(equation)
-                .attr("x", 20)
+                .attr("x", width - 10)
                 .attr("y", 30)
                 .style("fill", olsColor)
+                .style("font-size", "12px")
                 .style("font-weight", "bold");  
             
             svg.append("g")
                 .attr("id", "rsquare")
                 .append("text")
                 .text(rq)
-                .attr("x", 20)
+                .attr("x", width - 10)
                 .attr("y", 50)
                 .style("fill", olsColor)
+                .style("font-size", "12px")
                 .style("font-weight", "bold");
         }
     };
