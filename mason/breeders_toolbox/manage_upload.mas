@@ -420,7 +420,7 @@ function process_file(file_data, upload_type) {
             // wait for update to master
             break;
         case 'gps_coords' : 
-            display_gps_upload_options();
+            display_gps_upload_choices();
             jQuery('#gps_upload_next_btn').on('click', {file_data : file_data}, populate_gps_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
@@ -431,7 +431,10 @@ function process_file(file_data, upload_type) {
             populate_validate_submit_data(upload_type, file_data);
             break;
         case 'nirs' : 
-            //
+            display_nirs_upload_choices();
+            get_select_box('high_dimensional_phenotypes_protocols','upload_nirs_protocol_select', {'checkbox_name':'upload_nirs_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_nirs_protocol'});
+            jQuery('#nirs_upload_next_btn').on('click', {file_data : file_data}, populate_nirs_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'metabolomics' : 
             //
@@ -907,7 +910,7 @@ function display_cross_upload_choices() {
     );
 }
 
-function display_gps_upload_options() {
+function display_gps_upload_choices() {
     jQuery('#upload_type_choices_div').html(
         '<div class="form-group">' + 
             '<label class="col-sm-3 control-label">Coordinates Type: </label>' + 
@@ -1068,6 +1071,27 @@ function display_datacollector_spreadsheet_upload_choices() {
     );
 }
 
+function display_nirs_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<form class="form-horizontal" style="width:80%">' + 
+            '<div class="form-group">'+
+                '<label class="col-sm-6 control-label">NIRS protocol: </label>'+'<br><br>' + 
+                '<div id="upload_nirs_protocol_select"></div>'+ 
+            '</div><br><br>'+
+            '<div class="form-group">'+
+                '<label class="col-sm-6 control-label">Data Level: </label>'+
+                '<div class="col-sm-6" >'+
+                    '<select class="form-control" id="upload_nirs_data_level" name="upload_nirs_data_level">'+
+                        '<option value="tissue_samples">Tissue samples</option>'+
+                    '</select>'+
+               ' </div>'+
+            '</div>'+
+        '</form>' + 
+        '<br><br>' + 
+        '<button id="nirs_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -1109,8 +1133,15 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'family_names' : 'Family names of existing crosses',
         'phenotyping_spreadsheet' : "Phenotyping spreadsheet",
         'fieldbook_phenotypes' : "Field Book phenotypes",
-        'datacollector_spreadsheet' : "Datacollector spreadsheet"
-
+        'datacollector_spreadsheet' : "Datacollector spreadsheet",
+        'nirs' : "NIRS data",
+        'metabolomics' : "Metabolomic data",
+        'transcriptomics' : "Transcriptomic data",
+        'images' : "Images",
+        'images_barcodes' : "Images with barcodes",
+        'images_phenotypes' : "Images with associated phenotypes",
+        'soil_data' : "Soil data",
+        'vectors' : "Vector constructs"
     };
 
     display_validate_submit_modal({
@@ -1368,6 +1399,26 @@ function populate_datacollector_spreadsheet_validate_submit_data(event) {
     populate_validate_submit_data('datacollector_spreadsheet', file_data, {
         include_timestamps : include_timestamps,
         data_level : data_level
+    });
+}
+
+function populate_nirs_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let selected_protocols = [];
+    jQuery('input[name="upload_nirs_protocol_id"]:checked').each(function() {
+            selected_protocols.push({id : jQuery(this).val(), name : jQuery(this).attr('protocol_name')});
+        });
+    if (selected_protocols.length > 1){
+        alert('Only select one NIRS protocol!');
+        return;
+    } else if (selected_protocols.length < 1) {
+        alert ('Please select a NIRS protocol.');
+        return;
+    }
+
+    populate_validate_submit_data('nirs', file_data, {
+        nirs_protocol : selected_protocols[0].name,
+        nirs_protocol_id : selected_protocols[0].id
     });
 }
 

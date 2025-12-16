@@ -930,7 +930,7 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
 
     while (my ($nd_protocol_id, $name, $description, $create_date, $props_json) = $h->fetchrow_array()) {
         my $props = decode_json $props_json;
-        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$create_date.'</td><td>';
+        $html .= '<tr><td><input type="checkbox" name="'.$checkbox_name.'" value="'.$nd_protocol_id.'" protocol_name="'.$name.'"></td><td>'.$name.'</td><td>'.$description.'</td><td>'.$create_date.'</td><td>';
         while (my($k,$v) = each %$props) {
             if ($k ne 'header_column_details' && $k ne 'header_column_names') {
                 $html .= "$k: $v<br/>";
