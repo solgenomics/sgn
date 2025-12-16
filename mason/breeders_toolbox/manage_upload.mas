@@ -412,7 +412,9 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'datacollector_spreadsheet' : 
-            //
+            display_datacollector_spreadsheet_upload_choices();
+            jQuery('#datacollector_spreadsheet_upload_next_btn').on('click', {file_data:file_data}, populate_datacollector_spreadsheet_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'treatments' : 
             // wait for update to master
@@ -1040,6 +1042,32 @@ function display_fieldbook_upload_choices() {
     );
 }
 
+function display_datacollector_spreadsheet_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<form class="form-horizontal" style="width:60%">' + 
+        '<div class="form-group">'+
+            '<label class="col-sm-6 control-label">Timestamps Included: </label>'+
+            '<div class="col-sm-6" >'+
+                '<input type="checkbox" id="upload_datacollector_phenotype_timestamp_checkbox" name="upload_datacollector_phenotype_timestamp_checkbox" />'+
+            '</div>'+
+        '</div>'+
+            '<div class="form-group">'+
+                '<label class="col-sm-6 control-label">Data Level: </label>'+
+                '<div class="col-sm-6" >'+
+                    '<select class="form-control" id="upload_datacollector_phenotype_data_level" name="upload_datacollector_phenotype_data_level">'+
+                       ' <option value="plots">Plots</option>'+
+                        '<option value="plants">Plants</option>'+
+                       ' <option value="subplots">Subplots</option>'+
+                        '<option value="tissue_samples">Tissue Samples</option>'+
+                    '</select>'+
+               ' </div>'+
+            '</div>'+
+        '</form>' + 
+        '<br><br>' + 
+        '<button id="datacollector_spreadsheet_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -1081,6 +1109,7 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'family_names' : 'Family names of existing crosses',
         'phenotyping_spreadsheet' : "Phenotyping spreadsheet",
         'fieldbook_phenotypes' : "Field Book phenotypes",
+        'datacollector_spreadsheet' : "Datacollector spreadsheet"
 
     };
 
@@ -1329,6 +1358,17 @@ function populate_fieldbook_validate_submit_data(event) {
     }
 
     
+}
+
+function populate_datacollector_spreadsheet_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let include_timestamps = jQuery('#upload_datacollector_phenotype_timestamp_checkbox').prop('checked') ? 'yes' : 'no';
+    let data_level = jQuery('#upload_datacollector_phenotype_data_level').val();
+
+    populate_validate_submit_data('datacollector_spreadsheet', file_data, {
+        include_timestamps : include_timestamps,
+        data_level : data_level
+    });
 }
 
 function submit_file_validation(options) {
