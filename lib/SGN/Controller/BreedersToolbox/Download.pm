@@ -1256,10 +1256,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         expires => '+1m',
     };
 
-    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR=> $c->config->{cluster_shared_tempdir});
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    # my $num = sprintf("%05d", int(rand(100000)));
-    # my $filename = "breedbase_genotype_data_" . $num;
+    
     if ($download_format eq 'VCF') {
         $filename .= '.vcf';
     }
@@ -1350,11 +1349,9 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         expires => '+1m',
     };
 
-    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR=> $c->config->{cluster_shared_tempdir});
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    print STDERR "temp file for grm download: $file_path\n";
-    print STDERR "filename for grm download: $filename\n";
-
+    
     if ($download_format eq 'heatmap') {
         $filename .= '.pdf';
     }
