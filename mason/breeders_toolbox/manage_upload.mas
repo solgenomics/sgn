@@ -437,10 +437,30 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'metabolomics' : 
-            //
+            display_metabolomics_upload_choices();
+            get_select_box('high_dimensional_phenotypes_protocols','upload_metabolomics_protocol_select', {'checkbox_name':'upload_metabolomics_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_metabolomics_protocol'});
+            jQuery('#metabolomics_upload_file_format_select_div').hide();
+            jQuery('#metabolomics_upload_next_btn_div').show();
+            jQuery('#metabolomics_upload_next_btn').on('click', {file_data : file_data}, populate_metabolomics_validate_submit_data);
+            let metabolomics_details_select = jQuery('#upload_metabolomics_details_select');
+            archived_files_list.forEach(item => {
+                const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
+                metabolomics_details_select.append(opt);
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'transcriptomics' : 
-            //
+            display_transcriptomics_upload_choices();
+            get_select_box('high_dimensional_phenotypes_protocols','upload_transcriptomics_protocol_select', {'checkbox_name':'upload_transcriptomics_protocol_id', 'high_dimensional_phenotype_protocol_type':'high_dimensional_phenotype_transcriptomics_protocol'});
+            jQuery('#transcriptomics_upload_file_format_select_div').hide();
+            jQuery('#transcriptomics_upload_next_btn_div').show();
+            jQuery('#transcriptomics_upload_next_btn').on('click', {file_data : file_data}, populate_transcriptomics_validate_submit_data);
+            let transcriptomics_details_select = jQuery('#upload_transcriptomics_details_select');
+            archived_files_list.forEach(item => {
+                const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
+                transcriptomics_details_select.append(opt);
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'images' : 
             //
@@ -928,8 +948,8 @@ function display_gps_upload_choices() {
 
 function display_metabolomics_upload_choices() {
     jQuery('#upload_type_choices_div').html(
-        '<div class="form-group">' + 
-            '<label class="col-sm-7 control-label">There are two metabolomics files uploaded at once: </label>' + 
+        '<div id="metabolomics_upload_file_format_select_div" class="form-group">' + 
+            '<label class="col-sm-7 control-label">There are two metabolomics files uploaded at once. When processing a file, it will be assumed to be the main spreadsheet, and you will be prompted to select an additional details file.  </label>' + 
             '<div class="col-sm-5">' + 
                 '<select class="form-control" id="metabolomics_upload_type_choice_select" name="metabolomics_upload_type_choice_select">' + 
                     '<option value>Select...</option>' + 
@@ -940,6 +960,18 @@ function display_metabolomics_upload_choices() {
         '</div>' + 
         '<br>' + 
         '<div id="metabolomics_upload_next_btn_div" hidden>' + 
+            '<div class="form-group">' + 
+                '<label class="col-sm-7 control-label">Select a protocol:</label>' + 
+                '<br>' + 
+                '<div id="upload_metabolomics_protocol_select"></div>' + 
+            '</div>' + 
+            '<div class="form-group">' + 
+                '<label class="col-sm-7 control-label">Select a details file:</label>' + 
+                '<br>' + 
+                '<select class="form-control" id="upload_metabolomics_details_select" name="upload_metabolomics_details_select">'+
+                    '<option value>Select...</option>'+
+                '</select>'+
+            '</div>' + 
         '   <button id="metabolomics_upload_next_btn" class="btn btn-primary">Next</button>' + 
         '</div>'
     );
@@ -947,8 +979,8 @@ function display_metabolomics_upload_choices() {
 
 function display_transcriptomics_upload_choices() {
     jQuery('#upload_type_choices_div').html(
-        '<div class="form-group">' + 
-            '<label class="col-sm-7 control-label">There are two transcriptomics files uploaded at once: </label>' + 
+        '<div id="transcriptomics_upload_file_format_select_div" class="form-group">' + 
+            '<label class="col-sm-7 control-label">There are two transcriptomics files uploaded at once. When processing a file, it will be assumed to be the main spreadsheet, and you will be prompted to select an additional details file.  </label>' + 
             '<div class="col-sm-5">' + 
                 '<select class="form-control" id="transcriptomics_upload_type_choice_select" name="transcriptomics_upload_type_choice_select">' + 
                     '<option value>Select...</option>' + 
@@ -959,6 +991,18 @@ function display_transcriptomics_upload_choices() {
         '</div>' + 
         '<br>' + 
         '<div id="transcriptomics_upload_next_btn_div" hidden>' + 
+            '<div class="form-group">' + 
+                '<label class="col-sm-7 control-label">Select a protocol:</label>' + 
+                '<br>' + 
+                '<div id="upload_transcriptomics_protocol_select"></div>' + 
+            '</div>' + 
+            '<div class="form-group">' + 
+                '<label class="col-sm-7 control-label">Select a details file:</label>' + 
+                '<br>' + 
+                '<select class="form-control" id="upload_transcriptomics_details_select" name="upload_transcriptomics_details_select">'+
+                    '<option value>Select...</option>'+
+                '</select>'+
+            '</div>' + 
         '   <button id="transcriptomics_upload_next_btn" class="btn btn-primary">Next</button>' + 
         '</div>'
     );
@@ -1073,21 +1117,18 @@ function display_datacollector_spreadsheet_upload_choices() {
 
 function display_nirs_upload_choices() {
     jQuery('#upload_type_choices_div').html(
-        '<form class="form-horizontal" style="width:80%">' + 
-            '<div class="form-group">'+
-                '<label class="col-sm-6 control-label">NIRS protocol: </label>'+'<br><br>' + 
-                '<div id="upload_nirs_protocol_select"></div>'+ 
-            '</div><br><br>'+
-            '<div class="form-group">'+
-                '<label class="col-sm-6 control-label">Data Level: </label>'+
-                '<div class="col-sm-6" >'+
-                    '<select class="form-control" id="upload_nirs_data_level" name="upload_nirs_data_level">'+
-                        '<option value="tissue_samples">Tissue samples</option>'+
-                    '</select>'+
-               ' </div>'+
-            '</div>'+
-        '</form>' + 
-        '<br><br>' + 
+        '<div class="form-group">'+
+            '<label class="col-sm-6 control-label">NIRS protocol: </label>'+'<br><br>' + 
+            '<div id="upload_nirs_protocol_select"></div>'+ 
+        '</div><br><br>'+
+        // '<div class="form-group">'+
+        //     '<label class="col-sm-6 control-label">Data Level: </label>'+
+        //     '<div class="col-sm-6" >'+
+        //         '<select class="form-control" id="upload_nirs_data_level" name="upload_nirs_data_level">'+
+        //             '<option value="tissue_samples">Tissue samples</option>'+
+        //         '</select>'+
+        //    ' </div>'+
+        // '</div>'+
         '<button id="nirs_upload_next_btn" class="btn btn-primary">Next</button>'
     );
 }
@@ -1419,6 +1460,64 @@ function populate_nirs_validate_submit_data(event) {
     populate_validate_submit_data('nirs', file_data, {
         nirs_protocol : selected_protocols[0].name,
         nirs_protocol_id : selected_protocols[0].id
+    });
+}
+
+function populate_metabolomics_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let selected_protocols = [];
+    jQuery('input[name="upload_metabolomics_protocol_select"]:checked').each(function() {
+            selected_protocols.push({id : jQuery(this).val(), name : jQuery(this).attr('protocol_name')});
+        });
+    if (selected_protocols.length > 1){
+        alert('Only select one metabolomics protocol!');
+        return;
+    } else if (selected_protocols.length < 1) {
+        alert ('Please select a metabolomics protocol.');
+        return;
+    }
+    let metabolomics_details_id = jQuery('#upload_metabolomics_details_select option:selected').val();
+    let metabolomics_details_name = jQuery('#upload_metabolomics_details_select option:selected').text();
+
+    if (!metabolomics_details_id) {
+        alert("Please select a details file.");
+        return;
+    }
+
+    populate_validate_submit_data('metabolomics', file_data, {
+        details_file : metabolomics_details_name,
+        details_file_id : metabolomics_details_id,
+        metabolomics_protocol : selected_protocols[0].name,
+        metabolomics_protocol_id : selected_protocols[0].id
+    });
+}
+
+function populate_transcriptomics_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let selected_protocols = [];
+    jQuery('input[name="upload_transcriptomics_protocol_select"]:checked').each(function() {
+            selected_protocols.push({id : jQuery(this).val(), name : jQuery(this).attr('protocol_name')});
+        });
+    if (selected_protocols.length > 1){
+        alert('Only select one transcriptomics protocol!');
+        return;
+    } else if (selected_protocols.length < 1) {
+        alert ('Please select a transcriptomics protocol.');
+        return;
+    }
+    let transcriptomics_details_id = jQuery('#upload_transcriptomics_details_select option:selected').val();
+    let transcriptomics_details_name = jQuery('#upload_transcriptomics_details_select option:selected').text();
+
+    if (!transcriptomics_details_id) {
+        alert("Please select a details file.");
+        return;
+    }
+
+    populate_validate_submit_data('transcriptomics', file_data, {
+        details_file : transcriptomics_details_name,
+        details_file_id : transcriptomics_details_id,
+        transcriptomics_protocol : selected_protocols[0].name,
+        transcriptomics_protocol_id : selected_protocols[0].id
     });
 }
 
