@@ -190,9 +190,9 @@ while (my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 
 # Get list of directories - this CR path will be obtained from sgn_local.conf
 # Note: don't use basepath here; need to include parameter to point to the 'data dir'
-my @CR_exp_dirs = glob("/home/production/CropReporter/Data/*"); 
+my @CR_exp_dirs = glob("/home/production/CropReporter/Data/Exp*"); 
 
-#print "@CR_exp_dirs\n";
+print "@CR_exp_dirs\n";
 
 # Check each directory for the PS2 file:
 my $curr_exp;
