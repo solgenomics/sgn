@@ -1083,7 +1083,7 @@ sub _store_seedlot_location {
 sub _retrieve_location {
     my $self = shift;
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
-    my $nd_geolocation_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_geolocation');
+    my $nd_geolocation_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->stock_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_geolocation');
     if ($nd_geolocation_rs->count != 1){
         die "Seedlot does not have 1 nd_geolocation associated!\n";
     }
@@ -1113,7 +1113,7 @@ sub _retrieve_box_name {
 sub _retrieve_breeding_program {
     my $self = shift;
     my $experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), "seedlot_experiment", "experiment_type")->cvterm_id();
-    my $project_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->seedlot_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_experiment_projects')->search_related('project');
+    my $project_rs = $self->schema()->resultset('Stock::Stock')->search({'me.stock_id'=>$self->stock_id})->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$experiment_type_id})->search_related('nd_experiment_projects')->search_related('project');
     if ($project_rs->count != 1){
         die "Seedlot does not have 1 breeding program project (".$project_rs->count.") associated!\n";
     }

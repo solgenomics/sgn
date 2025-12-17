@@ -2829,22 +2829,43 @@ sub stock_obsolete_in_bulk_GET {
 }
 
 
-sub get_accession_related_seedlots : Path('/ajax/stock/accession_related_seedlots') : ActionClass('REST') { }
-
-sub get_accession_related_seedlots_GET : Args(0) {
-    my ($self, $c) = @_;
-    my $params = $c->req->params() || {};
-    my $accession_stock_id = $params->{contents_accession_stock_id};
-    print STDERR "ACCESSION STOCK ID =".Dumper($accession_stock_id)."\n";
+sub get_stock_related_seedlots :Path('/ajax/stock/stock_related_seedlots') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
-    my @accession_seedlots;
+    my @stock_seedlots;
 
-    my $accession_related_seedlots = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$accession_stock_id});
-    my $seedlots = $accession_related_seedlots->get_accession_related_seedlots();
-    print STDERR "SEEDLOTS =".Dumper($seedlots)."\n";
+    my $stock_related_seedlots = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $seedlots = $stock_related_seedlots->get_stock_related_seedlots();
+    foreach my $seedlot (@$seedlots) {
+        my $content_html = '';
+        my $accession_stock_id = $seedlot->{accession_stock_id};
+        my $accession_name = $seedlot->{accession_name};
+        my $cross_stock_id = $seedlot->{cross_stock_id};
+        my $cross_name = $seedlot->{cross_name};
+        if ($accession_stock_id) {
+            $content_html = qq{<a href="/stock/$accession_stock_id/view">$accession_name</a>};
+        } elsif ($cross_stock_id) {
+            $content_html = qq{<a href = "/cross/$cross_stock_id">$cross_name</a>}
+        }
 
-    $c->stash->{rest} = { data => \@accession_seedlots };
+        push @stock_seedlots, {
+            seedlot_stock_id => $seedlot->{seedlot_stock_id},
+            seedlot_stock_uniquename => $seedlot->{seedlot_stock_uniquename},
+            breeding_program_name => $seedlot->{breeding_program_name},
+            location => $seedlot->{location},
+            contents_html => $content_html,
+            count => $seedlot->{count},
+            weight_gram => $seedlot->{weight_gram},
+            box => $seedlot->{box_name},
+            seedlot_quality => $seedlot->{seedlot_quality},
+            material_type => $seedlot->{material_type},
+        }
+    }
+
+    $c->stash->{rest} = { data => \@stock_seedlots };
 
 
 

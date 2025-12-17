@@ -38,20 +38,8 @@ jQuery(document).ready(function(){
 
         var seedlots_table = jQuery('#seedlots_of_accession_table').DataTable({
             'destroy' : true,
-            'ordering'  : false,
-            'processing': true,
-            'serverSide': true,
-            'lengthMenu': [10,20,50,100,1000],
-            'ajax': { 'url': '/ajax/stock/accession_related_seedlots',
-                      'data': function(d) {
-% if ($stock_type eq 'accession'){
-                         d.contents_accession = "<% $stock_uniquename %>";
-                         d.contents_accession_stock_id = "<% $stock_id %>"
-% } elsif ($stock_type eq 'cross'){
-                        d.contents_cross = "<% $stock_uniquename %>";
-% }
-                    }
-            },
+            'autoWidth': false,
+            'ajax': '/ajax/stock/stock_related_seedlots/'+ "<% $stock_id %>",
             columns: [
                 { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
                 { title: "Breeding Program", "data": "breeding_program_name" },
