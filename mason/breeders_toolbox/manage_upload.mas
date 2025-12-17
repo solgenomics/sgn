@@ -466,7 +466,7 @@ function process_file(file_data, upload_type) {
             display_images_upload_choices();
             let images_select = jQuery('#upload_images_select_more');
             archived_files_list.forEach(item => {
-                if (item.filename.includes(".png") || item.filename.includes(".jpg") || item.filename.includes(".jpeg") || item.filename.includes(".webp") || item.filename.includes(".gif")) {
+                if (item.filename.includes(".png") || item.filename.includes(".jpg") || item.filename.includes(".jpeg") || item.filename.includes(".webp") || item.filename.includes(".tif") || item.filename.includes(".tiff")) {
                     const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
                     images_select.append(opt);
                 }
@@ -476,7 +476,12 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'soil_data' : 
-            //
+            display_soil_data_upload_choices();
+            jQuery('#soil_data_upload_next_btn').on('click', {file_data : file_data}, populate_soil_data_validate_submit_data);
+            jQuery('#soil_data_field_trial').autocomplete({
+                source: '/ajax/trials/trial_autocomplete'
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'vectors' : 
             //
@@ -1179,6 +1184,42 @@ function display_images_additional_upload_choices() {
     }
 }
 
+function display_soil_data_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+    '<div class="form-group">' + 
+       ' <label class="col-sm-4 control-label">Field trial: </label>'+
+        '<div class="col-sm-8" >'+
+            '<input class="form-control" type="text" id="soil_data_field_trial" name="soil_data_field_trial" />'+
+        '</div>'+
+    '</div>'+
+    '<div class="form-group">'+
+        '<label class="col-sm-4 control-label">Description:</label>'+
+        '<div class="col-sm-8">'+
+            '<input class="form-control" type="text" id="soil_data_description" name="soil_data_description" />'+
+        '</div>'+
+    '</div>'+
+    '<div class="form-group">'+
+        '<label class="col-sm-4 control-label">Sampling Date:</label>'+
+       ' <div class="col-sm-8">'+
+           ' <input class="form-control" id="soil_data_date" name="soil_data_date" title="data_date" type="date"/>'+
+        '</div>'+
+    '</div>'+
+    '<div class="form-group">'+
+        '<label class="col-sm-4 control-label">GPS (optional):</label>'+
+        '<div class="col-sm-8">'+
+            '<input class="form-control" type="text" id="soil_data_gps" name="soil_data_gps" />'+
+        '</div>'+
+    '</div>'+
+    '<div class="form-group">'+
+        '<label class="col-sm-4 control-label">Type of Sampling:</label>'+
+        '<div class="col-sm-8">'+
+            '<input class="form-control" type="text" id="type_of_sampling" name="type_of_sampling" />'+
+        '</div>'+
+    '</div>' + 
+    '<br><br>' + 
+    '<button id="soil_data_upload_next_btn" class="btn btn-primary">Next</button>');
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -1586,6 +1627,41 @@ function populate_image_validate_submit_data(event) {
             additional_files : selected_files
         });
     }
+}
+
+function populate_soil_data_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+
+    let field_trial = jQuery('#soil_data_field_trial').val();
+    let description = jQuery('#soil_data_description').val();
+    let date = jQuery('#soil_data_date').val();
+    let gps = jQuery('#soil_data_gps').val();
+    let sampling_type = jQuery('#type_of_sampling').val();
+
+    if (!field_trial) {
+        alert("Select a field trial.");
+        return;
+    }
+    if (!description) {
+        alert("Enter a soil data description");
+        return;
+    }
+    if (!date) {
+        alert("Enter a sampling date.");
+        return;
+    }
+    if (!sampling_type) {
+        alert("Enter a sampling type.");
+        return;
+    }
+
+    populate_validate_submit_data("soil_data", file_data, {
+        field_trial : field_trial,
+        description : description,
+        date : date,
+        gps : gps,
+        sampling_type : sampling_type
+    });
 }
 
 function submit_file_validation(options) {
