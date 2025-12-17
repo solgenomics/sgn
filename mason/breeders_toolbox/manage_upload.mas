@@ -484,7 +484,9 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'vectors' : 
-            //
+            display_vector_upload_choices();
+            jQuery('#vector_upload_next_btn').on('click', {file_data : file_data}, populate_vector_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'subplots' : 
             display_subplot_upload_choices();
@@ -852,7 +854,7 @@ function display_genotyping_data_upload_additional_choices() {
 function display_accession_upload_choices() {
     let fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>';
     if ('<% $user_role %>' == "curator"){
-        fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions"></input>';
+        fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked></input>';
     }
 
     jQuery('#upload_type_choices_div').html('<div class="form-group">' +
@@ -1218,6 +1220,32 @@ function display_soil_data_upload_choices() {
     '</div>' + 
     '<br><br>' + 
     '<button id="soil_data_upload_next_btn" class="btn btn-primary">Next</button>');
+}
+
+function display_vector_upload_choices() {
+    let fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked disabled></input>';
+    if ('<% $user_role %>' == "curator"){
+        fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked></input>';
+    }
+
+    jQuery('#upload_type_choices_div').html(
+        '<div class="form-group">' + 
+            '<label class="col-sm-4 control-label">Use Fuzzy Search: </label>'+
+            '<div class="col-sm-8">'+
+                fuzzy_search+
+                '<br/>'+
+                '<small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate vectors. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>'+
+            '</div>'+
+        '</div>'+
+        '<div class="form-group">'+
+           ' <label class="col-sm-4 control-label"> Auto generate uniquename</label><br>'+
+            '<div class="col-sm-8">'+
+                '<input type="checkbox" id="vector_autogenerate_uniquename" name="vector_autogenerate_uniquename">'+
+            '</div>'+
+        '</div>' + 
+        '<br><br>' + 
+        '<button id="vector_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
 }
 
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
@@ -1661,6 +1689,18 @@ function populate_soil_data_validate_submit_data(event) {
         date : date,
         gps : gps,
         sampling_type : sampling_type
+    });
+}
+
+function populate_vector_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+
+    let fuzzy_search = jQuery('#fuzzy_check_upload_vectors').prop('checked');
+    let generate_uniquenames = jQuery('#vector_autogenerate_uniquename').prop('checked');
+
+    populate_validate_submit_data("vectors", file_data, {
+        use_fuzzy_search : fuzzy_search,
+        generate_uniquenames : generate_uniquenames
     });
 }
 
