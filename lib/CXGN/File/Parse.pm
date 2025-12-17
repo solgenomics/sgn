@@ -298,6 +298,7 @@ sub parse {
   my $type = $self->type();
   my $required_columns = $self->required_columns();
   my $optional_columns = $self->optional_columns();
+  my $column_arrays = $self->column_arrays();
 
   # If type is not defined, use the file extension
   if ( !$type ) {
@@ -401,6 +402,10 @@ sub parse {
 
     }
 
+    # Add columns that are arrays, as defined in the CXGN::File::Parse constructor
+    my @array_columns = $column_arrays ? keys %$column_arrays : [];
+    $parsed->{'array_columns'} = \@array_columns || [];
+
     return $parsed;
   }
 
@@ -429,6 +434,9 @@ sub clean_header {
 
     # Do usual value cleaning
     $header = $self->clean_value($header);
+
+    # Strip BOM bytes, if present
+    $header =~ s/^\N{BOM}//;
 
     # check for case-insensitive required column match
     if ( $required_columns ) {
@@ -470,6 +478,9 @@ sub clean_value {
 
     # trim whitespace
     $value =~ s/^\s+|\s+$//g;
+
+    # trim unicode no-break space
+    $value =~s/\xa0//g;
 
     # split values
     if ( $column && $column_arrays && exists $column_arrays->{$column} ) {

@@ -235,8 +235,8 @@ has 'field_crossing_data_order' => (isa => 'ArrayRef[Str]|Undef', is => 'rw', re
 has 'prop_id' => (isa => 'Int | Undef', is => 'rw', required => 0);
 has 'people_schema' => ( isa => 'Ref', is => 'rw');
 has 'dbh' => (is  => 'rw');
-has 'start_date' => ( isa => 'Str', is => 'rw');
-has 'end_date' => (isa => 'Str', is => 'rw');
+has 'start_date' => ( isa => 'Maybe[Str]', is => 'rw');
+has 'end_date' => (isa => 'Maybe[Str]', is => 'rw');
 
 
 sub BUILD {

@@ -317,6 +317,10 @@ $field_headers => ()
                                 <& /image/plot_images.mas, trial_id => $trial_id &>
 % } #End trial_images_section
 
+% if ($info_section_id eq 'vector_view') {
+   <& /vectorviewer/vectorviewer.mas, stock_id => $stock_id, type_name => $type_name, edit_privs => $edit_privs, is_owner => $is_owner &>
+% }
+
 % if ($info_section_id eq 'stock_additional_info_section'){
                                 <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
 % } #End stock_additional_info_section
@@ -347,10 +351,14 @@ $field_headers => ()
 % } #End vector_related_accessions_section
 % if ($info_section_id eq 'vector_obsoleted_accessions_section'){
                                 <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_related_accessions_section
+% } #End vector_obsoleted_accessions_section
+% if ($info_section_id eq 'vector_transgenic_line_details_section'){
+                                <& /stock/vector_transformant_details.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_transgenic_line_details_section
 % if ($info_section_id eq 'related_transformation_info_section'){
                                 <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
-% } #End vector_related_accessions_section
+% } #End related_transformation_info_section
+
 
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
@@ -470,6 +478,9 @@ $field_headers => ()
 % if ($info_section_id eq 'genotyping_protocol_markers'){
                                 <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id, marker_info_headers => $marker_info_headers &>
 % } #End genotyping_protocol_markers
+% if ($info_section_id eq 'marker_metadata'){
+                                <& /breeders_toolbox/genotyping_protocol/marker_metadata.mas, protocol_id => $protocol_id &>
+% } #End marker_metadata
 % if ($info_section_id eq 'genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>
 % } #End genotyping_protocol_genotype_data

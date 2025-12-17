@@ -43,7 +43,7 @@ spatialHeaders <- args[6]
 # ################################################################################
 # # read in the phenotypic data
 
-userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE)
+userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE, check.names = FALSE)
 spatialPheno <- read.delim(spatialFile, header = TRUE, sep = "\t", fill = TRUE)
 colnames(spatialPheno) <- c("Trait", "Data.Quality", "Moran.P.Value", "Correction.Needed")
 traits <- spatialPheno$Trait[spatialPheno$Correction.Needed == "YES"]

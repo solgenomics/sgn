@@ -10,6 +10,7 @@ use DateTime;
 use JSON;
 use SGN::Model::Cvterm;
 use CXGN::Transformation::Transformation;
+use Sort::Key::Natural qw(natkeysort);
 
 local $Data::Dumper::Indent = 0;
 
@@ -141,28 +142,44 @@ is($transformation3_control_name, "bti_transformation_1_".$upload_date."_BTI_C_b
 
 #checking transformants in each transformation id
 my $transformants_1 = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation1_stock_id});
-my $result1 = $transformants_1->transformants();
+my $result1 = $transformants_1->get_transformant_details();
 is (scalar(@$result1), '4');
+
+my @sorted_names_1 = natkeysort {($_->[1])} @$result1;
+is($sorted_names_1[0][1], 'new_accession_1');
+is($sorted_names_1[0][2], '1');
+is($sorted_names_1[2][1], 'new_accession_3');
+is($sorted_names_1[2][2], '2');
 
 foreach my $r (@$result1){
     my ($stock_id, $stock_name) =@$r;
     push @all_new_stocks, $stock_id;
 }
 
-
 my $transformants_2 = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation2_stock_id});
-my $result2 = $transformants_2->transformants();
+my $result2 = $transformants_2->get_transformant_details();
 is (scalar(@$result2), '4');
+
+my @sorted_names_2 = natkeysort {($_->[1])} @$result2;
+is($sorted_names_2[0][1], 'new_accession_10');
+is($sorted_names_2[0][2], '3');
+is($sorted_names_2[2][1], 'new_accession_12');
+is($sorted_names_2[2][2], '1');
 
 foreach my $r (@$result2){
     my ($stock_id, $stock_name) =@$r;
     push @all_new_stocks, $stock_id;
 }
 
-
 my $transformants_3 = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation3_stock_id});
-my $result3 = $transformants_3->transformants();
+my $result3 = $transformants_3->get_transformant_details();
 is (scalar(@$result3), '5');
+
+my @sorted_names_3 = natkeysort {($_->[1])} @$result3;
+is($sorted_names_3[0][1], 'new_accession_5');
+is($sorted_names_3[0][2], '1');
+is($sorted_names_3[2][1], 'new_accession_7');
+is($sorted_names_3[2][2], '1');
 
 foreach my $r (@$result3){
     my ($stock_id, $stock_name) =@$r;
@@ -170,8 +187,14 @@ foreach my $r (@$result3){
 }
 
 my $transformants_4 = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation4_stock_id});
-my $result4 = $transformants_4->transformants();
+my $result4 = $transformants_4->get_transformant_details();
 is (scalar(@$result4), '2');
+
+my @sorted_names_4 = natkeysort {($_->[1])} @$result4;
+is($sorted_names_4[0][1], 'new_accession_14');
+is($sorted_names_4[0][2], '1');
+is($sorted_names_4[1][1], 'new_accession_15');
+is($sorted_names_4[1][2], '1');
 
 foreach my $r (@$result4){
     my ($stock_id, $stock_name) =@$r;

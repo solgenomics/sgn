@@ -374,7 +374,7 @@ sub store {
 
             if ($self->old_value() && ($self->old_value() eq $self->value())) {
                 #print STDERR "OLD VALUE AND NEW VALUE ARE THE SAME (".$self->value()."). NOT UPDATING\n";
-                return { success => 1, skip_count => 1, reason => "NEW AND OLD VALUES ARE IDENTICAL.\n" };
+                return { success => 1, skip_count => 1, previously_stored_skip_count => 1, reason => "NEW AND OLD VALUES ARE IDENTICAL.\n" };
 
             }
 
@@ -416,13 +416,13 @@ sub store {
             }
             return { success => 1, overwrite_count => \@overwritten_values, experiment_ids => \%experiment_ids, nd_experiment_md_images => \%nd_experiment_md_images };
         } # if overwrite
-        return { success => 1, skip_count => 1, reason => "Overwrite not set - skipping" };
+        return { success => 1, skip_count => 1, previously_stored_skip_count => 1, reason => "Overwrite not set - skipping" };
     }  # if phenotype-id
     else { # INSERT
         #print STDERR "OLD VALUE = ".$self->old_value()."\n";
         if ($self->old_value() eq $self->value()) {
             #print STDERR "TRYING TO INSERT WITH SAME VALUE ALREADY PRESENT... SKIPPING!\n";
-            return { success => 1, skip_count => 1, reason => "VALUE ALREADY PRESENT FOR TRAIT, OBS UNIT AND TIMESTAMP.\n" };
+            return { success => 1, skip_count => 1, previously_stored_skip_count => 1, reason => "VALUE ALREADY PRESENT FOR TRAIT, OBS UNIT AND TIMESTAMP.\n" };
         }
 
         #print STDERR "INSERTING... ".$self->value()."\n";
@@ -584,7 +584,7 @@ sub check_categories {
             }
         }
         foreach my $value (@check_values) {
-            if ($value ne '' && !exists($trait_categories_hash{$value})) {
+            if ($value ne '' && defined($value) && !exists($trait_categories_hash{$value})) {
                 my $valid_values = join("/", sort keys %trait_categories_hash);  # Sort values for consistent order
                 $error_message =  "<small> This trait value should be one of $valid_values: <br/>Value: ".$self->value()."</small><hr>";
             }
@@ -632,7 +632,7 @@ sub check {
 
     my $trait_value = $self->value();
 
-    if ($self->trait_format() eq 'numeric') {
+    if (defined($trait_value) && $trait_value ne '' && $trait_value ne 'NA' && $trait_value ne '.' && $self->trait_format() eq 'numeric') { # check only if the trait_value is defined and not NA etc.
         if (! looks_like_number($trait_value)) {
             push @errors, "Trait format is numeric but value is not a number ($trait_value)\n";
         }
