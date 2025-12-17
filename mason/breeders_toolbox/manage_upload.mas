@@ -463,7 +463,17 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'images' : 
-            //
+            display_images_upload_choices();
+            let images_select = jQuery('#upload_images_select_more');
+            archived_files_list.forEach(item => {
+                if (item.filename.includes(".png") || item.filename.includes(".jpg") || item.filename.includes(".jpeg") || item.filename.includes(".webp") || item.filename.includes(".gif")) {
+                    const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
+                    images_select.append(opt);
+                }
+            });
+            jQuery('#upload_images_type').on('change', display_images_additional_upload_choices);
+            jQuery('#image_upload_next_btn').on('click', {file_data : file_data}, populate_image_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'soil_data' : 
             //
@@ -1133,6 +1143,42 @@ function display_nirs_upload_choices() {
     );
 }
 
+function display_images_upload_choices() {
+     jQuery('#upload_type_choices_div').html(
+        '<div class="form-group">'+
+            '<label class="col-sm-6 control-label">Image upload type: </label>'+
+            '<div class="col-sm-6" >'+
+                '<select class="form-control" id="upload_images_type" name="upload_images_type">'+
+                    '<option value>Select...</option>'+
+                    '<option value="images">Images alone</option>'+
+                    '<option value="images_barcodes">Images with barcodes</option>'+
+                    '<option value="images_phenotypes">Image zipfile with associated phenotypes</option>'+
+                '</select>'+
+           ' </div>'+
+        '</div>'+
+        '<br>' + 
+        '<div id="upload_images_select_more_div" class="form-group" hidden>'+
+            '<label class="col-sm-6 control-label">Select additional images: </label>'+
+            '<div class="col-sm-6" >'+
+                '<select class="form-control" id="upload_images_select_more" name="upload_images_select_more" multiple>'+
+                    '<option value>Select...</option>'+
+                '</select>'+
+           ' </div>'+
+        '</div>'+
+        '<br>' + 
+        '<button id="image_upload_next_btn" class="btn btn-primary">Next</button>'
+    );
+}
+
+function display_images_additional_upload_choices() {
+    let image_upload_type = jQuery('#upload_images_type').val();
+    if (!image_upload_type || image_upload_type == "images_phenotypes") {
+        jQuery('#upload_images_select_more_div').hide();
+    } else {
+        jQuery('#upload_images_select_more_div').show();
+    }
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     let upload_type_dict = {
@@ -1519,6 +1565,27 @@ function populate_transcriptomics_validate_submit_data(event) {
         transcriptomics_protocol : selected_protocols[0].name,
         transcriptomics_protocol_id : selected_protocols[0].id
     });
+}
+
+function populate_image_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let image_upload_type = jQuery('#upload_images_type').val();
+
+    let selected_files = [];
+    jQuery('#upload_images_select_more option:selected').each(function(){
+        selected_files.push({id : jQuery(this).val(), name : jQuery(this).text()});
+    });
+
+    if (!image_upload_type) {
+        alert("Select an image upload type.");
+        return;
+    } else if (image_upload_type == "images_phenotypes") {
+        populate_validate_submit_data("images_phenotypes", file_data);
+    } else {
+        populate_validate_submit_data(image_upload_type, file_data, {
+            additional_files : selected_files
+        });
+    }
 }
 
 function submit_file_validation(options) {
