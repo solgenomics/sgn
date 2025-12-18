@@ -2783,7 +2783,7 @@ sub add_derived_accessions_using_list_POST : Args(0) {
     my $dbh = $c->dbc->dbh;
 
     if (!$c->user()) {
-        $c->stash->{rest} = { error => "Log in required for making stock obsolete." }; return;
+        $c->stash->{rest} = { error => "Log in required for adding derived accessions." }; return;
     }
 
     if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
@@ -2799,8 +2799,7 @@ sub add_derived_accessions_using_list_POST : Args(0) {
     my $all_new_names = decode_json $c->req->param('all_new_names');
     my @error_messages;
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => $all_new_names }
+        'uniquename' => { -in => $all_new_names },
     });
     while (my $r=$rs->next){
         push @error_messages, "Accession name already exists in database: ".$r->uniquename;

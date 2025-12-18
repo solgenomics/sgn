@@ -63,7 +63,7 @@ sub existing_accession_name {
     my $schema = $self->get_chado_schema();
     my $derived_accession_name = $self->get_derived_accession_name();
 
-    if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $derived_accession_name, 'is_obsolete' => { '!=' => 't' }})){
+    if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $derived_accession_name })) {
         return 1;
     } else {
         return;
