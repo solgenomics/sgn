@@ -2798,11 +2798,11 @@ sub add_derived_accessions_using_list_POST : Args(0) {
 
     my $all_new_names = decode_json $c->req->param('all_new_names');
     my @error_messages;
-    my $rs = $schema->resultset("Stock::Stock")->search({
-        'uniquename' => { -in => $all_new_names },
-    });
-    while (my $r=$rs->next){
-        push @error_messages, "Accession name already exists in database: ".$r->uniquename;
+
+    foreach my $new_name (@$all_new_names) {
+        if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $new_name })) {
+            push @error_messages, "Accession name already exists in database: ".$new_name;
+        }
     }
 
     if (scalar(@error_messages) >= 1) {
