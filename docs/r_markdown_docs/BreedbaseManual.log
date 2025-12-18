@@ -1,0 +1,2692 @@
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.29)  18 DEC 2025 16:36
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**BreedbaseManual.tex
+(./BreedbaseManual.tex
+LaTeX2e <2022-11-01> patch level 1
+L3 programming layer <2023-02-22> (/usr/share/texlive/texmf-dist/tex/latex/base
+/book.cls
+Document Class: book 2022/07/02 v1.4n Standard LaTeX document class
+(/usr/share/texlive/texmf-dist/tex/latex/base/bk12.clo
+File: bk12.clo 2022/07/02 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count181
+\c@chapter=\count182
+\c@section=\count183
+\c@subsection=\count184
+\c@subsubsection=\count185
+\c@paragraph=\count186
+\c@subparagraph=\count187
+\c@figure=\count188
+\c@table=\count189
+\abovecaptionskip=\skip48
+\belowcaptionskip=\skip49
+\bibindent=\dimen140
+) (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2022/04/08 v2.17n AMS math features
+\@mathmargin=\skip50
+For additional information on amsmath, use the `?' option.
+(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2021/08/26 v2.01 AMS text
+(/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks16
+\ex@=\dimen141
+)) (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen142
+) (/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count190
+LaTeX Info: Redefining \frac on input line 234.
+\uproot@=\count191
+\leftroot@=\count192
+LaTeX Info: Redefining \overline on input line 399.
+LaTeX Info: Redefining \colon on input line 410.
+\classnum@=\count193
+\DOTSCASE@=\count194
+LaTeX Info: Redefining \ldots on input line 496.
+LaTeX Info: Redefining \dots on input line 499.
+LaTeX Info: Redefining \cdots on input line 620.
+\Mathstrutbox@=\box51
+\strutbox@=\box52
+LaTeX Info: Redefining \big on input line 722.
+LaTeX Info: Redefining \Big on input line 723.
+LaTeX Info: Redefining \bigg on input line 724.
+LaTeX Info: Redefining \Bigg on input line 725.
+\big@size=\dimen143
+LaTeX Font Info:    Redeclaring font encoding OML on input line 743.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 744.
+\macc@depth=\count195
+LaTeX Info: Redefining \bmod on input line 905.
+LaTeX Info: Redefining \pmod on input line 910.
+LaTeX Info: Redefining \smash on input line 940.
+LaTeX Info: Redefining \relbar on input line 970.
+LaTeX Info: Redefining \Relbar on input line 971.
+\c@MaxMatrixCols=\count196
+\dotsspace@=\muskip16
+\c@parentequation=\count197
+\dspbrk@lvl=\count198
+\tag@help=\toks17
+\row@=\count199
+\column@=\count266
+\maxfields@=\count267
+\andhelp@=\toks18
+\eqnshift@=\dimen144
+\alignsep@=\dimen145
+\tagshift@=\dimen146
+\tagwidth@=\dimen147
+\totwidth@=\dimen148
+\lineht@=\dimen149
+\@envbody=\toks19
+\multlinegap=\skip51
+\multlinetaggap=\skip52
+\mathdisplay@stack=\toks20
+LaTeX Info: Redefining \[ on input line 2953.
+LaTeX Info: Redefining \] on input line 2954.
+) (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)) (/usr/share/texlive/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2022/02/03 v1.0f TeX engine tests
+) (/usr/share/texlive/texmf-dist/tex/latex/unicode-math/unicode-math.sty (/usr/
+share/texlive/texmf-dist/tex/latex/l3kernel/expl3.sty
+Package: expl3 2023-02-22 L3 programming layer (loader) 
+(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-xetex.def
+File: l3backend-xetex.def 2023-01-16 L3 backend support: XeTeX
+\g__graphics_track_int=\count268
+\l__pdf_internal_box=\box53
+\g__pdf_backend_object_int=\count269
+\g__pdf_backend_annotation_int=\count270
+\g__pdf_backend_link_int=\count271
+))
+Package: unicode-math 2020/01/31 v0.8q Unicode maths in XeLaTeX and LuaLaTeX
+(/usr/share/texlive/texmf-dist/tex/latex/unicode-math/unicode-math-xetex.sty
+Package: unicode-math-xetex 2020/01/31 v0.8q Unicode maths in XeLaTeX and LuaLa
+TeX
+(/usr/share/texlive/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
+Package: xparse 2023-02-02 L3 Experimental document command parser
+) (/usr/share/texlive/texmf-dist/tex/latex/l3packages/l3keys2e/l3keys2e.sty
+Package: l3keys2e 2023-02-02 LaTeX2e option processing using LaTeX3 keys
+) (/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.sty
+Package: fontspec 2022/01/15 v2.8a Font selection for XeLaTeX and LuaLaTeX
+(/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec-xetex.sty
+Package: fontspec-xetex 2022/01/15 v2.8a Font selection for XeLaTeX and LuaLaTe
+X
+\l__fontspec_script_int=\count272
+\l__fontspec_language_int=\count273
+\l__fontspec_strnum_int=\count274
+\l__fontspec_tmp_int=\count275
+\l__fontspec_tmpa_int=\count276
+\l__fontspec_tmpb_int=\count277
+\l__fontspec_tmpc_int=\count278
+\l__fontspec_em_int=\count279
+\l__fontspec_emdef_int=\count280
+\l__fontspec_strong_int=\count281
+\l__fontspec_strongdef_int=\count282
+\l__fontspec_tmpa_dim=\dimen150
+\l__fontspec_tmpb_dim=\dimen151
+\l__fontspec_tmpc_dim=\dimen152
+(/usr/share/texlive/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2021/04/29 v2.0v Standard LaTeX package
+) (/usr/share/texlive/texmf-dist/tex/latex/fontspec/fontspec.cfg))) (/usr/share
+/texlive/texmf-dist/tex/latex/base/fix-cm.sty
+Package: fix-cm 2020/11/24 v1.1t fixes to LaTeX
+(/usr/share/texlive/texmf-dist/tex/latex/base/ts1enc.def
+File: ts1enc.def 2001/06/05 v3.0e (jk/car/fm) Standard LaTeX file
+LaTeX Font Info:    Redeclaring font encoding TS1 on input line 47.
+))
+\g__um_fam_int=\count283
+\g__um_fonts_used_int=\count284
+\l__um_primecount_int=\count285
+\g__um_primekern_muskip=\muskip17
+(/usr/share/texlive/texmf-dist/tex/latex/unicode-math/unicode-math-table.tex)))
+(/usr/share/texlive/texmf-dist/tex/latex/lm/lmodern.sty
+Package: lmodern 2015/05/01 v1.6.1 Latin Modern Fonts
+LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
+(Font)                  OT1/cmr/m/n --> OT1/lmr/m/n on input line 22.
+LaTeX Font Info:    Overwriting symbol font `letters' in version `normal'
+(Font)                  OML/cmm/m/it --> OML/lmm/m/it on input line 23.
+LaTeX Font Info:    Overwriting symbol font `symbols' in version `normal'
+(Font)                  OMS/cmsy/m/n --> OMS/lmsy/m/n on input line 24.
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
+(Font)                  OMX/cmex/m/n --> OMX/lmex/m/n on input line 25.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
+(Font)                  OT1/cmr/bx/n --> OT1/lmr/bx/n on input line 26.
+LaTeX Font Info:    Overwriting symbol font `letters' in version `bold'
+(Font)                  OML/cmm/b/it --> OML/lmm/b/it on input line 27.
+LaTeX Font Info:    Overwriting symbol font `symbols' in version `bold'
+(Font)                  OMS/cmsy/b/n --> OMS/lmsy/b/n on input line 28.
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
+(Font)                  OMX/cmex/m/n --> OMX/lmex/m/n on input line 29.
+LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
+(Font)                  OT1/cmr/bx/n --> OT1/lmr/bx/n on input line 31.
+LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
+(Font)                  OT1/cmss/m/n --> OT1/lmss/m/n on input line 32.
+LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
+(Font)                  OT1/cmr/m/it --> OT1/lmr/m/it on input line 33.
+LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
+(Font)                  OT1/cmtt/m/n --> OT1/lmtt/m/n on input line 34.
+LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `bold'
+(Font)                  OT1/cmr/bx/n --> OT1/lmr/bx/n on input line 35.
+LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
+(Font)                  OT1/cmss/bx/n --> OT1/lmss/bx/n on input line 36.
+LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
+(Font)                  OT1/cmr/bx/it --> OT1/lmr/bx/it on input line 37.
+LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
+(Font)                  OT1/cmtt/m/n --> OT1/lmtt/m/n on input line 38.
+) (/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype.sty
+Package: microtype 2023/03/13 v3.1a Micro-typographical refinements (RS)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks21
+) (/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+Package: etoolbox 2020/10/05 v2.5k e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count286
+)
+\MT@toks=\toks22
+\MT@tempbox=\box54
+\MT@count=\count287
+LaTeX Info: Redefining \noprotrusionifhmode on input line 1059.
+LaTeX Info: Redefining \leftprotrusion on input line 1060.
+\MT@prot@toks=\toks23
+LaTeX Info: Redefining \rightprotrusion on input line 1078.
+LaTeX Info: Redefining \textls on input line 1368.
+\MT@outer@kern=\dimen153
+LaTeX Info: Redefining \textmicrotypecontext on input line 1988.
+\MT@listname@count=\count288
+(/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype-xetex.def
+File: microtype-xetex.def 2023/03/13 v3.1a Definitions specific to xetex (RS)
+LaTeX Info: Redefining \lsstyle on input line 238.
+)
+Package microtype Info: Loading configuration file microtype.cfg.
+(/usr/share/texlive/texmf-dist/tex/latex/microtype/microtype.cfg
+File: microtype.cfg 2023/03/13 v3.1a microtype main configuration file (RS)
+)) (/usr/share/texlive/texmf-dist/tex/latex/parskip/parskip.sty
+Package: parskip 2021-03-14 v2.0h non-zero parskip adjustments
+(/usr/share/texlive/texmf-dist/tex/latex/kvoptions/kvoptions.sty
+Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
+(/usr/share/texlive/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty
+Package: ltxcmds 2020-05-10 v1.25 LaTeX kernel commands for general use (HO)
+) (/usr/share/texlive/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty
+Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
+))) (/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2022/06/12 v2.14 LaTeX color extensions (UK)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: xetex.def on input line 227.
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-def/xetex.def
+File: xetex.def 2022/09/22 v5.0n Graphics/color driver for xetex
+) (/usr/share/texlive/texmf-dist/tex/latex/graphics/mathcolor.ltx)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1353.
+Package xcolor Info: Model `RGB' extended on input line 1369.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1371.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1372.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1373.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1374.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1375.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1376.
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/dvipsnam.def
+File: dvipsnam.def 2016/06/17 v3.0m Driver-dependent file (DPC,SPQR)
+) (/usr/share/texlive/texmf-dist/tex/latex/xcolor/svgnam.def
+File: svgnam.def 2022/06/12 v2.14 Predefined colors according to SVG 1.1 (UK)
+) (/usr/share/texlive/texmf-dist/tex/latex/xcolor/x11nam.def
+File: x11nam.def 2022/06/12 v2.14 Predefined colors according to Unix/X11 (UK)
+)) (/usr/share/texlive/texmf-dist/tex/latex/tools/longtable.sty
+Package: longtable 2021-09-01 v4.17 Multi-page Table package (DPC)
+\LTleft=\skip53
+\LTright=\skip54
+\LTpre=\skip55
+\LTpost=\skip56
+\LTchunksize=\count289
+\LTcapwidth=\dimen154
+\LT@head=\box55
+\LT@firsthead=\box56
+\LT@foot=\box57
+\LT@lastfoot=\box58
+\LT@gbox=\box59
+\LT@cols=\count290
+\LT@rows=\count291
+\c@LT@tables=\count292
+\c@LT@chunks=\count293
+\LT@p@ftn=\toks24
+) (/usr/share/texlive/texmf-dist/tex/latex/booktabs/booktabs.sty
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen155
+\lightrulewidth=\dimen156
+\cmidrulewidth=\dimen157
+\belowrulesep=\dimen158
+\belowbottomsep=\dimen159
+\aboverulesep=\dimen160
+\abovetopsep=\dimen161
+\cmidrulesep=\dimen162
+\cmidrulekern=\dimen163
+\defaultaddspace=\dimen164
+\@cmidla=\count294
+\@cmidlb=\count295
+\@aboverulesep=\dimen165
+\@belowrulesep=\dimen166
+\@thisruleclass=\count296
+\@lastruleclass=\count297
+\@thisrulewidth=\dimen167
+) (/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
+Package: array 2022/09/04 v2.5g Tabular extension package (FMi)
+\col@sep=\dimen168
+\ar@mcellbox=\box60
+\extrarowheight=\dimen169
+\NC@list=\toks25
+\extratabsurround=\skip57
+\backup@length=\skip58
+\ar@cellbox=\box61
+) (/usr/share/texlive/texmf-dist/tex/latex/tools/calc.sty
+Package: calc 2017/05/25 v4.3 Infix arithmetic (KKT,FJ)
+\calc@Acount=\count298
+\calc@Bcount=\count299
+\calc@Adimen=\dimen170
+\calc@Bdimen=\dimen171
+\calc@Askip=\skip59
+\calc@Bskip=\skip60
+LaTeX Info: Redefining \setlength on input line 80.
+LaTeX Info: Redefining \addtolength on input line 81.
+\calc@Ccount=\count300
+\calc@Cskip=\skip61
+) (/usr/share/texlive/texmf-dist/tex/latex/footnotehyper/footnotehyper.sty
+Package: footnotehyper 2021/08/13 v1.1e hyperref aware footnote.sty (JFB)
+\FNH@notes=\box62
+\FNH@width=\dimen172
+\FNH@toks=\toks26
+) (/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2022/03/10 v1.4e Standard LaTeX Graphics (DPC,SPQR)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2021/08/11 v1.11 sin cos tan (DPC)
+) (/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: xetex.def on input line 107.
+)
+\Gin@req@height=\dimen173
+\Gin@req@width=\dimen174
+) (/usr/share/texlive/texmf-dist/tex/latex/natbib/natbib.sty
+Package: natbib 2010/09/13 8.31b (PWD, AO)
+\bibhang=\skip62
+\bibsep=\skip63
+LaTeX Info: Redefining \cite on input line 694.
+\c@NAT@ctr=\count301
+) (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bookmark.sty
+Package: bookmark 2020-11-06 v1.29 PDF bookmarks (HO)
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hyperref.sty
+Package: hyperref 2023-02-07 v7.00v Hypertext links for LaTeX
+(/usr/share/texlive/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+(/usr/share/texlive/texmf-dist/tex/generic/infwarerr/infwarerr.sty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode not found.
+) (/usr/share/texlive/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
+) (/usr/share/texlive/texmf-dist/tex/generic/pdfescape/pdfescape.sty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+) (/usr/share/texlive/texmf-dist/tex/latex/hycolor/hycolor.sty
+Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
+) (/usr/share/texlive/texmf-dist/tex/latex/letltxmacro/letltxmacro.sty
+Package: letltxmacro 2019/12/03 v1.6 Let assignment for LaTeX macros (HO)
+) (/usr/share/texlive/texmf-dist/tex/latex/auxhook/auxhook.sty
+Package: auxhook 2019-12-17 v1.6 Hooks for auxiliary files (HO)
+) (/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
+Package: nameref 2022-05-17 v2.50 Cross-referencing by name of section
+(/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+) (/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+)
+\c@section@level=\count302
+)
+\@linkdim=\dimen175
+\Hy@linkcounter=\count303
+\Hy@pagecounter=\count304
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def
+File: pd1enc.def 2023-02-07 v7.00v Hyperref: PDFDocEncoding definition (HO)
+) (/usr/share/texlive/texmf-dist/tex/generic/intcalc/intcalc.sty
+Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
+) (/usr/share/texlive/texmf-dist/tex/generic/etexcmds/etexcmds.sty
+Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
+)
+\Hy@SavedSpaceFactor=\count305
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/puenc.def
+File: puenc.def 2023-02-07 v7.00v Hyperref: PDF Unicode definition (HO)
+)
+Package hyperref Info: Option `unicode' set `true' on input line 4060.
+Package hyperref Info: Hyper figures OFF on input line 4177.
+Package hyperref Info: Link nesting OFF on input line 4182.
+Package hyperref Info: Hyper index ON on input line 4185.
+Package hyperref Info: Plain pages OFF on input line 4192.
+Package hyperref Info: Backreferencing OFF on input line 4197.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4425.
+\c@Hy@tempcnt=\count306
+(/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip18
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 4763.
+\XeTeXLinkMargin=\dimen176
+(/usr/share/texlive/texmf-dist/tex/generic/bitset/bitset.sty
+Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
+(/usr/share/texlive/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
+))
+\Fld@menulength=\count307
+\Field@Width=\dimen177
+\Fld@charsize=\dimen178
+Package hyperref Info: Hyper figures OFF on input line 6042.
+Package hyperref Info: Link nesting OFF on input line 6047.
+Package hyperref Info: Hyper index ON on input line 6050.
+Package hyperref Info: backreferencing OFF on input line 6057.
+Package hyperref Info: Link coloring OFF on input line 6062.
+Package hyperref Info: Link coloring with OCG OFF on input line 6067.
+Package hyperref Info: PDF/A mode OFF on input line 6072.
+(/usr/share/texlive/texmf-dist/tex/latex/base/atbegshi-ltx.sty
+Package: atbegshi-ltx 2021/01/10 v1.0c Emulation of the original atbegshi
+package with kernel methods
+)
+\Hy@abspage=\count308
+\c@Item=\count309
+\c@Hfootnote=\count310
+)
+Package hyperref Info: Driver (autodetected): hxetex.
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hxetex.def
+File: hxetex.def 2023-02-07 v7.00v Hyperref driver for XeTeX
+(/usr/share/texlive/texmf-dist/tex/generic/stringenc/stringenc.sty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
+)
+)
+\pdfm@box=\box63
+\c@Hy@AnnotLevel=\count311
+\HyField@AnnotCount=\count312
+\Fld@listcount=\count313
+\c@bookmark@seq@number=\count314
+(/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
+Package: rerunfilecheck 2022-07-10 v1.10 Rerun checks for auxiliary files (HO)
+(/usr/share/texlive/texmf-dist/tex/latex/base/atveryend-ltx.sty
+Package: atveryend-ltx 2020/08/19 v1.0a Emulation of the original atveryend pac
+kage
+with kernel methods
+) (/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
+Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
+)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+85.
+)
+\Hy@SectionHShift=\skip64
+) (/usr/share/texlive/texmf-dist/tex/latex/bookmark/bkm-dvipdfm.def
+File: bkm-dvipdfm.def 2020-11-06 v1.29 bookmark driver for dvipdfm (HO)
+\BKM@id=\count315
+))
+Package hyperref Info: Option `colorlinks' set `true' on input line 84.
+(./BreedbaseManual.aux)
+\openout1 = `BreedbaseManual.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 90.
+LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Overwriting math alphabet `\mathrm' in version `normal'
+(Font)                  OT1/lmr/m/n --> TU/lmr/m/n on input line 90.
+LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
+(Font)                  OT1/lmr/m/it --> TU/lmr/m/it on input line 90.
+LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
+(Font)                  OT1/lmr/bx/n --> TU/lmr/bx/n on input line 90.
+LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
+(Font)                  OT1/lmss/m/n --> TU/lmss/m/n on input line 90.
+LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
+(Font)                  OT1/lmss/bx/n --> TU/lmss/bx/n on input line 90.
+LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
+(Font)                  OT1/lmtt/m/n --> TU/lmtt/m/n on input line 90.
+LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
+(Font)                  OT1/lmtt/m/n --> TU/lmtt/bx/n on input line 90.
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: Font family 'latinmodern-math.otf(0)' created for font
+(fontspec)             'latinmodern-math.otf' with options
+(fontspec)             [Scale=MatchLowercase,BoldItalicFont={},ItalicFont={},Sm
+allCapsFont={},Script=Math,BoldFont={latinmodern-math.otf}].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[0.9999970497384594]"[latinmodern-math.otf]/OT:scri
+pt=math;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[0.9999970497384594]"[latinmodern-math.otf]/OT:scri
+pt=math;language=dflt;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.: 
+
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(0)/m/n' will be
+(Font)              scaled to size 12.0pt on input line 90.
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: Font family 'latinmodern-math.otf(1)' created for font
+(fontspec)             'latinmodern-math.otf' with options
+(fontspec)             [Scale=MatchLowercase,BoldItalicFont={},ItalicFont={},Sm
+allCapsFont={},Script=Math,SizeFeatures={{Size=10.2-},{Size=7.2-10.2,Font=latin
+modern-math.otf,Style=MathScript},{Size=-7.2,Font=latinmodern-math.otf,Style=Ma
+thScriptScript}},BoldFont={latinmodern-math.otf}].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <10.2->s*[0.9999970497384594]"[latinmodern-math.otf]/OT:
+script=math;language=dflt;"<7.2-10.2>s*[0.9999970497384594]"[latinmodern-math.o
+tf]/OT:script=math;language=dflt;+ssty=0;"<-7.2>s*[0.9999970497384594]"[latinmo
+dern-math.otf]/OT:script=math;language=dflt;+ssty=1;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[0.9999970497384594]"[latinmodern-math.otf]/OT:scri
+pt=math;language=dflt;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.: 
+
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 12.0pt on input line 90.
+LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
+(Font)              `operators' in the math version `normal' on input line 90.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
+(Font)                  OT1/lmr/m/n --> TU/latinmodern-math.otf(1)/m/n on input
+ line 90.
+LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
+(Font)              `operators' in the math version `bold' on input line 90.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
+(Font)                  OT1/lmr/bx/n --> TU/latinmodern-math.otf(1)/b/n on inpu
+t line 90.
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 1.000097049443433.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 1.000097049443433.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 1.000097049443433.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 1.000097049443433.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 1.000097049443433.
+
+
+Package fontspec Info: Font family 'latinmodern-math.otf(2)' created for font
+(fontspec)             'latinmodern-math.otf' with options
+(fontspec)             [Scale=MatchLowercase,BoldItalicFont={},ItalicFont={},Sm
+allCapsFont={},Script=Math,SizeFeatures={{Size=10.2-},{Size=7.2-10.2,Font=latin
+modern-math.otf,Style=MathScript},{Size=-7.2,Font=latinmodern-math.otf,Style=Ma
+thScriptScript}},BoldFont={latinmodern-math.otf},ScaleAgain=1.0001,FontAdjustme
+nt={\fontdimen
+(fontspec)             8\font =8.124pt\relax \fontdimen 9\font =4.728pt\relax
+(fontspec)             \fontdimen 10\font =5.328pt\relax \fontdimen 11\font
+(fontspec)             =8.232pt\relax \fontdimen 12\font =4.14pt\relax
+(fontspec)             \fontdimen 13\font =4.356pt\relax \fontdimen 14\font
+(fontspec)             =4.356pt\relax \fontdimen 15\font =3.468pt\relax
+(fontspec)             \fontdimen 16\font =2.964pt\relax \fontdimen 17\font
+(fontspec)             =2.964pt\relax \fontdimen 18\font =3.0pt\relax
+(fontspec)             \fontdimen 19\font =2.4pt\relax \fontdimen 22\font
+(fontspec)             =3.0pt\relax \fontdimen 20\font =0pt\relax \fontdimen
+(fontspec)             21\font =0pt\relax }].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <10.2->s*[1.000097049443433]"[latinmodern-math.otf]/OT:s
+cript=math;language=dflt;"<7.2-10.2>s*[1.000097049443433]"[latinmodern-math.otf
+]/OT:script=math;language=dflt;+ssty=0;"<-7.2>s*[1.000097049443433]"[latinmoder
+n-math.otf]/OT:script=math;language=dflt;+ssty=1;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 8\font =8.124pt\relax \fontdimen 9\font
+(fontspec)             =4.728pt\relax \fontdimen 10\font =5.328pt\relax
+(fontspec)             \fontdimen 11\font =8.232pt\relax \fontdimen 12\font
+(fontspec)             =4.14pt\relax \fontdimen 13\font =4.356pt\relax
+(fontspec)             \fontdimen 14\font =4.356pt\relax \fontdimen 15\font
+(fontspec)             =3.468pt\relax \fontdimen 16\font =2.964pt\relax
+(fontspec)             \fontdimen 17\font =2.964pt\relax \fontdimen 18\font
+(fontspec)             =3.0pt\relax \fontdimen 19\font =2.4pt\relax \fontdimen
+(fontspec)             22\font =3.0pt\relax \fontdimen 20\font =0pt\relax
+(fontspec)             \fontdimen 21\font =0pt\relax 
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1.000097049443433]"[latinmodern-math.otf]/OT:scrip
+t=math;language=dflt;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.: 
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 8\font =8.124pt\relax \fontdimen 9\font
+(fontspec)             =4.728pt\relax \fontdimen 10\font =5.328pt\relax
+(fontspec)             \fontdimen 11\font =8.232pt\relax \fontdimen 12\font
+(fontspec)             =4.14pt\relax \fontdimen 13\font =4.356pt\relax
+(fontspec)             \fontdimen 14\font =4.356pt\relax \fontdimen 15\font
+(fontspec)             =3.468pt\relax \fontdimen 16\font =2.964pt\relax
+(fontspec)             \fontdimen 17\font =2.964pt\relax \fontdimen 18\font
+(fontspec)             =3.0pt\relax \fontdimen 19\font =2.4pt\relax \fontdimen
+(fontspec)             22\font =3.0pt\relax \fontdimen 20\font =0pt\relax
+(fontspec)             \fontdimen 21\font =0pt\relax 
+
+LaTeX Font Info:    Encoding `OMS' has changed to `TU' for symbol font
+(Font)              `symbols' in the math version `normal' on input line 90.
+LaTeX Font Info:    Overwriting symbol font `symbols' in version `normal'
+(Font)                  OMS/lmsy/m/n --> TU/latinmodern-math.otf(2)/m/n on inpu
+t line 90.
+LaTeX Font Info:    Encoding `OMS' has changed to `TU' for symbol font
+(Font)              `symbols' in the math version `bold' on input line 90.
+LaTeX Font Info:    Overwriting symbol font `symbols' in version `bold'
+(Font)                  OMS/lmsy/b/n --> TU/latinmodern-math.otf(2)/b/n on inpu
+t line 90.
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9998970500334856.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9998970500334856.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9998970500334856.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9998970500334856.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9999970497384594.
+
+
+Package fontspec Info: latinmodern-math scale = 0.9998970500334856.
+
+
+Package fontspec Info: Font family 'latinmodern-math.otf(3)' created for font
+(fontspec)             'latinmodern-math.otf' with options
+(fontspec)             [Scale=MatchLowercase,BoldItalicFont={},ItalicFont={},Sm
+allCapsFont={},Script=Math,SizeFeatures={{Size=10.2-},{Size=7.2-10.2,Font=latin
+modern-math.otf,Style=MathScript},{Size=-7.2,Font=latinmodern-math.otf,Style=Ma
+thScriptScript}},BoldFont={latinmodern-math.otf},ScaleAgain=0.9999,FontAdjustme
+nt={\fontdimen
+(fontspec)             8\font =0.48pt\relax \fontdimen 9\font =2.4pt\relax
+(fontspec)             \fontdimen 10\font =2.004pt\relax \fontdimen 11\font
+(fontspec)             =1.332pt\relax \fontdimen 12\font =7.2pt\relax
+(fontspec)             \fontdimen 13\font =0pt\relax }].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <10.2->s*[0.9998970500334856]"[latinmodern-math.otf]/OT:
+script=math;language=dflt;"<7.2-10.2>s*[0.9998970500334856]"[latinmodern-math.o
+tf]/OT:script=math;language=dflt;+ssty=0;"<-7.2>s*[0.9998970500334856]"[latinmo
+dern-math.otf]/OT:script=math;language=dflt;+ssty=1;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 8\font =0.48pt\relax \fontdimen 9\font
+(fontspec)             =2.4pt\relax \fontdimen 10\font =2.004pt\relax
+(fontspec)             \fontdimen 11\font =1.332pt\relax \fontdimen 12\font
+(fontspec)             =7.2pt\relax \fontdimen 13\font =0pt\relax 
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[0.9998970500334856]"[latinmodern-math.otf]/OT:scri
+pt=math;language=dflt;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.: 
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 8\font =0.48pt\relax \fontdimen 9\font
+(fontspec)             =2.4pt\relax \fontdimen 10\font =2.004pt\relax
+(fontspec)             \fontdimen 11\font =1.332pt\relax \fontdimen 12\font
+(fontspec)             =7.2pt\relax \fontdimen 13\font =0pt\relax 
+
+LaTeX Font Info:    Encoding `OMX' has changed to `TU' for symbol font
+(Font)              `largesymbols' in the math version `normal' on input line 9
+0.
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `normal'
+(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/m/n on inpu
+t line 90.
+LaTeX Font Info:    Encoding `OMX' has changed to `TU' for symbol font
+(Font)              `largesymbols' in the math version `bold' on input line 90.
+
+LaTeX Font Info:    Overwriting symbol font `largesymbols' in version `bold'
+(Font)                  OMX/lmex/m/n --> TU/latinmodern-math.otf(3)/b/n on inpu
+t line 90.
+LaTeX Info: Redefining \microtypecontext on input line 90.
+Package microtype Info: Applying patch `item' on input line 90.
+Package microtype Info: Applying patch `toc' on input line 90.
+Package microtype Info: Applying patch `eqnum' on input line 90.
+Package microtype Info: Applying patch `footnote' on input line 90.
+Package microtype Info: Applying patch `verbatim' on input line 90.
+Package microtype Info: Character protrusion enabled (level 2).
+Package microtype Info: Using protrusion set `basicmath'.
+Package microtype Info: No adjustment of tracking.
+Package microtype Info: No adjustment of spacing.
+Package microtype Info: No adjustment of kerning.
+(/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-LatinModernRoman.cfg
+File: mt-LatinModernRoman.cfg 2021/02/21 v1.1 microtype config. file: Latin Mod
+ern Roman (RS)
+)
+Package hyperref Info: Link coloring ON on input line 90.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 14.4pt on input line 92.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 92.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 7.0pt on input line 92.
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 9
+2.
+(/usr/share/texlive/texmf-dist/tex/latex/lm/omllmm.fd
+File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 14.4013pt on input line 92.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 10.00092pt on input line 92.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 7.00064pt on input line 92.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 14.39845pt on input line 92.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 9.99893pt on input line 92.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 6.99925pt on input line 92.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 92.
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+) (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msa.cfg
+File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 92.
+
+(/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+) (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msb.cfg
+File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
+) [1
+
+
+] [2
+
+] (./BreedbaseManual.toc
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 8.4pt on input line 2.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(1)/m/n' will be
+(Font)              scaled to size 6.0pt on input line 2.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 12.0011pt on input line 2.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 8.40076pt on input line 2.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(2)/m/n' will be
+(Font)              scaled to size 6.00055pt on input line 2.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 11.99872pt on input line 2.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 8.3991pt on input line 2.
+LaTeX Font Info:    Font shape `TU/latinmodern-math.otf(3)/m/n' will be
+(Font)              scaled to size 5.99936pt on input line 2.
+[3] [4] [5] [6] [7] [8])
+\tf@toc=\write3
+\openout3 = `BreedbaseManual.toc'.
+
+[9] [10
+
+] [11] [12
+
+]
+Chapter 1.
+[13]
+File: assets/images/image331.png Graphic file (type bmp)
+<assets/images/image331.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[14]
+File: assets/images/image166.png Graphic file (type bmp)
+<assets/images/image166.png>
+[15]
+File: assets/images/image261.png Graphic file (type bmp)
+<assets/images/image261.png>
+File: assets/images/image144.png Graphic file (type bmp)
+<assets/images/image144.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[16]
+Underfull \vbox (badness 5417) has occurred while \output is active []
+
+[17]
+File: assets/images/image270.png Graphic file (type bmp)
+<assets/images/image270.png>
+[18] [19]
+File: assets/images/list_manager_start.png Graphic file (type bmp)
+<assets/images/list_manager_start.png>
+File: assets/images/list_manager_new_list.png Graphic file (type bmp)
+<assets/images/list_manager_new_list.png>
+[20]
+File: assets/images/list_manager_view_list.png Graphic file (type bmp)
+<assets/images/list_manager_view_list.png>
+File: assets/images/list_manager_add_items.png Graphic file (type bmp)
+<assets/images/list_manager_add_items.png>
+[21]
+File: assets/images/list_manager_added_items.png Graphic file (type bmp)
+<assets/images/list_manager_added_items.png>
+File: assets/images/list_manager_list_types.png Graphic file (type bmp)
+<assets/images/list_manager_list_types.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[22]
+File: assets/images/image346.png Graphic file (type bmp)
+<assets/images/image346.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[23]
+File: assets/images/image71.png Graphic file (type bmp)
+<assets/images/image71.png>
+File: assets/images/image297.png Graphic file (type bmp)
+<assets/images/image297.png>
+[24]
+File: assets/images/roles.png Graphic file (type bmp)
+<assets/images/roles.png>
+[25] [26
+
+]
+Chapter 2.
+File: assets/images/image267.png Graphic file (type bmp)
+<assets/images/image267.png>
+File: assets/images/wizard_interface.png Graphic file (type bmp)
+<assets/images/wizard_interface.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[27]
+File: assets/images/wizard_interface_selections.png Graphic file (type bmp)
+<assets/images/wizard_interface_selections.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[28]
+File: assets/images/wizard_select_list.png Graphic file (type bmp)
+<assets/images/wizard_select_list.png>
+File: assets/images/wizard_any_min_all_toggle.jpg Graphic file (type bmp)
+<assets/images/wizard_any_min_all_toggle.jpg>
+[29]
+File: assets/images/wizard_any_min_all_toggle_min_details.jpg Graphic file (typ
+e bmp)
+<assets/images/wizard_any_min_all_toggle_min_details.jpg>
+File: assets/images/add_create_list.png Graphic file (type bmp)
+<assets/images/add_create_list.png>
+[30]
+File: assets/images/wizard_download_options.png Graphic file (type bmp)
+<assets/images/wizard_download_options.png>
+File: assets/images/wizard_related_metadata_download.png Graphic file (type bmp
+)
+<assets/images/wizard_related_metadata_download.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[31]
+File: assets/images/wizard_related_phenotypes_download.png Graphic file (type b
+mp)
+<assets/images/wizard_related_phenotypes_download.png>
+
+Underfull \vbox (badness 1748) has occurred while \output is active []
+
+[32]
+File: assets/images/wizard_load_create_dataset.png Graphic file (type bmp)
+<assets/images/wizard_load_create_dataset.png>
+File: assets/images/wizard_update_list_refresh.png Graphic file (type bmp)
+<assets/images/wizard_update_list_refresh.png>
+
+Underfull \vbox (badness 7685) has occurred while \output is active []
+
+[33]
+File: assets/images/search_accessions.png Graphic file (type bmp)
+<assets/images/search_accessions.png>
+File: assets/images/search_accessions_properties_search.png Graphic file (type 
+bmp)
+<assets/images/search_accessions_properties_search.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[34]
+File: assets/images/search_accessions_properties_view.png Graphic file (type bm
+p)
+<assets/images/search_accessions_properties_view.png>
+File: assets/images/search_accessions_graphical_filtering.png Graphic file (typ
+e bmp)
+<assets/images/search_accessions_graphical_filtering.png>
+
+Underfull \vbox (badness 8132) has occurred while \output is active []
+
+[35]
+File: assets/images/trial_search.png Graphic file (type bmp)
+<assets/images/trial_search.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[36]
+File: assets/images/trait-search-default.png Graphic file (type bmp)
+<assets/images/trait-search-default.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[37]
+File: assets/images/trait-search.png Graphic file (type bmp)
+<assets/images/trait-search.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[38]
+File: assets/images/ontology_browser.png Graphic file (type bmp)
+<assets/images/ontology_browser.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[39]
+File: assets/images/ontology_browser_variable.png Graphic file (type bmp)
+<assets/images/ontology_browser_variable.png>
+File: assets/images/search_seedlots.png Graphic file (type bmp)
+<assets/images/search_seedlots.png>
+
+Underfull \vbox (badness 7595) has occurred while \output is active []
+
+[40]
+File: assets/images/manage_seedlots.png Graphic file (type bmp)
+<assets/images/manage_seedlots.png>
+[41] [42
+
+]
+Chapter 3.
+File: assets/images/manage_user_roles_page.png Graphic file (type bmp)
+<assets/images/manage_user_roles_page.png>
+[43] [44]
+Chapter 4.
+File: assets/images/breeding_programs_screenshot.png Graphic file (type bmp)
+<assets/images/breeding_programs_screenshot.png>
+File: assets/images/new_program_screenshot.png Graphic file (type bmp)
+<assets/images/new_program_screenshot.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[45
+
+] [46]
+Chapter 5.
+File: assets/images/image141.png Graphic file (type bmp)
+<assets/images/image141.png>
+[47
+
+]
+File: assets/images/image187.png Graphic file (type bmp)
+<assets/images/image187.png>
+File: assets/images/location_map.png Graphic file (type bmp)
+<assets/images/location_map.png>
+[48]
+Chapter 6.
+File: assets/images/manage_accessions_add_accessions_link.png Graphic file (typ
+e bmp)
+<assets/images/manage_accessions_add_accessions_link.png>
+File: assets/images/manage_accessions_add_accessions_using_lists.png Graphic fi
+le (type bmp)
+<assets/images/manage_accessions_add_accessions_using_lists.png>
+[49
+
+]
+File: assets/images/manage_accessions_add_accessions_found.png Graphic file (ty
+pe bmp)
+<assets/images/manage_accessions_add_accessions_found.png>
+File: assets/images/manage_accessions_add_accessions_fuzzy.png Graphic file (ty
+pe bmp)
+<assets/images/manage_accessions_add_accessions_fuzzy.png>
+[50]
+File: assets/images/manage_accessions_add_accessions_fuzzy_options.png Graphic 
+file (type bmp)
+<assets/images/manage_accessions_add_accessions_fuzzy_options.png>
+File: assets/images/manage_accessions_add_accessions_complete_using_list.png Gr
+aphic file (type bmp)
+<assets/images/manage_accessions_add_accessions_complete_using_list.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[51]
+File: assets/images/manage_accessions_add_accessions_saved.png Graphic file (ty
+pe bmp)
+<assets/images/manage_accessions_add_accessions_saved.png>
+
+Underfull \hbox (badness 1990) in paragraph at lines 671--671
+[]\TU/lmr/bx/n/17.28 Uploading Accessions and Accession’s
+ []
+
+File: assets/images/manage_accessions_add_accessions_using_file.png Graphic fil
+e (type bmp)
+<assets/images/manage_accessions_add_accessions_using_file.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[52]
+File: assets/images/manage_accessions_add_accessions_spreadsheet_info.png Graph
+ic file (type bmp)
+<assets/images/manage_accessions_add_accessions_spreadsheet_info.png>
+
+Underfull \vbox (badness 1838) has occurred while \output is active []
+
+
+Overfull \hbox (20.4643pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 6.2.  UPLOADING ACCESSIONS AND ACCESSION’S INFO FROM A FILE \TU
+/lmr/m/n/12 53
+ []
+
+[53]
+File: assets/images/manage_accessions_add_accessions_complete_using_file.png Gr
+aphic file (type bmp)
+<assets/images/manage_accessions_add_accessions_complete_using_file.png>
+File: assets/images/manage_accessions_add_accessions_saved.png Graphic file (ty
+pe bmp)
+<assets/images/manage_accessions_add_accessions_saved.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[54]
+File: assets/images/accession_upload_using_email.png Graphic file (type bmp)
+<assets/images/accession_upload_using_email.png>
+
+Underfull \vbox (badness 2582) has occurred while \output is active []
+
+[55]
+File: assets/images/image286.png Graphic file (type bmp)
+<assets/images/image286.png>
+File: assets/images/image333.png Graphic file (type bmp)
+<assets/images/image333.png>
+File: assets/images/pedigree_upload_format.png Graphic file (type bmp)
+<assets/images/pedigree_upload_format.png>
+
+Underfull \vbox (badness 8038) has occurred while \output is active []
+
+[56] [57] [58] [59] [60
+
+]
+Chapter 7.
+File: assets/images/manage_seedlots.png Graphic file (type bmp)
+<assets/images/manage_seedlots.png>
+
+Underfull \vbox (badness 4378) has occurred while \output is active []
+
+[61]
+File: assets/images/manage_seedlot_add_seedlot.png Graphic file (type bmp)
+<assets/images/manage_seedlot_add_seedlot.png>
+File: assets/images/manage_seedlot_upload_seedlots.png Graphic file (type bmp)
+<assets/images/manage_seedlot_upload_seedlots.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[62]
+File: assets/images/seedlot_detail_page.png Graphic file (type bmp)
+<assets/images/seedlot_detail_page.png>
+[63]
+File: assets/images/seedlot_add_new_transaction.png Graphic file (type bmp)
+<assets/images/seedlot_add_new_transaction.png>
+File: assets/images/manage_seedlot_upload_inventory.png Graphic file (type bmp)
+
+<assets/images/manage_seedlot_upload_inventory.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[64]
+File: assets/images/manage_seedlot_upload_inventory_template.png Graphic file (
+type bmp)
+<assets/images/manage_seedlot_upload_inventory_template.png>
+[65]
+File: assets/images/manage_seedlot_accession_list_search.png Graphic file (type
+ bmp)
+<assets/images/manage_seedlot_accession_list_search.png>
+File: assets/images/manage_seedlot_list_available_seedlots.png Graphic file (ty
+pe bmp)
+<assets/images/manage_seedlot_list_available_seedlots.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[66]
+File: assets/images/manage_seedlot_accession_detail.png Graphic file (type bmp)
+
+<assets/images/manage_seedlot_accession_detail.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[67]
+File: assets/images/manage_seedlots_seedlot_maintenance.png Graphic file (type 
+bmp)
+<assets/images/manage_seedlots_seedlot_maintenance.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[68] [69]
+File: assets/images/seedlot_maintenance_upload.png Graphic file (type bmp)
+<assets/images/seedlot_maintenance_upload.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[70] [71]
+Underfull \hbox (badness 1337) in paragraph at lines 914--916
+[]\TU/lmr/m/n/12 Optionally, notes button next to each event to add additional
+ []
+
+File: assets/images/seedlot_maintenance_record.png Graphic file (type bmp)
+<assets/images/seedlot_maintenance_record.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[72]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[73]
+File: assets/images/seedlot_maintenance_events_unfiltered.png Graphic file (typ
+e bmp)
+<assets/images/seedlot_maintenance_events_unfiltered.png>
+[74]
+File: assets/images/seedlot_maintenance_events_filtered.png Graphic file (type 
+bmp)
+<assets/images/seedlot_maintenance_events_filtered.png>
+[75] [76]
+Chapter 8.
+File: assets/images/manage_populations.png Graphic file (type bmp)
+<assets/images/manage_populations.png>
+File: assets/images/manage_populations_add_population.png Graphic file (type bm
+p)
+<assets/images/manage_populations_add_population.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[77
+
+]
+File: assets/images/manage_populations_expand_table.png Graphic file (type bmp)
+
+<assets/images/manage_populations_expand_table.png>
+File: assets/images/manage_populations_table.png Graphic file (type bmp)
+<assets/images/manage_populations_table.png>
+[78]
+Chapter 9.
+File: assets/images/image148.png Graphic file (type bmp)
+<assets/images/image148.png>
+File: assets/images/manage_crosses1.png Graphic file (type bmp)
+<assets/images/manage_crosses1.png>
+
+Underfull \vbox (badness 2277) has occurred while \output is active []
+
+[79
+
+]
+File: assets/images/manage_crosses2.png Graphic file (type bmp)
+<assets/images/manage_crosses2.png>
+File: assets/images/manage_crosses_crossingtrial.png Graphic file (type bmp)
+<assets/images/manage_crosses_crossingtrial.png>
+[80]
+File: assets/images/add_crossingtrial.png Graphic file (type bmp)
+<assets/images/add_crossingtrial.png>
+File: assets/images/manage_crosses_addcross.png Graphic file (type bmp)
+<assets/images/manage_crosses_addcross.png>
+[81]
+File: assets/images/add_cross.png Graphic file (type bmp)
+<assets/images/add_cross.png>
+[82]
+File: assets/images/new_cross_dialog_type.png Graphic file (type bmp)
+<assets/images/new_cross_dialog_type.png>
+File: assets/images/new_cross_dialog2.png Graphic file (type bmp)
+<assets/images/new_cross_dialog2.png>
+[83]
+File: assets/images/add_cross_info.png Graphic file (type bmp)
+<assets/images/add_cross_info.png>
+File: assets/images/manage_crosses_upload.png Graphic file (type bmp)
+<assets/images/manage_crosses_upload.png>
+File: assets/images/upload_crosses.png Graphic file (type bmp)
+<assets/images/upload_crosses.png>
+
+Underfull \vbox (badness 5711) has occurred while \output is active []
+
+[84]
+File: assets/images/cross_upload_format.png Graphic file (type bmp)
+<assets/images/cross_upload_format.png>
+[85]
+File: assets/images/cross_upload_page.png Graphic file (type bmp)
+<assets/images/cross_upload_page.png>
+File: assets/images/progenies_upload_spreadsheet.png Graphic file (type bmp)
+<assets/images/progenies_upload_spreadsheet.png>
+File: assets/images/crossinfo_upload_spreadsheet.png Graphic file (type bmp)
+<assets/images/crossinfo_upload_spreadsheet.png>
+[86]
+File: assets/images/manage_cross_click_cross_wishlist.png Graphic file (type bm
+p)
+<assets/images/manage_cross_click_cross_wishlist.png>
+File: assets/images/cross_wishlist_initial_dialog.png Graphic file (type bmp)
+<assets/images/cross_wishlist_initial_dialog.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[87]
+File: assets/images/cross_wishlist_not_using_list_01.png Graphic file (type bmp
+)
+<assets/images/cross_wishlist_not_using_list_01.png>
+File: assets/images/cross_wishlist_not_using_list_02.png Graphic file (type bmp
+)
+<assets/images/cross_wishlist_not_using_list_02.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[88]
+File: assets/images/cross_wishlist_not_using_list_03.png Graphic file (type bmp
+)
+<assets/images/cross_wishlist_not_using_list_03.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[89]
+File: assets/images/cross_wishlist_using_list_01.png Graphic file (type bmp)
+<assets/images/cross_wishlist_using_list_01.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[90]
+File: assets/images/cross_wishlist_using_list_02.png Graphic file (type bmp)
+<assets/images/cross_wishlist_using_list_02.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[91]
+File: assets/images/cross_wishlist_not_using_list_04.png Graphic file (type bmp
+)
+<assets/images/cross_wishlist_not_using_list_04.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[92]
+File: assets/images/crossingtrial_1.png Graphic file (type bmp)
+<assets/images/crossingtrial_1.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[93]
+File: assets/images/crossingtrial_2.png Graphic file (type bmp)
+<assets/images/crossingtrial_2.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[94]
+File: assets/images/cross_page_1.png Graphic file (type bmp)
+<assets/images/cross_page_1.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[95]
+File: assets/images/cross_page_2.png Graphic file (type bmp)
+<assets/images/cross_page_2.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[96]
+File: assets/images/edit_cross_info.png Graphic file (type bmp)
+<assets/images/edit_cross_info.png>
+File: assets/images/cross_add_progenies.png Graphic file (type bmp)
+<assets/images/cross_add_progenies.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[97] [98]
+Chapter 10.
+File: assets/images/image290.png Graphic file (type bmp)
+<assets/images/image290.png>
+File: assets/images/image153.png Graphic file (type bmp)
+<assets/images/image153.png>
+File: assets/images/image279.png Graphic file (type bmp)
+<assets/images/image279.png>
+[99
+
+]
+File: assets/images/trial_detail_page_start.png Graphic file (type bmp)
+<assets/images/trial_detail_page_start.png>
+[100]
+File: assets/images/trial_detail_page_navigator_1.png Graphic file (type bmp)
+<assets/images/trial_detail_page_navigator_1.png>
+File: assets/images/trial_detail_page_navigator_2.png Graphic file (type bmp)
+<assets/images/trial_detail_page_navigator_2.png>
+File: assets/images/trial_detail_page_navigator_3.png Graphic file (type bmp)
+<assets/images/trial_detail_page_navigator_3.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[101]
+File: assets/images/add_transplanting_date.png Graphic file (type bmp)
+<assets/images/add_transplanting_date.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[102] [103]
+File: assets/images/trial_create_manage_trials.png Graphic file (type bmp)
+<assets/images/trial_create_manage_trials.png>
+File: assets/images/trial_create_open_form.png Graphic file (type bmp)
+<assets/images/trial_create_open_form.png>
+File: assets/images/trial_create_form_1.png Graphic file (type bmp)
+<assets/images/trial_create_form_1.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[104]
+File: assets/images/trial_create_form_2.png Graphic file (type bmp)
+<assets/images/trial_create_form_2.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[105]
+File: assets/images/trial_create_form_3.png Graphic file (type bmp)
+<assets/images/trial_create_form_3.png>
+[106]
+File: assets/images/trial_create_form_4.png Graphic file (type bmp)
+<assets/images/trial_create_form_4.png>
+[107]
+File: assets/images/trial_create_form_5.png Graphic file (type bmp)
+<assets/images/trial_create_form_5.png>
+File: assets/images/trial_create_form_6.png Graphic file (type bmp)
+<assets/images/trial_create_form_6.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[108]
+File: assets/images/trial_create_form_7_top.png Graphic file (type bmp)
+<assets/images/trial_create_form_7_top.png>
+[109]
+File: assets/images/trial_create_form_7_middle.png Graphic file (type bmp)
+<assets/images/trial_create_form_7_middle.png>
+File: assets/images/trial_create_form_7_bottom.png Graphic file (type bmp)
+<assets/images/trial_create_form_7_bottom.png>
+
+Underfull \vbox (badness 1590) has occurred while \output is active []
+
+[110]
+File: assets/images/add_management_factor_name_dialog.png Graphic file (type bm
+p)
+<assets/images/add_management_factor_name_dialog.png>
+File: assets/images/add_management_factor_dialog.png Graphic file (type bmp)
+<assets/images/add_management_factor_dialog.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[111]
+File: assets/images/trial_create_form_8.png Graphic file (type bmp)
+<assets/images/trial_create_form_8.png>
+[112]
+File: assets/images/trial_create_manage_trials.png Graphic file (type bmp)
+<assets/images/trial_create_manage_trials.png>
+File: assets/images/manage_trials_upload_trial_1.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_1.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[113]
+File: assets/images/manage_trials_upload_trial_2.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_2.png>
+File: assets/images/manage_trials_upload_trial_template.png Graphic file (type 
+bmp)
+<assets/images/manage_trials_upload_trial_template.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[114]
+Overfull \hbox (33.10004pt too wide) in paragraph at lines 1371--1373
+\TU/lmr/m/n/12 range_number row_number col_number seedlot_name num_seed_per_plo
+t
+ []
+
+
+Overfull \hbox (49.91434pt too wide) in paragraph at lines 1394--1395
+[]\TU/lmr/bx/n/12 plot_name  
+ []
+
+
+Overfull \hbox (75.33476pt too wide) in paragraph at lines 1396--1397
+[]\TU/lmr/bx/n/12 accession_name  
+ []
+
+
+Overfull \hbox (61.62901pt too wide) in paragraph at lines 1398--1399
+[]\TU/lmr/bx/n/12 plot_number  
+ []
+
+
+Overfull \hbox (68.56636pt too wide) in paragraph at lines 1400--1401
+[]\TU/lmr/bx/n/12 block_number  
+ []
+
+
+Overfull \hbox (58.45169pt too wide) in paragraph at lines 1402--1403
+[]\TU/lmr/bx/n/12 is_a_control  
+ []
+
+
+Overfull \hbox (58.47168pt too wide) in paragraph at lines 1404--1405
+[]\TU/lmr/bx/n/12 rep_number  
+ []
+
+
+Overfull \hbox (69.92235pt too wide) in paragraph at lines 1406--1407
+[]\TU/lmr/bx/n/12 range_number  
+ []
+
+
+Overfull \hbox (60.95567pt too wide) in paragraph at lines 1408--1409
+[]\TU/lmr/bx/n/12 row_number  
+ []
+
+
+Overfull \hbox (55.80768pt too wide) in paragraph at lines 1410--1411
+[]\TU/lmr/bx/n/12 col_number  
+ []
+
+
+Overfull \hbox (64.75035pt too wide) in paragraph at lines 1412--1413
+[]\TU/lmr/bx/n/12 seedlot_name  
+ []
+
+
+Overfull \hbox (100.03745pt too wide) in paragraph at lines 1414--1415
+[]\TU/lmr/bx/n/12 num_seed_per_plot  
+ []
+
+
+Overfull \hbox (144.42093pt too wide) in paragraph at lines 1416--1417
+[]\TU/lmr/bx/n/12 weight_gram_seed_per_plot  
+ []
+
+
+Overfull \hbox (69.54901pt too wide) in paragraph at lines 1418--1419
+[]\TU/lmr/bx/n/12 entry_number  
+ []
+
+
+Overfull \hbox (34.61433pt too wide) in paragraph at lines 1424--1424
+[]|\TU/lmr/m/n/12 2018plot1|  
+ []
+
+
+Overfull \hbox (57.10675pt too wide) in paragraph at lines 1424--1424
+[]|\TU/lmr/m/n/12 my_accession1|  
+ []
+
+
+Overfull \hbox (0.74101pt too wide) in paragraph at lines 1424--1424
+[]|\TU/lmr/m/n/12 101|  
+ []
+
+
+Overfull \hbox (34.61433pt too wide) in paragraph at lines 1425--1425
+[]|\TU/lmr/m/n/12 2018plot2|  
+ []
+
+
+Overfull \hbox (57.10675pt too wide) in paragraph at lines 1425--1425
+[]|\TU/lmr/m/n/12 my_accession2|  
+ []
+
+
+Overfull \hbox (0.74101pt too wide) in paragraph at lines 1425--1425
+[]|\TU/lmr/m/n/12 201|  
+ []
+
+
+Overfull \hbox (34.61433pt too wide) in paragraph at lines 1426--1426
+[]|\TU/lmr/m/n/12 2018plot3|  
+ []
+
+
+Overfull \hbox (57.10675pt too wide) in paragraph at lines 1426--1426
+[]|\TU/lmr/m/n/12 my_accession2|  
+ []
+
+
+Overfull \hbox (0.74101pt too wide) in paragraph at lines 1426--1426
+[]|\TU/lmr/m/n/12 102|  
+ []
+
+
+Overfull \hbox (34.61433pt too wide) in paragraph at lines 1427--1427
+[]|\TU/lmr/m/n/12 2018plot4|  
+ []
+
+
+Overfull \hbox (57.10675pt too wide) in paragraph at lines 1427--1427
+[]|\TU/lmr/m/n/12 my_accession1|  
+ []
+
+
+Overfull \hbox (0.74101pt too wide) in paragraph at lines 1427--1427
+[]|\TU/lmr/m/n/12 202|  
+ []
+
+[115]
+Underfull \hbox (badness 1072) in paragraph at lines 1430--1431
+\TU/lmr/m/n/12 ing_program location year transplanting_date design_type descrip
+tion
+ []
+
+
+Underfull \hbox (badness 3758) in paragraph at lines 1430--1431
+\TU/lmr/m/n/12 trial_type trial_stock_type plot_width plot_length field_size pl
+ant-
+ []
+
+File: assets/images/manage_trials_upload_trial_3.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_3.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[116]
+File: assets/images/manage_trials_upload_trial_4.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_4.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[117]
+File: assets/images/manage_trials_upload_trial_5.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_5.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[118] [119]
+File: assets/images/manage_trials_upload_trial_7.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_7.png>
+File: assets/images/manage_trials_upload_trial_8.png Graphic file (type bmp)
+<assets/images/manage_trials_upload_trial_8.png>
+[120]
+File: assets/images/multiple_trial_upload_with_email.png Graphic file (type bmp
+)
+<assets/images/multiple_trial_upload_with_email.png>
+[121]
+File: assets/images/fieldmap_trial_layout.png Graphic file (type bmp)
+<assets/images/fieldmap_trial_layout.png>
+File: assets/images/fieldmap_multi_trial_layout.png Graphic file (type bmp)
+<assets/images/fieldmap_multi_trial_layout.png>
+[122]
+File: assets/images/fieldmap_plot_image.png Graphic file (type bmp)
+<assets/images/fieldmap_plot_image.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[123]
+File: assets/images/fieldmap_view_plot_image.png Graphic file (type bmp)
+<assets/images/fieldmap_view_plot_image.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[124]
+File: assets/images/fieldmap_display_plot_image.png Graphic file (type bmp)
+<assets/images/fieldmap_display_plot_image.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[125]
+File: assets/images/heatmap_assayed_trait_view.png Graphic file (type bmp)
+<assets/images/heatmap_assayed_trait_view.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[126]
+File: assets/images/trial_detail_page_suppress_phenotype.png Graphic file (type
+ bmp)
+<assets/images/trial_detail_page_suppress_phenotype.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[127]
+File: assets/images/heatmap_spatial_correction_button.png Graphic file (type bm
+p)
+<assets/images/heatmap_spatial_correction_button.png>
+[128]
+File: assets/images/image332.png Graphic file (type bmp)
+<assets/images/image332.png>
+File: assets/images/image340.png Graphic file (type bmp)
+<assets/images/image340.png>
+File: assets/images/image190.png Graphic file (type bmp)
+<assets/images/image190.png>
+[129]
+File: assets/images/image79.png Graphic file (type bmp)
+<assets/images/image79.png>
+File: assets/images/image276.png Graphic file (type bmp)
+<assets/images/image276.png>
+File: assets/images/field_map_download_link.png Graphic file (type bmp)
+<assets/images/field_map_download_link.png>
+[130]
+File: assets/images/spatial_layout_usage_help.png Graphic file (type bmp)
+<assets/images/spatial_layout_usage_help.png>
+File: assets/images/spatial_layout_usage_help_1.png Graphic file (type bmp)
+<assets/images/spatial_layout_usage_help_1.png>
+File: assets/images/spatial_layout_usage_help_2.png Graphic file (type bmp)
+<assets/images/spatial_layout_usage_help_2.png>
+File: assets/images/spatial_layout_usage_help_3.png Graphic file (type bmp)
+<assets/images/spatial_layout_usage_help_3.png>
+[131]
+File: assets/images/fieldmap_view_plot_image.png Graphic file (type bmp)
+<assets/images/fieldmap_view_plot_image.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[132]
+File: assets/images/replace_plot_accession_form.png Graphic file (type bmp)
+<assets/images/replace_plot_accession_form.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[133]
+File: assets/images/image173.png Graphic file (type bmp)
+<assets/images/image173.png>
+File: assets/images/image87.png Graphic file (type bmp)
+<assets/images/image87.png>
+File: assets/images/image85.png Graphic file (type bmp)
+<assets/images/image85.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[134]
+File: assets/images/image348.png Graphic file (type bmp)
+<assets/images/image348.png>
+File: assets/images/image347.png Graphic file (type bmp)
+<assets/images/image347.png>
+[135] [136]
+File: assets/images/trial_detail_page_add_plant_entries.png Graphic file (type 
+bmp)
+<assets/images/trial_detail_page_add_plant_entries.png>
+File: assets/images/trial_detail_page_add_plant_entries_autogenerated.png Graph
+ic file (type bmp)
+<assets/images/trial_detail_page_add_plant_entries_autogenerated.png>
+[137]
+File: assets/images/manage_trials_tissue_sample_default.png Graphic file (type 
+bmp)
+<assets/images/manage_trials_tissue_sample_default.png>
+File: assets/images/manage_trials_tissue_sample_create.png Graphic file (type b
+mp)
+<assets/images/manage_trials_tissue_sample_create.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[138]
+File: assets/images/manage_trials_tissue_samples.png Graphic file (type bmp)
+<assets/images/manage_trials_tissue_samples.png>
+File: assets/images/manage_trials_tissue_sample_detail.png Graphic file (type b
+mp)
+<assets/images/manage_trials_tissue_sample_detail.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[139]
+File: assets/images/manage_trials_tissue_sample_related_stock.png Graphic file 
+(type bmp)
+<assets/images/manage_trials_tissue_sample_related_stock.png>
+File: assets/images/trial_detail_page_add_plot_gps.png Graphic file (type bmp)
+<assets/images/trial_detail_page_add_plot_gps.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[140]
+File: assets/images/trial_detail_page_add_plot_gps_dialog.png Graphic file (typ
+e bmp)
+<assets/images/trial_detail_page_add_plot_gps_dialog.png>
+File: assets/images/trial_detail_page_add_plot_gps_upload_info.png Graphic file
+ (type bmp)
+<assets/images/trial_detail_page_add_plot_gps_upload_info.png>
+
+Underfull \hbox (badness 4556) in paragraph at lines 1762--1763
+\TU/lmr/m/n/12 contain: plot_name WGS84_bottom_left_x WGS84_bottom_left_y
+ []
+
+
+Underfull \vbox (badness 1603) has occurred while \output is active []
+
+[141]
+File: assets/images/trial_detail_page_view_repetitive_measurements.png Graphic 
+file (type bmp)
+<assets/images/trial_detail_page_view_repetitive_measurements.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[142]
+File: assets/images/trial_upload_additional_file.png Graphic file (type bmp)
+<assets/images/trial_upload_additional_file.png>
+File: assets/images/trial_upload_additional_file_info.png Graphic file (type bm
+p)
+<assets/images/trial_upload_additional_file_info.png>
+File: assets/images/update_trial_metadata.png Graphic file (type bmp)
+<assets/images/update_trial_metadata.png>
+[143] [144]
+File: assets/images/trial_detail_page_delete_trait1.png Graphic file (type bmp)
+
+<assets/images/trial_detail_page_delete_trait1.png>
+File: assets/images/trial_detail_page_delete_trait2.png Graphic file (type bmp)
+
+<assets/images/trial_detail_page_delete_trait2.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[145]
+File: assets/images/trial_detail_page_delete_trait3.png Graphic file (type bmp)
+
+<assets/images/trial_detail_page_delete_trait3.png>
+[146]
+Chapter 11.
+File: assets/images/manage_genotyping_trials.png Graphic file (type bmp)
+<assets/images/manage_genotyping_trials.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[147
+
+]
+File: assets/images/manage_genotyping_trials_expand.png Graphic file (type bmp)
+
+<assets/images/manage_genotyping_trials_expand.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[148]
+File: assets/images/manage_genotyping_trials_add_trial.png Graphic file (type b
+mp)
+<assets/images/manage_genotyping_trials_add_trial.png>
+File: assets/images/manage_genotyping_trials_add_trial_wells.png Graphic file (
+type bmp)
+<assets/images/manage_genotyping_trials_add_trial_wells.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[149]
+File: assets/images/manage_genotyping_trials_upload_template.png Graphic file (
+type bmp)
+<assets/images/manage_genotyping_trials_upload_template.png>
+[150]
+File: assets/images/manage_genotyping_trials_add_trial_confirm.png Graphic file
+ (type bmp)
+<assets/images/manage_genotyping_trials_add_trial_confirm.png>
+File: assets/images/manage_genotyping_trials_detail_info.png Graphic file (type
+ bmp)
+<assets/images/manage_genotyping_trials_detail_info.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[151]
+File: assets/images/manage_genotyping_trials_detail_table.png Graphic file (typ
+e bmp)
+<assets/images/manage_genotyping_trials_detail_table.png>
+[152]
+Chapter 12.
+File: assets/images/FB_Section_Header.png Graphic file (type bmp)
+<assets/images/FB_Section_Header.png>
+[153
+
+]
+File: assets/images/QR_FieldBook_PlayStore.png Graphic file (type bmp)
+<assets/images/QR_FieldBook_PlayStore.png>
+
+Overfull \hbox (167.5337pt too wide) has occurred while \output is active
+\TU/lmr/m/n/12 154 \TU/lmr/m/sl/12 CHAPTER 12.  USING FIELD BOOK AND BREEDBASE 
+FOR DATA COLLECTION AND STORAGE
+ []
+
+[154] [155]
+Underfull \hbox (badness 1675) in paragraph at lines 1984--1984
+[]\TU/lmr/bx/n/17.28 Adding Traits to Field Book Using
+ []
+
+
+Underfull \hbox (badness 1803) in paragraph at lines 2003--2003
+[]\TU/lmr/bx/n/17.28 Collecting and Exporting Phenotype
+ []
+
+
+Overfull \hbox (167.5337pt too wide) has occurred while \output is active
+\TU/lmr/m/n/12 156 \TU/lmr/m/sl/12 CHAPTER 12.  USING FIELD BOOK AND BREEDBASE 
+FOR DATA COLLECTION AND STORAGE
+ []
+
+[156]
+Overfull \hbox (115.54572pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 12.7.  USING BRAPI FOR DATA TRANSFER BETWEEN FIELD BOOK AND BRE
+EDBASE \TU/lmr/m/n/12 157
+ []
+
+[157]
+Overfull \hbox (167.5337pt too wide) has occurred while \output is active
+\TU/lmr/m/n/12 158 \TU/lmr/m/sl/12 CHAPTER 12.  USING FIELD BOOK AND BREEDBASE 
+FOR DATA COLLECTION AND STORAGE
+ []
+
+[158]
+Overfull \hbox (115.54572pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 12.7.  USING BRAPI FOR DATA TRANSFER BETWEEN FIELD BOOK AND BRE
+EDBASE \TU/lmr/m/n/12 159
+ []
+
+[159]
+Overfull \hbox (167.5337pt too wide) has occurred while \output is active
+\TU/lmr/m/n/12 160 \TU/lmr/m/sl/12 CHAPTER 12.  USING FIELD BOOK AND BREEDBASE 
+FOR DATA COLLECTION AND STORAGE
+ []
+
+[160
+
+]
+Chapter 13.
+File: assets/images/image178.png Graphic file (type bmp)
+<assets/images/image178.png>
+[161]
+File: assets/images/image185.png Graphic file (type bmp)
+<assets/images/image185.png>
+
+LaTeX Warning: Reference `using-fieldbook-app' on page 162 undefined on input l
+ine 2171.
+
+File: assets/images/image112.png Graphic file (type bmp)
+<assets/images/image112.png>
+File: assets/images/image288.png Graphic file (type bmp)
+<assets/images/image288.png>
+File: assets/images/image68.png Graphic file (type bmp)
+<assets/images/image68.png>
+[162]
+File: assets/images/phenotype_spreadsheet_upload_help_dialog.png Graphic file (
+type bmp)
+<assets/images/phenotype_spreadsheet_upload_help_dialog.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[163]
+File: assets/images/create_phenotype_spreadsheet_dialog.png Graphic file (type 
+bmp)
+<assets/images/create_phenotype_spreadsheet_dialog.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[164]
+File: assets/images/phenotype_spreadsheet_upload_dialog.png Graphic file (type 
+bmp)
+<assets/images/phenotype_spreadsheet_upload_dialog.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[165] [166]
+Chapter 14.
+File: assets/images/image82.png Graphic file (type bmp)
+<assets/images/image82.png>
+File: assets/images/image274.png Graphic file (type bmp)
+<assets/images/image274.png>
+
+Underfull \vbox (badness 2189) has occurred while \output is active []
+
+[167
+
+]
+File: assets/images/image245.png Graphic file (type bmp)
+<assets/images/image245.png>
+File: assets/images/image264.png Graphic file (type bmp)
+<assets/images/image264.png>
+[168]
+File: assets/images/image248.png Graphic file (type bmp)
+<assets/images/image248.png>
+File: assets/images/plot_pheno_barcode.png Graphic file (type bmp)
+<assets/images/plot_pheno_barcode.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[169]
+File: assets/images/trial_barcode.png Graphic file (type bmp)
+<assets/images/trial_barcode.png>
+[170]
+Chapter 15.
+File: assets/gifs/gif1.png Graphic file (type bmp)
+<assets/gifs/gif1.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[171
+
+]
+File: assets/gifs/gif2.png Graphic file (type bmp)
+<assets/gifs/gif2.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[172]
+File: assets/gifs/gif3.png Graphic file (type bmp)
+<assets/gifs/gif3.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[173]
+File: assets/gifs/gif4.png Graphic file (type bmp)
+<assets/gifs/gif4.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[174] [175] [176
+
+]
+Chapter 16.
+File: assets/images/image255.png Graphic file (type bmp)
+<assets/images/image255.png>
+File: assets/images/trial_meta_data_download.png Graphic file (type bmp)
+<assets/images/trial_meta_data_download.png>
+File: assets/images/image287.png Graphic file (type bmp)
+<assets/images/image287.png>
+[177]
+File: assets/images/image182.png Graphic file (type bmp)
+<assets/images/image182.png>
+[178]
+Chapter 17.
+File: assets/images/odk_ona_management.png Graphic file (type bmp)
+<assets/images/odk_ona_management.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[179
+
+]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[180]
+File: assets/images/odk_ona_cross_status.png Graphic file (type bmp)
+<assets/images/odk_ona_cross_status.png>
+File: assets/images/odk_ona_cross_progress_graph.png Graphic file (type bmp)
+<assets/images/odk_ona_cross_progress_graph.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[181]
+File: assets/images/odk_ona_cross_progress_tree.png Graphic file (type bmp)
+<assets/images/odk_ona_cross_progress_tree.png>
+[182]
+Chapter 18.
+File: assets/images/manage_tissue_samples_create_tissues_field_trial_download.p
+ng Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_field_trial_download.png>
+[183
+
+]
+File: assets/images/manage_tissue_samples_create_tissues_field_trial_button.png
+ Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_field_trial_button.png>
+File: assets/images/manage_tissue_samples_create_tissues_field_trial_intro.png 
+Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_field_trial_intro.png>
+File: assets/images/manage_tissue_samples_create_tissues_field_trial_select.png
+ Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_field_trial_select.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[184]
+File: assets/images/manage_tissue_samples_create_tissues_field_trial_num_plants
+.png Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_field_trial_num_plants.png>
+
+File: assets/images/manage_tissue_samples_create_tissues_field_trial_num_tissue
+s.png Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_field_trial_num_tissues.png
+>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[185]
+File: assets/images/manage_tissue_samples_create_tissues_field_trial_submit.png
+ Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_field_trial_submit.png>
+[186]
+File: assets/images/manage_tissue_samples_create_tissues_genotyping_trial_downl
+oad.png Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_genotyping_trial_download.p
+ng>
+File: assets/images/manage_tissue_samples_create_tissues_genotyping_trial_butto
+n.png Graphic file (type bmp)
+<assets/images/manage_tissue_samples_create_tissues_genotyping_trial_button.png
+>
+
+Overfull \hbox (38.18161pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 18.2.  GENOTYPING PLATE TISSUE SAMPLES (96 OR 384 WELL PLATES) 
+\TU/lmr/m/n/12 187
+ []
+
+[187] [188
+
+]
+Chapter 19.
+File: assets/images/manage_observation_variables_start_button.png Graphic file 
+(type bmp)
+<assets/images/manage_observation_variables_start_button.png>
+[189]
+File: assets/images/manage_observation_variables_workflow_intro.png Graphic fil
+e (type bmp)
+<assets/images/manage_observation_variables_workflow_intro.png>
+File: assets/images/manage_observation_variables_workflow_observation_variable.
+png Graphic file (type bmp)
+<assets/images/manage_observation_variables_workflow_observation_variable.png>
+[190]
+File: assets/images/manage_observation_variables_workflow_trait.png Graphic fil
+e (type bmp)
+<assets/images/manage_observation_variables_workflow_trait.png>
+File: assets/images/manage_observation_variables_workflow_method.png Graphic fi
+le (type bmp)
+<assets/images/manage_observation_variables_workflow_method.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Overfull \hbox (117.5829pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 19.1.  MANAGING OBSERVATION VARIABLES WITH TRAITS, METHODS, AND
+ SCALES \TU/lmr/m/n/12 191
+ []
+
+[191]
+File: assets/images/manage_observation_variables_workflow_scale.png Graphic fil
+e (type bmp)
+<assets/images/manage_observation_variables_workflow_scale.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[192]
+File: assets/images/manage_observation_variables_workflow_submit.png Graphic fi
+le (type bmp)
+<assets/images/manage_observation_variables_workflow_submit.png>
+
+Overfull \hbox (117.5829pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 19.1.  MANAGING OBSERVATION VARIABLES WITH TRAITS, METHODS, AND
+ SCALES \TU/lmr/m/n/12 193
+ []
+
+[193] [194
+
+]
+Chapter 20.
+File: assets/images/manage_image_phenotyping_upload_intro.png Graphic file (typ
+e bmp)
+<assets/images/manage_image_phenotyping_upload_intro.png>
+
+Underfull \vbox (badness 7486) has occurred while \output is active []
+
+[195]
+File: assets/images/manage_image_phenotyping_upload_field_trial.png Graphic fil
+e (type bmp)
+<assets/images/manage_image_phenotyping_upload_field_trial.png>
+File: assets/images/manage_image_phenotyping_upload_drone_run.png Graphic file 
+(type bmp)
+<assets/images/manage_image_phenotyping_upload_drone_run.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[196]
+File: assets/images/manage_image_phenotyping_upload_image_info_1.png Graphic fi
+le (type bmp)
+<assets/images/manage_image_phenotyping_upload_image_info_1.png>
+
+Underfull \vbox (badness 1762) has occurred while \output is active []
+
+[197]
+File: assets/images/manage_image_phenotyping_upload_image_info_2.png Graphic fi
+le (type bmp)
+<assets/images/manage_image_phenotyping_upload_image_info_2.png>
+File: assets/images/manage_image_phenotyping_upload_images_zipfile.png Graphic 
+file (type bmp)
+<assets/images/manage_image_phenotyping_upload_images_zipfile.png>
+[198]
+File: assets/images/manage_image_phenotyping_upload_image_info_3.png Graphic fi
+le (type bmp)
+<assets/images/manage_image_phenotyping_upload_image_info_3.png>
+File: assets/images/manage_image_phenotyping_upload_images_rasters.png Graphic 
+file (type bmp)
+<assets/images/manage_image_phenotyping_upload_images_rasters.png>
+[199]
+File: assets/images/manage_image_phenotyping_standard_process_button.png Graphi
+c file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_button.png>
+File: assets/images/manage_image_phenotyping_standard_process_intro.png Graphic
+ file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_intro.png>
+[200]
+File: assets/images/manage_image_phenotyping_standard_process_drone_run_band.pn
+g Graphic file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_drone_run_band.png>
+File: assets/images/manage_image_phenotyping_standard_process_rotate.png Graphi
+c file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_rotate.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[201]
+File: assets/images/manage_image_phenotyping_standard_process_cropping.png Grap
+hic file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_cropping.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[202]
+File: assets/images/manage_image_phenotyping_standard_process_threshold_hist.pn
+g Graphic file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_threshold_hist.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[203]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[204]
+File: assets/images/manage_image_phenotyping_standard_process_plot_polygon.png 
+Graphic file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_plot_polygon.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[205] [206]
+File: assets/images/manage_image_phenotyping_standard_process_apply.png Graphic
+ file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_apply.png>
+File: assets/images/manage_image_phenotyping_standard_process_vegetation_index.
+png Graphic file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_vegetation_index.png>
+File: assets/images/manage_image_phenotyping_standard_process_phenotypes.png Gr
+aphic file (type bmp)
+<assets/images/manage_image_phenotyping_standard_process_phenotypes.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[207] [208]
+Chapter 21.
+File: assets/images/image_upload_dialog.png Graphic file (type bmp)
+<assets/images/image_upload_dialog.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[209
+
+]
+File: assets/images/filename_verify_success.png Graphic file (type bmp)
+<assets/images/filename_verify_success.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[210]
+Underfull \vbox (badness 2401) has occurred while \output is active []
+
+[211]
+File: assets/images/stock_add_image.png Graphic file (type bmp)
+<assets/images/stock_add_image.png>
+[212]
+Chapter 22.
+File: assets/images/manage_genotyping_data_upload_button.png Graphic file (type
+ bmp)
+<assets/images/manage_genotyping_data_upload_button.png>
+[213
+
+]
+File: assets/images/manage_genotyping_data_upload_dialog_intro.png Graphic file
+ (type bmp)
+<assets/images/manage_genotyping_data_upload_dialog_intro.png>
+File: assets/images/manage_genotyping_data_upload_dialog_project.png Graphic fi
+le (type bmp)
+<assets/images/manage_genotyping_data_upload_dialog_project.png>
+
+Underfull \vbox (badness 2884) has occurred while \output is active []
+
+[214]
+File: assets/images/manage_genotyping_data_upload_dialog_protocol.png Graphic f
+ile (type bmp)
+<assets/images/manage_genotyping_data_upload_dialog_protocol.png>
+File: assets/images/manage_genotyping_data_upload_dialog_vcf.png Graphic file (
+type bmp)
+<assets/images/manage_genotyping_data_upload_dialog_vcf.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[215]
+File: assets/images/manage_genotyping_data_wizard_download_prot.png Graphic fil
+e (type bmp)
+<assets/images/manage_genotyping_data_wizard_download_prot.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[216]
+File: assets/images/manage_genotyping_data_wizard_trial.png Graphic file (type 
+bmp)
+<assets/images/manage_genotyping_data_wizard_trial.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[217]
+File: assets/images/search_wizard_genotyping_protocols_download_main.png Graphi
+c file (type bmp)
+<assets/images/search_wizard_genotyping_protocols_download_main.png>
+[218]
+File: assets/images/search_wizard_genotyping_protocols_download_genotypes.png G
+raphic file (type bmp)
+<assets/images/search_wizard_genotyping_protocols_download_genotypes.png>
+File: assets/images/search_wizard_genotyping_protocols_download_phenotypes.png 
+Graphic file (type bmp)
+<assets/images/search_wizard_genotyping_protocols_download_phenotypes.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[219]
+File: assets/images/genotyping_protocol_detail_page_markers.png Graphic file (t
+ype bmp)
+<assets/images/genotyping_protocol_detail_page_markers.png>
+[220]
+File: assets/images/genotyping_protocol_detail_page_samples.png Graphic file (t
+ype bmp)
+<assets/images/genotyping_protocol_detail_page_samples.png>
+File: assets/images/genotyping_protocol_detail_page_delete.png Graphic file (ty
+pe bmp)
+<assets/images/genotyping_protocol_detail_page_delete.png>
+[221] [222
+
+]
+Chapter 23.
+File: assets/images/waves_breedbase_schema.png Graphic file (type bmp)
+<assets/images/waves_breedbase_schema.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[223]
+File: assets/images/manage_NIRS_main_display.png Graphic file (type bmp)
+<assets/images/manage_NIRS_main_display.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[224]
+File: assets/images/upload_NIRS_example_format.png Graphic file (type bmp)
+<assets/images/upload_NIRS_example_format.png>
+[225]
+File: assets/images/upload_NIRS_plot_example.png Graphic file (type bmp)
+<assets/images/upload_NIRS_plot_example.png>
+[226] [227] [228
+
+]
+Chapter 24.
+File: assets/images/sequence_metadata_manage.png Graphic file (type bmp)
+<assets/images/sequence_metadata_manage.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[229] [230]
+File: assets/images/sequence_metadata_search_basic.png Graphic file (type bmp)
+<assets/images/sequence_metadata_search_basic.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[231]
+File: assets/images/sequence_metadata_search_results.png Graphic file (type bmp
+)
+<assets/images/sequence_metadata_search_results.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[232]
+File: assets/images/sequence_metadata_search_advanced.png Graphic file (type bm
+p)
+<assets/images/sequence_metadata_search_advanced.png>
+
+Underfull \hbox (badness 3838) in paragraph at lines 2835--2836
+\TU/lmr/m/n/12 A table of Sequence Metadata annotations are embedded on the
+ []
+
+[233] [234
+
+]
+Chapter 25.
+
+Underfull \hbox (badness 7558) in paragraph at lines 2846--2846
+[]\TU/lmr/bx/n/17.28 What is Outliers Functionality in
+ []
+
+File: assets/images/outliers_dataset_icon.png Graphic file (type bmp)
+<assets/images/outliers_dataset_icon.png>
+[235]
+File: assets/images/outliers_dataset_basic_panel.png Graphic file (type bmp)
+<assets/images/outliers_dataset_basic_panel.png>
+File: assets/images/outliers_dataset_full_visualisation.png Graphic file (type 
+bmp)
+<assets/images/outliers_dataset_full_visualisation.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[236]
+Underfull \vbox (badness 3049) has occurred while \output is active []
+
+[237]
+File: assets/images/outliers_dataset_actions.png Graphic file (type bmp)
+<assets/images/outliers_dataset_actions.png>
+[238]
+Chapter 26.
+File: assets/images/image114.png Graphic file (type bmp)
+<assets/images/image114.png>
+File: assets/images/image251.png Graphic file (type bmp)
+<assets/images/image251.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[239
+
+]
+File: assets/images/image95.png Graphic file (type bmp)
+<assets/images/image95.png>
+File: assets/images/image78.png Graphic file (type bmp)
+<assets/images/image78.png>
+File: assets/images/image304.png Graphic file (type bmp)
+<assets/images/image304.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[240]
+File: assets/images/image76.png Graphic file (type bmp)
+<assets/images/image76.png>
+File: assets/images/image343.png Graphic file (type bmp)
+<assets/images/image343.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[241]
+File: assets/images/image326.png Graphic file (type bmp)
+<assets/images/image326.png>
+File: assets/images/image150.png Graphic file (type bmp)
+<assets/images/image150.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[242]
+File: assets/images/image156.png Graphic file (type bmp)
+<assets/images/image156.png>
+File: assets/images/image247.png Graphic file (type bmp)
+<assets/images/image247.png>
+[243]
+File: assets/images/image160.png Graphic file (type bmp)
+<assets/images/image160.png>
+[244]
+File: assets/images/image249.png Graphic file (type bmp)
+<assets/images/image249.png>
+[245]
+File: assets/images/image330.png Graphic file (type bmp)
+<assets/images/image330.png>
+File: assets/images/image244.png Graphic file (type bmp)
+<assets/images/image244.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[246]
+File: assets/images/image263.png Graphic file (type bmp)
+<assets/images/image263.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[247]
+File: assets/images/image83.png Graphic file (type bmp)
+<assets/images/image83.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[248]
+File: assets/images/image93.png Graphic file (type bmp)
+<assets/images/image93.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[249]
+File: assets/images/image328.png Graphic file (type bmp)
+<assets/images/image328.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[250]
+File: assets/images/image74.png Graphic file (type bmp)
+<assets/images/image74.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[251]
+File: assets/images/image147.png Graphic file (type bmp)
+<assets/images/image147.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[252] [253]
+File: assets/images/image338.png Graphic file (type bmp)
+<assets/images/image338.png>
+File: assets/images/image334.png Graphic file (type bmp)
+<assets/images/image334.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[254] [255]
+File: assets/images/image344.png Graphic file (type bmp)
+<assets/images/image344.png>
+File: assets/images/image329.png Graphic file (type bmp)
+<assets/images/image329.png>
+File: assets/images/image341.png Graphic file (type bmp)
+<assets/images/image341.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[256]
+File: assets/images/image322.png Graphic file (type bmp)
+<assets/images/image322.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[257]
+File: assets/images/image151.png Graphic file (type bmp)
+<assets/images/image151.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[258]
+File: assets/images/image69.png Graphic file (type bmp)
+<assets/images/image69.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[259]
+File: assets/images/image336.png Graphic file (type bmp)
+<assets/images/image336.png>
+
+Underfull \vbox (badness 1389) has occurred while \output is active []
+
+[260]
+File: assets/images/image171.png Graphic file (type bmp)
+<assets/images/image171.png>
+[261]
+File: assets/images/image81.png Graphic file (type bmp)
+<assets/images/image81.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[262]
+File: assets/images/image138.png Graphic file (type bmp)
+<assets/images/image138.png>
+File: assets/images/image181.png Graphic file (type bmp)
+<assets/images/image181.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[263]
+File: assets/images/image152.png Graphic file (type bmp)
+<assets/images/image152.png>
+[264]
+File: assets/images/image20.png Graphic file (type bmp)
+<assets/images/image20.png>
+File: assets/images/image318.png Graphic file (type bmp)
+<assets/images/image318.png>
+File: assets/images/image277.png Graphic file (type bmp)
+<assets/images/image277.png>
+
+Underfull \vbox (badness 4156) has occurred while \output is active []
+
+[265]
+File: assets/images/image268.png Graphic file (type bmp)
+<assets/images/image268.png>
+File: assets/images/image327.png Graphic file (type bmp)
+<assets/images/image327.png>
+[266]
+File: assets/images/pca_iita_naccri_trials.png Graphic file (type bmp)
+<assets/images/pca_iita_naccri_trials.png>
+[267]
+File: assets/images/anova-dm.png Graphic file (type bmp)
+<assets/images/anova-dm.png>
+[268]
+File: assets/images/k-means-cluster.png Graphic file (type bmp)
+<assets/images/k-means-cluster.png>
+
+Underfull \vbox (badness 6927) has occurred while \output is active []
+
+[269]
+File: assets/images/hclustering.png Graphic file (type bmp)
+<assets/images/hclustering.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[270]
+File: assets/images/genetic-gain.png Graphic file (type bmp)
+<assets/images/genetic-gain.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[271] [272]
+File: assets/images/kinship-inbreeding.png Graphic file (type bmp)
+<assets/images/kinship-inbreeding.png>
+[273]
+File: assets/images/selection_proportion_clustering.png Graphic file (type bmp)
+
+<assets/images/selection_proportion_clustering.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[274]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[275]
+File: assets/images/search_wizard_genotype_analyses_grm.png Graphic file (type 
+bmp)
+<assets/images/search_wizard_genotype_analyses_grm.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[276]
+Overfull \hbox (34.74158pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 26.11.  SEARCH WIZARD GENOME WIDE ASSOCIATION STUDY (GWAS) \TU/
+lmr/m/n/12 277
+ []
+
+[277]
+File: assets/images/search_wizard_genotype_analyses_gwas.png Graphic file (type
+ bmp)
+<assets/images/search_wizard_genotype_analyses_gwas.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[278]
+File: assets/images/search_wizard_genotype_analyses_manhattan_plot.png Graphic 
+file (type bmp)
+<assets/images/search_wizard_genotype_analyses_manhattan_plot.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Overfull \hbox (34.74158pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 26.11.  SEARCH WIZARD GENOME WIDE ASSOCIATION STUDY (GWAS) \TU/
+lmr/m/n/12 279
+ []
+
+[279]
+File: assets/images/search_wizard_genotype_analyses_qq_plot.png Graphic file (t
+ype bmp)
+<assets/images/search_wizard_genotype_analyses_qq_plot.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[280]
+File: assets/images/waves_breedbase_schema.png Graphic file (type bmp)
+<assets/images/waves_breedbase_schema.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[281]
+File: assets/images/manage_NIRS_prediction_workflow_intro.png Graphic file (typ
+e bmp)
+<assets/images/manage_NIRS_prediction_workflow_intro.png>
+File: assets/images/manage_NIRS_prediction_workflow_dataset.png Graphic file (t
+ype bmp)
+<assets/images/manage_NIRS_prediction_workflow_dataset.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[282]
+File: assets/images/manage_NIRS_cv.png Graphic file (type bmp)
+<assets/images/manage_NIRS_cv.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[283]
+File: assets/images/manage_NIRS_snv.png Graphic file (type bmp)
+<assets/images/manage_NIRS_snv.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[284] [285]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[286]
+File: assets/images/manage_NIRS_export_model.png Graphic file (type bmp)
+<assets/images/manage_NIRS_export_model.png>
+File: assets/images/manage_NIRS_select_model.png Graphic file (type bmp)
+<assets/images/manage_NIRS_select_model.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[287]
+File: assets/images/manage_NIRS_prediction_results.png Graphic file (type bmp)
+<assets/images/manage_NIRS_prediction_results.png>
+
+Underfull \hbox (badness 2253) in paragraph at lines 3408--3409
+\TU/lmr/m/n/12 dard normal variate transformation and de-trending of near-infra
+red
+ []
+
+[288] [289]
+File: assets/images/mixedmodel_tool_model_build_step.png Graphic file (type bmp
+)
+<assets/images/mixedmodel_tool_model_build_step.png>
+[290]
+Overfull \hbox (7.04288pt too wide) has occurred while \output is active
+\TU/lmr/m/sl/12 26.14.  GENOMIC PREDICTION OF CROSS PERFORMANCE (GPCP) \TU/lmr/
+m/n/12 291
+ []
+
+[291]
+File: assets/images/tool_compatibility_details.png Graphic file (type bmp)
+<assets/images/tool_compatibility_details.png>
+File: assets/images/tool_compatibility_data_summary.png Graphic file (type bmp)
+
+<assets/images/tool_compatibility_data_summary.png>
+[292] [293] [294]
+Chapter 27.
+File: assets/images/vectorViewer.png Graphic file (type bmp)
+<assets/images/vectorViewer.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[295
+
+]
+File: assets/images/vectorHighlight.png Graphic file (type bmp)
+<assets/images/vectorHighlight.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[296]
+File: assets/images/cursorLocation.png Graphic file (type bmp)
+<assets/images/cursorLocation.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[297]
+File: assets/images/ZoomIn.png Graphic file (type bmp)
+<assets/images/ZoomIn.png>
+File: assets/images/ZoomOut.png Graphic file (type bmp)
+<assets/images/ZoomOut.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[298]
+File: assets/images/vectorButtons.png Graphic file (type bmp)
+<assets/images/vectorButtons.png>
+[299] (./BreedbaseManual.aux)
+
+LaTeX Warning: There were undefined references.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 25983 strings out of 478682
+ 651074 string characters out of 5849005
+ 1860018 words of memory out of 6000000
+ 45476 multiletter control sequences out of 15000+600000
+ 518740 words of font info for 86 fonts, out of 8000000 for 9000
+ 14 hyphenation exceptions out of 8191
+ 86i,7n,121p,2343b,499s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+Output written on BreedbaseManual.pdf (299 pages).
