@@ -40,6 +40,11 @@ jQuery(document).ready(function(){
             'destroy' : true,
             'autoWidth': false,
             'ajax': '/ajax/stock/stock_related_seedlots/'+ "<% $stock_id %>",
+            "processing": true,
+            'language':{
+                "zeroRecords": " ",
+                "processing": "Loading..."
+            },
             columns: [
                 { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
                 { title: "Breeding Program", "data": "breeding_program_name" },
@@ -49,12 +54,13 @@ jQuery(document).ready(function(){
                 { title: "Weight(g)", "data": "weight_gram" },
                 { title: "Box Name", "data": "box" },
                 { title: "Quality", "data": "seedlot_quality" },
+                { title: "Material Type", "data": "material_type"},
                 { title: "", "data": "seedlot_stock_uniquename"}
             ],
         });
 
         seedlots_table.draw();
-        seedlots_table.column(8).visible(false);
+        seedlots_table.column(9).visible(false);
 
         jQuery('#seedlots_of_accession_table').on( 'draw.dt', function () {
             var seedlot_names = seedlots_table.column(8).data();
