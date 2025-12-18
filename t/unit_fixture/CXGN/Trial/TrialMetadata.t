@@ -36,7 +36,8 @@ for my $extension ("xls", "xlsx", "csv") {
                 'design_type' => undef,
                 'plot_width' => undef,
                 'plot_length' => undef,
-                'field_size' => undef
+                'field_size' => undef,
+                'folder' => {}
             },
             '137' => {
                 'trial_name' => 'test_trial',
@@ -52,7 +53,8 @@ for my $extension ("xls", "xlsx", "csv") {
                 'planting_date' => '2017-06-01',
                 'plot_width' => '1.5',
                 'plot_length' => '1',
-                'field_size' => '10'
+                'field_size' => '10',
+                'folder' => {}
             }
         },
         'breeding_programs' => [

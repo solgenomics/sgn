@@ -5,7 +5,7 @@ $can_obsolete
 </%args>
 
 
-<&| /page/info_section.mas, title => 'Transformants (Accessions) Derived from this Transformation ', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Transgenic Lines (Accessions) Derived from this Transformation ', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -15,7 +15,7 @@ $can_obsolete
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
-                        <&| /page/info_section.mas, title => 'Add transformants (accessions) to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding transformants (accessions) to a new or exisiting list</i>'&>
+                        <&| /page/info_section.mas, title => 'Add accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding transgenic lines (accessions) to a new or exisiting list</i>'&>
                             <br>
                             <div id="transformant_to_new_list" style="display:none"></div>
                             <div id="transformant_add_to_list"></div>

@@ -874,8 +874,16 @@ $design_types => ()
                     </&>
 
                     <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_trial_metadata_form" name="upload_trial_metadata_form">
-                        <label for="trial_metadata_upload_file" style="display: inline-block;">Trial Metadata File:</label>
-                        <input type="file" name="trial_metadata_upload_file" id="trial_metadata_upload_file" encoding="multipart/form-data" />
+                        <div style="display: flex; justify-content: space-between; max-width: 500px; flex-wrap: wrap; align-items: flex-end; gap: 15px;">
+                            <div>
+                                <label for="trial_metadata_upload_file" style="display: inline-block;">Trial Metadata File:</label>
+                                <input type="file" name="trial_metadata_upload_file" id="trial_metadata_upload_file" encoding="multipart/form-data" />
+                            </div>
+                            <div>
+                                <label class="control-label">Ignore Warnings: </label>
+                                <input id="trial_metadata_upload_ignore_warnings" name="trial_metadata_upload_ignore_warnings" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                            </div>
+                        </div>
                     </form>
 
                     <div style="display:none; margin: 15px; padding: 15px" id="upload_trial_metadata_warning_messages" class="alert-warning" role="alert"></div>
@@ -917,6 +925,7 @@ $design_types => ()
                             <tr>
                                 <td>trial_name</td>
                                 <td>breeding_program</td>
+                                <td>folder</td>
                                 <td>location</td>
                                 <td>year</td>
                                 <td>transplanting_date</td>
@@ -940,6 +949,7 @@ $design_types => ()
                     <ul>
                         <li>new_trial_name (A new name for the trial, must not already exist in the database)</li>
                         <li>breeding_program (The name of breeding program that managed the trial, must exist in the database.)</li>
+                        <li>folder (The name of the folder to display the trial in on the Manage > Field Trials page.  If the folder does not exist, a new one will be created under the trial's breeding program)
                         <li>location (The <strong>name</strong> or <strong>abbreviation</strong> of the location where the trial was held, must exist in the database.)</li>
                         <li>year (The year the trial was held.)</li>
                         <li>transplanting_date (The transplanting_date of the trial was conducted. Date in YYYY-MM-DD format or 'remove' to remove the date)</li>
@@ -995,6 +1005,12 @@ jQuery(document).ready(function(){
     jQuery('#upload_multiple_trials_ignore_warnings').change(function() {
       if (this.checked) {
         jQuery('#upload_multiple_trials_warning_messages').hide();
+      }
+    });
+
+    jQuery('#trial_metadata_upload_ignore_warnings').change(function() {
+      if (this.checked) {
+        jQuery('#upload_trial_metadata_warning_messages').hide();
       }
     });
 });

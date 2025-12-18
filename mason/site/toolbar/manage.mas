@@ -26,7 +26,7 @@
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/genotyping_projects/">Genotyping Projects</a></li>
     <li><a href="/breeders/genotyping/">Genotyping Plates</a></li>
-    <li><a href="/breeders/markers/">Markerset</a></li>
+    <li><a href="/breeders/markers/">Marker Allele Lists</a></li>
 
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/download">Download</a></li>
@@ -34,5 +34,9 @@
     <li><a href="/breeders/identifier_generation">Identifier Generation</a></li>
 <!--    <li><a href="/breeders/odk">ODK Data Collection</a></li>  -->
     <li><a href="/breeders/file_share_dump">File Share</a></li>
+
+    <li role="seperator" class="divider"></li>
+    <li><a href="/breeders/nirs">NIRS</a></li>
+    <li><a href="/breeders/transcriptomics">Transcriptomics</a></li>
   </ul>
 </li>
