@@ -74,7 +74,7 @@ $d->while_logged_in_as('submitter', sub {
     # Change page to trial comparison
     $d->get_ok('/tools/trial/comparison/list');
 
-    sleep(6);
+    sleep(12);
 
     $d->find_element("trials_list_select", "id", "find trials select")->click();
     sleep(1);
