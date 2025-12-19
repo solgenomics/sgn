@@ -72,6 +72,13 @@ sub people_and_roles : Path('/ajax/people/people_and_roles') : ActionClass('REST
 sub people_and_roles_GET : Args(0) {
     my $self = shift;
     my $c = shift;
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "user_roles")) {
+	$c->stash->{rest} = { error => $message };
+	$c->res->status(403);
+	$c->detach();
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     my $person_roles = CXGN::People::Roles->new({ people_schema=>$people_schema });
@@ -91,10 +98,18 @@ sub add_person_role_GET : Args(0) {
         $c->stash->{rest} = {error=>'You must be logged in first!'};
         $c->detach;
     }
-    if (!$user->check_roles("curator")) {
-        $c->stash->{rest} = {error=>'You must be logged in with the correct role!'};
-        $c->detach;
+
+
+    #if (!$user->check_roles("curator")) {
+    #    $c->stash->{rest} = {error=>'You must be logged in with the correct role!'};
+    #    $c->detach;
+    #}
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "user_roles")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
     }
+
     my $sp_person_id = $c->req->param('sp_person_id');
     my $sp_role_id = $c->req->param('sp_role_id');
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -122,20 +137,20 @@ sub list_roles :Chained('roles') PathPart('list') Args(0) {
 	$c->stash->{rest} = { error => "You must be logged in to use this function." };
 	return;
     }
-    
+
     my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my $r = CXGN::People::Roles->new( { people_schema => $people_schema });
-    
+
     my %roles = $r->role_hash();
 
     print STDERR "ROLE HASH: ".Dumper(\%roles);
-    
+
     my @rows = $r->list_roles();
     my ($user_role) = $c->user->get_object()->get_roles();
     my $can_modify_roles = $c->stash->{access}->grant( $c->stash->{user_id}, "write", "user_roles");
     my $can_view_roles = $c->stash->{access}->grant( $c->stash->{user_id}, "read", "user_roles");
     my @data = $self->format_role_results($user_role, \@rows, \%roles, $can_modify_roles, $can_view_roles);
-    
+
     $c->stash->{rest} = { data => \@data };
 }
 
@@ -187,7 +202,7 @@ sub format_role_results {
     my %role_colors = ( curator => 'red', submitter => 'orange', user => 'green' );
     my $default_color = "#0275d8";
 
-    foreach my $row (@rows) { 
+    foreach my $row (@rows) {
 	my $person_name = $row->first_name." ".$row->last_name();
 	my $delete_link = "";
 	my $add_user_link = '&nbsp;&nbsp;<a href="#" onclick="javascript:add_user_role('.$row->get_column('sp_person_id').", \'".$person_name."\')\"><span style=\"color:darkgrey;width:8px;height:8px;border:solid;border-width:1px;padding:1px;\"><b>+</b></a></span>";
@@ -204,13 +219,13 @@ sub format_role_results {
 	my $role_name = $roles{$row->get_column('sp_role_id')};
 
 	#if ($user_role ne "curator") {
-	if (! $can_modify_roles) { 
+	if (! $can_modify_roles) {
 	    # only show breeding programs
 	    #if ($role_name !~ /curator|user|submitter/) {
-	    
+
 	    $hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:10px;background-color:'.$default_color.'"><b>'.$role_name."</b></span>";
 	}
-	
+
 	else {
 	    my $color = $role_colors{$role_name} || $default_color;
 	    $hash{$row->sp_person_id}->{userroles} .= '<span style="border-radius:16px;color:white;border-style:solid;border:1px;padding:8px;margin:6px;background-color:'.$color.'"><b>'. $delete_link."&nbsp;&nbsp; ".$role_name."</b></span>";
@@ -265,10 +280,16 @@ sub delete :Chained('roles') PathPart('delete/association') Args(1) {
 	return;
     }
 
-    if (! $c->user()->has_role("curator")) {
-	$c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining user roles." };
-	return;
+    #if (! $c->user()->has_role("curator")) {
+    #	$c->stash->{rest} = { error => "You don't have the necessary privileges for maintaining user roles." };
+    #	return;
+    # }
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "read", "user_roles")) {
+	$c->stash->{rest} = { error => $message };
+	$c->detach();
     }
+
 
     my $schema = $c->dbic_schema("CXGN::People::Schema");
 
