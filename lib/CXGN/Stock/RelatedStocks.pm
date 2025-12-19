@@ -327,7 +327,7 @@ sub get_plots_and_plants {
 }
 
 
-sub get_stock_related_seedlots {
+sub get_stock_related_seedlots_1 {
     my $self = shift;
     my $schema = $self->dbic_schema();
     my $stock_id = $self->stock_id();
@@ -371,7 +371,76 @@ sub get_stock_related_seedlots {
         }
 
     }
-    print STDERR "SEEDLOT INFO =".Dumper(\@stock_seedlots)."\n";
+
+    return \@stock_seedlots
+}
+
+sub get_stock_related_seedlots {
+    my $self = shift;
+    my $schema = $self->dbic_schema();
+    my $stock_id = $self->stock_id();
+
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $current_count_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_count", "stock_property")->cvterm_id();
+    my $current_weight_gram_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "current_weight_gram", "stock_property")->cvterm_id();
+    my $seedlot_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_experiment", "experiment_type")->cvterm_id();
+    my $seedlot_quality_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot_quality", "stock_property")->cvterm_id();
+    my $location_code_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "location_code", "stock_property")->cvterm_id();
+    my $material_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "material_type", "stock_property")->cvterm_id();
+
+    my $q = "SELECT seedlot.stock_id, seedlot.uniquename, content.stock_id, content.uniquename, cvterm.name, nd_geolocation.description, project.name, box_name.value, count.value, weight_gram.value, seedlot_quality.value, material_type.value
+        FROM stock_relationship
+        JOIN stock AS content ON (stock_relationship.subject_id = content.stock_id) AND content.type_id IN (?,?)
+        JOIN cvterm ON (cvterm.cvterm_id = content.type_id)
+        JOIN stock AS seedlot ON (stock_relationship.object_id = seedlot.stock_id) AND stock_relationship.type_id = ?
+        JOIN nd_experiment_stock ON (seedlot.stock_id = nd_experiment_stock.stock_id) AND nd_experiment_stock.type_id = ?
+        JOIN nd_experiment ON (nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id)
+        JOIN nd_geolocation ON (nd_experiment.nd_geolocation_id = nd_geolocation.nd_geolocation_id)
+        JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment.nd_experiment_id)
+        JOIN project ON (nd_experiment_project.project_id = project.project_id)
+        JOIN stockprop AS box_name ON (box_name.stock_id = seedlot.stock_id) AND box_name.type_id = ?
+        LEFT JOIN stockprop AS count ON (count.stock_id = seedlot.stock_id) AND count.type_id = ?
+        LEFT JOIN stockprop AS weight_gram ON (weight_gram.stock_id = seedlot.stock_id) AND weight_gram.type_id = ?
+        LEFT JOIN stockprop AS seedlot_quality ON (seedlot_quality.stock_id = seedlot.stock_id) AND seedlot_quality.type_id = ?
+        LEFT JOIN stockprop AS material_type ON (material_type.stock_id = seedlot.stock_id) AND material_type.type_id = ?
+        WHERE content.stock_id = ? ";
+
+    my $h = $schema->storage->dbh->prepare($q);
+
+    $h->execute($cross_cvterm_id, $accession_cvterm_id, $collection_of_cvterm_id, $seedlot_experiment_cvterm_id, $location_code_cvterm_id, $current_count_cvterm_id,$current_weight_gram_cvterm_id, $seedlot_quality_cvterm_id, $material_type_cvterm_id, $stock_id);
+
+    my @stock_seedlots = ();
+    while(my ($seedlot_id, $seedlot_name, $content_stock_id, $content_name, $content_stock_type, $location, $breeding_program_name, $boxname, $count, $weight_gram, $seedlot_quality, $material_type) = $h->fetchrow_array()){
+        my $accession_stock_id = '';
+        my $accession_name = '';
+        my $cross_stock_id = '';
+        my $cross_name = '';
+        if ($content_stock_type eq 'accession') {
+            $accession_stock_id = $content_stock_id;
+            $accession_name = $content_name;
+        } elsif ($content_stock_type eq 'cross') {
+            $cross_stock_id = $content_stock_id;
+            $cross_name = $content_name;
+        }
+        push @stock_seedlots, {
+            seedlot_stock_id => $seedlot_id,
+            seedlot_stock_uniquename => $seedlot_name,
+            accession_stock_id => $accession_stock_id,
+            accession_name => $accession_name,
+            cross_stock_id => $cross_stock_id,
+            cross_name => $cross_name,
+            box_name => $boxname,
+            count => $count,
+            weight_gram => $weight_gram,
+            material_type => $material_type,
+            seedlot_quality => $seedlot_quality,
+            breeding_program_name => $breeding_program_name,
+            location => $location
+        }
+    }
 
     return \@stock_seedlots
 }
