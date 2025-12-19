@@ -2275,32 +2275,6 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
 
     my @plots = map {$_->[0]} @{$trial->get_plots()};
 
-<<<<<<< HEAD
-    my $plots_q = "WITH plot AS
-        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship
-            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
-            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
-        WHERE stock_relationship.type_id=?),
-    row_number AS
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
-        WHERE stockprop.type_id=?),
-    col_number AS
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
-        WHERE stockprop.type_id=?),
-    rep AS
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
-        WHERE stockprop.type_id=?),
-    block AS
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
-        WHERE stockprop.type_id=?)
-    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, rep.value AS replicate, block.value AS block, plot.accession_id, plot.accession_name
-    FROM plot
-    LEFT JOIN row_number ON plot.plot_id=row_number.plot_id
-    LEFT JOIN col_number ON col_number.plot_id=plot.plot_id
-    JOIN rep ON rep.plot_id=plot.plot_id
-    JOIN block ON block.plot_id=plot.plot_id
-    WHERE plot.plot_id = ANY(?);";
-=======
     my $plots_q = "
     WITH plot AS
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship
@@ -2323,7 +2297,6 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     FROM plot
     LEFT JOIN stockprops AS plotprops ON plotprops.stock_id=plot.plot_id
     LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id;";
->>>>>>> master
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
     $h->execute($plot_of_id, \@plots, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
