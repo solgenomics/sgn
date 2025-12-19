@@ -1248,71 +1248,6 @@ function display_vector_upload_choices() {
     );
 }
 
-function populate_validate_submit_data(upload_type, file_data, additional_args) {
-
-    let upload_type_dict = {
-        'trials' : "Multiple Trial Upload",
-        'trial_metadata' : "Trial Metadata",
-        'plants_by_name' : "Plants by name",
-        'plants_by_index' : "Plants by index number",
-        'plants_per_plot' : "Plants by number of plants per plot",
-        'subplot_plants_by_name' : "Subplot plants by name",
-        'subplot_plants_by_index' : "Subplot plants by index number",
-        'plants_per_subplot' : "Plants by number of plants per subplot",
-        'subplots_by_name' : "Subplots by name",
-        'subplots_by_index' : "Subplots by index number",
-        'subplots_per_plot' : "Subplots by number of subplots per plot",
-        'genotyping_plate_excel' : "Genotyping plate design made in Excel",
-        'genotyping_plate_default_android' : "Default Coordinate Android Application plate design",
-        'genotyping_plate_custom_android' : "Custom Coordinate Android Application plate design",
-        'genotype_data_vcf' : "VCF genotyping data",
-        'genotype_data_tassel' : "Tassel HDF5 genotyping data",
-        'genotype_data_intertek' : "Intertek genotyping data",
-        'genotype_data_kasp' : "KASP genotyping data",
-        'genotype_data_ssr' : "SSR genotyping data",
-        'locations' : "Locations",
-        'accessions' : "Accessions",
-        'seedlots' : "Seedlots",
-        'seedlot_inventory' : "Seedlot inventory",
-        'exist_to_exist' : "Transact existing seedlots to existing seedlots",
-        'exist_to_new' : "Transact existing seedlots to new seedlots",
-        'exist_to_plots' : "Transact existing seedlots to plots",
-        'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
-        'pedigrees' : "Pedigrees",
-        'crosses' : "Crosses",
-        'gps_polygon' : "GPS coordinate polygons",
-        'gps_point' : "GPS coordinate points",
-        'change_accessions' : "Accession swap",
-        'entry_numbers' : "Entry numbers",
-        'new_progenies' : 'Progeny relationships for new accessions',
-        'existing_progenies' : 'Progeny relationships for existing accessions',
-        'family_names' : 'Family names of existing crosses',
-        'phenotyping_spreadsheet' : "Phenotyping spreadsheet",
-        'fieldbook_phenotypes' : "Field Book phenotypes",
-        'datacollector_spreadsheet' : "Datacollector spreadsheet",
-        'nirs' : "NIRS data",
-        'metabolomics' : "Metabolomic data",
-        'transcriptomics' : "Transcriptomic data",
-        'images' : "Images",
-        'images_barcodes' : "Images with barcodes",
-        'images_phenotypes' : "Images with associated phenotypes",
-        'soil_data' : "Soil data",
-        'vectors' : "Vector constructs"
-    };
-
-    display_validate_submit_modal({
-        'Upload Type' : upload_type_dict[upload_type],
-        'File' : file_data.file_name,
-        'File ID' : file_data.file_id,
-        'Additional arguments' : additional_args ? JSON.stringify(additional_args, null, 2) : "none",
-        parameters_json : {
-            upload_type : upload_type,
-            file_id : file_data.file_id,
-            additional_args : additional_args
-        }
-    });
-}
-
 function populate_plant_validate_submit_data(event) {
     let file_data = event.data.file_data;
     let plant_upload_type = jQuery('#plant_upload_type_choice_select').val();
@@ -1704,15 +1639,101 @@ function populate_vector_validate_submit_data(event) {
     });
 }
 
-function submit_file_validation(options) {
+function populate_validate_submit_data(upload_type, file_data, additional_args) {
+
+    let upload_type_dict = {
+        'trials' : "Multiple Trial Upload",
+        'trial_metadata' : "Trial Metadata",
+        'plants_by_name' : "Plants by name",
+        'plants_by_index' : "Plants by index number",
+        'plants_per_plot' : "Plants by number of plants per plot",
+        'subplot_plants_by_name' : "Subplot plants by name",
+        'subplot_plants_by_index' : "Subplot plants by index number",
+        'plants_per_subplot' : "Plants by number of plants per subplot",
+        'subplots_by_name' : "Subplots by name",
+        'subplots_by_index' : "Subplots by index number",
+        'subplots_per_plot' : "Subplots by number of subplots per plot",
+        'genotyping_plate_excel' : "Genotyping plate design made in Excel",
+        'genotyping_plate_default_android' : "Default Coordinate Android Application plate design",
+        'genotyping_plate_custom_android' : "Custom Coordinate Android Application plate design",
+        'genotype_data_vcf' : "VCF genotyping data",
+        'genotype_data_tassel' : "Tassel HDF5 genotyping data",
+        'genotype_data_intertek' : "Intertek genotyping data",
+        'genotype_data_kasp' : "KASP genotyping data",
+        'genotype_data_ssr' : "SSR genotyping data",
+        'locations' : "Locations",
+        'accessions' : "Accessions",
+        'seedlots' : "Seedlots",
+        'seedlot_inventory' : "Seedlot inventory",
+        'exist_to_exist' : "Transact existing seedlots to existing seedlots",
+        'exist_to_new' : "Transact existing seedlots to new seedlots",
+        'exist_to_plots' : "Transact existing seedlots to plots",
+        'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
+        'pedigrees' : "Pedigrees",
+        'crosses' : "Crosses",
+        'gps_polygon' : "GPS coordinate polygons",
+        'gps_point' : "GPS coordinate points",
+        'change_accessions' : "Accession swap",
+        'entry_numbers' : "Entry numbers",
+        'new_progenies' : 'Progeny relationships for new accessions',
+        'existing_progenies' : 'Progeny relationships for existing accessions',
+        'family_names' : 'Family names of existing crosses',
+        'phenotyping_spreadsheet' : "Phenotyping spreadsheet",
+        'fieldbook_phenotypes' : "Field Book phenotypes",
+        'datacollector_spreadsheet' : "Datacollector spreadsheet",
+        'nirs' : "NIRS data",
+        'metabolomics' : "Metabolomic data",
+        'transcriptomics' : "Transcriptomic data",
+        'images' : "Images",
+        'images_barcodes' : "Images with barcodes",
+        'images_phenotypes' : "Images with associated phenotypes",
+        'soil_data' : "Soil data",
+        'vectors' : "Vector constructs"
+    };
+
+    display_validate_submit_modal({
+        'Upload Type' : upload_type_dict[upload_type],
+        'File' : file_data.file_name,
+        'File ID' : file_data.file_id,
+        'Additional arguments' : additional_args ? JSON.stringify(additional_args, null, 2) : "none",
+        parameters_json : {
+            upload_type : upload_type,
+            file_id : file_data.file_id,
+            additional_args : additional_args
+        }
+    });
+
+    let submit_params = {
+        upload_type : upload_type,
+        file : file_data.file_name,
+        file_id : file_data.file_id,
+        additional_args : additional_args
+    };
+
+    jQuery('#upload_validation_parameters').text(JSON.stringify(submit_params));
+}
+
+function submit_file_validation() {
+    let submit_params = JSON.parse(jQuery('#upload_validation_parameters').text());
+
     jQuery('.modal.fade').each(function(index, element){
         jQuery(this).modal("hide");
     });
-    //TODO
+    
+    jQuery('#working_modal').modal("show");
+
+    switch(submit_params.upload_type) {
+        case 'trials' : 
+            
+            break;
+        default :   
+            alert("Something strange happened... I got an invalid upload type: "+submit_params.upload_type);
+            break;
+    }
 }
 
 function submit_file_store(options) {
-    
+    //TODO
 }
 
 var archived_files_list = [];

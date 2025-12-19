@@ -1162,6 +1162,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $ignore_warnings            = $c->req->param('upload_multiple_trials_ignore_warnings') eq 'on';
     my $email_address              = $c->req->param('trial_email_address_upload');
     my $email_option_enabled       = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
+    my $archived_file_id           = $c->req->param('archived_file_id');
 
     my $dbhost                     = $c->config->{dbhost};
     my $dbname                     = $c->config->{dbname};
@@ -1195,22 +1196,28 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         return;
     }
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $c->user->get_object->get_user_type()
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
-        return;
+    my $archived_filename_with_path;
+
+    unless ($archived_file_id) {
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $c->user->get_object->get_user_type()
+        });
+        $archived_filename_with_path = $uploader->archive();
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
+            return;
+        }
+        unlink $upload_tempfile;
+    } else {
+        # $archived_filename_with_path = # need to implement a file utility
     }
-    unlink $upload_tempfile;
 
     # Build the backend script command to parse, validate, and upload the trials
     my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -i \"$archived_filename_with_path\" -un \"$username\"";
