@@ -1,312 +1,213 @@
-# Using Field Book App {#using-fieldbook-app}
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image21.png')
-```
-
-SGN databases support the Android Field Book App for collecting phenotypic data in the field with tablet computers. The app is available here:
-
-[*https://play.google.com/store/apps/details?id=com.fieldbook.tracker*](https://play.google.com/store/apps/details?id=com.fieldbook.tracker)
-
--   The app can also be downloaded directly from the Google Play store. There is no charge for the app.
-
--   Field Book App requires two files for collecting data: Field layout file and trait file.
-
--   SGN databases can generate the field layout file and trait file, which can be downloaded onto your computer, then transferred to an Android tablet device.
-
-## A typical workflow
-
-1. Creating a [*field layout file*](#creating-layout-files) based on the design of field trial
-
-2. Creating a [*trait file*](#creating-trait-files) from the list of traits
-
-3. Downloading the field layout file and trait file from the database to your computer
-
-4. Downloading the field layout file and trait file to the tablet (where the Field Book App is installed)
-
-5. Collecting phenotypes
-
-6. Exporting phenotypes from Field Book App to your computer
-
-7. [*Uploading the exported phenotype file*](#uploading-pheno-files) from your computer to the database
-
-## Creating Field Layout Files for the Field Book App {#creating-layout-files}
-
-There are two alternative methods for creating “Field Layout Files”.
-
-1.  Using “Field Book Tools” page
-
-2.  Using “Trial Detail” page.
-
-### Creating “Field Layout Files” by using “Field Book Tools” page.
-
-To access “Field Book Tools” page, clicking on “Field Book App” in the “Manage” menu.
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image170.png')
-```
-
-On the “Field Book Tools” page, clicking on “New”
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image253.png')
-```
-
-On the “Download Fieldbook” window, selecting trial name and data level (plots or plants), then clicking on “Submit” button.
-A treatment can be selected, which allows you to record phenotypes based on treatment application.
-A list of traits can be selected, which provides a summary of an accession's global performance for those traits in the Fieldbook.
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image337.png')
-```
-
-If the field book layout file was successfully created, a pop-up window will indicate that the field book layout file was saved successfully. Clicking on the file name will immediately download the file onto your computer. The file is also available to download on the “Field Book Tools” page, if you need to re-download it.
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Using Field Book and BreedBase for Data Collection and Storage {#Using-Field-Book-with-BreedBase}
 
 ```{r echo=FALSE, out.width='75%', fig.align='center'}
-knitr::include_graphics('assets/images/image183.png')
+knitr::include_graphics('assets/images/FB_Section_Header.png')
 ```
 
-To download field layout file to your computer, clicking on “Download File”, the file can then be transferred to your tablet. If you no longer want to keep the field layout file, clicking on “Delete Layout File”.
+## Introduction
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image257.png')
+**Field Book** is an open-source Android application designed to streamline phenotypic data collection, replacing traditional paper field books and reducing transcription errors.
+
+**BreedBase** supports integration with Field Book by enabling users to generate properly formatted field layout and trait files, import collected data, and optionally exchange data via **BrAPI**. 
+
+This section provides step-by-step guidance on preparing Field Book for data collection using trial data stored in BreedBase, including file generation, manual file import, and data export. It assumes that trial fields and trait definitions already exist in BreedBase and that users have access to an Android device.
+
+[*Field Book User Manual*](https://fieldbook.phenoapps.org/#/)
+
+---
+
+## Installing Field Book
+
+Field Book can be installed on an Android device via the Google Play Store or manually from GitHub. To ensure access to the latest features and fixes, we recommend checking for updates regularly.
+
+
+### Option 1: Downloading from the Google Play Store
+
+Download the Field Book app directly from the [Google Play Store](https://play.google.com/store/apps/details?id=com.fieldbook.tracker) or scan the QR code below.
+
+```{r echo=FALSE, out.width='25%', fig.align='center'}
+knitr::include_graphics('assets/images/QR_FieldBook_PlayStore.png')
 ```
 
-### Creating “Field Layout Files” by using “Trial Detail” page.
+[**Walkthrough: Installation and Setup**](https://scribehow.com/shared/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ)
 
-To create “Field Layout Files”, go to the “Trial Detail” page of the trial that you want to create the file. On the “Trial Detail” page, scrolling down to the bottom of the page to find “Android Field Book Layout” in the “Files” section, then clicking on the “Create Field Book” link.
+<iframe src="https://scribehow.com/embed/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image89.png')
-```
+### Option 2: Manual Installation from Github
 
-Clicking on the “Create Field Book” link will open a new window showing the name of the trial that you selected, as well as data level (plots or plants).
-A treatment can be selected, which allows you to record phenotypes based on treatment application.
-A list of traits can be selected, which provides a summary of an accession's global performance for those traits in the Fieldbook.
-To proceed, clicking on “Submit” button.
+[**Walkthrough: Installing Field Book from GitHub**](https://scribehow.com/shared/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A)
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image161.png')
-```
+<iframe src="https://scribehow.com/embed/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-If the field book layout file was successfully created, a pop-up window will indicate that the field book layout file was saved successfully. Clicking on the file name will immediately download the file onto your computer. The file is also available to download on the “Field Book Tools” page, if you need to re-download it.
+### Keeping Field Book Updated
 
-```{r echo=FALSE, out.width='75%', fig.align='center'}
-knitr::include_graphics('assets/images/image183.png')
-```
+Regular updates are recommended to access new features and bug fixes.
 
-To download field layout file to your computer, clicking on “Download File”, the file can then be transferred to your tablet. If you no longer want to keep the field layout file, clicking on “Delete Layout File”.
+[**Walkthrough: Updating the Field Book App**](https://scribehow.com/shared/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA).
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image94.png')
-```
+<iframe src="https://scribehow.com/embed/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-## Creating Trait Files for the Field Book App {#creating-trait-files}
+---
 
-Steps to Create a Trait File:
+## Preparing Field Layout Files in BreedBase
 
-### Creating a Trait List
+Field Book requires a **field layout file** containing a unique identifier for each plot or plant to be observed. Optionally, columns for row, column, pedigree, or previous phenotype data may be included for context.
 
-After you logged in, lists can be created and managed using the Search Wizard or the "Lists" link. For more information on how to create lists, click [*here*](#working-with-lists).
+BreedBase provides tools to generate layout files directly from trial metadata. These files can be exported and then uploaded to Field Book for data collection. 
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image325.png')
-```
+[**Walkthrough: Creating a Field Layout File in BreedBase**](https://scribehow.com/shared/Creating_a_Field_Layout_File_for_Field_Book_in_Breedbase__FDBwW83OS66kHXIvVsP-1A?referrer=documents)
 
-### Creating a Trait File
+---
 
-After you have your trait list, clicking on the "**Field Book App**" link found under the "**Manage**" menu tab. This will take you to the “Field Book Tools” page.
+## Importing Field Layout Files into Field Book
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image133.png')
-```
+Field layout files can be imported into Field Book via cloud storage or directly from the device. 
 
-To create a new trait file, finding the heading “Trait Files”, then clicking on the “New” link.
+### Option 1: Import from Cloud Storage
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image146.png')
-```
+Requirements:
 
-Clicking on the "New" link will open a dialogue box titled "Create Trait File". Please enter your “Trait file name” and select “List of traits to include” from drop-down list that you previously created. You can only use traits included in the list. Check the box titled "Include Notes Trait" if you would also like to record and upload general plot notes in the field. Click "OK" to submit.
+1. A generated field layout file.
+2. Linked cloud service (e.g., Google Drive) on the device.
+3. File uploaded to the cloud account.
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image134.png')
-```
+[**Walkthrough: Importing from Cloud Storage**](https://scribehow.com/shared/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA)
 
-If your trait file was successfully created, a new window will indicate that the trait file was saved, then clicking on “Close”.
+<iframe src="https://scribehow.com/embed/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image174.png')
-```
+### Option 2: Import from Local Storage Device
 
-After the trait file was saved, you will see your file listed in the “Field Book Tools” page. Clicking on “Download” link to download the trait file to your computer.
+Requirements:
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image163.png')
-```
+1. A generated field layout file.
+2. File transferred to the Android device’s local storage.
 
-After downloading the trait file to your computer, the file can be transferred to an Android Tablet. You need the Android Field Book App to open the file. The Android Field Book App can be downloaded at: *http://www.wheatgenetics.org/bioinformatics/22-android-field-book*
+[**Walkthrough: Importing from Local Device**](link to be added)
 
-## Transferring Files from Your Computer to Android Tablet
+---
 
-### Files on your computer
+## Adding Traits to Field Book Using BreedBase
 
-After downloading, Field Layout files and Trait files can be found in the “Downloads” folder of your computer. Field Layout files on your computer will have a prefix “fieldbook\_layout\_” added to the beginning of the file name. For example: **"2014-01-28\_19:14:34\_Trial Demo\_location 6767.xls"** on the the database website will be saved as **"field\_book\_layout\_2014-01-28\_19:14:34\_Trial Demo\_location 6767.xls"** on your computer.
+For exported data to be compatible with BreedBase, trait names in Field Book must match the exact names stored in the database.
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image142.png')
-```
+BreedBase supports generation of **trait files** containing properly formatted trait names, types, units, and metadata.
 
-The files can be transferred to Android tablet by copying the files into the tablet's Internal Storage File.
+### Creating Trait Files in BreedBase
 
-### Files on your Android tablet
+[**Walkthrough: Creating Trait Files in BreedBase**](https://scribehow.com/shared/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q)
 
-To transfer Field Layout file and Trait file to your Android tablet, connecting an Android tablet to your computer, then clicking on tablet icon on your computer. Clicking on the tablet icon will open a window showing an “Internal Storage” file.
+<iframe src="https://scribehow.com/embed/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image16.png')
-```
+### Importing Trait Files to Field Book
 
-After you installed the Android Field Book App, all files for the app are stored in the “fieldBook” folder within the “Internal storage” folder.
+[**Walkthrough: Importing Trait Files**](https://scribehow.com/shared/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw)
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image314.png')
-```
+<iframe src="https://scribehow.com/embed/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-Within the “fieldBook” folder, there are five sub-folders:
+---
 
--   field\_export
+## Collecting and Exporting Phenotype Data
 
--   field\_import
+This section describes the process for recording and exporting phenotype data using the Field Book application. It assumes that the required field layout and trait files have already been imported into the app.
 
--   plot\_data
+Users will be guided through entering phenotypic observations in the field and exporting collected data in a format compatible with downstream processing and upload to **BreedBase**. This standardized workflow helps ensure data integrity, traceability, and seamless integration with breeding databases.
 
--   resources
+### Collecting Phenotype Data in Field Book
 
--   trait
+Once field layout and trait files are loaded, data collection can begin. Field Book allows users to view each plot or plant entry, record trait values in structured forms, and automatically timestamp and geotag observations (if device settings allow).
 
-**Field Layout files must be copied into the “field\_import” folder.**
+[**Walkthrough: Collecting Data in Field Book**](https://scribehow.com/shared/Collecting_Data_in_Fieldbook__hIsZkb9xSnKcLW65gN60lA)
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image285.png')
-```
 
-**Trait files must be copied into the “trait” folder.**
+### Exporting Phenotype Data from Field Book and Importing to BreedBase
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image252.png')
-```
+After data collection is complete, Field Book allows users to export data as a .csv file. This file can then be uploaded to BreedBase for storage and analysis.
 
-You can either drag and drop, or copy the Field Layout file and the Trait file from your computer to the folders in your Android tablet.
+[**Walkthrough: Exporting Phenotype Data from Field Book**](https://scribehow.com/shared/Exporting_Phenotype_Data_in_FieldBook__ToUuuA3YTYGclEg7SDArLg)
 
+Once exported, the .csv file can be imported into BreedBase through the trial’s data upload interface. Proceed with uploading phenotype observations as described in the **Managing Phenotypic Data** section. 
 
-## Setting up “Field Book App” for data collection
+It is important that:
 
-After you transferred the Field Layout file and Trait file from your computer to Android tablet, you still need to set up “Field Book App” on your tablet for data collection.
+- Trait names match those defined in the database.
+- Plot or plant identifiers align with the original layout.
 
-To set up the Field Book App:
+---
 
-1. **To open the Field Book App in the Android Tablet, clicking on the Field Book App icon, which is a green rectangle.**
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image175.png')
-```
+## Using BrAPI for Data Transfer Between Field Book and BreedBase
 
-2. **To import Field Layout files, clicking on the "Fields" section of the main menu of the Field Book App.**
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image12.png')
-```
+Field Book supports integration with **BreedBase** via the **BrAPI (Breeding API)** specification. BrAPI enables direct exchange of trial metadata and phenotype observations between Field Book and BreedBase without the need for manual file uploads.
 
-Clicking on the "Fields" tab will open a new dialogue that will let you select the file that you want to import.
+This walkthrough covers: 
 
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image115.png')
-```
+- Connecting Field Book to a BrAPI-enabled BreedBase server
+- Importing trial layout and traits from BreedBase to Field Book
+- Exporting collected phenotype data from Field Book to BreedBase
 
-Choosing a Field File will generate a new dialogue that will ask you to choose between an Excel or CSV format. Since the data from the database is in Excel format, choose the Excel option.
+**Prerequisites:**
 
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image258.png')
-```
+- You must have a BreedBase user account with permissions to access trial and trait data.
+- Your BreedBase instance must be configured with working BrAPI endpoints.
+- The Field Book app must be installed on an Android device with internet access.
 
-After submitting the file format, a final dialogue box will appear. Please provide information about the file that you want to import. Please ensure that "plot\_name" is set as the unique identifier. To finalize the process, clicking “OK” button.
+**Advantages of Using BrAPI:**
 
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image342.png')
-```
+- Reduces manual errors from file handling.
+- Supports real-time syncing of data.
+- Enables remote team coordination and efficient workflows.
 
-3. **To import Trait Files, clicking on the "Traits" tab on the main menu of the Field Book App.**
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image246.png')
-```
-Then, clicking on the three dots symbol found on the upper right corner of the Field Book screen. This will open a drop down menu with the choices "Import" and "Export". Clicking on "Import"
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image177.png')
-```
-Clicking on "import" will open a new dialogue that displays a list of trait files that you can select to import to the Field Book App.
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image281.png')
-```
-The trait file is now imported into the Field Book App. The traits page will show all trait files and available traits.
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image184.png')
-```
+### Connecting Field Book to a BrAPI Server
 
+[**Walkthrough: Connecting Field Book to a BreedBase BrAPI Server**](https://scribehow.com/shared/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA)
 
-## Exporting Files from Field Book App
+<iframe src="https://scribehow.com/embed/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-Data that were collected on the Field Book App can be exported back to your tablet folder, which can then be transferred to your computer.
+### Importing Trials and Traits from BreedBase
 
-To export files containing data from the Field Book App to your tablet, clicking on the "Export" link on the main menu page of the Field Book App.
+[**Walkthrough: Importing Trials from BreedBase via BrAPI**](https://scribehow.com/shared/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg)
 
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image303.png')
-```
+<iframe src="https://scribehow.com/embed/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-Clicking on the "Export" link will open a new dialogue window. To ensure that data are exported in a correct format for the database, checking the "Database Format" box, then clicking on “OK” button.
+[**Walkthrough: Importing Traits from BreedBase via BrAPI**](https://scribehow.com/shared/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?referrer=documents)
 
-```{r echo=FALSE, out.width='50%', fig.align='center'}
-knitr::include_graphics('assets/images/image157.png')
-```
+<iframe src="https://scribehow.com/embed/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-The exported file can then be found in the “field\_export” sub-folder within the “fieldBook” folder on your tablet. Once you connect your tablet to your computer, you can directly transfer the file to your computer.
+### Collecting Data
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image254.png')
-```
+Proceed with entering phenotype observations as described in the **Collecting Phenotype Data in Field Book** section.
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image158.png')
-```
+Ensure that:
 
+- Trait values match expected formats (e.g., numeric, categorical).
+- Observations are saved regularly during field use.
 
-## Uploading Phenotype Files to an SGN database {#uploading-pheno-files}
+### Exporting Phenotype Data to BreedBase via BrAPI
 
-To upload phenotype files to the database, clicking on “Field Book App” in the “Manage” menu.
+[**Walkthrough: Sending Phenotype Data with BrAPI**](https://scribehow.com/shared/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ)
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image302.png')
-```
+<iframe src="https://scribehow.com/embed/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ?as=scrollable" width="100%" height="320" allow="fullscreen" style="border: 0; min-height: 320px"></iframe>
 
-On the “Field Book Tools” page, clicking on “Upload” link in the “Uploaded Phenotype Files” section.
+### Verifying Data in BreedBase
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image165.png')
-```
+After exporting data to BreedBase via BrAPI, it is important to verify that the export was successful directly in BreedBase. 
 
-Clicking on the "Upload" link will open a new dialogue asking you to choose a file that you want to upload to the database website. Please ensure that "plot\_name" is the first column of the file to be uploaded. To make sure that the file has the correct format for uploading, click on the “Verify” button. After the file format has been verified, click on the “Store” button.
+1. Log in to your BreedBase instance.
+2. Navigate to the Manage Trials or Trial Detail page for the uploaded study.
+3. Confirm that:
+    - Trait data appears in the Phenotype Data tab.
+    - Data points align with expected plot/plant identifiers.
+    - Trait units and scales match those defined in the database.
+  
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image131.png')
-```
+### Troubleshooting
 
-The list of uploaded phenotype files can be found on the Field Book Tools page
+- Connection fails: Ensure you have the correct BrAPI server URL and valid credentials.
+- Traits do not load: Confirm that the trait exists in BreedBase.
+- Upload fails: Check for internet connectivity, correct user permissions, and trait formatting errors.
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image265.png')
-```
 
-The uploaded files will also be seen in the corresponding “Trial Detail” page.
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/image75.png')
-```
