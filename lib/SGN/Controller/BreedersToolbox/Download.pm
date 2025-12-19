@@ -1161,8 +1161,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
     my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
-    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
+    my ($id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
+    my $accession_data = [];
 
     $trial_id_string = $c->req->param("trial_ids");
     if ($trial_id_string){
@@ -1197,22 +1199,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
         if ($accession_list_id) {
             $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+            @accession_list = map { $_->[1] } @$accession_data;
+        
+            my $t = CXGN::List::Transform->new();
+            my $acc_t = $t->can_transform("accessions", "accession_ids");
+            my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+            @accession_ids = @{$accession_id_hash->{transform}};
         }
-
-        @accession_list = map { $_->[1] } @$accession_data;
-
-        my $t = CXGN::List::Transform->new();
-        my $acc_t = $t->can_transform("accessions", "accession_ids");
-        my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
-        @accession_ids = @{$accession_id_hash->{transform}};
-    }
-
-    my ($fh, $filename) = tempfile("breedbase_genotype_data_XXXXX");
-    if ($download_format eq 'VCF') {
-        $filename .= '.vcf';
-    }
-    else {
-        $filename .=  '.tsv';
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
@@ -1293,6 +1286,16 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         expires => '+1m',
     };
 
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
+    my $filename = basename($file_path);
+    
+    if ($download_format eq 'VCF') {
+        $filename .= '.vcf';
+    }
+    else {
+        $filename .=  '.tsv';
+    }
+
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
 }
@@ -1312,7 +1315,8 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
-    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
+    my ($accession_data, $id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
 
     $trial_id_string = $c->req->param("trial_ids");
@@ -1338,14 +1342,6 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
         print STDERR "using default protocol_id = $protocol_id\n";
-    }
-
-    my ($fh, $filename) = tempfile("breedbase_grm_XXXXX");
-    if ($download_format eq 'heatmap') {
-        $filename .= '.pdf';
-    }
-    else {
-        $filename .= '.tsv';
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
@@ -1383,6 +1379,16 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         expires => '+1m',
     };
 
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
+    my $filename = basename($file_path);
+    
+    if ($download_format eq 'heatmap') {
+        $filename .= '.pdf';
+    }
+    else {
+        $filename .= '.tsv';
+    }
+
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
 }
@@ -1418,20 +1424,12 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my ($fh, $filename);
-    if ($download_format eq 'results_tsv') {
-        ($fh, $filename) = tempfile("breedbase_gwas_results_XXXXX", suffix => '.tsv');
-
-    }
-    elsif ($download_format eq 'manhattan_qq_plots') {
-        ($fh, $filename) = tempfile("breedbase_gwas_plots_XXXXX", suffix => '.pdf');
-    }
-
-    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
-
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
     mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
+    
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
     my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
     my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_gwas_grm_XXXXX", DIR=> $tmp_gwas_dir);
     my ($pheno_tempfile_fh, $pheno_tempfile) = tempfile("wizard_download_gwas_pheno_XXXXX", DIR=> $tmp_gwas_dir);
@@ -1466,6 +1464,16 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         value => $dl_token,
         expires => '+1m',
     };
+
+    my ($fh, $filename, $file_path);
+    if ($download_format eq 'results_tsv') {
+        ($fh, $file_path) = tempfile("breedbase_gwas_results_XXXXX", suffix => '.tsv', DIR=> $tmp_gwas_dir);
+        $filename = basename($file_path);
+    }
+    elsif ($download_format eq 'manhattan_qq_plots') {
+        ($fh, $file_path) = tempfile("breedbase_gwas_plots_XXXXX", suffix => '.pdf', DIR=> $tmp_gwas_dir);
+        $filename = basename($file_path);
+    }
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);

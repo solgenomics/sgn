@@ -5741,6 +5741,38 @@ sub nirs_matrix_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub nirs_protocol	: Chained('brapi') PathPart('nirs/protocols') Args(0) : ActionClass('REST') { }
+
+sub nirs_protocol_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Nirs');
+	my $brapi_package_result = $brapi_module->nirs_protocols({
+		protocolDbId => $clean_inputs->{protocolDbId},
+		observationUnitDbId => $clean_inputs->{observationUnitDbId}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub nirs_instances : Chained('brapi') PathPart('nirs/instances') Args(0) : ActionClass('REST') { }
+
+sub nirs_instances_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Nirs');
+	my $brapi_package_result = $brapi_module->nirs_instances({
+		protocolDbId => $clean_inputs->{protocolDbId},
+		observationUnitDbId => $clean_inputs->{observationUnitDbId},
+		instanceDbId => $clean_inputs->{instanceDbId}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
 
 =head2 brapi/v2/pedigree
 

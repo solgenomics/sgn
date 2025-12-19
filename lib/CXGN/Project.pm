@@ -4985,7 +4985,7 @@ sub get_subplots {
     } else {
         @subplots = @{$self->get_observation_units_direct('subplot')};
     }
-    print STDERR Dumper \@subplots;
+    # print STDERR Dumper \@subplots;
     return \@subplots;
 }
 

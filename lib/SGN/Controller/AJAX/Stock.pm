@@ -43,6 +43,7 @@ use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::AddDerivedAccession;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -68,27 +69,27 @@ sub add_stockprop_POST {
     my ( $self, $c ) = @_;
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-    
+
 #    if (!$c->user()) {
 #	$c->stash->{rest} = { error => "Log in required for adding stock properties." }; return;
  #   }
-    
+
     #if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "write", "stocks")) {
 	$c->stash->{rest} = { error => "You do not have the privileges to add stockprops." };
 	$c->detach();
     }
- 
+
     my $req = $c->req;
     my $stock_id = $c->req->param('stock_id');
     my $prop  = $c->req->param('prop');
     $prop =~ s/^\s+|\s+$//g; #trim whitespace from both ends
     my $prop_type = $c->req->param('prop_type');
-    
+
     my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
-    
+
     if ($stock && $prop && $prop_type) {
-	
+
 	my $message = '';
 	if ($prop_type eq 'stock_synonym') {
 	    my $fuzzy_accession_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
@@ -115,10 +116,10 @@ sub add_stockprop_POST {
                 $message = "CAUTION: The synonym you are adding is similar to these accessions and synonyms in the database: ".join(', ', @fuzzy_match_names).".";
             }
         }
-	
+
         try {
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
-	    
+
             my $stock = CXGN::Stock->new({
                 schema=>$schema,
                 stock_id=>$stock_id,
@@ -128,11 +129,11 @@ sub add_stockprop_POST {
                 modification_note => "Added property: $prop_type = $prop"
 					 });
             my $added_stock_id = $stock->store();
-	    
+
             my $dbh = $c->dbc->dbh();
             my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
             my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-	    
+
             $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
         } catch {
             $c->stash->{rest} = { error => "Failed: $_" }
@@ -205,7 +206,7 @@ sub delete_stockprop_GET {
 	$c->stash->{rest} = { error => $message };
 	$c->detach();
     }
-    
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $spr = $schema->resultset("Stock::Stockprop")->find( { stockprop_id => $stockprop_id });
     if (! $spr) {
@@ -244,7 +245,7 @@ sub associate_locus_GET :Args(0) {
 	$c->detach();
     }
 
-    
+
     my $locus_input = $c->req->param('loci') ;
     if (!$locus_input) {
         $self->status_bad_request($c, message => 'need loci param' );
@@ -523,7 +524,7 @@ sub associate_ontology_POST :Args(0) {
 	$c->detach();
     }
 
-    
+
     my $stock_id       = $c->req->param('object_id');
     my $ontology_input = $c->req->param('term_name');
     my $relationship   = $c->req->param('relationship'); # a cvterm_id
@@ -561,7 +562,7 @@ sub associate_ontology_POST :Args(0) {
         return;
     }
     #if ( any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci")) { 
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "loci")) {
         # if this fails, it will throw an acception and will (probably
         # rightly) be counted as a server error
         #########################################################
@@ -1478,7 +1479,7 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     }
 
 
-    
+
     my $stock_id = $c->req->param("stock_id");
     my $parent_id = $c->req->param("parent_id");
 
@@ -1488,7 +1489,7 @@ sub remove_parent_GET : Path('/ajax/stock/parent/remove') Args(0) {
     }
 
     #if (! ($c->user && ($c->user->check_roles('curator') || $c->user->check_roles('submitter'))))  {
-    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "pedigrees")) { 
+    if ($c->stash->{access}->denied( $c->stash->{user_id}, "write", "pedigrees")) {
 	$c->stash->{rest} = { error => "Log in is required, or insufficent privileges, for removing parents" };
 	return;
     }
@@ -1547,7 +1548,7 @@ sub add_stock_parent_GET :Args(0) {
 	$c->detach();
     }
 
-    
+
     my $stock_id = $c->req->param('stock_id');
     my $parent_name = $c->req->param('parent_name');
     my $parent_type = $c->req->param('parent_type');
@@ -1654,7 +1655,7 @@ sub add_phenotype_POST {
     my $response;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     #if (  any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
-    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) { 
+    if ($c->stash->{access}->grant( $c->stash->{user_id}, "write", "phenotyping")) {
         my $req = $c->req;
 
         my $stock_id = $c->req->param('stock_id');
@@ -1721,7 +1722,7 @@ sub stock_members_phenotypes :Chained('/stock/get_stock') PathPart('datatables/t
     my $self = shift;
     my $c = shift;
     #my $trait_id = shift;
-    
+
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping")) {
 	$c->stash->{rest} = { error => "You do not have the privileges to read phenotyping information ($message)" };
 	$c->detach();
@@ -1777,14 +1778,21 @@ sub _stock_project_phenotypes {
 sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock_id = $c->stash->{stock}->get_stock_id();
 
     if (my $message = $c->stash->{access}->denied( $c->stash->{user_id}, "read", "phenotyping")) {
 	$c->stash->{rest} = { error => "You do not have the privileges to read phenotyping information ($message)" };
 	$c->detach();
     }
 
-    
     my @trials = $c->stash->{stock}->get_trials();
+
+    my $stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $stock_id
+    );
+    my @trials = $stock->get_trials();
 
     my @formatted_trials;
     foreach my $t (@trials) {
@@ -1838,7 +1846,7 @@ sub get_shared_trials :Path('/stock/get_shared_trials'){
 	$c->detach();
     }
 
-    
+
     my @stock_ids = $c->request->param( 'stock_ids[]' );
     my $stock_string = join ",", map { "'$_'" } (@stock_ids);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -1967,7 +1975,7 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
 	$c->stash->{rest} = { error => "You do not have the privileges to read phenotyping information ($message)" };
 	$c->detach();
     }
-    
+
     my $q;
     if ($stock_type eq 'accession'){
         $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
@@ -2021,7 +2029,7 @@ sub get_pedigree :Chained('/stock/get_stock') PathPart('pedigree') Args(0) {
 	$c->detach();
     }
 
-    
+
     my $stock = CXGN::Stock->new(
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         stock_id => $c->stash->{stock}->get_stock_id()
@@ -2049,7 +2057,7 @@ sub get_pedigree_string :Chained('/stock/get_stock') PathPart('pedigreestring') 
     # 	$c->stash->{rest} = { error => 'You need to be logged in to view a pedigree string and have the appropriate permissions.' };
     # 	return;
     # }
-    
+
     # print STDERR "Checking privileges...\n";
 
     # my @privileges =  $c->stash->{access}->check_user($user_id, "pedigree");
@@ -2516,7 +2524,7 @@ sub stock_obsolete_GET {
 	$c->stash->{rest} = { error => $message };
 	$c->detach();
     }
-    
+
     my $stock_id = $c->req->param('stock_id');
     my $is_obsolete  = $c->req->param('is_obsolete');
     my $obsolete_note  = $c->req->param('obsolete_note');
@@ -2557,7 +2565,7 @@ sub get_accessions_with_pedigree_GET {
 	$c->stash->{rest} = { error => $message };
 	$c->detach();
     }
-    
+
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $result = CXGN::Cross->get_progeny_info($schema);
@@ -2725,7 +2733,7 @@ sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPar
 	$c->stash->{rest} = { error => $message };
 	$c->detach();
     }
-    
+
     my $user_id = $c->user->get_object()->get_sp_person_id();
 
     my @roles = $c->user->roles();
@@ -2815,7 +2823,7 @@ sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datata
 	$c->stash->{rest} = { error => $message };
 	$c->detach();
     }
-    
+
     my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
     my $result = $related_stocks->get_vector_obsoleted_accessions();
     my @obsoleted_accessions;
@@ -2882,7 +2890,7 @@ sub set_display_image_POST : Args(0) {
 	$c->stash->{rest} = { error => $message };
 	$c->detach();
     }
-    
+
     my $stock_id = $c->req->param('stock_id');
     my $image_id = $c->req->param('image_id');
 
@@ -2921,6 +2929,223 @@ sub set_display_image_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 
 }
+
+
+=head2 add_derived_accessions_using_list
+
+L<Catalyst::Action::REST> action.
+
+Add new accessions derived from another stock type
+
+=cut
+
+sub add_derived_accessions_using_list : Path('/stock/add_derived_accessions_using_list') : ActionClass('REST') { }
+
+sub add_derived_accessions_using_list_POST : Args(0) {
+
+    my ( $self, $c ) = @_;
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Log in required for adding derived accessions." }; return;
+    }
+
+    if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        $c->stash->{rest} = { error => 'Cannot add new accessions! You do not have a curator account' };
+        $c->detach();
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
+    my $derived_accession_info = decode_json $c->req->param('derived_accession_info');
+
+    my $all_new_names = decode_json $c->req->param('all_new_names');
+    my @error_messages;
+
+    foreach my $new_name (@$all_new_names) {
+        if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $new_name })) {
+            push @error_messages, "Accession name already exists in database: ".$new_name;
+        }
+    }
+
+    if (scalar(@error_messages) >= 1) {
+        my $error_string = join("\n", @error_messages);
+        $c->stash->{rest} = { error => $error_string };
+        return;
+    }
+
+    my $result;
+    eval {
+        foreach my $each_info (@$derived_accession_info) {
+            my $new_accession_stock_id;
+            my $stock_name = $each_info->{'stock_name'};
+            my $derived_accession_name = $each_info->{'derived_accession_name'};
+            my $accession_description = $each_info->{'accession_description'};
+            my $derived_from_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_name})->stock_id();
+
+            my $add_derived_accession = CXGN::Stock::AddDerivedAccession->new({
+                chado_schema => $schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                derived_from_stock_id => $derived_from_stock_id,
+                derived_accession_name => $derived_accession_name,
+                description => $accession_description,
+                owner_id => $user_id,
+            });
+
+            $result = $add_derived_accession->add_derived_accession();
+        }
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred while adding new accessions: $@"};
+        return;
+    }
+    if ($result->{error}) {
+        $c->stash->{rest} = { error => $result->{error} };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
+sub upload_derived_accessions_file : Path('/stock/upload_derived_accessions_file') : ActionClass('REST') { }
+
+sub upload_derived_accessions_file_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('derived_accessions_file');
+    my $upload_type = 'DerivedAccessionsGeneric';
+
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "derived_accessions_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload derived accessions'};
+        $c->detach();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    my @stock_props = ('');
+    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser->load_plugin($upload_type);
+    $parsed_data = $parser->parse();
+
+    if (!$parsed_data){
+        my $return_error;
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    if ($parsed_data) {
+        my $derived_accession_info = $parsed_data->{'derived_accession_info'};
+        my $result;
+        eval {
+            foreach my $each_info (@$derived_accession_info) {
+                my $new_accession_stock_id;
+                my $stock_name = $each_info->{'stock_name'};
+                my $derived_accession_name = $each_info->{'derived_accession_name'};
+                my $accession_description = $each_info->{'accession_description'};
+                my $derived_from_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_name})->stock_id();
+
+                my $add_derived_accession = CXGN::Stock::AddDerivedAccession->new({
+                    chado_schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    dbh => $dbh,
+                    derived_from_stock_id => $derived_from_stock_id,
+                    derived_accession_name => $derived_accession_name,
+                    description => $accession_description,
+                    owner_id => $user_id,
+                });
+
+                $result = $add_derived_accession->add_derived_accession();
+            }
+        };
+        if ($@) {
+            $c->stash->{rest} = { error => "An error occurred while adding new accessions: $@"};
+            return;
+        }
+        if ($result->{error}) {
+            $c->stash->{rest} = { error => $result->{error} };
+            return;
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
+
 
 sub get_stocks_with_images : Path('/ajax/stock/get_stocks_with_images') : ActionClass('REST') { }
 

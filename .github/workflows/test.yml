@@ -42,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout sgn
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
     
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
