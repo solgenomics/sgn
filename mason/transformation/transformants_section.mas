@@ -49,6 +49,8 @@ jQuery(document).ready(function(){
                 if (can_obsolete) {
                     if (row.is_in_trial){
                         return 'Used in a trial, cannot obsolete';
+                    } else if (row.is_a_parent){
+                        return 'Used as a parent, cannot obsolete';                    
                     } else {
                         return "<a onclick='obsoleteStock("+row.transformant_id+",\""+row.transformant_name+"\")'>X</a>";
                     }
