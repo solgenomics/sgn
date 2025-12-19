@@ -64,7 +64,7 @@ sub new_account :Path('/ajax/user/new') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema');
     print STDERR "Adding new account...\n";
-    if ($c->config->{is_mirror}) {
+    if ($c->config->{is_mirror} || $c->config->{reject_new_users}) {
 	$c->stash->{template} = '/system_message.mas';
 	$c->stash->{message} = "This site is a mirror site and does not support adding users. Please go to the main site to create an account.";
 	return;
@@ -688,7 +688,7 @@ ername.";}
     $new_user_login->set_password($password);
 
     $new_user_login->store();
-    
+
     my $new_user_person_id=$new_user_login->get_sp_person_id();
     my $new_user = CXGN::People::Person->new($c->dbc->dbh, $new_user_person_id);
 
@@ -698,7 +698,7 @@ ername.";}
 	$new_user->set_user_type(encode_entities($new_user_type));
 	$new_user->set_first_name(encode_entities($first_name));
 	$new_user->set_last_name(encode_entities($last_name));
-	
+
 	$new_user->store();
     };
 
