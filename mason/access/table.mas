@@ -38,7 +38,7 @@
 </style>
 
 <& /page/page_title.mas, title => 'Manage Role Privileges' &>
-      
+
   <div id="add_new_privilege_modal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -51,54 +51,33 @@
 	<div class="modal-body" style="align: center">
 	  <table style="align:center"><tr><th>Role</th><th></th><th>Level</th><th></th><th>Resource</th><th></th><th>Require</th></tr>
 	    <tr><td>
-		<select id="role_select"  class="form-control">
-		  <option value="curator">curator</option>
-		  <option value="submitter">submitter</option>
-		  <option value="user">user</option>
-		</select>
+		<div id="roles_select_div">
+		  [Loading...]
+		</div>
 	      </td><td width="20">&nbsp;</td><td>
 		<select id="level_select"  class="form-control">
-		  <option value="read">Read</option>
-		  <option value="write">Write</option>
-		  <option value="delete">Delete</option>
+		  <option value="read">read</option>
+		  <option value="write">write</option>
+		  <option value="delete">delete</option>
 		</select>
 	      </td><td width="20">&nbsp;</td><td>
-		<select id="resource_select" class="form-control">
-		  <option value="trials">Trials</option>
-		  <option value="phenotyping">Phenotyping</option>
-		  <option value="genotyping">Genotyping</option>
-                  <option value="stocks">Stocks</option>
-                  <option value="pedigrees">Pedigrees</option>
-		  <option value="crosses">Crosses</option>
-		  <option value="community">Community</option>
-		  <option value="loci">Loci</option>
-		  <option value="wizard">Wizard</option>
-		  <option value="privileges">Privileges</option>
-		  <option value="loci">Loci</option>
-		  <option value="breeding_programs">Breeding Programs</option>
-		  <option value="stocks">Stocks</option>
-		  <option value="catalog">Catalog</option>
-		  <option value="user_roles">User Roles</option>
-		  <option value="ontologies">Ontologies</option>
-		  <option value="publications">Publications</option>
-		  <option value="locations">Locations</option>
-		  <option value="seedlots">Seedlots</option>
-		</select>
-	       
+		<div id="resources_select_div">
+		  [Loading...]
+		</div>
 	      </td><td width="20">&nbsp;</td>
 	      <td>
 		&nbsp;<input id="require_breeding_program" type="checkbox" class="projectCheckbox" >&nbsp;Breeding Program</input><br />
 		&nbsp;<input id="require_ownership" type="checkbox" class="projectCheckbox" >&nbsp;Ownership</input>
 	      </td>
-	      
+
 
 	  </tr>
-	  
+
 
 
 	  </table>
-	  
-	  
+
+
 	</div>
 	<div class="modal-footer">
           <button id="submit_new_privileges" type="button" class="btn btn-primary">Add</button>
@@ -108,9 +87,36 @@
     </div>
   </div>
 
+
+
+  <div id="add_new_role_modal" class="modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+	<div class="modal-header">
+          <h5 class="modal-title">Add New Role</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+	</div>
+	<div class="modal-body" style="align: center">
+	Role name: <input type="text" id="role_name_input" size="30" />
+
+	</div>
+	<div class="modal-footer">
+          <button id="submit_new_role" type="button" class="btn btn-primary">Add</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+	</div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
 <div style="float:right">
   <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_new_role_modal" id="add_new_role_button">Add new role</button> &nbsp;
-    
+
   <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add_new_privilege_modal" id="add_new_privilege_button" >Add new privilege</button>
   </div>
   <br />
@@ -133,22 +139,82 @@
   <script>
 
 jQuery(document).ready( function() {
-    
-    jQuery.ajax( { 
+
+    jQuery.ajax( {
         url : '/ajax/access/table',
         success: function(r) { jQuery('#access_table').html(r.data) }
     });
 
+    jQuery('#add_new_privilege_button').click( function() {
+	jQuery('#new_privilege_modal').modal("open");
+	jQuery.ajax( {
+	    url : '/ajax/html/select/resources'
+	}).then(
+	    function(r) {
+		jQuery('#resources_select_div').html(r.select);
+	    },
+	    function(r) {
+		alert('An error occurred retrieving resources!');
+	    }
+	);
+	jQuery.ajax( {
+	    url : '/ajax/html/select/roles',
+	}).then(
+	    function(r) {
+		jQuery('#roles_select_div').html(r.select);
+	    },
+	    function(r) {
+		alert('an error occurred retrieving roles');
+	    }
+	);
+    });
+
+
     jQuery('#submit_new_privileges').click( function() {
-	var resource=jQuery('#resource_select').val();
+	var resource=jQuery('#html_resource_select').val();
 	var level = jQuery('#level_select').val();
-	var role = jQuery('#role_select').val();
+	var role = jQuery('#html_role_select').val();
 	var require_breeding_program = jQuery('#require_breeding_program').is(':checked');
 	var require_ownership = jQuery('#require_ownership').is(':checked');
 	add_privilege(resource, level, role, require_breeding_program, require_ownership);
     });
+
+    jQuery('#submit_new_role').click( function() {
+    	var role_name = jQuery('#role_name_input').val();
+	add_role(role_name);
+    });
+
 });
 
+function add_role(role_name) {
+    jQuery.ajax( {
+	url: '/ajax/access/add_role',
+	data: { 'role' : role_name },
+    }).then(
+	function(r) {
+            if (r.success === 1) {
+                 alert('Successfully added role.');
+		window.location.reload();
+	     }
+	}, function(r) { alert('an error occurred adding the role'); }
+    );
+}
+
+function delete_role(role_name) {
+    var yes = confirm("Are you sure you would like to delete the role "+role_name+'?');
+    if (yes) {
+	jQuery.ajax( {
+	    url : '/ajax/access/delete_role/'+role_name,
+	}).then(
+	    function(r) {
+		alert('Successfully deleted role '+role_name+'.');
+		window.location.reload();
+	    },
+	    function(r) {
+		alert('An error occurred trying to delete the role.');
+	    });
+    }
+}
 
 
 function delete_privilege(privilege_id) {
@@ -176,7 +242,6 @@ function add_privilege(resource, level, role, require_breeding_program, require_
 	url: '/ajax/access/add_privilege',
 	data: { resource: resource, level: level, role: role, require_breeding_program : require_breeding_program, require_ownership : require_ownership },
         success: function(r) {
-            alert(JSON.stringify(r));
 	    if (r.success) {
                 alert('added new privilege');
                 jQuery('#add_new_privilege_modal').modal("hide");
@@ -189,10 +254,9 @@ function add_privilege(resource, level, role, require_breeding_program, require_
 	error: function(r) {
 	    alert(JSON.stringify(r));
 	}
- 
-    });
-    
-}
-  
-</script>			       
 
+    });
+
+}
+
+</script>
