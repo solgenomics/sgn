@@ -43,6 +43,7 @@ use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Transformation::Transformation;
 use Sort::Naturally;
+use CXGN::People::Roles;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -916,7 +917,7 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
 
         $h = $schema->storage->dbh()->prepare($spectra_query);
         $h->execute($trial_id);
-        
+
     } else {
         my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
         FROM nd_protocol
@@ -2233,12 +2234,12 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ 
+    my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
-        people_schema=>$people_schema, 
-        metadata_schema=>$metadata_schema, 
+        people_schema=>$people_schema,
+        metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        trial_id => $trial_id 
+        trial_id => $trial_id
     });
 
     my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
@@ -2270,30 +2271,30 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
 
     my @plots = map {$_->[0]} @{$trial->get_plots()};
 
-    my $plots_q = "WITH plot AS 
-        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
-            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
-            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=?), 
-    row_number AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?), 
-    col_number AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+    my $plots_q = "WITH plot AS
+        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship
+            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
+        WHERE stock_relationship.type_id=?),
+    row_number AS
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
+        WHERE stockprop.type_id=?),
+    col_number AS
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
         WHERE stockprop.type_id=?),
     rep AS
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
         WHERE stockprop.type_id=?),
-    block AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
+    block AS
+        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop
         WHERE stockprop.type_id=?)
-    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, rep.value AS replicate, block.value AS block, plot.accession_id, plot.accession_name 
-    FROM plot 
-    LEFT JOIN row_number ON plot.plot_id=row_number.plot_id 
+    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, rep.value AS replicate, block.value AS block, plot.accession_id, plot.accession_name
+    FROM plot
+    LEFT JOIN row_number ON plot.plot_id=row_number.plot_id
     LEFT JOIN col_number ON col_number.plot_id=plot.plot_id
     JOIN rep ON rep.plot_id=plot.plot_id
     JOIN block ON block.plot_id=plot.plot_id
-    WHERE plot.plot_id = ANY(?);"; 
+    WHERE plot.plot_id = ANY(?);";
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
     $h->execute($plot_of_id, $row_num_id, $col_num_id, $rep_id, $block_id, \@plots);
@@ -2329,12 +2330,12 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ 
+    my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
-        people_schema=>$people_schema, 
-        metadata_schema=>$metadata_schema, 
+        people_schema=>$people_schema,
+        metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        trial_id => $trial_id 
+        trial_id => $trial_id
     });
 
     if (!$trial->has_subplot_entries()) {
@@ -2355,19 +2356,19 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
 
     my @subplots = map {$_->[0]} @{$trial->get_subplots()};
 
-    my $subplots_q = "WITH subplot AS 
-        (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
-            JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id 
-            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
+    my $subplots_q = "WITH subplot AS
+        (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship
+            JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
         WHERE stock_relationship.type_id=?),
-    plot AS 
+    plot AS
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
         WHERE stock_relationship.type_id=?)
-    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name 
-    FROM subplot 
+    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name
+    FROM subplot
     JOIN plot ON plot.subplot_id=subplot.subplot_id
-    WHERE subplot.subplot_id = ANY(?);"; 
+    WHERE subplot.subplot_id = ANY(?);";
 
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
     $h->execute($subplot_of_id, $subplot_of_id, \@subplots);
@@ -2399,12 +2400,12 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ 
+    my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
-        people_schema=>$people_schema, 
-        metadata_schema=>$metadata_schema, 
+        people_schema=>$people_schema,
+        metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        trial_id => $trial_id 
+        trial_id => $trial_id
     });
 
     if (!$trial->has_plant_entries()) {
@@ -2439,11 +2440,11 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     my $subplot_join = "";
     my $subplot_header = "";
     my $subplot_select = "";
-    
+
     if ($trial->has_subplot_entries()) {
         $subplot_q = ", subplot AS
         (SELECT object_id AS subplot_id, mysubplot.name as subplot_name, subject_id as plant_id FROM stock_relationship
-        JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id 
+        JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id
         WHERE stock_relationship.type_id=$plant_of_subplot_id)";
         $subplot_join = "JOIN subplot ON subplot.plant_id=plant.plant_id";
         $subplot_header = "<th>Parent Subplot</th>";
@@ -2452,29 +2453,29 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
 
     my @plants = map {$_->[0]} @{$trial->get_plants()};
 
-    my $plants_q = "WITH plant AS 
-        (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
-            JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id 
-            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=?), 
-    plot AS 
+    my $plants_q = "WITH plant AS
+        (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship
+            JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
+        WHERE stock_relationship.type_id=?),
+    plot AS
         (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
             JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
             WHERE stock_relationship.type_id=?),
-    row_number AS 
-        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?), 
-    col_number AS 
-        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?) 
+    row_number AS
+        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop
+        WHERE stockprop.type_id=?),
+    col_number AS
+        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop
+        WHERE stockprop.type_id=?)
     $subplot_q
     SELECT plant.plant_id, plant.plant_name, plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, plant.accession_id, plant.accession_name $subplot_select
     FROM plant
-    LEFT JOIN row_number ON plant.plant_id=row_number.plant_id 
+    LEFT JOIN row_number ON plant.plant_id=row_number.plant_id
     LEFT JOIN col_number ON col_number.plant_id=plant.plant_id
     JOIN plot ON plot.plant_id=plant.plant_id
     $subplot_join
-    WHERE plant.plant_id = ANY(?);"; 
+    WHERE plant.plant_id = ANY(?);";
 
     my $h = $schema->storage()->dbh()->prepare($plants_q);
     $h->execute($plant_of_id, $plant_of_id, $row_num_id, $col_num_id, \@plants);
@@ -2807,7 +2808,55 @@ sub get_control_transformation_ids_select : Path('/ajax/html/select/control_tran
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_roles_select :Path('/ajax/html/select/roles') Args(0) {
+    my $self = shift;
+    my $c = shift;
 
+    my $id = $c->req->param("id") || "html_role_select";
+    my $name = $c->req->param("name") || "html_role_select";
+
+    my $o = CXGN::People::Roles->new(
+	{
+	    bcs_schema => $c->stash->{bcs_schema},
+	    people_schema => $c->stash->{people_schema}
+	});
+
+    my @roles = $o->get_non_breeding_program_roles();
+
+    my @role_names = map { [ $_->[1], $_->[1] ] } @roles;
+
+    my $html =  simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@role_names,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_resources_select :Path('/ajax/html/select/resources') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "html_resource_select";
+    my $name = $c->req->param("name") || "html_resource_select";
+
+    my $resource_rs = $c->stash->{people_schema}->resultset('SpResource')->search( { } );
+
+    my @resources;
+    while(my $row = $resource_rs->next()) {
+	push @resources, [ $row->name(), $row->name() ];
+    }
+
+    @resources = sort { $a->[1] cmp $b->[1] } @resources;
+
+    my $html =  simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@resources,
+	);
+
+    $c->stash->{rest} = { select => $html };
+}
 
 
 
