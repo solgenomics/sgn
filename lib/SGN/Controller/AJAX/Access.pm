@@ -5,7 +5,7 @@ use Moose;
 use Data::Dumper;
 use List::Util 'any';
 use CXGN::Access;
-
+use CXGN::People::Roles;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -52,7 +52,7 @@ sub access_table :Path('/ajax/access/table') Args(0) {
     }
 
     print STDERR "USER ID: ".$c->stash->{user_id}."\n";
-    if (! $c->stash->{access}->grant($c->stash->{user_id}, "read", "privileges")) { 
+    if ($c->stash->{access}->denied($c->stash->{user_id}, "read", "privileges")) {
 	$c->stash->{rest} = { error => "You do not have the privileges required to access this page." };
 	return;
     }
@@ -73,9 +73,14 @@ sub access_table :Path('/ajax/access/table') Args(0) {
 	$count++;
 	my $rowspan;
 	my $rowspan_count = keys(%{$table{$role}});
-	    
+
+	my $delete_role = "";
+	if ($role !~ m/curator|submitter|user|vendor/) {
+	    $delete_role = '<a href="javascript:delete_role(\''.$role.'\')">X</a>';
+	}
+
 	$rowspan = " rowspan=\"$rowspan_count\" ";
-	$html .= "<tr ><td  $rowspan style=\"padding: 10px\">$role</td>";
+	$html .= "<tr ><td  $rowspan style=\"padding: 10px\">$delete_role&nbsp;$role</td>";
 	foreach my $level (sort(keys(%{$table{$role}}))) {
 	    $html .= "<td style=\"padding: 10px\">$level</td>";
 	    $html .= "<td style=\"padding: 10px\">";
@@ -87,22 +92,20 @@ sub access_table :Path('/ajax/access/table') Args(0) {
 		if ($resource->{require_ownership}) {
 		    $ownership = "[OWN]";
 		}
-		
-		    
-		
-		$html .= "<span class=\"chip\"><a href=\"javascript:delete_privilege(".$resource->{id}.")\">X</a> ".$resource->{name}." $breeding_program $ownership</span>  ";
+
+		if ($resource->{name}) {
+
+		    $html .= "<span class=\"chip\"><a href=\"javascript:delete_privilege(".$resource->{id}.")\">X</a> ".$resource->{name}." $breeding_program $ownership</span>  ";
+		}
 	    }
 	    $html .= "";
 	    $html .= "</td></tr>";
 	}
 
     }
-    	$html .= "</table>";
+    $html .= "</table>";
 
-
-    
-    
-    $c->stash->{rest} = { data => $html }; #\@table }; 
+    $c->stash->{rest} = { data => $html }; #\@table };
 }
 
 sub add_privilege :Path('/ajax/access/add_privilege') Args(0) {
@@ -113,7 +116,7 @@ sub add_privilege :Path('/ajax/access/add_privilege') Args(0) {
 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to change privileges.' };
 	return;
     }
-    
+
     my $resource = $c->req->param('resource');
     my $role = $c->req->param('role');
     my $level = $c->req->param('level');
@@ -139,7 +142,7 @@ sub delete_privilege :Path('/ajax/access/delete_privilege') Args(0) {
 	$c->stash->{rest} = { error => 'You do not have sufficient privileges to change privileges.' };
 	return;
     }
-    
+
     my $privilege_id = $c->req->param('privilege_id');
 
     my $r = $c->stash->{access}->delete_privilege($privilege_id);
@@ -147,5 +150,45 @@ sub delete_privilege :Path('/ajax/access/delete_privilege') Args(0) {
     $c->stash->{rest} = $r;
 }
 
+sub add_role :Path('/ajax/access/add_role') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $role = $c->req->param('role');
+
+    if (my $message = $c->stash->{access}->denied($c->stash->{user_id}, "write", "privileges")) {
+	$c->stash->{message} = $message;
+	$c->stash->{template} = "/access/denied.mas";
+	$c->detach();
+    }
+
+    my $o = CXGN::People::Roles->new(
+	{
+	    bcs_schema => $c->stash->{bcs_schema},
+	    people_schema => $c->stash->{people_schema},
+	} );
+
+    my $sp_role_id = $o->add_sp_role($role);
+
+    $c->stash->{access}->add_privilege("community", $role, "read");
+
+    $c->stash->{rest} = { success => 1, sp_role_id => $sp_role_id };
+}
+
+sub delete_role :Path('/ajax/access/delete_role') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $role = shift;
+
+    my $o = CXGN::People::Roles->new( { bcs_schema => $c->stash->{bcs_schema}, people_schema => $c->stash->{people_schema} });
+    my $error = $o->delete_sp_role($role);
+
+    if ($error) {
+	$c->stash->{rest} = { error => $error };
+    }
+
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
+}
 
 1;
