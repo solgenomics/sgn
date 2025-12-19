@@ -50,12 +50,14 @@ sub add_sp_role {
 		return;
 	}
 	eval {
-		my $q="INSERT INTO sgn_people.sp_roles (name) VALUES (?);";
+		my $q="INSERT INTO sgn_people.sp_roles (name) VALUES (?) RETURNING sp_role_id;";
 		my $sth = $dbh->prepare($q);
 		$sth->execute($name);
+		my ($sp_role_id) = $sth->fetchrow_array();
+		return $sp_role_id;
 	};
 	if ($@) {
-		return "An error occurred while storing a new role. ($@)";
+		die "An error occurred while storing a new role. ($@)";
 	}
 }
 
@@ -64,7 +66,7 @@ sub update_sp_role {
     my $new_name = shift;
     my $old_name = shift;
     my $dbh = $self->people_schema->storage->dbh;
-    
+
     my $q="SELECT sp_role_id FROM sgn_people.sp_roles where name=?;";
     my $sth = $dbh->prepare($q);
     $sth->execute($old_name);
@@ -83,6 +85,40 @@ sub update_sp_role {
     }
 }
 
+sub delete_sp_role {
+    my $self = shift;
+    my $sp_role_name = shift;
+
+    my $role = $self->people_schema()->resultset('SpRole')->find( { name => $sp_role_name });
+
+    if (! $role) {
+	return "The role ($sp_role_name) you are trying to delete does not exist";
+    }
+    # check whether the role is assigned to anybody
+    # if so, do not allow deletion
+    #
+    my $assigned = $self->people_schema->resultset('SpPersonRole')->find( { sp_role_id => $role->sp_role_id() });
+
+    if ($assigned) {
+	return "This role is currently being in use and cannot be deleted.";
+    }
+
+    # check if role matches a breeding program name
+    #
+    my $bp = $self->bcs_schema()->resultset('Project::Project')->find( { name => $role->name() });
+
+    if ($bp) {
+	return "The role you would like to delete is associated with a breeding program. You need to remove the breeding program to delete this role.";
+    }
+
+    my $privilege_row = $self->people_schema->resultset('SpPrivilege')->find( { sp_role_id => $role->sp_role_id() });
+    $privilege_row->delete();
+    $role->delete();
+    return 0;
+
+}
+
+
 sub role_hash {
     my $self = shift;
     my %roles;
@@ -98,8 +134,8 @@ sub list_roles {
     my $sp_person_id = shift;
 
     my $rs2;
-    
-    if ($sp_person_id) { 
+
+    if ($sp_person_id) {
 	$rs2 = $self->people_schema->resultset("SpPerson")->search(
 	    { censor => 0, disabled => undef, 'me.sp_person_id' => $sp_person_id },
 	    { join => 'sp_person_roles',
@@ -114,10 +150,10 @@ sub list_roles {
 	      '+select' => ['sp_person_roles.sp_role_id', 'sp_person_roles.sp_person_role_id' ],
 	      '+as'     => ['sp_role_id', 'sp_person_role_id' ],
 	      order_by => 'sp_role_id' });
-    }	
+    }
 
     my @rows;
-    
+
     while (my $row= $rs2->next()) {
 	push @rows, $row;
     }
@@ -183,6 +219,21 @@ sub get_sp_roles {
 	}
 	return \@sp_roles;
 }
+
+sub get_non_breeding_program_roles {
+	my $self = shift;
+	my $dbh = $self->people_schema->storage->dbh;
+	my @sp_roles;
+	my $q="SELECT name, sp_role_id FROM sgn_people.sp_roles where name not in (SELECT name from project)";
+	my $sth = $dbh->prepare($q);
+	$sth->execute();
+	while (my ($name, $sp_role_id) = $sth->fetchrow_array ) {
+		push(@sp_roles, [$sp_role_id, $name] );
+	}
+	return @sp_roles;
+}
+
+
 
 sub check_sp_roles {
 	my $self = shift;
