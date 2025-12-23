@@ -281,8 +281,8 @@ sub _authenticate_user {
     my $expired;
     my $wildcard = 'any';
 
-    #($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
-    $user_id = $c->stash->{user_id};
+    ($user_id, $user_type, $user_pref, $expired) = CXGN::Login->new($c->dbc->dbh)->query_from_cookie($c->stash->{session_token});
+    #$user_id = $c->stash->{user_id};
 
     my %server_permission;
     my $rc = eval{
@@ -322,7 +322,7 @@ sub _authenticate_user {
 	}
 
 	if ($c->stash->{session_token}) {
-	    #($user_id, $user_type, $user_pref, $expired) = $login->query_from_cookie($c->stash->{session_token});
+	    ($user_id, $user_type, $user_pref, $expired) = $login->query_from_cookie($c->stash->{session_token});
 
 	    print STDERR "WE SHOULD ALREADY BE LOGGED IN WITH: ".$user_id." : ".$user_type." : ".$expired."\n";
 	}
@@ -348,8 +348,8 @@ sub _authenticate_user {
 
 	my $message;
 
-	print STDERR "USER ID IN STASH: ". $c->stash->{user_id}."\n";
-	if ($message = $c->{stash}->{access}->denied($c->stash->{user_id}, $access_level, $resource, $owner_id, $breeding_programs)) {
+	print STDERR "USER ID IN STASH: ". $c->stash->{user_id}." AND AS VAR: $user_id\n";
+	if ($message = $c->{stash}->{access}->denied($user_id, $access_level, $resource, $owner_id, $breeding_programs)) {
 	    print STDERR "ACCESS DENIED: $message\n";
 	    $http_code = 403;
 	}
