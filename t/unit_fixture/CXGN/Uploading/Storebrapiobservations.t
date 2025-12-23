@@ -66,7 +66,7 @@ is_deeply($response, {
                           'status' => [
                                         {
                                           'messageType' => 'ERROR',
-                                          'message' => 'You must login and have permission to access this BrAPI call.'
+                                          'message' => 'Login required for this activity. '
                                         }
                                       ],
                           'datafiles' => [],
@@ -114,7 +114,7 @@ $req->content( $j );
 $ua = LWP::UserAgent->new();
 $res = $ua->request($req);
 $response = decode_json $res->content;
-print STDERR Dumper $response;
+print STDERR "RESPONSE FROM PUT BRAPI V1 OBSERVATIONS: ".Dumper($response);
 
 #Remove observationdbid from result because it is variable
 foreach (@{$response->{result}->{observations}}){
