@@ -98,9 +98,9 @@ sub metadata_query {
     my $queryref = shift;
     my $limit_to_breeding_programs = shift;
     my $h;
-    # print STDERR "criteria_list=" . Dumper($criteria_list);
-    # print STDERR "dataref=" . Dumper($dataref);
-    # print STDERR "queryref=" . Dumper($queryref);
+    print STDERR "criteria_list=" . Dumper($criteria_list);
+    print STDERR "dataref=" . Dumper($dataref);
+    print STDERR "queryref=" . Dumper($queryref);
     
     my $target_table = $criteria_list->[-1];
     # print STDERR "target_table=". $target_table . "\n";
@@ -127,7 +127,7 @@ sub metadata_query {
 	    }
 	}
 
-	if (ref($limit_to_breeding_programs) eq 'ARRAY') { 
+	if (ref($limit_to_breeding_programs) eq 'ARRAY' && scalar(@$limit_to_breeding_programs)>0 ) { 
 	    my $limit_bp_query = $self->build_subquery( join(",", map{ "'$_'" } @$limit_to_breeding_programs), 0, $target_table, $target, "breeding_programs", $select, $group);
 
 	    push @queries, $limit_bp_query;
