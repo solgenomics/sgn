@@ -138,7 +138,9 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok("refresh_jstree_html", "name", "refresh tree with new trial added")->click();
 	sleep(5);
 
-	$t->find_element_ok('//div[@id="trial_list"]//ul[@class="jstree-container-ul jstree-children"]//li//i[@class="jstree-icon jstree-ocl"]',
+	print STDERR "HTML NOW: ". $t->driver->get_page_source();
+	
+	$t->find_element_ok('//div[@id="phenotyping_trial_list"]//ul[@class="jstree-container-ul jstree-children"]//li//i[@class="jstree-icon jstree-ocl"]',
 		'xpath', 'find a plus button to open a tree in test trails')->click();
 	sleep(2);
 
