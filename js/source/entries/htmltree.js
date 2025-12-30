@@ -90,14 +90,14 @@ export function init_events(tree_type) {
             window.open('/folder/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'breeding_program') {
-	    alert('type is breeding_program!');
+	    //alert('type is breeding_program!');
             window.open('/breeders/program/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'analyses') {
             window.open('/analyses/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'phenotyping_trial') {
-	    alert('type is phentoyping trial!');
+	    //alert('type is phentoyping trial!');
             window.open('/breeders_toolbox/trial/'+node.id);
             event.stopPropagation();
         } else if (node.type == 'sampling_trial') {
@@ -128,7 +128,7 @@ export function get_timestamp() {
 
 
 export function get_html_tree(tree_type) {
-    alert('get_html_tree with tree type '+tree_type);
+    //alert('get_html_tree with tree type '+tree_type);
     return jQuery.ajax( {
 	url: '/ajax/breeders/get_trials_with_folders?type='+tree_type,
     }).then(  function(r) {
