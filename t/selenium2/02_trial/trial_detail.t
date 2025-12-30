@@ -13,6 +13,8 @@ $t->while_logged_in_as("curator", sub {
 
     for my $file ("T100_trial_layout.xls", "T100_trial_layout_selenium_second_file.xlsx") {
 
+    	print STDERR "NOW TESTING WITH FILE $file...\n";
+	
         #Upload New Trial
         $t->get_ok('/breeders/trials');
         sleep(3);
@@ -102,7 +104,7 @@ $t->while_logged_in_as("curator", sub {
         $t->get_ok('/breeders/trials');
         sleep(3);
 
-        $t->find_element_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree")->click();
+        $t->find_element_ok("refresh_phenotyping_trial_button",  "id", "refresh tree")->click(); # was refresh_jstree_html_trialtree_button",
         sleep(5);
 
         $t->find_element_ok("jstree-icon", "class", "open up tree")->click();
