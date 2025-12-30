@@ -5693,7 +5693,7 @@ sub nirs : Chained('brapi') PathPart('nirs') Args(0) : ActionClass('REST') { }
 sub nirs_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    my $auth = _authenticate_user($c, "phenotyping", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Nirs');
@@ -5746,7 +5746,7 @@ sub nirs_protocol	: Chained('brapi') PathPart('nirs/protocols') Args(0) : Action
 sub nirs_protocol_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Nirs');
@@ -5762,7 +5762,7 @@ sub nirs_instances : Chained('brapi') PathPart('nirs/instances') Args(0) : Actio
 sub nirs_instances_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Nirs');
