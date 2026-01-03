@@ -20,15 +20,15 @@ export function init(tree_type, hard_refresh) {
     //
 //    alert("HARD REFRESH: "+hard_refresh);
     var last_refresh_date = localStorage.getItem(tree_type+'_last_refresh');
-    //alert("Last refresh timestamp: "+last_refresh_date);
+    alert("Last refresh timestamp: "+last_refresh_date);
 
     if (hard_refresh === 1 || last_refresh_date === null) {
-	//alert("refresh date is not set or hard_refresh is 1");
+	alert("refresh date is not set or hard_refresh is 1");
 	jQuery.ajax({
 	    url: '/ajax/breeders/recently_modified_projects',
 	    data: { 'type' : tree_type, 'hard_refresh' : hard_refresh },
 	}).then( function(r) {
-	    //alert("NEW TRIALS 1: "+JSON.stringify(r));
+	    alert("NEW TRIALS 1: "+JSON.stringify(r));
 
 	    if (r.data.length > 0) {
 		get_html_tree(tree_type);
@@ -38,18 +38,18 @@ export function init(tree_type, hard_refresh) {
     }
 
     else {
-	//alert('retrieving from local storage');
+	alert('retrieving from local storage');
 	html = localStorage.getItem(tree_type);
-	//alert('html retrieved from local storage: '+html);
+	alert('html retrieved from local storage: '+html);
 	format_html_tree(html, tree_type);
     }
 
     if (html === null) {
-	//alert('HTML NOT DEFINED! FETCHING...');
+	alert('HTML NOT DEFINED! FETCHING...');
 	get_html_tree(tree_type);
 
     }
-    //alert('Done with init');
+    alert('Done with init');
 }
 
 export function init_events(tree_type) {
@@ -105,7 +105,12 @@ export function init_events(tree_type) {
             event.stopPropagation();
         } else if (node.type == 'crossing_trial') {
 	    window.open('/breeders/crosses/'+node.id);
+	    event.stopPropagation();
+	} else if (node.type == 'genotype_data_project') {
+	    window.open('/breeders/trial/'+node.id);
+	    even.stopPropagation();
 	}
+
       }
     });
 
@@ -128,11 +133,11 @@ export function get_timestamp() {
 
 
 export function get_html_tree(tree_type) {
-    //alert('get_html_tree with tree type '+tree_type);
+    alert('get_html_tree with tree type '+tree_type);
     return jQuery.ajax( {
 	url: '/ajax/breeders/get_trials_with_folders?type='+tree_type,
     }).then(  function(r) {
-	//alert("adding new html and timestamp to localstorage" + r.html);
+	alert("adding new html and timestamp to localstorage" + r.html);
 	localStorage.setItem(tree_type, r.html);
 	localStorage.setItem(tree_type+'_last_refresh', get_timestamp());
 	format_html_tree(r.html, tree_type);
@@ -166,7 +171,11 @@ export function format_html_tree(treehtml, tree_type) {
 	    },
 	    "crossing_trial" : {
                 "icon": 'glyphicon glyphicon-grain text-success',
-            }
+            },
+	    "genotype_data_project" : {
+		"icon": 'glyphicon glyphicon-th text-success',
+	    },
+
 	},
 	"search" : {
 	    "case_insensitive" : true,
