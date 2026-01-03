@@ -348,7 +348,7 @@ sub get_recently_created_accessions : Path('/ajax/breeders/recently_added_access
 }
 
 
-=head2 get_recent_project_changes()
+=head2 get_recently_modified_projects()
 
   Summary: function used in the trial tree pages to determine if there
            were any changes in the database that should trigger a refresh
