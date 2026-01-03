@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
+<& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'], entries => [ 'htmltree']  &>
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
@@ -60,27 +60,32 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    alert('get tree from local storage...');
-    var html = localStorage.getItem('html_genotyping_trial_tree');
-    if (html !== null) {
-	alert("HTML NOW: "+html);
-	format_genotyping_trial_tree(html);
-    }
+
+    var htmltree = window.jsMod['htmltree'];
+    var hard_refresh = <% $hard_refresh || '""' %>;
+    htmltree.init("genotyping_trial", <% $hard_refresh %>);
+
+//    alert('get tree from local storage...');
+//    var html = localStorage.getItem('html_genotyping_trial_tree');
+//    if (html !== null) {
+//	alert("HTML NOW: "+html);
+//	format_genotyping_trial_tree(html);
+//    }
 
     //alert(html);
-    if (html === null) {
-	alert('HTML NOT DEFINED! FETCHING...');
-	get_genotyping_trial_tree().then( function(r) { 
-	    html = localStorage.getItem('html_genotyping_trial_tree');
-	    format_genotyping_trial_tree(html);
-	});
-    }
+//    if (html === null) {
+    //alert('HTML NOT DEFINED! FETCHING...');
+//	get_genotyping_trial_tree().then( function(r) {
+//	    html = localStorage.getItem('html_genotyping_trial_tree');
+//	    format_genotyping_trial_tree(html);
+//	});
+//    }
 
-    
-    jQuery('#refresh_genotyping_trial_jstree_html').click(function(){
-	alert('hello!');
-	get_genotyping_trial_tree();
-    });
+
+//    jQuery('#refresh_genotyping_trial_jstree_html').click(function(){
+	//alert('hello!');
+//	get_genotyping_trial_tree();
+//    });
 
 
   //   jQuery.ajax( {
@@ -150,24 +155,24 @@ jQuery(document).ready(function($) {
 
 
 function get_genotyping_trial_tree() {
-    alert('get_trial_tree');
+	 //    alert('get_trial_tree');
     return jQuery.ajax( {
-	url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_trial',  
+	url: '/ajax/breeders/get_trials_with_folders_cached?type=genotyping_trial',
     }).then(  function(r) { localStorage.setItem('html_genotyping_trial_tree', r.html); });
 }
 
 function format_genotyping_trial_tree(treehtml) {
-    alert('format_genotyping_trial_tree');
-    
+	 //    alert('format_genotyping_trial_tree');
+
     var html = '<ul>'+treehtml+'</ul>';
-    
+
     jQuery('#genotyping_trial_list').html(html);
 
-    alert("HTML "+html);
+    //    alert("HTML "+html);
     //console.log(html);
     jQuery('#genotyping_trial_list').jstree( {
 	"core": { 'themes': { 'name': 'proton', 'responsive': true}},
-	"valid_children" : [ "folder", "trial", "breeding_program" ],
+		"valid_children" : [ "folder", "trial", "breeding_program" ],
 	"types" : {
 	    "breeding_program" : {
 		"icon": 'glyphicon glyphicon-briefcase text-info',
@@ -184,9 +189,9 @@ function format_genotyping_trial_tree(treehtml) {
 	    "case_insensitive" : true,
 	},
 	"plugins" : ["html_data","types","search"],
-	
+
     });
-    
+
 }
 
 function get_timestamp() {
