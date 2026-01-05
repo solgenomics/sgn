@@ -327,54 +327,6 @@ sub get_plots_and_plants {
 }
 
 
-sub get_stock_related_seedlots_1 {
-    my $self = shift;
-    my $schema = $self->dbic_schema();
-    my $stock_id = $self->stock_id();
-
-    my $collection_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'collection_of', 'stock_relationship')->cvterm_id();
-    my $stock_seedlot_relationships = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $stock_id, type_id => $collection_of_type_id } );
-
-    my @stock_seedlots = ();
-    foreach my $seedlot ($stock_seedlot_relationships->all()) {
-        my $seedlot_stock_id = $seedlot->object_id();
-        my $seedlot_obj = CXGN::Stock::Seedlot->new( schema => $schema, seedlot_id => $seedlot_stock_id);
-        my $seedlot_name = $seedlot_obj->uniquename();
-        my $accession = $seedlot_obj->accession();
-        my $accession_stock_id = $accession->[0];
-        my $accession_name = $accession->[1];
-        my $cross = $seedlot_obj->cross();
-        my $cross_stock_id = $cross->[0];
-        my $cross_name = $cross->[1];
-        my $box_name = $seedlot_obj->box_name();
-        my $count = $seedlot_obj->get_current_count_property();
-        my $weight_gram = $seedlot_obj->get_current_weight_property();
-        my $material_type = $seedlot_obj->material_type();
-        my $quality = $seedlot_obj->quality();
-        my $breeding_program_name = $seedlot_obj->breeding_program_name();
-        my $location_code = $seedlot_obj->location_code();
-
-        push @stock_seedlots, {
-            seedlot_stock_id => $seedlot_stock_id,
-            seedlot_stock_uniquename => $seedlot_name,
-            accession_stock_id => $accession_stock_id,
-            accession_name => $accession_name,
-            cross_stock_id => $cross_stock_id,
-            cross_name => $cross_name,
-            box_name => $box_name,
-            count => $count,
-            weight_gram => $weight_gram,
-            material_type => $material_type,
-            seedlot_quality => $quality,
-            breeding_program_name => $breeding_program_name,
-            location => $location_code
-        }
-
-    }
-
-    return \@stock_seedlots
-}
-
 sub get_stock_related_seedlots {
     my $self = shift;
     my $schema = $self->dbic_schema();

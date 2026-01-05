@@ -3062,7 +3062,7 @@ sub get_stock_related_seedlots :Path('/ajax/stock/stock_related_seedlots') :Args
     my @stock_seedlots;
 
     my $stock_related_seedlots = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $seedlots = $stock_related_seedlots->get_stock_related_seedlots_1();
+    my $seedlots = $stock_related_seedlots->get_stock_related_seedlots();
     foreach my $seedlot (@$seedlots) {
         my $content_html = '';
         my $accession_stock_id = $seedlot->{accession_stock_id};
