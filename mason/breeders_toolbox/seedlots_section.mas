@@ -63,7 +63,7 @@ jQuery(document).ready(function(){
         seedlots_table.column(9).visible(false);
 
         jQuery('#seedlots_of_accession_table').on( 'draw.dt', function () {
-            var seedlot_names = seedlots_table.column(8).data();
+            var seedlot_names = seedlots_table.column(9).data();
             var names = "";
 
             for (var i = 0; i < seedlot_names.length; i++) {
