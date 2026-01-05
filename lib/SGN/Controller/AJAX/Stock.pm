@@ -3090,9 +3090,6 @@ sub get_stock_related_seedlots :Path('/ajax/stock/stock_related_seedlots') :Args
     }
 
     $c->stash->{rest} = { data => \@stock_seedlots };
-
-
-
 }
 
 

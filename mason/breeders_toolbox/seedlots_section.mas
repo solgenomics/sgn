@@ -40,12 +40,7 @@ jQuery(document).ready(function(){
             'destroy' : true,
             'autoWidth': false,
             'ajax': '/ajax/stock/stock_related_seedlots/'+ "<% $stock_id %>",
-            "processing": true,
-            'language':{
-                "zeroRecords": " ",
-                "processing": "Loading..."
-            },
-            columns: [
+            'columns': [
                 { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/seedlot/"+row.seedlot_stock_id+"'>"+row.seedlot_stock_uniquename+"</a>"; } },
                 { title: "Breeding Program", "data": "breeding_program_name" },
                 { title: "Contents", "data": "contents_html" },
