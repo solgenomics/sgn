@@ -103,6 +103,8 @@ solGS.scatterPlot = {
 
     var xAxisMid = 0.5 * (totalH); 
     var yAxisMid = 0.5 * (totalW);
+
+     const regColor = '#86B404';
  
     regPlot.append("g")
         .attr("class", "x axis")
@@ -114,7 +116,7 @@ solGS.scatterPlot = {
         .attr("dy", ".1em")         
         .attr("transform", "rotate(90)")
         .attr("fill", "green")
-        .style({"text-anchor":"start", "fill": "#86B404"});
+        .style({"text-anchor":"start", "fill": regColor});
        
     regPlot.append("g")
         .attr("class", "y axis")
@@ -124,7 +126,7 @@ solGS.scatterPlot = {
         .attr("y", 0)
         .attr("x", -10)
         .attr("fill", "green")
-        .style("fill", "#86B404");
+        .style("fill", regColor);
 
     regPlot.append("g")
         .attr("id", "x_axis_label")
@@ -133,7 +135,7 @@ solGS.scatterPlot = {
         .attr("y", (pad.top + (height/2)) + 50)
         .attr("x", (width - 110))
         .attr("font-size", 10)
-        .style("fill", "#86B404")
+        .style("fill", regColor)
 
     regPlot.append("g")
         .attr("id", "y_axis_label")
@@ -142,7 +144,7 @@ solGS.scatterPlot = {
         .attr("y", (pad.top -  10))
         .attr("x", ((width/2) - 80))
         .attr("font-size", 10)
-        .style("fill", "#86B404")
+        .style("fill", regColor)
 
     regPlot.append("g")
         .selectAll("circle")
@@ -172,10 +174,10 @@ solGS.scatterPlot = {
         .on("mouseover", function(d) {
             d3.select(this)
                 .attr("r", 5)
-                .style("fill", "#86B404")
+                .style("fill", regColor)
             regPlot.append("text")
                 .attr("id", "dLabel")
-                .style("fill", "#86B404")              
+                .style("fill", regColor)              
                 .text( d[0].name + "(" + d[0].pheno_dev + "," + d[0].gebv + ")")
                 .attr("x", pad.left + 1)
                 .attr("y", pad.top + 80);
@@ -236,10 +238,11 @@ solGS.scatterPlot = {
         lsPoints.push([x[1], y]); 
    
     });
-      
+    
+   
     regPlot.append("svg:path")
         .attr("d", lsLine(lsPoints))
-        .attr('stroke', '#86B404')
+        .attr('stroke', regColor)
         .attr('stroke-width', 2)
         .attr('fill', 'none');
 
@@ -249,7 +252,7 @@ solGS.scatterPlot = {
         .text(equation)
         .attr("x", 20)
         .attr("y", 30)
-        .style("fill", "#86B404")
+        .style("fill", regColor)
         .style("font-weight", "bold");  
     
      regPlot.append("g")
@@ -258,7 +261,7 @@ solGS.scatterPlot = {
         .text(rq)
         .attr("x", 20)
         .attr("y", 50)
-        .style("fill", "#86B404")
+        .style("fill", regColor)
         .style("font-weight", "bold");  
 
         if (downloadLinks) {
