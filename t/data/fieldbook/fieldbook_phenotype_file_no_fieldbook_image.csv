@@ -1,4 +1,4 @@
-"plot_id","range","plot","rep","accession","is_a_control","trait","value","timestamp","person","location","number",
+"plot_name","range","plot","rep","accession","is_a_control","trait","value","timestamp","person","location","number",
 "test_trial21",1,2,1,"test_accession1",,"dry matter content|CO_334:0000092",42,"2016-01-07 12:08:24-0500","johndoe","42.4472 ; -76.4676",1
 "test_trial22",1,3,1,"test_accession2",,"dry matter content|CO_334:0000092",45,"2016-01-07 12:08:26-0500","johndoe","42.4472 ; -76.4676",1
 "test_trial23",1,4,1,"test_accession3",,"dry matter content|CO_334:0000092",41,"2016-01-07 12:08:27-0500","johndoe","42.4472 ; -76.4676",1

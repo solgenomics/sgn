@@ -11,6 +11,8 @@ use File::Spec::Functions qw /catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use Storable qw/ nstore retrieve /;
+use Data::Dumper;
+
 
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
@@ -35,63 +37,56 @@ sub run {
     my $self = shift;
 
     my $output_details = retrieve( $self->output_details_file );
-    $self->check_analysis_status($output_details);
+    $self->process_analysis_status($output_details);
+
+}
+
+sub process_analysis_status {
+    my ( $self, $output_details ) = @_;
+
+    $output_details = $self->check_analysis_status($output_details);
+    $self->log_analysis_status($output_details);
+    $self->email_analysis_status($output_details);
 
 }
 
 sub check_analysis_status {
     my ( $self, $output_details ) = @_;
 
-    $output_details = $self->check_success($output_details);
-    $self->log_analysis_status($output_details);
-    $self->report_status($output_details);
+    my $analysis_type = $output_details->{analysis_profile}->{analysis_type};
 
-}
-
-sub check_success {
-    my ( $self, $output_details ) = @_;
-
-    my $analysis_profile = $output_details->{analysis_profile};
-    my $type             = $analysis_profile->{analysis_type};
-
-    if ( $analysis_profile->{analysis_type} =~ /training_dataset/ ) {
+    if ( $analysis_type =~ /training_dataset/ ) {
         $output_details = $self->check_population_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /(training|multiple)_model/ )
+    elsif ( $analysis_type =~ /(training|multiple)_model/ )
     {
         if ( $output_details->{data_set_type} =~ /combined_populations/ ) {
-            $output_details =
-              $self->check_combined_pops_trait_modeling($output_details);
+            $output_details = $self->check_combined_pops_trait_modeling($output_details);
         }
         elsif ( $output_details->{data_set_type} =~ /single_population/ ) {
             $output_details = $self->check_trait_modeling($output_details);
         }
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /combine_populations/ ) {
-        $output_details =
-          $self->check_multi_pops_data_download($output_details);
+    elsif ( $analysis_type =~ /combine_populations/ ) {
+        $output_details = $self->check_multi_pops_data_download($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /selection_prediction/ ) {
+    elsif ( $analysis_type =~ /selection_prediction/ ) {
         my $st_type = $output_details->{data_set_type};
 
         if ( $output_details->{data_set_type} =~ /combined/ ) {
-
- # $output_details = $self->check_combined_pops_trait_modeling($output_details);
-            $output_details =
-              $self->check_selection_prediction($output_details);
+            $output_details = $self->check_selection_prediction($output_details);
         }
         elsif ( $output_details->{data_set_type} =~ /single_population/ ) {
-            $output_details =
-              $self->check_selection_prediction($output_details);
+            $output_details = $self->check_selection_prediction($output_details);
         }
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /kinship/ ) {
+    elsif ( $analysis_type =~ /kinship/ ) {
         $output_details = $self->check_kinship_analysis($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /pca/ ) {
+    elsif ( $analysis_type =~ /pca/ ) {
         $output_details = $self->check_pca_analysis($output_details);
     }
-    elsif ( $analysis_profile->{analysis_type} =~ /cluster/ ) {
+    elsif ( $analysis_type =~ /cluster/ ) {
         $output_details = $self->check_cluster_analysis($output_details);
     }
 
@@ -513,7 +508,7 @@ sub check_cluster_analysis {
     my ( $self, $output_details ) = @_;
 
     foreach my $k ( keys %{$output_details} ) {
-        if ( $k =~ /cluster/ ) {
+        if ( $k =~ /cluster/) {
             my $result_file = $output_details->{$k}->{result_file};
             if ($result_file) {
                 while (1) {
@@ -567,7 +562,7 @@ sub get_file {
     return $file;
 }
 
-sub report_status {
+sub email_analysis_status {
     my ( $self, $output_details ) = @_;
 
     my $args = $output_details->{analysis_profile}->{arguments};
@@ -639,8 +634,7 @@ sub email_addresses {
 sub email_body {
     my ( $self, $output_details ) = @_;
 
-    my $analysis_profile = $output_details->{analysis_profile};
-    my $analysis_type    = $analysis_profile->{analysis_type};
+    my $analysis_type = $output_details->{analysis_profile}->{analysis_type};
 
     my $msg;
 
@@ -659,14 +653,8 @@ sub email_body {
     elsif ( $analysis_type =~ /selection_prediction/ ) {
         $msg = $self->selection_prediction_message($output_details);
     }
-    elsif ( $analysis_type =~ /kinship/ ) {
-        $msg = $self->kinship_analysis_message($output_details);
-    }
-    elsif ( $analysis_type =~ /pca/ ) {
-        $msg = $self->pca_analysis_message($output_details);
-    }
-    elsif ( $analysis_type =~ /cluster/ ) {
-        $msg = $self->cluster_analysis_message($output_details);
+    else {
+        $msg = $self->generic_analysis_email_message($output_details);
     }
 
     return $msg;
@@ -853,7 +841,7 @@ sub combine_populations_message {
             $no_match
           . " can not be combined.\n"
           . "Possibly the the populations were genotyped\n"
-          . "with different marker sets or querying the data for one or more of the\n"
+          . "with different marker alleles or querying the data for one or more of the\n"
           . "populations failed. See details below:\n\n";
 
         foreach my $k ( keys %{$output_details} ) {
@@ -890,98 +878,57 @@ sub combine_populations_message {
     return $message;
 }
 
-sub kinship_analysis_message {
-    my ( $self, $output_details ) = @_;
+sub generic_analysis_email_message {
+    my ( $self, $output_details) = @_;
 
     my $message;
+    my $analysis_type = $output_details->{analysis_type};
+    my $analysis_name = $output_details->{analysis_profile}->{analysis_name};
 
     foreach my $k ( keys %{$output_details} ) {
-        if ( $k =~ /kinship/ ) {
-
+        if ( $k =~ /$analysis_type/ ) {
             my $output_page = $output_details->{$k}->{output_page};
+            my $extra_info;
 
+            my $referer = $output_details->{referer};
+            
             if ( $output_details->{$k}->{success} ) {
-                $message =
-'Your kinship analysis is done. You can access the result here:'
-                  . "\n\n$output_page\n\n";
+                if ( $referer !~ /$analysis_type/) {
+                    my $alternative_output_page = $output_page;
+                    $output_page = $referer;
+
+                    $extra_info = 'Please run the analysis again using the same parameters to see the output.';
+                    $extra_info .= "\n\nAlternatively, if you don't remember the parameters, you can access the output here:";
+                    $extra_info .= "\n" .$alternative_output_page . "\n\n";
+                }   
+
+                $message = "Your $analysis_type analysis, $analysis_name, is done. You can access the result here:";
+                $message .= "\n$output_page\n\n";
+
+                if ($extra_info) {
+                    $message .= $extra_info;
+                }
+
             }
             else {
                 no warnings 'uninitialized';
                 my $fail_message = $output_details->{$k}->{failure_reason};
 
-                $message = "The kinship analysis failed.\n";
+                $message = "The $analysis_type analysis, $analysis_name, failed.\n";
                 $message .= "\nPossible causes are:\n$fail_message\n";
-                $message .= 'Refering page: ' . $output_page . "\n\n";
+                $message .= 'Refering page: ' . $referer. "\n\n";
+                $message .= 'Output page: ' . $output_page. "\n\n";
                 $message .=
 "We will troubleshoot the cause and contact you when we find out more.\n\n";
             }
         }
-    }
+
+        last if $message;
+    }       
 
     return $message;
 }
 
-sub pca_analysis_message {
-    my ( $self, $output_details ) = @_;
-
-    my $message;
-
-    foreach my $k ( keys %{$output_details} ) {
-        if ( $k =~ /pca/ ) {
-
-            my $output_page = $output_details->{$k}->{output_page};
-
-            if ( $output_details->{$k}->{success} ) {
-                $message = 'Your PCA is done. You can access the result here:'
-                  . "\n\n$output_page\n\n";
-            }
-            else {
-                no warnings 'uninitialized';
-                my $fail_message = $output_details->{$k}->{failure_reason};
-
-                $message = "The PCA failed.\n";
-                $message .= "\nPossible causes are:\n$fail_message\n";
-                $message .= 'Refering page: ' . $output_page . "\n\n";
-                $message .=
-"We will troubleshoot the cause and contact you when we find out more.\n\n";
-            }
-        }
-    }
-
-    return $message;
-}
-
-sub cluster_analysis_message {
-    my ( $self, $output_details ) = @_;
-
-    my $message;
-
-    foreach my $k ( keys %{$output_details} ) {
-        if ( $k =~ /cluster/ ) {
-
-            my $output_page = $output_details->{$k}->{output_page};
-
-            if ( $output_details->{$k}->{success} ) {
-
-                $message =
-                    'Your clustering is done. You can access the result here:'
-                  . "\n\n$output_page\n\n";
-            }
-            else {
-                no warnings 'uninitialized';
-                my $fail_message = $output_details->{$k}->{failure_reason};
-
-                $message = "The cluster analysis failed.\n";
-                $message .= "\nPossible causes are:\n$fail_message\n";
-                $message .= 'Refering page: ' . $output_page . "\n\n";
-                $message .=
-"We will troubleshoot the cause and contact you when we find out more.\n\n";
-            }
-        }
-    }
-
-    return $message;
-}
 
 sub log_analysis_status {
     my ( $self, $output_details ) = @_;

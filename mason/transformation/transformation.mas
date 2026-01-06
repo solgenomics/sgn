@@ -29,6 +29,7 @@ $is_a_control => undef
 $control_name => undef
 $control_id => undef
 $control_link => undef
+$can_obsolete => undef
 
 </%args>
 
@@ -75,7 +76,7 @@ $control_link => undef
     </div>
 </&>
 
-<& /transformation/transformants_section.mas, transformation_id => $transformation_id &>
+<& /transformation/transgenic_line_details_section.mas, transformation_id => $transformation_id, program_name => $program_name, can_obsolete => $can_obsolete  &>
 <& /transformation/obsoleted_transformants_section.mas, transformation_id => $transformation_id &>
 %if ($control_id) {
     <& /transformation/control_transformants_section.mas, control_id => $control_id &>

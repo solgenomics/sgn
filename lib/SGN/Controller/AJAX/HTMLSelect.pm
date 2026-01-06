@@ -31,6 +31,7 @@ use CXGN::List;
 use CXGN::Trial::Folder;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
+use CXGN::Stock;
 use CXGN::Stock::Search;
 use CXGN::Stock::Seedlot;
 use CXGN::Dataset;
@@ -2228,6 +2229,286 @@ sub get_micasense_aligned_raw_images_grid : Path('/ajax/html/select/micasense_al
     $html .= "</tbody></table>";
 
     $c->stash->{rest} = { select => $html };
+}
+
+sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param("trial_id");
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
+    my $trial = CXGN::Trial->new({ 
+        bcs_schema => $schema,
+        people_schema=>$people_schema, 
+        metadata_schema=>$metadata_schema, 
+        phenome_schema=>$phenome_schema,
+        trial_id => $trial_id 
+    });
+
+    my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_relationship'
+    })->cv_id();
+    my $stockprop_cv_id = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_property'
+    })->cv_id();
+    my $plot_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plot_of',
+        cv_id => $stock_relationship_cv_id
+    })->cvterm_id();
+    my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'row_number',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+    my $col_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'col_number',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+    my $rep_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'replicate',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+    my $block_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'block',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'stock_synonym',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+
+    my @plots = map {$_->[0]} @{$trial->get_plots()};
+
+    my $plots_q = "
+    WITH plot AS 
+        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
+        WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)), 
+    stockprops AS (
+        SELECT
+            stock_id,
+            MAX(value) FILTER (WHERE type_id = ?) AS row_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS col_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS rep,
+            MAX(value) FILTER (WHERE type_id = ?) AS block,
+            MAX(value) FILTER (WHERE type_id = ?) AS synonyms
+        FROM stockprop
+        WHERE type_id IN (?, ?, ?, ?, ?)
+        GROUP BY stock_id
+    )
+    SELECT plot.plot_id, plot.plot_name, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms
+    FROM plot 
+    LEFT JOIN stockprops AS plotprops ON plotprops.stock_id=plot.plot_id
+    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id;"; 
+
+    my $h = $schema->storage()->dbh()->prepare($plots_q);
+    $h->execute($plot_of_id, \@plots, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
+
+    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates (row,column)</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+
+    while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
+        my $coordinates = "NA";
+        if ($row && $column){
+            $coordinates = "($row,$column)";
+        }
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+    }
+
+    $html .= "</tbody></thead></table>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param("trial_id");
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
+    my $trial = CXGN::Trial->new({ 
+        bcs_schema => $schema,
+        people_schema=>$people_schema, 
+        metadata_schema=>$metadata_schema, 
+        phenome_schema=>$phenome_schema,
+        trial_id => $trial_id 
+    });
+
+    if (!$trial->has_subplot_entries()) {
+        $c->stash->{rest} = { error => "This trial has no subplots.\n" };
+        return;
+    }
+
+    my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_relationship'
+    })->cv_id();
+    my $stockprop_cv_id = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_property'
+    })->cv_id();
+    my $subplot_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'subplot_of',
+        cv_id => $stock_relationship_cv_id
+    })->cvterm_id();
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'stock_synonym',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+
+    my @subplots = map {$_->[0]} @{$trial->get_subplots()};
+
+    my $subplots_q = "
+    WITH subplot AS 
+        (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+            JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id 
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
+        WHERE stock_relationship.type_id=? AND mysubplot.stock_id = ANY(?)),
+    plot AS 
+        (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
+            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
+        WHERE stock_relationship.type_id=?)
+    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name, stockprop.value
+    FROM subplot 
+    JOIN plot ON plot.subplot_id=subplot.subplot_id
+    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?);"; 
+
+    my $h = $schema->storage()->dbh()->prepare($subplots_q);
+    $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
+
+    my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+
+    while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
+        $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+    }
+
+    $html .= "</tbody></thead></table>";
+
+    $c->stash->{rest} = { select => $html };
+}
+
+sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->req->param("trial_id");
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
+
+    my $trial = CXGN::Trial->new({ 
+        bcs_schema => $schema,
+        people_schema=>$people_schema, 
+        metadata_schema=>$metadata_schema, 
+        phenome_schema=>$phenome_schema,
+        trial_id => $trial_id 
+    });
+
+    if (!$trial->has_plant_entries()) {
+        $c->stash->{rest} = { error => "This trial has no plants.\n" };
+        return;
+    }
+
+    my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_relationship'
+    })->cv_id();
+    my $stockprop_cv_id = $schema->resultset("Cv::Cv")->find({
+        name => 'stock_property'
+    })->cv_id();
+    my $plant_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plant_of',
+        cv_id => $stock_relationship_cv_id
+    })->cvterm_id();
+    my $plant_of_subplot_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plant_of_subplot',
+        cv_id => $stock_relationship_cv_id
+    })->cvterm_id();
+    my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'row_number',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+    my $col_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'col_number',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'stock_synonym',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+
+    my $subplot_q = "";
+    my $subplot_join = "";
+    my $subplot_header = "";
+    my $subplot_select = "";
+    
+    if ($trial->has_subplot_entries()) {
+        $subplot_q = ", subplot AS
+        (SELECT object_id AS subplot_id, mysubplot.name as subplot_name, subject_id as plant_id FROM stock_relationship
+        JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id 
+        WHERE stock_relationship.type_id=$plant_of_subplot_id)";
+        $subplot_join = "JOIN subplot ON subplot.plant_id=plant.plant_id";
+        $subplot_header = "<th>Parent Subplot</th>";
+        $subplot_select = ", subplot.subplot_id as subplot_id, subplot.subplot_name as subplot_name"
+    }
+
+    my @plants = map {$_->[0]} @{$trial->get_plants()};
+
+    my $plants_q = "WITH plant AS 
+        (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+            JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id 
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
+        WHERE stock_relationship.type_id=? AND myplant.stock_id = ANY(?)), 
+    plot AS 
+        (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
+            JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
+            WHERE stock_relationship.type_id=?),
+    stockprops AS (
+        SELECT
+            stock_id,
+            MAX(value) FILTER (WHERE type_id = ?) AS row_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS col_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS synonyms
+        FROM stockprop
+        WHERE type_id IN (?, ?, ?)
+        GROUP BY stock_id)
+    $subplot_q
+    SELECT plant.plant_id, plant.plant_name, plot.plot_id, plot.plot_name, plantprops.row_number, plantprops.col_number, plant.accession_id, plant.accession_name, synonyms.synonyms $subplot_select
+    FROM plant
+    JOIN plot ON plot.plant_id=plant.plant_id
+    LEFT JOIN stockprops AS plantprops ON (plant.plant_id=plantprops.stock_id)
+    LEFT JOIN stockprops AS synonyms ON (synonyms.stock_id=plant.accession_id)
+    $subplot_join
+    ;"; 
+
+    my $h = $schema->storage()->dbh()->prepare($plants_q);
+    $h->execute($plant_of_id, \@plants, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id);
+
+    my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+
+    while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $synonyms, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
+        my $coordinates = "NA";
+        if ($row && $column){
+            $coordinates = "($row,$column)";
+        }
+        my $subplot_data = "";
+        if ($subplot_id && $subplot_name) {
+            $subplot_data = "<td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td>";
+        }
+        $html .= "<tr><td><input id=\"select_plant_$plant_name\" type=\"checkbox\" class=\"exp_design_plant_select\"></td><td><a href=\"/stock/$plant_id/view\">$plant_name</a></td>$subplot_data<td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+    }
+
+    $html .= "</tbody></thead></table>";
+
+    $c->stash->{rest} = { select => $html};
 }
 
 sub get_plot_polygon_templates_partial : Path('/ajax/html/select/plot_polygon_templates_partial') Args(0) {

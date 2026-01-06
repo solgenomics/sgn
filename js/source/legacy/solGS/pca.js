@@ -493,10 +493,12 @@ solGS.pca = {
     },
 
     pcaDownloadLinks: function (res) {
+
         var screePlotFile = res.scree_plot_file;
         var scoresFile = res.scores_file;
         var loadingsFile = res.loadings_file;
         var variancesFile = res.variances_file;
+        var reportFile = res.report_file;
 
         var screePlot = screePlotFile.split("/").pop();
         var screePlotLink =
@@ -525,6 +527,14 @@ solGS.pca = {
             '" download=' +
             variances +
             ">Variances</a>";
+        
+        var report = reportFile.split("/").pop();
+        var reportLink = 
+            '<a href="' +
+            reportFile +
+            '" download=' +
+            report +
+            ">Analysis log</a>";
 
         var pcaPlotDivId = this.pcaPlotDivId(res.file_id).replace(/#/, "");
         var pcaPlotLink = `<a href='#'  onclick='event.preventDefault();' id='download_${pcaPlotDivId}'>PCA plot</a>`;
@@ -557,6 +567,8 @@ solGS.pca = {
             variancesLink +
             " | " +
             loadingsLink +
+            " | " +
+            reportLink +
             " | " +
             pcaPlotLink;
 

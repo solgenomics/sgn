@@ -43,6 +43,7 @@ use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::AddDerivedAccession;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -1700,8 +1701,14 @@ sub _stock_project_phenotypes {
 sub get_stock_trials :Chained('/stock/get_stock') PathPart('datatables/trials') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock_id = $c->stash->{stock}->get_stock_id();
 
-    my @trials = $c->stash->{stock}->get_trials();
+    my $stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $stock_id
+    );
+    my @trials = $stock->get_trials();
 
     my @formatted_trials;
     foreach my $t (@trials) {
@@ -2551,30 +2558,14 @@ sub get_accession_additional_file_uploaded :Chained('/stock/get_stock') PathPart
         $c->detach();
     }
 
+    print STDERR "AJAX/Stock: retrieve additional files...\n";
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $stock_id = $c->stash->{stock_row}->stock_id();
-    my @file_array;
-    my %file_info;
+    my $stock = CXGN::Stock->new({schema=>$schema,stock_id=>$stock_id});
+    print STDERR "Calling backend function...\n";
+    my $data = $stock->get_additional_uploaded_files();
 
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype
-    FROM phenome.stock_file
-    JOIN metadata.md_files using(file_id)
-    LEFT JOIN metadata.md_metadata as m using(metadata_id)
-    LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id)
-    WHERE stock_id=? and m.obsolete = 0 and metadata.md_files.filetype='accession_additional_file_upload' ORDER BY file_id ASC";
-
-    my $h = $c->dbc->dbh()->prepare($q);
-    $h->execute($stock_id);
-
-    while (my ($file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype) = $h->fetchrow_array()) {
-        $file_info{$file_id} = [$file_id, $create_date, $person_id, $username, $basename, $dirname, $filetype];
-    }
-    foreach (keys %file_info){
-        push @file_array, $file_info{$_};
-    }
-    print STDERR "files: " . Dumper \@file_array;
-
-    $c->stash->{rest} = {success=>1, files=>\@file_array};
-    return;
+    $c->stash->{rest} = $data;
 }
 
 sub obsolete_trial_additional_file_uploaded :Chained('/stock/get_stock') PathPart('obsolete_uploaded_additional_file') Args(1) {
@@ -2649,7 +2640,7 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
     my @related_accessions;
 
     foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = @$r;
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
         push @related_accessions, {
             transformant_id => $transformant_id,
             transformant_name => $transformant_name,
@@ -2693,6 +2684,31 @@ sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datata
 
     $c->stash->{rest}={data=>\@obsoleted_accessions};
 }
+
+
+sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('datatables/vector_transgenic_line_details') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = $c->stash->{stock_row}->stock_id();
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @transgenic_lines;
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
+        push @transgenic_lines, {
+            transformant_id => $transformant_id,
+            transformant_name => $transformant_name,
+            number_of_insertions => $number_of_insertions
+        };
+    }
+
+    $c->stash->{rest}={data=>\@transgenic_lines};
+}
+
 
 =head2 set_display_image
 
@@ -2851,6 +2867,292 @@ sub tissue_sample_autocomplete_GET :Args(0) {
     $c->stash->{rest} = \@response_list;
 }
 
+
+=head2 add_derived_accessions_using_list
+
+L<Catalyst::Action::REST> action.
+
+Add new accessions derived from another stock type
+
+=cut
+
+sub add_derived_accessions_using_list : Path('/stock/add_derived_accessions_using_list') : ActionClass('REST') { }
+
+sub add_derived_accessions_using_list_POST : Args(0) {
+
+    my ( $self, $c ) = @_;
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Log in required for adding derived accessions." }; return;
+    }
+
+    if ( !any { $_ eq 'curator' || $_ eq 'submitter' || $_ eq 'sequencer' } $c->user->roles() ) {
+        $c->stash->{rest} = { error => 'Cannot add new accessions! You do not have a curator account' };
+        $c->detach();
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
+    my $derived_accession_info = decode_json $c->req->param('derived_accession_info');
+
+    my $all_new_names = decode_json $c->req->param('all_new_names');
+    my @error_messages;
+
+    foreach my $new_name (@$all_new_names) {
+        if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $new_name })) {
+            push @error_messages, "Accession name already exists in database: ".$new_name;
+        }
+    }
+
+    if (scalar(@error_messages) >= 1) {
+        my $error_string = join("\n", @error_messages);
+        $c->stash->{rest} = { error => $error_string };
+        return;
+    }
+
+    my $result;
+    eval {
+        foreach my $each_info (@$derived_accession_info) {
+            my $new_accession_stock_id;
+            my $stock_name = $each_info->{'stock_name'};
+            my $derived_accession_name = $each_info->{'derived_accession_name'};
+            my $accession_description = $each_info->{'accession_description'};
+            my $derived_from_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_name})->stock_id();
+
+            my $add_derived_accession = CXGN::Stock::AddDerivedAccession->new({
+                chado_schema => $schema,
+                phenome_schema => $phenome_schema,
+                dbh => $dbh,
+                derived_from_stock_id => $derived_from_stock_id,
+                derived_accession_name => $derived_accession_name,
+                description => $accession_description,
+                owner_id => $user_id,
+            });
+
+            $result = $add_derived_accession->add_derived_accession();
+        }
+    };
+
+    if ($@) {
+        $c->stash->{rest} = { error => "An error occurred while adding new accessions: $@"};
+        return;
+    }
+    if ($result->{error}) {
+        $c->stash->{rest} = { error => $result->{error} };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
+
+sub upload_derived_accessions_file : Path('/stock/upload_derived_accessions_file') : ActionClass('REST') { }
+
+sub upload_derived_accessions_file_POST : Args(0) {
+    my ($self, $c) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('derived_accessions_file');
+    my $upload_type = 'DerivedAccessionsGeneric';
+
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "derived_accessions_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else{
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload derived accessions!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload derived accessions'};
+        $c->detach();
+    }
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+    ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    my @stock_props = ('');
+    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+    $parser->load_plugin($upload_type);
+    $parsed_data = $parser->parse();
+
+    if (!$parsed_data){
+        my $return_error;
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    if ($parsed_data) {
+        my $derived_accession_info = $parsed_data->{'derived_accession_info'};
+        my $result;
+        eval {
+            foreach my $each_info (@$derived_accession_info) {
+                my $new_accession_stock_id;
+                my $stock_name = $each_info->{'stock_name'};
+                my $derived_accession_name = $each_info->{'derived_accession_name'};
+                my $accession_description = $each_info->{'accession_description'};
+                my $derived_from_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>$stock_name})->stock_id();
+
+                my $add_derived_accession = CXGN::Stock::AddDerivedAccession->new({
+                    chado_schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    dbh => $dbh,
+                    derived_from_stock_id => $derived_from_stock_id,
+                    derived_accession_name => $derived_accession_name,
+                    description => $accession_description,
+                    owner_id => $user_id,
+                });
+
+                $result = $add_derived_accession->add_derived_accession();
+            }
+        };
+        if ($@) {
+            $c->stash->{rest} = { error => "An error occurred while adding new accessions: $@"};
+            return;
+        }
+        if ($result->{error}) {
+            $c->stash->{rest} = { error => $result->{error} };
+            return;
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
+
+
+sub get_stocks_with_images : Path('/ajax/stock/get_stocks_with_images') : ActionClass('REST') { }
+
+sub get_stocks_with_images_GET : Args(0) {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->req->param('trial_id');
+    my $stock_type_name = $c->req->param('stock_type');
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $stock = CXGN::Stock->new({schema=> $schema});
+
+    my $stock_names = $stock->get_stocks_with_images($trial_id, $stock_type_name);
+
+    $c->stash->{rest} = { data => $stock_names };
+}
+
+
+sub stock_obsolete_in_bulk : Path('/stock/obsolete_in_bulk') : ActionClass('REST') { }
+
+sub stock_obsolete_in_bulk_GET {
+    my ( $self, $c ) = @_;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $program_name = $c->req->param('program_name');
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to obsolete stocks" };
+        $c->detach();
+    }
+
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if (! ( (exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+        $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $program_name to obsolete stocks." };
+        return;
+    }
+
+    my $stock_name_string = $c->req->param('stock_names');
+    my $stock_name_array = decode_json $stock_name_string;
+    my $obsolete_note  = $c->req->param('obsolete_note');
+    my $is_obsolete = '1';
+
+    foreach my $stock_name (@$stock_name_array) {
+        my $stock = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name });
+        if ($stock) {
+            my $stock_id = $stock->stock_id();
+            try {
+                my $stock_obj = CXGN::Stock->new({
+                    schema=>$schema,
+                    stock_id=>$stock_id,
+                    is_saving=>1,
+                    sp_person_id => $c->user()->get_object()->get_sp_person_id(),
+                    user_name => $c->user()->get_object()->get_username(),
+                    modification_note => "Obsolete at ".localtime,
+                    is_obsolete => $is_obsolete,
+                    obsolete_note => $obsolete_note,
+                });
+                my $saved_stock_id = $stock_obj->store();
+            } catch {
+                $c->stash->{rest} = { error => "Failed: $_" }
+            };
+        } else {
+            $c->stash->{rest} = { error => "Not a valid stock: $stock_name" };
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
 
 
 1;

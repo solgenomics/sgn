@@ -234,9 +234,9 @@ sub get_vector_related_accessions {
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship')->cvterm_id();
+    my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
 
-
-    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename
+    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename, stockprop.value
         FROM stock AS transformant
         JOIN stock_relationship AS plant_relationship ON (plant_relationship.object_id = transformant.stock_id) AND plant_relationship.type_id = ?
         JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
@@ -244,14 +244,15 @@ sub get_vector_related_accessions {
         JOIN stock as vector ON (vector_relationship.subject_id = vector.stock_id) AND vector.type_id = ?
         LEFT JOIN stock_relationship AS transformation_relationship ON (transformation_relationship.subject_id = transformant.stock_id) AND transformation_relationship.type_id = ?
         LEFT JOIN stock AS transformation ON (transformation_relationship.object_id = transformation.stock_id) AND transformation.type_id = ?
+        LEFT JOIN stockprop ON (transformant.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
         WHERE vector.stock_id = ? AND transformant.is_obsolete = 'F' ORDER BY transformation.uniquename, transformant.uniquename";
 
     my $h = $schema->storage->dbh->prepare($q);
-    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $stock_id);
+    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $number_of_insertions_type_id, $stock_id);
 
     my @related_stocks =();
-    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name) = $h->fetchrow_array()){
-        push @related_stocks, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name]
+    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = $h->fetchrow_array()){
+        push @related_stocks, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions]
     }
 
     return \@related_stocks;
@@ -324,7 +325,59 @@ sub get_plots_and_plants {
     return\@related_stocks;
 }
 
+sub get_derived_accession_relationship {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+    my $derived_from_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'derived_from', 'stock_relationship')->cvterm_id();
 
+    my $q = "SELECT derived_from.stock_id, derived_from.uniquename, cvterm.name, derived_accession.stock_id, derived_accession.uniquename
+        FROM stock AS derived_from
+        JOIN cvterm ON (derived_from.type_id = cvterm.cvterm_id)
+        JOIN stock_relationship ON (stock_relationship.object_id = derived_from.stock_id) AND stock_relationship.type_id = ?
+        JOIN stock AS derived_accession ON (stock_relationship.subject_id = derived_accession.stock_id)
+        WHERE derived_from.stock_id = ? OR derived_accession.stock_id = ? ";
+
+    my $h = $schema->storage->dbh->prepare($q);
+
+    $h->execute($derived_from_type_id, $stock_id, $stock_id);
+
+    my @derived_accession_relationship_info = ();
+    while(my ($derived_from_stock_id, $derived_from_stock_name, $derived_from_stock_type, $derived_accession_stock_id, $derived_accession_name) = $h->fetchrow_array()){
+        push @derived_accession_relationship_info, [$derived_from_stock_id, $derived_from_stock_name, $derived_from_stock_type, $derived_accession_stock_id, $derived_accession_name];
+    }
+
+    return\@derived_accession_relationship_info;
+}
+
+sub get_original_derived_from_stock {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+    my %original_stock_info;
+
+    my $accession_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename, cvterm.name
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.object_id = stock.stock_id) AND stock_relationship.type_id IN (?,?)
+        JOIN cvterm ON (stock.type_id = cvterm.cvterm_id)
+        WHERE stock_relationship.subject_id = ? AND stock.type_id IN (?,?,?) ";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $stock_id, $accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id);
+    my ($original_stock_id, $original_stock_name, $original_stock_type) = $h->fetchrow_array();
+
+    $original_stock_info{'original_stock_id'} = $original_stock_id;
+    $original_stock_info{'original_stock_name'} = $original_stock_name;
+    $original_stock_info{'original_stock_type'} = $original_stock_type;
+
+    return \%original_stock_info;
+}
 
 
 1;

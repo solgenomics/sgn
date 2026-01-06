@@ -50,6 +50,8 @@ use Archive::Tar;
 use CXGN::Stock::ObsoletedStocks;
 use CXGN::People::Person;
 use CXGN::BreedersToolbox::Accessions;
+use CXGN::Cross;
+use Sort::Key::Natural qw(natkeysort);
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -444,8 +446,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         has_header => $has_header,
         search_type => $search_type,
 	    repetitive_measurements => $repetitive_measurements,
-	    phenotype_start_date => $phenotype_start_date,
-	    phenotype_end_date => $phenotype_end_date,
+	    start_date => $phenotype_start_date,
+	    end_date => $phenotype_end_date,
     });
 
     # print STDERR "Repetitive_measurements option recieved" .$repetitive_measurements  ."\n";
@@ -1129,8 +1131,10 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $genotyping_plate_id = $c->req->param("genotyping_plate_id");
     my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
-    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
+    my ($id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
+    my $accession_data = [];
 
     $trial_id_string = $c->req->param("trial_ids");
     if ($trial_id_string){
@@ -1165,22 +1169,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
         if ($accession_list_id) {
             $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
+            @accession_list = map { $_->[1] } @$accession_data;
+        
+            my $t = CXGN::List::Transform->new();
+            my $acc_t = $t->can_transform("accessions", "accession_ids");
+            my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
+            @accession_ids = @{$accession_id_hash->{transform}};
         }
-
-        @accession_list = map { $_->[1] } @$accession_data;
-
-        my $t = CXGN::List::Transform->new();
-        my $acc_t = $t->can_transform("accessions", "accession_ids");
-        my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
-        @accession_ids = @{$accession_id_hash->{transform}};
-    }
-
-    my $filename = '';
-    if ($download_format eq 'VCF') {
-        $filename = 'BreedBaseGenotypesDownload.vcf';
-    }
-    else {
-        $filename = 'BreedBaseGenotypesDownload.tsv';
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
@@ -1261,6 +1256,16 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         expires => '+1m',
     };
 
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
+    my $filename = basename($file_path);
+    
+    if ($download_format eq 'VCF') {
+        $filename .= '.vcf';
+    }
+    else {
+        $filename .=  '.tsv';
+    }
+
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
 }
@@ -1280,7 +1285,8 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
     my $dl_token = $c->req->param("gbs_download_token") || "no_token";
     my $dl_cookie = "download".$dl_token;
 
-    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, $accession_data, $id_string, $protocol_id, $project_id, $trial_id_string, @trial_ids);
+    my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
+    my ($accession_data, $id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
 
     $trial_id_string = $c->req->param("trial_ids");
@@ -1306,14 +1312,6 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         my $default_genotyping_protocol = $c->config->{default_genotyping_protocol};
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
         print STDERR "using default protocol_id = $protocol_id\n";
-    }
-
-    my $filename;
-    if ($download_format eq 'heatmap') {
-        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.pdf';
-    }
-    else {
-        $filename = 'BreedBaseGeneticRelationshipMatrixDownload.tsv';
     }
 
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
@@ -1351,6 +1349,16 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
         expires => '+1m',
     };
 
+    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
+    my $filename = basename($file_path);
+    
+    if ($download_format eq 'heatmap') {
+        $filename .= '.pdf';
+    }
+    else {
+        $filename .= '.tsv';
+    }
+
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
 }
@@ -1386,19 +1394,12 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         $protocol_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({name=>$default_genotyping_protocol})->nd_protocol_id();
     }
 
-    my $filename;
-    if ($download_format eq 'results_tsv') {
-        $filename = 'BreedBaseGWASDownloadResults.tsv';
-    }
-    elsif ($download_format eq 'manhattan_qq_plots') {
-        $filename = 'BreedBaseGWASDownloadManhattanAndQQPlots.pdf';
-    }
-
-    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
-
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
     mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
+    
+    my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
+
     my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
     my ($grm_tempfile_fh, $grm_tempfile) = tempfile("wizard_download_gwas_grm_XXXXX", DIR=> $tmp_gwas_dir);
     my ($pheno_tempfile_fh, $pheno_tempfile) = tempfile("wizard_download_gwas_pheno_XXXXX", DIR=> $tmp_gwas_dir);
@@ -1433,6 +1434,16 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
         value => $dl_token,
         expires => '+1m',
     };
+
+    my ($fh, $filename, $file_path);
+    if ($download_format eq 'results_tsv') {
+        ($fh, $file_path) = tempfile("breedbase_gwas_results_XXXXX", suffix => '.tsv', DIR=> $tmp_gwas_dir);
+        $filename = basename($file_path);
+    }
+    elsif ($download_format eq 'manhattan_qq_plots') {
+        ($fh, $file_path) = tempfile("breedbase_gwas_plots_XXXXX", suffix => '.pdf', DIR=> $tmp_gwas_dir);
+        $filename = basename($file_path);
+    }
 
     $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
     $c->res->body($file_handle);
@@ -2084,6 +2095,89 @@ sub download_summary_stock_entries : Path('/breeders/download_summary_stock_entr
     $c->res->body($output);
 
 }
+
+
+# Download cross and family that each accession belongs to
+
+sub download_cross_family_of_progenies : Path('/breeders/download_cross_family_of_progenies') {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
+
+    my $progeny_list_id = $c->req->param("progeny_list_list_select");
+    my $file_format = $c->req->param("file_format") || ".xlsx";
+    my $dl_token = $c->req->param("cross_family_download_token") || "no_token";
+    my $dl_cookie = "download".$dl_token;
+    if ( !$progeny_list_id ) {
+        print STDERR "ERROR: No progeny list id provided to download cross and family info";
+        return;
+    }
+
+    my $progeny_list = SGN::Controller::AJAX::List->retrieve_list($c, $progeny_list_id);
+    my @progeny_names = map { $_->[1] } @$progeny_list;
+    my @progeny_stock_ids = ();
+    foreach my $progeny(sort@progeny_names) {
+        my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => $progeny });
+        my $progeny_id = $progeny_rs->stock_id;
+        push @progeny_stock_ids, $progeny_id;
+    }
+
+    my @download_rows;
+    my $all_info = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_stock_ids);
+    my @sorted_names = natkeysort {($_->[1])} @$all_info;
+
+    foreach my $info (@sorted_names) {
+        my $progeny_name = $info->[1];
+        my $female_parent_name = $info->[3];
+        my $male_parent_name = $info->[5];
+        my $cross_type = $info->[6];
+        my $cross_unique_id = $info->[8];
+        my $family_name = $info->[10];
+        my $family_type = $info->[11];
+        my $crossing_experiment = $info->[13];
+        push @download_rows, [$progeny_name, $female_parent_name, $male_parent_name, $cross_type, $cross_unique_id, $family_name, $family_type, $crossing_experiment];
+    }
+
+    # Create tempfile
+    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_cross_family_XXXXX", UNLINK => 0);
+    # Create and Return XLSX file
+    if ( $file_format eq ".xlsx" ) {
+        my $file_path = $tempfile . ".xlsx";
+        my $file_name = basename($file_path);
+
+        # Get Excel worksheet
+        my $workbook = Excel::Writer::XLSX->new($file_path);
+        my $worksheet = $workbook->add_worksheet();
+
+        # Write header
+        my @header = ("Accession Name", "Female Parent", "Male Parent", "Cross Type", "Cross Unique ID", "Family Name", "Family Type", "Crossing Experiment");
+        $worksheet->write_row(0, 0, \@header);
+
+        # Write each event
+        my $row_count = 1;
+        foreach my $row (@download_rows) {
+            $worksheet->write_row($row_count, 0, $row);
+            $row_count++;
+        }
+        $workbook->close();
+
+        # Return the xls file
+        $c->res->content_type('application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $c->res->cookies->{$dl_cookie} = {
+          value => $dl_token,
+          expires => '+1m',
+        };
+        $c->res->header('Content-Disposition', qq[attachment; filename="$file_name"]);
+
+        my $output = read_file($file_path);
+
+        $c->res->body($output);
+    }
+
+}
+
+
 
 #=pod
 1;

@@ -3333,6 +3333,8 @@ sub save_plant_entries {
     my $parsed_data = shift;
     my $plants_per_plot = shift;
     my $inherits_plot_treatments = shift;
+    my $user_id = shift;
+    my $add_additional_plants = shift;
 
     my $create_plant_entities_txn = sub {
         my $chado_schema = $self->bcs_schema();
@@ -3381,12 +3383,13 @@ sub save_plant_entries {
             }
         }
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
-
+        if (!$add_additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        }
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
@@ -4982,7 +4985,7 @@ sub get_subplots {
     } else {
         @subplots = @{$self->get_observation_units_direct('subplot')};
     }
-    print STDERR Dumper \@subplots;
+    # print STDERR Dumper \@subplots;
     return \@subplots;
 }
 
@@ -5780,6 +5783,12 @@ sub update_metadata {
         if ($details->{facility_submitted}) { $self->set_genotyping_facility_submitted($details->{facility_submitted}); }
         if ($details->{facility_status}) { $self->set_genotyping_facility_status($details->{set_genotyping_facility_status}); }
         if ($details->{raw_data_link}) { $self->set_raw_data_link($details->{raw_data_link}); }
+        if ($details->{folder}) {
+            if ( $details->{folder}->{type} eq 'exists' ) {
+                my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->bcs_schema(), folder_id => $self->get_trial_id() });
+                $folder->associate_parent($details->{folder}->{id});
+            }
+        }
     };
     if ($@) {
         return "An error occurred setting the new trial details of trial " . $self->get_name() . ": $@";

@@ -7,6 +7,9 @@ jQuery( document ).ready( function() {
         showImagePreview(this.files);
     });
 
+    let barcodeDataResult;
+    let exifDataResult = null;
+    let exifValid = null;
 
     jQuery('#upload_images_submit_verify').click( function() {
         jQuery('#working_modal').modal("show");
@@ -19,18 +22,70 @@ jQuery( document ).ready( function() {
                 alert("Please select image files");
                 return false;
             }
-            var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
-            if (parseErrors.length) {
-                // console.log("parseErrors are "+JSON.stringify(parseErrors));
-                reportVerifyResult({ "error" : parseErrors });
-                jQuery('#working_modal').modal("hide");
-                return;
+
+            var formData = new FormData();
+            for (var i = 0; i < imageFiles.length; i++) {
+                formData.append('images', imageFiles[i]);
             }
-            verifyImageFiles(fileData, unitType, transformType).then(function(result) {
-                reportVerifyResult(result);
+            console.log("AJAX request", imageFiles);
+            jQuery.ajax({
+                url: "/ajax/image/verify_exif",
+                method: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+            }).done(function(result) {
+                exifDataResult = result;
+                //console.log("exif data result", result);
+                const exifOk = verifyExifData(result);
+                exifValid = exifOk;
+                console.log("check", exifOk);
+
+                if (!exifOk) {
+                    var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
+                    //console.log("non-exif", fileData);
+                    if (parseErrors.length) {
+                    //console.log("parseErrors are "+JSON.stringify(parseErrors));
+                    reportVerifyResult({ "error" : parseErrors });
+                    jQuery('#working_modal').modal("hide");
+                    return;
+                }
+                verifyImageFiles(fileData, unitType, transformType).then(function(result) {
+                    reportVerifyResult(result);
+                    jQuery('#working_modal').modal("hide");
+                });    
+                }
+                jQuery('#working_modal').modal("hide");
+            }).fail(function() {
+                reportVerifyResult({ "error": ["Error ocurred during EXIF verification."]});
                 jQuery('#working_modal').modal("hide");
             });
+        } else if (type == 'images_with_barcodes') {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            if (imageFiles.length < 1) {
+                jQuery('#working_modal').modal("hide");
+                alert("Please select image files");
+                return false;
+            }
+            var formData = new FormData();
+            for (var i = 0; i < imageFiles.length; i++) {
+                formData.append('images', imageFiles[i]);
+            }
+            jQuery.ajax({
+                url: "/ajax/image/scan_barcode",
+                method: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+            }).done(function(result) {
+                barcodeDataResult = result;
+                const validBarcodes = verifyBarcodeData(result);
+                jQuery('#working_modal').modal("hide");
 
+            }).fail(function() {
+                reportVerifyResult({ "error": ["Error ocurred during barcode scan"]});
+                jQuery('#working_modal').modal("hide");
+            });
         } else { // verify associated phenotypes format
             var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
             var zipFile =  document.getElementById('upload_images_zip_file_input').files[0];
@@ -55,33 +110,27 @@ jQuery( document ).ready( function() {
         var type = jQuery('#upload_images_file_format').val();
         if (type == 'images') {
             var imageFiles = document.getElementById('upload_images_file_input').files;
+            //console.log("imageFiles", imageFiles);
             jQuery('#progress_msg').text('Preparing images for upload');
             jQuery('#progress_bar').css("width", "0%")
             .attr("aria-valuenow", 0)
             .text("0%");
             jQuery('#progress_modal').modal('show');
+            //console.log("exif data result", exifDataResult);
 
-            var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
-            var observationUnits = Object.values(fileData).map(function(value) {
-                return value.observationUnit;
-            });
+            if (exifValid) {
 
-            jQuery.ajax( {
-                url: "/list/transform/temp",
-                method: 'GET',
-                data: {
-                    "type": transformType,
-                    "items": JSON.stringify(observationUnits),
-                }
-            }).done(function(response) {
+                const fileData = parseExifData(exifDataResult, imageFiles);
+                //console.log("exif data: ", fileData);
+                const transformType = "stock_ids_2_stocks";
+                const observationUnits = Object.values(fileData).map(function(value) {
+                    return value.observationUnit;
+                });
+
                 var observationUnitDbIds;
-                if (unitType == "observationUnitName") {
-                    observationUnitDbIds = response.transform;
-                } else {
-                    observationUnitDbIds = observationUnits;
-                }
+                observationUnitDbIds = observationUnits
 
-                var imageData = Object.values(fileData).map(function(value, i) {
+                const imageData = Object.values(fileData).map(function(value, i) {
                     value.observationUnitDbId = observationUnitDbIds[i];
                     return value;
                 });
@@ -96,8 +145,75 @@ jQuery( document ).ready( function() {
                     jQuery('#upload_images_status').append(
                         formatMessage(error, 'error')
                     );
+
                 });
+              
+            } else {
+                var [fileData, unitType, transformType, parseErrors] = parseImageFilenames(imageFiles);
+                var observationUnits = Object.values(fileData).map(function(value) {
+                    return value.observationUnit;
+                });
+
+                jQuery.ajax( {
+                    url: "/list/transform/temp",
+                    method: 'GET',
+                    data: {
+                        "type": transformType,
+                        "items": JSON.stringify(observationUnits),
+                    }
+                }).done(function(response) {
+                    var observationUnitDbIds;
+                    if (unitType == "observationUnitName") {
+                        observationUnitDbIds = response.transform;
+                    } else {
+                        observationUnitDbIds = observationUnits;
+                    }
+
+                    var imageData = Object.values(fileData).map(function(value, i) {
+                        value.observationUnitDbId = observationUnitDbIds[i];
+                        return value;
+                    });
+
+                    loadAllImages(imageFiles, imageData).done(function(result) {
+                        // console.log("Result from promise is: "+JSON.stringify(result));
+                        jQuery('#progress_modal').modal('hide');
+                        reportStoreResult(result);
+                    })
+                    .fail(function(error) {
+                        console.log(error);
+                        jQuery('#upload_images_status').append(
+                            formatMessage(error, 'error')
+                        );
+                    });
+                });
+            }  
+        } else if (type == "images_with_barcodes") {
+            var imageFiles = document.getElementById('upload_images_file_input').files;
+            jQuery('#progress_msg').text('Preparing images for upload');
+            jQuery('#progress_bar').css("width", "0%")
+            .attr("aria-valuenow", 0)
+            .text("0%");
+            jQuery('#progress_modal').modal('show');
+
+            var fileData = parseBarcodeData(barcodeDataResult, imageFiles);
+
+            const observationUnits = Object.values(fileData).map(function(value) {
+                return value.observationUnit;
             });
+            var observationUnitDbIds;
+            observationUnitDbIds = observationUnits;
+
+            console.log("observatioUnits: ", observationUnits);
+
+            const imageData = Object.values(fileData).map(function(value, i) {
+                value.observationUnitDbId = observationUnits[i];
+                return value;
+            });
+
+            loadAllImages(imageFiles, imageData).done(function(result) {
+                jQuery('#progress_modal').modal('hide');
+                reportStoreResult(result);
+            }); 
         } else { // store associated phenotypes format
             jQuery('#working_modal').modal("show");
             var phenoFile =  document.getElementById('upload_associated_phenotypes_file_input').files[0];
@@ -157,6 +273,119 @@ function reportVerifyResult(result) {
             formatMessage(result.error, "error")
         );
     }
+}
+
+function verifyExifData(result) {
+    const successMessages =[];
+    const errorMessages = [];
+    const finalSuccessMessage = [];
+    let exifFiles = 0;
+    let nonExifFiles = 0;
+    //console.log("image data", result.images[0].exif);
+
+    result.images.forEach((img, index) => {
+        const imgName = img.filename || `Image ${index + 1}`;
+        const exif = img.exif || {};
+
+        if (result.images[index].status === "no_exif") {
+            errorMessages.push(`${imgName} does not have EXIF data`);
+            nonExifFiles++;
+            return;
+        } else {
+            exifFiles++;
+        }
+
+        const hasObsUnit = exif.observation_unit && exif.observation_unit.observation_unit_db_id;
+        const hasObsVar = exif.observation_variable && exif.observation_variable.observation_variable_name;
+        const obsVariableName = exif.observation_variable.observation_variable_name;
+        const hasTimestamp = exif.timestamp;
+        const hasCvtermId = exif.cvterm_id;
+        const stockName = exif.stock_name;
+        
+        if (hasObsUnit) {
+            successMessages.push(`${imgName}: ObservationUnitDbId: ${exif.observation_unit.observation_unit_db_id}`);
+        } else {
+            errorMessages.push(`${imgName}: Missing ObservationUnitDbId`);
+        }
+
+        if (hasObsVar) {
+            successMessages.push(`${imgName}: Observation Variable: ${exif.observation_variable.observation_variable_name}`);
+        } else {
+            errorMessages.push(`${imgName}: Missing Observation Variable Name`);
+        }
+
+        if (hasTimestamp) {
+            successMessages.push(`${imgName}: Timestamp: ${exif.timestamp}`);
+        } else {
+            errorMessages.push(`${imgName}: Missing Timestamp`);
+        }
+
+        if (!hasCvtermId) {
+            errorMessages.push(`${imgName} associated trait ${obsVariableName} does not exist in the database`);
+        }
+
+        if (result.images[index].stock_exists === "false") {
+            errorMessages.push(`${imgName}: ObservationUnitDbId ${exif.observation_unit.observation_unit_db_id} does not exist in the database`);
+        } else if (!stockName) {
+            errorMessages.push(`${imgName} Stock ${stockName} does not exist in the database`);
+        }
+
+        if (errorMessages.length === 0) {
+            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${exif.stock_name} Associated trait: ${obsVariableName}. Ready to store image`);
+        }
+    });
+
+    let validExif;
+    if (errorMessages.length === 0) {
+        jQuery('#upload_images_submit_store').attr('disabled', false);
+        jQuery('#upload_images_status').html(
+            formatMessage(finalSuccessMessage, "success")
+        );
+        return true;
+    } else if (exifFiles > 0 && nonExifFiles > 0) {
+        errorMessages.push("Please load files all containing EXIF data or with the same file naming pattern");
+        validExif = errorMessages;
+    } else if (errorMessages.length > 0 && successMessages.length > 0) {
+        validExif = errorMessages;
+    } else {
+        return false;
+    }
+
+    jQuery('#upload_images_submit_store').attr('disbled', true);
+    jQuery('#upload_images_status').html(
+        formatMessage(errorMessages, "error")
+    );
+    return validExif;
+}
+
+function parseExifData(exifData, imageFiles) {
+    const fileData = {};
+    console.log("passed exif", exifData);
+    //console.log("passed image files", imageFiles);
+    //console.log("exifdata.images", exifData.images);
+
+    for (let i = 0; i< imageFiles.length; i++) {
+        const file = imageFiles[i];
+        const timestamp = exifData.images[i].exif.timestamp;
+        const timestampWithoutExtension = timestamp.substr(0, timestamp.lastIndexOf(" "));
+        const obsUnitId = exifData.images[i].exif.observation_unit.observation_unit_db_id;
+        const cvtermId = exifData.images[i].exif.cvterm_id;
+        //console.log("obsUnitId", obsUnitId);
+        if (obsUnitId) {
+            fileData[file.name] = {
+                "imageName" : file.name,
+                "imageFileName" : file.name,
+                "imageFileSize" : file.size,
+                "imageTimeStamp" : timestampWithoutExtension,
+                "mimeType" : file.type,
+                "observationUnit" : obsUnitId,
+                "cvtermId" : cvtermId
+            };
+        }
+
+    }
+    //console.log("File data: ", fileData);
+    return fileData;
 }
 
 
@@ -225,6 +454,76 @@ function parseImageFilenames(imageFiles) {
     return [fileData, unitType, transformType, parseErrors];
 }
 
+function verifyBarcodeData(result) {
+    const successMessages = [];
+    const errorMessages = [];
+    const finalSuccessMessage = [];
+
+    result.images.forEach((img, index) => {
+        const imgName = img.filename || `Image ${index + 1}`;
+
+        if (result.images[index].multiple_codes === "true") {
+            errorMessages.push(`Multiple barcodes found in ${imgName}. Please make sure each image only contains one barcode`);
+        }
+        
+        if (result.images[index].valid_barcode === "false") {
+            errorMessages.push(`Barcode not found for ${imgName}`);
+            return;
+        }
+
+        const stockId = result.images[index].stock_id;
+
+        if (result.images[index].stock_exists === "false") {
+            errorMessages.push(`Stock ID ${stockId} found in ${imgName} does not exist in the database`);
+        }
+
+        if (errorMessages.length === 0) {
+            finalSuccessMessage.push(`${imgName} barcode scanned successfully. Associated stock ID: ${stockId}. Ready to store image`);
+        }
+    })
+
+    if (errorMessages.length === 0) {
+        jQuery('#upload_images_submit_store').attr('disabled', false);
+        jQuery('#upload_images_status').html(
+            formatMessage(finalSuccessMessage, "success")
+        );
+        return true;
+    } else {
+        jQuery('#upload_images_submit_store').attr('disabled', false);
+        jQuery('#upload_images_status').html(
+            formatMessage(errorMessages, "error")
+        );
+        return false;
+    }
+}
+
+function parseBarcodeData(barcodeData, imageFiles) {
+    const fileData = {};
+
+    for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        var timestamp = barcodeData.images[i].timestamp;
+        if (timestamp) {
+            const timestampWithoutExtension = timestamp.split(" ")[0];
+            const timestampWithDashes = timestampWithoutExtension.replace(/:/g, '-');
+            timestamp = timestampWithDashes;
+        }
+        
+        const obsUnitId = barcodeData.images[i].stock_id;
+        if (obsUnitId) {
+            fileData[file.name] = {
+                "imageName" : file.name,
+                "imageFileName" : file.name,
+                "imageFileSize" : file.size,
+                "imageTimeStamp" : timestamp,
+                "mimeType" : file.type,
+                "observationUnit" : obsUnitId
+
+            };
+        }
+    }
+    return fileData;
+}
 
 function formatMessage(messageDetails, messageType) {
     var formattedMessage = "<hr><ul class='list-group'>";
@@ -261,7 +560,7 @@ function verifyImageFiles(fileData, unitType, transformType) {
           var errors = response.missing.map(function(name) {
               return "<b>" + name + "</b> is not a valid "+unitType;
           });
-          console.log("Errors are "+errors);
+          //console.log("Errors are "+errors);
           return { "error" : errors };
       } else {
           var successText = "Verification complete. All image files match an existing observationUnit. Ready to store images.";
@@ -317,7 +616,7 @@ function loadImagesSequentially(imageFiles, imageData, uploadStatus){
         } else {
             // console.log("handling response errors: "+JSON.stringify(response.metadata.status));
             response.metadata.status.forEach(function(msg) {
-              if (msg.messageType == "ERROR") { uploadStatus.error.push(msg.message); }
+            if (msg.messageType == "ERROR") { uploadStatus.error.push(msg.message); }
             });
             return uploadStatus;
         }
@@ -335,13 +634,14 @@ function loadImagesSequentially(imageFiles, imageData, uploadStatus){
 
 }
 
-
 function loadSingleImage(imageFiles, imageData, uploadStatus){
 
     var currentImage = imageFiles.length - imageData.length;
     var total = imageFiles.length;
     var file = imageFiles[currentImage];
     var image = imageData[0];
+    //console.log("image", image);
+    //console.log("file", file);
 
     currentImage++;
     jQuery('#progress_msg').html('<p class="form-group text-center">Working on image '+currentImage+' out of '+total+'</p>');
@@ -358,7 +658,9 @@ function loadSingleImage(imageFiles, imageData, uploadStatus){
         data: JSON.stringify([image]),
         contentType: "application/json; charset=utf-8"
     }).success(function(response){
+        //console.log("response:", response);
         var imageDbId = response.result.data[0].imageDbId;
+        //console.log("imageDbId: ", imageDbId);
         jQuery.ajax( {
             url: "/brapi/v2/images/"+imageDbId+"/imagecontent",
             method: 'PUT',
