@@ -326,6 +326,12 @@ sub get_plots_and_plants {
 }
 
 
+=head2 get_stock_related_seedlots()
+
+retrieves seedlots info associated with an accession stock id or a cross stock id
+
+=cut
+
 sub get_stock_related_seedlots {
     my $self = shift;
     my $schema = $self->dbic_schema();
