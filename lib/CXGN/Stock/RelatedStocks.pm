@@ -6,7 +6,6 @@ use warnings;
 use Moose;
 use SGN::Model::Cvterm;
 use Data::Dumper;
-use CXGN::Stock::Seedlot;
 
 has 'dbic_schema' => (
     isa => 'Bio::Chado::Schema',
