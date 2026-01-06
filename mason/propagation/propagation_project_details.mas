@@ -15,7 +15,6 @@ $propagation_type
 $date
 </%args>
 
-
 <div class="row">
     <div class="col-sm-12">
         <table class="table table-hover table-bordered" >
@@ -50,7 +49,7 @@ $date
                 <td>
                     <span id="breeding_program">
 % if ($breeding_program_name) {
-%     print "$breeding_program_name";
+                 <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
 % }
 % else {
 %     print "<span class='text-danger'>[No Breeding Program]</span>";
