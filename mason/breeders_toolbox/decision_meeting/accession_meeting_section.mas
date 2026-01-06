@@ -5,41 +5,45 @@
      title=>'Accession — Decision Tracker',
      is_subsection=>1, collapsible=>1, collapsed=>0,
      subtitle=>'Track decisions per accession. Use the per-column filters below the header.'
-	&>
-	  <div class="panel panel-default">
-	    <div class="panel-body">
-	      <div class="form-inline" style="margin-bottom:10px;">
-	        </select>
-	      </div>
+  &>
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <div class="form-inline" style="margin-bottom:10px;">
+          </select>
 
-	      <div class="table-responsive">
-	        <table id="decision_table" class="table table-striped table-bordered" width="100%">
-	          <thead>
-	            <tr>
-	              <th>Accession</th>
-	              <th>Breeding Program</th>
-	              <th>Stage</th>
-	              <th>Year</th>
-	              <th>Decision</th>
-	              <th>Female Parent</th>
-	              <th>Male Parent</th>
-	              <th>Notes</th>
-	            </tr>
-	          </thead>
-	        </table>
-	      </div>
+          <!-- Breeding Program checkbox dropdown placeholder -->
+          <div id="bp_filter_placeholder" class="btn-group" style="margin-left:12px;">
+            <!-- JS will inject checkbox dropdown here -->
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table id="decision_table" class="table table-striped table-bordered" width="100%">
+            <thead>
+              <tr>
+                <th>Accession</th>
+                <th>Breeding Program</th>
+                <th>Stage</th>
+                <th>Year</th>
+                <th>Decision</th>
+                <th>Female Parent</th>
+                <th>Male Parent</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
 
-	    </div>
-	  </div>
-	</&>
+      </div>
+    </div>
+  </&>
 
-	<&| /page/info_section.mas,
+  <&| /page/info_section.mas,
        title=>'Data Summary',
        is_subsection=>1, collapsible=>1, collapsed=>0,
        subtitle=>"View Approvers' Record"
     &>
     <div class="panel panel-default">
-  	  <div class="panel-body">
+      <div class="panel-body">
       <div class="form-inline" style="margin-bottom:10px;">
         <label for="accession_select" class="control-label" style="margin-right:8px;">Select a Dataset:</label>
         <select id="accession_select" class="form-control input-sm" style="min-width:240px;">

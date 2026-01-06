@@ -52,7 +52,7 @@ sub validate_design {
     my $error = '';
 
     if (defined $design_type){
-        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'URDD'&& $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis'){
+        if ($design_type ne 'CRD' && $design_type ne 'Alpha' && $design_type ne 'MAD' && $design_type ne 'Lattice' && $design_type ne 'Augmented' && $design_type ne 'RCBD' && $design_type ne 'RRC' && $design_type ne 'DRRC' && $design_type ne 'URDD'&& $design_type ne 'ARC' && $design_type ne 'p-rep' && $design_type ne 'splitplot' && $design_type ne 'stripplot' && $design_type ne 'greenhouse' && $design_type ne 'Westcott' && $design_type ne 'Analysis' && $design_type ne 'Meeting'){
             $error .= "Design $design_type type must be either: CRD, Alpha, Augmented, Lattice, RCBD, RRC, DRRC, URDD, ARC, MAD, p-rep, greenhouse, Westcott, splitplot or stripplot";
             return $error;
         }

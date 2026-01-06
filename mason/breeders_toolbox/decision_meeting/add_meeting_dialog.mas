@@ -26,14 +26,21 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
           </div>
 
           <div class="form-group">
-            <label for="mtg_program">Program</label>
-            <select id="mtg_program" class="form-control"></select>
-          </div>
+			  <label for="mtg_program" class="control-label">Breeding Program</label>
+			  <select id="mtg_program" name="breeding_program" class="form-control">
+			    <option value="">— Select a program —</option>
+			    <!-- options are populated via AJAX -->
+			  </select>
+		  </div>
 
-          <div class="form-group">
-            <label for="mtg_location">Location</label>
-            <input id="mtg_location" class="form-control" type="text">
-          </div>
+		   <div class="form-group">
+				<label for="mtg_location" class="control-label">Location</label>
+				<select id="mtg_location" name="location_id" class="form-control">
+					<option value="">— Select a location —</option>
+					<!-- options populated via AJAX -->
+				</select>
+			</div>
+
 
           <div class="form-group">
             <label for="mtg_year">Year</label>
@@ -46,22 +53,46 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
           </div>
 
           <div class="form-group">
-            <label for="mtg_data">Data (optional)</label>
+            <label for="mtg_data">Description</label>
             <textarea id="mtg_data" class="form-control" rows="3"></textarea>
           </div>
+           <div class="form-group" id="attendees_group">
+            <label class="control-label" for="people_search">Attendees</label>
 
-          <div class="form-group">
-            <label for="mtg_attendees">Attendees (comma or newline separated)</label>
-            <textarea id="mtg_attendees" class="form-control" rows="2"></textarea>
+            <!-- single global search box -->
+            <input type="search"
+                   id="people_search"
+                   class="form-control"
+                   placeholder="Search by first or last name…"
+                   autocomplete="off"
+                   style="max-width: 420px; margin-bottom: 8px;">
+
+            <div class="table-responsive">
+              <table id="people_table" class="table table-striped table-bordered" width="100%">
+                <thead>
+                  <tr>
+                    <th style="width:42px; text-align:center;">
+                      <input type="checkbox" id="people_select_all" aria-label="Select all"/>
+                    </th>
+                    <th>First name</th>
+                    <th>Last name</th>
+                    <th>Contact Email</th>
+                  </tr>
+                </thead>
+                <tbody><!-- populated via JS --></tbody>
+              </table>
+            </div>
+
+            <!-- keep your original field; will contain comma-separated emails -->
+            <input type="hidden" id="mtg_attendees" name="atendee_id" value="">
           </div>
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
 
-          <!-- IMPORTANT: give this the id your JS listens for -->
           <button id="create_meeting_save" type="submit" class="btn btn-success">Save Meeting</button>
-          <!-- (Alternatively you could name it create_meeting_submit; your JS supports either) -->
+          
         </div>
       </form>
 
