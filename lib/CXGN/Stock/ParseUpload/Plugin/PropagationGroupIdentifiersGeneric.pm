@@ -19,12 +19,12 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'propagation_group_identifier', 'accession_name', 'material_type', 'date', 'description', 'operator_name' ],
-        optional_columns => [ 'material_source_type', 'source_name', 'sub_location' ],
+        optional_columns => [ 'source_type', 'source_name', 'sub_location' ],
         column_aliases => {
             'propagation_group_identifier' => ['propagation group identifier'],
             'accession_name' => ['accession name'],
             'material_type' => ['material type'],
-            'material_source_type' => ['material source type'],
+            'source_type' => ['source type'],
             'source_name' => ['source_name'],
             'sub_location' => ['sub-location', 'sub location'],
             'operator_name' => ['operator name'],
@@ -131,7 +131,7 @@ sub _parse_with_plugin {
         $identifier_info{$row_number}{'date'} = $row->{'date'};
         $identifier_info{$row_number}{'description'} = $row->{'description'};
         $identifier_info{$row_number}{'operator_name'} = $row->{'operator_name'};
-        $identifier_info{$row_number}{'material_source_type'} = $row->{'material_source_type'};
+        $identifier_info{$row_number}{'material_source_type'} = $row->{'source_type'};
         $identifier_info{$row_number}{'source_name'} = $row->{'source_name'};
         $identifier_info{$row_number}{'sub_location'} = $row->{'sub_location'};
     }

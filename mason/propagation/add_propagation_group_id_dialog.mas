@@ -46,7 +46,7 @@ $date
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Material Source Type: </label>
+                            <label class="col-sm-4 control-label">Source Type: </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_source_type">
                                     <option value="">Please select a type</option>

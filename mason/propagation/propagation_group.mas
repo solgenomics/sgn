@@ -31,8 +31,8 @@ $accession_stock_id
                         <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
                         <tr><td><b>Material</b></td><td><%$accession_link%></td></tr>
                         <tr><td><b>Material Type</b></td><td><%$material_type%></td></tr>
-                        <tr><td><b>Material Source Type</b></td><td><%$material_source_type%></td></tr>
-                        <tr><td><b>Material Source Name</b></td><td><%$source_link%></td></tr>
+                        <tr><td><b>Source Type</b></td><td><%$material_source_type%></td></tr>
+                        <tr><td><b>Source Name</b></td><td><%$source_link%></td></tr>
                         <tr><td><b>Date</b></td><td><%$date%></td></tr>
                         <tr><td><b>Sub-Location</b></td><td><%$sub_location%></td></tr>
                         <tr><td><b>Description</b></td><td><%$description%></td></tr>

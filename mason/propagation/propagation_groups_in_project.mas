@@ -12,8 +12,8 @@ $trial_id
                 <th>Propagation Group ID</th>
                 <th>Accession</th>
                 <th>Material Type</th>
-                <th>Material Source Type</th>
-                <th>Material Source</th>
+                <th>Source Type</th>
+                <th>Source Name</th>
                 <th>Date</th>
                 <th>Sub-Location</th>
                 <th>Description</th>

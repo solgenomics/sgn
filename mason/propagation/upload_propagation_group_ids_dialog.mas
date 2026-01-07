@@ -102,7 +102,7 @@ $trial_name
                                 <td>propagation_group_identifier</td>
                                 <td>accession_name</td>
                                 <td>material_type</td>
-                                <td>material_source_type</td>
+                                <td>source_type</td>
                                 <td>source_name</td>
                                 <td>date</td>
                                 <td>sub_location</td>
