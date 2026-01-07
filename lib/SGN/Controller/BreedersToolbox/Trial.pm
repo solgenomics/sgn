@@ -447,6 +447,12 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my $date = $time->ymd();
         $c->stash->{date} = $date;
 
+        my $user = $c->user()->get_object();
+        my $first_name = $user->get_first_name();
+        my $last_name = $user->get_last_name();
+        my $full_name = $first_name.' '.$last_name;
+        $c->stash->{logged_in_name} = $full_name;
+
         $c->stash->{template} = '/propagation/propagation_project.mas';
     }
 

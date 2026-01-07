@@ -2,6 +2,7 @@
 $trial_id
 $trial_name
 $breeding_program_name
+$logged_in_name
 $date
 
 </%args>
@@ -86,7 +87,7 @@ $date
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Operator: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_operator" name="propagation_operator" placeholder="">
+                                <input class="form-control" type="text" id="propagation_operator" name="propagation_operator" value="<%$logged_in_name%>" >
                             </div>
                         </div>
                     </div>
