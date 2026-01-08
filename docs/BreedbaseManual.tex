@@ -85,7 +85,7 @@
 
 \title{Breedbase User Manual}
 \author{Breedbase team}
-\date{2025-12-19}
+\date{2026-01-08}
 
 \begin{document}
 \maketitle
@@ -2200,6 +2200,48 @@ Clicking on ``Create Phenotyping Spreadsheet'' will bring up a dialog where you 
 To ensure that the file has a correct format for uploading, click on the ``Verify'' button. This will check the contents of the file and also perform quality checks on the values in the file. These checks include checking the trait definition for categorical values, minimum and maximum values, and data type checking. It will also check if there are already values uploaded for the given observation units and traits. If there are, there is an option to overwrite the existing values with the new values in your file. If the file is valid, only then can you click ``Store'' to store the information in the database.
 
 \begin{center}\includegraphics[width=0.75\linewidth]{assets/images/phenotype_spreadsheet_upload_dialog} \end{center}
+
+\hypertarget{managing-high-dimensional-phenotyping-data}{%
+\chapter{Managing High Dimensional Phenotyping Data}\label{managing-high-dimensional-phenotyping-data}}
+
+\hypertarget{managing-transcriptomic-data}{%
+\section{Managing Transcriptomic Data}\label{managing-transcriptomic-data}}
+
+\hypertarget{uploading-transcriptomic-data}{%
+\subsection{Uploading Transcriptomic Data}\label{uploading-transcriptomic-data}}
+
+To upload transcriptomic data, go to the transcriptomics page by clicking ``Transcriptomics'' under the Manage tab.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcriptomics_menu} \end{center}
+
+Click the ``Upload Transcriptomics Data'' button to open the upload workflow dialog. On the second step ``Samples'', you will be prompted to make sure that your samples are already in the database. You can refer to the ``Managing Tissue Samples'' chapter for instructions on how to create a sampling trial. After creating a sampling trial or confirming that your samples exist, move on to the ``Protocol Info'' step. Here you can select an existing protocol, or create a new protocol. To create a protocol, click the ``Protocol Not Shown. Create a New Protocol'' button. From here you can fill in information about your new protocol and when finished, click ``Go to Next Step''.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/create_transcriptomics_protocol} \end{center}
+
+You will need to have two csv files when uploading transcriptomics data. The first is the data matrix file, which should have these headers:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/data_matrix_headers} \end{center}
+
+The names in the sample\_name column should match the sample names you created in your sampling trial file. The header marked ``transcript\_name\_columns'' should be replaced with the transcript names you want to upload, each in its own column in the header and the respective expression value below. Example:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/data_matrix_example} \end{center}
+
+The second file is the transcript details file, which should have these headers:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcript_details_headers} \end{center}
+
+Each row under the transcript\_name column should contain each transcript name from your data matrix file. For example:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcript_details_example} \end{center}
+
+Once these two files are uploaded, click verify to check that they are formatted correctly and that the samples exist. If there are no errors, you can then click store to store your transcriptomics data.
+
+\hypertarget{downloading-transcriptomics-data}{%
+\subsection{Downloading Transcriptomics Data}\label{downloading-transcriptomics-data}}
+
+To download your data, click the ``Uploaded Transcriptomics Data'' dropdown menu on the Transcriptomics page. Then click the ``Your Uploaded Transcriptomic Data'' dropdown. From here you will be able to see the transcriptomics data that you have uploaded. Click the ``Download'' button next to the data that you wish to download.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/download_transcriptomics} \end{center}
 
 \hypertarget{managing-barcodes}{%
 \chapter{Managing Barcodes}\label{managing-barcodes}}
