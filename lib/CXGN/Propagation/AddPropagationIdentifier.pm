@@ -84,13 +84,15 @@ sub add_propagation_identifier {
 
         my $propagation_material_stock_id = $propagation_material->subject_id();
 
-        my $rootstock_rs = $schema->resultset("Stock::Stock")->find({
-            uniquename => $rootstock_name,
-            type_id => $accession_cvterm_id,
-        });
+        if ($rootstock_name) {
+            my $rootstock_rs = $schema->resultset("Stock::Stock")->find({
+                uniquename => $rootstock_name,
+                type_id => $accession_cvterm_id,
+            });
 
-        if ($rootstock_rs) {
-            $rootstock_stock_id = $rootstock_rs->stock_id();
+            if ($rootstock_rs) {
+                $rootstock_stock_id = $rootstock_rs->stock_id();
+            }
         }
 
         my $propagation_identifier_stock = $schema->resultset("Stock::Stock")->find_or_create({
@@ -101,11 +103,13 @@ sub add_propagation_identifier {
 
         $propagation_stock_id = $propagation_identifier_stock->stock_id();
 
-        $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
-            type_id => $propagation_rootstock_of_cvterm_id,
-            object_id => $propagation_stock_id,
-            subject_id => $rootstock_stock_id,
-        });
+        if ($rootstock_stock_id) {
+            $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
+                type_id => $propagation_rootstock_of_cvterm_id,
+                object_id => $propagation_stock_id,
+                subject_id => $rootstock_stock_id,
+            });            
+        }
 
         $propagation_identifier_stock->find_or_create_related('stock_relationship_objects', {
             type_id => $propagation_member_of_cvterm_id,

@@ -407,9 +407,11 @@ sub add_propagation_identifier_POST :Args(0){
         return;
     }
 
-    if (! $schema->resultset("Stock::Stock")->find({uniquename => $rootstock_name, type_id => $accession_cvterm_id })){
-        $c->stash->{rest} = {error =>  "Rootstock name does not exist or does not exist as accession uniquename." };
-        return;
+    if ($rootstock_name) {
+        if (! $schema->resultset("Stock::Stock")->find({uniquename => $rootstock_name, type_id => $accession_cvterm_id })){
+            $c->stash->{rest} = {error =>  "Rootstock name does not exist or does not exist as accession uniquename." };
+            return;
+        }
     }
 
     my $propagation_stock_id;
@@ -741,8 +743,10 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
         if ($status_type eq 'Inventoried') {
             my $inventory = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_stock_id=>$propagation_stock_id});
             my $inventory_info = $inventory->get_associated_inventory_identifier();
-            my $inventory_identifier = $inventory_info->[1];
-            $status_type = 'Inventoried'.':'. ' '.$inventory_identifier;
+            my $inventory_stock_id = $inventory_info->[0];
+            my $inventory_name = $inventory_info->[1];
+            my $inventory_link = qq{<a href="/stock/$inventory_stock_id/view">$inventory_name</a>};
+            $status_type = 'Inventoried'.':'. ' '.$inventory_link;
         }
 
         if ($status_type ne 'In Progress') {
