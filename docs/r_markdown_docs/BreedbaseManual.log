@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.29)  19 DEC 2025 15:22
+This is XeTeX, Version 3.141592653-2.6-0.999995 (TeX Live 2023) (preloaded format=xelatex 2023.10.29)  8 JAN 2026 17:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1887,6 +1887,51 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 [165] [166]
 Chapter 14.
+File: assets/images/transcriptomics_menu.png Graphic file (type bmp)
+<assets/images/transcriptomics_menu.png>
+[167
+
+]
+File: assets/images/create_transcriptomics_protocol.png Graphic file (type bmp)
+
+<assets/images/create_transcriptomics_protocol.png>
+File: assets/images/data_matrix_headers.png Graphic file (type bmp)
+<assets/images/data_matrix_headers.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+Overfull \hbox (30.43217pt too wide) has occurred while \output is active
+\TU/lmr/m/n/12 168 \TU/lmr/m/sl/12 CHAPTER 14.  MANAGING HIGH DIMENSIONAL PHENO
+TYPING DATA
+ []
+
+[168]
+Underfull \hbox (badness 1286) in paragraph at lines 2225--2226
+\TU/lmr/m/n/12 you created in your sampling trial file. The header marked “tran
+-
+ []
+
+File: assets/images/data_matrix_example.png Graphic file (type bmp)
+<assets/images/data_matrix_example.png>
+File: assets/images/transcript_details_headers.png Graphic file (type bmp)
+<assets/images/transcript_details_headers.png>
+File: assets/images/transcript_details_example.png Graphic file (type bmp)
+<assets/images/transcript_details_example.png>
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+[169]
+File: assets/images/download_transcriptomics.png Graphic file (type bmp)
+<assets/images/download_transcriptomics.png>
+
+Overfull \hbox (30.43217pt too wide) has occurred while \output is active
+\TU/lmr/m/n/12 170 \TU/lmr/m/sl/12 CHAPTER 14.  MANAGING HIGH DIMENSIONAL PHENO
+TYPING DATA
+ []
+
+[170]
+Chapter 15.
 File: assets/images/image82.png Graphic file (type bmp)
 <assets/images/image82.png>
 File: assets/images/image274.png Graphic file (type bmp)
@@ -1894,14 +1939,14 @@ File: assets/images/image274.png Graphic file (type bmp)
 
 Underfull \vbox (badness 2189) has occurred while \output is active []
 
-[167
+[171
 
 ]
 File: assets/images/image245.png Graphic file (type bmp)
 <assets/images/image245.png>
 File: assets/images/image264.png Graphic file (type bmp)
 <assets/images/image264.png>
-[168]
+[172]
 File: assets/images/image248.png Graphic file (type bmp)
 <assets/images/image248.png>
 File: assets/images/plot_pheno_barcode.png Graphic file (type bmp)
@@ -1909,17 +1954,17 @@ File: assets/images/plot_pheno_barcode.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[169]
+[173]
 File: assets/images/trial_barcode.png Graphic file (type bmp)
 <assets/images/trial_barcode.png>
-[170]
-Chapter 15.
+[174]
+Chapter 16.
 File: assets/gifs/gif1.png Graphic file (type bmp)
 <assets/gifs/gif1.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[171
+[175
 
 ]
 File: assets/gifs/gif2.png Graphic file (type bmp)
@@ -1927,44 +1972,44 @@ File: assets/gifs/gif2.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[172]
+[176]
 File: assets/gifs/gif3.png Graphic file (type bmp)
 <assets/gifs/gif3.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[173]
+[177]
 File: assets/gifs/gif4.png Graphic file (type bmp)
 <assets/gifs/gif4.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[174] [175] [176
+[178] [179] [180
 
 ]
-Chapter 16.
+Chapter 17.
 File: assets/images/image255.png Graphic file (type bmp)
 <assets/images/image255.png>
 File: assets/images/trial_meta_data_download.png Graphic file (type bmp)
 <assets/images/trial_meta_data_download.png>
 File: assets/images/image287.png Graphic file (type bmp)
 <assets/images/image287.png>
-[177]
+[181]
 File: assets/images/image182.png Graphic file (type bmp)
 <assets/images/image182.png>
-[178]
-Chapter 17.
+[182]
+Chapter 18.
 File: assets/images/odk_ona_management.png Graphic file (type bmp)
 <assets/images/odk_ona_management.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[179
+[183
 
 ]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[180]
+[184]
 File: assets/images/odk_ona_cross_status.png Graphic file (type bmp)
 <assets/images/odk_ona_cross_status.png>
 File: assets/images/odk_ona_cross_progress_graph.png Graphic file (type bmp)
@@ -1972,15 +2017,15 @@ File: assets/images/odk_ona_cross_progress_graph.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[181]
+[185]
 File: assets/images/odk_ona_cross_progress_tree.png Graphic file (type bmp)
 <assets/images/odk_ona_cross_progress_tree.png>
-[182]
-Chapter 18.
+[186]
+Chapter 19.
 File: assets/images/manage_tissue_samples_create_tissues_field_trial_download.p
 ng Graphic file (type bmp)
 <assets/images/manage_tissue_samples_create_tissues_field_trial_download.png>
-[183
+[187
 
 ]
 File: assets/images/manage_tissue_samples_create_tissues_field_trial_button.png
@@ -1995,7 +2040,7 @@ File: assets/images/manage_tissue_samples_create_tissues_field_trial_select.png
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[184]
+[188]
 File: assets/images/manage_tissue_samples_create_tissues_field_trial_num_plants
 .png Graphic file (type bmp)
 <assets/images/manage_tissue_samples_create_tissues_field_trial_num_plants.png>
@@ -2007,11 +2052,11 @@ s.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[185]
+[189]
 File: assets/images/manage_tissue_samples_create_tissues_field_trial_submit.png
  Graphic file (type bmp)
 <assets/images/manage_tissue_samples_create_tissues_field_trial_submit.png>
-[186]
+[190]
 File: assets/images/manage_tissue_samples_create_tissues_genotyping_trial_downl
 oad.png Graphic file (type bmp)
 <assets/images/manage_tissue_samples_create_tissues_genotyping_trial_download.p
@@ -2022,25 +2067,25 @@ n.png Graphic file (type bmp)
 >
 
 Overfull \hbox (38.18161pt too wide) has occurred while \output is active
-\TU/lmr/m/sl/12 18.2.  GENOTYPING PLATE TISSUE SAMPLES (96 OR 384 WELL PLATES) 
-\TU/lmr/m/n/12 187
+\TU/lmr/m/sl/12 19.2.  GENOTYPING PLATE TISSUE SAMPLES (96 OR 384 WELL PLATES) 
+\TU/lmr/m/n/12 191
  []
 
-[187] [188
+[191] [192
 
 ]
-Chapter 19.
+Chapter 20.
 File: assets/images/manage_observation_variables_start_button.png Graphic file 
 (type bmp)
 <assets/images/manage_observation_variables_start_button.png>
-[189]
+[193]
 File: assets/images/manage_observation_variables_workflow_intro.png Graphic fil
 e (type bmp)
 <assets/images/manage_observation_variables_workflow_intro.png>
 File: assets/images/manage_observation_variables_workflow_observation_variable.
 png Graphic file (type bmp)
 <assets/images/manage_observation_variables_workflow_observation_variable.png>
-[190]
+[194]
 File: assets/images/manage_observation_variables_workflow_trait.png Graphic fil
 e (type bmp)
 <assets/images/manage_observation_variables_workflow_trait.png>
@@ -2052,38 +2097,38 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 Overfull \hbox (117.5829pt too wide) has occurred while \output is active
-\TU/lmr/m/sl/12 19.1.  MANAGING OBSERVATION VARIABLES WITH TRAITS, METHODS, AND
- SCALES \TU/lmr/m/n/12 191
+\TU/lmr/m/sl/12 20.1.  MANAGING OBSERVATION VARIABLES WITH TRAITS, METHODS, AND
+ SCALES \TU/lmr/m/n/12 195
  []
 
-[191]
+[195]
 File: assets/images/manage_observation_variables_workflow_scale.png Graphic fil
 e (type bmp)
 <assets/images/manage_observation_variables_workflow_scale.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[192]
+[196]
 File: assets/images/manage_observation_variables_workflow_submit.png Graphic fi
 le (type bmp)
 <assets/images/manage_observation_variables_workflow_submit.png>
 
 Overfull \hbox (117.5829pt too wide) has occurred while \output is active
-\TU/lmr/m/sl/12 19.1.  MANAGING OBSERVATION VARIABLES WITH TRAITS, METHODS, AND
- SCALES \TU/lmr/m/n/12 193
+\TU/lmr/m/sl/12 20.1.  MANAGING OBSERVATION VARIABLES WITH TRAITS, METHODS, AND
+ SCALES \TU/lmr/m/n/12 197
  []
 
-[193] [194
+[197] [198
 
 ]
-Chapter 20.
+Chapter 21.
 File: assets/images/manage_image_phenotyping_upload_intro.png Graphic file (typ
 e bmp)
 <assets/images/manage_image_phenotyping_upload_intro.png>
 
 Underfull \vbox (badness 7486) has occurred while \output is active []
 
-[195]
+[199]
 File: assets/images/manage_image_phenotyping_upload_field_trial.png Graphic fil
 e (type bmp)
 <assets/images/manage_image_phenotyping_upload_field_trial.png>
@@ -2093,35 +2138,35 @@ File: assets/images/manage_image_phenotyping_upload_drone_run.png Graphic file
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[196]
+[200]
 File: assets/images/manage_image_phenotyping_upload_image_info_1.png Graphic fi
 le (type bmp)
 <assets/images/manage_image_phenotyping_upload_image_info_1.png>
 
 Underfull \vbox (badness 1762) has occurred while \output is active []
 
-[197]
+[201]
 File: assets/images/manage_image_phenotyping_upload_image_info_2.png Graphic fi
 le (type bmp)
 <assets/images/manage_image_phenotyping_upload_image_info_2.png>
 File: assets/images/manage_image_phenotyping_upload_images_zipfile.png Graphic 
 file (type bmp)
 <assets/images/manage_image_phenotyping_upload_images_zipfile.png>
-[198]
+[202]
 File: assets/images/manage_image_phenotyping_upload_image_info_3.png Graphic fi
 le (type bmp)
 <assets/images/manage_image_phenotyping_upload_image_info_3.png>
 File: assets/images/manage_image_phenotyping_upload_images_rasters.png Graphic 
 file (type bmp)
 <assets/images/manage_image_phenotyping_upload_images_rasters.png>
-[199]
+[203]
 File: assets/images/manage_image_phenotyping_standard_process_button.png Graphi
 c file (type bmp)
 <assets/images/manage_image_phenotyping_standard_process_button.png>
 File: assets/images/manage_image_phenotyping_standard_process_intro.png Graphic
  file (type bmp)
 <assets/images/manage_image_phenotyping_standard_process_intro.png>
-[200]
+[204]
 File: assets/images/manage_image_phenotyping_standard_process_drone_run_band.pn
 g Graphic file (type bmp)
 <assets/images/manage_image_phenotyping_standard_process_drone_run_band.png>
@@ -2131,31 +2176,31 @@ c file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[201]
+[205]
 File: assets/images/manage_image_phenotyping_standard_process_cropping.png Grap
 hic file (type bmp)
 <assets/images/manage_image_phenotyping_standard_process_cropping.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[202]
+[206]
 File: assets/images/manage_image_phenotyping_standard_process_threshold_hist.pn
 g Graphic file (type bmp)
 <assets/images/manage_image_phenotyping_standard_process_threshold_hist.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[203]
+[207]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[204]
+[208]
 File: assets/images/manage_image_phenotyping_standard_process_plot_polygon.png 
 Graphic file (type bmp)
 <assets/images/manage_image_phenotyping_standard_process_plot_polygon.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[205] [206]
+[209] [210]
 File: assets/images/manage_image_phenotyping_standard_process_apply.png Graphic
  file (type bmp)
 <assets/images/manage_image_phenotyping_standard_process_apply.png>
@@ -2168,14 +2213,14 @@ aphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[207] [208]
-Chapter 21.
+[211] [212]
+Chapter 22.
 File: assets/images/image_upload_dialog.png Graphic file (type bmp)
 <assets/images/image_upload_dialog.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[209
+[213
 
 ]
 File: assets/images/filename_verify_success.png Graphic file (type bmp)
@@ -2183,18 +2228,18 @@ File: assets/images/filename_verify_success.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[210]
+[214]
 Underfull \vbox (badness 2401) has occurred while \output is active []
 
-[211]
+[215]
 File: assets/images/stock_add_image.png Graphic file (type bmp)
 <assets/images/stock_add_image.png>
-[212]
-Chapter 22.
+[216]
+Chapter 23.
 File: assets/images/manage_genotyping_data_upload_button.png Graphic file (type
  bmp)
 <assets/images/manage_genotyping_data_upload_button.png>
-[213
+[217
 
 ]
 File: assets/images/manage_genotyping_data_upload_dialog_intro.png Graphic file
@@ -2206,7 +2251,7 @@ le (type bmp)
 
 Underfull \vbox (badness 2884) has occurred while \output is active []
 
-[214]
+[218]
 File: assets/images/manage_genotyping_data_upload_dialog_protocol.png Graphic f
 ile (type bmp)
 <assets/images/manage_genotyping_data_upload_dialog_protocol.png>
@@ -2216,25 +2261,25 @@ type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[215]
+[219]
 File: assets/images/manage_genotyping_data_wizard_download_prot.png Graphic fil
 e (type bmp)
 <assets/images/manage_genotyping_data_wizard_download_prot.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[216]
+[220]
 File: assets/images/manage_genotyping_data_wizard_trial.png Graphic file (type 
 bmp)
 <assets/images/manage_genotyping_data_wizard_trial.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[217]
+[221]
 File: assets/images/search_wizard_genotyping_protocols_download_main.png Graphi
 c file (type bmp)
 <assets/images/search_wizard_genotyping_protocols_download_main.png>
-[218]
+[222]
 File: assets/images/search_wizard_genotyping_protocols_download_genotypes.png G
 raphic file (type bmp)
 <assets/images/search_wizard_genotyping_protocols_download_genotypes.png>
@@ -2244,81 +2289,81 @@ Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[219]
+[223]
 File: assets/images/genotyping_protocol_detail_page_markers.png Graphic file (t
 ype bmp)
 <assets/images/genotyping_protocol_detail_page_markers.png>
-[220]
+[224]
 File: assets/images/genotyping_protocol_detail_page_samples.png Graphic file (t
 ype bmp)
 <assets/images/genotyping_protocol_detail_page_samples.png>
 File: assets/images/genotyping_protocol_detail_page_delete.png Graphic file (ty
 pe bmp)
 <assets/images/genotyping_protocol_detail_page_delete.png>
-[221] [222
+[225] [226
 
 ]
-Chapter 23.
+Chapter 24.
 File: assets/images/waves_breedbase_schema.png Graphic file (type bmp)
 <assets/images/waves_breedbase_schema.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[223]
+[227]
 File: assets/images/manage_NIRS_main_display.png Graphic file (type bmp)
 <assets/images/manage_NIRS_main_display.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[224]
+[228]
 File: assets/images/upload_NIRS_example_format.png Graphic file (type bmp)
 <assets/images/upload_NIRS_example_format.png>
-[225]
+[229]
 File: assets/images/upload_NIRS_plot_example.png Graphic file (type bmp)
 <assets/images/upload_NIRS_plot_example.png>
-[226] [227] [228
+[230] [231] [232
 
 ]
-Chapter 24.
+Chapter 25.
 File: assets/images/sequence_metadata_manage.png Graphic file (type bmp)
 <assets/images/sequence_metadata_manage.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[229] [230]
+[233] [234]
 File: assets/images/sequence_metadata_search_basic.png Graphic file (type bmp)
 <assets/images/sequence_metadata_search_basic.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[231]
+[235]
 File: assets/images/sequence_metadata_search_results.png Graphic file (type bmp
 )
 <assets/images/sequence_metadata_search_results.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[232]
+[236]
 File: assets/images/sequence_metadata_search_advanced.png Graphic file (type bm
 p)
 <assets/images/sequence_metadata_search_advanced.png>
 
-Underfull \hbox (badness 3838) in paragraph at lines 2835--2836
+Underfull \hbox (badness 3838) in paragraph at lines 2877--2878
 \TU/lmr/m/n/12 A table of Sequence Metadata annotations are embedded on the
  []
 
-[233] [234
+[237] [238
 
 ]
-Chapter 25.
+Chapter 26.
 
-Underfull \hbox (badness 7558) in paragraph at lines 2846--2846
+Underfull \hbox (badness 7558) in paragraph at lines 2888--2888
 []\TU/lmr/bx/n/17.28 What is Outliers Functionality in
  []
 
 File: assets/images/outliers_dataset_icon.png Graphic file (type bmp)
 <assets/images/outliers_dataset_icon.png>
-[235]
+[239]
 File: assets/images/outliers_dataset_basic_panel.png Graphic file (type bmp)
 <assets/images/outliers_dataset_basic_panel.png>
 File: assets/images/outliers_dataset_full_visualisation.png Graphic file (type 
@@ -2327,14 +2372,14 @@ bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[236]
+[240]
 Underfull \vbox (badness 3049) has occurred while \output is active []
 
-[237]
+[241]
 File: assets/images/outliers_dataset_actions.png Graphic file (type bmp)
 <assets/images/outliers_dataset_actions.png>
-[238]
-Chapter 26.
+[242]
+Chapter 27.
 File: assets/images/image114.png Graphic file (type bmp)
 <assets/images/image114.png>
 File: assets/images/image251.png Graphic file (type bmp)
@@ -2342,7 +2387,7 @@ File: assets/images/image251.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[239
+[243
 
 ]
 File: assets/images/image95.png Graphic file (type bmp)
@@ -2354,7 +2399,7 @@ File: assets/images/image304.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[240]
+[244]
 File: assets/images/image76.png Graphic file (type bmp)
 <assets/images/image76.png>
 File: assets/images/image343.png Graphic file (type bmp)
@@ -2362,7 +2407,7 @@ File: assets/images/image343.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[241]
+[245]
 File: assets/images/image326.png Graphic file (type bmp)
 <assets/images/image326.png>
 File: assets/images/image150.png Graphic file (type bmp)
@@ -2370,18 +2415,18 @@ File: assets/images/image150.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[242]
+[246]
 File: assets/images/image156.png Graphic file (type bmp)
 <assets/images/image156.png>
 File: assets/images/image247.png Graphic file (type bmp)
 <assets/images/image247.png>
-[243]
+[247]
 File: assets/images/image160.png Graphic file (type bmp)
 <assets/images/image160.png>
-[244]
+[248]
 File: assets/images/image249.png Graphic file (type bmp)
 <assets/images/image249.png>
-[245]
+[249]
 File: assets/images/image330.png Graphic file (type bmp)
 <assets/images/image330.png>
 File: assets/images/image244.png Graphic file (type bmp)
@@ -2389,43 +2434,43 @@ File: assets/images/image244.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[246]
+[250]
 File: assets/images/image263.png Graphic file (type bmp)
 <assets/images/image263.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[247]
+[251]
 File: assets/images/image83.png Graphic file (type bmp)
 <assets/images/image83.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[248]
+[252]
 File: assets/images/image93.png Graphic file (type bmp)
 <assets/images/image93.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[249]
+[253]
 File: assets/images/image328.png Graphic file (type bmp)
 <assets/images/image328.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[250]
+[254]
 File: assets/images/image74.png Graphic file (type bmp)
 <assets/images/image74.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[251]
+[255]
 File: assets/images/image147.png Graphic file (type bmp)
 <assets/images/image147.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[252] [253]
+[256] [257]
 File: assets/images/image338.png Graphic file (type bmp)
 <assets/images/image338.png>
 File: assets/images/image334.png Graphic file (type bmp)
@@ -2433,7 +2478,7 @@ File: assets/images/image334.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[254] [255]
+[258] [259]
 File: assets/images/image344.png Graphic file (type bmp)
 <assets/images/image344.png>
 File: assets/images/image329.png Graphic file (type bmp)
@@ -2443,40 +2488,40 @@ File: assets/images/image341.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[256]
+[260]
 File: assets/images/image322.png Graphic file (type bmp)
 <assets/images/image322.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[257]
+[261]
 File: assets/images/image151.png Graphic file (type bmp)
 <assets/images/image151.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[258]
+[262]
 File: assets/images/image69.png Graphic file (type bmp)
 <assets/images/image69.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[259]
+[263]
 File: assets/images/image336.png Graphic file (type bmp)
 <assets/images/image336.png>
 
 Underfull \vbox (badness 1389) has occurred while \output is active []
 
-[260]
+[264]
 File: assets/images/image171.png Graphic file (type bmp)
 <assets/images/image171.png>
-[261]
+[265]
 File: assets/images/image81.png Graphic file (type bmp)
 <assets/images/image81.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[262]
+[266]
 File: assets/images/image138.png Graphic file (type bmp)
 <assets/images/image138.png>
 File: assets/images/image181.png Graphic file (type bmp)
@@ -2484,10 +2529,10 @@ File: assets/images/image181.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[263]
+[267]
 File: assets/images/image152.png Graphic file (type bmp)
 <assets/images/image152.png>
-[264]
+[268]
 File: assets/images/image20.png Graphic file (type bmp)
 <assets/images/image20.png>
 File: assets/images/image318.png Graphic file (type bmp)
@@ -2497,69 +2542,69 @@ File: assets/images/image277.png Graphic file (type bmp)
 
 Underfull \vbox (badness 4156) has occurred while \output is active []
 
-[265]
+[269]
 File: assets/images/image268.png Graphic file (type bmp)
 <assets/images/image268.png>
 File: assets/images/image327.png Graphic file (type bmp)
 <assets/images/image327.png>
-[266]
+[270]
 File: assets/images/pca_iita_naccri_trials.png Graphic file (type bmp)
 <assets/images/pca_iita_naccri_trials.png>
-[267]
+[271]
 File: assets/images/anova-dm.png Graphic file (type bmp)
 <assets/images/anova-dm.png>
-[268]
+[272]
 File: assets/images/k-means-cluster.png Graphic file (type bmp)
 <assets/images/k-means-cluster.png>
 
 Underfull \vbox (badness 6927) has occurred while \output is active []
 
-[269]
+[273]
 File: assets/images/hclustering.png Graphic file (type bmp)
 <assets/images/hclustering.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[270]
+[274]
 File: assets/images/genetic-gain.png Graphic file (type bmp)
 <assets/images/genetic-gain.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[271] [272]
+[275] [276]
 File: assets/images/kinship-inbreeding.png Graphic file (type bmp)
 <assets/images/kinship-inbreeding.png>
-[273]
+[277]
 File: assets/images/selection_proportion_clustering.png Graphic file (type bmp)
 
 <assets/images/selection_proportion_clustering.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[274]
+[278]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[275]
+[279]
 File: assets/images/search_wizard_genotype_analyses_grm.png Graphic file (type 
 bmp)
 <assets/images/search_wizard_genotype_analyses_grm.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[276]
+[280]
 Overfull \hbox (34.74158pt too wide) has occurred while \output is active
-\TU/lmr/m/sl/12 26.11.  SEARCH WIZARD GENOME WIDE ASSOCIATION STUDY (GWAS) \TU/
-lmr/m/n/12 277
+\TU/lmr/m/sl/12 27.11.  SEARCH WIZARD GENOME WIDE ASSOCIATION STUDY (GWAS) \TU/
+lmr/m/n/12 281
  []
 
-[277]
+[281]
 File: assets/images/search_wizard_genotype_analyses_gwas.png Graphic file (type
  bmp)
 <assets/images/search_wizard_genotype_analyses_gwas.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[278]
+[282]
 File: assets/images/search_wizard_genotype_analyses_manhattan_plot.png Graphic 
 file (type bmp)
 <assets/images/search_wizard_genotype_analyses_manhattan_plot.png>
@@ -2568,24 +2613,24 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 Overfull \hbox (34.74158pt too wide) has occurred while \output is active
-\TU/lmr/m/sl/12 26.11.  SEARCH WIZARD GENOME WIDE ASSOCIATION STUDY (GWAS) \TU/
-lmr/m/n/12 279
+\TU/lmr/m/sl/12 27.11.  SEARCH WIZARD GENOME WIDE ASSOCIATION STUDY (GWAS) \TU/
+lmr/m/n/12 283
  []
 
-[279]
+[283]
 File: assets/images/search_wizard_genotype_analyses_qq_plot.png Graphic file (t
 ype bmp)
 <assets/images/search_wizard_genotype_analyses_qq_plot.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[280]
+[284]
 File: assets/images/waves_breedbase_schema.png Graphic file (type bmp)
 <assets/images/waves_breedbase_schema.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[281]
+[285]
 File: assets/images/manage_NIRS_prediction_workflow_intro.png Graphic file (typ
 e bmp)
 <assets/images/manage_NIRS_prediction_workflow_intro.png>
@@ -2595,22 +2640,22 @@ ype bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[282]
+[286]
 File: assets/images/manage_NIRS_cv.png Graphic file (type bmp)
 <assets/images/manage_NIRS_cv.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[283]
+[287]
 File: assets/images/manage_NIRS_snv.png Graphic file (type bmp)
 <assets/images/manage_NIRS_snv.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[284] [285]
+[288] [289]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[286]
+[290]
 File: assets/images/manage_NIRS_export_model.png Graphic file (type bmp)
 <assets/images/manage_NIRS_export_model.png>
 File: assets/images/manage_NIRS_select_model.png Graphic file (type bmp)
@@ -2618,39 +2663,39 @@ File: assets/images/manage_NIRS_select_model.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[287]
+[291]
 File: assets/images/manage_NIRS_prediction_results.png Graphic file (type bmp)
 <assets/images/manage_NIRS_prediction_results.png>
 
-Underfull \hbox (badness 2253) in paragraph at lines 3408--3409
+Underfull \hbox (badness 2253) in paragraph at lines 3450--3451
 \TU/lmr/m/n/12 dard normal variate transformation and de-trending of near-infra
 red
  []
 
-[288] [289]
+[292] [293]
 File: assets/images/mixedmodel_tool_model_build_step.png Graphic file (type bmp
 )
 <assets/images/mixedmodel_tool_model_build_step.png>
-[290]
+[294]
 Overfull \hbox (7.04288pt too wide) has occurred while \output is active
-\TU/lmr/m/sl/12 26.14.  GENOMIC PREDICTION OF CROSS PERFORMANCE (GPCP) \TU/lmr/
-m/n/12 291
+\TU/lmr/m/sl/12 27.14.  GENOMIC PREDICTION OF CROSS PERFORMANCE (GPCP) \TU/lmr/
+m/n/12 295
  []
 
-[291]
+[295]
 File: assets/images/tool_compatibility_details.png Graphic file (type bmp)
 <assets/images/tool_compatibility_details.png>
 File: assets/images/tool_compatibility_data_summary.png Graphic file (type bmp)
 
 <assets/images/tool_compatibility_data_summary.png>
-[292] [293] [294]
-Chapter 27.
+[296] [297] [298]
+Chapter 28.
 File: assets/images/vectorViewer.png Graphic file (type bmp)
 <assets/images/vectorViewer.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[295
+[299
 
 ]
 File: assets/images/vectorHighlight.png Graphic file (type bmp)
@@ -2658,13 +2703,13 @@ File: assets/images/vectorHighlight.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[296]
+[300]
 File: assets/images/cursorLocation.png Graphic file (type bmp)
 <assets/images/cursorLocation.png>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[297]
+[301]
 File: assets/images/ZoomIn.png Graphic file (type bmp)
 <assets/images/ZoomIn.png>
 File: assets/images/ZoomOut.png Graphic file (type bmp)
@@ -2672,21 +2717,21 @@ File: assets/images/ZoomOut.png Graphic file (type bmp)
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
-[298]
+[302]
 File: assets/images/vectorButtons.png Graphic file (type bmp)
 <assets/images/vectorButtons.png>
-[299] (./BreedbaseManual.aux)
+[303] (./BreedbaseManual.aux)
 
 LaTeX Warning: There were undefined references.
 
  ) 
 Here is how much of TeX's memory you used:
- 25983 strings out of 478682
- 651074 string characters out of 5849005
+ 26117 strings out of 478682
+ 656962 string characters out of 5849005
  1860018 words of memory out of 6000000
- 45476 multiletter control sequences out of 15000+600000
+ 45603 multiletter control sequences out of 15000+600000
  518740 words of font info for 86 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  86i,7n,121p,2343b,499s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on BreedbaseManual.pdf (299 pages).
+Output written on BreedbaseManual.pdf (303 pages).
