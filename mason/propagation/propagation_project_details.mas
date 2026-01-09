@@ -121,11 +121,12 @@ $date
     </div>
 </div>
 </br>
-<button class="btn btn-sm btn-default" style="margin:3px" id="add_new_propagation_group_id_link">Add New Propagation Group ID</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_group_ids_link">Upload Propagation Group IDs</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_ids_link">Upload Propagation IDs</button>
+<button class="btn btn-sm btn-default" style="margin:3px" id="add_new_propagation_group_id_link">Add New Propagation Group ID</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_group_ids_link">Upload New Propagation Group IDs</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_ids_link">Upload New Propagation IDs</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_id_status_link">Upload Propagation ID Status</button>
 
 <& /propagation/add_propagation_group_id_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, date => $date, logged_in_name => $logged_in_name&>
 <& /propagation/upload_propagation_group_ids_dialog.mas, trial_id => $trial_id, trial_name => $trial_name&>
 <& /propagation/upload_propagation_ids_dialog.mas, trial_id => $trial_id, trial_name => $trial_name&>
+<& /propagation/upload_propagation_id_status_dialog.mas&>
 
 <script>
 
