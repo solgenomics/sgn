@@ -13,7 +13,6 @@ use Spreadsheet::WriteExcel;
 use Spreadsheet::Read;
 use CXGN::Fieldbook::DownloadTrial;
 use File::Temp 'tempfile';
-use Cwd;
 use DateTime;
 
 my $f = SGN::Test::Fixture->new();
@@ -1457,7 +1456,7 @@ for my $extension ("xls", "xlsx") {
 
     $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id, phenome_schema => $f->phenome_schema, metadata_schema => $f->metadata_schema});
     my $temp_basedir = $f->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $f->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }

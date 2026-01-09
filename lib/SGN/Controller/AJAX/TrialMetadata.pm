@@ -35,7 +35,6 @@ use Statistics::Descriptive::Full;
 use CXGN::TrialStatus;
 use CXGN::BreedersToolbox::SoilData;
 use CXGN::Genotype::GenotypingProject;
-use Cwd;
 use List::Util qw(max);
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
@@ -955,7 +954,7 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -1088,7 +1087,7 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -1212,7 +1211,7 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
     }
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -1354,7 +1353,7 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -1489,7 +1488,7 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -1621,7 +1620,7 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -1755,7 +1754,7 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -1889,7 +1888,7 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -2020,7 +2019,7 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -3205,7 +3204,7 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -3303,7 +3302,7 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -3397,7 +3396,7 @@ sub create_subplot_entries : Chained('trial') PathPart('create_subplot_entries')
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -3480,7 +3479,7 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
@@ -6455,7 +6454,7 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
     }
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
-    my $site_basedir = getcwd();
+    my $site_basedir = $c->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
         mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
     }
