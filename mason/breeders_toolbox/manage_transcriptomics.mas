@@ -16,7 +16,7 @@ $sample_tissue_types => ()
 <div>
 
 <%perl>
-my $buttons_html = "<button class='btn btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link'>Upload Transcriptomic Data</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_download_button'>Download Transcriptomic Data</button>";
+my $buttons_html = "<button class='btn btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link_transcriptomics'>Upload Transcriptomic Data</button><button class='btn btn-default' style='margin:3px' name='high_dimensional_phenotype_download_button'>Download Transcriptomic Data</button>";
 </%perl>
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Transcriptomics</h4>", info_section_subtitle => 'Upload and download transcriptomic data.', buttons_html => $buttons_html, icon_class => undef, col1_width_class => "col-sm-0", col2_width_class => "col-sm-12", info_section_id => "manage_transcriptomics_main", transcriptomics_files => $transcriptomics_files, deleted_transcriptomics_files => $deleted_transcriptomics_files, all_transcriptomics_files => $all_transcriptomics_files, all_deleted_transcriptomics_files => $all_deleted_transcriptomics_files, locations => $locations, sampling_facilities => $sampling_facilities, sample_tissue_types => $sample_tissue_types &>

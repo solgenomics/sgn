@@ -36,13 +36,13 @@
            <div class="col-md-5">
                <center>
                    <label>Page Width:</label><br>
-                   <input class="form-control"  placeholder="In inches" type="number" id="page_width" style="max-width: 100%;">
+                   <input class="form-control"   type="number" id="page_width" style="max-width: 100%;">
                </center>
            </div>
            <div class="col-md-5">
                <center>
                    <label>Page Height:</label><br>
-                   <input class="form-control" placeholder="In inches" type="number" id="page_height" style="max-width: 100%;">
+                   <input class="form-control"  type="number" id="page_height" style="max-width: 100%;">
                </center>
            </div>
        </div>
@@ -53,18 +53,18 @@
            <div class="col-md-5">
                <center>
                    <label>Label Width:</label><br>
-                   <input class="form-control" placeholder="In inches" type="number" id="label_width" style="max-width: 100%;">
+                   <input class="form-control"  type="number" id="label_width" style="max-width: 100%;">
                </center>
            </div>
            <div class="col-md-5">
                <center>
                    <label>Label Height:</label><br>
-                   <input class="form-control" placeholder="In inches" type="number" id="label_height" style="max-width: 100%;">
+                   <input class="form-control"  type="number" id="label_height" style="max-width: 100%;">
                </center>
            </div>
            <div class="col-md-2">
-                <label class='radio'><input type="radio" name="dimoptradio" id="dim_inches" class="radio-select-imperial" value="inch" checked>Imperial</label>
-                <label class='radio'><input type="radio" name="dimoptradio" id="dim_cm" class="radio-select-metric" value="cm">Metric</label>
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_inches" class="radio-select-imperial" value="inch">Imperial (inches)</label>
+                <label class='radio'><input type="radio" name="dimoptradio" id="dim_cm" class="radio-select-metric" value="cm" checked>Metric (cm)</label>
            </div>
            <div class="col-md-2">
                <br>

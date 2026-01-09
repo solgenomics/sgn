@@ -221,11 +221,11 @@ has 'cmd' => (isa => 'Str', is => 'rw');
 
 =head2 logfile()
 
-The logfile used to store and retrieve finish timestamps. Required for job creation. 
+The logfile used to store and retrieve finish timestamps. Required for object creation. 
 
 =cut
 
-has 'finish_logfile' => (isa => 'Str', is => 'rw', predicate => 'has_finish_logfile');
+has 'finish_logfile' => (isa => 'Str', is => 'rw', predicate => 'has_finish_logfile', required => 1);
 
 =head2 name()
 
@@ -253,6 +253,11 @@ sub BUILD {
 
     my $bcs_schema = $args->{schema};
     my $people_schema = $args->{people_schema};
+    my $logfile = $args->{finish_logfile};
+
+    if (!$logfile) {
+        die "finish_logfile is required for job creation.\n";
+    }
 
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
         my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
@@ -265,11 +270,6 @@ sub BUILD {
                 name => $self->job_type(),
                 cv_id => $cv_id
             });
-        }
-        my $logfile;
-        if (!$self->has_finish_logfile()) {
-            $logfile = `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
-            $self->finish_logfile($logfile);
         }
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
         if (!$self->has_cxgn_tools_run_config()) {
@@ -297,11 +297,7 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
-        $self->finish_logfile($logfile);
     }
-
-    $self->enforce_finish_logfile();
 }
 
 =head2 check_status()
@@ -559,7 +555,7 @@ sub store {
             $row->args(JSON::Any->encode({
                 cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                 name => $self->name(),
-                finish_logfile => $self->finish_logfile(),
+                # finish_logfile => $self->finish_logfile(),
                 cmd => $self->cmd(),
                 results_page => $self->results_page(),
                 submit_page => $self->submit_page(),
@@ -581,7 +577,7 @@ sub store {
                 args => JSON::Any->encode({
                     cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                     name => $self->name(),
-                    finish_logfile => $self->finish_logfile(),
+                    # finish_logfile => $self->finish_logfile(),
                     cmd => $self->cmd(),
                     results_page => $self->results_page(),
                     submit_page => $self->submit_page(),
@@ -725,28 +721,6 @@ sub alive {
        return 0;
     } else {
         return 1;
-    }
-}
-
-=head2 enforce_finish_logfile()
-
-Checks to see if the finish logfile has been created, and makes it if necessary.
-
-=cut
-
-sub enforce_finish_logfile {
-    my $self = shift;
-
-    if (!$self->has_finish_logfile()) {
-        die "No finish logfile specified.\n";
-    }
-
-    my $logfile = $self->finish_logfile();
-
-    unless (-e $logfile) {
-        my ($directory, $file) = $logfile =~ m|(.*/)([^/]+)$|;
-        make_path($directory);
-        system("touch $logfile");
     }
 }
 

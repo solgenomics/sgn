@@ -272,14 +272,14 @@ input[type="text"] {
 
         jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
             init_summary_table(type);
-        });
+        
 
 %  if ($trial_stock_type eq 'analysis_instance') {
         trait_summary_hist_display_change('analysis_instance');
 %  } else {
         trait_summary_hist_display_change('plot');
 %  }
-
+        });
         jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
             //console.log("scrolling histo into view");
             var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
@@ -336,7 +336,12 @@ input[type="text"] {
             "buttons":  [
                 'pageLength','copy', 'excel', 'csv', 'pdf'
             ],
-            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1&split_by_treatments='+split_by_treatments,
+            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+            "processing": true,
+            'language':{
+                "zeroRecords": " ",
+                "processing": "Loading..."
+            }
         });
 
         summary_table.clear().draw();

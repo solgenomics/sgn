@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 24 Managing Sequence Metadata | Breedbase User Manual</title>
+  <meta name="description" content="A manual for all things Breedbase. How to create an account, search the database, manage different data types, and analyze data." />
+  <meta name="generator" content="bookdown 0.36 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 24 Managing Sequence Metadata | Breedbase User Manual" />
+  <meta property="og:type" content="book" />
+  <meta property="og:image" content="https://solgenomics.github.io/assets/images/Breedbase_HighRes.png" />
+  <meta property="og:description" content="A manual for all things Breedbase. How to create an account, search the database, manage different data types, and analyze data." />
+  <meta name="github-repo" content="solgenomics/sgn" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 24 Managing Sequence Metadata | Breedbase User Manual" />
+  
+  <meta name="twitter:description" content="A manual for all things Breedbase. How to create an account, search the database, manage different data types, and analyze data." />
+  <meta name="twitter:image" content="https://solgenomics.github.io/assets/images/Breedbase_HighRes.png" />
+
+<meta name="author" content="Breedbase team" />
+
+
+<meta name="date" content="2025-12-19" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="managing-spectral-data.html"/>
+<link rel="next" href="managing-outliers-in-dataset.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<script async defer src="https://hypothes.is/embed.js"></script>
+
+
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+
+<link rel="stylesheet" href="assets/style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="toc-logo"><a href="./"><img src="assets/images/Breedbase_HighRes.png"></a></li>
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Introduction</a></li>
+<li class="chapter" data-level="1" data-path="basic-website-usage.html"><a href="basic-website-usage.html"><i class="fa fa-check"></i><b>1</b> Basic Website Usage</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="basic-website-usage.html"><a href="basic-website-usage.html#creating-a-user-account"><i class="fa fa-check"></i><b>1.1</b> Creating a User Account</a>
+<ul>
+<li class="chapter" data-level="1.1.1" data-path="basic-website-usage.html"><a href="basic-website-usage.html#verifying-first-that-you-do-not-already-have-an-account"><i class="fa fa-check"></i><b>1.1.1</b> Verifying first that you do not already have an account</a></li>
+<li class="chapter" data-level="1.1.2" data-path="basic-website-usage.html"><a href="basic-website-usage.html#creating-a-user-account-1"><i class="fa fa-check"></i><b>1.1.2</b> Creating a user account</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="basic-website-usage.html"><a href="basic-website-usage.html#managing-your-account"><i class="fa fa-check"></i><b>1.2</b> Managing your Account</a>
+<ul>
+<li class="chapter" data-level="1.2.1" data-path="basic-website-usage.html"><a href="basic-website-usage.html#login"><i class="fa fa-check"></i><b>1.2.1</b> Login</a></li>
+<li class="chapter" data-level="1.2.2" data-path="basic-website-usage.html"><a href="basic-website-usage.html#editing-account-settings"><i class="fa fa-check"></i><b>1.2.2</b> Editing Account Settings</a></li>
+<li class="chapter" data-level="1.2.3" data-path="basic-website-usage.html"><a href="basic-website-usage.html#changing-your-account-status-from-user-to-submitter"><i class="fa fa-check"></i><b>1.2.3</b> Changing Your Account Status: From “User” to “Submitter”</a></li>
+<li class="chapter" data-level="1.2.4" data-path="basic-website-usage.html"><a href="basic-website-usage.html#submitting-feedback-on-an-sgn-database"><i class="fa fa-check"></i><b>1.2.4</b> Submitting Feedback on an SGN Database</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3" data-path="basic-website-usage.html"><a href="basic-website-usage.html#menu-layout"><i class="fa fa-check"></i><b>1.3</b> Menu Layout</a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="basic-website-usage.html"><a href="basic-website-usage.html#menu-options"><i class="fa fa-check"></i><b>1.3.1</b> Menu Options</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="basic-website-usage.html"><a href="basic-website-usage.html#working-with-lists"><i class="fa fa-check"></i><b>1.4</b> Working with Lists</a>
+<ul>
+<li class="chapter" data-level="1.4.1" data-path="basic-website-usage.html"><a href="basic-website-usage.html#creating-lists"><i class="fa fa-check"></i><b>1.4.1</b> Creating lists</a></li>
+<li class="chapter" data-level="1.4.2" data-path="basic-website-usage.html"><a href="basic-website-usage.html#viewing-and-editing-lists"><i class="fa fa-check"></i><b>1.4.2</b> Viewing and editing lists</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path="basic-website-usage.html"><a href="basic-website-usage.html#user-permissions"><i class="fa fa-check"></i><b>1.5</b> User Permissions</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="searching-the-database.html"><a href="searching-the-database.html"><i class="fa fa-check"></i><b>2</b> Searching the Database</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="searching-the-database.html"><a href="searching-the-database.html#search-wizard"><i class="fa fa-check"></i><b>2.1</b> The Search Wizard</a>
+<ul>
+<li class="chapter" data-level="2.1.1" data-path="searching-the-database.html"><a href="searching-the-database.html#how-the-search-wizard-works"><i class="fa fa-check"></i><b>2.1.1</b> How the Search Wizard Works</a></li>
+<li class="chapter" data-level="2.1.2" data-path="searching-the-database.html"><a href="searching-the-database.html#how-to-use-retrieved-data"><i class="fa fa-check"></i><b>2.1.2</b> How to use retrieved data</a></li>
+<li class="chapter" data-level="2.1.3" data-path="searching-the-database.html"><a href="searching-the-database.html#updating-the-wizard"><i class="fa fa-check"></i><b>2.1.3</b> Updating the Wizard</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="searching-the-database.html"><a href="searching-the-database.html#accessions-and-plot-search"><i class="fa fa-check"></i><b>2.2</b> Accessions and Plot Search</a></li>
+<li class="chapter" data-level="2.3" data-path="searching-the-database.html"><a href="searching-the-database.html#trials-search"><i class="fa fa-check"></i><b>2.3</b> Trials Search</a></li>
+<li class="chapter" data-level="2.4" data-path="searching-the-database.html"><a href="searching-the-database.html#trait-search"><i class="fa fa-check"></i><b>2.4</b> Trait Search</a></li>
+<li class="chapter" data-level="2.5" data-path="searching-the-database.html"><a href="searching-the-database.html#ontology-browser"><i class="fa fa-check"></i><b>2.5</b> Ontology Browser</a></li>
+<li class="chapter" data-level="2.6" data-path="searching-the-database.html"><a href="searching-the-database.html#search-seedlots"><i class="fa fa-check"></i><b>2.6</b> Search Seedlots</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="managing-user-roles.html"><a href="managing-user-roles.html"><i class="fa fa-check"></i><b>3</b> Managing User Roles</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="managing-user-roles.html"><a href="managing-user-roles.html#what-are-user-roles"><i class="fa fa-check"></i><b>3.1</b> What are User Roles?</a></li>
+<li class="chapter" data-level="3.2" data-path="managing-user-roles.html"><a href="managing-user-roles.html#the-manage-user-roles-page"><i class="fa fa-check"></i><b>3.2</b> The Manage User Roles page</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="managing-breeding-programs.html"><a href="managing-breeding-programs.html"><i class="fa fa-check"></i><b>4</b> Managing Breeding Programs</a></li>
+<li class="chapter" data-level="5" data-path="managing-locations.html"><a href="managing-locations.html"><i class="fa fa-check"></i><b>5</b> Managing Locations</a></li>
+<li class="chapter" data-level="6" data-path="managing-accessions.html"><a href="managing-accessions.html"><i class="fa fa-check"></i><b>6</b> Managing Accessions</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="managing-accessions.html"><a href="managing-accessions.html#add-accessions-using-a-list"><i class="fa fa-check"></i><b>6.1</b> Add Accessions Using A List</a></li>
+<li class="chapter" data-level="6.2" data-path="managing-accessions.html"><a href="managing-accessions.html#uploading-accessions-and-accessions-info-from-a-file"><i class="fa fa-check"></i><b>6.2</b> Uploading Accessions and Accession’s Info From A File</a></li>
+<li class="chapter" data-level="6.3" data-path="managing-accessions.html"><a href="managing-accessions.html#email-alert-for-accession-upload"><i class="fa fa-check"></i><b>6.3</b> Email alert for accession upload</a></li>
+<li class="chapter" data-level="6.4" data-path="managing-accessions.html"><a href="managing-accessions.html#add-parentage-pedigree-information-to-accessions"><i class="fa fa-check"></i><b>6.4</b> Add Parentage (Pedigree) Information to Accessions</a></li>
+<li class="chapter" data-level="6.5" data-path="managing-accessions.html"><a href="managing-accessions.html#working-with-grafts"><i class="fa fa-check"></i><b>6.5</b> Working with grafts</a></li>
+<li class="chapter" data-level="6.6" data-path="managing-accessions.html"><a href="managing-accessions.html#bulk-renaming-of-accessions"><i class="fa fa-check"></i><b>6.6</b> Bulk renaming of accessions</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html"><i class="fa fa-check"></i><b>7</b> Managing Seed Lots</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#add-new-seedlots"><i class="fa fa-check"></i><b>7.1</b> Add New Seedlot(s)</a></li>
+<li class="chapter" data-level="7.2" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#seedlot-transactions"><i class="fa fa-check"></i><b>7.2</b> Seedlot Transactions</a></li>
+<li class="chapter" data-level="7.3" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#seed-inventory"><i class="fa fa-check"></i><b>7.3</b> Seed Inventory</a></li>
+<li class="chapter" data-level="7.4" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#find-seedlots-for-a-list-of-accessions"><i class="fa fa-check"></i><b>7.4</b> Find Seedlots For a List of Accessions</a></li>
+<li class="chapter" data-level="7.5" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#create-a-seedlot-for-an-accession-or-cross"><i class="fa fa-check"></i><b>7.5</b> Create a seedlot for an Accession or Cross</a></li>
+<li class="chapter" data-level="7.6" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#add-quality-data-to-a-seedlot"><i class="fa fa-check"></i><b>7.6</b> Add quality data to a seedlot</a></li>
+<li class="chapter" data-level="7.7" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#seedlot-maintenance-events"><i class="fa fa-check"></i><b>7.7</b> Seedlot Maintenance Events</a>
+<ul>
+<li class="chapter" data-level="7.7.1" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#setup"><i class="fa fa-check"></i><b>7.7.1</b> Setup</a></li>
+<li class="chapter" data-level="7.7.2" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#adding-events"><i class="fa fa-check"></i><b>7.7.2</b> Adding Events</a></li>
+<li class="chapter" data-level="7.7.3" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#displaying-events"><i class="fa fa-check"></i><b>7.7.3</b> Displaying Events</a></li>
+<li class="chapter" data-level="7.7.4" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#downloading-events"><i class="fa fa-check"></i><b>7.7.4</b> Downloading Events</a></li>
+</ul></li>
+<li class="chapter" data-level="7.8" data-path="managing-seed-lots.html"><a href="managing-seed-lots.html#deleting-seedlots"><i class="fa fa-check"></i><b>7.8</b> Deleting Seedlots</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="managing-populations.html"><a href="managing-populations.html"><i class="fa fa-check"></i><b>8</b> Managing Populations</a></li>
+<li class="chapter" data-level="9" data-path="managing-crosses.html"><a href="managing-crosses.html"><i class="fa fa-check"></i><b>9</b> Managing Crosses</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="managing-crosses.html"><a href="managing-crosses.html#crossing-experiment"><i class="fa fa-check"></i><b>9.1</b> Crossing Experiment</a>
+<ul>
+<li class="chapter" data-level="9.1.1" data-path="managing-crosses.html"><a href="managing-crosses.html#add-new-crossing-experiment"><i class="fa fa-check"></i><b>9.1.1</b> Add New Crossing Experiment</a></li>
+</ul></li>
+<li class="chapter" data-level="9.2" data-path="managing-crosses.html"><a href="managing-crosses.html#cross"><i class="fa fa-check"></i><b>9.2</b> Cross</a>
+<ul>
+<li class="chapter" data-level="9.2.1" data-path="managing-crosses.html"><a href="managing-crosses.html#add-new-crosses"><i class="fa fa-check"></i><b>9.2.1</b> Add New Crosses</a></li>
+<li class="chapter" data-level="9.2.2" data-path="managing-crosses.html"><a href="managing-crosses.html#update-crosses-by-uploading"><i class="fa fa-check"></i><b>9.2.2</b> Update Crosses by Uploading</a></li>
+</ul></li>
+<li class="chapter" data-level="9.3" data-path="managing-crosses.html"><a href="managing-crosses.html#cross-wishlist"><i class="fa fa-check"></i><b>9.3</b> Cross Wishlist</a>
+<ul>
+<li class="chapter" data-level="9.3.1" data-path="managing-crosses.html"><a href="managing-crosses.html#create-a-cross-wishlist"><i class="fa fa-check"></i><b>9.3.1</b> Create a Cross Wishlist</a></li>
+</ul></li>
+<li class="chapter" data-level="9.4" data-path="managing-crosses.html"><a href="managing-crosses.html#crossing-experiment-detail-page"><i class="fa fa-check"></i><b>9.4</b> Crossing Experiment Detail Page</a></li>
+<li class="chapter" data-level="9.5" data-path="managing-crosses.html"><a href="managing-crosses.html#cross-detail-page"><i class="fa fa-check"></i><b>9.5</b> Cross Detail Page</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="managing-field-trials.html"><a href="managing-field-trials.html"><i class="fa fa-check"></i><b>10</b> Managing Field Trials</a>
+<ul>
+<li class="chapter" data-level="10.1" data-path="managing-field-trials.html"><a href="managing-field-trials.html#trial-detail-page"><i class="fa fa-check"></i><b>10.1</b> Trial Detail Page</a></li>
+<li class="chapter" data-level="10.2" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-trials"><i class="fa fa-check"></i><b>10.2</b> Adding Trials</a>
+<ul>
+<li class="chapter" data-level="10.2.1" data-path="managing-field-trials.html"><a href="managing-field-trials.html#prerequisites"><i class="fa fa-check"></i><b>10.2.1</b> Prerequisites</a></li>
+<li class="chapter" data-level="10.2.2" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-a-trial-by-using-design-new-trial-form"><i class="fa fa-check"></i><b>10.2.2</b> Adding a trial by using “Design New Trial” form</a></li>
+<li class="chapter" data-level="10.2.3" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-a-trial-from-an-uploaded-file"><i class="fa fa-check"></i><b>10.2.3</b> Adding a trial from an uploaded file</a></li>
+<li class="chapter" data-level="10.2.4" data-path="managing-field-trials.html"><a href="managing-field-trials.html#multi-location-trials"><i class="fa fa-check"></i><b>10.2.4</b> Multi-location trials</a></li>
+<li class="chapter" data-level="" data-path="managing-field-trials.html"><a href="managing-field-trials.html#email-alert-for-multiple-trial-design-upload"><i class="fa fa-check"></i>Email alert for multiple trial design upload</a></li>
+<li class="chapter" data-level="10.2.5" data-path="managing-field-trials.html"><a href="managing-field-trials.html#viewing-plot-layout-and-trait-heatmap"><i class="fa fa-check"></i><b>10.2.5</b> Viewing Plot Layout and Trait HeatMap</a></li>
+<li class="chapter" data-level="10.2.6" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-additional-information-in-the-trial-detail-page"><i class="fa fa-check"></i><b>10.2.6</b> Adding additional information in the <em>Trial Detail</em> page</a></li>
+<li class="chapter" data-level="10.2.7" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-plant-entries-to-your-trial"><i class="fa fa-check"></i><b>10.2.7</b> Adding Plant Entries To Your Trial</a></li>
+<li class="chapter" data-level="10.2.8" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-tissue-sample-entries-to-your-trial"><i class="fa fa-check"></i><b>10.2.8</b> Adding Tissue Sample Entries To Your Trial</a></li>
+<li class="chapter" data-level="10.2.9" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-gps-coordinates-for-plots"><i class="fa fa-check"></i><b>10.2.9</b> Uploading GPS Coordinates For Plots</a></li>
+<li class="chapter" data-level="10.2.10" data-path="managing-field-trials.html"><a href="managing-field-trials.html#repetitive-measurements-section"><i class="fa fa-check"></i><b>10.2.10</b> Repetitive Measurements Section</a></li>
+<li class="chapter" data-level="10.2.11" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-additional-files-to-trial"><i class="fa fa-check"></i><b>10.2.11</b> Uploading Additional Files To Trial</a></li>
+</ul></li>
+<li class="chapter" data-level="10.3" data-path="managing-field-trials.html"><a href="managing-field-trials.html#updating-trial-data"><i class="fa fa-check"></i><b>10.3</b> Updating Trial Data</a></li>
+<li class="chapter" data-level="10.4" data-path="managing-field-trials.html"><a href="managing-field-trials.html#deleting-trial-data"><i class="fa fa-check"></i><b>10.4</b> Deleting Trial Data</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="managing-genotyping-plates.html"><a href="managing-genotyping-plates.html"><i class="fa fa-check"></i><b>11</b> Managing Genotyping Plates</a>
+<ul>
+<li class="chapter" data-level="11.1" data-path="managing-genotyping-plates.html"><a href="managing-genotyping-plates.html#adding-a-new-genotyping-plate"><i class="fa fa-check"></i><b>11.1</b> Adding a New Genotyping Plate</a></li>
+<li class="chapter" data-level="11.2" data-path="managing-genotyping-plates.html"><a href="managing-genotyping-plates.html#genotyping-plate-detail-page"><i class="fa fa-check"></i><b>11.2</b> Genotyping Plate Detail Page</a></li>
+</ul></li>
+<li class="chapter" data-level="12" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html"><i class="fa fa-check"></i><b>12</b> Using Field Book and BreedBase for Data Collection and Storage</a>
+<ul>
+<li class="chapter" data-level="12.1" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#introduction-1"><i class="fa fa-check"></i><b>12.1</b> Introduction</a></li>
+<li class="chapter" data-level="12.2" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#installing-field-book"><i class="fa fa-check"></i><b>12.2</b> Installing Field Book</a>
+<ul>
+<li class="chapter" data-level="12.2.1" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#option-1-downloading-from-the-google-play-store"><i class="fa fa-check"></i><b>12.2.1</b> Option 1: Downloading from the Google Play Store</a></li>
+<li class="chapter" data-level="12.2.2" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#option-2-manual-installation-from-github"><i class="fa fa-check"></i><b>12.2.2</b> Option 2: Manual Installation from Github</a></li>
+<li class="chapter" data-level="12.2.3" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#keeping-field-book-updated"><i class="fa fa-check"></i><b>12.2.3</b> Keeping Field Book Updated</a></li>
+</ul></li>
+<li class="chapter" data-level="12.3" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#preparing-field-layout-files-in-breedbase"><i class="fa fa-check"></i><b>12.3</b> Preparing Field Layout Files in BreedBase</a></li>
+<li class="chapter" data-level="12.4" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#importing-field-layout-files-into-field-book"><i class="fa fa-check"></i><b>12.4</b> Importing Field Layout Files into Field Book</a>
+<ul>
+<li class="chapter" data-level="12.4.1" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#option-1-import-from-cloud-storage"><i class="fa fa-check"></i><b>12.4.1</b> Option 1: Import from Cloud Storage</a></li>
+<li class="chapter" data-level="12.4.2" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#option-2-import-from-local-storage-device"><i class="fa fa-check"></i><b>12.4.2</b> Option 2: Import from Local Storage Device</a></li>
+</ul></li>
+<li class="chapter" data-level="12.5" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#adding-traits-to-field-book-using-breedbase"><i class="fa fa-check"></i><b>12.5</b> Adding Traits to Field Book Using BreedBase</a>
+<ul>
+<li class="chapter" data-level="12.5.1" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#creating-trait-files-in-breedbase"><i class="fa fa-check"></i><b>12.5.1</b> Creating Trait Files in BreedBase</a></li>
+<li class="chapter" data-level="12.5.2" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#importing-trait-files-to-field-book"><i class="fa fa-check"></i><b>12.5.2</b> Importing Trait Files to Field Book</a></li>
+</ul></li>
+<li class="chapter" data-level="12.6" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#collecting-and-exporting-phenotype-data"><i class="fa fa-check"></i><b>12.6</b> Collecting and Exporting Phenotype Data</a>
+<ul>
+<li class="chapter" data-level="12.6.1" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#collecting-phenotype-data-in-field-book"><i class="fa fa-check"></i><b>12.6.1</b> Collecting Phenotype Data in Field Book</a></li>
+<li class="chapter" data-level="12.6.2" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#exporting-phenotype-data-from-field-book-and-importing-to-breedbase"><i class="fa fa-check"></i><b>12.6.2</b> Exporting Phenotype Data from Field Book and Importing to BreedBase</a></li>
+</ul></li>
+<li class="chapter" data-level="12.7" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#using-brapi-for-data-transfer-between-field-book-and-breedbase"><i class="fa fa-check"></i><b>12.7</b> Using BrAPI for Data Transfer Between Field Book and BreedBase</a>
+<ul>
+<li class="chapter" data-level="12.7.1" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#connecting-field-book-to-a-brapi-server"><i class="fa fa-check"></i><b>12.7.1</b> Connecting Field Book to a BrAPI Server</a></li>
+<li class="chapter" data-level="12.7.2" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#importing-trials-and-traits-from-breedbase"><i class="fa fa-check"></i><b>12.7.2</b> Importing Trials and Traits from BreedBase</a></li>
+<li class="chapter" data-level="12.7.3" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#collecting-data"><i class="fa fa-check"></i><b>12.7.3</b> Collecting Data</a></li>
+<li class="chapter" data-level="12.7.4" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#exporting-phenotype-data-to-breedbase-via-brapi"><i class="fa fa-check"></i><b>12.7.4</b> Exporting Phenotype Data to BreedBase via BrAPI</a></li>
+<li class="chapter" data-level="12.7.5" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#verifying-data-in-breedbase"><i class="fa fa-check"></i><b>12.7.5</b> Verifying Data in BreedBase</a></li>
+<li class="chapter" data-level="12.7.6" data-path="Using-Field-Book-with-BreedBase.html"><a href="Using-Field-Book-with-BreedBase.html#troubleshooting"><i class="fa fa-check"></i><b>12.7.6</b> Troubleshooting</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="13" data-path="managing-phenotypic-data.html"><a href="managing-phenotypic-data.html"><i class="fa fa-check"></i><b>13</b> Managing Phenotypic Data</a>
+<ul>
+<li class="chapter" data-level="13.1" data-path="managing-phenotypic-data.html"><a href="managing-phenotypic-data.html#uploading-fieldbook-phenotypes"><i class="fa fa-check"></i><b>13.1</b> Uploading Fieldbook Phenotypes</a>
+<ul>
+<li class="chapter" data-level="13.1.1" data-path="managing-phenotypic-data.html"><a href="managing-phenotypic-data.html#export-field-book-database-file"><i class="fa fa-check"></i><b>13.1.1</b> Export Field Book Database File</a></li>
+<li class="chapter" data-level="13.1.2" data-path="managing-phenotypic-data.html"><a href="managing-phenotypic-data.html#upload-field-book-database-file"><i class="fa fa-check"></i><b>13.1.2</b> Upload Field Book Database File</a></li>
+</ul></li>
+<li class="chapter" data-level="13.2" data-path="managing-phenotypic-data.html"><a href="managing-phenotypic-data.html#uploading-spreadsheet-phenotypes"><i class="fa fa-check"></i><b>13.2</b> Uploading Spreadsheet Phenotypes</a>
+<ul>
+<li class="chapter" data-level="13.2.1" data-path="managing-phenotypic-data.html"><a href="managing-phenotypic-data.html#generating-spreadsheet-file"><i class="fa fa-check"></i><b>13.2.1</b> Generating Spreadsheet File</a></li>
+<li class="chapter" data-level="13.2.2" data-path="managing-phenotypic-data.html"><a href="managing-phenotypic-data.html#uploading-spreadsheet-file"><i class="fa fa-check"></i><b>13.2.2</b> Uploading Spreadsheet File</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="14" data-path="managing-barcodes.html"><a href="managing-barcodes.html"><i class="fa fa-check"></i><b>14</b> Managing Barcodes</a></li>
+<li class="chapter" data-level="15" data-path="using-the-label-designer.html"><a href="using-the-label-designer.html"><i class="fa fa-check"></i><b>15</b> Using the Label Designer</a>
+<ul>
+<li class="chapter" data-level="15.1" data-path="using-the-label-designer.html"><a href="using-the-label-designer.html#select-a-data-source"><i class="fa fa-check"></i><b>15.1</b> Select a Data Source</a></li>
+<li class="chapter" data-level="15.2" data-path="using-the-label-designer.html"><a href="using-the-label-designer.html#set-page-and-label-size"><i class="fa fa-check"></i><b>15.2</b> Set Page and Label Size</a></li>
+<li class="chapter" data-level="15.3" data-path="using-the-label-designer.html"><a href="using-the-label-designer.html#design-your-label"><i class="fa fa-check"></i><b>15.3</b> Design Your Label</a></li>
+<li class="chapter" data-level="15.4" data-path="using-the-label-designer.html"><a href="using-the-label-designer.html#adjust-formatting-save-and-download"><i class="fa fa-check"></i><b>15.4</b> Adjust Formatting, Save, and Download</a></li>
+</ul></li>
+<li class="chapter" data-level="16" data-path="managing-downloads.html"><a href="managing-downloads.html"><i class="fa fa-check"></i><b>16</b> Managing Downloads</a></li>
+<li class="chapter" data-level="17" data-path="managing-odk-data-collection.html"><a href="managing-odk-data-collection.html"><i class="fa fa-check"></i><b>17</b> Managing ODK Data Collection</a>
+<ul>
+<li class="chapter" data-level="17.1" data-path="managing-odk-data-collection.html"><a href="managing-odk-data-collection.html#ona-crossing-information"><i class="fa fa-check"></i><b>17.1</b> ONA Crossing Information</a>
+<ul>
+<li class="chapter" data-level="17.1.1" data-path="managing-odk-data-collection.html"><a href="managing-odk-data-collection.html#managing-ona-crossing-information"><i class="fa fa-check"></i><b>17.1.1</b> Managing ONA Crossing Information</a></li>
+<li class="chapter" data-level="17.1.2" data-path="managing-odk-data-collection.html"><a href="managing-odk-data-collection.html#reviewing-plant-status"><i class="fa fa-check"></i><b>17.1.2</b> Reviewing Plant Status</a></li>
+<li class="chapter" data-level="17.1.3" data-path="managing-odk-data-collection.html"><a href="managing-odk-data-collection.html#graphical-summary-for-performed-crosses"><i class="fa fa-check"></i><b>17.1.3</b> Graphical Summary For Performed Crosses</a></li>
+<li class="chapter" data-level="17.1.4" data-path="managing-odk-data-collection.html"><a href="managing-odk-data-collection.html#summary-information-for-performed-crosses"><i class="fa fa-check"></i><b>17.1.4</b> Summary Information For Performed Crosses</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="18" data-path="managing-tissue-samples.html"><a href="managing-tissue-samples.html"><i class="fa fa-check"></i><b>18</b> Managing Tissue Samples</a>
+<ul>
+<li class="chapter" data-level="18.1" data-path="managing-tissue-samples.html"><a href="managing-tissue-samples.html#tissue-samples-from-field-trials"><i class="fa fa-check"></i><b>18.1</b> Tissue samples from field trials</a></li>
+<li class="chapter" data-level="18.2" data-path="managing-tissue-samples.html"><a href="managing-tissue-samples.html#genotyping-plate-tissue-samples-96-or-384-well-plates"><i class="fa fa-check"></i><b>18.2</b> Genotyping Plate Tissue Samples (96 or 384 well plates)</a></li>
+</ul></li>
+<li class="chapter" data-level="19" data-path="managing-observation-variables.html"><a href="managing-observation-variables.html"><i class="fa fa-check"></i><b>19</b> Managing Observation Variables</a>
+<ul>
+<li class="chapter" data-level="19.1" data-path="managing-observation-variables.html"><a href="managing-observation-variables.html#managing-observation-variables-with-traits-methods-and-scales"><i class="fa fa-check"></i><b>19.1</b> Managing Observation Variables with Traits, Methods, and Scales</a></li>
+</ul></li>
+<li class="chapter" data-level="20" data-path="managing-image-data.html"><a href="managing-image-data.html"><i class="fa fa-check"></i><b>20</b> Managing Image Data</a>
+<ul>
+<li class="chapter" data-level="20.1" data-path="managing-image-data.html"><a href="managing-image-data.html#image-phenotyping-dashboard"><i class="fa fa-check"></i><b>20.1</b> Image-Phenotyping Dashboard</a></li>
+<li class="chapter" data-level="20.2" data-path="managing-image-data.html"><a href="managing-image-data.html#image-input"><i class="fa fa-check"></i><b>20.2</b> Image Input</a></li>
+<li class="chapter" data-level="20.3" data-path="managing-image-data.html"><a href="managing-image-data.html#standard-process"><i class="fa fa-check"></i><b>20.3</b> Standard Process</a></li>
+<li class="chapter" data-level="20.4" data-path="managing-image-data.html"><a href="managing-image-data.html#ground-control-points"><i class="fa fa-check"></i><b>20.4</b> Ground Control Points</a></li>
+</ul></li>
+<li class="chapter" data-level="21" data-path="managing-phenotypic-image-data.html"><a href="managing-phenotypic-image-data.html"><i class="fa fa-check"></i><b>21</b> Managing Phenotypic Image Data</a>
+<ul>
+<li class="chapter" data-level="21.1" data-path="managing-phenotypic-image-data.html"><a href="managing-phenotypic-image-data.html#uploading-image-files"><i class="fa fa-check"></i><b>21.1</b> Uploading Image files</a></li>
+<li class="chapter" data-level="21.2" data-path="managing-phenotypic-image-data.html"><a href="managing-phenotypic-image-data.html#uploading-images-directly-to-stocks"><i class="fa fa-check"></i><b>21.2</b> Uploading Images Directly to Stocks</a></li>
+</ul></li>
+<li class="chapter" data-level="22" data-path="managing-vcf-data.html"><a href="managing-vcf-data.html"><i class="fa fa-check"></i><b>22</b> Managing VCF Data</a>
+<ul>
+<li class="chapter" data-level="22.1" data-path="managing-vcf-data.html"><a href="managing-vcf-data.html#uploading-vcf-data"><i class="fa fa-check"></i><b>22.1</b> Uploading VCF Data</a></li>
+<li class="chapter" data-level="22.2" data-path="managing-vcf-data.html"><a href="managing-vcf-data.html#searching-and-downloading-vcf-data"><i class="fa fa-check"></i><b>22.2</b> Searching and Downloading VCF Data</a></li>
+<li class="chapter" data-level="22.3" data-path="managing-vcf-data.html"><a href="managing-vcf-data.html#searching-protocols"><i class="fa fa-check"></i><b>22.3</b> Searching Protocols</a></li>
+<li class="chapter" data-level="22.4" data-path="managing-vcf-data.html"><a href="managing-vcf-data.html#detail-pages-and-deletion"><i class="fa fa-check"></i><b>22.4</b> Detail Pages and Deletion</a></li>
+</ul></li>
+<li class="chapter" data-level="23" data-path="managing-spectral-data.html"><a href="managing-spectral-data.html"><i class="fa fa-check"></i><b>23</b> Managing Spectral Data</a>
+<ul>
+<li class="chapter" data-level="23.1" data-path="managing-spectral-data.html"><a href="managing-spectral-data.html#upload-spectral-data"><i class="fa fa-check"></i><b>23.1</b> Upload Spectral Data</a></li>
+<li class="chapter" data-level="23.2" data-path="managing-spectral-data.html"><a href="managing-spectral-data.html#evaluate-and-remove-outliers"><i class="fa fa-check"></i><b>23.2</b> Evaluate and Remove Outliers</a></li>
+<li class="chapter" data-level="23.3" data-path="managing-spectral-data.html"><a href="managing-spectral-data.html#plot-spectra"><i class="fa fa-check"></i><b>23.3</b> Plot Spectra</a></li>
+<li class="chapter" data-level="23.4" data-path="managing-spectral-data.html"><a href="managing-spectral-data.html#aggregate-spectra"><i class="fa fa-check"></i><b>23.4</b> Aggregate Spectra</a></li>
+<li class="chapter" data-level="23.5" data-path="managing-spectral-data.html"><a href="managing-spectral-data.html#references"><i class="fa fa-check"></i><b>23.5</b> References</a></li>
+</ul></li>
+<li class="chapter" data-level="24" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html"><i class="fa fa-check"></i><b>24</b> Managing Sequence Metadata</a>
+<ul>
+<li class="chapter" data-level="24.1" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html#what-is-sequence-metadata"><i class="fa fa-check"></i><b>24.1</b> What is Sequence Metadata?</a></li>
+<li class="chapter" data-level="24.2" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html#loading-sequence-metadata"><i class="fa fa-check"></i><b>24.2</b> Loading Sequence Metadata</a></li>
+<li class="chapter" data-level="24.3" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html#searching-sequence-metadata"><i class="fa fa-check"></i><b>24.3</b> Searching Sequence Metadata</a>
+<ul>
+<li class="chapter" data-level="24.3.1" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html#basic-search"><i class="fa fa-check"></i><b>24.3.1</b> Basic Search</a></li>
+<li class="chapter" data-level="24.3.2" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html#advanced-search"><i class="fa fa-check"></i><b>24.3.2</b> Advanced Search</a></li>
+</ul></li>
+<li class="chapter" data-level="24.4" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html#marker-integration"><i class="fa fa-check"></i><b>24.4</b> Marker Integration</a></li>
+<li class="chapter" data-level="24.5" data-path="managing-sequence-metadata.html"><a href="managing-sequence-metadata.html#sequence-metadata-api"><i class="fa fa-check"></i><b>24.5</b> Sequence Metadata API</a></li>
+</ul></li>
+<li class="chapter" data-level="25" data-path="managing-outliers-in-dataset.html"><a href="managing-outliers-in-dataset.html"><i class="fa fa-check"></i><b>25</b> Managing Outliers in Dataset</a>
+<ul>
+<li class="chapter" data-level="25.1" data-path="managing-outliers-in-dataset.html"><a href="managing-outliers-in-dataset.html#what-is-outliers-functionality-in-dataset"><i class="fa fa-check"></i><b>25.1</b> What is Outliers Functionality in Dataset ?</a></li>
+<li class="chapter" data-level="25.2" data-path="managing-outliers-in-dataset.html"><a href="managing-outliers-in-dataset.html#accessing-trait-visualization"><i class="fa fa-check"></i><b>25.2</b> Accessing Trait Visualization</a></li>
+<li class="chapter" data-level="25.3" data-path="managing-outliers-in-dataset.html"><a href="managing-outliers-in-dataset.html#interpreting-visual-elements"><i class="fa fa-check"></i><b>25.3</b> Interpreting Visual Elements</a></li>
+<li class="chapter" data-level="25.4" data-path="managing-outliers-in-dataset.html"><a href="managing-outliers-in-dataset.html#choosing-cut-off-values"><i class="fa fa-check"></i><b>25.4</b> Choosing Cut-Off Values</a></li>
+<li class="chapter" data-level="25.5" data-path="managing-outliers-in-dataset.html"><a href="managing-outliers-in-dataset.html#setting-deviation-multiplier"><i class="fa fa-check"></i><b>25.5</b> Setting Deviation Multiplier</a></li>
+<li class="chapter" data-level="25.6" data-path="managing-outliers-in-dataset.html"><a href="managing-outliers-in-dataset.html#utilizing-graph-controls"><i class="fa fa-check"></i><b>25.6</b> Utilizing Graph Controls</a></li>
+</ul></li>
+<li class="chapter" data-level="26" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html"><i class="fa fa-check"></i><b>26</b> Data Analysis Tools</a>
+<ul>
+<li class="chapter" data-level="26.1" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#selection-index"><i class="fa fa-check"></i><b>26.1</b> Selection Index</a></li>
+<li class="chapter" data-level="26.2" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genomic-selection"><i class="fa fa-check"></i><b>26.2</b> Genomic Selection</a>
+<ul>
+<li class="chapter" data-level="26.2.1" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#method-1"><i class="fa fa-check"></i><b>26.2.1</b> Building a Model - Method 1:</a></li>
+<li class="chapter" data-level="26.2.2" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#method-2"><i class="fa fa-check"></i><b>26.2.2</b> Building a Model - Method 2</a></li>
+<li class="chapter" data-level="26.2.3" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#building-a-model---method-3"><i class="fa fa-check"></i><b>26.2.3</b> Building a Model - Method 3</a></li>
+</ul></li>
+<li class="chapter" data-level="26.3" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genome-browsing"><i class="fa fa-check"></i><b>26.3</b> Genome Browsing</a>
+<ul>
+<li class="chapter" data-level="26.3.1" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#browsing-genotype-data-by-accession"><i class="fa fa-check"></i><b>26.3.1</b> Browsing Genotype data by Accession</a></li>
+<li class="chapter" data-level="26.3.2" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#browsing-genotype-data-by-trial"><i class="fa fa-check"></i><b>26.3.2</b> Browsing Genotype data by Trial</a></li>
+</ul></li>
+<li class="chapter" data-level="26.4" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#principal-component-analysis-pca"><i class="fa fa-check"></i><b>26.4</b> Principal Component Analysis (PCA)</a></li>
+<li class="chapter" data-level="26.5" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#anova"><i class="fa fa-check"></i><b>26.5</b> ANOVA</a></li>
+<li class="chapter" data-level="26.6" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#clustering-k-means-hierarchical"><i class="fa fa-check"></i><b>26.6</b> Clustering (K-Means, Hierarchical)</a></li>
+<li class="chapter" data-level="26.7" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genetic-gain"><i class="fa fa-check"></i><b>26.7</b> Genetic Gain</a></li>
+<li class="chapter" data-level="26.8" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#kinship-and-inbreeding-coefficients"><i class="fa fa-check"></i><b>26.8</b> Kinship and Inbreeding Coefficients</a></li>
+<li class="chapter" data-level="26.9" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#creating-crossing-groups"><i class="fa fa-check"></i><b>26.9</b> Creating Crossing Groups</a></li>
+<li class="chapter" data-level="26.10" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#search-wizard-genomic-relationship-matrix-grm-download"><i class="fa fa-check"></i><b>26.10</b> Search Wizard Genomic Relationship Matrix (GRM) Download</a></li>
+<li class="chapter" data-level="26.11" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#search-wizard-genome-wide-association-study-gwas"><i class="fa fa-check"></i><b>26.11</b> Search Wizard Genome Wide Association Study (GWAS)</a></li>
+<li class="chapter" data-level="26.12" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#spectral-analysis"><i class="fa fa-check"></i><b>26.12</b> Spectral Analysis</a>
+<ul>
+<li class="chapter" data-level="26.12.1" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#dataset-selection"><i class="fa fa-check"></i><b>26.12.1</b> Dataset selection</a></li>
+<li class="chapter" data-level="26.12.2" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#cross-validation"><i class="fa fa-check"></i><b>26.12.2</b> Cross-validation</a></li>
+<li class="chapter" data-level="26.12.3" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#preprocessing"><i class="fa fa-check"></i><b>26.12.3</b> Preprocessing</a></li>
+<li class="chapter" data-level="26.12.4" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#algorithms"><i class="fa fa-check"></i><b>26.12.4</b> Algorithms</a></li>
+<li class="chapter" data-level="26.12.5" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#output-common-model-summary-statistics"><i class="fa fa-check"></i><b>26.12.5</b> Output: common model summary statistics</a></li>
+<li class="chapter" data-level="26.12.6" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#export-model-for-later-use"><i class="fa fa-check"></i><b>26.12.6</b> Export model for later use</a></li>
+<li class="chapter" data-level="26.12.7" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#predict-phenotypes-from-an-exported-model-routine-use"><i class="fa fa-check"></i><b>26.12.7</b> Predict phenotypes from an exported model (routine use)</a></li>
+<li class="chapter" data-level="26.12.8" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#faq"><i class="fa fa-check"></i><b>26.12.8</b> FAQ</a></li>
+</ul></li>
+<li class="chapter" data-level="26.13" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#general-mixed-model-tool"><i class="fa fa-check"></i><b>26.13</b> General Mixed Model Tool</a></li>
+<li class="chapter" data-level="26.14" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#genomic-prediction-of-cross-performance-gpcp"><i class="fa fa-check"></i><b>26.14</b> Genomic Prediction of Cross Performance (GPCP)</a></li>
+<li class="chapter" data-level="26.15" data-path="data-analysis-tools.html"><a href="data-analysis-tools.html#tool-compatibility"><i class="fa fa-check"></i><b>26.15</b> Tool Compatibility</a></li>
+</ul></li>
+<li class="chapter" data-level="27" data-path="vector-viewer.html"><a href="vector-viewer.html"><i class="fa fa-check"></i><b>27</b> Vector Viewer</a></li>
+<li class="divider"></li>
+<li><a href="https://bookdown.org/" target="blank">Published with bookdown</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Breedbase User Manual</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="managing-sequence-metadata" class="section level1 hasAnchor" number="24">
+<h1><span class="header-section-number">Chapter 24</span> Managing Sequence Metadata<a href="managing-sequence-metadata.html#managing-sequence-metadata" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p><img src="assets/images/sequence_metadata_manage.png" width="95%" style="display: block; margin: auto;" /></p>
+<div id="what-is-sequence-metadata" class="section level2 hasAnchor" number="24.1">
+<h2><span class="header-section-number">24.1</span> What is Sequence Metadata?<a href="managing-sequence-metadata.html#what-is-sequence-metadata" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Sequence Metadata is a feature that allows for the efficient storage and retrieval of sequence annotations for a specific region along a reference genome. The annotation data can contain a primary “score” value and any number of secondary key/value attribute data. For example, Sequence Metatadata can store MNase open chromatin scores for every 10 basepairs along the reference genome as well as genome-wide association study (GWAS) statistics, including the trait information associated with the result. This data can then be filtered by position and/or scores/attribute values and even cross-referenced with markers stored in the database.</p>
+</div>
+<div id="loading-sequence-metadata" class="section level2 hasAnchor" number="24.2">
+<h2><span class="header-section-number">24.2</span> Loading Sequence Metadata<a href="managing-sequence-metadata.html#loading-sequence-metadata" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Sequence Metadata can be loaded into the database using a gff3-formatted file. The following columns are used to load the data:</p>
+<ul>
+<li><strong>#1 / seqid:</strong> The name of the database feature (ie chromosome) the metadata is associated with (The feature name must already exist as a feature in the database)</li>
+<li><strong>#4 / start:</strong> The metadata’s start position</li>
+<li><strong>#5 / end:</strong> The metadata’s end position</li>
+<li><strong>#6 / score:</strong> (optional) The primary score attribute of the metadata</li>
+<li><strong>#9 / attributes:</strong> (optional) Secondary key//value attributes to be saved with the score. These should be formatted using the gff3 standard (key1=value1;key2=value2). The attribute key cannot be either <em>score</em>, <em>start</em>, or <em>end</em>.</li>
+</ul>
+<p>To upload the gff3 file:</p>
+<ol style="list-style-type: decimal">
+<li>Go to the <strong>Manage &gt; Sequence Metadata</strong> page</li>
+<li>Click the <strong>Upload Sequence Metadata</strong> button</li>
+<li>On Step 2 of the Wizard, select the Type of data to be uploaded
+<ul>
+<li>This groups similar datasets together in the same Data Type category</li>
+</ul></li>
+<li>On Step 3 of the Wizard, select an existing Protocol or create a new one
+<ul>
+<li>The Protocol is used to describe how the data was generated and define the score value and any secondary attributes. Adding the attributes (and their descriptions) to the Protocol will allow the Sequence Metadata queries to filter the data based on the value of one or more of these attributes. Attributes not defined in the Protocol will still be stored and displayed on retrieval, but will not be able to be used in a search filter.</li>
+</ul></li>
+<li>Finally, select and upload your gff3 file to the database. The database will verify the format of the file before its contents are stored.</li>
+</ol>
+</div>
+<div id="searching-sequence-metadata" class="section level2 hasAnchor" number="24.3">
+<h2><span class="header-section-number">24.3</span> Searching Sequence Metadata<a href="managing-sequence-metadata.html#searching-sequence-metadata" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>To retrieve stored Sequence Metadata, go to the <strong>Search &gt; Sequence Metadata</strong> page.</p>
+<div id="basic-search" class="section level3 hasAnchor" number="24.3.1">
+<h3><span class="header-section-number">24.3.1</span> Basic Search<a href="managing-sequence-metadata.html#basic-search" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The basic Sequence Metadata search options include selecting the reference genome and species, the chromosome, and (optionally) the start and/or end position(s) along the reference genome. In addition, one or more specific protocols can be selected to limit the results.</p>
+<p><img src="assets/images/sequence_metadata_search_basic.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>The Sequence Metadata search results are returned as a table, including the chromosome and start/stop positions of the annotation, along with the primary score value and any additional key/value attributes. The markers column will include a list of marker names of any stored markers that are found within the start/stop positions of the Sequence Metadata. The data can be downloaded as a table in an Excel or CSV file or a machine-readable (code-friendly) JSON file. If the Sequence Metadata JBrowse configuration is set, the filtered results can be displayed as a dynamic JBrowse track.</p>
+<p><img src="assets/images/sequence_metadata_search_results.png" width="95%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="advanced-search" class="section level3 hasAnchor" number="24.3.2">
+<h3><span class="header-section-number">24.3.2</span> Advanced Search<a href="managing-sequence-metadata.html#advanced-search" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Any number of advanced search filters can be applied to the query. The advanced filters can limit the search results by the value of the primary score and/or any of the secondary attribute values.</p>
+<p><img src="assets/images/sequence_metadata_search_advanced.png" width="95%" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="marker-integration" class="section level2 hasAnchor" number="24.4">
+<h2><span class="header-section-number">24.4</span> Marker Integration<a href="managing-sequence-metadata.html#marker-integration" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>A table of Sequence Metadata annotations are embedded on the Marker/Variant detail page. The table will include any annotations that span the poisiton of the marker (for data of the same reference genome and species).</p>
+</div>
+<div id="sequence-metadata-api" class="section level2 hasAnchor" number="24.5">
+<h2><span class="header-section-number">24.5</span> Sequence Metadata API<a href="managing-sequence-metadata.html#sequence-metadata-api" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>A publicly accessible RESTful API (Application Programming Interface) is available to query the database for Sequence Metadata directly from your programming environment (R, python, etc) to be used in analysis. The data is returned in a JSON format. Documentation for the API can be found on the <strong>Manage &gt; Sequence Metadata</strong> page</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="managing-spectral-data.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="managing-outliers-in-dataset.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["BreedbaseManual.pdf"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "section"
+},
+"info": false
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

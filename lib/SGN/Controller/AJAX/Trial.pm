@@ -1493,6 +1493,7 @@ sub upload_trial_metadata_file : Path('/ajax/trial/upload_trial_metadata_file') 
 sub upload_trial_metadata_file_POST : Args(0) {
     my ($self, $c)                 = @_;
     my $upload                     = $c->req->upload('trial_metadata_upload_file');
+    my $ignore_warnings            = $c->req->param('trial_metadata_upload_ignore_warnings');
 
     my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbhost                     = $c->config->{dbhost};
@@ -1562,9 +1563,11 @@ sub upload_trial_metadata_file_POST : Args(0) {
     }
 
     if ($parser->has_parse_warnings()) {
-        my $warnings = $parser->get_parse_warnings();
-        $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
-        return;
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
+            return;
+        }
     }
 
     # Check breeding program permissions, if not a curator
@@ -1579,6 +1582,34 @@ sub upload_trial_metadata_file_POST : Args(0) {
         if ( scalar(@missing_breeding_programs) > 0 ) {
             $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
             return;
+        }
+    }
+
+    # Create missing folders
+    my %created_folders;
+    foreach my $trial_id (keys %{$parsed_data->{trial_data}} ) {
+        my $details = $parsed_data->{trial_data}->{$trial_id};
+        if ( $details->{folder} ) {
+            if ( $details->{folder}->{type} eq 'missing' ) {
+                my $folder_id;
+
+                if ( exists $created_folders{$details->{folder}->{name}} ) {
+                    $folder_id = $created_folders{$details->{folder}->{name}};
+                }
+                else {
+                    my $f = CXGN::Trial::Folder->create({
+                        bcs_schema => $chado_schema,
+                        name => $details->{folder}->{name},
+                        breeding_program_id => $details->{folder}->{breeding_program_id},
+                        folder_for_trials => 1
+                    });
+                    $folder_id = $f->folder_id();
+                    $created_folders{$details->{folder}->{name}} = $folder_id;
+                }
+
+                $parsed_data->{trial_data}->{$trial_id}->{folder}->{type} = "exists";
+                $parsed_data->{trial_data}->{$trial_id}->{folder}->{id} = $folder_id;
+            }
         }
     }
 

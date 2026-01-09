@@ -52,8 +52,8 @@ page_formats["US Letter PDF"] = {
                 top_margin: 36.7,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             },
             'CASS [1" x 5 1/4"]': {
                 label_width: 378,
@@ -121,8 +121,8 @@ page_formats["A4 PDF"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -141,8 +141,8 @@ page_formats["Zebra printer file"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -159,8 +159,8 @@ page_formats["Custom"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -1633,8 +1633,8 @@ function retrievePageParams() {
         top_margin: label_sizes[label].top_margin || convertPageDimensions("top_margin"),
         horizontal_gap: label_sizes[label].horizontal_gap || convertPageDimensions("horizontal_gap"),
         vertical_gap: label_sizes[label].vertical_gap || convertPageDimensions("vertical_gap"),
-        number_of_columns: label_sizes[label].number_of_columns,
-        number_of_rows: label_sizes[label].number_of_rows,
+        number_of_columns: (label == "Custom" || page == "Custom") ? document.getElementById("number_of_columns").value : label_sizes[label].number_of_columns,
+        number_of_rows: (label == "Custom" || page == "Custom") ? document.getElementById("number_of_rows").value : label_sizes[label].number_of_rows,
         plot_filter: document.getElementById("plot_filter").value,
         sort_order_1: document.getElementById("sort_order_1").value,
         sort_order_2: document.getElementById("sort_order_2").value,
@@ -1651,6 +1651,7 @@ function retrievePageParams() {
         start_col: document.getElementById("start_col").value,
         start_row: document.getElementById("start_row").value,
         text_alignment : getAlignmentSpecs(),
+        page_units : getPageUnits()
     }
     return page_params;
 
@@ -1691,6 +1692,13 @@ function getAlignmentSpecs() {
         return "left";
     }   
     return "middle";
+}
+
+function getPageUnits() {
+    if(jQuery('#dim_inches').prop('checked')) {
+        return "imperial";
+    }   
+    return "metric";
 }
 
 function initializeCustomModal(add_fields) {
@@ -1829,26 +1837,55 @@ function loadDesign (list_id) {
         }
     }
 
+     var page_units = params['page_units'];
+
+    if (page_units == "imperial") {
+        jQuery(".radio-select-metric").each(function() {
+            jQuery(this).prop("checked", false)
+        });
+        jQuery(".radio-select-imperial").each(function() {
+            jQuery(this).prop("checked", true)
+        });
+    } else {
+        jQuery(".radio-select-metric").each(function() {
+            jQuery(this).prop("checked", true)
+        });
+        jQuery(".radio-select-imperial").each(function() {
+            jQuery(this).prop("checked", false)
+        });
+    }
+
     var page = params['page_format'];
     document.getElementById('page_format').value = page;
     //console.log("page is "+page);
     switchPageDependentOptions(page);
     if (page == 'Custom') {
-        document.getElementById("page_width").value = params['page_width'] / 72;
-        document.getElementById("page_height").value = params['page_height'] / 72;
+        document.getElementById("page_width").value = convertPixelsToPageDimensions(params['page_width']);
+        document.getElementById("page_height").value = convertPixelsToPageDimensions(params['page_height']);
     }
 
     var label = params['label_format'];
     document.getElementById('label_format').value = label;
     switchLabelDependentOptions(label);
     if (label == 'Custom') {
-        document.getElementById("label_width").value = params['label_width'];
-        document.getElementById("label_height").value = params['label_height'];
+        document.getElementById("label_width").value = convertPixelsToPageDimensions(params['label_width']);
+        document.getElementById("label_height").value = convertPixelsToPageDimensions(params['label_height']);
         page_formats[page].label_sizes['Custom'].label_width = params['label_width'];
         page_formats[page].label_sizes['Custom'].label_height = params['label_height'];
         changeLabelSize(params['label_width'], params['label_height']);
         $("#d3-add-and-download-div").removeAttr('style');
         enableDrawArea();
+    }
+
+    var text_alignment = params['text_alignment'];
+    d3.selectAll(".label-element")
+            .attr("text-anchor", text_alignment)
+    d3.select(".selection-tools").remove();
+
+    if (text_alignment == "left") {
+        jQuery('#align_left').prop("checked", true);
+    } else {
+        jQuery('#align_middle').prop("checked", true);
     }
 
     saveAdditionalOptions(
