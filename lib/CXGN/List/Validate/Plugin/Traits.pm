@@ -59,7 +59,7 @@ sub validate {
             } else {
                 $query->{'dbxref.accession'} = $accession;
             }
-            if ( $db_name eq 'COMP' && $validator->{composable_validation_check_name} ) {
+            if ( ($db_name eq 'COMP' || $db_name eq 'COMP_EXP_TREATMENT') && $validator->{composable_validation_check_name} ) {
                 $query->{'me.name'} = $trait_name;
             }
             my $rs = $schema->resultset("Cv::Cvterm")->search($query, {'join' => 'dbxref'});

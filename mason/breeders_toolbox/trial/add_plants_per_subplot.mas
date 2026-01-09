@@ -16,20 +16,20 @@ $trial_name => undef
 
 	       <form class="form-horizontal" role="form" method="post" id="add_plants_subplot_dialog_form" name="add_plants_subplot_dialog_form">
 	        <div class="form-group">
-      	      <label class="col-sm-3 control-label">Maximum number of plants per subplot: </label>
-      	      <div class="col-sm-9" >
+      	      <label class="col-sm-5 control-label">Maximum number of plants per subplot: </label>
+      	      <div class="col-sm-7" >
                 <input name="add_plants_per_subplot_num" id="add_plants_per_subplot_num" class="form-control" type="number" autofocus/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
-      	      <div class="col-sm-9" >
+      	      <label class="col-sm-5 control-label">Inherits Treatment(s) From Plots: </label>
+      	      <div class="col-sm-7" >
                 <input name="add_plants_per_subplot_inherit_treatments" id="add_plants_per_subplot_inherit_treatments" type="checkbox" checked disabled/>
               </div>
 	        </div>
             <div class="form-group">
-      	      <label class="col-sm-3 control-label">Assign row and column data to plants within plots?</label>
-      	      <div class="col-sm-9" >
+      	      <label class="col-sm-5 control-label">Assign row and column data to plants within plots?</label>
+      	      <div class="col-sm-7" >
                 <input name="add_rows_and_columns_to_subplot_plants" id="add_rows_and_columns_to_subplot_plants" type="checkbox"/>
                 <div id="subplot_plant_row_column_format_dialog" style="display:none">
                     <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each subplot.</i></p>

@@ -272,7 +272,7 @@ var trial_id = <% $trial_id %>;
       //alert(replace_accession+","+replace_plot_id+ "and" +replace_plot_name );
 
       jQuery('#replace_accessions_link').find('button').trigger('click');
-      jQuery('#edit_plot_information').html('<b>Selected Plot Information: </b>');
+      //jQuery('#edit_plot_information').html('<b>Selected Plot Information: </b>');
       jQuery('#edit_plot_name').html(replace_plot_name);
       jQuery('#edit_plot_number').html(replace_plot_number);
       old_plot_id = jQuery('#edit_plot_id').html(replace_plot_id);
