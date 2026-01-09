@@ -41,6 +41,12 @@ has 'propagation_group_identifier' => (
     required => 1,
 );
 
+has 'purpose' => (
+    isa =>'Str',
+    is => 'rw',
+    required => 1,
+);
+
 has 'accession_name' => (
     isa => 'Str',
     is => 'rw',
@@ -104,6 +110,7 @@ sub add_propagation_group_identifier {
     my $schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
     my $propagation_group_identifier = $self->get_propagation_group_identifier();
+    my $purpose = $self->get_purpose();
     my $accession_name = $self->get_accession_name();
     my $material_type = $self->get_material_type();
     my $material_source_type = $self->get_material_source_type();
@@ -119,6 +126,7 @@ sub add_propagation_group_identifier {
     $metadata_hash->{operator} = $operator_name;
     $metadata_hash->{sub_location} = $sub_location;
     $metadata_hash->{material_source_type} = $material_source_type;
+    $metadata_hash->{purpose} = $purpose;
     my $metadata_json_string = encode_json $metadata_hash;
     my %return;
     my $propagation_group_stock_id;

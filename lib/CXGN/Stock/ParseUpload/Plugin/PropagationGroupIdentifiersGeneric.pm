@@ -18,7 +18,7 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'propagation_group_identifier', 'accession_name', 'material_type', 'date', 'description', 'operator_name' ],
+        required_columns => [ 'propagation_group_identifier', 'purpose' 'accession_name', 'material_type', 'date', 'description', 'operator_name' ],
         optional_columns => [ 'source_type', 'source_name', 'sub_location' ],
         column_aliases => {
             'propagation_group_identifier' => ['propagation group identifier'],
@@ -126,6 +126,7 @@ sub _parse_with_plugin {
     foreach my $row (@$parsed_data) {
         my $row_number = $row->{'_row'};
         $identifier_info{$row_number}{'propagation_group_identifier'} = $row->{'propagation_group_identifier'};
+        $identifier_info{$row_number}{'purpose'} = $row->{'purpose'};        
         $identifier_info{$row_number}{'accession_name'} = $row->{'accession_name'};
         $identifier_info{$row_number}{'material_type'} = $row->{'material_type'};
         $identifier_info{$row_number}{'date'} = $row->{'date'};

@@ -129,6 +129,7 @@ sub add_propagation_group_identifier_POST :Args(0){
     my $propagation_group_identifier = $c->req->param('propagation_group_identifier');
     $propagation_group_identifier =~ s/^\s+|\s+$//g;
     my $propagation_project_id = $c->req->param('propagation_project_id');
+    my $purpose = $c->req->param('purpose');
     my $accession_name = $c->req->param('accession_name');
     my $material_type = $c->req->param('material_type');
     my $material_source_type = $c->req->param('material_source_type');
@@ -187,6 +188,7 @@ sub add_propagation_group_identifier_POST :Args(0){
             dbh => $dbh,
             propagation_project_id => $propagation_project_id,
             propagation_group_identifier => $propagation_group_identifier,
+            purpose => $purpose,
             accession_name => $accession_name,
             material_type => $material_type,
             material_source_type => $material_source_type,
@@ -330,6 +332,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         eval {
             foreach my $row (keys %$parsed_data) {
                 my $propagation_group_identifier = $parsed_data->{$row}->{'propagation_group_identifier'};
+                my $purpose = $parsed_data->{$row}->{'purpose'};
                 my $accession_name = $parsed_data->{$row}->{'accession_name'};
                 my $material_type = $parsed_data->{$row}->{'material_type'};
                 my $material_source_type = $parsed_data->{$row}->{'material_source_type'};
@@ -345,6 +348,7 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
                     dbh => $dbh,
                     propagation_project_id => $propagation_project_id,
                     propagation_group_identifier => $propagation_group_identifier,
+                    purpose => $purpose,
                     accession_name => $accession_name,
                     material_type => $material_type,
                     material_source_type => $material_source_type,

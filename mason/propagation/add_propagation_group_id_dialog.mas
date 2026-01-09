@@ -28,6 +28,17 @@ $date
                                 <input class="form-control" type="text" id="new_propagation_group_identifier" name="new_propagation_group_identifier" placeholder="Must be unique in the database">
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Purpose: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="propagation_purpose">
+                                    <option value="">Please select</option>
+                                    <option value="CVC Backup">CVC Backup</option>
+                                    <option value="SH second Tree">SH second tree</option>
+                                    <option value="SH Replacement">SH Replacement</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="form-group" id = "get_propagation_accession_name">
                             <label class="col-sm-4 control-label">Accession Name: </label>
                             <div class="col-sm-8" >
@@ -129,6 +140,7 @@ jQuery(document).ready(function(){
 
     jQuery('#submit_new_propagation_group_id').click( function() {
         const propagation_group_identifier = jQuery('#new_propagation_group_identifier').val();
+        const purpose = jQuery('#propagation_purpose').val();
         const accession_name = jQuery('#propagation_accession_name').val();
         const material_type = jQuery('#propagation_material_type').val();
         const material_source_type = jQuery('#propagation_material_source_type').val();
@@ -142,6 +154,10 @@ jQuery(document).ready(function(){
 
         if (propagation_group_identifier == '') {
             alert("Please provide a propagation group identifier");
+            return;
+        }
+        if (purpose == '') {
+            alert("Please select a propagation purpose");
             return;
         }
         if (accession_name == '') {
@@ -173,6 +189,7 @@ jQuery(document).ready(function(){
                 'propagation_project_id': propagation_project_id,
                 'breeding_program_name': breeding_program_name,
                 'propagation_group_identifier': propagation_group_identifier,
+                'purpose': purpose,
                 'accession_name': accession_name,
                 'material_type': material_type,
                 'material_source_type': material_source_type,
