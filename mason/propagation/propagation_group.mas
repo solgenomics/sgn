@@ -12,6 +12,7 @@ $sub_location
 $operator_name
 $project_link
 $accession_stock_id
+$purpose
 
 </%args>
 
@@ -29,6 +30,7 @@ $accession_stock_id
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
                         <tr><td><b>Project</b></td><td><%$project_link%></td></tr>
+                        <tr><td><b>Purpose</b></td><td><%$purpose%></td></tr>                        
                         <tr><td><b>Material</b></td><td><%$accession_link%></td></tr>
                         <tr><td><b>Material Type</b></td><td><%$material_type%></td></tr>
                         <tr><td><b>Source Type</b></td><td><%$material_source_type%></td></tr>

@@ -50,6 +50,7 @@ sub propagation_group_page : Path('/propagation_group') Args(1) {
     my $material_type = $info->[0]->[3];
     my $metadata = $info->[0]->[4];
     my $metadata_hash = decode_json $metadata;
+    my $purpose = $metadata_hash->{purpose};
     my $date = $metadata_hash->{'date'};
     my $operator_name = $metadata_hash->{'operator'};
     my $sub_location = $metadata_hash->{'sub_location'};
@@ -67,8 +68,9 @@ sub propagation_group_page : Path('/propagation_group') Args(1) {
 
     $c->stash->{propagation_group_id} = $propagation_group_id;
     $c->stash->{propagation_group_name} = $propagation_group_name;
+    $c->stash->{purpose} = $purpose;    
     $c->stash->{description} = $description;
-    $c->stash->{accession_stock_id} = $accession_stock_id;    
+    $c->stash->{accession_stock_id} = $accession_stock_id;
     $c->stash->{accession_link} = $accession_link;
     $c->stash->{source_link} = $source_link;
     $c->stash->{material_type} = $material_type;

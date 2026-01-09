@@ -10,6 +10,7 @@ $trial_id
         <thead>
             <tr>
                 <th>Propagation Group ID</th>
+                <th>Purpose</th>
                 <th>Accession</th>
                 <th>Material Type</th>
                 <th>Source Type</th>
