@@ -29,10 +29,10 @@ my $response = decode_json $mech->content;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
-my $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id });
+my $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id, phenome_schema => $f->phenome_schema, metadata_schema => $f->metadata_schema });
 $trial->create_plant_entities('2');
 
-$trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id });
+$trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id, phenome_schema => $f->phenome_schema, metadata_schema => $f->metadata_schema });
 my $temp_basedir = $f->config->{tempfiles_subdir};
     my $site_basedir = $f->config->{basepath};
     if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
