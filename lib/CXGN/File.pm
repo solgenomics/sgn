@@ -259,7 +259,7 @@ sub set_file_type {
 
 =head1 CLASS METHODS
 
-=head2 get_user_archived_files($metadata_schema, $user_id)
+=head2 get_user_archived_files($bcs_schema, $user_id)
 
 Retrieves all files uploaded by a user.
 
@@ -293,7 +293,7 @@ sub get_user_archived_files {
     return \@data;
 }
 
-=head2 get_all_archived_files($metadata_schema)
+=head2 get_all_archived_files($bcs_schema)
 
 Retrieves all archived files. Typically used by a curator. 
 
@@ -327,3 +327,5 @@ sub get_all_archived_files {
 
     return \@data;
 }
+
+1;
