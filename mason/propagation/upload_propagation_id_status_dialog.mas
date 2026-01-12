@@ -111,7 +111,7 @@
                     <ul>
                         <li>propagation_identifier (must exist in the database )</li>
                         <li>status_type (e.g., Plant in Trial, Distributed, Dead, Disposed, Inventoried)</li>
-                        <li>status_date (please use YYYY-MM_DD format)</li>
+                        <li>status_date (please use YYYY-MM-DD format)</li>
                         <li>status_updated_by</li>
                     </ul>
 

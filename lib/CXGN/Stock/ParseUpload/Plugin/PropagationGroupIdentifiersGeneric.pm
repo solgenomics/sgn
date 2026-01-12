@@ -63,7 +63,7 @@ sub _validate_with_plugin {
     my $seen_propagation_group_identifiers = $parsed_values->{'propagation_group_identifier'};
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_source_names = $parsed_values->{'source_name'};
-    my $seen_material_types = $parsed_values->{'material_relationship_type'};
+    my $seen_material_types = $parsed_values->{'material_type'};
 
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions', $seen_accession_names)->{'missing'}};
@@ -126,7 +126,7 @@ sub _parse_with_plugin {
     foreach my $row (@$parsed_data) {
         my $row_number = $row->{'_row'};
         $identifier_info{$row_number}{'propagation_group_identifier'} = $row->{'propagation_group_identifier'};
-        $identifier_info{$row_number}{'purpose'} = $row->{'purpose'};        
+        $identifier_info{$row_number}{'purpose'} = $row->{'purpose'};
         $identifier_info{$row_number}{'accession_name'} = $row->{'accession_name'};
         $identifier_info{$row_number}{'material_type'} = $row->{'material_type'};
         $identifier_info{$row_number}{'date'} = $row->{'date'};
