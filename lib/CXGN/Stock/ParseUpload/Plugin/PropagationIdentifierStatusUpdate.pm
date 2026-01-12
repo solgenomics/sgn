@@ -120,9 +120,7 @@ sub _parse_with_plugin {
         $propagation_identifier_status{$propagation_identifier}{'inventory_identifier'} = $row->{'inventory_identifier'};
     }
 
-    $parsed_result{'propagation_identifier_status'} = \%propagation_identifier_status;
-
-    $self->_set_parsed_data(\%parsed_result);
+    $self->_set_parsed_data(\%propagation_identifier_status);
 
     return 1;
 

@@ -862,6 +862,169 @@ sub update_propagation_status_POST : Args(0) {
 }
 
 
+sub upload_propagation_identifier_status: Path('/ajax/propagation/upload_propagation_identifier_status') : ActionClass('REST'){ }
+
+sub upload_propagation_identifier_status_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $upload = $c->req->upload('propagation_identifier_status_file');
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "propagation_identifier_status_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my $time = DateTime->now();
+    my $update_date = $time->ymd();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+    my @error_messages;
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifer statuses!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload propagation identifier statuses!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload propagation identifier status'};
+        $c->detach();
+    }
+
+    my $person_name= CXGN::People::Person->new($dbh, $user_id);
+    my $full_name = $person_name->get_first_name()." ".$person_name->get_last_name();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+        ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    #parse uploaded file with appropriate plugin
+    my @stock_props = ();
+    $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@stock_props);
+
+    $parser->load_plugin('PropagationIdentifierStatusUpdate');
+    $parsed_data = $parser->parse();
+
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    my $propagation_status_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_status', 'stock_property')->cvterm_id();
+
+    if ($parsed_data){
+        foreach my $propagation_identifier (sort keys %$parsed_data) {
+            my $status_type = $parsed_data->{$propagation_identifier}->{status_type};
+            my $status_date = $parsed_data->{$propagation_identifier}->{status_date};
+            my $status_notes = $parsed_data->{$propagation_identifier}->{status_notes};
+            my $status_updated_by = $parsed_data->{$propagation_identifier}->{status_updated_by};
+            my $inventory_identifier = $parsed_data->{$propagation_identifier}->{inventory_identifier};
+
+            my $propagation_stock_id = $schema->resultset('Stock::Stock')->find({ uniquename => $propagation_identifier})->stock_id();
+            my $previous_status = $schema->resultset("Stock::Stockprop")->find( {stock_id => $propagation_stock_id, type_id => $propagation_status_cvterm_id });
+            my $previous_stockprop_id;
+            if($previous_status) {
+                $previous_stockprop_id = $previous_status->stockprop_id();
+            }
+
+            my $status = CXGN::Propagation::Status->new({
+                bcs_schema => $schema,
+                parent_id => $propagation_stock_id,
+                prop_id => $previous_stockprop_id
+            });
+
+            $status->status_type($status_type);
+            $status->update_person($status_updated_by);
+            $status->update_date($status_date);
+            $status->update_notes($status_notes);
+            $status->store();
+
+            if (!$status->store()){
+                $c->stash->{rest} = {error => "Error saving propagation status",};
+                return;
+            }
+
+            my $inventory_stock_id;
+            if ($status->store() && $inventory_identifier) {
+                my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
+                    chado_schema => $schema,
+                    phenome_schema => $phenome_schema,
+                    dbh => $dbh,
+                    propagation_stock_id => $propagation_stock_id,
+                    inventory_identifier => $inventory_identifier,
+                    owner_id => $user_id,
+                });
+
+                my $add = $add_inventory_identifier->add();
+                $inventory_stock_id = $add->{inventory_stock_id};
+
+                if (!$inventory_stock_id) {
+                    $c->stash->{rest} = {error => "Error saving Inventory Identifier!",};
+                    return;
+                }
+            }
+        }
+    }
+
+    $c->stash->{rest} = {success => "1",};
+}
+
+
+
 
 ###
 1;#

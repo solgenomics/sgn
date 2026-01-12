@@ -18,11 +18,11 @@
                             <a id="propagation_id_status_upload_spreadsheet_format_info">Spreadsheet Format</a>
                         </p>
                     </&>
-                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_propagation_id_status_form" name="upload_propagation_id_status_form">
+                    <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_propagation_identifier_status_form" name="upload_propagation_identifier_status_form">
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Upload File: </label>
                             <div class="col-sm-9" >
-                                <input type="file" name="upload_propagation_id_status_file" id="propagation_id_status_file" encoding="multipart/form-data" />
+                                <input type="file" name="upload_propagation_identifier_status_file" id="propagation_identifier_status_file" encoding="multipart/form-data" />
                             </div>
                         </div>
                     </form>
@@ -30,7 +30,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" name="upload_propagation_id_status_submit" id="upload_propagation_id_status_submit">Upload</button>
+                <button type="button" class="btn btn-primary" name="upload_propagation_identifier_status_submit" id="upload_propagation_identifier_status_submit">Upload</button>
             </div>
         </div>
     </div>
@@ -148,7 +148,7 @@ jQuery(document).ready(function(){
     });
 
     function upload_propagation_id_status_file() {
-        var uploadFile = jQuery("#propagation_id_status_file").val();
+        var uploadFile = jQuery("#propagation_identifier_status_file").val();
         if (uploadFile === '') {
             alert("Please select a file");
             return;
@@ -156,9 +156,9 @@ jQuery(document).ready(function(){
 
         jQuery("#working_modal").modal("show");
         jQuery.ajax({
-            url: "/ajax/propagation/upload_propagation_id_status",
+            url: "/ajax/propagation/upload_propagation_identifier_status",
             type: 'POST',
-            data: new FormData(jQuery("#upload_propagation_id_status_form")[0]),
+            data: new FormData(jQuery("#upload_propagation_identifier_status_form")[0]),
             processData: false,
             contentType: false,
             success: function(response) {
