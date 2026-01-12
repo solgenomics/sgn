@@ -72,6 +72,7 @@ jQuery(document).ready(function() {
         jQuery("#genotyping_protocol_filter_results_container").hide();
         GENO_SEARCH_ACC_RESULTS = {};
         jQuery.ajax({
+            method: 'POST',
             url: '/ajax/genotyping_protocol/search/accession_list',
             data: {
                 accession_list_id: jQuery("#accession_list_select").val()
