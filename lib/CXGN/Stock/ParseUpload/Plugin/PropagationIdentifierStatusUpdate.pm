@@ -82,7 +82,7 @@ sub _validate_with_plugin {
 
     foreach my $type (@$seen_status_types) {
         if (!exists $supported_status_types{$type}) {
-            push @error_messages, "Status type not supported: $type. Status type should be Inventoried, Planted in Trial, Distribued, Dead or Disposed ";
+            push @error_messages, "Status type not supported: <b>$type</b>. Status type should be Inventoried, Planted in Trial, Distribued, Dead or Disposed ";
         }
     }
 
