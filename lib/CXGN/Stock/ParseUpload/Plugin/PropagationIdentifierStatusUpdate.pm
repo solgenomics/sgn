@@ -57,13 +57,13 @@ sub _validate_with_plugin {
     my $seen_status_dates = $parsed_values->{'status_date'};
 
     my $propagation_identifier_validator = CXGN::List::Validate->new();
-    my @propagation_identifiers_missing = @{$propagation_identifier_validator->validate($schema,'propagation',$seen_propagation_identifers)->{'missing'}};
+    my @propagation_identifiers_missing = @{$propagation_identifier_validator->validate($schema,'propagation',$seen_propagation_identifiers)->{'missing'}};
 
     if (scalar(@propagation_identifiers_missing) > 0) {
         push @error_messages, "The following propagation identifiers are not in the database: ".join(',',@propagation_identifiers_missing);
     }
 
-    if (scalar($@seen_inventory_identifiers) > 0) {
+    if (scalar(@$seen_inventory_identifiers) > 0) {
         my $rs = $schema->resultset("Stock::Stock")->search({
             'uniquename' => { -in => $seen_inventory_identifiers }
         });
@@ -86,9 +86,9 @@ sub _validate_with_plugin {
         }
     }
 
-    foreach my $date (@$seed_status_dates) {
+    foreach my $date (@$seen_status_dates) {
         if (! ($date =~ m/(\d{4})\-(\d{2})\-(\d{2})/)) {
-            push @error_messages, "Invalid date format: $info_value. Dates need to be YYYY-MM-DD format";
+            push @error_messages, "Invalid date format: $date. Dates need to be YYYY-MM-DD format";
         }
     }
 
