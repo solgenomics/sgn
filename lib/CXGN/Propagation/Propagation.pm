@@ -63,8 +63,9 @@ sub get_propagation_groups_in_project {
     my $plot_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+    my $variety_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'released_variety_name', 'stock_property')->cvterm_id();
 
-    my $q = "SELECT propagation.stock_id, propagation.uniquename, propagation.description, material_type.value, metadata.value, accession.stock_id, accession.uniquename, source.stock_id, source.uniquename
+    my $q = "SELECT propagation.stock_id, propagation.uniquename, propagation.description, material_type.value, metadata.value, accession.stock_id, accession.uniquename, source.stock_id, source.uniquename, variety.value
         FROM nd_experiment_project
         JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
         JOIN stock AS propagation ON (nd_experiment_stock.stock_id = propagation.stock_id) AND propagation.type_id = ?
@@ -74,15 +75,16 @@ sub get_propagation_groups_in_project {
         JOIN stock AS accession ON (accession_relationship.subject_id = accession.stock_id) AND accession.type_id = ?
         LEFT JOIN stock_relationship AS source_relationship ON (source_relationship.object_id = propagation.stock_id) AND source_relationship.type_id = ?
         LEFT JOIN stock AS source ON (source_relationship.subject_id = source.stock_id) AND source.type_id IN (?,?,?)
+        LEFT JOIN stockprop AS variety ON (accession.stock_id = variety.stock_id) AND variety.type_id = ?
         WHERE nd_experiment_project.project_id = ? ;";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
-    $h->execute($propagation_group_cvterm_id, $propagation_material_type_cvterm_id, $propagation_metadata_cvterm_id, $propagation_material_of_cvterm_id, $accession_cvterm_id, $propagation_source_material_of_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id, $project_id);
+    $h->execute($propagation_group_cvterm_id, $propagation_material_type_cvterm_id, $propagation_metadata_cvterm_id, $propagation_material_of_cvterm_id, $accession_cvterm_id, $propagation_source_material_of_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id, $variety_cvterm_id, $project_id);
 
     my @propagation_groups = ();
-    while (my ($propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name) = $h->fetchrow_array()){
-        push @propagation_groups, [$propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name]
+    while (my ($propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $variety_name) = $h->fetchrow_array()){
+        push @propagation_groups, [$propagation_stock_id, $propagation_name, $description, $material_type, $metadata, $accession_stock_id, $accession_name, $source_stock_id, $source_name, $variety_name]
     }
 
     return \@propagation_groups;

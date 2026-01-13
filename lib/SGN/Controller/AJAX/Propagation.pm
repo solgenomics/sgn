@@ -676,8 +676,9 @@ sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_group
 
         my $accession_link = qq{<a href="/stock/$r->[5]/view">$r->[6]</a>};
         my $source_link = qq{<a href="/stock/$r->[7]/view">$r->[8]</a>};
+        my $variety_name = $r->[9];
 
-        push @propagations, [$propagation_group_link, $purpose, $accession_link, $material_type, $material_source_type, $source_link, $date, $sub_location, $description, $operator_name]
+        push @propagations, [$propagation_group_link, $purpose, $accession_link, $variety_name, $material_type, $material_source_type, $source_link, $date, $sub_location, $description, $operator_name]
 
     }
     $c->stash->{rest} = { data => \@propagations };

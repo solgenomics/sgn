@@ -12,6 +12,7 @@ $trial_id
                 <th>Propagation Group ID</th>
                 <th>Purpose</th>
                 <th>Accession</th>
+                <th>Variety Name</th>
                 <th>Material Type</th>
                 <th>Source Type</th>
                 <th>Source Name</th>
