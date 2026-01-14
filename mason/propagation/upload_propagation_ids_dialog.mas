@@ -148,41 +148,42 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#upload_propagation_ids_submit").click(function(){
-        const uploadFile = jQuery("#propagation_ids_file").val();
+        upload_propagation_ids();
+    });
 
-        jQuery('#upload_propagation_ids_form').attr("action", "/ajax/propagation/upload_propagation_identifiers");
-
-        if (uploadFile === ''){
+    function upload_propagation_ids() {
+        var uploadFile = jQuery("#propagation_ids_file").val();
+        if (uploadFile === '') {
             alert("Please select a file");
             return;
         }
 
-        jQuery("#upload_propagation_ids_form").submit();
-        jQuery("#upload_propagation_ids_dialog").modal("hide");
-    });
-
-    jQuery('#upload_propagation_ids_form').iframePostForm({
-        json: true,
-        post: function(){
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_propagation_ids_error_display tbody").html('');
-                jQuery("#upload_propagation_ids_error_display tbody").append(response.error_string);
-                jQuery("#upload_propagation_ids_error_display").modal("show");
-                return;
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: "/ajax/propagation/upload_propagation_identifiers",
+            type: 'POST',
+            data: new FormData(jQuery("#upload_propagation_ids_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error_string) {
+                    jQuery("#upload_propagation_ids_error_display tbody").html('');
+                    jQuery("#upload_propagation_ids_error_display tbody").append(response.error_string);
+                    jQuery("#upload_propagation_ids_error_display").modal("show");
+                    return;
+                }
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.success) {
+                    jQuery("#upload_propagation_ids_dialog").modal("hide");
+                    jQuery('#propagation_ids_saved_dialog_message').modal("show");
+                }
             }
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            if (response.success) {
-                jQuery('#propagation_ids_saved_dialog_message').modal("show");
-            }
-        }
-    });
+        });
+    };
 
     jQuery("#dismiss_propagation_ids_saved_dialog").click(function(){
         location.reload();
