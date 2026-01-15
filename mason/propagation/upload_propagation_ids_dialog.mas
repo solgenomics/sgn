@@ -113,15 +113,15 @@
                     <ul>
                         <li>propagation_group_identifier (must exist in the database)</li>
                         <li>propagation_identifier (must not exist in the database)</li>
+                        <li>status_type (must be one of the following:'in progress', 'inventoried', 'distributed', 'planted in trial', 'dead', 'disposed')</li>
+                        <li>status_date (must be in the <b>YYYY-MM-DD</b> format)</li>
+                        <li>status_updated_by (person name)</li>
                     </ul>
 
                     <b>Optional fields:</b>
                     <ul>
                         <li>rootstock (rootstock accession must exist in the database)</li>
-                        <li>status_type (must be one of the following:'in progress', 'inventoried', 'distributed', 'planted in trial', 'dead', 'disposed')</li>
-                        <li>status_date (must be in the <b>YYYY-MM-DD</b> format)</li>
                         <li>status_notes</li>
-                        <li>status_updated_by (person name)</li>
                         <li>inventory_identifier (must not exist in the database and must be globally unique. If any propagation_identifier has Inventoried status type, the propagation identifier and the derived inventory identifier can be uploaded at the same time)</li>
                     </ul>
                 </div>

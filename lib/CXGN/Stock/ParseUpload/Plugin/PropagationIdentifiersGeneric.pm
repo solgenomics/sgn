@@ -18,8 +18,8 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'propagation_group_identifier', 'propagation_identifier'],
-        optional_columns => [ 'rootstock', 'status_type', 'status_date', 'status_notes', 'status_updated_by', 'inventory_identifier'],
+        required_columns => [ 'propagation_group_identifier', 'propagation_identifier', 'status_type', 'status_date', 'status_updated_by'],
+        optional_columns => [ 'rootstock', 'status_notes', 'inventory_identifier'],
         column_aliases => {
             'propagation_group_identifier' => ['propagation group identifier'],
             'propagation_identifier' => ['propagation identifier'],
