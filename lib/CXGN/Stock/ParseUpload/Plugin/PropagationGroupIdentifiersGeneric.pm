@@ -58,10 +58,18 @@ sub _validate_with_plugin {
     $supported_material_types{'plant'} = 1;
     $supported_material_types{'seed'} = 1;
     $supported_material_types{'budwood'} = 1;
-    $supported_material_types{'tissue_culture'} = 1;
+    $supported_material_types{'tissue culture'} = 1;
+
+    my %supported_source_types;
+    $supported_source_types{'seedlot'} = 1;
+    $supported_source_types{'plot'} = 1;
+    $supported_source_types{'plant'} = 1;
+    $supported_source_types{'tissue sample'} = 1;
+    $supported_source_types{'new'} = 1;
 
     my $seen_propagation_group_identifiers = $parsed_values->{'propagation_group_identifier'};
     my $seen_accession_names = $parsed_values->{'accession_name'};
+    my $seen_source_types = $parsed_values->{'source_type'};
     my $seen_source_names = $parsed_values->{'source_name'};
     my $seen_material_types = $parsed_values->{'material_type'};
 
@@ -100,7 +108,13 @@ sub _validate_with_plugin {
 
     foreach my $type (@$seen_material_types) {
         if (!exists $supported_material_types{$type}) {
-            push @error_messages, "Material type not supported: $type. Material type should be plant, seed, budwood or tissue_culture ";
+            push @error_messages, "Material type not supported: $type. Material type should be plant, seed, budwood or tissue culture ";
+        }
+    }
+
+    foreach my $source_type (@$seen_source_types) {
+        if (!exists $supported_source_types{$source_type}) {
+            push @error_messages, "Source type not supported: $source_type. Source type should be seedlot, plot, plant, tissue sample or new ";
         }
     }
 

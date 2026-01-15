@@ -118,7 +118,7 @@ $trial_name
                         <li>propagation_group_identifier (must be globally unique and must not exist in the database )</li>
                         <li>purpose (e.g., CVC Backup, SH second Tree, SH Replacement)</li>
                         <li>accession_name (must exist as <b>uniquenames</b> in the database)</li>
-                        <li>material_type (must be one of the following: plant, seed, budwood, tissue_culture. If you would like to add additional types, please contact us.)</li>
+                        <li>material_type (must be one of the following: plant, seed, budwood, tissue culture. If you would like to add additional types, please contact us.)</li>
                         <li>date (propagation initiation date YYYY-MM-DD)</li>
                         <li>description</li>
                         <li>operator_name</li>
@@ -126,8 +126,8 @@ $trial_name
 
                     <b>Optional fields:</b>
                     <ul>
-                        <li>source_type (can be plot, subplot, plant or tissue_sample type)</li>
-                        <li>source_name (must exist as <b>uniquenames</b> in the database, can be plot, subplot, plant or tissue_sample stock type.)</li>
+                        <li>source_type (can be plot, subplot, plant, tissue sample or new)</li>
+                        <li>source_name (must exist as <b>uniquenames</b> in the database, can be plot, subplot, plant or tissue sample stock type.)</li>
                         <li>sub_location (detailed location of propagation materials)</li>
                     </ul>
                 </div>

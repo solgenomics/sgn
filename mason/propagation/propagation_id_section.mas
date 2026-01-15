@@ -150,11 +150,11 @@ function updatePropagationStatus(propagation_stock_id, propagation_name){
     var html = '';
     html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Propagation ID: </label><div class="col-sm-9" ><input class="form-control" id="update_propagation_name" name="update_propagation_name" value="'+propagation_name+'" disabled></div></div>';
     html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><select class="form-control" id="update_propagation_status" name="update_propagation_status"><option disabled value="" selected hidden>Select a status</option>';
-    html += '<option value='+"Inventoried"+'>'+"Inventoried"+'</option>';
-    html += '<option value='+"Planted in Trial"+'>'+"Planted in Trial"+'</option>';
-    html += '<option value='+"Distributed"+'>'+"Distributed"+'</option>';
-    html += '<option value='+"Dead"+'>'+"Dead"+'</option>';
-    html += '<option value='+"Disposed"+'>'+"Disposed"+'</option>';
+    html += '<option value='+"inventoried"+'>'+"inventoried"+'</option>';
+    html += '<option value='+"planted in trial"+'>'+"planted in trial"+'</option>';
+    html += '<option value='+"distributed"+'>'+"distributed"+'</option>';
+    html += '<option value='+"dead"+'>'+"dead"+'</option>';
+    html += '<option value='+"disposed"+'>'+"disposed"+'</option>';
     html += '</select></div></div>';
     html += '<div class="form-group"><label class="col-sm-3 control-label">Notes: </label><div class="col-sm-9" ><input class="form-control" id="propagation_status_notes" placeholder="Optional"></div></div>'
     html += '<div id="inventory_id_section" style="display:none"><div class="form-group"><label class="col-sm-3 control-label">Inventory ID: </label><div class="col-sm-9" ><input class="form-control" id="propagation_inventory_identifier" placeholder="must be globally unique"></div></div>'

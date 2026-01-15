@@ -50,10 +50,10 @@ $date
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_type">
                                     <option value="">Please select a type</option>
-                                    <option value="plant">Plant</option>
-                                    <option value="seed">Seed</option>
-                                    <option value="budwood">Budwood</option>
-                                    <option value="tissue_culture">Tissue Culture</option>
+                                    <option value="plant">plant</option>
+                                    <option value="seed">seed</option>
+                                    <option value="budwood">budwood</option>
+                                    <option value="tissue culture">tissue culture</option>
                                 </select>
                             </div>
                         </div>
@@ -62,11 +62,11 @@ $date
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_source_type">
                                     <option value="">Please select a type</option>
-                                    <option value="Seedlot">Seedlot</option>
-                                    <option value="Plot">Plot</option>
-                                    <option value="Plant">Plant</option>
-                                    <option value="Tissue Sample">Tissue Sample</option>
-                                    <option value="New">New</option>
+                                    <option value="seedlot">seedlot</option>
+                                    <option value="plot">plot</option>
+                                    <option value="plant">plant</option>
+                                    <option value="tissue sample">tissue sample</option>
+                                    <option value="new">new</option>
                                 </select>
                             </div>
                         </div>

@@ -623,7 +623,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
                         return;
                     }
 
-                    if (($status_type eq 'Inventoried') && $inventory_identifier) {
+                    if (($status_type eq 'inventoried') && $inventory_identifier) {
                         my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
                             chado_schema => $schema,
                             phenome_schema => $phenome_schema,
@@ -705,7 +705,7 @@ sub get_active_propagation_ids_in_group :Path('/ajax/propagation/active_propagat
         my $updated_date = $status_info->{update_date};
         my $updated_by = $status_info->{update_person};
 
-        if ($status_type eq 'In Progress') {
+        if ($status_type eq 'in progress') {
             push @propagations, {
                 propagation_stock_id => $propagation_stock_id,
                 propagation_name => $propagation_name,
@@ -746,7 +746,7 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
         my $updated_by = $status_info->{update_person};
         my $notes = $status_info->{update_notes};
 
-        if ($status_type eq 'Inventoried') {
+        if ($status_type eq 'inventoried') {
             my $inventory = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_stock_id=>$propagation_stock_id});
             my $inventory_info = $inventory->get_associated_inventory_identifier();
             my $inventory_stock_id = $inventory_info->[0];
@@ -755,7 +755,7 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
             $status_type = 'Inventoried'.':'. ' '.$inventory_link;
         }
 
-        if ($status_type ne 'In Progress') {
+        if ($status_type ne 'in progress') {
             push @propagations, {
                 propagation_stock_id => $propagation_stock_id,
                 propagation_name => $propagation_name,

@@ -54,12 +54,12 @@ sub _validate_with_plugin {
     }
 
     my %supported_status_types;
-    $supported_status_types{'In Progress'} = 1;
-    $supported_status_types{'Inventoried'} = 1;
-    $supported_status_types{'Distributed'} = 1;
-    $supported_status_types{'Planted in Trial'} = 1;
-    $supported_status_types{'Dead'} = 1;
-    $supported_status_types{'Disposed'} = 1;
+    $supported_status_types{'in progress'} = 1;
+    $supported_status_types{'inventoried'} = 1;
+    $supported_status_types{'distributed'} = 1;
+    $supported_status_types{'planted in trial'} = 1;
+    $supported_status_types{'dead'} = 1;
+    $supported_status_types{'disposed'} = 1;
 
     my $seen_propagation_group_identifiers = $parsed_values->{'propagation_group_identifier'};
     my $seen_propagation_identifiers = $parsed_values->{'propagation_identifier'};
