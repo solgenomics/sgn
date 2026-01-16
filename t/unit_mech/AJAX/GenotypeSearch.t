@@ -79,9 +79,6 @@ $mech->post_ok("http://localhost:3010/ajax/genotyping_protocol/search/accession_
 my $response = decode_json $mech->content();
 is_deeply($response, $expected_response, "Check genotyping protocol filter response");
 
-print STDERR "\n\n\n\n\====> PROTO RESP:\n";
-print STDERR Dumper $response;
-
 
 # Test Genotype Project Filer
 $expected_response = {
@@ -135,9 +132,6 @@ $expected_response = {
 $mech->post_ok("http://localhost:3010/ajax/genotyping_project/search/accession_list", { accession_list_id => $list_id });
 $response = decode_json $mech->content();
 is_deeply($response, $expected_response, "Check genotyping project filter response");
-
-print STDERR "\n\n\n\n\n===> PROJ RESPONSE:\n";
-print STDERR Dumper $response;
 
 # Remove the list when done
 CXGN::List::delete_list($f->dbh(), $list_id);
