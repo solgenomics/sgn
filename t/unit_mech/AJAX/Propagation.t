@@ -59,13 +59,57 @@ $mech->post_ok('http://localhost:3010/ajax/propagation/add_propagation_identifie
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
+#propagation ids upload
+my $file = $f->config->{basepath} . "/t/data/stock/propagation_ids_upload.xlsx";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/propagation/upload_propagation_identifiers',
+    Content_Type => 'form-data',
+    Content      => [
+        "propagation_ids_file" => [
+            $file,
+            "propagation_ids_upload.xlsx",
+            Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+
+        ],
+        "sgn_session_id" => $sgn_session_id,
+    ]
+);
+ok($response->is_success);
+my $message = $response->decoded_content;
+
+my $message_hash = decode_json $message;
+is_deeply($message_hash, { 'success' => 1 });
+
+#update status
 my $propagation_identifier_rs = $schema->resultset('Stock::Stock')->find({ name => 'G1_1' });
 my $propagation_stock_id = $propagation_identifier_rs->stock_id();
 
-#update status
 $mech->post_ok('http://localhost:3010/ajax/propagation/update_status', [ 'propagation_stock_id' => $propagation_stock_id, 'propagation_status' => 'Inventoried', 'propagation_status_notes' => 'test', 'inventory_identifier' => 'inventory_1']);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
+
+#status upload
+my $file = $f->config->{basepath} . "/t/data/stock/propagation_status_upload.xlsx";
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/propagation/upload_propagation_identifier_status',
+    Content_Type => 'form-data',
+    Content      => [
+        "propagation_identifier_status_file" => [
+            $file,
+            "propagation_status_upload.xlsx",
+            Content_Type => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+
+        ],
+        "sgn_session_id" => $sgn_session_id,
+    ]
+);
+ok($response->is_success);
+my $message = $response->decoded_content;
+
+my $message_hash = decode_json $message;
+is_deeply($message_hash, { 'success' => 1 });
 
 
 $f->clean_up_db();

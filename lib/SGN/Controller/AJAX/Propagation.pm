@@ -596,7 +596,7 @@ sub upload_propagation_identifiers_POST : Args(0) {
                 }
 
                 if (!$status_type) {
-                    $status_type = 'In Progress';
+                    $status_type = 'in progress';
                 }
                 if (!$status_date) {
                     $status_date = $update_date;
