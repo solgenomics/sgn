@@ -283,7 +283,7 @@ sub genotyping_protocol_accession_search_POST : Args(0) {
 
         # Generate lookup of accession ids -> accession names
         $ph = join(',', ('?') x @accession_ids);
-        $q = "SELECT accession_id, accession_name FROM accessions WHERE accession_id IN ($ph)";
+        $q = "SELECT stock_id, uniquename FROM stock WHERE stock_id IN ($ph)";
         $h = $dbh->prepare($q);
         $h->execute(@accession_ids);
         while (my ($acc_id, $acc_name) = $h->fetchrow_array()) {
@@ -294,7 +294,7 @@ sub genotyping_protocol_accession_search_POST : Args(0) {
         my @gen_ids = keys %acc_by_gen;
         if ( scalar @gen_ids > 0 ) {
             $ph = join(',', ('?') x @gen_ids);
-            $q = "SELECT genotyping_protocol_id, genotyping_protocol_name FROM genotyping_protocols WHERE genotyping_protocol_id IN ($ph)";
+            $q = "SELECT nd_protocol_id, name FROM nd_protocol WHERE nd_protocol_id IN ($ph)";
             $h = $dbh->prepare($q);
             $h->execute(@gen_ids);
             while (my ($gen_id, $gen_name) = $h->fetchrow_array()) {
