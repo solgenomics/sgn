@@ -38,7 +38,7 @@ my $expected_response = {
     'results' => {
         'matches' => {
             'accessions_by_genotyping_protocol' => {
-                '1' => [ 38913, 38915, 39964, 38914 ]
+                '1' => [ 38913, 38914, 38915, 39964 ]
             },
             'genotyping_protocols_by_accession' => {
                 '38915' => [ 1 ],
@@ -85,11 +85,11 @@ $expected_response = {
     'results' => {
         'matches' => {
             'accessions_by_genotyping_project' => {
-                '140' => [ 38913, 38915, 38914 ],
-                '142' => [ 38913, 38915, 39964, 38914 ]
+                '140' => [ 38913, 38914, 38915 ],
+                '142' => [ 38913, 38914, 38915, 39964 ]
             },
             'genotyping_projects_by_accession' => {
-                '38913' => [ 142, 140 ],
+                '38913' => [ 140, 142 ],
                 '38914' => [ 140, 142 ],
                 '38915' => [ 140, 142 ],
                 '39964' => [ 142 ],
