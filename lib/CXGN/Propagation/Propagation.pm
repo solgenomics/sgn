@@ -63,7 +63,7 @@ sub get_propagation_groups_in_project {
     my $plot_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-    my $variety_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'released_variety_name', 'stock_property')->cvterm_id();
+    my $variety_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
 
     my $q = "SELECT propagation.stock_id, propagation.uniquename, propagation.description, material_type.value, metadata.value, accession.stock_id, accession.uniquename, source.stock_id, source.uniquename, variety.value
         FROM nd_experiment_project

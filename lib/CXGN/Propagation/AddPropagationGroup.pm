@@ -41,12 +41,6 @@ has 'propagation_group_identifier' => (
     required => 1,
 );
 
-has 'purpose' => (
-    isa =>'Str',
-    is => 'rw',
-    required => 1,
-);
-
 has 'accession_name' => (
     isa => 'Str',
     is => 'rw',
@@ -78,6 +72,11 @@ has 'date' => (
     isa => 'Str',
     is => 'rw',
     required => 1,
+);
+
+has 'purpose' => (
+    isa =>'Str',
+    is => 'rw',
 );
 
 has 'description' => (

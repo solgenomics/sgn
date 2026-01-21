@@ -10,14 +10,14 @@ $trial_id
         <thead>
             <tr>
                 <th>Propagation Group ID</th>
-                <th>Purpose</th>
                 <th>Accession</th>
-                <th>Variety Name</th>
+                <th>Variety</th>
                 <th>Material Type</th>
                 <th>Source Type</th>
                 <th>Source Name</th>
                 <th>Date</th>
                 <th>Sub-Location</th>
+                <th>Purpose</th>
                 <th>Description</th>
                 <th>Operator</th>
             </tr>

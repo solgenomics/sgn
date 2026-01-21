@@ -40,9 +40,11 @@ $locations
                                         <label class="col-sm-3 control-label">Propagation Type: </label>
                                         <div class="col-sm-9">
                                             <select class="form-control" id="propagation_type" name="propagation_type">
+                                                <option value="Macropropagation">Macropropagation</option>
+                                                <!--
                                                 <option value="">Select a Type</option>
-                                                <option value="propagation">Propagation</option>
-                                                <option value="micro_propagation">Micro Propagation</option>
+                                                <option value="Micropropagation">Micropropagation</option>
+                                                -->
                                             </select>
                                         </div>
                                     </div><br/>

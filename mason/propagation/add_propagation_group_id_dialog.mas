@@ -28,17 +28,6 @@ $date
                                 <input class="form-control" type="text" id="new_propagation_group_identifier" name="new_propagation_group_identifier" placeholder="Must be unique in the database">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Purpose: </label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="propagation_purpose">
-                                    <option value="">Please select</option>
-                                    <option value="CVC Backup">CVC Backup</option>
-                                    <option value="SH second Tree">SH second tree</option>
-                                    <option value="SH Replacement">SH Replacement</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="form-group" id = "get_propagation_accession_name">
                             <label class="col-sm-4 control-label">Accession Name: </label>
                             <div class="col-sm-8" >
@@ -50,10 +39,13 @@ $date
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_type">
                                     <option value="">Please select a type</option>
+                                    <option value="budwood">budwood</option>
+                                    <option value="stem">stem</option>
+                                    <option value="shoot">shoot</option>
+                                    <option value="root">root</option>
+                                    <option value="corm">corm</option>
                                     <option value="plant">plant</option>
                                     <option value="seed">seed</option>
-                                    <option value="budwood">budwood</option>
-                                    <option value="tissue culture">tissue culture</option>
                                 </select>
                             </div>
                         </div>
@@ -61,7 +53,7 @@ $date
                             <label class="col-sm-4 control-label">Source Type: </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_source_type">
-                                    <option value="">Please select a type</option>
+                                    <option value="">Please select a type (optional)</option>
                                     <option value="seedlot">seedlot</option>
                                     <option value="plot">plot</option>
                                     <option value="plant">plant</option>
@@ -74,19 +66,30 @@ $date
                         <div class="form-group" id = "get_propagation_source_name">
                             <label class="col-sm-4 control-label">Source Name: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="Source name must be in the database">
+                                <input class="form-control" type="text" id="propagation_source_name" name="propagation_source_name" placeholder="optional (source name must be in the database)">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Sub-Location: </label>
                             <div class="col-sm-8" >
-                                <input class="form-control" type="text" id="propagation_sub_location" name="propagation_sub_location" placeholder="Optional">
+                                <input class="form-control" type="text" id="propagation_sub_location" name="propagation_sub_location" placeholder="optional">
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Date (YYYY-MM-DD): </label>
                             <div class="col-sm-8" >
                                 <input class="form-control" name="propagation_date" id="propagation_date" value="<%$date%>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Purpose: </label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="propagation_purpose">
+                                    <option value="">Please select (optional)</option>
+                                    <option value="CVC Backup">CVC Backup</option>
+                                    <option value="SH second Tree">SH second tree</option>
+                                    <option value="SH Replacement">SH Replacement</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-group">
@@ -154,10 +157,6 @@ jQuery(document).ready(function(){
 
         if (propagation_group_identifier == '') {
             alert("Please provide a propagation group identifier");
-            return;
-        }
-        if (purpose == '') {
-            alert("Please select a propagation purpose");
             return;
         }
         if (accession_name == '') {
