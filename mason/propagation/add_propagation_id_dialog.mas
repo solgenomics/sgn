@@ -35,7 +35,7 @@ $accession_stock_id
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="reset" id="close_add_propagation_id_dialog" name="close_add_propagation_id_dialog" class="btn btn-default" >Close</button>
+                    <button id="add_propagation_id_dismiss_button" name="add_propagation_id_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                     <button id="submit_new_propagation_id" type="button" class="btn btn-primary" >Add</button>
                 </div>
             </form>
@@ -108,17 +108,18 @@ jQuery(document).ready(function(){
         });
     });
 
-
-    jQuery("#close_add_propagation_id_dialog").click(function() {
+    jQuery("#add_propagation_id_dismiss_button").click(function() {
         jQuery("#add_propagation_id_dialog").modal('hide');
+        jQuery('#new_propagation_identifier').val('');
+        jQuery('#propagation_rootstock_name').val('');
     });
-
 
     jQuery("#dismiss_propagation_id_saved_dialog").click(function() {
         jQuery("#add_propagation_id_saved_dialog_message").modal('hide');
+        jQuery('#new_propagation_identifier').val('');
+        jQuery('#propagation_rootstock_name').val('');
         location.reload();
     });
-
 
 });
 

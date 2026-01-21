@@ -444,7 +444,7 @@ sub add_propagation_identifier_POST :Args(0){
             parent_id => $propagation_stock_id,
         });
 
-        $status->status_type('In Progress');
+        $status->status_type('in progress');
         $status->update_person($full_name);
         $status->update_date($update_date);
 
