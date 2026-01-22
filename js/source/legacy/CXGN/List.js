@@ -70,7 +70,9 @@ CXGN.List.prototype = {
         "accessions": 'accessions_2_accession_ids',
         "plots": 'plots_2_plot_ids',
         "seedlots": 'stocks_2_stock_ids',
-        "crosses": 'stocks_2_stock_ids'
+        "crosses": 'stocks_2_stock_ids',
+        "genotyping_projects": 'projects_2_project_ids',
+        "genotyping_plates": 'projects_2_project_ids'
     },
 
     // Return the data as a straight list
