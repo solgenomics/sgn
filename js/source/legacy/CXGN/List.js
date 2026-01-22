@@ -70,7 +70,9 @@ CXGN.List.prototype = {
         "accessions": 'accessions_2_accession_ids',
         "plots": 'plots_2_plot_ids',
         "seedlots": 'stocks_2_stock_ids',
-        "crosses": 'stocks_2_stock_ids'
+        "crosses": 'stocks_2_stock_ids',
+        "genotyping_projects": 'projects_2_project_ids',
+        "genotyping_plates": 'projects_2_project_ids'
     },
 
     // Return the data as a straight list
@@ -276,7 +278,7 @@ CXGN.List.prototype = {
             }
         });
     },
-    
+
 
     //return the newly created list_item_id or 0 if nothing was added
     //(due to duplicates)
@@ -472,7 +474,7 @@ CXGN.List.prototype = {
                 list_group_select_action_html += '<div class="col-sm-8">';
                 var compare_disabled = (total === 2)? '' : 'disabled style="opacity:0.6;cursor:not-allowed;"';
                 list_group_select_action_html += '<a id="delete_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:deleteSelectedListGroup(['+selected+'])">Delete</a>&nbsp;<a id="make_public_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePublicSelectedListGroup(['+selected+'])">Make Public</a>&nbsp;<a id="make_private_selected_list_group" class="btn btn-primary btn-sm" style="color:white" href="javascript:makePrivateSelectedListGroup(['+selected+'])">Make Private</a>&nbsp<a id="compare_selected_list_group" class="btn btn-primary btn-sm" style="color:white" '+compare_disabled+' href="javascript:createThreeColumnDiff(['+selected+'])">Compare Selected Lists</a>';
-                list_group_select_action_html += '</div>';  // end column   
+                list_group_select_action_html += '</div>';  // end column
                 list_group_select_action_html += '</div>';  // end row
 
                 // Union / Intersection Icons
@@ -718,7 +720,7 @@ CXGN.List.prototype = {
                 validateList(list_id,undefined,type_select_id);
             }
         });
-        
+
         jQuery('div[name="list_item_toggle_edit"]').click(function() {
             var list_item_id = jQuery(this).data('listitemid');
             var list_item_name = jQuery(this).data('listitemname');
@@ -898,7 +900,7 @@ CXGN.List.prototype = {
     */
 
     listSelect: function(div_name, types, empty_element, refresh, hide_public_lists) {
-    
+
         var allLists = this.getLists(types);
         var lists = allLists.private_lists;
         var public_lists = allLists.public_lists;
@@ -1423,7 +1425,7 @@ function addToListMenu(listMenuDiv, dataDiv, options) {
         var addition_type = jQuery('#' + dataDiv + '_addition_type').val();
 
         if (dataDiv === 'trial_tissue_samples_data') {
-            type = 'tissue_sample';
+            type = 'tissue_samples';
         }
 
         var data = getData(dataDiv, selectText);
@@ -1841,7 +1843,7 @@ function createThreeColumnDiff(list_ids) {
     var lo = new CXGN.List();
     var list_name1 = lo.listNameById(list_ids[0]);
     var list_name2 = lo.listNameById(list_ids[1]);
-    
+
     lo.compareLists(list_ids).then(function(result) {
         window._listComparisonResult = result;
 
@@ -1898,7 +1900,7 @@ function createThreeColumnDiff(list_ids) {
 }
 
 jQuery(document).on('click', '#download_comparison_column', function() {
-    
+
     let tableHeader = jQuery('#comparison_column_select').val();
     let columnNames = window._columnNames;
     const selected = columnNames[tableHeader];

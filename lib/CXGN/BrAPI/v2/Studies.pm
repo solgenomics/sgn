@@ -624,6 +624,7 @@ sub _search {
         my $additional_info = {
 			programDbId => qq|$_->{breeding_program_id}|,
 			programName => $_->{breeding_program_name},
+			createDate => $_->{create_date},
 		};
 		# Join the additional info with the existing additional info
 		if ($_->{additional_info}) {
