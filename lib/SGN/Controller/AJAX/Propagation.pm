@@ -814,6 +814,10 @@ sub update_propagation_status_POST : Args(0) {
         }
     }
 
+    if ($status_type eq 'in_trial') {
+        $status_type = 'in trial';
+    }
+
     my $propagation_status_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_status', 'stock_property')->cvterm_id();
     my $previous_status = $schema->resultset("Stock::Stockprop")->find( {stock_id => $propagation_stock_id, type_id => $propagation_status_cvterm_id });
     my $previous_stockprop_id;

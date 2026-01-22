@@ -18,8 +18,8 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'propagation_group_identifier', 'purpose' 'accession_name', 'material_type', 'date', 'description', 'operator_name' ],
-        optional_columns => [ 'source_type', 'source_name', 'sub_location' ],
+        required_columns => [ 'propagation_group_identifier', 'accession_name', 'material_type', 'date', 'description', 'operator_name' ],
+        optional_columns => [ 'source_type', 'source_name', 'sub_location', 'purpose'],
         column_aliases => {
             'propagation_group_identifier' => ['propagation group identifier'],
             'accession_name' => ['accession name'],
@@ -58,7 +58,11 @@ sub _validate_with_plugin {
     $supported_material_types{'plant'} = 1;
     $supported_material_types{'seed'} = 1;
     $supported_material_types{'budwood'} = 1;
-    $supported_material_types{'tissue culture'} = 1;
+    $supported_material_types{'stem'} = 1;
+    $supported_material_types{'shoot'} = 1;
+    $supported_material_types{'root'} = 1;
+    $supported_material_types{'corm'} = 1;
+
 
     my %supported_source_types;
     $supported_source_types{'seedlot'} = 1;
@@ -67,11 +71,17 @@ sub _validate_with_plugin {
     $supported_source_types{'tissue sample'} = 1;
     $supported_source_types{'new'} = 1;
 
+    my %supported_purposes;
+    $supported_purposes{'backup'} = 1;
+    $supported_purposes{'replicate'} = 1;
+    $supported_purposes{'replacement'} = 1;
+
     my $seen_propagation_group_identifiers = $parsed_values->{'propagation_group_identifier'};
     my $seen_accession_names = $parsed_values->{'accession_name'};
     my $seen_source_types = $parsed_values->{'source_type'};
     my $seen_source_names = $parsed_values->{'source_name'};
     my $seen_material_types = $parsed_values->{'material_type'};
+    my $seen_purposes = $parsed_values->{'purpose'};
 
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions', $seen_accession_names)->{'missing'}};
@@ -112,10 +122,20 @@ sub _validate_with_plugin {
         }
     }
 
-    foreach my $source_type (@$seen_source_types) {
-        if (!exists $supported_source_types{$source_type}) {
-            push @error_messages, "Source type not supported: $source_type. Source type should be seedlot, plot, plant, tissue sample or new ";
+    if ($seen_source_types) {
+        foreach my $source_type (@$seen_source_types) {
+            if (!exists $supported_source_types{$source_type}) {
+                push @error_messages, "Source type not supported: $source_type. Source type should be seedlot, plot, plant, tissue sample or new ";
+            }
         }
+    }
+
+    if ($seen_purposes) {
+        foreach my $purpose (@$seen_purposes) {
+            if (!exists $supported_purposes{$purpose}) {
+                push @error_messages, "Purpose input not supported: $purpose. Purpose field should be replicate, replacement or backup";
+            }
+        }        
     }
 
     if (scalar(@error_messages) >= 1) {

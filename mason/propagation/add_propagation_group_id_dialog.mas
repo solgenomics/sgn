@@ -86,9 +86,9 @@ $date
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_purpose">
                                     <option value="">Please select (optional)</option>
-                                    <option value="CVC Backup">CVC Backup</option>
-                                    <option value="SH second Tree">SH second tree</option>
-                                    <option value="SH Replacement">SH Replacement</option>
+                                    <option value="replicate">replicate</option>
+                                    <option value="backup">backup</option>
+                                    <option value="replacement">replacement</option>
                                 </select>
                             </div>
                         </div>

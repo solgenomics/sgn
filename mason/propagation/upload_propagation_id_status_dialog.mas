@@ -110,7 +110,7 @@
                     <b>Required fields:</b>
                     <ul>
                         <li>propagation_identifier (must exist in the database )</li>
-                        <li>status_type (e.g., planted in trial, distributed, dead, disposed, inventoried)</li>
+                        <li>status_type (can be 'in trial', 'distributed', 'dead', 'disposed' or 'inventoried'). If the status is inventoried, please provide a new inventory identifier.</li>
                         <li>status_date (please use YYYY-MM-DD format)</li>
                         <li>status_updated_by</li>
                     </ul>
@@ -118,7 +118,7 @@
                     <b>Optional fields:</b>
                     <ul>
                         <li>status_notes</li>
-                        <li>inventory_identifier (if the status is the <b>Inventoried</b>, please provide an inventory identifier. The inventory identifier must not exist in the database.)</li>
+                        <li>inventory_identifier (if the status is the <b>inventoried</b>, please provide an inventory identifier. The inventory identifier must not exist in the database.)</li>
                     </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Propagation ID Status", optional_column => 1 &>

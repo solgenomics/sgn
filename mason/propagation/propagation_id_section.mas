@@ -151,7 +151,7 @@ function updatePropagationStatus(propagation_stock_id, propagation_name){
     html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Propagation ID: </label><div class="col-sm-9" ><input class="form-control" id="update_propagation_name" name="update_propagation_name" value="'+propagation_name+'" disabled></div></div>';
     html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><select class="form-control" id="update_propagation_status" name="update_propagation_status"><option disabled value="" selected hidden>Select a status</option>';
     html += '<option value='+"inventoried"+'>'+"inventoried"+'</option>';
-    html += '<option value='+"planted in trial"+'>'+"planted in trial"+'</option>';
+    html += '<option value='+"in_trial"+'>'+"in trial"+'</option>';
     html += '<option value='+"distributed"+'>'+"distributed"+'</option>';
     html += '<option value='+"dead"+'>'+"dead"+'</option>';
     html += '<option value='+"disposed"+'>'+"disposed"+'</option>';
@@ -166,7 +166,7 @@ function updatePropagationStatus(propagation_stock_id, propagation_name){
 
     jQuery("#update_propagation_status").change(function() {
         var status = jQuery('#update_propagation_status').val();
-        if (status == "Inventoried") {
+        if (status == "inventoried") {
             jQuery('#inventory_id_section').modal('show');
         } else {
             jQuery('#inventory_id_section').modal('hide');
