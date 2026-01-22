@@ -48,9 +48,10 @@ sub create_design {
             my $coord_pair = "";
             if (@plant_coords) {
                 $coord_pair = shift(@plant_coords);
+                $coord_pair = "_COORDS{$coord_pair}";
             }
             my $plant_name = $plot_name."_plant_$n";
-            push @plant_names, $plant_name."_COORDS{$coord_pair}";
+            push @plant_names, $plant_name.$coord_pair;
         }
         $greenhouse_design{$plot_num}->{'plant_names'} = \@plant_names;
     }
