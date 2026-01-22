@@ -109,7 +109,7 @@ function displayResults(results) {
         let ranked_gen_table = "<table class='table'>";
         ranked_gen_table += `<thead><tr><th>Genotyping Protocol</th><th>Accession Count (total: ${results.counts.accessions_total})</th><th></th></tr></thead>`;
         ranked_gen_table += "<tbody>";
-        const display = results.counts.ranked_genotyping_protocols.length < 3 ? results.counts.ranked_genotyping_protocols : 3;
+        const display = results.counts.ranked_genotyping_protocols.length < 3 ? results.counts.ranked_genotyping_protocols.length : 3;
         for ( let i = 0; i < display; i++ ) {
             const gen_id = results.counts.ranked_genotyping_protocols[i];
             const count_matches = results.counts.accessions_by_genotyping_protocol[gen_id];
@@ -132,7 +132,6 @@ function displayResults(results) {
     let table = "<thead><tr>";
     table += "<th>Accession</th>";
     for ( let gen_id in (results?.lookups?.genotyping_protocols || {}) ) {
-        console.log(gen_id);
         table += `<th>${(results?.lookups?.genotyping_protocols || {})[gen_id]}</th>`;
     }
     table += "</tr></thead>";
