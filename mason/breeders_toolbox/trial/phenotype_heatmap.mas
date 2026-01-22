@@ -1515,7 +1515,11 @@ function _finish() {
             coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row] = [];
         }
         if (includeAccessionName) {
-            cellVal = plot.germplasmName;
+            if (plot.germplasmName) {
+                cellVal = plot.germplasmName;
+            } else if (plot.crossName) {
+                cellVal = plot.crossName;
+            }
         } else {
             cellVal = '';
         }
