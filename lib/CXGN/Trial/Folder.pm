@@ -49,6 +49,12 @@ has 'folder_for_trials' => (isa => 'Bool',
 	default => 0,
 );
 
+has 'folder_for_experiments_menu' => (
+	isa => 'Bool',
+	is => 'rw',
+	default => 0
+);
+
 has 'folder_for_crosses' => (isa => 'Bool',
 	is => 'rw',
 	default => 0,
@@ -120,6 +126,7 @@ sub BUILD {
 
 	my $breeding_program_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema,'breeding_program', 'project_property')->cvterm_id();
 	my $folder_for_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_trials', 'project_property')->cvterm_id();
+	my $folder_for_experiments_menu_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_experiments_menu', 'project_property')->cvterm_id();
 	my $folder_for_crosses_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_crosses', 'project_property')->cvterm_id();
 	my $folder_for_genotyping_trials_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_genotyping_trials', 'project_property')->cvterm_id();
 	my $folder_for_genotyping_projects_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'folder_for_genotyping_projects', 'project_property')->cvterm_id();
@@ -144,6 +151,8 @@ sub BUILD {
 			$self->breeding_program($row);
 		} elsif ($folder_type_row->type_id() == $folder_for_trials_cvterm_id) {
 			$self->folder_for_trials(1);
+		} elsif ($folder_type_row->type_id() == $folder_for_experiments_menu_cvterm_id) {
+			$self->folder_for_experiments_menu(1);
 		} elsif ($folder_type_row->type_id() == $folder_for_crosses_cvterm_id) {
 			$self->folder_for_crosses(1);
 		} elsif ($folder_type_row->type_id() == $folder_for_genotyping_trials_cvterm_id) {

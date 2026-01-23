@@ -28,6 +28,7 @@ $project_parent => undef
 $breeding_program => undef
 $folder_for_trials
 $folder_for_crosses
+$folder_for_experiments_menu
 $folder_for_genotyping_trials
 $folder_for_genotyping_projects
 $folder_for_tracking_activities
@@ -44,7 +45,7 @@ $has_child_folders => undef
 <& /breeders_toolbox/folder/folder_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name(), folder_for_trials => $folder_for_trials, folder_for_crosses => $folder_for_crosses, folder_for_genotyping_trials => $folder_for_genotyping_trials, folder_for_genotyping_projects => $folder_for_genotyping_projects , folder_for_tracking_activities => $folder_for_tracking_activities, folder_for_transformations => $folder_for_transformations &>
 <& /breeders_toolbox/folder/folder_move.mas, breeding_program_id=>$breeding_program->project_id(), breeding_program_name=>$breeding_program->name()   &>
 <& /breeders_toolbox/folder/edit_folder_name.mas, trial_id=>$folder_id, trial_name=>$folder_name, trial_type=>"Folder" &>
-<& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, folder_for_trials=>$folder_for_trials, folder_for_crosses=>$folder_for_crosses, folder_for_genotyping_trials=>$folder_for_genotyping_trials, folder_for_genotyping_projects=>$folder_for_genotyping_projects , folder_for_tracking_activities=>$folder_for_tracking_activities, folder_for_transformations=>$folder_for_transformations&>
+<& /breeders_toolbox/folder/folder_category_set.mas, folder_id=>$folder_id, folder_name=>$folder_name, folder_for_trials=>$folder_for_trials, folder_for_experiments_menu=>$folder_for_experiments_menu, folder_for_crosses=>$folder_for_crosses, folder_for_genotyping_trials=>$folder_for_genotyping_trials, folder_for_genotyping_projects=>$folder_for_genotyping_projects , folder_for_tracking_activities=>$folder_for_tracking_activities, folder_for_transformations=>$folder_for_transformations&>
 
 <div>
 
@@ -218,6 +219,16 @@ $has_child_folders => undef
 % }
 
                     </tr>
+% if($folder_for_trials){
+                    <tr>
+                        <td><h5>Folder For Experiments Menu</h5></td>
+% if($folder_for_experiments_menu){
+                        <td><h4><span class="glyphicon glyphicon-ok"></span></h4></td>
+% } else {
+                        <td><h4><span class="glyphicon glyphicon-remove"></span></h4></td>
+% }
+                    </tr>
+% }
                     <tr>
                         <td><h5>Folder For Crosses</h5></td>
 % if($folder_for_crosses){

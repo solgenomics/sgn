@@ -76,6 +76,7 @@ sub folder_page :Path("/folder") Args(1) {
     $c->stash->{folder_id} = $folder_id;
     $c->stash->{folder_name} = $folder_project->name();
     $c->stash->{folder_for_trials} = $folder->folder_for_trials();
+    $c->stash->{folder_for_experiments_menu} = $folder->folder_for_experiments_menu();
     $c->stash->{folder_for_crosses} = $folder->folder_for_crosses();
     $c->stash->{folder_for_genotyping_trials} = $folder->folder_for_genotyping_trials();
     $c->stash->{folder_for_genotyping_projects} = $folder->folder_for_genotyping_projects();

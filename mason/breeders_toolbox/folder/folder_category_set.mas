@@ -2,6 +2,7 @@
 $folder_id
 $folder_name => undef
 $folder_for_trials => undef
+$folder_for_experiments_menu => undef
 $folder_for_crosses => undef
 $folder_for_genotyping_trials => undef
 $folder_for_genotyping_projects => undef
@@ -28,6 +29,14 @@ $folder_for_genotyping_projects => undef
 % }
                             </div>
                         </div>
+% if($folder_for_trials) {
+                        <div class="form-group">
+                            <label class="col-sm-5 control-label">Folder for Experiments Menu:</label>
+                            <div class="col-sm-7" >
+                                <input name="edit_folder_for_experiments_menu" id="edit_folder_for_experiments_menu" type="checkbox" checked="<% $folder_for_experiments_menu ? 'true' : 'false' %>" />
+                            </div>
+                        </div>
+% }
                         <div class="form-group">
                             <label class="col-sm-5 control-label">Folder for Crosses:</label>
                             <div class="col-sm-7" >
@@ -92,6 +101,7 @@ function save_folder_categories() {
     var previous_folder_for_genotyping_projects = "<% $folder_for_genotyping_projects %>";
 
     var folder_for_trials = jQuery('#edit_folder_for_trials').is(":checked");
+    var folder_for_experiments_menu = jQuery('#edit_folder_for_experiments_menu').is(":checked");
     var folder_for_crosses = jQuery('#edit_folder_for_crosses').is(":checked");
     var folder_for_genotyping_trials = jQuery('#edit_folder_for_genotyping_trials').is(":checked");
     var folder_for_genotyping_projects = jQuery('#edit_folder_for_genotyping_projects').is(":checked");
@@ -116,6 +126,7 @@ function save_folder_categories() {
         url: '/ajax/folder/'+<% $folder_id %>+'/categories',
         data: {
           'folder_for_trials' : folder_for_trials,
+          'folder_for_experiments_menu': folder_for_experiments_menu,
           'folder_for_crosses' : folder_for_crosses,
           'folder_for_genotyping_trials' : folder_for_genotyping_trials,
           'folder_for_genotyping_projects' : folder_for_genotyping_projects,
