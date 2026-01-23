@@ -86,11 +86,16 @@ sub access_table :Path('/ajax/access/table') Args(0) {
 	    $html .= "<td style=\"padding: 10px\">";
 	    foreach my $resource (@{ $table{$role}->{$level} }) {
 		my ($breeding_program, $ownership);
+
 		if ($resource->{require_breeding_program}) {
 		    $breeding_program = "[BP]";
 		}
+
 		if ($resource->{require_ownership}) {
 		    $ownership = "[OWN]";
+		}
+		else {
+		    $ownership = "";
 		}
 
 		if ($resource->{name}) {
