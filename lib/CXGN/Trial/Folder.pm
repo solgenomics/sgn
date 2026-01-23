@@ -400,8 +400,10 @@ sub fast_children {
         }
 	);
 
+    print STDERR "ROWS RETRIEVED: ".$rs->count()."\n";
     while (my $row = $rs->next) {
         my $name = $row->get_column('project_name');
+	print STDERR "NAME = $name\n";
         $children{$name}{'name'} = $name;
         $children{$name}{'id'} = $row->subject_project_id();
         if ($row->get_column('project_value')){
@@ -664,10 +666,10 @@ sub get_jstree_html {
             elsif ($project_type_of_interest eq 'phenotyping_trial' && $children{$child}->{'sampling_trial'}) {
                 $html .= _jstree_li_html($schema, 'sampling_trial', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
-            elsif ($project_type_of_interest eq 'genotyping_project' && $children{$child}->{'genotype_data_project'}) {
+            elsif ($project_type_of_interest eq 'genotype_data_project' && $children{$child}->{'genotype_data_project'}) {
                 $html .= _jstree_li_html($schema, 'genotyping_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
-            elsif ($project_type_of_interest eq 'genotyping_project' && $children{$child}->{'pcr_genotype_data_project'}) {
+            elsif ($project_type_of_interest eq 'genotype_data_project' && $children{$child}->{'pcr_genotype_data_project'}) {
                 $html .= _jstree_li_html($schema, 'genotyping_project', $children{$child}->{'id'}, $children{$child}->{'name'})."</li>";
             }
             elsif ($children{$child}->{$folder_type_of_interest}) {
