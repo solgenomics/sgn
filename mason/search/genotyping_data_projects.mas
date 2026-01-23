@@ -40,6 +40,14 @@
     </div>
 </div>
 
+<br /><br />
+
+<&| /page/info_section.mas, id=>"protocol_search_accession_filter", title => 'Filter Projects by Accessions', collapsible=>1, collapsed=>0 &>
+
+<& /search/genotyping_projects_accession_filter.mas &>
+
+</&>
+
 
 <script>
 
