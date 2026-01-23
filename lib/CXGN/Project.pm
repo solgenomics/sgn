@@ -5629,7 +5629,7 @@ sub get_recently_added_trials {
 
     if (! grep($type, qw | phenotyping genotyping_plate genotyping_project crosses | )) {
 	print STDERR "Trial type $type not recognized, aborting query\n";
-	return;	
+	return;
     }
 
     my %clause = (
@@ -5640,11 +5640,11 @@ sub get_recently_added_trials {
 	crossing_trial => "  cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'crossing_trial' and ",
 	analysis_experiment => " cvterm.cv_id in (select cv_id where name='project_property') and projectprop.value = 'analysis_experiment' and ",
     );
-    
+
     my $q = "select distinct(project.project_id), project.create_date from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm.cvterm_id) where $clause{$type} create_date + interval '1 $interval' > current_date group by project.project_id order by create_date desc limit ?";
 
     print STDERR "QUERY = $q\n";
-    
+
     my $q = "select project.project_id from project where create_date + interval '1 $interval' > current_date order by create_date desc limit ?";
 
     my $h = $bcs_schema->storage->dbh()->prepare($q);
@@ -5735,9 +5735,9 @@ sub get_recently_modified_projects {
     my $last_refresh_date = shift;
     my $type = shift;
     my $hard_refresh = shift;
-    
+
     print STDERR "RECENTLY MODIFIED PROJECT... using type $type and hard refresh set to $hard_refresh\n";
-    
+
     #if (! $last_refresh_date) {
 #	print STDERR "No last refresh date provided, skipping.\n";
 #	return [];
@@ -5746,17 +5746,17 @@ sub get_recently_modified_projects {
     #if ($type eq "trialtree" || $type eq "trial" || $type eq "trials") { $type = "phenotyping_trial"; }
 
     print STDERR "TYPE NOW: $type\n";
-    
+
     if (! grep($type, qw | phenotyping_trial genotyping_plate genotyping_project crosses | )) {
 	print STDERR "Trial type $type not recognized, aborting query\n";
-	return;	
+	return;
     }
 
     my %clause = (
 	all => " ",
 	phenotyping_trial => " cvterm.cv_id in (select cv_id from cv where name='project_type') and (cvterm.name not in ('analysis_metadata_json', 'genotyping_trial', 'genotyping_project', 'crossing_trial'))  ",
 	genotyping_trial => "  cvterm.cv_id in (select cv_id from cv where name='project_type')  and projectprop.value in ('genotyping_plate', 'folder_for_genotyping_trials', 'genotyping_trial', 'breeding_program') ",
-	genotyping_project => "  cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value in ('genotyping_project', 'folder_for_genotyping_projects', 'breeding_program')  ",
+	genotyping_project => "  projectprop.value in ('genotype_data_project', 'folder_for_genotyping_projects', 'breeding_program')  ",
 	crossing_trial => "  cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value in ('crossing_trial', 'folder_for_crossing_trials', 'breeding_program') ",
 	analysis_experiment => " cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value = 'analysis_experiment' ",
     );
@@ -5770,15 +5770,15 @@ sub get_recently_modified_projects {
     if ($hard_refresh) {
 	$last_refresh_date = "1900-01-01T00:00:00";
     }
-    
+
     my $q = "select distinct(project.project_id), project.create_date from project join projectprop using(project_id) join cvterm on(projectprop.type_id=cvterm.cvterm_id) where $clause{$type} $create_clause  group by project.project_id order by create_date";
 
     print STDERR "QUERY = $q\n";
-    
+
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     print STDERR "LAST REFRESH DATE = $last_refresh_date\n";
-    if ($last_refresh_date) { 
+    if ($last_refresh_date) {
 	$h->execute($last_refresh_date);
     }
     else {
@@ -5792,7 +5792,7 @@ sub get_recently_modified_projects {
 	my $trial_link = "<a href=\"/breeders/trial/".$t->get_trial_id()."\">".$t->get_name()."</a>";
 	my $trial_type = ref($t);
 	$trial_type =~ s/^CXGN\:\://g;
-	
+
 	my $breeding_program = $t->get_breeding_program();
 	my $breeding_program_id = $t->get_breeding_program_id();
 
