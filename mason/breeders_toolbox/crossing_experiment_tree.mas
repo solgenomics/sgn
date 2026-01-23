@@ -71,12 +71,12 @@ jQuery.noConflict();
 
 jQuery(document).ready(function($) {
 
-    alert('hello crossing trials!');
+    //alert('hello crossing trials!');
     var htmltree = window.jsMod['htmltree'];
     var hard_refresh = <% $hard_refresh || '""' %>;
-    alert('HARD REFRESH = '+hard_refresh);
+    //alert('HARD REFRESH = '+hard_refresh);
     htmltree.init("crossing_trial", <% $hard_refresh %>);
-    alert('DONE!');
+    //alert('DONE!');
     //htmltree.init_events('phenotyping_trial');
 
     // alert('get tree from local storage...');
@@ -89,19 +89,19 @@ jQuery(document).ready(function($) {
   //   //alert(html);
   //   if (html === null) {
   // 	alert('HTML NOT DEFINED! FETCHING...');
-  // 	get_crosses_tree().then( function(r) { 
+  // 	get_crosses_tree().then( function(r) {
   // 	    html = localStorage.getItem('html_crossing_experiment_tree');
   // 	    format_crosses_tree(html);
   // 	});
   //   }
 
-    
+
   //   jQuery('#refresh_crosses_jstree_html_trialtree_button').click(function(){
   // 	alert('hello!');
   // 	get_crosses_tree();
   //   });
 
-    
+
   //   jQuery('#crosses_datatable').DataTable({
   //       destroy: true,
   //       scrollY:        '30vh',
@@ -178,15 +178,15 @@ jQuery(document).ready(function($) {
 // function get_crosses_tree() {
 //     alert('get_trial_tree');
 //     return jQuery.ajax( {
-// 	url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',  
+// 	url: '/ajax/breeders/get_trials_with_folders_cached?type=cross',
 //     }).then(  function(r) { localStorage.setItem('html_crosses_tree', r.html); });
 // }
 
 // function format_crosses_tree(treehtml) {
 //     alert('format_crosses_tree');
-    
+
 //     var html = '<ul>'+treehtml+'</ul>';
-    
+
 //     jQuery('#crosses_list').html(html);
 
 //     alert("HTML "+html);
@@ -210,9 +210,9 @@ jQuery(document).ready(function($) {
 // 	    "case_insensitive" : true,
 // 	},
 // 	"plugins" : ["html_data","types","search"],
-	
+
 //     });
-    
+
 });
 
 
