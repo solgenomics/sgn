@@ -66,9 +66,9 @@ jQuery(document).ready(function($) {
 
     var htmltree = window.jsMod['htmltree'];
     var hard_refresh = <% $hard_refresh || '""' %>;
-    alert('HARD REFRESH = '+hard_refresh);
+//    alert('HARD REFRESH = '+hard_refresh);
     htmltree.init("genotyping_project", <% $hard_refresh %>);
-    alert('Done with genotyping_project');
+ //   alert('Done with genotyping_project');
 
 
 // //				       alert('get tree from local storage...');
