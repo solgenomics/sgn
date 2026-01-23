@@ -112,13 +112,15 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('new_cross_close_modal', 'id', 'find "new cross close modal" and click')->click();
 	sleep(1);
 
-	$t->find_element_ok("refresh_crosses_jstree_html_trialtree_button", "id", "find and click 'refresh crosses trial jstree'")->click();
+	print STDERR "REFRESH CROSSING TRIAL TREE...\n";
+	$t->find_element_ok("refresh_crossing_trial_button", "id", "find and click 'refresh crosses trial jstree'")->click();
+	sleep(20);
+
+	print STDERR "FIND NEW CROSSING TRIALS...\n";
+	$t->find_element_ok('//div[@id="crossing_trial_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with crosses trial list')->click();
 	sleep(5);
 
-	$t->find_element_ok('//div[@id="crosses_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with crosses trial list')->click();
-	sleep(5);
-
-	my $href_to_trial = $t->find_element_ok("//div[\@id='crosses_list']//a[contains(text(), '$experiment_name')]", 'xpath', 'find created cross and take link href')->get_attribute('href');
+	my $href_to_trial = $t->find_element_ok("//div[\@id='crossing_trial_list']//a[contains(text(), '$experiment_name')]", 'xpath', 'find created cross and take link href')->get_attribute('href');
 
 	# check if added successfully
 	$t->get_ok($href_to_trial);
