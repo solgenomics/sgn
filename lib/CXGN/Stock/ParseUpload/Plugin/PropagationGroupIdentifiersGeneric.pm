@@ -67,8 +67,8 @@ sub _validate_with_plugin {
     my %supported_source_types;
     $supported_source_types{'seedlot'} = 1;
     $supported_source_types{'plot'} = 1;
+    $supported_source_types{'subplot'} = 1;
     $supported_source_types{'plant'} = 1;
-    $supported_source_types{'tissue sample'} = 1;
     $supported_source_types{'new'} = 1;
 
     my %supported_purposes;
@@ -91,7 +91,7 @@ sub _validate_with_plugin {
 
     if ($seen_source_names) {
         my $source_name_validator = CXGN::List::Validate->new();
-        my @source_names_missing = @{$source_name_validator->validate($schema,'plots_or_subplots_or_plants_or_tissue_samples', $seen_source_names)->{'missing'}};
+        my @source_names_missing = @{$source_name_validator->validate($schema,'plots_or_subplots_or_plants_or_seedlots', $seen_source_names)->{'missing'}};
         if (scalar(@source_names_missing) > 0) {
             push @error_messages, "The following source names are not in the database, or are not in the database as uniquenames: ".join(',',@source_names_missing);
         }
@@ -118,14 +118,14 @@ sub _validate_with_plugin {
 
     foreach my $type (@$seen_material_types) {
         if (!exists $supported_material_types{$type}) {
-            push @error_messages, "Material type not supported: $type. Material type should be plant, seed, budwood or tissue culture ";
+            push @error_messages, "Material type not supported: $type. Material type should be budwood, stem, shoot, root, corm, plant or seed";
         }
     }
 
     if ($seen_source_types) {
         foreach my $source_type (@$seen_source_types) {
             if (!exists $supported_source_types{$source_type}) {
-                push @error_messages, "Source type not supported: $source_type. Source type should be seedlot, plot, plant, tissue sample or new ";
+                push @error_messages, "Source type not supported: $source_type. Source type should be plot, subplot, plant, seedlot or new ";
             }
         }
     }
@@ -135,7 +135,7 @@ sub _validate_with_plugin {
             if (!exists $supported_purposes{$purpose}) {
                 push @error_messages, "Purpose input not supported: $purpose. Purpose field should be replicate, replacement or backup";
             }
-        }        
+        }
     }
 
     if (scalar(@error_messages) >= 1) {

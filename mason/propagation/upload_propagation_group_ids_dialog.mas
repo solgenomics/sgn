@@ -117,7 +117,7 @@ $trial_name
                     <ul>
                         <li>propagation_group_identifier (must be globally unique and must not exist in the database )</li>
                         <li>accession_name (must exist as <b>uniquenames</b> in the database)</li>
-                        <li>material_type (must be one of the following: plant, seed, budwood, tissue culture. If you would like to add additional types, please contact us.)</li>
+                        <li>material_type (must be one of the following: budwood, stem, shoot, root, corm, plant or seed. If you would like to add additional types, please contact us.)</li>
                         <li>date (propagation initiation date YYYY-MM-DD)</li>
                         <li>description</li>
                         <li>operator_name</li>
@@ -125,8 +125,8 @@ $trial_name
 
                     <b>Optional fields:</b>
                     <ul>
-                        <li>source_type (can be plot, subplot, plant, tissue sample or new)</li>
-                        <li>source_name (must exist as <b>uniquenames</b> in the database, can be plot, subplot, plant or tissue sample stock type.)</li>
+                        <li>source_type (can be plot, subplot, plant, seedlot or new)</li>
+                        <li>source_name (must exist as <b>uniquenames</b> in the database, can be plot, subplot, plant or seedlot stock type.)</li>
                         <li>sub_location (detailed location of propagation materials)</li>
                         <li>purpose (can be replicate, replacement or backup)</li>
                     </ul>

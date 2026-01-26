@@ -54,10 +54,10 @@ $date
                             <div class="col-sm-8">
                                 <select class="form-control" id="propagation_material_source_type">
                                     <option value="">Please select a type (optional)</option>
-                                    <option value="seedlot">seedlot</option>
                                     <option value="plot">plot</option>
+                                    <option value="subplot">subplot</option>
                                     <option value="plant">plant</option>
-                                    <option value="tissue sample">tissue sample</option>
+                                    <option value="seedlot">seedlot</option>
                                     <option value="new">new</option>
                                 </select>
                             </div>
