@@ -653,7 +653,7 @@ jQuery(document).ready(function ($) {
 
         var num_rows_per_plot = $('#trial_create_rows_per_plot').val();
         var num_cols_per_plot = $('#trial_create_cols_per_plot').val();
-        if ($('#add_plant_entries').val() > num_rows_per_plot * num_cols_per_plot || num_rows_per_plot * num_cols_per_plot < Math.max(... greenhouse_num_plants.map(Number)) || num_rows_per_plot * num_cols_per_plot < num_plants_per_treatment) {
+        if ($('#trial_create_rows_and_columns_to_plants').prop('checked') && ($('#add_plant_entries').val() > num_rows_per_plot * num_cols_per_plot || num_rows_per_plot * num_cols_per_plot < Math.max(... greenhouse_num_plants.map(Number))) || num_rows_per_plot * num_cols_per_plot < num_plants_per_treatment) {
             alert("You specified in-plot coordinates, but the number of plants per plot is greater than the number of positions available in each plot. Please decrease the number of plants per plot or increase the number of available positions. If this is a greenhouse trial, make sure no accession is specified to have more plants than the number of allowed spaces. If this is a splitplot design, please make sure that the number of plants per plot specified in section (2) matches the number of plants per treatment.");
             return;
         }
