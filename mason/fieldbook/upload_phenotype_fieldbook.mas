@@ -16,6 +16,13 @@
                 <div class="well well-sm">
                     <h5>Upload Exported Fieldbook Phenotype File in Database Format for Plots or Plants</h5>
                 </div>
+            <&| /page/explanation.mas, title=>'Template Information' &>
+                <p>
+                <b>File format information</b>
+                <br>
+                <a id="phenotype_fieldbook_upload_info">Spreadsheet Format</a>
+                </p>
+            </&>
                 <div class="form-group">
                     <label class="col-sm-6 control-label">Data Level: </label>
                     <div class="col-sm-6" >
@@ -52,7 +59,48 @@
   </div>
 </div>
 
+<div class="modal fade" id="upload_fieldbook_file_info_dialog" name="upload_fieldbook_file_info_dialog" tabindex="-1" role="dialog" aria-labelledby="transcriptomicsUploadInfoDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="transcriptomicsUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
 
+            <h3>Fieldbook files can be uploaded in .xlsx or .csv format</h3>
+            <h4>When exporting a Phenotype File from Fieldbook, the file should already be in this format. Please check to make sure your file was exported correctly</h4>
+
+            <ul>
+
+                <li><strong>plot_id</strong> or <strong>plant_id</strong> or <strong>subplot_id</strong>: This should be one of these stock IDs that already exist in the database.</li>
+                <li><strong>trait</strong>: A trait that exists in the database.</li>
+                <li><strong>value</strong>: Corresponding value for the observed trait.</li>
+                <li><strong>observationTimeStamp</strong>: Timestamp of the observation.</li>
+                <li><strong>collector</strong>: Observation collector's name.</li>
+            </ul>
+            <table class="table table-hover table-bordered table-condensed" >
+                <thead></thead>
+                <tbody>
+                    <tr>
+                        <td>plot_id</td>
+                        <td>trait</td>
+                        <td>value</td>
+                        <td>observationTimeStamp</td>
+                        <td>collector</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script defer="defer">
 
@@ -60,6 +108,10 @@ jQuery(document).ready(function() {
 
     jQuery('#upload_fieldbook_phenotypes_link').click( function() {
 	jQuery('#upload_fieldbook_phenotypes_dialog').modal("show");
+    });
+
+    jQuery('#phenotype_fieldbook_upload_info').click( function() {
+        jQuery('#upload_fieldbook_file_info_dialog').modal("show");
     });
 
 });
