@@ -498,7 +498,7 @@ $has_plant_entries => undef
                                 <div class="col-sm-3 control-label"><strong>Information to include: </strong></div>
                                 <div class="col-sm-9" >
                                     <div class="checkbox">
-                                        <label><input type="checkbox" id="accession_name" value="accession_name" checked> Accession Name </label>
+                                        <label><input type="checkbox" id="accession_name" value="accession_name" checked> Cross/Accession Name </label>
                                     </div>
                                     <div class="checkbox">
                                         <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> Observation Unit Name </label>
