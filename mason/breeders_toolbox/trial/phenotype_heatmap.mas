@@ -5,6 +5,7 @@ $data_level => 'plot'
 $has_col_and_row_numbers => undef
 $has_subplot_entries => undef
 $has_plant_entries => undef
+$trial_stock_type => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
@@ -478,6 +479,53 @@ $has_plant_entries => undef
             <div class="modal-footer">
                 <button id="close_trait_delete_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="download_field_layout_modal" name="download_field_layout_modal" tabindex="-1" role="dialog" aria-labelledby="DownloadTrialLayoutDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DownloadTrialLayoutDialog"><b>Download Spatial Layout Options</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" >
+                        <div class="well">
+                            <div class="form-group">
+                                <div class="col-sm-3 control-label"><strong>Information to include: </strong></div>
+                                <div class="col-sm-9" >
+% if ($trial_stock_type eq "cross") {
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id="accession_name" value="accession_name" checked> Cross/Accession Name </label>
+                                    </div>
+% }
+% else {
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id ="accession_name" value="accession_name" checked> Accession Name </label>
+                                    </div>
+% }
+                                    <div class="checkbox">
+                                        <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> Observation Unit Name </label>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label> <input type="checkbox" id="plot_id" value="plot_id"> Plot ID </label>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id="plot_num" value="plot_num"> Plot Number </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_download_layout_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="download_field_layout_button" title="Download">Download</button>
             </div>
         </div>
     </div>
@@ -1445,6 +1493,15 @@ function _finish() {
     });
 
   jQuery("#trial_fieldmap_download_layout_button").click( function () {
+    jQuery("#download_field_layout_modal").modal("show");
+  });
+  
+  jQuery("#download_field_layout_button").click( function () {
+    const includeAccessionName = jQuery('#accession_name').is(':checked');
+    const includeObsUnitName = jQuery('#obs_unit_name').is(':checked');
+    const includePlotId = jQuery('#plot_id').is(':checked');
+    const includePlotNum = jQuery('#plot_num').is(':checked');
+
     let cols_csv_header = [];
     for (let i = FieldMap.meta_data.min_col; i <= FieldMap.meta_data.max_col; i++) {
         cols_csv_header.push(i);
@@ -1459,11 +1516,32 @@ function _finish() {
     let row = "positionCoordinateY";
     let col = "positionCoordinateX";
     let temp_plot_arr = [...FieldMap.plot_arr];
+    let cellVal = '';
     for (let plot of temp_plot_arr.filter(plot => plot.type != "border")) {
+        console.log("plot:", plot);
         if (!coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row]) {
             coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row] = [];
         }
-        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = plot.germplasmName;
+        if (includeAccessionName) {
+            if (plot.germplasmName) {
+                cellVal = plot.germplasmName;
+            } else if (plot.crossName) {
+                cellVal = plot.crossName;
+            }
+        } else {
+            cellVal = '';
+        }
+        if (includeObsUnitName && plot.observationUnitName) {
+            cellVal += (cellVal ? '\n' : '') + plot.observationUnitName;
+        }
+        if (includePlotId && plot.observationUnitDbId) {
+            cellVal += (cellVal ? '\n' : '') + plot.observationUnitDbId;
+        }
+        if (includePlotNum && plot.observationUnitPosition.observationLevel.levelCode) {
+            cellVal += (cellVal ? '\n' : '') + plot.observationUnitPosition.observationLevel.levelCode;
+        }
+        cellVal = `"${cellVal}"`;
+        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = cellVal;
     }
     if (!FieldMap.meta_data.invert_row_checkmark) {
         coord_matrix.reverse();
@@ -1486,7 +1564,7 @@ function _finish() {
 
         hiddenElement.download = `Trial_${FieldMap.trial_id}_spatial_layout.csv`;
         hiddenElement.click();
-  });
+  })
 
   jQuery(document).on('click', '#trial_phenotype_heatmap_download', function(){
       var html = d3.select("svg")
