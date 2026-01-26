@@ -5,6 +5,7 @@ $data_level => 'plot'
 $has_col_and_row_numbers => undef
 $has_subplot_entries => undef
 $has_plant_entries => undef
+$trial_stock_type => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
@@ -497,9 +498,16 @@ $has_plant_entries => undef
                             <div class="form-group">
                                 <div class="col-sm-3 control-label"><strong>Information to include: </strong></div>
                                 <div class="col-sm-9" >
+% if ($trial_stock_type eq "cross") {
                                     <div class="checkbox">
                                         <label><input type="checkbox" id="accession_name" value="accession_name" checked> Cross/Accession Name </label>
                                     </div>
+% }
+% else {
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id ="accession_name" value="accession_name" checked> Accession Name </label>
+                                    </div>
+% }
                                     <div class="checkbox">
                                         <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> Observation Unit Name </label>
                                     </div>
