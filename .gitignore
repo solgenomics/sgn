@@ -49,5 +49,6 @@ docs/_site/
 .DS_Store
 sgn.iml
 docs/*
-!docs/r_markdown_docs
+!docs/r_markdown_docs/
+!docs/r_markdown_docs/**
 .idea/
