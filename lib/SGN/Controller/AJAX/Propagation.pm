@@ -245,6 +245,12 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
     my $session_id = $c->req->param("sgn_session_id");
     my @error_messages;
 
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $program_ref = $program_object->get_breeding_programs_by_trial($propagation_project_id);
+
+    my $program_array = @$program_ref[0];
+    my $breeding_program_name = @$program_array[1];
+
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
@@ -256,6 +262,11 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+
+        if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+            $c->stash->{rest} = {error=>'Only a submitter or a curator can upload propagation group identifiers'};
+            $c->detach();
+        }
     } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload propagation group identifiers!'};
@@ -264,27 +275,16 @@ sub upload_propagation_group_identifiers_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+
+        my @user_roles = $c->user->roles();
+        my %has_roles = ();
+        map { $has_roles{$_} = 1; } @user_roles;
+
+        if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
+          $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload propagation group identifiers." };
+          return;
+        }
     }
-
-    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
-        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload propagation group identifiers'};
-        $c->detach();
-    }
-
-    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
-    my $program_ref = $program_object->get_breeding_programs_by_trial($propagation_project_id);
-
-    my $program_array = @$program_ref[0];
-    my $breeding_program_name = @$program_array[1];
-    my @user_roles = $c->user->roles();
-    my %has_roles = ();
-    map { $has_roles{$_} = 1; } @user_roles;
-
-    if (! ( (exists($has_roles{$breeding_program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator}))) {
-      $c->stash->{rest} = { error => "You need to be either a curator, or a submitter associated with breeding program $breeding_program_name to upload propagation group identifiers." };
-      return;
-    }
-
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
