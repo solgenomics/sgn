@@ -573,10 +573,10 @@ document.addEventListener("DOMContentLoaded", function() {
   jQuery(window).on('pageshow', function() {
     let urlParams = new URLSearchParams(window.location.search);
     if ( urlParams.has('list') ) {
-      loadList(urlParams.get('list'));
+      setTimeout(() => loadList(urlParams.get('list')), 500);
     }
     else if ( urlParams.has('experiment') ) {
-      loadExperiment(urlParams.get('experiment'));
+      setTimeout(() => loadExperiment(urlParams.get('experiment')), 500);
     }
   });
 
@@ -589,7 +589,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let listValue = "__LIST__" + listId;
     jQuery('#wizard-type-select-col1 option').each(function() {
       let opt = jQuery(this);
-      if ( opt.val() == listValue ) {
+      if ( opt.val() === listValue ) {
         jQuery("#wizard-type-select-col1").val(opt.val());
         window.sWizard.wizard.initial_list(listId);
       }
@@ -605,7 +605,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let experimentValue = "__EXPERIMENT__" + experimentId;
     jQuery('#wizard-type-select-col1 option').each(function() {
       let opt = jQuery(this);
-      if ( opt.val() == experimentValue ) {
+      if ( opt.val() === experimentValue ) {
         jQuery("#wizard-type-select-col1").val(opt.val());
         window.sWizard.wizard.initial_experiment(experimentId);
       }
