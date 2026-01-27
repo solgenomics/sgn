@@ -2,6 +2,7 @@ import "../legacy/d3/d3v5Min.js";
 
 
 const list_prefix = "__LIST__";
+const experiment_prefix = "__EXPERIMENT__";
 
 /**
  * Wizard - Creates a new Wizard object.
@@ -227,6 +228,28 @@ export function Wizard(main_id,col_number){
     })
   }
 
+  function setColumnFromExperiment(index,experimentID) {
+    allCols.filter(d=>d.index==index)
+      .style("opacity","0.5")
+      .select(".wizard-loader")
+      .style("display",null);
+    fetch(document.location.origin+'/ajax/breeders/trial_folders/'+experimentID)
+      .then(resp=>resp.json())
+      .then(json=>{
+        if ( json && json.trials ) {
+          var trials = json.trials.map((x) => { return { ...x, url: `/breeders/trial/${x.id}` } })
+          setColumn(index, "trials", null, ()=>true, trials);
+          allCols.filter(d=>d.index==index)
+            .style("opacity","1")
+            .select(".wizard-loader")
+            .style("display","none");
+        }
+      })
+      .catch(err=>{
+        console.log("ERROR: Could not fetch trials from experiment/trial folder [" + err.message + "]");
+      });
+  }
+
   function setColumnFromList(index,listID){
     allCols.filter(d=>d.index==index)
       .style("opacity","0.5")
@@ -251,6 +274,9 @@ export function Wizard(main_id,col_number){
     var val = d3.select(this).node().value;
     if (val.slice(0,list_prefix.length)==list_prefix){
       setColumnFromList(d.index,val.slice(list_prefix.length))
+    }
+    else if (val.slice(0,experiment_prefix.length)==experiment_prefix){
+      setColumnFromExperiment(d.index,val.slice(experiment_prefix.length))
     }
     else {
       setColumn(d.index, val);
@@ -523,6 +549,17 @@ export function Wizard(main_id,col_number){
     ))
   }
 
+  function set_experiments(experiment_dict) {
+    experiment_dict = experiment_dict || {};
+    var experiments = Object.keys(experiment_dict).map(k=>({id:k,name:experiment_dict[k]}));
+    experiments = experiments.sort((a,b)=>a.name.toLowerCase() < b.name.toLowerCase() ? -1 : b.name.toLowerCase() < a.name.toLowerCase() ? 1 : 0);
+    var opts = allCols.selectAll(".wizard-experiments-group").selectAll("option")
+      .data(experiments);
+    opts.enter().append("option").merge(opts)
+      .attr("value",d=>experiment_prefix+d.id)
+      .text(d=>d.name);
+  }
+
   function set_lists(list_dict){
     list_dict = list_dict || {};
     var lists = Object.keys(list_dict).map(k=>({id:k,name:list_dict[k].name,type:list_dict[k].type}));
@@ -747,9 +784,17 @@ export function Wizard(main_id,col_number){
     },
 
     /**
+     * experiments - sets or resets the available experiments (folders of trials) to show in the wizard
+     * @memberof Wizard.prototype
+     * @param {Object} experiment_dict object where keys are project IDs and values are the human-readable name
+     * @returns {this}
+     */
+    experiments: function(experiment_dict) { set_experiments(experiment_dict); return wizard},
+
+    /**
      * lists - sets or resets the availible lists to show in the wizard
      * @memberof Wizard.prototype
-     * @param  {Object} list_dict object where keys are listIDs and values are the human-readable name
+     * @param  {Object} list_dict object where keys are listIDs and values are {name: human-readbale name, type: list type}
      * @returns {this}
      */
     lists: function(list_dict){ set_lists(list_dict); return wizard},
@@ -768,7 +813,23 @@ export function Wizard(main_id,col_number){
      * @param  {Array.<string>} types list of types availible in the first column
      * @returns {this}
      */
-    initial_types: function(types){set_inital_types(types); return wizard}
+    initial_types: function(types){set_inital_types(types); return wizard},
+
+    /**
+     * Populate the first column of the wizard with a pre-defined list
+     * @memberof Wizard.prototype
+     * @param {int} listID List ID to populate
+     * @returns {this}
+     */
+    initial_list: function(listID) { setColumnFromList(0, listID); return wizard},
+
+    /**
+     * Populate the first column of the wizard with a pre-defined experiment / trial folder
+     * @memberof Wizard.prototype
+     * @param {int} experimentID Project ID of Experiment / Trial Folder to populate
+     * @returns {this}
+     */
+    initial_experiment: function(experimentID) { setColumnFromExperiment(0, experimentID); return wizard}
   };
   return wizard
 }

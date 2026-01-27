@@ -43,9 +43,10 @@ $dataset_id => undef
         <div class="wizard-panel panel panel-default">
 
           <div class="panel-heading">
-            <select class="wizard-type-select form-control input-sm form-inline">
+            <select class="wizard-type-select form-control input-sm form-inline" id="wizard-type-select-col1">
               <option value="" disabled selected>Select Column Type</option>
               <optgroup class="wizard-types-group" label="--------------------"></optgroup>
+              <optgroup class="wizard-experiments-group" label="Load Trials from Experiment:"></optgroup>
               <optgroup class="wizard-lists-group" label="Load Selection from List:"></optgroup>
             </select>
           </div>
@@ -566,6 +567,50 @@ document.addEventListener("DOMContentLoaded", function() {
   d3.select("#update_wizard_lists").on('click',function(){
     window.sWizard.reload_lists();
   });
+
+
+  // On Page Ready: load a pre-defined list or experiment into the first column
+  jQuery(window).on('pageshow', function() {
+    let urlParams = new URLSearchParams(window.location.search);
+    if ( urlParams.has('list') ) {
+      loadList(urlParams.get('list'));
+    }
+    else if ( urlParams.has('experiment') ) {
+      loadExperiment(urlParams.get('experiment'));
+    }
+  });
+
+
+  /**
+   * Preload the Wizard with the contents of the specified List
+   * @param {String,Number} listId The ID of the List to load
+   */
+  function loadList(listId) {
+    let listValue = "__LIST__" + listId;
+    jQuery('#wizard-type-select-col1 option').each(function() {
+      let opt = jQuery(this);
+      if ( opt.val() == listValue ) {
+        jQuery("#wizard-type-select-col1").val(opt.val());
+        window.sWizard.wizard.initial_list(listId);
+      }
+    });
+  }
+
+
+  /**
+   * Preload the Wizard with the Trials from the specified Experiement (project/folder)
+   * @param {String,Number} experimenId The ID of the experiment/project/folder to load
+   */
+  function loadExperiment(experimentId) {
+    let experimentValue = "__EXPERIMENT__" + experimentId;
+    jQuery('#wizard-type-select-col1 option').each(function() {
+      let opt = jQuery(this);
+      if ( opt.val() == experimentValue ) {
+        jQuery("#wizard-type-select-col1").val(opt.val());
+        window.sWizard.wizard.initial_experiment(experimentId);
+      }
+    });
+  }
 
 
   // Wizard Callback: get archived vcf files available for selected genotyping protocol / project

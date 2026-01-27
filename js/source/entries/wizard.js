@@ -192,6 +192,27 @@ export function WizardSetup(main_id) {
 
   load_lists();
 
+  var load_experiments = () => (new Promise((resolve, reject)=>{
+    fetch(document.location.origin+'/ajax/breeders/trial_folders?tagged=true')
+      .then(resp=>resp.json())
+      .then(json=>{
+        let experiment_dict = {};
+        if ( json && json.folders ) {
+          for ( let i = 0; i < json.folders.length; i++ ) {
+            experiment_dict[json.folders[i].id] = json.folders[i].name;
+          }
+        }
+        resolve(experiment_dict);
+      })
+      .catch(err=>{
+        reject("ERROR: Could not fetch experiment/trial folders [" + err.message + "]");
+      });
+  })).then(experiment_dict => {
+    wiz.experiments(experiment_dict);
+  });
+
+  load_experiments();
+
   wiz.add_to_list((listID, items) => {
     var count = list.addBulk(listID, items.map(i => i.name));
     if (count) alert(`${count} items added to list.`);
