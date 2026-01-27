@@ -168,6 +168,72 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
 }
 
 
+#
+# GET /ajax/breeders/trial_folders
+# Get all of the projects/folders used to hold phenotyping trials
+# Returns:
+#   folders: array of folder info (id, name)
+#
+sub trial_folders : Path('/ajax/breeders/trial_folders') {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $tagged = $c->req->param('tagged') eq 'true';
+
+    my @folders;
+    my $trial_folder_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "trial_folder", "project_property")->cvterm_id();
+    my $folder_for_experiments_menu_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'folder_for_experiments_menu', 'project_property')->cvterm_id();
+    my $rs = $schema->resultset("Project::Project")->search(
+        { 'projectprops.type_id' => $tagged ? $folder_for_experiments_menu_type_id : $trial_folder_type_id },
+        { join => 'projectprops' }
+    );
+    if ( $rs ) {
+        while ( my $folder = $rs->next ) {
+            push(@folders, {
+                id => $folder->id,
+                name => $folder->name
+            });
+        }
+    }
+
+    $c->stash->{rest} = { folders => \@folders };
+}
+
+
+#
+# GET /ajax/breeders/trial_folders/:folder id
+# Get all of the trials contained in the specified folder
+# Returns:
+#   trials: array of trial info (id, name)
+#
+sub trials_in_folder : Path('/ajax/breeders/trial_folders/') : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $folder_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my @trials;
+    my $trial_folder_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "trial_folder", "project_property")->cvterm_id();
+    my $trial_rs = $schema->resultset('Project::ProjectRelationship')->search({
+        'me.object_project_id' => $folder_id,
+        'me.type_id' => $trial_folder_type_id
+    }, {
+        join => 'subject_project', '+select' => ['subject_project.name'], '+as' => ['trial_name']
+    });
+    if ( $trial_rs ) {
+        while ( my $trial = $trial_rs->next ) {
+            push(@trials, {
+                id => $trial->subject_project->id,
+                name => $trial->subject_project->name
+            });
+        }
+    }
+
+    $c->stash->{rest} = { trials => \@trials };
+
+}
+
+
 =head2 function get_recent_trials()
 
   Params: a string indicating the interval - one of 'day', 'week', 'month' or 'year'

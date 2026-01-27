@@ -1,0 +1,84 @@
+<div id="explore-experiments">
+    <p>Explore <strong>Experiments</strong> in the Search Wizard:</p>
+
+    <&| /util/user.mas:logged_out &>
+        <div id="explore-experiments-login">
+            <p><em>You must first log in to view the lists of experiments...</em></p>
+        </div>
+    </&>
+
+    <&| /util/user.mas:logged_in &>
+        <div id="explore-experiments-loggedin">
+            <select class="form-control" id="explore-experiments-select" disabled>
+              <option value=''>Loading...</option>
+            </select>
+        </div>
+    </&>
+</div>
+
+<script type='text/javascript'>
+  jQuery(document).ready(function() {
+    getExperiments(function(experiments) {
+      displayExperiments(experiments);
+    });
+  });
+
+
+  /**
+   * Get the list of "experiments" = projects/folders used to hold trials
+   * @param callback Callback function(experiments)
+   */
+  function getExperiments(callback) {
+    jQuery.ajax({
+      method: 'GET',
+      url: '/ajax/breeders/trial_folders?tagged=true',
+      error: function(response) {
+        console.log("ERROR: Could not get experiments");
+        console.log(response);
+        return callback([]);
+      },
+      success: function(response) {
+        if ( response && response.folders ) {
+          return callback(response.folders);
+        }
+        else {
+          return callback([]);
+        }
+      }
+    });
+  }
+
+
+  /**
+   * Display the "experiments" in as options in the select box
+   * @param {Object[]} List of BrAPI trials to parse as experiments
+   */
+  function displayExperiments(experiments) {
+    let options = ["<option value=''>---- Select an Experiment to Explore ----</option>"];
+    
+    experiments.sort(function(a, b) {
+      if (a.name < b.name) return -1;
+      if (a.name > b.name) return 1;
+      return 0;
+    });
+    
+    for ( let i = 0; i < experiments.length; i++ ) {
+      let id = experiments[i].id;
+      let name = experiments[i].name;
+
+      let html = "<option value='" + id + "'>" + name + "</option>";
+      options.push(html);
+    }
+    jQuery("#explore-experiments-select").html(options.join(''));
+    jQuery("#explore-experiments-select").prop('disabled', false);
+
+    jQuery("#explore-experiments-select").change(function() {
+        let experimentId = jQuery(this).find('option:selected').val();
+        if ( experimentId && experimentId !== "" ) {
+            jQuery(this).find('option:selected').html("Loading...");
+            jQuery("#explore-experiments-select").prop('disabled', true);
+            window.location = "/breeders/search?experiment=" + experimentId;
+        }
+    });
+  }
+</script>
