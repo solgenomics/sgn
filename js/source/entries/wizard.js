@@ -48,7 +48,7 @@ const toValidateType = (t) => (t === "tissue_sample" ? "tissue_samples" : t);
 const toLoadType = (t) => (t === "tissue_samples" ? "tissue_sample" : t);
 
 // Allow both forms when FETCHING lists so legacy lists appear
-const fetchTypes = [...new Set([...initialtypes, "tissue_sample", "subplots", "plants", "plots"])];
+const fetchTypes = [...new Set([...initialtypes, "genotyping_plates", "tissue_sample", "subplots", "plants", "plots"])];
 
 function makeURL(target, id) {
     switch (target) {
@@ -73,6 +73,7 @@ function makeURL(target, id) {
           return document.location.origin + `/breeders/trial/${id}`;
         case "genotyping_protocols":
           return document.location.origin + `/breeders_toolbox/protocol/${id}`;
+        case "genotyping_plates":
         case "genotyping_projects":
           return document.location.origin + `/breeders/trial/${id}`;
         case "trial_designs":
