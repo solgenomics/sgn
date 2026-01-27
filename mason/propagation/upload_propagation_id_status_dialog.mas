@@ -90,9 +90,9 @@
                 <div class="container-fluid">
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
-                    <br />
-
+                    The first row (header) must contain the <b>propagation_identifier</b>, <b>status_type</b>, <b>status_date</b>, <b>status_updated_by</b>. Additional information can be included by selecting optional column(s) (see below):
+                    <br/>
+                    <br>
                     <table class="table table-hover table-bordered table-condensed" >
                         <thead></thead>
                         <tbody>
@@ -100,8 +100,8 @@
                                 <td>propagation_identifier</td>
                                 <td>status_type</td>
                                 <td>status_date</td>
-                                <td>status_notes</td>
                                 <td>status_updated_by</td>
+                                <td>status_notes</td>
                                 <td>inventory_identifier</td>
                             </tr>
                         </tbody>
