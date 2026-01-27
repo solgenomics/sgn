@@ -33,7 +33,11 @@ $folder_for_genotyping_projects => undef
                         <div class="form-group">
                             <label class="col-sm-5 control-label">Folder for Experiments Menu:</label>
                             <div class="col-sm-7" >
-                                <input name="edit_folder_for_experiments_menu" id="edit_folder_for_experiments_menu" type="checkbox" checked="<% $folder_for_experiments_menu ? 'true' : 'false' %>" />
+% if($folder_for_experiments_menu) {
+                                <input name="edit_folder_for_experiments_menu" id="edit_folder_for_experiments_menu" type="checkbox" checked />
+% } else {
+                                <input name="edit_folder_for_experiments_menu" id="edit_folder_for_experiments_menu" type="checkbox" />
+% }
                             </div>
                         </div>
 % }
@@ -135,7 +139,7 @@ function save_folder_categories() {
             if (response.error){
                 alert(response.error);
             }
-            else if(confirm('Categories set for folder!')){
+            else {
                 location.reload();
             }
         },
