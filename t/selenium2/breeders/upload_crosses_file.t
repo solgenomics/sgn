@@ -99,13 +99,13 @@ $t->while_logged_in_as("submitter", sub {
         $t->find_element_ok('upload_crosses_dismiss_button', 'name', 'find "close" modal button and click')->click();
         sleep(2);
 
-        $t->find_element_ok("refresh_crosses_jstree_html_trialtree_button", "id", "find and click 'refresh crosses trial jstree'")->click();
+        $t->find_element_ok("refresh_crossing_trial_button", "id", "find and click 'refresh crosses trial jstree'")->click();
         sleep(10);
 
-        $t->find_element_ok('//div[@id="crosses_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with crosses trial list')->click();
+        $t->find_element_ok('//div[@id="crossing_trial_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with crosses trial list')->click();
         sleep(5);
 
-        my $href_to_trial = $t->find_element_ok("//div[\@id='crosses_list']//a[contains(text(), '$experiment_name')]", 'xpath', 'find created cross and take link href')->get_attribute('href');
+        my $href_to_trial = $t->find_element_ok("//div[\@id='crossing_trial_list']//a[contains(text(), '$experiment_name')]", 'xpath', 'find created cross and take link href')->get_attribute('href');
 
         $t->get_ok($href_to_trial);
         sleep(3);
