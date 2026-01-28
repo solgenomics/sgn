@@ -28,7 +28,6 @@ sub _validate_with_plugin {
             'source_name' => ['source_name'],
             'sub_location' => ['sub-location', 'sub location'],
             'operator_name' => ['operator name'],
-
         }
     );
 
@@ -82,6 +81,7 @@ sub _validate_with_plugin {
     my $seen_source_names = $parsed_values->{'source_name'};
     my $seen_material_types = $parsed_values->{'material_type'};
     my $seen_purposes = $parsed_values->{'purpose'};
+    my $seen_dates = $parsed_values->{'date'};
 
     my $accession_validator = CXGN::List::Validate->new();
     my @accessions_missing = @{$accession_validator->validate($schema,'accessions', $seen_accession_names)->{'missing'}};
@@ -119,6 +119,12 @@ sub _validate_with_plugin {
     foreach my $type (@$seen_material_types) {
         if (!exists $supported_material_types{$type}) {
             push @error_messages, "Material type not supported: $type. Material type should be budwood, stem, shoot, root, corm, plant or seed";
+        }
+    }
+
+    foreach my $date (@$seen_dates) {
+        if (! ($date =~ m/(\d{4})\-(\d{2})\-(\d{2})/)) {
+            push @error_messages, "Invalid date format: $date. Dates need to be YYYY-MM-DD format";
         }
     }
 

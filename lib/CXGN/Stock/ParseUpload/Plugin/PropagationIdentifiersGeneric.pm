@@ -57,7 +57,7 @@ sub _validate_with_plugin {
     $supported_status_types{'in progress'} = 1;
     $supported_status_types{'inventoried'} = 1;
     $supported_status_types{'distributed'} = 1;
-    $supported_status_types{'planted in trial'} = 1;
+    $supported_status_types{'in trial'} = 1;
     $supported_status_types{'dead'} = 1;
     $supported_status_types{'disposed'} = 1;
 
@@ -105,7 +105,7 @@ sub _validate_with_plugin {
         if (scalar(@$seen_status_types) > 0) {
             foreach my $type (@$seen_status_types) {
                 if (!exists $supported_status_types{$type}) {
-                    push @error_messages, "Status type not supported: $type. Status type must be 'In Progress', 'Inventoried', 'Distributed', 'Planted in Trial', 'Dead', 'Disposed'";
+                    push @error_messages, "Status type not supported: $type. Status type must be 'in progress', 'inventoried', 'distributed', 'in trial', 'dead', 'disposed'";
                 }
             }
         }
