@@ -59,6 +59,7 @@ jQuery(document).ready(function () {
                     ordering: true,
                     info: true,
                     scrollY: '250px',
+                    scrollX : true,
                     scrollCollapse: true
                 });
                 var lo = new CXGN.List();

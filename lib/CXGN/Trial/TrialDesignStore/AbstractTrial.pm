@@ -913,13 +913,25 @@ sub store {
             if ($plant_names) {
                 my $plant_index_number = 1;
                 foreach my $plant_name (@$plant_names) {
-
+                    # TODO: EXTRACT COORDS FROM PLANT NAME
+                    my $plant_row;
+                    my $plant_col;
+                    print STDERR "\nCREATING $plant_name\n";
+                    if ($plant_name =~ m/_COORDS\{(?<ROW>\d+),(?<COL>\d+)\}/) {
+                        $plant_row = $+{ROW};
+                        $plant_col = $+{COL};
+                    }
+                    $plant_name =~ s/_COORDS\{\d+,\d+\}//;
                     my @plant_stock_props = (
                         { type_id => $self->get_plant_index_number_cvterm_id, value => $plant_index_number },
                         { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
                         { type_id => $self->get_block_cvterm_id, value => $block_number },
                         { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                     );
+                    if ($plant_row && $plant_col) {
+                        push @plant_stock_props, {type_id => $self->get_row_number_cvterm_id, value => $plant_row};
+                        push @plant_stock_props, {type_id => $self->get_col_number_cvterm_id, value => $plant_col};
+                    }
                     if ($is_a_control) {
                         push @plant_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }

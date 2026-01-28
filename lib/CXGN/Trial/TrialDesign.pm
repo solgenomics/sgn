@@ -65,6 +65,10 @@ has 'block_size' => (isa => 'Int', is => 'rw', predicate => 'has_block_size', cl
 
 has 'greenhouse_num_plants' => (isa => 'ArrayRef[Int]', is => 'rw', predicate => 'has_greenhouse_num_plants', clearer => 'clear_greenhouse_num_plants');
 
+has 'num_rows_per_plot' => (isa => 'Int', is => 'rw', predicate => 'has_num_rows_per_plot', clearer => 'clear_num_rows_per_plot');
+
+has 'num_cols_per_plot' => (isa => 'Int', is => 'rw', predicate => 'has_num_cols_per_plot', clearer => 'clear_num_cols_per_plot');
+
 has 'maximum_block_size' => (isa => 'Int', is => 'rw', predicate => 'has_maximum_block_size', clearer => 'clear_maximum_block_size');
 
 has 'plot_name_prefix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_prefix', clearer => 'clear_plot_name_prefix');
