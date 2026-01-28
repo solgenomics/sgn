@@ -183,6 +183,8 @@ $editable_vector_props
 
 <& /file_formats/vector_upload.mas, editable_vector_props => $editable_vector_props, editable_stock_props_definitions => $editable_stock_props_definitions &>
 
+<& /file_formats/spatial_layout.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -276,6 +278,7 @@ function upload_type_options() {
         "<option value='datacollector_spreadsheet'>Datacollector Spreadsheet</option>"+
         "<option value='treatments' disabled>Treatments</option>"+
         "<option value='gps_coords'>Plot GPS Coordinates</option>"+
+        "<option value='spatial_layout'>Trial Spatial Layout</option>" +
         "<option value='change_accessions'>Accession Swap</option>" +
         "<option value='entry_numbers'>Entry Numbers</option>" +
         "<option value='nirs'>NIRS</option>" +
@@ -423,6 +426,9 @@ function process_file(file_data, upload_type) {
             display_gps_upload_choices();
             jQuery('#gps_upload_next_btn').on('click', {file_data : file_data}, populate_gps_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
+            break;
+        case 'spatial_layout' : 
+            populate_validate_submit_data(upload_type, file_data);
             break;
         case 'change_accessions' : 
             populate_validate_submit_data(upload_type, file_data);
@@ -583,6 +589,9 @@ function display_upload_formats(upload_type) {
             break;
         case 'gps_coords' : 
             jQuery('#upload_plot_gps_spreadsheet_info_dialog').modal("show");
+            break;
+        case 'spatial_layout' : 
+            jQuery('#trial_coord_upload_spreadsheet_info_dialog').modal("show");
             break;
         case 'change_accessions' : 
             jQuery('#change_accessions_upload_file_format').modal("show");
@@ -1673,6 +1682,7 @@ function populate_validate_submit_data(upload_type, file_data, additional_args) 
         'crosses' : "Crosses",
         'gps_polygon' : "GPS coordinate polygons",
         'gps_point' : "GPS coordinate points",
+        'spatial_layout' : "Trial spatial layout",
         'change_accessions' : "Accession swap",
         'entry_numbers' : "Entry numbers",
         'new_progenies' : 'Progeny relationships for new accessions',

@@ -61,11 +61,12 @@ sub upload_document_POST : Args(0) {
         my $upload_tempfile = $upload->tempname;
         my $time = DateTime->now();
         my $timestamp = $time->ymd()."_".$time->hms();
+        my $archive_path = $c->config->{archive_path};
 
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
             subdirectory => 'document_browser',
-            archive_path => $c->config->{archive_path},
+            archive_path => $archive_path,
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
@@ -76,7 +77,8 @@ sub upload_document_POST : Args(0) {
             $c->stash->{rest} = { error => 'Problem archiving the files!' };
             $c->detach;
         }
-        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        $archived_filename_with_path =~ s/$archive_path//g;
+        my $md5 = $uploader->get_md5("$archive_path/$archived_filename_with_path");
         if (!$md5){
             $c->stash->{rest} = { error => 'Problem retrieving file md5 checksums!' };
             $c->detach;
@@ -156,42 +158,8 @@ sub user_archived_files_POST : Args(0) {
     my $data;
 
     if ($role eq "curator") {
-        # $q = "SELECT file_id, basename, sp_person_id, first_name, last_name FROM metadata.md_files 
-        # JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
-        # JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
-        # WHERE basename != 'none'";
-
-        # my $h = $dbh->prepare($q);
-        # $h->execute();
-
-        # while (my ($file_id, $file_name, $user_id, $first_name, $last_name) = $h->fetchrow_array()){
-        #     $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
-        #     push @data, {
-        #         file_id => $file_id,
-        #         timestamp => $+{TIMESTAMP},
-        #         filename => $+{FILENAME},
-        #         user_id => $user_id,
-        #         user_name => "$first_name $last_name"
-        #     };
-        # }
         $data = CXGN::File->get_all_archived_files($bcs_schema);
     } else {
-        # $q = "SELECT file_id, basename FROM metadata.md_files 
-        # JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
-        # JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
-        # WHERE sp_person_id=? AND basename != 'none'";
-
-        # my $h = $dbh->prepare($q);
-        # $h->execute($user_id);
-
-        # while (my ($file_id, $file_name) = $h->fetchrow_array()){
-        #     $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
-        #     push @data, {
-        #         file_id => $file_id,
-        #         timestamp => $+{TIMESTAMP},
-        #         filename => $+{FILENAME}
-        #     };
-        # }
         $data = CXGN::File->get_user_archived_files($bcs_schema, $user_id);
     }
 

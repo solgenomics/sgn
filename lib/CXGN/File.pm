@@ -63,6 +63,18 @@ has 'file_id' => (
     required => 1
 );
 
+=head2 archive_path()
+
+Server configuration - path to the file archive
+
+=cut
+
+has 'archive_path' => (
+    isa => 'Str',
+    is => 'ro',
+    required => 1
+);
+
 =head2 basename()
 
 Database file basename. Concatenation of timestamp and file name. 
@@ -98,7 +110,7 @@ has 'filename' => (
 
 =head2 dirname()
 
-Parent directories of archived file. Should be combined with a config key for file archive location for complete file path. 
+Parent directories of archived file. Should be combined with the archive path config key ($file->archive_path or $c->config->{archive_path}) for a complete path to a file
 
 =cut
 

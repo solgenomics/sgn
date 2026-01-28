@@ -1162,7 +1162,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $ignore_warnings            = $c->req->param('upload_multiple_trials_ignore_warnings') eq 'on';
     my $email_address              = $c->req->param('trial_email_address_upload');
     my $email_option_enabled       = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
-    my $archived_file_id           = $c->req->param('archived_file_id');
+    my $archived_file_id           = $c->req->param('archived_file_id') || undef;
 
     my $dbhost                     = $c->config->{dbhost};
     my $dbname                     = $c->config->{dbname};
@@ -1197,13 +1197,14 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     }
 
     my $archived_filename_with_path;
+    my $archive_path = $c->config->{archive_path};
 
     unless ($archived_file_id) {
         ## Store uploaded temporary file in archive
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
             subdirectory => $subdirectory,
-            archive_path => $c->config->{archive_path},
+            archive_path => $archive_path,
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
@@ -1217,10 +1218,15 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         unlink $upload_tempfile;
     } else {
         # $archived_filename_with_path = # need to implement a file utility
+        # my $archived_file = CXGN::File->new({
+        #     file_id => $archived_file_id,
+        #     metadata_schema => $
+        # });
+        # $archived_filename_with_path = $archived_file->filename();
     }
 
     # Build the backend script command to parse, validate, and upload the trials
-    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -i \"$archived_filename_with_path\" -un \"$username\"";
+    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -i \"$archive_path/$archived_filename_with_path\" -un \"$username\"";
     $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
     $cmd .= " -iw" if $ignore_warnings;
 
