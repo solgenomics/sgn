@@ -162,31 +162,6 @@ sub _search {
             }
         }
 
-        ## Getting gps coordinates
-        my $sp_rs ='';
-        eval {
-            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        };
-        my %geolocation_lookup;
-        while( my $r = $sp_rs->next()){
-            $geolocation_lookup{$r->stock_id} = $r->value;
-        }
-        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{obsunit_stock_id}} ?$geolocation_lookup{$obs_unit->{obsunit_stock_id}} : undef;
-        my $geo_coordinates;
-
-        if ($geo_coordinates_string){
-            $geo_coordinates = decode_json $geo_coordinates_string;
-        }
-
-        ## Getting additional info
-        my $additional_info;
-
-        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        if ($rs->count() > 0){
-            my $additional_info_json = $rs->first()->value();
-            $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
-        }
-
 	my %numbers;
 
         my $entry_type = $obs_unit->{is_a_control} ? 'check' : 'test';
@@ -207,6 +182,7 @@ sub _search {
         my $family_stock_id;
 
         my $family_name;
+        my $additional_info = $obs_unit->{additional_info};
 
         ## Following code lines add observationUnitParent to additionalInfo, useful for BI
         if ($obs_unit->{obsunit_type_name} eq 'plant') {
@@ -278,7 +254,7 @@ sub _search {
 
         my %observationUnitPosition = (
             entryType => $entry_type,
-            geoCoordinates => $geo_coordinates,
+            geoCoordinates => $obs_unit->{plot_geo_json},
             positionCoordinateX => $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
             positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
@@ -302,20 +278,6 @@ sub _search {
         });
         my $external_references = $references->search();
         my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
-
-        ## Get plot images
-        my @plot_image_ids;
-			eval {
-	            my $image_id = CXGN::Stock->new({
-	    			schema => $self->bcs_schema,
-	    			stock_id => $obs_unit->{obsunit_stock_id},
-	    		});
-	    		@plot_image_ids = $image_id->get_image_ids();
-	    	};
-            my @ids;
-            foreach my $arrayimage (@plot_image_ids){
-                push @ids, $arrayimage->[0];
-            }
 
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
@@ -342,7 +304,7 @@ sub _search {
             seedLotName => $obs_unit->{seedlot_name} ? qq|$obs_unit->{seedlot_name}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            plotImageDbIds => \@ids,
+            plotImageDbIds => $obs_unit->{image_ids},
             treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
