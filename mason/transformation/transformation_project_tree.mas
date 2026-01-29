@@ -3,9 +3,10 @@ $user_id => undef
 @programs => ()
 @locations => ()
 @roles => ()
+$hard_refresh => ''
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
+<& /util/import_javascript.mas, entries => [ 'htmltree' ], classes => [ 'jquery.iframe-post-form', 'jstree.dist.jstree', 'CXGN.TrialTreeFolders'] &>
 
 <& /util/import_css.mas, paths => ['/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
@@ -49,7 +50,7 @@ $user_id => undef
                 <br />
             </td>
             <td>
-                <div id="transformation_projects_list" >[loading...]</div>
+                <div id="transformation_project_list" >[loading...]</div>
             </td>
         </tr>
     </tbody>
@@ -68,64 +69,69 @@ jQuery(document).ready(function($) {
         jQuery("#create_transformation_project_dialog").modal("show");
     });
 
-    jQuery.ajax( {
-        url: '/ajax/breeders/get_trials_with_folders_cached?type=transformation',
-        success: function(response) {
-            var html = '<ul>'+response.html+'</ul>';
+    var htmltree = window.jsMod['htmltree'];
+    var hard_refresh = <% $hard_refresh || '""' %>;
+    htmltree.init("transformation_project", <% $hard_refresh %>);
 
-            jQuery('#transformation_projects_list').html(html);
-            jQuery('#transformation_projects_list').jstree( {
-                "core": { 'themes': { 'name': 'proton', 'responsive': true}},
-                "valid_children" : [ "folder", "trial", "breeding_program" ],
-                "types" : {
-                    "breeding_program" : {
-                        "icon": 'glyphicon glyphicon-briefcase text-info',
-                    },
-                    "folder" : {
-                        "icon": 'glyphicon glyphicon-folder-open text-danger',
-                    },
-                    "transformation" : {
-                        "icon": 'glyphicon glyphicon-text-width text-success',
-                    }
-                },
-                "search" : {
-                    "case_insensitive" : true,
-                 },
-                "plugins" : ["html_data","types","search"],
-            });
-        },
-        error: function(response) {
-            alert("An error occurred while loading the transformation project data.");
-          }
-    });
+
+    // jQuery.ajax( {
+    //     url: '/ajax/breeders/get_trials_with_folders_cached?type=transformation',
+    //     success: function(response) {
+    //         var html = '<ul>'+response.html+'</ul>';
+
+    //         jQuery('#transformation_projects_list').html(html);
+    //         jQuery('#transformation_projects_list').jstree( {
+    //             "core": { 'themes': { 'name': 'proton', 'responsive': true}},
+    //             "valid_children" : [ "folder", "trial", "breeding_program" ],
+    //             "types" : {
+    //                 "breeding_program" : {
+    //                     "icon": 'glyphicon glyphicon-briefcase text-info',
+    //                 },
+    //                 "folder" : {
+    //                     "icon": 'glyphicon glyphicon-folder-open text-danger',
+    //                 },
+    //                 "transformation" : {
+    //                     "icon": 'glyphicon glyphicon-text-width text-success',
+    //                 }
+    //             },
+    //             "search" : {
+    //                 "case_insensitive" : true,
+    //              },
+    //             "plugins" : ["html_data","types","search"],
+    //         });
+    //     },
+    //     error: function(response) {
+    //         alert("An error occurred while loading the transformation project data.");
+    //       }
+    // });
 
     jQuery("#transformation_tree_search").keyup(function() {
-        var v = jQuery("#transformation_tree_search").val();
-        jQuery("#transformation_projects_list").jstree(true).search(v);
+         var v = jQuery("#transformation_tree_search").val();
+         jQuery("#transformation_project_list").jstree(true).search(v);
     });
 
-    jQuery('#transformation_projects_list').on("changed.jstree", function (e, data) {
-        if ($('#transformation_projects_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
-            jQuery("#folder_edit_options").show();
-        }
-        else {
-            jQuery("#folder_edit_options").hide();
-        }
-    });
+    // jQuery('#transformation_projects_list').on("changed.jstree", function (e, data) {
+    //     if ($('#transformation_projects_list').jstree('is_leaf', data.node) && data.node.data.jstree.type == 'folder') {
+    //         jQuery("#folder_edit_options").show();
+    //     }
+    //     else {
+    //         jQuery("#folder_edit_options").hide();
+    //     }
+    // });
 
-    jQuery("#transformation_projects_list").delegate("li", "dblclick", function(event){
-        var node = $("#transformation_projects_list").jstree("get_node", this);
-        //console.log(node);
-        if (node.id.substr(0,1) !== 'j') {
-            if (node.type == 'folder') {
-                window.open('/folder/'+node.id);
-                event.stopPropagation();
-            } else if (node.type == 'transformation') {
-                window.open('/breeders_toolbox/trial/'+node.id);
-                event.stopPropagation();
-            }
-        }
-    });
+    // jQuery("#transformation_projects_list").delegate("li", "dblclick", function(event){
+    //     var node = $("#transformation_projects_list").jstree("get_node", this);
+    //     //console.log(node);
+    //     if (node.id.substr(0,1) !== 'j') {
+    //         if (node.type == 'folder') {
+    //             window.open('/folder/'+node.id);
+    //             event.stopPropagation();
+    //         } else if (node.type == 'transformation') {
+    //             window.open('/breeders_toolbox/trial/'+node.id);
+    //             event.stopPropagation();
+    //         }
+    //     }
+    // });
 
 });
 
