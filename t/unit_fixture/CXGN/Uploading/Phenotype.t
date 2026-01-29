@@ -1053,7 +1053,7 @@ print STDERR "Pheno for trait 70773 after data collector: ".Dumper(\@pheno_for_t
 print STDERR "EXPECTED: ".Dumper(\@pheno_for_trait_check);
 is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits 70773 from phenotyping spreadsheet upload 3' );
 
-# Test parsing and storing a fieldbook plot phenotype file with stock id
+# Test parsing and storing a fieldbook plot phenotype .csv file with stock id
 
 my $parser = CXGN::Phenotypes::ParseUpload->new();
 my $filename = "t/data/fieldbook/fieldbook_phenotype_plot_id_file.csv";
@@ -1063,6 +1063,16 @@ ok($validate_file == 1, "Check if parse validate works for plot fieldbook file")
 
 my $parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
 ok($parsed_file, "Check if parse works for plot fieldbook file");
+
+# Test parsing and storing a fieldbook plot phenotype .xlsx file with stock id
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/fieldbook/fieldbook_phenotype_plot_id_file.xlsx";
+
+my $validate_file = $parser->validate('field book', $filename, 1, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for plot fieldbook xlsx file");
+
+my $parsed_file = $parser->parse('field book', $filename, 1, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse works for plot fieldbook xslx file");
 
 # Debug
 print STDERR Dumper $parsed_file;
