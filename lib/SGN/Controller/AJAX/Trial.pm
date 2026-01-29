@@ -219,6 +219,8 @@ sub generate_experimental_design_POST : Args(0) {
     my $number_of_unreplicated_stocks = scalar(@unreplicated_stocks);
 
     my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
+    my $num_rows_per_plot = $c->req->param('num_rows_per_plot');
+    my $num_cols_per_plot = $c->req->param('num_cols_per_plot');
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
@@ -391,6 +393,10 @@ sub generate_experimental_design_POST : Args(0) {
         if ($greenhouse_num_plants) {
             my $json = JSON::XS->new();
             $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
+        }
+        if ($num_rows_per_plot && $num_cols_per_plot) {
+            $trial_design->set_num_rows_per_plot($num_rows_per_plot);
+            $trial_design->set_num_cols_per_plot($num_cols_per_plot);
         }
         if ($westcott_check_1){
             $trial_design->set_westcott_check_1($westcott_check_1);

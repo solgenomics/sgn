@@ -677,6 +677,13 @@ jQuery(document).ready(function ($) {
             //console.log(greenhouse_num_plants);
         }
 
+        var num_rows_per_plot = $('#trial_create_rows_per_plot').val();
+        var num_cols_per_plot = $('#trial_create_cols_per_plot').val();
+        if ($('#trial_create_rows_and_columns_to_plants').prop('checked') && ($('#add_plant_entries').val() > num_rows_per_plot * num_cols_per_plot || num_rows_per_plot * num_cols_per_plot < Math.max(... greenhouse_num_plants.map(Number))) || num_rows_per_plot * num_cols_per_plot < num_plants_per_treatment) {
+            alert("You specified in-plot coordinates, but the number of plants per plot is greater than the number of positions available in each plot. Please decrease the number of plants per plot or increase the number of available positions. If this is a greenhouse trial, make sure no accession is specified to have more plants than the number of allowed spaces. If this is a splitplot design, please make sure that the number of plants per plot specified in section (2) matches the number of plants per treatment.");
+            return;
+        }
+
         var use_same_layout;
         if ($('#use_same_layout').is(':checked')) {
            use_same_layout = $('#use_same_layout').val();
@@ -740,7 +747,9 @@ jQuery(document).ready(function ($) {
                 'plot_width': plot_width,
                 'plot_length': plot_length,
                 'use_same_layout' : use_same_layout,
-		'plot_numbering_scheme' : plot_numbering_scheme
+		        'plot_numbering_scheme' : plot_numbering_scheme,
+                'num_cols_per_plot' : num_cols_per_plot,
+                'num_rows_per_plot' : num_rows_per_plot
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -2366,7 +2375,9 @@ jQuery(document).ready(function ($) {
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
-                    add_plants_per_plot();
+                    if (design_type != "greenhouse" && design_type != "splitplot") {
+                        add_plants_per_plot();
+                    }
                 }
             },
             error: function () {
