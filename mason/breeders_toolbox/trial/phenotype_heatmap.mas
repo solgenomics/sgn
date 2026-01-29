@@ -606,7 +606,12 @@ $trial_stock_type => undef
                         <label class="col-sm-3 control-label">Enter New Accession: </label>
                         <div class="col-sm-9" >
                           <input class="form-control" id="hm_accession" name="hm_accession"></input>
-                        <p><i>Warning: subplots, plants, and tissue samples will be updated but will keep their original names unless a new plot name is specified. The new plot name will replace the old plot name in subplots, plants, and tissue samples if possible.</i></p>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="col-sm-9" >
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible.</i></p>
                         </div>
                       </div>
 
@@ -1335,7 +1340,7 @@ jQuery(document).ready( function() {
                 traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
                 traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
                 traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
-                traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='Treatments & Assayed Traits'>";
                 Object.keys(variables).sort().forEach((name) => {
                     traits_assayed_html = traits_assayed_html + `<option value='${variables[name]}'>${name}</option>`;
                 });
@@ -1348,27 +1353,29 @@ jQuery(document).ready( function() {
                         if (response.error) {
                             // do nothing
                         } else {
-                            globalThis.spatial_adjustments = JSON.parse(response.data);
+                            if (response.data !== "") {
+                                globalThis.spatial_adjustments = JSON.parse(response.data);
 
-                            let unique_spatial_traits = new Set();
-                            //find the traits
-                            Object.values(globalThis.spatial_adjustments).forEach(obj => {
-                                Object.keys(obj).forEach(key => unique_spatial_traits.add(key));
-                            });
+                                let unique_spatial_traits = new Set();
+                                //find the traits
+                                Object.values(globalThis.spatial_adjustments).forEach(obj => {
+                                    Object.keys(obj).forEach(key => unique_spatial_traits.add(key));
+                                });
 
-                            let unique_traits_array = [... unique_spatial_traits];
+                                let unique_traits_array = [... unique_spatial_traits];
 
-                            let trait_id_to_trait = Object.fromEntries(
-                                Object.entries(variables).map(([key, value]) => [value, key])
-                            );
+                                let trait_id_to_trait = Object.fromEntries(
+                                    Object.entries(variables).map(([key, value]) => [value, key])
+                                );
 
 
-                            let adjusted_traits = jQuery('<optgroup>', {label:"Spatial corrections"});
-                            unique_traits_array.forEach((trait_id) => {
-                                adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (corrected)`, text : `${trait_id_to_trait[trait_id]} (corrected)` }));
-                                adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (adjustment)`, text : `${trait_id_to_trait[trait_id]} (adjustment)` }));
-                            });
-                            jQuery('#trait_list_dropdown').append(adjusted_traits);
+                                let adjusted_traits = jQuery('<optgroup>', {label:"Spatial corrections"});
+                                unique_traits_array.forEach((trait_id) => {
+                                    adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (corrected)`, text : `${trait_id_to_trait[trait_id]} (corrected)` }));
+                                    adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (adjustment)`, text : `${trait_id_to_trait[trait_id]} (adjustment)` }));
+                                });
+                                jQuery('#trait_list_dropdown').append(adjusted_traits);
+                            }
                         }
                     }
                 });

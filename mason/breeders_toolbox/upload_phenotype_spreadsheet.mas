@@ -62,14 +62,14 @@
                 </div>
 
                 <div id="upload_phenotype_spreadsheet_info" style="display: none">
-                    <& /help/file_upload_type.mas, type => "Simple Phenotype Spreadsheets" &>
+                    <& /help/file_upload_type.mas, type => "Simple phenotype spreadsheets" &>
                 </div>
             </form><br/>
 
         </div>
 
         <div class="modal-footer">
-	    <button type="button" class="btn btn-default" name="reset_dialog" id="reset_dialog">Reset form</button>
+	    <button type="button" class="btn btn-default" name="reset_dialog" id="phenotype_reset_dialog">Reset form</button>
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             <button type="button" class="btn btn-info" name="upload_spreadsheet_phenotype_submit_verify" id="upload_spreadsheet_phenotype_submit_verify">Verify</button>
             <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_phenotype_submit_store" id="upload_spreadsheet_phenotype_submit_store" title="First Verify Your File">Store</button>

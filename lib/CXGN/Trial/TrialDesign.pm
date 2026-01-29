@@ -98,7 +98,7 @@ has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap
 
 has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
 
-has 'treatments' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
+has 'treatments' => (isa => 'HashRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
 
 has 'num_plants_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_plants_per_plot',clearer => 'clear_num_plants_per_plot');
 
