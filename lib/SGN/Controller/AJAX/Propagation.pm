@@ -448,10 +448,10 @@ sub add_propagation_identifier_POST :Args(0){
         $status->update_person($full_name);
         $status->update_date($update_date);
 
-        $status->store();
+        $status->add_status_info();
 
         if (!$status->store()){
-            $c->stash->{rest} = {error => "Error saving new propagation identifier",};
+            $c->stash->{rest} = {error => "Error saving status for propagation identifier",};
             return;
         }
     }
@@ -617,9 +617,9 @@ sub upload_propagation_identifiers_POST : Args(0) {
                     if ($status_notes) {
                         $status->update_notes($status_notes);
                     }
-                    $status->store();
-                    if (!$status->store()){
-                        $c->stash->{rest} = {error => "Error saving new propagation identifier",};
+                    $status->add_status_info();
+                    if (!$status->add_status_info()){
+                        $c->stash->{rest} = {error => "Error saving status for new propagation identifier",};
                         return;
                     }
 
@@ -996,9 +996,9 @@ sub upload_propagation_identifier_status_POST : Args(0) {
             $status->update_person($status_updated_by);
             $status->update_date($status_date);
             $status->update_notes($status_notes);
-            $status->store();
+            $status->add_status_info();
 
-            if (!$status->store()){
+            if (!$status->add_status_info()){
                 $c->stash->{rest} = {error => "Error saving propagation status",};
                 return;
             }
