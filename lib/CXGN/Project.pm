@@ -5759,6 +5759,7 @@ sub get_recently_modified_projects {
 	genotyping_project => "  projectprop.value in ('genotype_data_project', 'folder_for_genotyping_projects', 'breeding_program')  ",
 	crossing_trial => "  cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value in ('crossing_trial', 'folder_for_crossing_trials', 'breeding_program') ",
 	analysis_experiment => " cvterm.cv_id in (select cv_id from cv where name='project_type') and projectprop.value = 'analysis_experiment' ",
+	transformation_project => " projectprop.value = 'transformation_project' ",
     );
 
     my $create_clause = "";
