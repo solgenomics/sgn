@@ -34,7 +34,7 @@ $hard_refresh => undef
         <tr>
             <td>
                 <h4>Search</h4>
-                <input type="text" class="form-control input-sm" id="crossing_tria_search" placeholder="Search" />
+                <input type="text" class="form-control input-sm" id="crossing_trial_search" placeholder="Search" />
                 <hr>
 
                 <h5><i>Double click<br />crossing experiment (&nbsp;<span class="glyphicon glyphicon-grain text-success"></span>&nbsp;) or folder (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;)<br/>to view detail page.</i></h5>
@@ -143,10 +143,10 @@ jQuery(document).ready(function($) {
   //     }
   // });
 
-//     jQuery("#cross_tree_search").keyup(function() {
-//         var v = jQuery("#cross_tree_search").val();
-//         jQuery("#crosses_list").jstree(true).search(v);
-//     });
+     jQuery("#cross_tree_search").keyup(function() {
+         var v = jQuery("#crossing_trial_search").val();
+         jQuery("#crossing_trial_list").jstree(true).search(v);
+     });
 
 //     jQuery('#crosses_list').on("changed.jstree", function (e, data) {
 //         //console.log(data);
