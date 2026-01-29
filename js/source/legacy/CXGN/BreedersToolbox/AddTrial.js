@@ -53,18 +53,14 @@ jQuery(document).ready(function ($) {
 
     jQuery('#add_plant_entries').on('change', function() {
         let plants_per_plot = jQuery(this).val();
-        if (plants_per_plot != null && plants_per_plot != 0) {
-            jQuery('#greenhouse_default_num_plants_per_accession_val').val(plants_per_plot);
-            greenhouse_show_num_plants_section()
-        }
+        jQuery('#greenhouse_default_num_plants_per_accession_val').val(plants_per_plot);
+        greenhouse_show_num_plants_section()
     });
 
     jQuery('#greenhouse_default_num_plants_per_accession_val').on('change', function() {
         let plants_per_plot = jQuery(this).val();
-        if (plants_per_plot != null && plants_per_plot != 0) {
-            jQuery('#add_plant_entries').val(plants_per_plot);
-            greenhouse_show_num_plants_section()
-        }
+        jQuery('#add_plant_entries').val(plants_per_plot);
+        greenhouse_show_num_plants_section()
     });
 
     function create_trial_validate_form(){
