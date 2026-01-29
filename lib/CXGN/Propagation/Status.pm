@@ -66,21 +66,6 @@ has 'update_notes' => (
     is => 'rw'
 );
 
-#sub BUILD {
-#    my $self = shift;
-#    my $args = shift;
-
-#    $self->prop_table('stockprop');
-#    $self->prop_namespace('Stock::Stockprop');
-#    $self->prop_primary_key('stockprop_id');
-#    $self->prop_type('propagation_status');
-#    $self->cv_name('stock_property');
-#    $self->allowed_fields( [ qw | status_type update_person update_date update_notes | ] );
-#    $self->parent_table('stock');
-#    $self->parent_primary_key('stock_id');
-
-#    $self->load();
-#}
 
 sub add_status_info {
     my $self = shift;
@@ -126,7 +111,6 @@ sub add_status_info {
 
     };
 
-    #try to add all cross info in a transaction
     try {
         $schema->txn_do($coderef);
     } catch {
