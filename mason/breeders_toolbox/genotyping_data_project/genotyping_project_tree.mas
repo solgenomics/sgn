@@ -126,10 +126,10 @@ jQuery(document).ready(function($) {
     //     }
     // });
 
-//     jQuery("#genotyping_project_tree_search").keyup(function() {
-//         var v = jQuery("#genotyping_project_tree_search").val();
-//         jQuery("#genotyping_project_list").jstree(true).search(v);
-//     });
+    jQuery("#genotyping_project_tree_search").keyup(function() {
+        var v = jQuery("#genotyping_project_tree_search").val();
+        jQuery("#genotyping_project_list").jstree(true).search(v);
+    });
 
 //     jQuery("#genotyping_project_list").delegate("li", "dblclick", function(event){
 //         var node = $("#genotyping_project_list").jstree("get_node", this);
