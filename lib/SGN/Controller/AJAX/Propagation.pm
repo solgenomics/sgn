@@ -661,7 +661,9 @@ sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_group
 
     my @propagations;
     foreach my $r (@sorted_names){
-        my $propagation_group_link = qq{<a href="/propagation_group/$r->[0]">$r->[1]</a>};
+        my $propagation_group_id = $r->[0];
+        my $propagation_group_name = $r->[1];
+        my $propagation_group_link = qq{<a href="/propagation_group/$propagation_group_id">$propagation_group_name</a>};
         my $description = $r->[2];
         my $material_type = $r->[3];
         my $metadata = $r->[4];
@@ -675,8 +677,11 @@ sub get_propagation_groups_in_project :Path('/ajax/propagation/propagation_group
         my $accession_link = qq{<a href="/stock/$r->[5]/view">$r->[6]</a>};
         my $source_link = qq{<a href="/stock/$r->[7]/view">$r->[8]</a>};
         my $variety_name = $r->[9];
+        my $propagation_group = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_group_stock_id=>$propagation_group_id});
+        my $members = $propagation_group->get_members_in_group();
+        my $number_of_members = scalar @$members;
 
-        push @propagations, [$propagation_group_link, $accession_link, $variety_name, $material_type, $material_source_type, $source_link, $date, $sub_location, $purpose, $description, $operator_name]
+        push @propagations, [$propagation_group_link, $accession_link, $variety_name, $material_type, $material_source_type, $source_link, $date, $sub_location, $purpose, $description, $operator_name, $number_of_members]
 
     }
     $c->stash->{rest} = { data => \@propagations };

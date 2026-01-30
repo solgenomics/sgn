@@ -20,6 +20,7 @@ $trial_id
                 <th>Purpose</th>
                 <th>Description</th>
                 <th>Operator</th>
+                <th>Number of Propagation IDs</th>
             </tr>
         </thead>
     </table>
