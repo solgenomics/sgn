@@ -19,6 +19,12 @@ $locations
                     <&| /util/workflow.mas, id=> "add_propagation_project_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"What are Propagation Projects?" &>
+                            <p>Propagation Project page acts as a centralized page for different propagation processes .</p>
+                            <ul>
+                                <li>Different propagation types, objectives, programs or propagations done in different years can be grouped on different project pages.
+                                <li>Metadata for each propagation process (batch) within a project (e.g., accession name, material type, date, operator) is linked to a grobally unique Propagation Group Identifier.</li>
+                                <li>Within each Propagation Group Identifier, the progress of each plantet produced is tracked by another unique identifier called Propagation Identifier.</li>
+                            </ul>
                             <hr>
                             <center>
                                 <button id="next_step_add_new_propagation_project" class="btn btn-primary" onclick="Workflow.complete(this);">Go to Next Step</button>
