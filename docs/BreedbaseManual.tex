@@ -85,7 +85,7 @@
 
 \title{Breedbase User Manual}
 \author{Breedbase team}
-\date{2026-01-08}
+\date{2026-01-30}
 
 \begin{document}
 \maketitle
@@ -2201,48 +2201,6 @@ To ensure that the file has a correct format for uploading, click on the ``Verif
 
 \begin{center}\includegraphics[width=0.75\linewidth]{assets/images/phenotype_spreadsheet_upload_dialog} \end{center}
 
-\hypertarget{managing-high-dimensional-phenotyping-data}{%
-\chapter{Managing High Dimensional Phenotyping Data}\label{managing-high-dimensional-phenotyping-data}}
-
-\hypertarget{managing-transcriptomic-data}{%
-\section{Managing Transcriptomic Data}\label{managing-transcriptomic-data}}
-
-\hypertarget{uploading-transcriptomic-data}{%
-\subsection{Uploading Transcriptomic Data}\label{uploading-transcriptomic-data}}
-
-To upload transcriptomic data, go to the transcriptomics page by clicking ``Transcriptomics'' under the Manage tab.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcriptomics_menu} \end{center}
-
-Click the ``Upload Transcriptomics Data'' button to open the upload workflow dialog. On the second step ``Samples'', you will be prompted to make sure that your samples are already in the database. You can refer to the ``Managing Tissue Samples'' chapter for instructions on how to create a sampling trial. After creating a sampling trial or confirming that your samples exist, move on to the ``Protocol Info'' step. Here you can select an existing protocol, or create a new protocol. To create a protocol, click the ``Protocol Not Shown. Create a New Protocol'' button. From here you can fill in information about your new protocol and when finished, click ``Go to Next Step''.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/create_transcriptomics_protocol} \end{center}
-
-You will need to have two csv files when uploading transcriptomics data. The first is the data matrix file, which should have these headers:
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/data_matrix_headers} \end{center}
-
-The names in the sample\_name column should match the sample names you created in your sampling trial file. The header marked ``transcript\_name\_columns'' should be replaced with the transcript names you want to upload, each in its own column in the header and the respective expression value below. Example:
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/data_matrix_example} \end{center}
-
-The second file is the transcript details file, which should have these headers:
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcript_details_headers} \end{center}
-
-Each row under the transcript\_name column should contain each transcript name from your data matrix file. For example:
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcript_details_example} \end{center}
-
-Once these two files are uploaded, click verify to check that they are formatted correctly and that the samples exist. If there are no errors, you can then click store to store your transcriptomics data.
-
-\hypertarget{downloading-transcriptomics-data}{%
-\subsection{Downloading Transcriptomics Data}\label{downloading-transcriptomics-data}}
-
-To download your data, click the ``Uploaded Transcriptomics Data'' dropdown menu on the Transcriptomics page. Then click the ``Your Uploaded Transcriptomic Data'' dropdown. From here you will be able to see the transcriptomics data that you have uploaded. Click the ``Download'' button next to the data that you wish to download.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/download_transcriptomics} \end{center}
-
 \hypertarget{managing-barcodes}{%
 \chapter{Managing Barcodes}\label{managing-barcodes}}
 
@@ -2504,8 +2462,8 @@ On the last page of the workflow, you confirm the submission.
 
 Afterwards, you can use the newly created observation variable ontology term in your phenotyping.
 
-\hypertarget{managing-image-data}{%
-\chapter{Managing Image Data}\label{managing-image-data}}
+\hypertarget{managing-drone-imagery}{%
+\chapter{Managing Drone Imagery}\label{managing-drone-imagery}}
 
 \hypertarget{image-phenotyping-dashboard}{%
 \section{Image-Phenotyping Dashboard}\label{image-phenotyping-dashboard}}
@@ -2614,8 +2572,8 @@ After completing the standard process, the job will continue in the background u
 
 Ground control points can be saved after an imaging event has undergone the standard process on orhomosaics. Ground control points can then be used across imaging events on the same field experiment in order to automate the entire standard process.
 
-\hypertarget{managing-phenotypic-image-data}{%
-\chapter{Managing Phenotypic Image Data}\label{managing-phenotypic-image-data}}
+\hypertarget{managing-images}{%
+\chapter{Managing Images}\label{managing-images}}
 
 \hypertarget{uploading-image-files}{%
 \section{Uploading Image files}\label{uploading-image-files}}
@@ -2646,6 +2604,23 @@ The image\_name column should match the file names of the associated images in t
 In the Images section on a stock details page you can add a new image associated with that stock by clicking the ``Add Image'' button. This will associate any images uploaded through this dialog with the corresponding stock.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/stock_add_image} \end{center}
+
+\hypertarget{uploading-images-from-the-field-trial-and-image-analysis-pages}{%
+\section{Uploading Images from the Field Trial and Image Analysis Pages}\label{uploading-images-from-the-field-trial-and-image-analysis-pages}}
+
+Another way to upload images is through the field trial details page. Navigate to a field trial details page and open the ``Images'' section.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/field_trial_images} \end{center}
+
+Then click the ``Add New Image'' button to open the image upload dialog, where images can be uploaded in the same formats as described previously.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_new_image_trial} \end{center}
+
+To upload images from the Image Analysis page, click on ``Image Analysis'' under the ``Analyze'' menu. Then click the ``Upload New Images'' button on this page.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image_analysis_add_image} \end{center}
+
+This will open the same image upload dialog.
 
 \hypertarget{managing-vcf-data}{%
 \chapter{Managing VCF Data}\label{managing-vcf-data}}
