@@ -16,9 +16,11 @@ jobs:
         PGPASSWORD: postgres
         SGN_TEST_SERVER: http://test_breedbase:3010
         SGN_REMOTE_SERVER_ADDR: selenium
+        PGHOST: breedbase_db
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+        - ${{ github.workspace }}:/downloads
       options: --network-alias test_breedbase
 
     services:
@@ -38,12 +40,13 @@ jobs:
         volumes:
           - ${{ github.workspace }}:/home/production/cxgn/sgn
           - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
-        options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
-
+          - ${{ github.workspace }}:/downloads
+        options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"     
+        
     steps:
       - name: Checkout sgn
-        uses: actions/checkout@v5
-    
+        uses: actions/checkout@v4
+
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
       
