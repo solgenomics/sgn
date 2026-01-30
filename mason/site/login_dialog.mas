@@ -56,6 +56,21 @@ $goto_url => '/'
                         </div>
                     </div>
                 </form>
+% if ($c->config->{oidc_client}){
+                <div class="container-fluid" style="display: grid; margin-top: 20px; margin-bottom: 20px;">
+% if ($c->config->{oidc_client}->{google}){
+                    <button class="btn btn-default" id="login_with_google" name="login_with_google" onclick="location.href = '/authenticate/oidc/google/login';">
+                        <img style="width:20px" src="/documents/img/Google_logo.png"/>
+                        Google
+                    </button>
+% }
+% if ($c->config->{oidc_client}->{keycloak}){
+                    <button style="margin-top: 10px" class="btn btn-default" id="login_with_keycloak" name="login_with_keycloak" onclick="location.href = '/authenticate/oidc/keycloak/login';">
+                        <img style="width:20px" src="/documents/img/Keycloak_logo.png"/>
+                        Keycloak
+                    </button>
+% }
+% }             
             </div>
             <div class="modal-footer">
 %  if (!$c->config->{require_login}) {
