@@ -43,6 +43,9 @@ jobs:
     steps:
       - name: Checkout sgn
         uses: actions/checkout@v5
+
+      - name: Install modules
+        run: cpanm Crypt::JWT Crypt::PRNG MIME::Base64::URLSafe
     
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
