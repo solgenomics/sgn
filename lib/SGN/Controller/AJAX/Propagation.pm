@@ -440,17 +440,16 @@ sub add_propagation_identifier_POST :Args(0){
         return;
     } else {
         my $status = CXGN::Propagation::Status->new({
-            bcs_schema => $schema,
-            parent_id => $propagation_stock_id,
+            chado_schema => $schema,
+            propagation_stock_id => $propagation_stock_id,
+            status_type => 'in progress',
+            update_person => $full_name,
+            update_date => $update_date
         });
 
-        $status->status_type('in progress');
-        $status->update_person($full_name);
-        $status->update_date($update_date);
+        my $added_status = $status->add_status_info();
 
-        $status->add_status_info();
-
-        if (!$status->store()){
+        if (!$added_status) {
             $c->stash->{rest} = {error => "Error saving status for propagation identifier",};
             return;
         }
@@ -607,23 +606,22 @@ sub upload_propagation_identifiers_POST : Args(0) {
 
                 if ($propagation_stock_id)  {
                     my $status = CXGN::Propagation::Status->new({
-                        bcs_schema => $schema,
-                        parent_id => $propagation_stock_id,
+                        chado_schema => $schema,
+                        propagation_stock_id => $propagation_stock_id,
+                        status_type => $status_type,
+                        update_person => $status_updated_by,
+                        update_date => $status_date,
+                        update_notes => $status_notes
                     });
 
-                    $status->status_type($status_type);
-                    $status->update_person($status_updated_by);
-                    $status->update_date($status_date);
-                    if ($status_notes) {
-                        $status->update_notes($status_notes);
-                    }
-                    $status->add_status_info();
-                    if (!$status->add_status_info()){
+                    my $added_status = $status->add_status_info();
+
+                    if (!$added_status) {
                         $c->stash->{rest} = {error => "Error saving status for new propagation identifier",};
                         return;
                     }
 
-                    if (($status_type eq 'inventoried') && $inventory_identifier) {
+                    if ($added_status && ($status_type eq 'inventoried') && $inventory_identifier) {
                         my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
                             chado_schema => $schema,
                             phenome_schema => $phenome_schema,
@@ -700,10 +698,13 @@ sub get_active_propagation_ids_in_group :Path('/ajax/propagation/active_propagat
     my @propagations;
     foreach my $r (@sorted_names){
         my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
-        my $status_info = decode_json $status;
-        my $status_type = $status_info->{status_type};
-        my $updated_date = $status_info->{update_date};
-        my $updated_by = $status_info->{update_person};
+        my $status_history = decode_json $status;
+        my @history_array = @$status_history;
+        my $latest_status = pop @history_array;
+        print STDERR "LATEST STATUS =".Dumper($latest_status)."\n";
+        my $status_type = $latest_status->{status_type};
+        my $updated_date = $latest_status->{update_date};
+        my $updated_by = $latest_status->{update_person};
 
         if ($status_type eq 'in progress') {
             push @propagations, {
@@ -740,11 +741,13 @@ sub get_inactive_propagation_ids_in_group :Path('/ajax/propagation/inactive_prop
     foreach my $r (@sorted_names){
         my ($propagation_stock_id, $propagation_name, $accession_stock_id, $accession_name, $rootstock_stock_id, $rootstock_name, $status) =@$r;
 
-        my $status_info = decode_json $status;
-        my $status_type = $status_info->{status_type};
-        my $updated_date = $status_info->{update_date};
-        my $updated_by = $status_info->{update_person};
-        my $notes = $status_info->{update_notes};
+        my $status_history = decode_json $status;
+        my @history_array = @$status_history;
+        my $latest_status = pop @history_array;
+        my $status_type = $latest_status->{status_type};
+        my $updated_date = $latest_status->{update_date};
+        my $updated_by = $latest_status->{update_person};
+        my $notes = $latest_status->{update_notes};
 
         if ($status_type eq 'inventoried') {
             my $inventory = CXGN::Propagation::Propagation->new({schema=>$schema, dbh=>$dbh, propagation_stock_id=>$propagation_stock_id});
@@ -826,24 +829,23 @@ sub update_propagation_status_POST : Args(0) {
     }
 
     my $status = CXGN::Propagation::Status->new({
-        bcs_schema => $schema,
-        parent_id => $propagation_stock_id,
-        prop_id => $previous_stockprop_id
+        chado_schema => $schema,
+        propagation_stock_id => $propagation_stock_id,
+        status_type => $status_type,
+        update_person => $full_name,
+        update_date => $update_date,
+        update_notes => $update_notes
     });
 
-    $status->status_type($status_type);
-    $status->update_person($full_name);
-    $status->update_date($update_date);
-    $status->update_notes($update_notes);
-    $status->store();
+    my $added_status = $status->add_status_info();
 
-    if (!$status->store()){
-        $c->stash->{rest} = {error => "Error saving propagation status",};
+    if (!$added_status) {
+        $c->stash->{rest} = {error => "Error updating status",};
         return;
     }
 
     my $inventory_stock_id;
-    if ($status->store() && $inventory_identifier) {
+    if ($added_status && $inventory_identifier) {
         my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
             chado_schema => $schema,
             phenome_schema => $phenome_schema,
@@ -978,33 +980,26 @@ sub upload_propagation_identifier_status_POST : Args(0) {
             my $status_notes = $parsed_data->{$propagation_identifier}->{status_notes};
             my $status_updated_by = $parsed_data->{$propagation_identifier}->{status_updated_by};
             my $inventory_identifier = $parsed_data->{$propagation_identifier}->{inventory_identifier};
-
-            my $propagation_stock_id = $schema->resultset('Stock::Stock')->find({ uniquename => $propagation_identifier})->stock_id();
-            my $previous_status = $schema->resultset("Stock::Stockprop")->find( {stock_id => $propagation_stock_id, type_id => $propagation_status_cvterm_id });
-            my $previous_stockprop_id;
-            if($previous_status) {
-                $previous_stockprop_id = $previous_status->stockprop_id();
-            }
+            my $propagation_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $propagation_identifier});
 
             my $status = CXGN::Propagation::Status->new({
-                bcs_schema => $schema,
-                parent_id => $propagation_stock_id,
-                prop_id => $previous_stockprop_id
+                chado_schema => $schema,
+                propagation_stock_id => $propagation_stock_id,
+                status_type => $status_type,
+                update_person => $status_updated_by,
+                update_date => $status_date,
+                update_notes => $status_notes
             });
 
-            $status->status_type($status_type);
-            $status->update_person($status_updated_by);
-            $status->update_date($status_date);
-            $status->update_notes($status_notes);
-            $status->add_status_info();
+            my $added_status = $status->add_status_info();
 
-            if (!$status->add_status_info()){
-                $c->stash->{rest} = {error => "Error saving propagation status",};
+            if (!$added_status) {
+                $c->stash->{rest} = {error => "Error updating status",};
                 return;
             }
 
             my $inventory_stock_id;
-            if ($status->store() && $inventory_identifier) {
+            if ($added_status && $inventory_identifier) {
                 my $add_inventory_identifier = CXGN::Propagation::AddInventoryIdentifier->new({
                     chado_schema => $schema,
                     phenome_schema => $phenome_schema,

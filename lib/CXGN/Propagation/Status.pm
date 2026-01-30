@@ -79,16 +79,17 @@ sub add_status_info {
         my $update_date = $self->get_update_date();
         my $update_notes = $self->get_update_notes();
         my %new_status_hash;
-        $new_status_hash{$status_type}{'update_date'} = $update_date;
-        $new_status_hash{$status_type}{'update_person'} = $update_person;
-        $new_status_hash{$status_type}{'update_notes'} = $update_date;
+        $new_status_hash{'status_type'} = $status_type;
+        $new_status_hash{'update_date'} = $update_date;
+        $new_status_hash{'update_person'} = $update_person;
+        $new_status_hash{'update_notes'} = $update_notes;            
 
         my $propagation_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type');
         my $propagation_status_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_status', 'stock_property');
 
         my $status_string;
         my @status_array;
-        my $previous_status_rs = $schema->resultset("Stock::Stockprop")->find({ stock_id => $propagation_stock_id, type_id => $propagation_status_cvterm->(cvterm_id)});
+        my $previous_status_rs = $schema->resultset("Stock::Stockprop")->search({ stock_id => $propagation_stock_id, type_id => $propagation_status_cvterm->cvterm_id});
         if ($previous_status_rs->count == 1){
             my $status_history = $previous_status_rs->first->value();
             my $all_statuses = decode_json $status_history;
@@ -105,7 +106,7 @@ sub add_status_info {
             @status_array = (\%new_status_hash);
             $status_string = encode_json \@status_array;
             print STDERR "STATUS STRING 2 =".Dumper($status_string)."\n";
-            my $propagation_identifier = $schema->resultset("Stock::Stock")->find({ stock_id => $propagation_stock_id, type_id => $propagation_cvterm->(cvterm_id)})
+            my $propagation_identifier = $schema->resultset("Stock::Stock")->find({ stock_id => $propagation_stock_id, type_id => $propagation_cvterm->cvterm_id});
             $propagation_identifier->create_stockprops({$propagation_status_cvterm->name() => $status_string});
         }
 
