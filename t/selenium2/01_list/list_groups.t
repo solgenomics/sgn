@@ -159,7 +159,7 @@ $d->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-
+=head2 download
     my @files = glob("$download_dir/*");
 
     ok(@files, "File downloaded to tmp directory");
@@ -174,6 +174,7 @@ $d->while_logged_in_as("submitter", sub {
 
     my $expected = "test1\ntest2";
     like($contents, qr/\Q$expected\E/, "Downloaded file contains expected content");
+=cut
 
     ## Delete list group
 
