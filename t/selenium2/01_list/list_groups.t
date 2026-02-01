@@ -5,12 +5,26 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::WWW::WebDriver;
+use Selenium::Firefox;
+use Selenium::Firefox::Profile;
+
+my $download_dir = "/downloads";
+chown 1200, 1250, $download_dir;
+chmod 0777, $download_dir;
+my $profile = Selenium::Firefox::Profile->new;
+$profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
+$profile->set_preference( 'browser.download.dir', $download_dir );
+$profile->set_preference( 'browser.download.manager.showWhenStarting', 0 );
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream,text/csv,application/zip,text/plain' );
+
+my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
 
 
 
 my $d = SGN::Test::WWW::WebDriver->new();
+$d->driver($driver);
 
-my $download_dir = $d->download_dir();
+#my $download_dir = $d->download_dir();
 
 
 $d->while_logged_in_as("submitter", sub {
@@ -159,7 +173,6 @@ $d->while_logged_in_as("submitter", sub {
 
     sleep(1);
 
-=head2 download
     my @files = glob("$download_dir/*");
 
     ok(@files, "File downloaded to tmp directory");
@@ -174,7 +187,6 @@ $d->while_logged_in_as("submitter", sub {
 
     my $expected = "test1\ntest2";
     like($contents, qr/\Q$expected\E/, "Downloaded file contains expected content");
-=cut
 
     ## Delete list group
 

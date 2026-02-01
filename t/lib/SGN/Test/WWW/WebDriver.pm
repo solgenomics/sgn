@@ -101,8 +101,8 @@ has 'download_dir' => (is => 'ro',
 			   }
     );
 
-our $webdriver_instance;
 
+=head2 test
 sub BUILD {
     my $self = shift;
 
@@ -124,7 +124,7 @@ sub BUILD {
 
     $self->driver($driver);
 }
-
+=cut
 sub login_as { 
     my $self = shift;
     my $role = shift;
