@@ -77,26 +77,14 @@ jQuery(document).ready(function ($) {
                 return;
 	        }
 
-                function(r) {
-                    if (r.error) { alert(r.error); }
-                    else {
-                    for(var i=0; i<vectorsToAdd.length; i++){
-                        infoToAdd.push({
-                        'defaultDisplayName':vectorsToAdd[i],
-                        });
-                    }
-                    }
-                    add_vectors(infoToAdd);
-                    $('#review_absent_dialog').modal("hide");
-
-                },
-                function(r) {
-                    alert('ERROR! Try again later.');
-                }
-	    }
+            for(var i=0; i<vectorsToAdd.length; i++){
+                infoToAdd.push({
+                    'defaultDisplayName':vectorsToAdd[i],
+                });
+            }
+        }
         add_vectors(infoToAdd);
         $('#review_absent_dialog').modal("hide");
-
     });
 
     $('#new_vectors_submit').click(function () {
