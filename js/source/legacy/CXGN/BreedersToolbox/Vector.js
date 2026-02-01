@@ -18,12 +18,10 @@ var $j = jQuery.noConflict();
 var list = new CXGN.List();
 var vectorList;
 var vector_list_id;
-var validSpecies;
 var fuzzyResponse;
 var fullParsedData;
 var infoToAdd;
 var vectorListFound;
-var speciesNames;
 var doFuzzySearch;
 
 function disable_ui() {
@@ -36,7 +34,7 @@ function enable_ui() {
 
 jQuery(document).ready(function ($) {
 
-    function add_vectors(full_info, species_names) {
+    function add_vectors(full_info) {
 
         $.ajax({
             type: 'POST',
@@ -45,7 +43,6 @@ jQuery(document).ready(function ($) {
             timeout: 36000000,
             data: {
                 'data': JSON.stringify(full_info),
-                'allowed_organisms': JSON.stringify(species_names),
             },
             beforeSend: function(){
                 disable_ui();
@@ -70,72 +67,34 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    function verify_species_name() {
-        var speciesName = $("#species_name_input").val();
-        validSpecies = 0;
-        return $.ajax({
-            type: 'GET',
-            url: '/organism/verify_name',
-            dataType: "json",
-            data: {
-                'species_name': speciesName,
-            }
-            // success: function (response) {
-            //     if (response.error) {
-            //         alert(response.error);
-            //         validSpecies = 0;
-            //     } else {
-            //         validSpecies = 1;
-            //     }
-            // },
-            // error: function (response) {
-            //     alert('An error occurred verifying species name. sorry'+response.responseText);
-            //     validSpecies = 0;
-            // }
-        });
-    }
-
-    $('#species_name_input').focusout(function () {
-        verify_species_name().then( function(r) { if (r.error) { alert(r.error); } }, function(r) { alert('An error occurred. The site may not be available right now.'); });
-    });
-
     //  review absent vectors
     $('#review_absent_vectors_submit').click(function () {
         if (fullParsedData == undefined){
-            var speciesName = $("#species_name_input").val();
             var vectorsToAdd = vectorList;
-            if (!speciesName) {
-                alert("Species name required");
-                return;
-            }
 
             if (!vectorsToAdd || vectorsToAdd.length == 0) {
                 alert("No vectors to add");
                 return;
 	        }
-        
-            verify_species_name().then(
+
                 function(r) {
                     if (r.error) { alert(r.error); }
                     else {
                     for(var i=0; i<vectorsToAdd.length; i++){
                         infoToAdd.push({
-                        'species_name':speciesName,
                         'defaultDisplayName':vectorsToAdd[i],
                         });
-                        speciesNames.push(speciesName);
                     }
                     }
-                    add_vectors(infoToAdd, speciesNames);
+                    add_vectors(infoToAdd);
                     $('#review_absent_dialog').modal("hide");
 
                 },
                 function(r) {
                     alert('ERROR! Try again later.');
                 }
-            );
 	    }
-        add_vectors(infoToAdd, speciesNames);
+        add_vectors(infoToAdd);
         $('#review_absent_dialog').modal("hide");
 
     });
@@ -239,7 +198,6 @@ function review_verification_results(doFuzzySearch, verifyResponse, vector_list_
     vectorListFound = {};
     vectorList = [];
     infoToAdd = [];
-    speciesNames = [];
     //console.log(verifyResponse);
     //console.log(vector_list_id);
 
@@ -293,7 +251,6 @@ function review_verification_results(doFuzzySearch, verifyResponse, vector_list_
     if (verifyResponse.full_data){
         for(var key in verifyResponse.full_data){
             infoToAdd.push(verifyResponse.full_data[key]);
-            speciesNames.push(verifyResponse.full_data[key]['species'])
         }
     }
 
@@ -306,7 +263,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, vector_list_
 
         }  else if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
-            
+
         } else {
             jQuery('#review_fuzzy_matches_dialog').modal('hide');
 
@@ -330,9 +287,6 @@ function populate_review_absent_dialog(absent, infoToAdd){
 
     jQuery('#count_of_absent_vectors').html("Total number to be added("+absent.length+")");
     var absent_html = '';
-    jQuery("#species_name_input").autocomplete({
-        source: '/organism/autocomplete'
-    });
 
     for( i=0; i < absent.length; i++){
         absent_html = absent_html
@@ -419,7 +373,6 @@ function process_fuzzy_options(vector_list_id) {
         success: function (response) {
             //console.log(response);
             infoToAdd = [];
-            speciesNames = [];
             vectorList = response.names_to_add;
             if (vectorList.length > 0){
 
@@ -427,12 +380,10 @@ function process_fuzzy_options(vector_list_id) {
                     for (var i=0; i<vectorList.length; i++){
                         var vector_name = vectorList[i];
                         infoToAdd.push(fullParsedData[vector_name]);
-                        speciesNames.push(fullParsedData[vector_name]['species']);
                     }
                     for (var vector_name in vectorListFound) {
                         if (vectorListFound.hasOwnProperty(vector_name)) {
                             infoToAdd.push(fullParsedData[vector_name]);
-                            speciesNames.push(fullParsedData[vector_name]['species']);
                         }
                     }
                 }

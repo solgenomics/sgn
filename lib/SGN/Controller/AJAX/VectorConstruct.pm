@@ -113,7 +113,6 @@ sub create_vector_construct_POST {
 
     foreach (@$data){
         my $vector = $_->{uniqueName} || undef;
-        my $organism = $_->{species_name} || undef;
         push @$vector_list, $vector;
     }
 
@@ -306,7 +305,7 @@ sub verify_vectors_file_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
+        $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
 
@@ -331,9 +330,6 @@ sub verify_vectors_file_POST : Args(0) {
         absent => $parsed_data->{absent_vectors},
         fuzzy => $parsed_data->{fuzzy_vectors},
         found => $parsed_data->{found_vectors},
-        absent_organisms => $parsed_data->{absent_organisms},
-        fuzzy_organisms => $parsed_data->{fuzzy_organisms},
-        found_organisms => $parsed_data->{found_organisms}
     );
 
     if ($parsed_data->{error_string}){
