@@ -54,6 +54,7 @@ $identifier_prefix => undef
 $genotyping_facility => undef
 $management_factor_date => undef
 $management_factor_type => undef
+$management_factor_types => undef
 $trial_stock_type => undef
 $trial_stock_count => undef
 $trial_owner => undef
@@ -200,7 +201,7 @@ $field_headers => ()
                                 <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, trial_stock_type => $trial_stock_type &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
-                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
+                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
 % } #End trial_design_section
 % if ($info_section_id eq 'trial_detail_traits_assayed'){
 

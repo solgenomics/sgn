@@ -28,7 +28,7 @@ sub search {
     my $limit;
     my $brapi_study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
     if (!$brapi_study_ids_arrayref || scalar (@$brapi_study_ids_arrayref) < 1) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
-
+    #TODO: figure out why this has no brapi study Id arrayref
     ($data,$counter) = _search($self,$params,$limit);
 
     my %result = (data=>$data);
