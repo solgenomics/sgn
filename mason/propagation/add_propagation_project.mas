@@ -21,9 +21,9 @@ $locations
                             <& /page/page_title.mas, title=>"What are Propagation Projects?" &>
                             <p>Propagation Project page acts as a centralized page for different propagation processes .</p>
                             <ul>
-                                <li>Different propagation types, objectives, programs or propagations done in different years can be grouped on different project pages.
-                                <li>Metadata for each propagation process (batch) within a project (e.g., accession name, material type, date, operator) is linked to a grobally unique Propagation Group Identifier.</li>
-                                <li>Within each Propagation Group Identifier, the progress of each plantet produced is tracked by another unique identifier called Propagation Identifier.</li>
+                                <li>Each project page may be used to group propagation processes having the same propagation type, objective or done in the same year.</li>
+                                <li>Metadata for each propagation process (e.g., accession name, material type, date, operator) is linked to a globally unique <b>Propagation Group Identifier</b>.</li>
+                                <li>Within each Propagation Group Identifier, the progress of each plantet produced is tracked by another unique <b>Propagation Identifier</b>.</li>
                             </ul>
                             <hr>
                             <center>
