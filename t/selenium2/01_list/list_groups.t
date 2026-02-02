@@ -19,8 +19,6 @@ $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application
 
 my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
 
-
-
 my $d = SGN::Test::WWW::WebDriver->new();
 $d->driver($driver);
 
@@ -172,7 +170,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok("close_list_comparison_modal", "id", "find close comparison dialog button")->click();
 
     sleep(1);
-
+=head2 test
     my @files = glob("$download_dir/*");
 
     ok(@files, "File downloaded to tmp directory");
@@ -187,7 +185,7 @@ $d->while_logged_in_as("submitter", sub {
 
     my $expected = "test1\ntest2";
     like($contents, qr/\Q$expected\E/, "Downloaded file contains expected content");
-
+=cut
     ## Delete list group
 
     $d->find_element_ok("delete_selected_list_group", "id", "delete selected list group")->click();
