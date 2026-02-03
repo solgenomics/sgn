@@ -71,7 +71,8 @@ $goto_url => '/'
                     </button>
 % }
                 </div>
-% }             
+% }
+            </div>
             <div class="modal-footer">
 %  if (!$c->config->{require_login}) {
                 <button id="close_site_login_dialog_button" type="button" class="btn btn-default" data-dismiss="modal" style="float:left">Close</button>
