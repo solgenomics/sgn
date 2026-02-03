@@ -128,6 +128,15 @@ sub cache_pheno_corr_output_files {
 
    $c->controller('solGS::Files')->cache_file($c, $json_cache_data);
 
+   my $corr_input_data_json = {
+        key  => 'corr_input_data_json_' . $pop_id,
+		file => "corr_input_data_json_${pop_id}" . '.txt',
+	    stash_key => 'corr_input_data_json_file',
+		cache_dir => $corre_cache_dir
+    };
+
+   $c->controller('solGS::Files')->cache_file($c, $corr_input_data_json);
+
 }
 
 
