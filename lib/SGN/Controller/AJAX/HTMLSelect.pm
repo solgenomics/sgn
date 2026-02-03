@@ -2270,49 +2270,46 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         name => 'block',
         cv_id => $stockprop_cv_id
     })->cvterm_id();
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'stock_synonym',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
 
     my @plots = map {$_->[0]} @{$trial->get_plots()};
 
-    my $plots_q = "WITH plot AS 
+    my $plots_q = "
+    WITH plot AS 
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
-            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=?), 
-    row_number AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?), 
-    col_number AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?),
-    rep AS
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?),
-    block AS 
-        (SELECT stock_id AS plot_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?)
-    SELECT plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, rep.value AS replicate, block.value AS block, plot.accession_id, plot.accession_name 
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
+        WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)), 
+    stockprops AS (
+        SELECT
+            stock_id,
+            MAX(value) FILTER (WHERE type_id = ?) AS row_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS col_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS rep,
+            MAX(value) FILTER (WHERE type_id = ?) AS block,
+            MAX(value) FILTER (WHERE type_id = ?) AS synonyms
+        FROM stockprop
+        WHERE type_id IN (?, ?, ?, ?, ?)
+        GROUP BY stock_id
+    )
+    SELECT plot.plot_id, plot.plot_name, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms
     FROM plot 
-    LEFT JOIN row_number ON plot.plot_id=row_number.plot_id 
-    LEFT JOIN col_number ON col_number.plot_id=plot.plot_id
-    JOIN rep ON rep.plot_id=plot.plot_id
-    JOIN block ON block.plot_id=plot.plot_id
-    WHERE plot.plot_id = ANY(?);"; 
+    LEFT JOIN stockprops AS plotprops ON plotprops.stock_id=plot.plot_id
+    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id;"; 
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
-    $h->execute($plot_of_id, $row_num_id, $col_num_id, $rep_id, $block_id, \@plots);
+    $h->execute($plot_of_id, \@plots, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
 
     my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates (row,column)</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
-    while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name) = $h->fetchrow_array()) {
+    while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
         my $coordinates = "NA";
         if ($row && $column){
             $coordinates = "($row,$column)";
         }
-        my $accession_obj = CXGN::Stock->new({
-            stock_id => $accession_id,
-            schema => $schema
-        });
-        my $synonyms = $accession_obj->_retrieve_stockprop('stock_synonym');
         $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
@@ -2355,34 +2352,34 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
         name => 'subplot_of',
         cv_id => $stock_relationship_cv_id
     })->cvterm_id();
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'stock_synonym',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
 
     my @subplots = map {$_->[0]} @{$trial->get_subplots()};
 
-    my $subplots_q = "WITH subplot AS 
+    my $subplots_q = "
+    WITH subplot AS 
         (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
             JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=?),
+        WHERE stock_relationship.type_id=? AND mysubplot.stock_id = ANY(?)),
     plot AS 
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
         WHERE stock_relationship.type_id=?)
-    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name 
+    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name, stockprop.value
     FROM subplot 
     JOIN plot ON plot.subplot_id=subplot.subplot_id
-    WHERE subplot.subplot_id = ANY(?);"; 
+    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?);"; 
 
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
-    $h->execute($subplot_of_id, $subplot_of_id, \@subplots);
+    $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
 
     my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
-    while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name) = $h->fetchrow_array()) {
-        my $accession_obj = CXGN::Stock->new({
-            stock_id => $accession_id,
-            schema => $schema
-        });
-        my $synonyms = $accession_obj->_retrieve_stockprop('stock_synonym');
+    while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
         $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
@@ -2437,6 +2434,10 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         name => 'col_number',
         cv_id => $stockprop_cv_id
     })->cvterm_id();
+    my $synonym_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'stock_synonym',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
 
     my $subplot_q = "";
     my $subplot_join = "";
@@ -2459,32 +2460,35 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
             JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=?), 
+        WHERE stock_relationship.type_id=? AND myplant.stock_id = ANY(?)), 
     plot AS 
         (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
             JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
             WHERE stock_relationship.type_id=?),
-    row_number AS 
-        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?), 
-    col_number AS 
-        (SELECT stock_id AS plant_id, stockprop.value AS value FROM stockprop 
-        WHERE stockprop.type_id=?) 
+    stockprops AS (
+        SELECT
+            stock_id,
+            MAX(value) FILTER (WHERE type_id = ?) AS row_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS col_number,
+            MAX(value) FILTER (WHERE type_id = ?) AS synonyms
+        FROM stockprop
+        WHERE type_id IN (?, ?, ?)
+        GROUP BY stock_id)
     $subplot_q
-    SELECT plant.plant_id, plant.plant_name, plot.plot_id, plot.plot_name, row_number.value AS row_number, col_number.value AS col_number, plant.accession_id, plant.accession_name $subplot_select
+    SELECT plant.plant_id, plant.plant_name, plot.plot_id, plot.plot_name, plantprops.row_number, plantprops.col_number, plant.accession_id, plant.accession_name, synonyms.synonyms $subplot_select
     FROM plant
-    LEFT JOIN row_number ON plant.plant_id=row_number.plant_id 
-    LEFT JOIN col_number ON col_number.plant_id=plant.plant_id
     JOIN plot ON plot.plant_id=plant.plant_id
+    LEFT JOIN stockprops AS plantprops ON (plant.plant_id=plantprops.stock_id)
+    LEFT JOIN stockprops AS synonyms ON (synonyms.stock_id=plant.accession_id)
     $subplot_join
-    WHERE plant.plant_id = ANY(?);"; 
+    ;"; 
 
     my $h = $schema->storage()->dbh()->prepare($plants_q);
-    $h->execute($plant_of_id, $plant_of_id, $row_num_id, $col_num_id, \@plants);
+    $h->execute($plant_of_id, \@plants, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id);
 
     my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
-    while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
+    while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $synonyms, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
         if ($row && $column){
             $coordinates = "($row,$column)";
@@ -2493,11 +2497,6 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         if ($subplot_id && $subplot_name) {
             $subplot_data = "<td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td>";
         }
-        my $accession_obj = CXGN::Stock->new({
-            stock_id => $accession_id,
-            schema => $schema
-        });
-        my $synonyms = $accession_obj->_retrieve_stockprop('stock_synonym');
         $html .= "<tr><td><input id=\"select_plant_$plant_name\" type=\"checkbox\" class=\"exp_design_plant_select\"></td><td><a href=\"/stock/$plant_id/view\">$plant_name</a></td>$subplot_data<td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 

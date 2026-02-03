@@ -707,16 +707,23 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     foreach my $r (@sorted_names){
         my ($stock_id, $stock_name) =@$r;
         my $is_in_trial;
-        my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id );
-        my @trial_list = $check_trial->get_trials();
+        my $is_a_parent;
+        my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $stock_id );
+        my @trial_list = $stock_obj->get_trials();
         if (scalar(@trial_list) > 0) {
             $is_in_trial = 1;
+        }
+
+        my $progeny_count = $stock_obj->check_progenies();
+        if ($progeny_count > 0) {
+            $is_a_parent = 1;
         }
 
         push @transformants, {
             transformant_id => $stock_id,
             transformant_name => $stock_name,
             is_in_trial => $is_in_trial,
+            is_a_parent => $is_a_parent
         };
     }
 
@@ -1516,13 +1523,21 @@ sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_acce
     my @transformants;
     foreach my $r (@sorted_names){
         my $is_in_trial;
-        my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $r->[0] );
-        my @trial_list = $check_trial->get_trials();
+        my $is_a_parent;
+        my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $r->[0] );
+        my @trial_list = $stock_obj->get_trials();
         if (scalar(@trial_list) > 0) {
             $is_in_trial = 1;
         }
+
+        my $progeny_count = $stock_obj->check_progenies();
+        if ($progeny_count > 0) {
+            $is_a_parent = 1;
+        }
         if ($is_in_trial) {
             push @transformants, ['Used in a trial, cannot obsolete', $r->[1]];
+        } elsif ($is_a_parent) {
+            push @transformants, ['Used as a parent, cannot obsolete', $r->[1]];
         } else {
             push @transformants, ["<input type='checkbox' name='checked_stocks' value='$r->[1]'>", $r->[1]];
         }

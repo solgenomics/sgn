@@ -84,10 +84,14 @@ $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
 $is_obsolete => undef
+$derived_accession_relationship => undef
+$related_stock_link => undef
+$original_stock_link => undef
 $is_in_trial => undef
 $vector_related_genes => undef
 $vector_analyzed_tissue_types => undef
 $number_of_insertions => undef
+$is_a_parent => undef
 
 #Specific to genotyping protocol detail page
 $protocol_id => undef
@@ -210,7 +214,7 @@ $field_headers => ()
                             <div class="panel-body">
 
 % if ($info_section_id eq 'pheno_heatmap'){
-                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries &>
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, trial_stock_type => $trial_stock_type &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
                                 <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
@@ -339,7 +343,7 @@ $field_headers => ()
 % }
 
 % if ($info_section_id eq 'stock_additional_info_section'){
-                                <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
+                                <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner , derived_accession_relationship => $derived_accession_relationship, related_stock_link => $related_stock_link, original_stock_link => $original_stock_link &>
 % } #End stock_additional_info_section
 % if ($info_section_id eq 'stock_trials_section'){
                                 <& /stock/trials.mas, stock_id => $stock_id, type_name => $type_name, trial_id => $trial_id, trial_name => $trial_name, name => $name, project_id => $project_id&>
@@ -437,7 +441,7 @@ $field_headers => ()
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % } #End stock_comments_section
 % if ($info_section_id eq 'stock_delete_section'){
-                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete, is_in_trial=>$is_in_trial &>
+                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete, is_in_trial=>$is_in_trial, is_a_parent=>$is_a_parent &>
 % } #End stock_delete_section
 % if ($info_section_id eq 'population_delete_section'){
                                 <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>

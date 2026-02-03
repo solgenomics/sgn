@@ -211,6 +211,8 @@ sub generate_experimental_design_POST : Args(0) {
     my $number_of_unreplicated_stocks = scalar(@unreplicated_stocks);
 
     my $greenhouse_num_plants = $c->req->param('greenhouse_num_plants');
+    my $num_rows_per_plot = $c->req->param('num_rows_per_plot');
+    my $num_cols_per_plot = $c->req->param('num_cols_per_plot');
     my $use_same_layout = $c->req->param('use_same_layout');
     my $number_of_checks = scalar(@control_names_crbd);
 
@@ -311,7 +313,7 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_backend($c->config->{backend});
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
-	$trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
+	    $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
 
         my $design_created = 0;
         if ($use_same_layout) {
@@ -383,6 +385,10 @@ sub generate_experimental_design_POST : Args(0) {
         if ($greenhouse_num_plants) {
             my $json = JSON::XS->new();
             $trial_design->set_greenhouse_num_plants($json->decode($greenhouse_num_plants));
+        }
+        if ($num_rows_per_plot && $num_cols_per_plot) {
+            $trial_design->set_num_rows_per_plot($num_rows_per_plot);
+            $trial_design->set_num_cols_per_plot($num_cols_per_plot);
         }
         if ($westcott_check_1){
             $trial_design->set_westcott_check_1($westcott_check_1);
@@ -1316,6 +1322,7 @@ sub upload_trial_metadata_file : Path('/ajax/trial/upload_trial_metadata_file') 
 sub upload_trial_metadata_file_POST : Args(0) {
     my ($self, $c)                 = @_;
     my $upload                     = $c->req->upload('trial_metadata_upload_file');
+    my $ignore_warnings            = $c->req->param('trial_metadata_upload_ignore_warnings');
 
     my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbhost                     = $c->config->{dbhost};
@@ -1385,9 +1392,11 @@ sub upload_trial_metadata_file_POST : Args(0) {
     }
 
     if ($parser->has_parse_warnings()) {
-        my $warnings = $parser->get_parse_warnings();
-        $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
-        return;
+        unless ($ignore_warnings) {
+            my $warnings = $parser->get_parse_warnings();
+            $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
+            return;
+        }
     }
 
     # Check breeding program permissions, if not a curator
@@ -1402,6 +1411,34 @@ sub upload_trial_metadata_file_POST : Args(0) {
         if ( scalar(@missing_breeding_programs) > 0 ) {
             $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
             return;
+        }
+    }
+
+    # Create missing folders
+    my %created_folders;
+    foreach my $trial_id (keys %{$parsed_data->{trial_data}} ) {
+        my $details = $parsed_data->{trial_data}->{$trial_id};
+        if ( $details->{folder} ) {
+            if ( $details->{folder}->{type} eq 'missing' ) {
+                my $folder_id;
+
+                if ( exists $created_folders{$details->{folder}->{name}} ) {
+                    $folder_id = $created_folders{$details->{folder}->{name}};
+                }
+                else {
+                    my $f = CXGN::Trial::Folder->create({
+                        bcs_schema => $chado_schema,
+                        name => $details->{folder}->{name},
+                        breeding_program_id => $details->{folder}->{breeding_program_id},
+                        folder_for_trials => 1
+                    });
+                    $folder_id = $f->folder_id();
+                    $created_folders{$details->{folder}->{name}} = $folder_id;
+                }
+
+                $parsed_data->{trial_data}->{$trial_id}->{folder}->{type} = "exists";
+                $parsed_data->{trial_data}->{$trial_id}->{folder}->{id} = $folder_id;
+            }
         }
     }
 

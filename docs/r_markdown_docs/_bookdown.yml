@@ -13,6 +13,7 @@ rmd_files: [
   "managing_genotyping_plates.Rmd",
   "using_fieldbook_app.Rmd",
   "managing_phenotypic_data.Rmd",
+  "managing_high_dim_phenotyping_data.Rmd",
   "managing_barcodes.Rmd",
   "using_label_designer.Rmd",
   "managing_downloads.Rmd",
