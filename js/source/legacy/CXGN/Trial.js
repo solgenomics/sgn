@@ -221,10 +221,10 @@ function delete_field_map() {
 	     jQuery('#working_modal').modal("hide");
 
       if (response.error) {
-		      alert("Error Deleting Field Map: "+response.error);
+		      alert("Error deleting field map: "+response.error);
       } else {
-          //alert("Field map deletion Successful...");
-		      jQuery('#delete_field_map_dialog_message').dialog("open");
+              alert("Field map deletion successful.");
+		      location.reload();
           }
 	 },
 	 error: function () {
@@ -493,7 +493,11 @@ delete_field_map();
 
 
 jQuery('#delete_field_map_hm_link').click(function () {
-    jQuery('#delete_field_map_dialog').dialog("open");
+    if (confirm("Are you sure you want to delete the spatial layout of this trial?")) {
+        delete_field_map();
+    } else {
+        return;
+    }
 });
 
 jQuery("#delete_field_map_dialog_message").dialog({
