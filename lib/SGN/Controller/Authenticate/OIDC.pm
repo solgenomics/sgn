@@ -208,7 +208,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
 
         # Fetch the .well-known configuration
         my $well_known = fetch_json($config->{well_known_url});
-        my ($error, $error_description) = (
+        ($error, $error_description) = (
             $well_known->{error},
             $well_known->{error_description}
         );
@@ -220,7 +220,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         # Fetch the certificates for verifying token signatures
         # This is how we know they legitimately came from the provider
         my $certs = fetch_json($well_known->{jwks_uri});
-        my ($error, $error_description) = (
+        ($error, $error_description) = (
             $certs->{error},
             $certs->{error_description}
         );
@@ -273,7 +273,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         # ---------------------------------------------------------------------
         # 2. Use The Access Token To Request User Information
 
-        my $response = $ua->get(
+        $response = $ua->get(
             $well_known->{userinfo_endpoint},
             "Authorization" => "Bearer $access_token"
         );
@@ -311,13 +311,9 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
 
         # Require match of private_email or pending_email (set at user account creation)
         my $schema = $c->dbic_schema("Bio::Chado::Schema");
-        my $q = "
-        SELECT sp_person_id, user_prefs
-        FROM sgn_people.sp_person
-        WHERE UPPER(private_email)=UPPER(?) OR UPPER(pending_email)=UPPER(?)";
+        my $q = "SELECT COUNT(*) FROM sgn_people.sp_person WHERE UPPER(private_email)=UPPER(?) OR UPPER(pending_email)=UPPER(?)";
         my $h = $schema->storage->dbh()->prepare($q);
         my $num_rows = $h->execute($email, $email);
-        my ($person_id, $user_prefs) = $h->fetchrow_array();
 
         # Uh oh, too many matches (not sure if this is even possible)
         if ( $num_rows > 1 ) {
@@ -327,6 +323,14 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
             );
             return;
         }
+
+        $q = "
+        SELECT sp_person_id, user_prefs
+        FROM sgn_people.sp_person
+        WHERE UPPER(private_email)=UPPER(?) OR UPPER(pending_email)=UPPER(?)";
+        $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($email, $email);
+        my ($person_id, $user_prefs) = $h->fetchrow_array();
 
         # ---------------------------------------------------------------------
         # 4. Auto-provision
