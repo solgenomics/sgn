@@ -184,7 +184,11 @@ sub BUILD {
             } elsif ($tt->value eq 'sampling_trial') {
                 $self->folder_type("sampling_trial");
             } elsif ($tt->value eq 'activity_record') {
-                $self->folder_type('activity_record');
+                $self->folder_type('activity');
+            } elsif ($tt->value eq 'transformation_project') {
+                $self->folder_type('transformation');
+            } elsif ($tt->value eq 'propagation_project') {
+                $self->folder_type('propagation');
             } elsif ($tt->type_id == $analyses_cvterm_id) {
                 $self->folder_type("analyses");
 			} elsif ($tt->type_id == $location_cvterm_id) {
