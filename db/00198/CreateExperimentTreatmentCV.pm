@@ -66,8 +66,10 @@ sub patch {
 
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
     my $site_basedir = getcwd()."/../..";
-    my $dbuser = $self->dbh->dbuser();
-    my $dbpass = $self->dbh->dbpass();
+    my $dbuser = $self->dbuser;
+    my $dbpass = $self->dbpass;
+
+    print STDERR "\n Got DB with $dbuser and $dbpass.\n";
         
     print STDERR "INSERTING CV TERMS...\n";
 
