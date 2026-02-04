@@ -211,6 +211,7 @@ sub pheno_corr_output_files {
     my $output_files = join ("\t",
 			  $c->stash->{pheno_corr_table_file},
 			  $c->stash->{pheno_corr_json_file},
+              $c->stash->{corr_input_data_json_file}
 	);
 
     my $tmp_dir = $c->stash->{correlation_temp_dir};
