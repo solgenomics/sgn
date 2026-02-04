@@ -117,7 +117,11 @@ if ($image_objects)  { # don't display anything for empty list of images
 
   $image_html .= "<script>
   jQuery(document).ready(function() {
-      jQuery('a.stock_image_group').colorbox();
+      jQuery('a.stock_image_group').colorbox({photo: true, onComplete: function () {
+        var titleWidth = jQuery('#cboxTitle').outerWidth(true);
+        var paddedWidth = titleWidth + 500;
+        jQuery.colorbox.resize({width: paddedWidth + 'px'});
+}});
       jQuery(document).on('click', '#print_images_multi_image_view', function(){
           var colorbox_html = '';
           jQuery(\"input:checkbox[name='print_images_checkbox']:checked\").each(function(){
