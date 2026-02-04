@@ -977,7 +977,6 @@ sub upload_propagation_identifier_status_POST : Args(0) {
     }
 
     my $propagation_status_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'propagation_status', 'stock_property')->cvterm_id();
-
     if ($parsed_data){
         foreach my $propagation_identifier (sort keys %$parsed_data) {
             my $status_type = $parsed_data->{$propagation_identifier}->{status_type};
@@ -985,7 +984,7 @@ sub upload_propagation_identifier_status_POST : Args(0) {
             my $status_notes = $parsed_data->{$propagation_identifier}->{status_notes};
             my $status_updated_by = $parsed_data->{$propagation_identifier}->{status_updated_by};
             my $inventory_identifier = $parsed_data->{$propagation_identifier}->{inventory_identifier};
-            my $propagation_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $propagation_identifier});
+            my $propagation_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => $propagation_identifier})->stock_id();
 
             my $status = CXGN::Propagation::Status->new({
                 chado_schema => $schema,

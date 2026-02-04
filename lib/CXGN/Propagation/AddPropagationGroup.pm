@@ -75,7 +75,7 @@ has 'date' => (
 );
 
 has 'purpose' => (
-    isa =>'Str',
+    isa => 'Str|Undef',
     is => 'rw',
 );
 

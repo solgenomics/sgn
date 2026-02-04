@@ -62,7 +62,7 @@ has 'update_date' => (
 );
 
 has 'update_notes' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw'
 );
 
@@ -82,7 +82,7 @@ sub add_status_info {
         $new_status_hash{'status_type'} = $status_type;
         $new_status_hash{'update_date'} = $update_date;
         $new_status_hash{'update_person'} = $update_person;
-        $new_status_hash{'update_notes'} = $update_notes;            
+        $new_status_hash{'update_notes'} = $update_notes;
 
         my $propagation_cvterm =  SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation', 'stock_type');
         my $propagation_status_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_status', 'stock_property');

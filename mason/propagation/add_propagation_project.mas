@@ -23,7 +23,7 @@ $locations
                             <ul>
                                 <li>Each project page may be used to group propagation processes having the same propagation type, objective or done in the same year.</li>
                                 <li>Metadata for each propagation process (e.g., accession name, material type, date, operator) is linked to a globally unique <b>Propagation Group Identifier</b>.</li>
-                                <li>Within each Propagation Group Identifier, the progress of each plantet produced is tracked by another unique <b>Propagation Identifier</b>.</li>
+                                <li>Within each Propagation Group, the progress of each plant produced is tracked by a globally unique <b>Propagation Identifier</b>.</li>
                             </ul>
                             <hr>
                             <center>

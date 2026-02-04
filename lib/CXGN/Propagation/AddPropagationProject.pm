@@ -16,7 +16,8 @@ use CXGN::Trial;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 
-has 'chado_schema' => (isa => 'DBIx::Class::Schema',
+has 'chado_schema' => (
+    isa => 'DBIx::Class::Schema',
 	is => 'rw',
 	required => 1,
 );
@@ -26,39 +27,46 @@ has 'dbh' => (
     required => 1,
 );
 
-has 'breeding_program_id' => (isa =>'Int',
+has 'breeding_program_id' => (
+    isa =>'Int',
     is => 'rw',
     required => 1,
 );
 
-has 'year' => (isa => 'Str',
+has 'year' => (
+    isa => 'Str',
     is => 'rw',
     required => 1,
 );
 
-has 'project_description' => (isa => 'Str',
+has 'project_description' => (
+    isa => 'Str',
     is => 'rw',
     required => 1,
 );
 
-has 'nd_geolocation_id' => (isa => 'Int|Undef',
+has 'nd_geolocation_id' => (
+    isa => 'Int',
     is => 'rw',
     required => 1,
 );
 
-has 'propagation_project_name' => (isa => 'Str',
+has 'propagation_project_name' => (
+    isa => 'Str',
     is => 'rw',
     required => 1,
 );
 
-has 'propagation_type' => (isa => 'Str',
+has 'propagation_type' => (
+    isa => 'Str',
     is => 'rw',
     required => 1,
 );
 
-has 'owner_id' => (isa => 'Int',
+has 'owner_id' => (
+    isa => 'Int',
     is => 'rw',
-    );
+);
 
 
 sub existing_propagation_project {
