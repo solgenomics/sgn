@@ -1,7 +1,7 @@
 
 package SGN::Controller::AJAX::Wiki;
 
-
+use URI::FromHash 'uri';
 use Text::MultiMarkdown qw | markdown |;
 use CXGN::People::Wiki;
 
@@ -51,19 +51,23 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
 
     my $page_name = $c->req->param('page_name');
 
+    my $wiki_page_name = $page_name;
+    $wiki_page_name =~ s/(_|-|\s+)(\w)/\U$2/g;
+
     my $sp_wiki_id;
 
     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
 
+
     eval {
-	$sp_wiki_id = $wiki->new_page($page_name, $user_id);
+	$sp_wiki_id = $wiki->new_page($wiki_page_name, $user_id);
     };
 
     if ($@) {
 	$c->stash->{rest} = { error => $@ };
     }
     else {
-	$c->stash->{rest} = { success => 1, sp_wiki_id => $sp_wiki_id };
+	$c->stash->{rest} = { success => 1, sp_wiki_id => $sp_wiki_id, page_name => $wiki_page_name };
     }
 }
 
@@ -85,12 +89,30 @@ sub store_POST {
     my $c = shift;
 
     my $sp_person_id = $c->user->get_object->get_sp_person_id();
+
+    if (! $sp_person_id) {
+	$c->stash->{rest} = { error => "You need to be logged in to store wiki pages." };
+	$c->detach();
+    }
+
     my $page_name = $c->stash->{page_name};
+
+    if (! $c->user()->check_roles("curator")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to modify wiki pages." };
+	$c->detach();
+    }
+    my $user_id = $c->user()->get_object->get_sp_person_id();
+
 
     print STDERR "WIKI ID FOR STORE: $page_name\n";
 
-    my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
+    my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $page_name } );
 
+    print STDERR "PAGE OWNED BY ".$wiki->sp_person_id()."\n";
+    if ($wiki->sp_person_id() != $user_id) {
+	$c->stash->{rest} = { error => "Only the original owner can modify the wiki page." };
+	$c->detach();
+    }
     my $content_data;
 
     my $content = $c->req->param('content');
@@ -118,8 +140,31 @@ sub delete : Chained('ajax_wiki') PathPart('delete') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    print STDERR "DELETE WIKI\n";
-    $c->stash->{rest} = { error => '' };
+    print STDERR "DELETE WIKI PAGE ".$c->stash->{page_name}."\n";
+
+    if (! $c->user()->check_roles("curator")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to delete wiki pages." };
+	$c->detach();
+    }
+    my $user_id = $c->user()->get_object->get_sp_person_id();
+
+
+    my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $c->stash->{page_name} } );
+
+    if ($user_id != $wiki->sp_person_id()) {
+	$c->stash->{rest} = { error => "Only the original page creator can delete the page. It is not you." };
+	$c->detach();
+    }
+
+    eval {
+	$wiki->delete($c->stash->{page_name});
+    };
+    if ($@) {
+	$c->stash->{rest} = { error => $@ };
+    }
+    else {
+	$c->stash->{rest} = { success => 1 };
+    }
 
 
 }
@@ -130,19 +175,33 @@ sub view : Chained('ajax_wiki') PathPart('view') Args(0) {
 
     print STDERR "VIEW PAGE NAMED ".$c->stash->{page_name}."\n";
 
-    my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
+    if (! $c->user()) {
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    }
 
-    my $page_contents;
+    my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $c->stash->{page_name} } );
+
+    my $page_content;
+    my $page_version;
+
     eval {
-	$page_contents = $wiki->retrieve_page($c->stash->{page_name});
+	my $page_data = $wiki->retrieve_page($c->stash->{page_name});
+
+	$page_content = $page_data->{content};
+
+        $page_version = $wiki->get_version();
+
     };
     if ($@) {
 	$c->stash->{rest} = { error => "An error occurred retrieving the page. It may not exist $@" };
 	$c->detach();
     }
-    my $wiki_html = markdown($page_contents, { use_wikilinks => 1 } );
+    my $wiki_html = markdown($page_content, { use_wikilinks => 1, base_url => '/wiki/' } );
 
-    $c->stash->{rest} = { html => $wiki_html };
+    $c->stash->{rest} = {
+	html => $wiki_html,
+	page_version => $page_version,
+    };
 
 }
 
@@ -153,12 +212,16 @@ sub retrieve : Chained('ajax_wiki') PathPart('retrieve') Args(0) {
 
     print STDERR "RETRIEVING WIKI PAGE NAMED ".$c->stash->{page_name}."\n";
 
-    my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
+    my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $c->stash->{page_name} }  );
 
-    my $page_contents = $wiki->retrieve_page($c->stash->{page_name});
+    my $page_data = $wiki->retrieve_page($c->stash->{page_name});
+    my $page_content = $page_data->{content};
+    my $page_version = $page_data->{page_version};
 
-    $c->stash->{rest} = { raw => $page_contents };
-
+    $c->stash->{rest} = {
+	raw => $page_content,
+	page_version => $page_version,
+    };
 }
 
 

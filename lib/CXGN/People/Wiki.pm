@@ -5,7 +5,6 @@ use Moose;
 
 use Data::Dumper;
 use CXGN::People::Schema;
-use Text::MultiMarkdown;
 
 has people_schema => (isa => 'Ref', is => 'rw');
 
@@ -15,14 +14,32 @@ has page_name => ( isa => 'Str',
 has page_content => ( isa => 'Str',
 		      is => 'rw');
 
-has page_version => ( isa => 'Int',
+has page_version => ( isa => 'Maybe[Int]',
 		      is => 'rw');
 
 has sp_person_id => ( isa => 'Int',
 		      is => 'rw');
 
 has sp_wiki_id => (isa => 'Int',
-		is => 'rw');
+		   is => 'rw');
+
+has create_date => (isa => 'Str',
+		    is => 'rw');
+
+
+sub BUILD {
+    my $self = shift;
+
+    my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $self->page_name } );
+
+    if ($row) {
+	$self->sp_person_id($row->sp_person_id());
+	$self->create_date($row->create_date());
+	$self->sp_wiki_id($row->sp_wiki_id());
+	$self->page_version($self->get_version());
+    }
+
+}
 
 
 sub new_page {
@@ -76,8 +93,10 @@ sub retrieve_page {
 	if ($content_rs->count() > 0) {
 	    $content_row = $content_rs->next();
 
-	    return $content_row->page_content();
-
+	    return {
+		content => $content_row->page_content(),
+		version => $content_row->page_version(),
+	    };
 	}
 
 	else {
@@ -161,6 +180,51 @@ sub store_page {
 	version => $new_row->page_version(),
 	wiki_content_id => $new_row->sp_wiki_content_id()
     };
+}
+
+sub delete {
+    my $self = shift;
+    my $page_name = shift;
+
+    my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $page_name });
+
+    $row->delete();
+}
+
+
+sub get_version {
+    my $self =shift;
+    my $page_name = shift || $self->page_name();
+
+    my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $page_name });
+
+    my $page_version;
+
+    my $version_rs = $self->people_schema()->resultset("SpWikiContent")->search( { sp_wiki_id => $row->sp_wiki_id() }, { order_by => { -desc => 'page_version' } } );
+
+    if ($version_rs->count() > 0) {
+	my $version_row = $version_rs->next();
+	$page_version = $version_row->page_version();
+    }
+
+    return $page_version;
+}
+
+
+sub all_pages {
+    my $self = shift;
+
+    my $rs = $self->people_schema()->resultset("SpWiki")->search();
+
+    my @pages;
+    while (my $row = $rs->next()) {
+	push @pages, $row->page_name();
+    }
+
+    my @pages = sort(@pages);
+
+    print STDERR "PAGES ".Dumper(\@pages);
+    return @pages;
 }
 
 1;
