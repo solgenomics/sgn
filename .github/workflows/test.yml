@@ -66,6 +66,11 @@ jobs:
       - name: Run unit_mech tests
         run: /entrypoint.sh --nopatch t/unit_mech
 
+      - name: Prepare download directories
+        run: |
+          mkdir -p ${{ github.workspace}}/.downloads
+          chmod 0777 ${{ github.workspace}}/.downloads
+
       # selenium tests for a moment as separate folders - will change once full solgs are ready 
       # but anyway, it will is still fully functional for tests purpose
       - name: Run selenium tests 01_list
