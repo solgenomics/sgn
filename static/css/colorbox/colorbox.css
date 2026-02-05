@@ -1,3 +1,12 @@
+/* stylelint-disable
+   selector-id-pattern,
+   selector-class-pattern,
+   declaration-block-single-line-max-declarations,
+   no-duplicate-selectors,
+   function-url-quotes,
+   length-zero-no-unit,
+   block-no-empty
+*/
 /*
     ColorBox Core Style
     The following rules are the styles that are consistant between themes.
