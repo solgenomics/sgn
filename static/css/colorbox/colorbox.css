@@ -1,6 +1,10 @@
+
 /* stylelint-disable
-   selector-id-pattern
+   selector-id-pattern,
+   selector-class-pattern,
+   no-duplicate-selectors
 */
+
 /*
     ColorBox Core Style
     The following rules are the styles that are consistant between themes.
@@ -25,7 +29,7 @@
 #cboxMiddleLeft,
 #cboxBottomLeft {
     clear: left;
-}
+} 
 
 #cboxContent {
     position: relative;
@@ -38,7 +42,6 @@
 }
 
 #cboxLoadedContent iframe {
-    display: block;
     width: 100%;
     height: 100%;
     border: 0;
@@ -74,8 +77,6 @@
 #cboxOverlay {
     background: #000;
 }
-
-#colorbox {}
 
 #cboxTopLeft {
     width: 14px;
@@ -140,7 +141,7 @@
 #cboxTitle {
     position: relative;
     display: inline-block;
-    bottom: 0px;
+    bottom: 0;
     margin: 0 5px;
     white-space: nowrap;
     line-height: 1.4;
@@ -216,3 +217,5 @@
 .cboxSlideshow_off #cboxSlideshow.hover {
     background-position: -125px 0;
 }
+
+/* stylelint-enable */
