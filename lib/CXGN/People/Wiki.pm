@@ -110,8 +110,8 @@ sub retrieve_page {
 sub store_page {
     my $self = shift;
     my $page_name = shift || 'WikiHome';
-    my $content = shift || "empty page";
-    my $sp_person_id = shift;
+    my $content = shift || $self->page_content();
+    my $sp_person_id = shift || $self->sp_person_id();
 
     print STDERR "STORE_PAGE: $page_name, $content\n";
 
