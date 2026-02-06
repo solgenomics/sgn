@@ -230,7 +230,37 @@ sub get_stock_entry_summary {
 
 =cut
 
-sub remove_treatment {
+sub remove_treatment { #TODO REFACTOR
+    my $self = shift;
+    my $schema = $self->bcs_schema;
+    my $treatment_id =shift;
+
+    my $trial_id = $self->get_trial_id();
+
+    my $treatment_rs = $schema->resultset('Project::Project')->find({ project_id => $treatment_id });
+    if (!$treatment_rs) {
+        return { error => "Treatment not found" };
+    }
+
+    eval {
+        $treatment_rs->delete();
+    };
+
+    return { success => 1 };
+}
+
+=head2 remove_treatment_project
+
+ Usage:        my $trial_object->remove_treatment_project($treatment_id);
+ Desc:         removes the selected treatment from this trial
+ Ret:
+ Args:         $treatment_id
+ Side Effects:
+ Example:
+
+=cut
+
+sub remove_treatment_project {
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $treatment_id =shift;
@@ -316,12 +346,12 @@ sub get_crossing_experiments_from_field_trial {
  Desc:         add additional accessions or crosses or families for existing greenhouse trial
  Ret:
  Args:
- Side Effects:
+ Side Effects: Treatments are NOT added automatically when calling this, since this adds new plots/accessions. Users will have to add treatments to the new stocks afterwards. 
  Example:
 
 =cut
 
-sub add_additional_stocks_for_greenhouse {
+sub add_additional_stocks_for_greenhouse { 
     my $self = shift;
     my $schema = $self->bcs_schema;
     my $stock_list = shift;
@@ -440,9 +470,11 @@ sub add_additional_stocks_for_greenhouse {
 sub add_additional_plants_for_greenhouse {
     my $self = shift;
     my $schema = $self->bcs_schema;
+    my $metadata_schema = $self->metadata_schema;
     my $stock_list = shift;
     my $number_of_plants_list = shift;
     my $user_id = shift;
+    my $phenotype_store_config = shift;
     my $trial_id = $self->get_trial_id();
     my $add_additional_plants = '1';
 
@@ -500,9 +532,9 @@ sub add_additional_plants_for_greenhouse {
             }
         }
 
-        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id });
+        my $greenhouse_trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $trial_id, metadata_schema => $metadata_schema });
 
-        $greenhouse_trial->save_plant_entries($info,'' ,'' ,$user_id, $add_additional_plants);
+        $greenhouse_trial->save_plant_entries($info,'' ,1 ,$user_id, $phenotype_store_config, $add_additional_plants); #TODO: Add phenotypestore config hash
 
         my $new_layout = CXGN::Trial::TrialLayout->new({
             schema => $schema,

@@ -1,0 +1,332 @@
+<%args>
+    $exp_treatment_root
+    $db_name
+</%args>
+
+<div style="text-align: center; margin: 2em 0">
+   <h2 style="margin-bottom: 1em">Design new experimental treatments</h2>
+   <h4>Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit their treatments from their parent stocks.</h4>
+
+   <h4> Check the <a href='/search/treatments'>treatment search page</a> to see if your treatment has already been made before designing new treatments.</h4>
+
+    <br>
+
+   <div class="container-fluid">
+        <form class="form-horizontal" role="form" method="post" id="new_treatment_design_form" name="new_treatment_design_form">
+        <div class="form-group">
+                <label class="col-sm-3 control-label"> New treatment name: </label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Special characters not allowed."/>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Definition:</label>
+                <div class="col-sm-9">
+                    <textarea style="width:70%;" class="form-control" id="new_treatment_definition" name="new_treatment_definition" placeholder="Make it descriptive. Be sure to describe category meanings if using categorical data."></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Treatment format:</label>
+                <div class="col-sm-9">
+                    <select style="width:70%;" class="form-control" id="new_treatment_format_select" name="new_treatment_format_select" type="select">
+                        <option value="numeric" selected>Numeric</option>
+                        <option value="categorical">Categorical</option>
+                        <option value="percent">Percent</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="date">Date</option>
+                        <option value="text">Text</option>
+                        <option value="counter">Counter</option>
+                        <option value="ontology">Ontology (parent to child terms)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_repeat_select_container">
+                <label class="col-sm-3 control-label">Application type:</label>
+                <div class="col-sm-9">
+                    <select style="width:70%;" class="form-control" id="new_treatment_repeat_select" name="new_treatment_repeat_select" type="select">
+                        <option value="single" selected>Single application</option>
+                        <option value="multiple">Repeated application</option>
+                        <option value="time_series">Time series</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_default_value_container">
+                <label class="col-sm-3 control-label" id="new_treatment_default_value_label">Default value:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_treatment_default_value" name="new_treatment_default_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_minimum_value_container">
+                <label class="col-sm-3 control-label">Minimum value:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_treatment_min_value" name="new_treatment_min_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_maximum_value_container">
+                <label class="col-sm-3 control-label">Maximum value:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_treatment_max_value" name="new_treatment_max_value" type="text" placeholder="(Optional)"/>
+                </div>
+            </div>
+            <div class="form-group" id="new_treatment_add_categories_container" style="display:none;">
+                <label class="col-sm-3 control-label">Add categories:</label>
+                <div class="col-sm-9">
+                    <table style="width:70%;">
+                        <tr>
+                            <td><input class="form-control" id="new_treatment_add_category" name="new_treatment_add_category" type="text" placeholder="Optional. No special characters."/></td>
+                            <td style="width:25%"><input  class="form-control" id="new_treatment_category_ordinal" name="new_treatment_category_ordinal" type="number" placeholder="Ordinate"></td>
+                            <td><button id="new_treatment_add_category_btn" class="btn btn-small btn-success">+</button></td>
+                        </tr>
+                    </table>
+                    <table id="new_treatment_categories" style="width:30%;">
+                    </table>
+                    <button id="new_treatment_remove_category_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
+                </div>
+            </div>
+            <div class="form-group" id="chain_parent_term_container">
+                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term. 
+Will be the treatment root term by default."></span>&nbsp;Chain to an existing term:</label>
+                <div class="col-sm-9">
+                    <input style="width:70%;" class="form-control" id="new_treatment_parent_term" name="new_treatment_parent_term" type="text" placeholder="Full name, as in 'Legacy experiment treatment|EXPERIMENT_TREATMENT:0000001'"/>
+                </div>
+            </div>
+        </form>
+        <button class="btn btn-primary" id="new_treatment_submit_btn">Submit</button>
+    </div>
+</div>
+
+<button id="download_ontology_btn" class="btn btn-primary">Download Treatment Ontology</button>
+<br>
+<br>
+<& /ontology/embedded_browser.mas, cvterm => $exp_treatment_root &>
+
+<script>
+    jQuery(document).ready(function () {
+
+        jQuery('#new_treatment_submit_btn').on('click', function () {
+
+            jQuery('#working_modal').modal("show");
+
+            let name = jQuery('#new_treatment_name').val();
+            let definition = jQuery('#new_treatment_definition').val();
+            let format = jQuery('#new_treatment_format_select').val();
+            let default_value = jQuery('#new_treatment_default_value').val();
+            let minimum = jQuery('#new_treatment_minimum').val();
+            let maximum = jQuery('#new_treatment_maximum').val();
+            let repeat_type = jQuery('#new_treatment_repeat_select').val();
+            let categories = JSON.parse(html_table_to_json(jQuery('#new_treatment_categories').html()));
+            let cat_list = [];
+            let cat_details_list = [];
+            Object.keys(categories).sort().forEach(key => {
+                cat_list.push( key );
+                cat_details_list.push(categories[key]);
+            });
+            categories = cat_list.join('/');
+            let category_details = cat_details_list.join('/');
+            let parent_term = jQuery('#new_treatment_parent_term').val();
+
+            jQuery.ajax({
+                url: '/ajax/treatment/create',
+                data : {
+                    definition : definition,
+                    name : name,
+                    format : format,
+                    default_value : default_value,
+                    minimum : minimum,
+                    maximum : maximum,
+                    categories : categories,
+                    category_details : category_details,
+                    parent_term : parent_term,
+                    repeat_type : repeat_type
+                },
+                success: function(response) { 
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        alert("New treatment saved.");
+                        window.location.reload();
+                    }
+                },
+                error: function(response) { 
+                    jQuery('#working_modal').modal("hide");
+                    console.log(response);
+                    alert("An error occurred, check console.");
+                }
+            });
+        });
+
+        jQuery('#new_treatment_parent_term').autocomplete({
+            source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
+        });
+
+        jQuery('#new_treatment_format_select').on('change', function () {
+            let treatment_type = jQuery(this).val();
+            if (treatment_type === 'numeric') {
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'categorical') {
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_add_categories_container').show();
+                jQuery('#new_treatment_default_value_label').html("Default category:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'ontology') {
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_container').hide();
+                jQuery('#new_treatment_repeat_select_container').hide();
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+            } else if (treatment_type === 'percent') { 
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('0');
+                jQuery('#new_treatment_max_value').val('100');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'counter') {
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('0');
+                jQuery('#new_treatment_max_value').val('');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'boolean') {
+                jQuery('#new_treatment_minimum_value_container').show();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_maximum_value_container').show();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_label').html("Default value:");
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('0');
+                jQuery('#new_treatment_max_value').val('1');
+                jQuery('#new_treatment_repeat_select_container').show();
+            } else if (treatment_type === 'date') {
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_repeat_select_container').show();
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+            } else if (treatment_type === 'text') {
+                jQuery('#new_treatment_minimum_value_container').hide();
+                jQuery('#new_treatment_maximum_value_container').hide();
+                jQuery('#new_treatment_add_categories_container').hide();
+                jQuery('#new_treatment_default_value_container').show();
+                jQuery('#new_treatment_repeat_select_container').show();
+                jQuery('#new_treatment_default_value').val('');
+                jQuery('#new_treatment_min_value').val('');
+                jQuery('#new_treatment_max_value').val('');
+            }
+        });
+
+        jQuery('#new_treatment_add_category_btn').on('click',function(e) {
+            e.preventDefault();
+            let new_category = jQuery('#new_treatment_add_category').val();
+            let new_ordinal = jQuery('#new_treatment_category_ordinal').val();
+
+            if (! new_ordinal) {
+                alert("Assign an ordinal value to the new category.");
+                return;
+            }
+
+            if (new_category.includes('/') || new_category.includes('=')){
+                alert("No special characters.");
+                return;
+            }
+
+            if (new_category !== null && new_category !== "" && new_category.trim() !== "" ) {
+                let table_str = jQuery('#new_treatment_categories').html();
+                let table_elems = [];
+                if (table_str && table_str.trim() !== "") {
+                    table_elems = JSON.parse(html_table_to_json(table_str));
+                }
+                table_elems[new_ordinal] = new_category;
+                table_str = json_to_html_table(table_elems);
+                jQuery('#new_treatment_categories').html(table_str);
+                if (Object.keys(table_elems).length > 0) {
+                    jQuery('#new_treatment_remove_category_btn').css('display', '');
+                }
+            }
+            jQuery('#new_treatment_add_category').val('');
+            jQuery('#new_treatment_category_ordinal').val('');
+        });
+
+        jQuery('#new_treatment_remove_category_btn').on('click',function(e) {
+            e.preventDefault();
+            let table_str = jQuery('#new_treatment_categories').html();
+            let table_elems = JSON.parse(html_table_to_json(table_str));
+            let max_key = Math.max( ... Object.keys(table_elems).map(Number));
+            delete table_elems[max_key];
+            if (Object.keys(table_elems).length == 0) {
+                jQuery('#new_treatment_remove_category_btn').css('display', 'none');
+            }
+            table_str = json_to_html_table(table_elems);
+            jQuery('#new_treatment_categories').html(table_str);
+        });
+
+        jQuery('#download_ontology_btn').click(function() {
+
+            jQuery('#working_modal').modal("show");
+
+            fetch("/ajax/onto/download_obo/<% $db_name %>")
+                .then(response => response.blob())
+                .then(blob => {
+                    jQuery('#working_modal').modal("hide");
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "<% $db_name %>.txt";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    jQuery('#working_modal').modal("hide");
+                    alert("An error occurred: " + error);
+                    console.error('Download failed:', error)
+                });
+        });
+
+        function html_table_to_json(html_str) {
+            let list = html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== '');
+            let object = Object.fromEntries(list.map(cat => {
+                    const [key, value] = cat.split("=").map(s => s.trim());
+                    return [key, value];
+                })
+            );
+            return JSON.stringify(object);
+        }
+
+        function json_to_html_table(json) {
+            let html_arr = [];
+            Object.keys(json).sort().forEach(key => {
+                html_arr.push( key + " = " + json[key]);
+            });
+            return "<tr><td>"+html_arr.join("</td></tr><tr><td>")+"</td></tr>";
+        }
+    });
+</script>
