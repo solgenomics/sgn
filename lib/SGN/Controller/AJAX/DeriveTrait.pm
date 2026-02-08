@@ -154,29 +154,35 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 
 	my @dependent_trait_ids;
 	my ($db_id, $accession, @traits_cvterm_ids, $cvterm_id, @found_trait_cvterm_ids, @accessions, @trait_values);
+	# Store paired (db_id, accession) tuples to support multi-ontology formulas
+	my @db_accession_pairs;
 	my (%hash1, %hash2, %hash3, @trait_values1, @trait_values2, @trait_values3);
 	while ($msg_formula =~ /(\w*\:\d+)/g){
 		push @dependent_trait_ids, [$1];
-		($db_id,$accession) = split (/:/, $1);	
-			
+		($db_id,$accession) = split (/:/, $1);
+
 		$accession =~ s/\s+$//;
 		$accession =~ s/^\s+//;
 		$db_id =~ s/\s+$//;
 		$db_id =~ s/^\s+//;
-			
+
 		push @accessions, $accession;
+		push @db_accession_pairs, [$db_id, $accession];
 	}
-	print "DB ID: $db_id\n";
 	#print STDERR Dumper (\@dependent_trait_ids);
-	foreach my $accession (@accessions) {
+	# Use correct db_id for each accession (fixes multi-ontology formula bug)
+	foreach my $pair (@db_accession_pairs) {
+		my ($pair_db_id, $pair_accession) = @$pair;
 		my $h1 = $dbh->prepare("select cvterm.cvterm_id from cvterm join dbxref using(dbxref_id) join db using(db_id) where dbxref.accession=? and db.name=?;");
 
-    		$h1->execute($accession, $db_id);
-    		while ($cvterm_id = $h1->fetchrow_array()) {
+		$h1->execute($pair_accession, $pair_db_id);
+		while ($cvterm_id = $h1->fetchrow_array()) {
 			push @traits_cvterm_ids, $cvterm_id;
 		}
 	}
 	#print STDERR Dumper (\@traits_cvterm_ids);
+	print STDERR "DEBUG: traits_cvterm_ids from formula: " . join(', ', @traits_cvterm_ids) . "\n";
+	print STDERR "DEBUG: assayed traits: " . join(', ', map { $_->[0] . '=' . $_->[1] } @{$triat_name}) . "\n";
 	for (my $x=0; $x<scalar(@traits_cvterm_ids); $x++){
 		foreach $trait_found (@{$triat_name}) {
 			if ($trait_found->[0] eq $traits_cvterm_ids[$x]) {
@@ -185,16 +191,23 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 		}
 	}
 
-	while ($msg_formula =~ /([\w\s-]+\|\w*\:\d+)/g){
-		my $full_name = $1;
-		if ($full_name =~ m/\s-\s/g){
-			$full_name =~ s/-\s//g;
+	# Build full trait names from DB instead of fragile regex parsing
+	# This handles special chars (/, (, ), %) in trait names reliably
+	foreach my $pair (@db_accession_pairs) {
+		my ($pair_db_id, $pair_accession) = @$pair;
+		my $h_name = $dbh->prepare("SELECT cvterm.name, db.name, dbxref.accession FROM cvterm JOIN dbxref USING(dbxref_id) JOIN db USING(db_id) WHERE dbxref.accession=? AND db.name=?;");
+		$h_name->execute($pair_accession, $pair_db_id);
+		my ($trait_name, $db_name, $acc) = $h_name->fetchrow_array();
+		if ($trait_name) {
+			push @regres, "$trait_name|$db_name:$acc";
 		}
-		push @regres, $full_name;
 	}
 	#print STDERR Dumper (\@regres);
+	print STDERR "DEBUG: found_trait_cvterm_ids: " . join(', ', @found_trait_cvterm_ids) . "\n";
+	print STDERR "DEBUG: regres: " . join(', ', @regres) . "\n";
 	my ($stock_name, $stock_id, $plot_name, $value);
 	if (@found_trait_cvterm_ids != @traits_cvterm_ids) {
+		print STDERR "DEBUG: MISMATCH! found=" . scalar(@found_trait_cvterm_ids) . " needed=" . scalar(@traits_cvterm_ids) . "\n";
 		$c->stash->{rest} = {error => "Upload or compute trait(s) required for computing \n\n$selected_trait = $msg_formula." };
 		return;
 	}
@@ -252,9 +265,9 @@ project.project_id=? ) );");
 			#print STDERR Dumper \%map_hash;
 			my $msg_formula_sub = $msg_formula;
 			foreach my $full_trait (keys %map_hash) {
-				$full_trait =~ /([\w\s-]+)\|(\w*\:\d+)/g;
+				$full_trait =~ /([^|]+)\|(\w*\:\d+)/g;
 				#print STDERR Dumper $full_trait;
-				$msg_formula_sub =~ s/($1\|$2)/$map_hash{$full_trait}/g;
+				$msg_formula_sub =~ s/\Q$1\E\|\Q$2\E/$map_hash{$full_trait}/g;
 			}
 			#print STDERR Dumper $msg_formula_sub;
 			my $calc_value = eval "$msg_formula_sub";
@@ -301,10 +314,15 @@ project.project_id=? ) );");
         metadata_hash=>\%phenotype_metadata,
 				composable_validation_check_name=>$c->config->{composable_validation_check_name}
     );
+    print "DERIVE_DEBUG: plots=" . scalar(@plots) . " traits=" . join(',', @traits) . " data_keys=" . scalar(keys %data) . "\n";
 
     my ($store_error, $store_success) = $store_phenotypes->store();
+
+    print "DERIVE_DEBUG: store_error=" . ($store_error // 'none') . " store_success=" . ($store_success // 'none') . "\n";
+
     if ($store_error) {
         $c->stash->{rest} = {error => $store_error};
+        return;
     }
 
 	$c->stash->{rest} = {success => 1};
