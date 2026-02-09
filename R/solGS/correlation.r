@@ -28,6 +28,7 @@ message('inputFiles: ', inputFiles)
 correInputData <- c()
 correCoefsTableFile <- c()
 correCoefsJsonFile <- c()
+corrInputDataJsonFile <- c()
 corrInputDataJson <- c()
 
 convertDataFrameToJson <- function(df) {
@@ -48,7 +49,7 @@ if (any(grepl("phenotype_data", inputFiles))) {
     correCoefsTableFile <- grep("pheno_corr_table", outputFiles, value = TRUE)
     correCoefsJsonFile  <- grep("pheno_corr_json", outputFiles, value = TRUE)
 
-    corrInputDataJsonFile <- grep("corr_input_data_json", outputFiles, value = TRUE)
+    corrInputDataJsonFile <- grep("corr_pheno_input_data_json", outputFiles, value = TRUE)
 
     formattedPhenoData <- c()
     phenoData          <- c()
@@ -96,6 +97,7 @@ if (any(grepl("phenotype_data", inputFiles))) {
 
     correCoefsTableFile <- grep("genetic_corr_table", outputFiles, value = TRUE)
     correCoefsJsonFile  <- grep("genetic_corr_json", outputFiles, value = TRUE)
+    corrInputDataJsonFile <- grep("corr_geno_input_data_json", outputFiles, value = TRUE)
     geneticDataFile     <- grep("combined_gebvs", inputFiles, value = TRUE)
     selectionIndexFile  <- grep("selection_index", inputFiles, value = TRUE)
 
@@ -181,9 +183,8 @@ correlationList <- list(
     values  = coefs,
     pvalues = pvalues
 )
-print(correlationList)
+
 correlationJson <- jsonlite::toJSON(correlationList)
-print(correlationJson)
 
 write.table(allcordata,
     file = correCoefsTableFile,
@@ -195,8 +196,10 @@ write.table(allcordata,
 write(correlationJson,
     file = correCoefsJsonFile)
 
-write(corrInputDataJson,
-    file = corrInputDataJsonFile)
+if (!is.null(corrInputDataJsonFile) && !is.null(corrInputDataJson)) {
+    write(corrInputDataJson,
+        file = corrInputDataJsonFile)
+}
 
 message("Done running correlation.")
 q(save = "no", runLast = FALSE)

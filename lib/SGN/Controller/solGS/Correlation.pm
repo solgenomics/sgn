@@ -41,6 +41,7 @@ sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0)
     
     $self->cache_pheno_corr_output_files($c);
     my $corre_json_file = $c->stash->{pheno_corr_json_file};
+    my $corre_input_data_json_file = $c->stash->{corr_pheno_input_data_json_file};
 
     my $ret->{status} = 'Correlation analysis failed.';
 
@@ -51,7 +52,8 @@ sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0)
     
     if (-s $corre_json_file) {
         $ret->{status}   = 'success';
-        $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{output_data}     = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{input_data} = read_file($corre_input_data_json_file, {binmode => ':utf8'});
         $ret->{corre_table_file} = $self->download_pheno_correlation_file($c);
     }
 
@@ -75,6 +77,7 @@ sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
     
     $self->cache_genetic_corr_output_files($c);
     my $corre_json_file = $c->stash->{genetic_corr_json_file};
+    my $corre_input_data_json_file = $c->stash->{corr_geno_input_data_json_file};
 
     if (!-s $corre_json_file) {
         $c->controller('solGS::Gebvs')->run_combine_traits_gebvs($c);
@@ -83,7 +86,8 @@ sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
     $c->controller('solGS::Gebvs')->combined_gebvs_file($c);
     my $combined_gebvs_file = $c->stash->{combined_gebvs_file};
 
-    my $ret->{status} = undef;
+    my $ret->{status} = 'Correlation analysis failed.';
+
     my $json = JSON->new();
     if ( !-s $combined_gebvs_file ) {
         $ret->{status} = "There is no GEBVs input. Error occured combining the GEBVs of the traits.";
@@ -93,11 +97,10 @@ sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
 
     if (-s $corre_json_file) {
         $ret->{status}   = 'success';
-        $ret->{data}     = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{output_data} = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{input_data} = read_file($corre_input_data_json_file, {binmode => ':utf8'});
         $ret->{corre_table_file} = $self->download_genetic_correlation_file($c);
-    } else {
-        $ret->{status}   = 'There is no correlation output. Error occured running the correlation. ';
-    }
+    } 
 
     $ret = $json->encode($ret);
     $c->res->content_type('application/json');
@@ -129,9 +132,9 @@ sub cache_pheno_corr_output_files {
    $c->controller('solGS::Files')->cache_file($c, $json_cache_data);
 
    my $corr_input_data_json = {
-        key  => 'corr_input_data_json_' . $pop_id,
-		file => "corr_input_data_json_${pop_id}" . '.txt',
-	    stash_key => 'corr_input_data_json_file',
+        key  => 'corr_pheno_input_data_json_' . $pop_id,
+		file => "corr_pheno_input_data_json_${pop_id}" . '.txt',
+	    stash_key => 'corr_pheno_input_data_json_file',
 		cache_dir => $corre_cache_dir
     };
 
@@ -175,6 +178,15 @@ sub cache_genetic_corr_output_files {
 
    $c->controller('solGS::Files')->cache_file($c, $json_cache_data);
 
+   my $corr_input_data_json = {
+        key  => 'corr_geno_input_data_json_' . $identifier,
+		file => "corr_geno_input_data_json_${identifier}" . '.txt',
+	    stash_key => 'corr_geno_input_data_json_file',
+		cache_dir => $corre_cache_dir
+    };
+
+   $c->controller('solGS::Files')->cache_file($c, $corr_input_data_json);
+
 }
 
 
@@ -211,7 +223,7 @@ sub pheno_corr_output_files {
     my $output_files = join ("\t",
 			  $c->stash->{pheno_corr_table_file},
 			  $c->stash->{pheno_corr_json_file},
-              $c->stash->{corr_input_data_json_file}
+              $c->stash->{corr_pheno_input_data_json_file}
 	);
 
     my $tmp_dir = $c->stash->{correlation_temp_dir};
@@ -267,6 +279,7 @@ sub geno_corr_output_files {
     my $output_files = join ("\t",
         $c->stash->{genetic_corr_table_file},
         $c->stash->{genetic_corr_json_file},
+        $c->stash->{corr_geno_input_data_json_file}
 	);
 
     my $tmp_dir = $c->stash->{correlation_temp_dir};

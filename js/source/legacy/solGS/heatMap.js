@@ -9,7 +9,12 @@ var solGS = solGS || function solGS() {};
 
 solGS.heatmap = {
 
-  plot: function (data, heatmapCanvasDiv, heatmapPlotDivId, downloadLinks) {
+  plot: function (heatmapArgs) {
+    var outputData = heatmapArgs.output_data;
+    var heatmapCanvasDiv = heatmapArgs.heatmapCanvasDiv;
+    var heatmapPlotDivId = heatmapArgs.heatmapPlotDivId;
+    var downloadLinks = heatmapArgs.downloadLinks;
+
     if (heatmapCanvasDiv == null) {
       alert("The div element where the heatmap to draw is missing.");
     }
@@ -19,11 +24,11 @@ solGS.heatmap = {
       jQuery(heatmapCanvasDiv).append("<div id=" + divId + "></div>");
     }
 
-    data = JSON.parse(data);
+    outputData = JSON.parse(outputData);
 
-    var labels = data.labels;
-    var values = data.values;
-    var pvalues = data.pvalues;
+    var labels = outputData.labels;
+    var values = outputData.values;
+    var pvalues = outputData.pvalues;
     var nLabels = labels.length;
 
     var corr = [];
