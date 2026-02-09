@@ -102,7 +102,7 @@ sub login : Chained('provider') PathPart('login') Args(0) {
 
         my $params = {
             client_id     => $config->{client_id},
-            redirect_uri  => $c->uri_for("/authenticate/oidc/$provider/callback"),
+            redirect_uri  => $c->config->{'main_production_site_url'} . "/authenticate/oidc/$provider/callback",
             scope         => 'openid email profile',
             response_type => 'code',
             audience      => $config->{client_id},
@@ -235,7 +235,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
             grant_type    => 'authorization_code',
             client_id     => $config->{client_id},
             client_secret => $config->{client_secret},
-            redirect_uri  => $c->uri_for("/authenticate/oidc/$provider/callback"),
+            redirect_uri  => $c->config->{'main_production_site_url'} . "/authenticate/oidc/$provider/callback",
         };
 
         # Provider-Specific Parameter
