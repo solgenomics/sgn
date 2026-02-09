@@ -51,6 +51,18 @@ jQuery(document).ready(function ($) {
         create_trial_validate_form();
     });
 
+    jQuery('#add_plant_entries').on('change', function() {
+        let plants_per_plot = jQuery(this).val();
+        jQuery('#greenhouse_default_num_plants_per_accession_val').val(plants_per_plot);
+        greenhouse_show_num_plants_section()
+    });
+
+    jQuery('#greenhouse_default_num_plants_per_accession_val').on('change', function() {
+        let plants_per_plot = jQuery(this).val();
+        jQuery('#add_plant_entries').val(plants_per_plot);
+        greenhouse_show_num_plants_section()
+    });
+
     function create_trial_validate_form(){
         var trial_name = $("#new_trial_name").val();
         var breeding_program = $("#select_breeding_program").val();
