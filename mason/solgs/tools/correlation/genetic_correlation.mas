@@ -38,7 +38,7 @@ $training_pop_name
 
 <& /solgs/tools/base.mas &>
 
-<& /util/import_javascript.mas, classes => ["solGS.correlation"] &>
+<& /util/import_javascript.mas, classes => ["solGS.correlation", "solGS.scatterPlot", "statistics.simple_statistics"] &>
 <&| /page/info_section.mas,
       collapsible => 1,
       collapsed   => 0,
