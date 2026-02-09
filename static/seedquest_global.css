@@ -1,0 +1,1358 @@
+/**
+ * SeedQuest Global Skin — Modern UI for BreedBase
+ * ================================================
+ * Transforms default Bootstrap 3 BreedBase into a vibrant,
+ * dashboard-style interface with colored section headers,
+ * accented wells, gradient buttons, and rich visual depth.
+ *
+ * Design reference: SeedQuest Dashboard (home.mas)
+ */
+
+/* ── Google Font ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+
+/* ═══════════════════════════════════════════════
+   1.  BASE / TYPOGRAPHY
+   ═══════════════════════════════════════════════ */
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-size: 13.5px;
+    color: #334155;
+    background-color: #eef2f7;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Wider container — uses most of screen width */
+#outercontainer {
+    max-width: 1480px !important;
+    width: 98% !important;
+    margin: 0 auto !important;
+    overflow-x: auto;
+}
+
+/* #outercontainer handles overflow — no body-level clipping needed */
+
+
+/* ═══════════════════════════════════════════════
+   2.  PAGE TITLE (#pagetitle)
+   ═══════════════════════════════════════════════ */
+
+#pagetitle {
+    text-align: center;
+    margin: 12px 0 24px;
+    padding: 0;
+}
+
+#pagetitle_h3 {
+    font-weight: 700 !important;
+    font-size: 26px !important;
+    color: #0f172a !important;
+    letter-spacing: 0.3px;
+    margin: 0;
+    padding: 0;
+}
+
+/* Colored underline accent below page title */
+#pagetitle::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #38bdf8, #22d3ee);
+    margin: 10px auto 0;
+    border-radius: 3px;
+}
+
+
+/* ═══════════════════════════════════════════════
+   3.  WELLS → Dashboard-style Cards with accents
+   ═══════════════════════════════════════════════ */
+
+.well {
+    background: #fff !important;
+    border: none !important;
+    border-left: 4px solid #38bdf8 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    padding: 20px 24px !important;
+    margin-bottom: 20px;
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+    /* Allow horizontal scroll for wide tables, keep vertical overflow for dropdowns */
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+.well:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    transform: translateY(-1px);
+}
+
+/* Cycle accent colors through nth-child for visual interest */
+.well:nth-child(4n+1) {
+    border-left-color: #38bdf8 !important;
+}
+
+.well:nth-child(4n+2) {
+    border-left-color: #34d399 !important;
+}
+
+.well:nth-child(4n+3) {
+    border-left-color: #a78bfa !important;
+}
+
+.well:nth-child(4n+4) {
+    border-left-color: #fbbf24 !important;
+}
+
+.well-sm {
+    padding: 16px 20px !important;
+    border-radius: 10px !important;
+}
+
+/* Nested wells get subtle style */
+.well .well {
+    background: #f8fafc !important;
+    box-shadow: none !important;
+    border-left: 3px solid #e2e8f0 !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   4.  INFO SECTIONS → Dashboard-style colored panels
+   ═══════════════════════════════════════════════ */
+
+/* Main info section header — soft, airy colored bar */
+.infosectionhead,
+.infosectionhead_empty {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    border: none !important;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 4px 0 !important;
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.18);
+}
+
+.infosectiontitle,
+.infosectiontitle_empty {
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    color: #fff !important;
+    padding: 12px 18px !important;
+    letter-spacing: 0.3px;
+}
+
+.infosectionsubtitle,
+.infosectionsubtitle_empty {
+    padding: 12px 18px !important;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.85) !important;
+    cursor: pointer;
+}
+
+/* All links/buttons inside info section headers must be white on colored bg */
+.infosectionhead a,
+.infosectionhead_empty a,
+.infosectionhead button,
+.infosectionhead_empty button,
+.infosectionhead .btn,
+.infosectionhead_empty .btn {
+    color: #fff !important;
+    text-decoration: underline;
+    opacity: 0.9;
+}
+
+.infosectionhead a:hover,
+.infosectionhead_empty a:hover {
+    opacity: 1;
+    text-decoration: none;
+}
+
+/* Collapse/expand toggle icon — constrain the oversized PNG */
+.collapser_img,
+img.collapser_img {
+    width: 14px !important;
+    height: 14px !important;
+    vertical-align: middle;
+    opacity: 0.85;
+    cursor: pointer;
+}
+
+.infosectioncontent,
+.infosectioncontent_empty {
+    padding: 20px !important;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* Color cycling for info section headers — each section gets a soft accent */
+.infosectionhead:nth-of-type(4n+1),
+table.infosectionhead:nth-of-type(4n+1) {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.18);
+}
+
+.infosectionhead:nth-of-type(4n+2),
+table.infosectionhead:nth-of-type(4n+2) {
+    background: linear-gradient(135deg, #34d399, #6ee7b7) !important;
+    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.18);
+}
+
+.infosectionhead:nth-of-type(4n+3),
+table.infosectionhead:nth-of-type(4n+3) {
+    background: linear-gradient(135deg, #a78bfa, #c4b5fd) !important;
+    box-shadow: 0 2px 8px rgba(167, 139, 250, 0.18);
+}
+
+.infosectionhead:nth-of-type(4n+4),
+table.infosectionhead:nth-of-type(4n+4) {
+    background: linear-gradient(135deg, #fbbf24, #fcd34d) !important;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18);
+}
+
+/* Sub-info sections — lighter pastel accent */
+.subsectionhead {
+    background: linear-gradient(90deg, #f0f9ff, #eff6ff) !important;
+    border-radius: 8px 8px 0 0 !important;
+    border-left: 3px solid #38bdf8 !important;
+}
+
+.subsectiontitle {
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    color: #3b82f6 !important;
+    padding: 10px 16px !important;
+}
+
+.subsectioncontent {
+    border-left: 3px solid #e2e8f0 !important;
+    padding: 16px !important;
+    background: #fff;
+}
+
+
+/* ═══════════════════════════════════════════════
+   5.  BUTTONS — Vibrant, dashboard-matching
+   ═══════════════════════════════════════════════ */
+
+.btn {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 8px 18px !important;
+    transition: all 0.25s cubic-bezier(.4, 0, .2, 1) !important;
+    border: none !important;
+    letter-spacing: 0.2px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Primary — BreedBase teal-blue */
+.btn-primary {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    color: #fff !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6) !important;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35) !important;
+}
+
+/* Default — elevated with subtle gradient instead of flat white */
+.btn-default {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+    color: #334155 !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.btn-default:hover {
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1) !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10) !important;
+}
+
+/* Success — Green gradient */
+.btn-success {
+    background: linear-gradient(135deg, #34d399, #6ee7b7) !important;
+    color: #fff !important;
+}
+
+.btn-success:hover {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Info — Cyan gradient */
+.btn-info {
+    background: linear-gradient(135deg, #22d3ee, #67e8f9) !important;
+    color: #fff !important;
+}
+
+.btn-info:hover {
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35) !important;
+}
+
+/* Warning — Amber gradient */
+.btn-warning {
+    background: linear-gradient(135deg, #fbbf24, #fcd34d) !important;
+    color: #fff !important;
+}
+
+.btn-warning:hover {
+    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35) !important;
+}
+
+/* Danger — Red gradient */
+.btn-danger {
+    background: linear-gradient(135deg, #f87171, #fca5a5) !important;
+    color: #fff !important;
+}
+
+.btn-danger:hover {
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35) !important;
+}
+
+/* Small buttons */
+.btn-sm {
+    font-size: 12px !important;
+    padding: 6px 14px !important;
+    border-radius: 6px !important;
+}
+
+/* Extra small */
+.btn-xs {
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    border-radius: 5px !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   6.  TABLES — Clean, with colored header ribbon
+   ═══════════════════════════════════════════════ */
+
+.table {
+    border-collapse: separate !important;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    width: 100% !important;
+    table-layout: auto;
+}
+
+/* DataTables wrapper is the scroll container for wide tables */
+.dataTables_wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+}
+
+/* Bootstrap .table-responsive also needs proper overflow handling */
+.table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0.01%;
+}
+
+/* Info section and panel body scroll if needed */
+.infosectioncontent,
+.panel-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table>thead>tr>th {
+    background: linear-gradient(90deg, #f0f9ff, #eff6ff) !important;
+    color: #3b82f6 !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dbeafe !important;
+    padding: 10px 10px !important;
+    white-space: nowrap;
+}
+
+.table>tbody>tr>td {
+    padding: 8px 10px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    vertical-align: middle !important;
+    font-size: 13px;
+}
+
+.table-bordered {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-bordered>thead>tr>th,
+.table-bordered>tbody>tr>td {
+    border: 1px solid #e2e8f0 !important;
+}
+
+/* Hover — subtle blue highlight */
+.table-hover>tbody>tr:hover>td,
+.table-hover>tbody>tr:hover>th {
+    background: #eff6ff !important;
+}
+
+/* Striped */
+.table-striped>tbody>tr:nth-of-type(odd) {
+    background-color: #fafbfc !important;
+}
+
+/* DataTables integration */
+.dataTables_wrapper {
+    font-size: 13px;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 6px 12px !important;
+}
+
+.dataTables_wrapper .dataTables_length select {
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   7.  DROPDOWN MENUS (navbar submenus)
+   ═══════════════════════════════════════════════ */
+
+.dropdown-menu {
+    border: none !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.14), 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+    padding: 6px !important;
+    margin-top: 4px !important;
+    animation: sq-dropdown-fade 0.2s ease;
+    background: #fff !important;
+    backdrop-filter: blur(10px);
+    min-width: 220px;
+}
+
+@keyframes sq-dropdown-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu>li>a,
+.navbar .dropdown-menu>li>a,
+.navbar-default .dropdown-menu>li>a,
+ul.dropdown-menu>li>a {
+    padding: 4px 12px !important;
+    font-size: 13px !important;
+    color: #334155 !important;
+    border-radius: 6px !important;
+    margin: 0;
+    transition: all 0.15s ease;
+    line-height: 1.4 !important;
+    display: block !important;
+}
+
+/* Long dropdown menus get scroll */
+.dropdown-menu {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.dropdown-menu>li>a:hover,
+.dropdown-menu>li>a:focus {
+    background: linear-gradient(135deg, #eff6ff, #f0f9ff) !important;
+    color: #3b82f6 !important;
+    text-decoration: none !important;
+    padding-left: 18px !important;
+}
+
+/* Active item */
+.dropdown-menu>.active>a,
+.dropdown-menu>.active>a:hover,
+.dropdown-menu>.active>a:focus {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    color: #fff !important;
+}
+
+/* Divider */
+.dropdown-menu .divider {
+    margin: 4px 8px !important;
+    border-top: 1px solid #e2e8f0 !important;
+}
+
+/* Dropdown header */
+.dropdown-menu .dropdown-header {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8 !important;
+    padding: 8px 14px 4px !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   8.  NAVBAR (enhance existing SeedQuest toolbar)
+   ═══════════════════════════════════════════════ */
+
+.navbar-default {
+    background: linear-gradient(180deg, #ffffff, #f8fafc) !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    min-height: 48px !important;
+}
+
+.navbar-default .navbar-nav>li>a {
+    font-weight: 500 !important;
+    font-size: 13.5px !important;
+    color: #475569 !important;
+    transition: color 0.2s ease;
+    padding: 14px 16px !important;
+}
+
+.navbar-default .navbar-nav>li>a:hover {
+    color: #38bdf8 !important;
+}
+
+.navbar-default .navbar-nav>.open>a,
+.navbar-default .navbar-nav>.open>a:hover,
+.navbar-default .navbar-nav>.open>a:focus {
+    background: #f1f5f9 !important;
+    color: #38bdf8 !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   9.  MODALS — Rich, dashboard-style
+   ═══════════════════════════════════════════════ */
+
+.modal-content {
+    border: none !important;
+    border-radius: 14px !important;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.22) !important;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    border-bottom: none !important;
+    padding: 16px 20px !important;
+}
+
+.modal-header .modal-title {
+    font-weight: 700 !important;
+    font-size: 17px !important;
+    color: #fff !important;
+}
+
+.modal-header .close {
+    color: #fff !important;
+    opacity: 0.8;
+    text-shadow: none !important;
+}
+
+.modal-header .close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 24px !important;
+}
+
+.modal-footer {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    padding: 14px 20px !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   10.  FORMS — Clean inputs with focus glow
+   ═══════════════════════════════════════════════ */
+
+.form-control {
+    border-radius: 8px !important;
+    border: 1.5px solid #e2e8f0 !important;
+    padding: 9px 14px !important;
+    font-size: 13.5px !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    box-shadow: none !important;
+    background: #fff;
+}
+
+.form-control:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+    outline: none;
+}
+
+/* Select elements */
+select.form-control {
+    appearance: auto;
+    cursor: pointer;
+}
+
+/* Labels */
+label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+
+/* ═══════════════════════════════════════════════
+   11.  PANELS (Bootstrap 3) → Dashboard-style
+   ═══════════════════════════════════════════════ */
+
+.panel {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+    overflow: hidden;
+}
+
+.panel-heading {
+    border-radius: 12px 12px 0 0 !important;
+    font-weight: 700 !important;
+    padding: 14px 18px !important;
+    font-size: 15px !important;
+}
+
+.panel-default>.panel-heading {
+    background: linear-gradient(90deg, #f0f9ff, #eff6ff) !important;
+    border-bottom: 1px solid #dbeafe !important;
+    color: #3b82f6 !important;
+}
+
+.panel-primary>.panel-heading {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.panel-success>.panel-heading {
+    background: linear-gradient(135deg, #34d399, #6ee7b7) !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.panel-info>.panel-heading {
+    background: linear-gradient(135deg, #22d3ee, #67e8f9) !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.panel-warning>.panel-heading {
+    background: linear-gradient(135deg, #fbbf24, #fcd34d) !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.panel-danger>.panel-heading {
+    background: linear-gradient(135deg, #f87171, #fca5a5) !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.panel-body {
+    padding: 18px !important;
+    background: #fff;
+}
+
+/* Panel title inside colored heading */
+.panel-heading .panel-title {
+    color: inherit !important;
+    font-weight: 700 !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   12.  ALERTS — Rich with left accent + icon area
+   ═══════════════════════════════════════════════ */
+
+.alert {
+    border: none !important;
+    border-radius: 10px !important;
+    border-left: 4px solid !important;
+    font-size: 13px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.alert-success {
+    background: linear-gradient(90deg, #ecfdf5, #f0fdf4) !important;
+    color: #065f46 !important;
+    border-left-color: #34d399 !important;
+}
+
+.alert-info {
+    background: linear-gradient(90deg, #eff6ff, #f0f9ff) !important;
+    color: #3b82f6 !important;
+    border-left-color: #3b82f6 !important;
+}
+
+.alert-warning {
+    background: linear-gradient(90deg, #fffbeb, #fefce8) !important;
+    color: #92400e !important;
+    border-left-color: #fbbf24 !important;
+}
+
+.alert-danger {
+    background: linear-gradient(90deg, #fef2f2, #fff1f2) !important;
+    color: #991b1b !important;
+    border-left-color: #f87171 !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   13.  jsTREE STYLING (trial tree)
+   ═══════════════════════════════════════════════ */
+
+.jstree-default .jstree-anchor {
+    font-size: 13px !important;
+    padding: 4px 8px !important;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.jstree-default .jstree-hovered {
+    background: #eff6ff !important;
+    box-shadow: none !important;
+}
+
+.jstree-default .jstree-clicked {
+    background: #dbeafe !important;
+    color: #3b82f6 !important;
+    box-shadow: none !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   14.  TABS (nav-tabs) — Vibrant active state
+   ═══════════════════════════════════════════════ */
+
+.nav-tabs {
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+
+.nav-tabs>li>a {
+    border: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    padding: 10px 18px !important;
+    transition: all 0.2s;
+}
+
+.nav-tabs>li>a:hover {
+    background: #f0f9ff !important;
+    border: none !important;
+    color: #38bdf8 !important;
+}
+
+.nav-tabs>li.active>a,
+.nav-tabs>li.active>a:hover,
+.nav-tabs>li.active>a:focus {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    border-radius: 8px 8px 0 0 !important;
+    box-shadow: 0 -2px 8px rgba(14, 165, 233, 0.20);
+}
+
+
+/* ═══════════════════════════════════════════════
+   15.  PAGINATION — Rounded, modern
+   ═══════════════════════════════════════════════ */
+
+.pagination>li>a,
+.pagination>li>span {
+    border: 1px solid #e2e8f0 !important;
+    color: #475569 !important;
+    border-radius: 8px !important;
+    margin: 0 2px;
+    font-size: 12.5px !important;
+    padding: 6px 12px !important;
+    transition: all 0.15s;
+}
+
+.pagination>li>a:hover {
+    background: #eff6ff !important;
+    color: #38bdf8 !important;
+    border-color: #38bdf8 !important;
+}
+
+.pagination>.active>a,
+.pagination>.active>span {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    border-color: #38bdf8 !important;
+    color: #fff !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   16.  BREADCRUMBS
+   ═══════════════════════════════════════════════ */
+
+.breadcrumb {
+    background: linear-gradient(90deg, #f0f9ff, #f8fafc) !important;
+    border-radius: 8px !important;
+    padding: 10px 16px !important;
+    font-size: 13px !important;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.breadcrumb>li+li:before {
+    color: #94a3b8 !important;
+}
+
+.breadcrumb>.active {
+    color: #38bdf8 !important;
+    font-weight: 600;
+}
+
+
+/* ═══════════════════════════════════════════════
+   17.  FOOTER
+   ═══════════════════════════════════════════════ */
+
+#footer {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    font-size: 12px !important;
+    color: #94a3b8 !important;
+}
+
+#footer a {
+    color: #64748b !important;
+}
+
+#footer a:hover {
+    color: #38bdf8 !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   18.  LINKS
+   ═══════════════════════════════════════════════ */
+
+a {
+    color: #38bdf8;
+    transition: color 0.15s ease;
+}
+
+a:hover {
+    color: #60a5fa;
+    text-decoration: none;
+}
+
+
+/* ═══════════════════════════════════════════════
+   19.  SCROLLBAR (webkit)
+   ═══════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* ═══════════════════════════════════════════════
+   20.  H-TAGS — Consistent with colored accent
+   ═══════════════════════════════════════════════ */
+
+h1 {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #0f172a;
+}
+
+h2 {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #0f172a;
+}
+
+h3 {
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: #1e293b;
+}
+
+h4 {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #334155;
+}
+
+h5 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: #475569;
+}
+
+
+/* ═══════════════════════════════════════════════
+   21.  UTILITY — Selection, badges, page transition
+   ═══════════════════════════════════════════════ */
+
+::selection {
+    background: #bae6fd;
+    color: #0c4a6e;
+}
+
+.badge,
+.label {
+    border-radius: 20px !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
+    padding: 3px 10px !important;
+}
+
+.label-default {
+    background: #64748b !important;
+}
+
+.label-primary {
+    background: #38bdf8 !important;
+}
+
+.label-success {
+    background: #34d399 !important;
+}
+
+/* Smooth page transition */
+.container-fluid {
+    animation: sq-page-in 0.25s ease;
+}
+
+@keyframes sq-page-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   22.  INPUT-GROUP — Match form styling
+   ═══════════════════════════════════════════════ */
+
+.input-group-addon {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 8px 0 0 8px !important;
+    color: #475569;
+    font-size: 13px;
+}
+
+.input-group .form-control:last-child {
+    border-radius: 0 8px 8px 0 !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   23.  PROGRESS BARS — Vibrant gradient
+   ═══════════════════════════════════════════════ */
+
+.progress {
+    background: #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    height: 10px !important;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, #38bdf8, #22d3ee) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+.progress-bar-success {
+    background: linear-gradient(90deg, #34d399, #34d399) !important;
+}
+
+.progress-bar-warning {
+    background: linear-gradient(90deg, #fbbf24, #fbbf24) !important;
+}
+
+.progress-bar-danger {
+    background: linear-gradient(90deg, #f87171, #f87171) !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   24.  LIST-GROUP → Polished items
+   ═══════════════════════════════════════════════ */
+
+.list-group {
+    border-radius: 10px !important;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.list-group-item {
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 12px 18px !important;
+    font-size: 13px;
+    transition: background 0.15s, padding-left 0.2s;
+}
+
+.list-group-item:last-child {
+    border-bottom: none !important;
+}
+
+.list-group-item:hover {
+    background: #f8fafc;
+    padding-left: 22px !important;
+}
+
+.list-group-item.active {
+    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    border: none !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   25.  TOOLTIP — Modern look
+   ═══════════════════════════════════════════════ */
+
+.tooltip-inner {
+    background: #1e293b !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+}
+
+.tooltip.top .tooltip-arrow {
+    border-top-color: #1e293b !important;
+}
+
+
+/* ═══════════════════════════════════════════════
+   26.  RESPONSIVE — Tablet (≤992px)
+   ═══════════════════════════════════════════════ */
+
+@media (max-width: 992px) {
+    #outercontainer {
+        width: 98% !important;
+        padding: 0 8px !important;
+    }
+
+    #pagetitle_h3 {
+        font-size: 22px !important;
+    }
+
+    .well {
+        padding: 16px 18px !important;
+        border-radius: 10px !important;
+    }
+
+    /* Stack buttons when too many on one row */
+    .btn {
+        margin-bottom: 6px !important;
+    }
+
+    /* Tables: allow horizontal scroll */
+    .table-responsive {
+        border: none !important;
+        border-radius: 8px;
+    }
+
+    /* Info sections — slightly smaller text */
+    .infosectiontitle,
+    .infosectiontitle_empty {
+        font-size: 14px !important;
+        padding: 10px 14px !important;
+    }
+
+    /* Modals fill more of the screen */
+    .modal-dialog {
+        width: 92% !important;
+        margin: 30px auto !important;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   27.  RESPONSIVE — Mobile (≤768px)
+   ═══════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    body {
+        font-size: 13px;
+    }
+
+    #outercontainer {
+        width: 100% !important;
+        padding: 0 6px !important;
+    }
+
+    #pagetitle {
+        margin: 8px 0 16px;
+    }
+
+    #pagetitle_h3 {
+        font-size: 20px !important;
+    }
+
+    /* Wells — tighter padding on mobile */
+    .well {
+        padding: 14px 14px !important;
+        border-radius: 8px !important;
+        margin-bottom: 14px;
+        border-left-width: 3px !important;
+    }
+
+    /* Buttons — full-width on mobile for touch targets */
+    .btn {
+        font-size: 13px !important;
+        padding: 10px 16px !important;
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Exceptions: inline buttons (dropdown toggles, btn-group) */
+    .btn-group .btn,
+    .btn-xs,
+    .pagination .btn,
+    td .btn,
+    th .btn {
+        display: inline-block !important;
+        width: auto !important;
+    }
+
+    /* Info section titles — smaller */
+    .infosectiontitle,
+    .infosectiontitle_empty {
+        font-size: 13px !important;
+        padding: 10px 12px !important;
+    }
+
+    .infosectioncontent,
+    .infosectioncontent_empty {
+        padding: 14px 12px !important;
+    }
+
+    /* Tables — force scroll on mobile */
+    .table {
+        font-size: 12px !important;
+    }
+
+    .table>thead>tr>th {
+        font-size: 11px !important;
+        padding: 8px 10px !important;
+    }
+
+    .table>tbody>tr>td {
+        padding: 8px 10px !important;
+        font-size: 12px;
+    }
+
+    /* Wrap tables in horizontal scroll */
+    .well>.table,
+    .infosectioncontent>.table,
+    .panel-body>.table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Dropdown menus — full width */
+    .dropdown-menu {
+        min-width: 100% !important;
+        border-radius: 8px !important;
+    }
+
+    /* Modal — near full screen */
+    .modal-dialog {
+        width: 96% !important;
+        margin: 15px auto !important;
+    }
+
+    .modal-content {
+        border-radius: 10px !important;
+    }
+
+    .modal-body {
+        padding: 16px !important;
+    }
+
+    /* Tabs — scrollable horizontal */
+    .nav-tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    .nav-tabs>li {
+        flex-shrink: 0;
+    }
+
+    .nav-tabs>li>a {
+        padding: 8px 14px !important;
+    }
+
+    /* Panels tighter */
+    .panel-heading {
+        padding: 10px 14px !important;
+        font-size: 14px !important;
+    }
+
+    .panel-body {
+        padding: 14px !important;
+    }
+
+    /* jstree compact */
+    .jstree-default .jstree-anchor {
+        font-size: 12px !important;
+        padding: 6px 4px !important;
+    }
+
+    /* Headings tighter */
+    h1 {
+        font-size: 20px !important;
+    }
+
+    h2 {
+        font-size: 18px !important;
+    }
+
+    h3 {
+        font-size: 16px !important;
+    }
+
+    h4 {
+        font-size: 14px !important;
+    }
+
+    h5 {
+        font-size: 13px !important;
+    }
+
+    /* Forms — full-width inputs */
+    .form-control {
+        font-size: 14px !important;
+        padding: 10px 12px !important;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   28.  RESPONSIVE — Small mobile (≤480px)
+   ═══════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+    #pagetitle_h3 {
+        font-size: 18px !important;
+    }
+
+    .well {
+        padding: 12px 10px !important;
+        border-radius: 6px !important;
+    }
+
+    .infosectionhead,
+    .infosectionhead_empty {
+        border-radius: 6px 6px 0 0 !important;
+    }
+
+    .infosectioncontent,
+    .infosectioncontent_empty {
+        border-radius: 0 0 6px 6px;
+        padding: 10px 8px !important;
+    }
+
+    /* Navbar collapses */
+    .navbar-nav {
+        margin: 0 !important;
+    }
+
+    .navbar-nav>li>a {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   29.  PRINT STYLES
+   ═══════════════════════════════════════════════ */
+
+@media print {
+    body {
+        background: #fff !important;
+    }
+
+    .well {
+        border-left: 2px solid #999 !important;
+        box-shadow: none !important;
+    }
+
+    .infosectionhead {
+        background: #ddd !important;
+        color: #000 !important;
+        box-shadow: none !important;
+    }
+
+    .btn {
+        box-shadow: none !important;
+    }
+
+    .navbar,
+    #footer {
+        display: none !important;
+    }
+}

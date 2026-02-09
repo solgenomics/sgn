@@ -916,6 +916,18 @@ sub manage_drone_imagery : Path("/breeders/drone_imagery") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_drone_imagery.mas';
 }
 
+sub manage_drone_imagery_simple : Path("/breeders/drone_imagery_simple") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    $c->stash->{template} = '/breeders_toolbox/drone_imagery/upload_drone_imagery_simple.mas';
+}
+
 
 sub manage_genotyping_projects : Path("/breeders/genotyping_projects") Args(0) {
     my $self = shift;
@@ -1048,5 +1060,18 @@ sub manage_activities : Path("/breeders/activities") Args(0) {
 }
 
 
+
+
+sub weather_gdd : Path("/tools/weather/gdd") Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = "/breeders_toolbox/gdd_analysis.mas";
+}
+
+sub gdd_analysis : Path("/breeders/gdd_analysis") Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->stash->{template} = "/breeders_toolbox/gdd_analysis.mas";
+}
 
 1;

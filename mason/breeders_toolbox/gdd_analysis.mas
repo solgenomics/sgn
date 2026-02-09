@@ -1,0 +1,1496 @@
+<%doc>
+GDD/CHU Analysis Page
+Calculate Growing Degree Days and Crop Heat Units for crop planning
+</%doc>
+
+<& /page/page_title.mas, title => "GDD/CHU Calculator" &>
+
+<div class="well well-sm">
+    <p>Calculate <strong>Growing Degree Days (GDD)</strong> and <strong>Crop Heat Units (CHU)</strong> for your locations. Select one or more years to compare growing seasons.</p>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h4>GDD/CHU Calculator</h4>
+    </div>
+    <div class="panel-body">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Select Location:</label>
+                <div class="col-sm-9">
+                    <select class="form-control" id="gdd_location_id">
+                        <option value="">Loading locations...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label">Select Year(s):</label>
+                <div class="col-sm-9">
+                    <div id="year_selector" class="btn-group" data-toggle="buttons">
+                        <!-- Years populated dynamically -->
+                    </div>
+                    <p class="help-block">Click to select multiple years for comparison</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Display Options Panel -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <a data-toggle="collapse" href="#displayOptions">
+                    <span class="glyphicon glyphicon-cog"></span> Display Options
+                </a>
+            </div>
+            <div id="displayOptions" class="panel-collapse collapse in">
+                <div class="panel-body">
+                    <!-- Row 1: Crop and Chart Options -->
+                    <div class="row">
+                        <div class="col-md-5">
+                            <label>Crop / Base Temperature:</label>
+                            <select class="form-control" id="gdd_crop_select">
+                                <option value="">Loading crops...</option>
+                            </select>
+                            <input type="number" class="form-control" id="gdd_custom_base" placeholder="Custom base °C" style="margin-top:5px">
+                        </div>
+                        <div class="col-md-7">
+                            <label>Show on Chart:</label>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="chart_gdd" checked> GDD</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="chart_chu" checked> CHU</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="chart_precip"> Precipitation</label></div>
+                            <br>
+                            <label>Table Columns:</label>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_humidity"> Humidity</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_solar"> Solar</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_dewpoint"> Dew Point</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_pressure"> Pressure</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_uv"> UV</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_wind"> Wind</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_et"> ET</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_soiltemp"> Soil Temp</label></div>
+                            <div class="checkbox-inline"><label><input type="checkbox" id="show_soilmoisture"> Soil Moist</label></div>
+                        </div>
+                    </div>
+                    <hr>
+                    <!-- Row 2: Growing Season Dates -->
+                    <div id="season_config">
+                        <label>Growing Season Dates (per year):</label>
+                        <div id="season_inputs">
+                            <!-- Dynamically generated per-year date inputs -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <br>
+        <div class="text-center">
+            <button class="btn btn-default" id="gdd_config_station" type="button" style="margin-right: 10px;">
+                <span class="glyphicon glyphicon-cog"></span> Configure Station
+            </button>
+            <button class="btn btn-primary btn-lg" id="gdd_calculate" type="button">
+                <span class="glyphicon glyphicon-stats"></span> Calculate GDD/CHU
+            </button>
+            <button class="btn btn-success btn-lg" id="maturity_calculator_top" type="button" style="margin-left: 10px;">
+                <span class="glyphicon glyphicon-grain"></span> Maturity Calculator
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="gdd_sync_status" class="alert alert-info" style="display:none"></div>
+
+<div id="gdd_results" style="display:none">
+    <div class="panel panel-success">
+        <div class="panel-heading">
+            <h4>Results 
+                <div class="pull-right">
+                    <button class="btn btn-success btn-sm" id="gdd_export_excel">
+                        <span class="glyphicon glyphicon-download-alt"></span> Export to Excel
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="maturity_calculator_btn" style="margin-left:5px">
+                        <span class="glyphicon glyphicon-grain"></span> Maturity Calculator
+                    </button>
+                </div>
+            </h4>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">Total GDD</div>
+                        <div class="panel-body text-center">
+                            <h2 id="result_total_gdd">0</h2>
+                            <p>Growing Degree Days</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-warning">
+                        <div class="panel-heading">Total CHU</div>
+                        <div class="panel-body text-center">
+                            <h2 id="result_total_chu">0</h2>
+                            <p>Crop Heat Units</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">Total Precip</div>
+                        <div class="panel-body text-center">
+                            <h2 id="result_total_precip">0</h2>
+                            <p>mm Rainfall</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Days</div>
+                        <div class="panel-body text-center">
+                            <h2 id="result_days_count">0</h2>
+                            <p>Data Points</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <h4>Growing Season Charts</h4>
+            <div id="charts_container">
+                <!-- Single chart for overlay mode, or multiple charts for per-year mode -->
+                <div id="gdd_chart" style="height:400px;width:100%"></div>
+            </div>
+            <br>
+            <h4>Daily Data</h4>
+            <div class="table-responsive">
+                <table class="table table-striped table-condensed" id="gdd_data_table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Max &deg;C</th>
+                            <th>Min &deg;C</th>
+                            <th>GDD (day)</th>
+                            <th>GDD (cumul)</th>
+                            <th>CHU (day)</th>
+                            <th>CHU (cumul)</th>
+                            <th>Precip (mm)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+var gddData = null; // Store for export
+
+// Reusable function to render the data table based on current checkbox state
+function renderTable(data) {
+    // Handle both single-year (daily_data) and multi-year (all_daily_data) formats
+    var dailyData = data.daily_data || data.all_daily_data;
+    if (!data || !dailyData) return;
+    
+    // Build table header dynamically
+    var thead = jQuery('#gdd_data_table thead tr');
+    thead.empty();
+    thead.append('<th>Date</th><th>Max °C</th><th>Min °C</th><th>GDD (day)</th><th>GDD (cumul)</th><th>CHU (day)</th><th>CHU (cumul)</th><th>Precip (mm)</th>');
+    
+    // Add optional columns based on checkboxes
+    if (jQuery('#show_humidity').is(':checked')) thead.append('<th>Humidity %</th>');
+    if (jQuery('#show_solar').is(':checked')) thead.append('<th>Solar MJ/m²</th>');
+    if (jQuery('#show_dewpoint').is(':checked')) thead.append('<th>Dew Pt °C</th>');
+    if (jQuery('#show_pressure').is(':checked')) thead.append('<th>Pressure hPa</th>');
+    if (jQuery('#show_uv').is(':checked')) thead.append('<th>UV Index</th>');
+    if (jQuery('#show_wind').is(':checked')) thead.append('<th>Wind km/h</th>');
+    if (jQuery('#show_et').is(':checked')) thead.append('<th>ET mm</th>');
+    if (jQuery('#show_soiltemp').is(':checked')) thead.append('<th>Soil °C</th>');
+    if (jQuery('#show_soilmoisture').is(':checked')) thead.append('<th>Soil %</th>');
+    
+    // Build table body
+    var tbody = jQuery('#gdd_data_table tbody');
+    tbody.empty();
+    jQuery.each(dailyData, function(i, day) {
+        var row = '<tr>' +
+            '<td>' + day.date + '</td>' +
+            '<td>' + day.temp_max + '</td>' +
+            '<td>' + day.temp_min + '</td>' +
+            '<td>' + day.gdd_day + '</td>' +
+            '<td>' + day.gdd_cumulative + '</td>' +
+            '<td>' + day.chu_day + '</td>' +
+            '<td>' + day.chu_cumulative + '</td>' +
+            '<td>' + day.precip_day + '</td>';
+        
+        // Add optional columns
+        if (jQuery('#show_humidity').is(':checked')) row += '<td>' + (day.humidity_mean || '-') + '</td>';
+        if (jQuery('#show_solar').is(':checked')) row += '<td>' + (day.solar_radiation || '-') + '</td>';
+        if (jQuery('#show_dewpoint').is(':checked')) row += '<td>' + (day.dew_point || '-') + '</td>';
+        if (jQuery('#show_pressure').is(':checked')) row += '<td>' + (day.pressure || '-') + '</td>';
+        if (jQuery('#show_uv').is(':checked')) row += '<td>' + (day.uv_index || '-') + '</td>';
+        if (jQuery('#show_wind').is(':checked')) row += '<td>' + (day.wind_speed_max || '-') + '</td>';
+        if (jQuery('#show_et').is(':checked')) row += '<td>' + (day.evapotranspiration || '-') + '</td>';
+        if (jQuery('#show_soiltemp').is(':checked')) row += '<td>' + (day.soil_temp || '-') + '</td>';
+        if (jQuery('#show_soilmoisture').is(':checked')) row += '<td>' + (day.soil_moisture || '-') + '</td>';
+        
+        row += '</tr>';
+        tbody.append(row);
+    });
+}
+
+jQuery(document).ready(function() {
+    
+    // Load locations directly
+    jQuery.ajax({
+        url: '/ajax/location/all',
+        dataType: 'json',
+        success: function(response) {
+            var select = jQuery('#gdd_location_id');
+            select.empty();
+            select.append('<option value="">-- Select Location --</option>');
+            if (response && response.data) {
+                jQuery.each(response.data, function(i, loc) {
+                    if (loc.properties && loc.properties.Name && loc.properties.Name !== '[Computation]') {
+                        select.append('<option value="' + loc.properties.Id + '">' + 
+                            loc.properties.Name + '</option>');
+                    }
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            jQuery('#gdd_location_id').html('<option value="">Error loading locations</option>');
+        }
+    });
+    
+    // Load crops
+    jQuery.ajax({
+        url: '/ajax/weather/crops',
+        dataType: 'json',
+        success: function(response) {
+            var select = jQuery('#gdd_crop_select');
+            select.empty();
+            select.append('<option value="">-- Select Crop --</option>');
+            if (response && response.crops) {
+                jQuery.each(response.crops, function(i, crop) {
+                    select.append('<option value="' + crop.id + '" data-base="' + crop.base_temp + '">' + 
+                        crop.crop_name + ' (Base: ' + crop.base_temp + '&deg;C)' + 
+                        (crop.use_chu ? ' [CHU]' : '') + '</option>');
+                });
+            }
+        }
+    });
+
+    // Initialize year selector (last 6 years)
+    var currentYear = new Date().getFullYear();
+    var yearSelector = jQuery('#year_selector');
+    for (var y = currentYear; y >= currentYear - 5; y--) {
+        var checked = (y === currentYear - 1) ? 'active' : ''; // Default to last year
+        yearSelector.append(
+            '<label class="btn btn-default ' + checked + '">' +
+            '<input type="checkbox" name="years" value="' + y + '" ' + (checked ? 'checked' : '') + '> ' + y +
+            '</label>'
+        );
+    }
+    
+    // Update season inputs when years change
+    function updateSeasonInputs() {
+        var selected = [];
+        jQuery('#year_selector input:checked').each(function() {
+            selected.push(parseInt(jQuery(this).val()));
+        });
+        selected.sort().reverse();
+        
+        var container = jQuery('#season_inputs');
+        container.empty();
+        
+        if (selected.length === 0) {
+            container.html('<p class="text-muted">Select at least one year above</p>');
+            return;
+        }
+        
+        jQuery.each(selected, function(i, year) {
+            var defaultStart = year + '-04-15';
+            var defaultEnd = year + '-09-30';
+            container.append(
+                '<div class="row" style="margin-bottom:5px">' +
+                '<div class="col-xs-2"><strong>' + year + ':</strong></div>' +
+                '<div class="col-xs-5">' +
+                '<input type="date" class="form-control input-sm season-start" data-year="' + year + '" value="' + defaultStart + '">' +
+                '</div>' +
+                '<div class="col-xs-5">' +
+                '<input type="date" class="form-control input-sm season-end" data-year="' + year + '" value="' + defaultEnd + '">' +
+                '</div>' +
+                '</div>'
+            );
+        });
+    }
+    
+    // Trigger season inputs update when years change
+    jQuery('#year_selector').on('change', 'input', function() {
+        jQuery(this).closest('label').toggleClass('active', this.checked);
+        updateSeasonInputs();
+    });
+    
+    // Initialize season inputs
+    updateSeasonInputs();
+    
+    // Re-render table when Display Options checkboxes change
+    jQuery('#displayOptions input[type="checkbox"]').change(function() {
+        if (gddData) {
+            // Re-render table with updated checkbox state
+            renderTable(gddData);
+        }
+    });
+    
+    // Export to Excel
+    jQuery('#gdd_export_excel').click(function() {
+        // Handle both single-year and multi-year data
+        var dataToExport = gddData ? (gddData.daily_data || gddData.all_daily_data) : null;
+        if (!dataToExport || dataToExport.length === 0) {
+            alert('No data to export. Please calculate GDD first.');
+            return;
+        }
+        
+        // Prepare data for Excel
+        var exportData = dataToExport.map(function(day) {
+            return {
+                'Date': day.date,
+                'Max Temp (°C)': day.temp_max,
+                'Min Temp (°C)': day.temp_min,
+                'GDD (daily)': day.gdd_day,
+                'GDD (cumulative)': day.gdd_cumulative,
+                'CHU (daily)': day.chu_day,
+                'CHU (cumulative)': day.chu_cumulative,
+                'Precip (mm)': day.precip_day,
+                'Humidity (%)': day.humidity_mean || '',
+                'Solar Radiation': day.solar_radiation || '',
+                'Dew Point (°C)': day.dew_point || '',
+                'Pressure (hPa)': day.pressure || '',
+                'UV Index': day.uv_index || '',
+                'Wind Speed (km/h)': day.wind_speed_max || '',
+                'ET (mm)': day.evapotranspiration || '',
+                'Soil Temp (°C)': day.soil_temp || '',
+                'Soil Moisture (%)': day.soil_moisture || '',
+                'Leaf Wetness': day.leaf_wetness || '',
+                'Source': day.source || ''
+            };
+        });
+        
+        // Add summary row
+        exportData.push({});
+        exportData.push({
+            'Date': 'TOTALS',
+            'Max Temp (&deg;C)': '',
+            'Min Temp (&deg;C)': '',
+            'GDD (daily)': '',
+            'GDD (cumulative)': gddData.total_gdd,
+            'CHU (daily)': '',
+            'CHU (cumulative)': gddData.total_chu,
+            'Precip (mm)': gddData.total_precip
+        });
+        
+        // Create workbook
+        var ws = XLSX.utils.json_to_sheet(exportData);
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'GDD_CHU_Data');
+        
+        // Generate filename
+        var locationName = jQuery('#gdd_location_id option:selected').text() || 'location';
+        var cropName = jQuery('#gdd_crop_select option:selected').text().split(' (')[0] || 'crop';
+        var filename = 'GDD_' + locationName + '_' + cropName + '_' + gddData.start_date + '.xlsx';
+        
+        // Download
+        XLSX.writeFile(wb, filename);
+    });
+    
+    // Calculate GDD (with automatic sync of missing data)
+    // Supports both single-year and multi-year modes
+    jQuery('#gdd_calculate').click(function() {
+        var location_id = jQuery('#gdd_location_id').val();
+        var crop_id = jQuery('#gdd_crop_select').val();
+        var base_temp = jQuery('#gdd_custom_base').val();
+        
+        if (!location_id) {
+            alert('Please select a location');
+            return;
+        }
+        
+        // Collect selected years and their season dates
+        var seasons = [];
+        jQuery('.season-start').each(function() {
+            var year = jQuery(this).data('year');
+            var start = jQuery(this).val();
+            var end = jQuery('.season-end[data-year="' + year + '"]').val();
+            if (start && end) {
+                seasons.push({ year: year, start: start, end: end });
+            }
+        });
+        
+        if (seasons.length === 0) {
+            alert('Please select at least one year');
+            return;
+        }
+        
+        // Show loading state
+        jQuery('#gdd_results').hide();
+        jQuery('#gdd_sync_status').removeClass('alert-success alert-danger').addClass('alert-info')
+            .html('<span class="glyphicon glyphicon-refresh spinning"></span> Checking database and fetching any missing weather data for ' + seasons.length + ' year(s)...').show();
+        jQuery('#gdd_calculate').prop('disabled', true).html('<span class="glyphicon glyphicon-refresh spinning"></span> Calculating...');
+        
+        jQuery.ajax({
+            url: '/ajax/weather/gdd',
+            data: {
+                location_id: location_id,
+                crop_id: crop_id,
+                base_temp: base_temp,
+                seasons: JSON.stringify(seasons)
+            },
+            success: function(response) {
+                // Reset button
+                jQuery('#gdd_calculate').prop('disabled', false).html('<span class="glyphicon glyphicon-stats"></span> Calculate GDD/CHU');
+                
+                if (response.error) {
+                    jQuery('#gdd_sync_status').removeClass('alert-info').addClass('alert-danger').html('Error: ' + response.error);
+                    return;
+                }
+                
+                // Show sync status
+                var syncMsg = '';
+                if (response.sync_info) {
+                    if (response.sync_info.synced > 0) {
+                        syncMsg = '<span class="glyphicon glyphicon-cloud-download"></span> Fetched ' + response.sync_info.synced + ' new days';
+                    } else {
+                        syncMsg = '<span class="glyphicon glyphicon-ok"></span> All data from cache';
+                    }
+                    syncMsg += ' (' + response.sync_info.existing + ' days already stored)';
+                }
+                jQuery('#gdd_sync_status').removeClass('alert-info alert-danger').addClass('alert-success').html(syncMsg);
+                
+                // Store data for export
+                gddData = response;
+                
+                if (response.multi_year && response.years) {
+                    // Multi-year mode - show per-year summary and overlay chart
+                    renderMultiYearResults(response);
+                } else {
+                    // Single-year mode (legacy fallback)
+                    jQuery('#result_total_gdd').text(response.total_gdd);
+                    jQuery('#result_total_chu').text(response.total_chu);
+                    jQuery('#result_total_precip').text(response.total_precip);
+                    jQuery('#result_days_count').text(response.days_count);
+                    renderTable(response);
+                    renderSingleYearChart(response);
+                }
+                
+                jQuery('#gdd_results').show();
+            },
+            error: function() {
+                jQuery('#gdd_calculate').prop('disabled', false).html('<span class="glyphicon glyphicon-stats"></span> Calculate GDD/CHU');
+                jQuery('#gdd_sync_status').removeClass('alert-info').addClass('alert-danger').html('Failed to calculate GDD');
+            }
+        });
+    });
+    
+    // Render multi-year results with per-year table and overlay chart
+    function renderMultiYearResults(data) {
+        // Update summary cards with averages
+        jQuery('#result_total_gdd').text(data.summary.avg_gdd + ' avg');
+        jQuery('#result_total_chu').text(data.summary.avg_chu + ' avg');
+        jQuery('#result_total_precip').text(data.summary.avg_precip + ' avg');
+        jQuery('#result_days_count').text(data.summary.total_days + ' (' + data.summary.years_count + ' yrs)');
+        
+        // Remove any previous year summary
+        jQuery('#year_summary').remove();
+        
+        // Build per-year summary table
+        var summaryHtml = '<h4>Per-Year Summary</h4><table class="table table-striped table-condensed">' +
+            '<thead><tr><th>Year</th><th>Days</th><th>Total GDD</th><th>Total CHU</th><th>Total Precip</th><th>Avg Temp</th></tr></thead><tbody>';
+        jQuery.each(data.years, function(i, yr) {
+            summaryHtml += '<tr>' +
+                '<td><strong>' + yr.year + '</strong></td>' +
+                '<td>' + yr.days_count + '</td>' +
+                '<td>' + yr.total_gdd + '</td>' +
+                '<td>' + yr.total_chu + '</td>' +
+                '<td>' + yr.total_precip + ' mm</td>' +
+                '<td>' + yr.avg_temp + '°C</td>' +
+                '</tr>';
+        });
+        summaryHtml += '</tbody></table>';
+        jQuery('#gdd_data_table').before('<div id="year_summary">' + summaryHtml + '</div>');
+        
+        // Get chart option states
+        var showGDD = jQuery('#chart_gdd').is(':checked');
+        var showCHU = jQuery('#chart_chu').is(':checked');
+        var showPrecip = jQuery('#chart_precip').is(':checked');
+        
+        // Create separate chart for each year
+        var container = jQuery('#charts_container');
+        container.empty();
+        
+        jQuery.each(data.years, function(i, yr) {
+            // Create chart div for this year
+            var chartId = 'chart_year_' + yr.year;
+            container.append('<div class="year-chart-wrapper" style="margin-bottom:20px; padding:15px; background:#f9f9f9; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1)">' +
+                '<h5 style="margin:0 0 10px 0; color:#2E7D32"><strong>' + yr.year + ' Growing Season</strong> (' + yr.start_date + ' to ' + yr.end_date + ')</h5>' +
+                '<div id="' + chartId + '" style="height:350px;width:100%"></div>' +
+                '</div>');
+            
+            var traces = [];
+            var dates = yr.daily_data.map(function(d) { return d.date; });
+            
+            // GDD trace (cumulative)
+            if (showGDD) {
+                traces.push({
+                    x: dates,
+                    y: yr.daily_data.map(function(d) { return parseFloat(d.gdd_cumulative); }),
+                    name: 'GDD',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#2E7D32', width: 2 }
+                });
+            }
+            
+            // CHU trace (cumulative)
+            if (showCHU) {
+                traces.push({
+                    x: dates,
+                    y: yr.daily_data.map(function(d) { return parseFloat(d.chu_cumulative); }),
+                    name: 'CHU',
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: '#F57C00', width: 2 }
+                });
+            }
+            
+            // Precipitation bars (daily)
+            if (showPrecip) {
+                traces.push({
+                    x: dates,
+                    y: yr.daily_data.map(function(d) { return parseFloat(d.precip_day || 0); }),
+                    name: 'Precip (mm)',
+                    type: 'bar',
+                    yaxis: 'y2',
+                    marker: { color: '#1976D2', opacity: 0.6 }
+                });
+            }
+            
+            var layout = {
+                margin: { t: 10, b: 50, l: 60, r: 60 },
+                xaxis: { title: 'Date' },
+                yaxis: { title: 'Heat Units' },
+                legend: { orientation: 'h', y: 1.1 },
+                showlegend: true
+            };
+            
+            if (showPrecip) {
+                layout.yaxis2 = { title: 'Precip (mm)', overlaying: 'y', side: 'right' };
+            }
+            
+            Plotly.newPlot(chartId, traces, layout, { responsive: true });
+        });
+        
+        // Also render combined table
+        renderTable({ daily_data: data.all_daily_data });
+    }
+    
+    // Re-render charts when chart options change
+    jQuery('#chart_gdd, #chart_chu, #chart_precip').change(function() {
+        if (gddData && gddData.multi_year && gddData.years) {
+            renderMultiYearResults(gddData);
+        } else if (gddData && gddData.daily_data) {
+            renderSingleYearChart(gddData);
+        }
+    });
+    
+    // Render single-year chart (legacy)
+    function renderSingleYearChart(data) {
+        var dates = data.daily_data.map(function(d) { return d.date; });
+        var gdd_cumul = data.daily_data.map(function(d) { return parseFloat(d.gdd_cumulative); });
+        var chu_cumul = data.daily_data.map(function(d) { return parseFloat(d.chu_cumulative); });
+        var precip = data.daily_data.map(function(d) { return parseFloat(d.precip_day); });
+        
+        Plotly.newPlot('gdd_chart', [
+            { x: dates, y: gdd_cumul, name: 'GDD', type: 'scatter', mode: 'lines', line: {color: '#5cb85c', width: 3} },
+            { x: dates, y: chu_cumul, name: 'CHU', type: 'scatter', mode: 'lines', line: {color: '#f0ad4e', width: 3} },
+            { x: dates, y: precip, name: 'Precipitation (mm)', type: 'bar', yaxis: 'y2', marker: {color: '#5bc0de', opacity: 0.6} }
+        ], {
+            title: 'Cumulative GDD/CHU & Daily Precipitation',
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Heat Units' },
+            yaxis2: { title: 'Precipitation (mm)', overlaying: 'y', side: 'right' },
+            legend: { orientation: 'h', y: -0.2 }
+        });
+    }
+    
+    // Load location config when selected
+    jQuery('#gdd_location_id').change(function() {
+        var location_id = jQuery(this).val();
+        if (!location_id) return;
+        
+        // Load station config
+        jQuery.ajax({
+            url: '/ajax/weather/station_config/get',
+            data: { location_id: location_id },
+            success: function(response) {
+                if (response.config) {
+                    var type = response.config.weather_station_type || 'Open-Meteo';
+                    jQuery('#station_type').val(type).trigger('change');
+                    
+                    if (type === 'Davis') {
+                        jQuery('#davis_api_key').val(response.config.davis_api_key);
+                        jQuery('#davis_api_secret').val(response.config.davis_api_secret);
+                        jQuery('#davis_station_id').val(response.config.davis_station_id);
+                    } else if (type === 'Ecowitt') {
+                        jQuery('#ecowitt_mac').val(response.config.ecowitt_mac_address);
+                        jQuery('#ecowitt_app_key').val(response.config.ecowitt_app_key);
+                    }
+                }
+            }
+        });
+    });
+
+    // Configure Station Button
+    jQuery('#gdd_config_station').click(function() {
+        if (!jQuery('#gdd_location_id').val()) {
+            alert('Please select a location first');
+            return;
+        }
+        jQuery('#station_config_modal').modal('show');
+    });
+    
+    // Station Type Change
+    jQuery('#station_type').change(function() {
+        var type = jQuery(this).val();
+        jQuery('#davis_fields').hide();
+        jQuery('#ecowitt_fields').hide();
+        
+        if (type === 'Davis') {
+            jQuery('#davis_fields').show();
+        } else if (type === 'Ecowitt') {
+            jQuery('#ecowitt_fields').show();
+        }
+    });
+    
+    // Save Station Config
+    jQuery('#save_station_config').click(function() {
+        var location_id = jQuery('#gdd_location_id').val();
+        var type = jQuery('#station_type').val();
+        
+        jQuery.ajax({
+            url: '/ajax/weather/station_config/save',
+            data: {
+                location_id: location_id,
+                station_type: type,
+                davis_api_key: jQuery('#davis_api_key').val(),
+                davis_api_secret: jQuery('#davis_api_secret').val(),
+                davis_station_id: jQuery('#davis_station_id').val(),
+                ecowitt_mac: jQuery('#ecowitt_mac').val(),
+                ecowitt_app_key: jQuery('#ecowitt_app_key').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Configuration saved!');
+                    jQuery('#station_config_modal').modal('hide');
+                } else {
+                    alert('Error saving: ' + (response.error || 'Unknown error'));
+                }
+            },
+            error: function() {
+                alert('Error saving configuration');
+            }
+        });
+    });
+
+});
+</script>
+
+<!-- Station Config Modal -->
+<div class="modal fade" id="station_config_modal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Weather Station Configuration</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Station Type:</label>
+                    <select class="form-control" id="station_type">
+                        <option value="Open-Meteo">Open-Meteo (Default/Virtual)</option>
+                        <option value="Davis">Davis WeatherLink</option>
+                        <option value="Ecowitt">Ecowitt</option>
+                    </select>
+                </div>
+                
+                <div id="davis_fields" style="display:none">
+                    <div class="form-group">
+                        <label>API Key:</label>
+                        <input type="text" class="form-control" id="davis_api_key" placeholder="Enter API Key">
+                    </div>
+                    <div class="form-group">
+                        <label>API Secret:</label>
+                        <input type="text" class="form-control" id="davis_api_secret" placeholder="Enter API Secret">
+                    </div>
+                    <div class="form-group">
+                        <label>Station ID:</label>
+                        <input type="text" class="form-control" id="davis_station_id" placeholder="Enter Station ID">
+                    </div>
+                </div>
+
+                <div id="ecowitt_fields" style="display:none">
+                    <div class="form-group">
+                        <label>MAC Address:</label>
+                        <input type="text" class="form-control" id="ecowitt_mac" placeholder="Enter MAC Address">
+                    </div>
+                    <div class="form-group">
+                        <label>Application Key:</label>
+                        <input type="text" class="form-control" id="ecowitt_app_key" placeholder="Enter App Key">
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                   <small>Note: Enter the required credentials to allow importing data from your private weather station.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="save_station_config">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Maturity Calculator Modal -->
+<div class="modal fade" id="maturity_calculator_modal" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary" style="color:white">
+                <button type="button" class="close" data-dismiss="modal" style="color:white">&times;</button>
+                <h4 class="modal-title">
+                    <span class="glyphicon glyphicon-grain"></span> Maturity Calculator - Create Phenotypes
+                    <button type="button" class="btn btn-link" id="mc_settings_toggle" style="color:white; padding:0 10px" title="Trait Settings">
+                        <span class="glyphicon glyphicon-cog"></span>
+                    </button>
+                </h4>
+            </div>
+            <div class="modal-body" id="mc_modal_body">
+                <!-- Settings Panel (collapsed by default) -->
+                <div id="mc_settings_panel" class="panel panel-default" style="display:none">
+                    <div class="panel-heading"><strong><span class="glyphicon glyphicon-cog"></span> Trait Settings</strong></div>
+                    <div class="panel-body">
+                        <p class="text-muted small">Select which ontology traits to use for GDD calculation. Defaults are set for your crop type.</p>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Emergence Trait:</label>
+                                    <select class="form-control input-sm" id="mc_trait_emergence">
+                                        <option value="97939">Seedling emergence - Date (yymmdd)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Flowering Trait:</label>
+                                    <select class="form-control input-sm" id="mc_trait_flowering">
+                                        <option value="81054">Silking time - day (Maize)</option>
+                                        <option value="81052">Anthesis silking interval</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Maturity Trait:</label>
+                                    <select class="form-control input-sm" id="mc_trait_maturity">
+                                        <option value="80767">Maturity time - day</option>
+                                        <option value="81183">Maturity time - day (alt)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning" id="mc_trait_warning" style="display:none; margin-bottom:0">
+                            <small><span class="glyphicon glyphicon-exclamation-sign"></span> Some selected traits may not exist in your ontology. Contact administrator to add them.</small>
+                        </div>
+                        <div class="checkbox" style="margin-top:10px">
+                            <label>
+                                <input type="checkbox" id="mc_use_planting_fallback"> 
+                                <strong>Use planting date as fallback</strong> if no emergence data exists
+                            </label>
+                            <span style="margin-left:15px">
+                                Days to emergence: 
+                                <input type="number" id="mc_fallback_emergence_days" 
+                                       min="1" max="20" value="7" 
+                                       style="width:60px; display:inline-block" 
+                                       class="form-control input-sm">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <strong>GDD:</strong> <span id="mc_gdd_value">0</span> | 
+                    <strong>CHU:</strong> <span id="mc_chu_value">0</span> | 
+                    <strong>Period:</strong> <span id="mc_period_display">-</span>
+                </div>
+                
+                <div class="form-group">
+                    <label>Search Trial:</label>
+                    <input type="text" class="form-control" id="mc_trial_search" placeholder="Type to search trials...">
+                </div>
+                
+                <div id="mc_trial_results" style="max-height:150px; overflow-y:auto; border:1px solid #ddd; padding:5px; margin-bottom:15px; display:none"></div>
+                
+                <div id="mc_accession_section" style="display:none">
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="mc_select_all"> Select All Accessions
+                        </label>
+                        <span class="badge" id="mc_accession_count" style="margin-left:10px">0</span>
+                    </div>
+                    
+                    <div id="mc_accession_list" style="max-height:250px; overflow-y:auto; border:1px solid #ddd; padding:10px">
+                        <!-- Accession checkboxes -->
+                    </div>
+                </div>
+                
+                <div id="mc_loading" style="display:none; text-align:center">
+                    <span class="glyphicon glyphicon-refresh spinning"></span> Loading...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="mc_validation_summary" style="text-align:left; margin-bottom:10px; display:none;">
+                    <small>
+                        <span class="label label-success">✓ Maturity</span>
+                        <span class="label label-warning">⚠ Emergence</span>
+                        <span class="label label-default">○ No data</span>
+                    </small>
+                </div>
+                <span id="mc_status" class="text-success pull-left"></span>
+                <button type="button" class="btn btn-info" id="mc_validate_data">
+                    <span class="glyphicon glyphicon-check"></span> Validate Data
+                </button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="mc_modal_footer_close">Cancel</button>
+                <button type="button" class="btn btn-primary" id="mc_create_phenotypes" disabled>
+                    <span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Maturity Calculator JavaScript
+jQuery(document).ready(function() {
+    var mcSelectedTrial = null;
+    var mcAccessions = [];
+    var mcCropType = 'maize_trait';  // Will be detected from trial
+    var mcReadyCount = 0;  // Count of accessions with emergence data
+    var mcOriginalModalBody = null;  // Store original modal content for reset
+    
+    // Store original modal body content on first load
+    mcOriginalModalBody = jQuery('#mc_modal_body').html();
+    
+    // Reset modal when closed
+    jQuery('#maturity_calculator_modal').on('hidden.bs.modal', function() {
+        jQuery('#mc_modal_body').html(mcOriginalModalBody);
+        jQuery('#mc_modal_footer_close').show().text('Cancel').removeClass('btn-success').addClass('btn-default');
+        jQuery('#mc_create_phenotypes').show().prop('disabled', true).html(
+            '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes'
+        );
+        jQuery('#mc_validate_data').show();
+        jQuery('#mc_validation_summary').hide();
+        jQuery('#mc_status').text('');
+        mcSelectedTrial = null;
+    });
+    
+    // Function to load maturity traits dynamically from API
+    function loadMaturityTraits(crop) {
+        var $select = jQuery('#mc_trait_maturity');
+        $select.html('<option value="">Loading...</option>');
+        
+        jQuery.ajax({
+            url: '/ajax/weather/maturity_traits',
+            data: { crop: crop },
+            success: function(response) {
+                $select.empty();
+                if (response.traits && response.traits.length > 0) {
+                    response.traits.forEach(function(t) {
+                        var formatBadge = '';
+                        var disabled = '';
+                        if (t.format === 'day') {
+                            formatBadge = ' [DAY]';
+                        } else if (t.format === 'date') {
+                            formatBadge = ' [DATE]';
+                        } else {
+                            formatBadge = ' [unsupported]';
+                            disabled = 'disabled';
+                        }
+                        $select.append('<option value="' + t.id + '" ' + disabled + '>' + 
+                            t.name + formatBadge + '</option>');
+                    });
+                    // Show warning if some traits are unsupported
+                    var hasUnsupported = response.traits.some(function(t) { return t.format === 'unknown'; });
+                    jQuery('#mc_trait_warning').toggle(hasUnsupported);
+                } else {
+                    $select.append('<option value="">No maturity traits found</option>');
+                }
+            },
+            error: function() {
+                $select.html('<option value="">Failed to load traits</option>');
+            }
+        });
+    }
+    
+    // Function to open Maturity Calculator modal
+    function openMaturityCalculator(requireGdd) {
+        if (requireGdd && !gddData) {
+            alert('Please calculate GDD/CHU first');
+            return;
+        }
+        
+        // Display current GDD/CHU values if available
+        if (gddData) {
+            jQuery('#mc_gdd_value').text(gddData.total_gdd || (gddData.summary && gddData.summary.avg_gdd) || 0);
+            jQuery('#mc_chu_value').text(gddData.total_chu || (gddData.summary && gddData.summary.avg_chu) || 0);
+            
+            var period = '';
+            if (gddData.years && gddData.years.length > 0) {
+                period = gddData.years[0].start_date + ' to ' + gddData.years[0].end_date;
+            }
+            jQuery('#mc_period_display').text(period);
+        } else {
+            jQuery('#mc_gdd_value').text('—');
+            jQuery('#mc_chu_value').text('—');
+            jQuery('#mc_period_display').text('Calculate GDD first');
+        }
+        
+        // Reset state
+        jQuery('#mc_trial_search').val('');
+        jQuery('#mc_trial_results').hide().empty();
+        jQuery('#mc_accession_section').hide();
+        jQuery('#mc_accession_list').empty();
+        jQuery('#mc_create_phenotypes').prop('disabled', true);
+        jQuery('#mc_status').text('');
+        mcSelectedTrial = null;
+        mcAccessions = [];
+        mcCropType = 'maize_trait';
+        
+        // Load traits dynamically from API
+        loadMaturityTraits(mcCropType);
+        
+        jQuery('#maturity_calculator_modal').modal('show');
+    }
+    
+    // Open from Results panel button (requires GDD data)
+    jQuery('#maturity_calculator_btn').click(function() {
+        openMaturityCalculator(true);
+    });
+    
+    // Open from top button (no GDD requirement)
+    jQuery('#maturity_calculator_top').click(function() {
+        openMaturityCalculator(false);
+    });
+    
+    // Trial search
+    var searchTimeout;
+    jQuery('#mc_trial_search').on('input', function() {
+        var query = jQuery(this).val().trim();
+        clearTimeout(searchTimeout);
+        
+        if (query.length < 2) {
+            jQuery('#mc_trial_results').hide();
+            return;
+        }
+        
+        searchTimeout = setTimeout(function() {
+            jQuery('#mc_loading').show();
+            
+            jQuery.ajax({
+                url: '/ajax/search/trials',
+                data: { trial_name: query },
+                success: function(response) {
+                    jQuery('#mc_loading').hide();
+                    var results = jQuery('#mc_trial_results');
+                    results.empty();
+                    
+                    // Response is DataTables format: data is array of arrays
+                    // [0]=link with name, [5]=location
+                    if (response && response.data && response.data.length > 0) {
+                        jQuery.each(response.data, function(i, row) {
+                            // Extract trial ID and name from link HTML
+                            // row: [0]=link, [5]=location, [8]=planting_date, [9]=harvest_date
+                            var linkHtml = row[0];
+                            var match = linkHtml.match(/trial\/(\d+)[^>]*>([^<]+)/);
+                            if (match) {
+                                var trialId = match[1];
+                                var trialName = match[2];
+                                var location = row[5] || '';
+                                var plantingDate = row[8] || '';
+                                var harvestDate = row[9] || '';
+                                results.append(
+                                    '<div class="mc-trial-item" data-id="' + trialId + '" data-name="' + trialName + '" data-planting="' + plantingDate + '" data-harvest="' + harvestDate + '" data-location="' + location + '" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee">' +
+                                    '<strong>' + trialName + '</strong>' +
+                                    (location ? ' <span class="text-muted">(' + location + ')</span>' : '') +
+                                    (plantingDate ? ' <small class="text-success">' + plantingDate + '</small>' : ' <span class="text-warning"><small>No planting date</small></span>') +
+                                    '</div>'
+                                );
+                            }
+                        });
+                        results.show();
+                    } else {
+                        results.html('<p class="text-muted" style="padding:10px">No trials found</p>').show();
+                    }
+                },
+                error: function() {
+                    jQuery('#mc_loading').hide();
+                    jQuery('#mc_trial_results').html('<p class="text-danger" style="padding:10px">Error searching trials</p>').show();
+                }
+            });
+        }, 300);
+    });
+    
+    // Select trial
+    jQuery('#mc_trial_results').on('click', '.mc-trial-item', function() {
+        var plantingDate = jQuery(this).data('planting') || '';
+        var harvestDate = jQuery(this).data('harvest') || '';
+        var locationName = jQuery(this).data('location') || '';
+        
+        mcSelectedTrial = {
+            id: jQuery(this).data('id'),
+            name: jQuery(this).data('name'),
+            planting_date: plantingDate,
+            harvest_date: harvestDate,
+            location: locationName
+        };
+        
+        jQuery('#mc_trial_search').val(mcSelectedTrial.name);
+        jQuery('#mc_trial_results').hide();
+        
+        // Validate dates and show warning if missing
+        var warnings = [];
+        if (!plantingDate) warnings.push('Planting date not set');
+        if (!harvestDate) warnings.push('Harvest date not set');
+        
+        if (warnings.length > 0) {
+            jQuery('#mc_status').html('<span class="text-warning"><strong>⚠ Warning:</strong> ' + warnings.join(', ') + '. GDD calculation may be inaccurate.</span>');
+        } else {
+            jQuery('#mc_status').html('<span class="text-success"><small>Trial dates: ' + plantingDate + ' → ' + harvestDate + '</small></span>');
+            
+            // First get location_id from trial, then fetch GDD
+            jQuery.ajax({
+                url: '/ajax/trial/' + mcSelectedTrial.id + '/location_id',
+                success: function(locResponse) {
+                    var locationId = locResponse.location_id || null;
+                    
+                    // Now fetch GDD
+                    jQuery.ajax({
+                        url: '/ajax/weather/gdd',
+                        data: {
+                            location_id: locationId,
+                            start_date: plantingDate,
+                            end_date: harvestDate
+                        },
+                        success: function(response) {
+                            if (response && !response.error) {
+                                gddData = response;
+                                var totalGdd = response.total_gdd || (response.summary && response.summary.avg_gdd) || 0;
+                                var totalChu = response.total_chu || (response.summary && response.summary.avg_chu) || 0;
+                                jQuery('#mc_gdd_value').text(totalGdd.toFixed ? totalGdd.toFixed(0) : totalGdd);
+                                jQuery('#mc_chu_value').text(totalChu.toFixed ? totalChu.toFixed(0) : totalChu);
+                                jQuery('#mc_period_display').text(plantingDate + ' → ' + harvestDate);
+                            } else {
+                                jQuery('#mc_period_display').text('GDD fetch error: ' + (response.error || 'unknown'));
+                            }
+                        },
+                        error: function() {
+                            jQuery('#mc_period_display').text('Weather API unavailable');
+                        }
+                    });
+                },
+                error: function() {
+                    jQuery('#mc_period_display').text('Could not get location');
+                }
+            });
+        }
+        
+        // Load accessions for this trial
+        jQuery('#mc_loading').show();
+        jQuery('#mc_accession_section').hide();
+        
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/' + mcSelectedTrial.id + '/accessions',
+            success: function(response) {
+                jQuery('#mc_loading').hide();
+                // Response format: {accessions: [[{stock_id, accession_name, stock_type}, ...]]}
+                mcAccessions = (response.accessions && response.accessions[0]) || [];
+                
+                var list = jQuery('#mc_accession_list');
+                list.empty();
+                
+                if (mcAccessions.length > 0) {
+                    jQuery('#mc_accession_count').text(mcAccessions.length + ' accessions');
+                    
+                    jQuery.each(mcAccessions, function(i, acc) {
+                        list.append(
+                            '<div class="checkbox" style="margin:3px 0">' +
+                            '<label><input type="checkbox" class="mc-accession-cb" value="' + acc.stock_id + '" data-name="' + acc.accession_name + '"> ' +
+                            acc.accession_name + '</label>' +
+                            '</div>'
+                        );
+                    });
+                    
+                    jQuery('#mc_accession_section').show();
+                } else {
+                    list.html('<p class="text-muted">No accessions in this trial</p>');
+                    jQuery('#mc_accession_section').show();
+                }
+            },
+            error: function() {
+                jQuery('#mc_loading').hide();
+                jQuery('#mc_accession_list').html('<p class="text-danger">Error loading accessions</p>');
+                jQuery('#mc_accession_section').show();
+            }
+        });
+    });
+    
+    // Select All checkbox
+    jQuery('#mc_select_all').change(function() {
+        jQuery('.mc-accession-cb').prop('checked', jQuery(this).is(':checked'));
+        updateCreateButton();
+    });
+    
+    // Individual checkbox change
+    jQuery('#mc_accession_list').on('change', '.mc-accession-cb', function() {
+        updateCreateButton();
+    });
+    
+    function updateCreateButton() {
+        var selectedCount = jQuery('.mc-accession-cb:checked').length;
+        // Count only selected accessions that are ready (have emergence data)
+        var selectedReadyCount = jQuery('.mc-accession-cb:checked').filter(function() {
+            return jQuery(this).data('is-ready') == '1' || jQuery(this).data('is-ready') === true;
+        }).length;
+        jQuery('#mc_create_phenotypes').prop('disabled', selectedReadyCount === 0);
+        jQuery('#mc_create_phenotypes').html(
+            '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU for ' + selectedReadyCount + ' Accession(s)'
+        );
+    }
+    
+    // Load phenology traits dynamically
+    var mcTraitsLoaded = false;
+    function loadPhenologyTraits() {
+        if (mcTraitsLoaded) return;
+        
+        jQuery.ajax({
+            url: '/ajax/phenology/traits',
+            data: { crop: mcCropType || 'maize' },
+            success: function(response) {
+                mcTraitsLoaded = true;
+                
+                // Populate emergence dropdown
+                var emSelect = jQuery('#mc_trait_emergence').empty();
+                (response.traits.emergence || []).forEach(function(t) {
+                    var selected = (t.id == response.defaults.emergence) ? ' selected' : '';
+                    emSelect.append('<option value="' + t.id + '"' + selected + '>' + t.name + '</option>');
+                });
+                if (emSelect.children().length === 0) {
+                    emSelect.append('<option value="">No emergence traits found</option>');
+                    jQuery('#mc_trait_warning').show();
+                }
+                
+                // Populate flowering dropdown
+                var flSelect = jQuery('#mc_trait_flowering').empty();
+                (response.traits.flowering || []).forEach(function(t) {
+                    var selected = (t.id == response.defaults.flowering) ? ' selected' : '';
+                    flSelect.append('<option value="' + t.id + '"' + selected + '>' + t.name + '</option>');
+                });
+                if (flSelect.children().length === 0) {
+                    flSelect.append('<option value="">No flowering traits found</option>');
+                    jQuery('#mc_trait_warning').show();
+                }
+                
+                
+                // Maturity dropdown is now populated by loadMaturityTraits() with format badges
+                // Do not overwrite it here - it was already loaded when modal opened
+            }
+        });
+    }
+    
+    // Settings panel toggle - load traits on open
+    jQuery('#mc_settings_toggle').click(function() {
+        jQuery('#mc_settings_panel').slideToggle(200);
+        loadPhenologyTraits();
+    });
+    
+    // Validate Data button - fetch phenotype status for accessions
+    jQuery('#mc_validate_data').click(function() {
+        if (!mcSelectedTrial) {
+            alert('Please select a trial first');
+            return;
+        }
+        
+        jQuery('#mc_validate_data').prop('disabled', true).html(
+            '<span class="glyphicon glyphicon-refresh spinning"></span> Validating...'
+        );
+        
+        jQuery.ajax({
+            url: '/ajax/trial/' + mcSelectedTrial.id + '/phenology',
+            success: function(response) {
+                jQuery('#mc_validate_data').prop('disabled', false).html(
+                    '<span class="glyphicon glyphicon-check"></span> Validate Data'
+                );
+                
+                if (response.accessions) {
+                    var list = jQuery('#mc_accession_list');
+                    list.empty();
+                    
+                    var summary = response.summary || {};
+                    var readyCount = summary.ready || 0;
+                    var notReadyCount = summary.not_ready || 0;
+                    mcReadyCount = readyCount;  // Store globally for button/dialog
+                    
+                    jQuery.each(response.accessions, function(i, acc) {
+                        var statusIcon, statusClass, statusTitle;
+                        var missingText = '';
+                        
+                        if (acc.is_ready) {
+                            // Ready - has maturity or flowering
+                            statusIcon = '✓';
+                            statusClass = 'text-success';
+                            var vals = [];
+                            if (acc.maturity_value) vals.push('M:' + acc.maturity_value);
+                            if (acc.flowering_value) vals.push('F:' + acc.flowering_value);
+                            if (acc.emergence_value) vals.push('E:' + acc.emergence_value);
+                            statusTitle = 'Ready (' + vals.join(', ') + ')';
+                        } else {
+                            // Not ready - show what's missing
+                            statusIcon = '✗';
+                            statusClass = 'text-danger';
+                            var missing = acc.missing || [];
+                            missingText = ' <span class="text-muted small">- missing: ' + missing.join(', ') + '</span>';
+                            statusTitle = 'Missing: ' + missing.join(', ');
+                        }
+                        
+                        list.append(
+                            '<div class="checkbox" style="margin:3px 0">' +
+                            '<label>' +
+                            '<input type="checkbox" class="mc-accession-cb" value="' + (acc.plot_ids ? acc.plot_ids.join(',') : '') + '" ' +
+                            'data-name="' + acc.name + '" data-is-ready="' + (acc.is_ready ? '1' : '0') + '" ' +
+                            'data-maturity="' + (acc.maturity_value || '') + '"' + (acc.is_ready ? ' checked' : '') + '> ' +
+                            '<span class="' + statusClass + '" title="' + statusTitle + '" style="font-size:16px">' + statusIcon + '</span> ' +
+                            '<strong>' + acc.name + '</strong>' +
+                            ' <span class="badge">' + acc.plot_count + ' plots</span>' +
+                            missingText +
+                            '</label>' +
+                            '</div>'
+                        );
+                    });
+                    
+                    // Update summary with clear counts
+                    jQuery('#mc_validation_summary').show()
+                        .html('<div style="text-align:center; padding:5px; background:#f5f5f5; border-radius:3px; margin-bottom:10px">' +
+                            '<span class="label label-success" style="font-size:14px">✓ ' + readyCount + ' ready</span> ' +
+                            '<span class="label label-danger" style="font-size:14px">✗ ' + notReadyCount + ' need data</span> ' +
+                            '<br><small class="text-muted">Total: ' + response.accessions.length + ' germplasm, ' + summary.total_plots + ' plots</small>' +
+                        '</div>');
+                    
+                    // Update crop type from response
+                    if (response.crop) {
+                        mcCropType = response.crop;
+                    }
+                    
+                    // Update mcSelectedTrial with location_id from response
+                    if (response.trial && response.trial.location_id) {
+                        mcSelectedTrial.location_id = response.trial.location_id;
+                        
+                        // Auto-fetch GDD for trial period
+                        jQuery.ajax({
+                            url: '/ajax/weather/gdd',
+                            data: {
+                                location_id: response.trial.location_id,
+                                start_date: response.trial.planting_date,
+                                end_date: response.trial.harvest_date
+                            },
+                            success: function(gddResponse) {
+                                if (gddResponse && !gddResponse.error) {
+                                    gddData = gddResponse;
+                                    var totalGdd = gddResponse.total_gdd || (gddResponse.summary && gddResponse.summary.avg_gdd) || 0;
+                                    var totalChu = gddResponse.total_chu || (gddResponse.summary && gddResponse.summary.avg_chu) || 0;
+                                    jQuery('#mc_gdd_value').text(totalGdd.toFixed ? totalGdd.toFixed(0) : totalGdd);
+                                    jQuery('#mc_chu_value').text(totalChu.toFixed ? totalChu.toFixed(0) : totalChu);
+                                    jQuery('#mc_period_display').text(response.trial.planting_date + ' → ' + response.trial.harvest_date);
+                                }
+                            }
+                        });
+                    }
+                    
+                    jQuery('#mc_status').html('<span class="text-info">✓ Validation complete for <strong>' + response.accessions.length + '</strong> germplasm. Crop: ' + mcCropType + '</span>');
+                    
+                    // Enable create button based on selections
+                    updateCreateButton();
+                }
+            },
+            error: function() {
+                jQuery('#mc_validate_data').prop('disabled', false).html(
+                    '<span class="glyphicon glyphicon-check"></span> Validate Data'
+                );
+                jQuery('#mc_status').html('<span class="text-danger">Error validating data</span>');
+            }
+        });
+    });
+    
+    // Create Phenotypes
+    jQuery('#mc_create_phenotypes').click(function() {
+        console.log('Create button clicked, gddData:', gddData);
+        var selectedIds = [];
+        var selectedNames = [];
+        jQuery('.mc-accession-cb:checked').each(function() {
+            // Value is comma-separated plot_ids, split and flatten
+            var plotIds = jQuery(this).val().split(',');
+            plotIds.forEach(function(id) {
+                if (id && id.trim()) {
+                    selectedIds.push(parseInt(id.trim(), 10));
+                }
+            });
+            selectedNames.push(jQuery(this).data('name'));
+        });
+        
+        if (selectedIds.length === 0) {
+            alert('Please select at least one accession');
+            return;
+        }
+        
+        // Build confirmation message
+        var gddVal = 0;
+        var chuVal = 0;
+        var periodStr = 'Not calculated';
+        
+        if (gddData) {
+            gddVal = parseFloat(gddData.total_gdd || (gddData.summary && gddData.summary.avg_gdd) || 0).toFixed(1);
+            chuVal = parseFloat(gddData.total_chu || (gddData.summary && gddData.summary.avg_chu) || 0).toFixed(1);
+            if (gddData.years && gddData.years[0]) {
+                periodStr = gddData.years[0].start_date + ' to ' + gddData.years[0].end_date;
+            }
+        } else {
+            // Use trial dates if GDD not calculated
+            gddVal = '—';
+            chuVal = '—';
+            periodStr = mcSelectedTrial.planting_date + ' to ' + mcSelectedTrial.harvest_date;
+        }
+        
+        // Count only ready accessions that will actually get phenotypes
+        var actualReadyCount = jQuery('.mc-accession-cb:checked').filter(function() {
+            return jQuery(this).data('is-ready') == '1' || jQuery(this).data('is-ready') === true;
+        }).length;
+        var confirmMsg = '📊 Create Phenotypes?\n\n' +
+            'Trial: ' + mcSelectedTrial.name + '\n' +
+            'Accessions with data: ' + actualReadyCount + '\n' +
+            '─────────────────\n' +
+            'GDD: ' + gddVal + '\n' +
+            'CHU: ' + chuVal + '\n' +
+            'Period: ' + periodStr + '\n' +
+            '─────────────────\n\n' +
+            (gddData ? '' : '⚠️ Warning: GDD not calculated! Values will be 0.\n\n') +
+            'This will create ' + (actualReadyCount * 2) + ' phenotype records.\n\n' +
+            'Click OK to save, Cancel to review.';
+        
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+        
+        jQuery('#mc_create_phenotypes').prop('disabled', true).html(
+            '<span class="glyphicon glyphicon-refresh spinning"></span> Creating...'
+        );
+        
+        jQuery.ajax({
+            url: '/ajax/phenotype/store_gdd_batch',
+            type: 'POST',
+            data: {
+                trial_id: mcSelectedTrial.id,
+                accession_ids: JSON.stringify(selectedIds),
+                gdd: gddData ? (gddData.total_gdd || (gddData.summary && gddData.summary.avg_gdd) || 0) : 0,
+                chu: gddData ? (gddData.total_chu || (gddData.summary && gddData.summary.avg_chu) || 0) : 0,
+                crop: mcCropType,
+                maturity_trait_id: jQuery('#mc_trait_maturity').val(),
+                emergence_trait_id: jQuery('#mc_trait_emergence').val(),
+                use_planting_fallback: jQuery('#mc_use_planting_fallback').is(':checked') ? 1 : 0,
+                fallback_emergence_days: parseInt(jQuery('#mc_fallback_emergence_days').val()) || 7,
+                collect_date: mcSelectedTrial.harvest_date || (gddData && gddData.years ? gddData.years[0].end_date : null)
+            },
+            success: function(response) {
+                console.log('Store response:', response);
+                if (response.success) {
+                    // Build result summary from actual saved values
+                    var resultHtml = '<div class="alert alert-success">' +
+                        '<h5><span class="glyphicon glyphicon-ok"></span> Phenotypes Created Successfully!</h5>' +
+                        '<p>Created <strong>' + response.created + '</strong> phenotype records for ' + 
+                        '<strong>' + Math.floor(response.created / 2) + '</strong> accession(s)</p>' +
+                        '</div>';
+                    
+                    // Show actual saved per-plot values from backend
+                    resultHtml += '<table class="table table-condensed table-bordered">' +
+                        '<thead><tr><th>Accession</th><th>GDD</th><th>CHU</th><th>Maturity (days)</th></tr></thead>' +
+                        '<tbody>';
+                    
+                    if (response.results && response.results.length > 0) {
+                        jQuery.each(response.results, function(i, r) {
+                            // Find accession name by stock_id
+                            var accName = 'Stock #' + r.stock_id;
+                            jQuery('.mc-accession-cb:checked').each(function() {
+                                var plotIds = jQuery(this).val().split(',');
+                                if (plotIds.includes(String(r.stock_id)) || 
+                                    jQuery(this).val() === String(r.stock_id)) {
+                                    accName = jQuery(this).data('name');
+                                    return false;
+                                }
+                            });
+                            resultHtml += '<tr><td>' + accName + '</td>' +
+                                '<td><strong>' + parseFloat(r.gdd || 0).toFixed(1) + '</strong></td>' +
+                                '<td><strong>' + parseFloat(r.chu || 0).toFixed(1) + '</strong></td>' +
+                                '<td>' + (r.maturity_days || '-') + '</td></tr>';
+                        });
+                    } else {
+                        resultHtml += '<tr><td colspan="4">No per-plot data available</td></tr>';
+                    }
+                    resultHtml += '</tbody></table>';
+                    
+                    // Replace modal body with results
+                    jQuery('#mc_modal_body').html(resultHtml);
+                    
+                    // Change button to Close
+                    jQuery('#mc_create_phenotypes').hide();
+                    jQuery('#mc_modal_footer_close').show().text('Close').removeClass('btn-default').addClass('btn-success');
+                    
+                } else {
+                    jQuery('#mc_status').html('<span class="text-danger">Error: ' + (response.error || 'Unknown') + '</span>');
+                    jQuery('#mc_create_phenotypes').prop('disabled', false).html(
+                        '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes'
+                    );
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('AJAX error:', status, error, xhr.responseText);
+                jQuery('#mc_status').html('<span class="text-danger">Failed to create phenotypes: ' + error + '</span>');
+                jQuery('#mc_create_phenotypes').prop('disabled', false).html(
+                    '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes'
+                );
+            },
+            complete: function(xhr, status) {
+                console.log('AJAX complete:', status, xhr.status);
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.spinning {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.input-group.date .input-group-addon {
+    cursor: pointer;
+}
+</style>

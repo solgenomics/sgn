@@ -184,8 +184,22 @@ sub get_full_pedigree : Path('/ajax/pedigrees/get_full') : ActionClass('REST') {
 sub get_full_pedigree_GET {
     my $self = shift;
     my $c = shift;
+
+    # Pedigree access restricted to breeder or curator roles
+    if ($c->user()) {
+        unless ($c->user->check_roles('breeder') || $c->user->check_roles('curator')) {
+            $c->stash->{rest} = { error => 'Access denied: pedigree information is restricted to breeder or curator roles.' };
+            $c->detach();
+            return;
+        }
+    } else {
+        $c->stash->{rest} = { error => 'You must be logged in to view pedigree information.' };
+        $c->detach();
+        return;
+    }
+
     my $stock_id = $c->req->param('stock_id');
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $sp_person_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
@@ -221,10 +235,24 @@ sub get_relationships : Path('/ajax/pedigrees/get_relationships') : ActionClass(
 sub get_relationships_POST {
     my $self = shift;
     my $c = shift;
+
+    # Pedigree access restricted to breeder or curator roles
+    if ($c->user()) {
+        unless ($c->user->check_roles('breeder') || $c->user->check_roles('curator')) {
+            $c->stash->{rest} = { error => 'Access denied: pedigree information is restricted to breeder or curator roles.' };
+            $c->detach();
+            return;
+        }
+    } else {
+        $c->stash->{rest} = { error => 'You must be logged in to view pedigree information.' };
+        $c->detach();
+        return;
+    }
+
     my $stock_ids = [];
     my $s_ids = $c->req->body_params->{stock_id};
     push @{$stock_ids}, (ref $s_ids eq 'ARRAY' ? @$s_ids : $s_ids);
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $sp_person_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $mother_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $father_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();

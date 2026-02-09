@@ -7,6 +7,7 @@ use Data::Dumper;
 use File::Slurp;
 use File::Spec qw | catfile |;
 use File::Path qw(rmtree);
+use File::Glob qw(bsd_glob);
 use JSON::Any;
 use File::Basename qw | basename |;
 use DateTime;
@@ -361,11 +362,12 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         }
     }
 
+    # Invalidate ANOVA/solGS cache so next run uses updated outlier flags
+    $self->_invalidate_analysis_cache($c, \@unique_study_names);
+
     $c->stash->{rest} = $response_data;
 
-
-    
-    ## celaning tempfiles
+    ## cleaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 }
 
@@ -447,9 +449,67 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
         $c->stash->{rest} = $response_data;
     }
 
-    ## celaning tempfiles
+    # Invalidate ANOVA/solGS cache after restoring outliers
+    my @trial_names_restore;
+    if (ref($outlier_trials) eq 'ARRAY') {
+        @trial_names_restore = @$outlier_trials;
+    } elsif (!ref($outlier_trials)) {
+        @trial_names_restore = split(/,\s*/, $outlier_trials);
+    }
+    $self->_invalidate_analysis_cache($c, \@trial_names_restore) if @trial_names_restore;
+
+    ## cleaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 
+}
+
+# ============================================================================
+# Cache invalidation: clear ANOVA + phenotype cache for affected trials
+# so the next run recalculates with current outlier flags.
+# ============================================================================
+
+sub _invalidate_analysis_cache {
+    my ($self, $c, $trial_names) = @_;
+    return unless $trial_names && @$trial_names;
+
+    my $dbh = $c->dbc->dbh;
+    my $tmp_dir = $c->config->{cluster_shared_tempdir} || '/home/production/tmp';
+
+    # Resolve trial names to project IDs
+    my $placeholders = join(',', ('?') x scalar(@$trial_names));
+    my $sth = $dbh->prepare(
+        "SELECT project_id FROM project WHERE name IN ($placeholders)"
+    );
+    $sth->execute(@$trial_names);
+
+    my @trial_ids;
+    while (my ($pid) = $sth->fetchrow_array) {
+        push @trial_ids, $pid;
+    }
+    return unless @trial_ids;
+
+    # Delete cache files matching each trial ID under all known cache paths:
+    #   1. $tmp_dir/*/solgs/cache/   — solGS phenotype cache (hostname subdir)
+    #   2. $tmp_dir/*/anova/cache/   — ANOVA results (hostname subdir)
+    #   3. $tmp_dir/breedbase-site/anova/ — direct Anova.pm cache (no hostname)
+    for my $tid (@trial_ids) {
+        my @patterns = (
+            # solGS phenotype data + traits
+            "$tmp_dir/*/solgs/cache/phenotype_data_$tid",
+            "$tmp_dir/*/solgs/cache/all_traits_pop_$tid",
+            "$tmp_dir/*/solgs/cache/traits_*_pop_$tid",
+            "$tmp_dir/*/solgs/tempfiles/*${tid}*",
+            # ANOVA results under hostname subdir
+            "$tmp_dir/*/anova/cache/*${tid}*",
+            "$tmp_dir/*/anova/tempfiles/*${tid}*",
+            # Direct ANOVA cache (breedbase-site dir, used by Anova.pm)
+            "$tmp_dir/breedbase-site/anova/*${tid}*",
+        );
+        for my $pattern (@patterns) {
+            my @files = bsd_glob($pattern);
+            unlink @files if @files;
+        }
+    }
 }
 
 

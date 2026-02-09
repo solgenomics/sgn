@@ -1,0 +1,21 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown"><span data-i18n="nav_genotyping">Genotyping</span></a>
+  <ul class="dropdown-menu">
+    <li class="dropdown-header" data-i18n="geno_manage">Manage</li>
+    <li><a href="/breeders/genotyping_projects/"><span class="glyphicon glyphicon-folder-open"></span> <span data-i18n="geno_projects">Genotyping Projects</span></a></li>
+    <li><a href="/breeders/genotyping/"><span class="glyphicon glyphicon-th-large"></span> <span data-i18n="geno_plates">Genotyping Plates</span></a></li>
+    <li><a href="/breeders/markers/"><span class="glyphicon glyphicon-barcode"></span> <span data-i18n="geno_allele_lists">Marker Allele Lists</span></a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header" data-i18n="geno_search">Search</li>
+    <li><a href="/search/genotyping_trials"><span class="glyphicon glyphicon-search"></span> <span data-i18n="geno_search_plates">Search Plates</span></a></li>
+    <li><a href="/search/genotyping_data_projects"><span class="glyphicon glyphicon-search"></span> <span data-i18n="geno_search_projects">Search Projects</span></a></li>
+    <li><a href="/search/genotyping_protocols"><span class="glyphicon glyphicon-list"></span> <span data-i18n="geno_search_protocols">Genotyping Protocols</span></a></li>
+    <li><a href="/search/stocks_using_genotypes"><span class="glyphicon glyphicon-filter"></span> <span data-i18n="geno_search_accessions">Accessions Using Genotypes</span></a></li>
+    <li><a href="/search/vectors"><span class="glyphicon glyphicon-compressed"></span> <span data-i18n="geno_vector">Vector Constructs</span></a></li>
+
+    <li role="separator" class="divider"></li>
+    <li class="dropdown-header" data-i18n="geno_analysis">Analysis</li>
+    <li><a href="/tools/solgwas"><span class="glyphicon glyphicon-stats"></span> <span data-i18n="geno_gwas">GWAS</span></a></li>
+    <li><a href="/kinship/analysis"><span class="glyphicon glyphicon-random"></span> <span data-i18n="geno_kinship">Kinship &amp; Inbreeding</span></a></li>
+  </ul>
+</li>

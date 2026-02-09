@@ -11,12 +11,15 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
+        <li><a href="/breeders/home"><span class="glyphicon glyphicon-dashboard"></span> <span data-i18n="nav_dashboard">Dashboard</span></a></li>
         <& toolbar/search_menu.mas &>
 	  <& toolbar/manage.mas &>
 	  <& toolbar/analyze.mas &>
+	  <& toolbar/genotyping.mas &>
         <& toolbar/about.mas &>
       </ul>
       <ul class="nav navbar-nav navbar-right">
+        <li><a href="#" id="sq-lang-btn" onclick="sqToggleLang(); return false;" title="Switch language" style="padding:10px 8px;font-size:13px;font-weight:600;">🇺🇦 UA</a></li>
         <& toolbar/search.mas &>
         <& toolbar/login.mas &>
       </ul>

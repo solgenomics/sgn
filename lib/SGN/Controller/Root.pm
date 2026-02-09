@@ -281,6 +281,55 @@ sub auto : Private {
         }
     }
 
+    # Global auth gate: unauthenticated users see only homepage & about page.
+    # All other pages require login.
+    unless ($c->user()) {
+        my $path = $c->req->path;
+        $path = '' if !defined $path;
+
+        # Whitelist of paths accessible without login
+        my $is_public = (
+            $path eq ''                            # homepage
+            || $path =~ m{^about(/|$)}i            # about pages
+            || $path =~ m{^pages/legal}i           # legal/terms
+            || $path =~ m{^help(/|$)}i             # help pages
+            || $path =~ m{^user/(login|new|reset_password|confirm)}i  # auth pages
+            || $path =~ m{^ajax/user/(login|new|forgot_username|reset_password)}i  # login AJAX
+            || $path =~ m{^brapi/v\d+/token$}i     # BrAPI login (Field Book)
+            || $path =~ m{^static/}i               # static assets
+            || $path =~ m{^s/}i                    # /s/ static alias
+            || $path =~ m{^css/}i                  # CSS
+            || $path =~ m{^js/}i                   # JS
+            || $path =~ m{^img/}i                  # images
+            || $path =~ m{^documents/}i            # documents/tempfiles
+            || $path =~ m{^favicon\.ico$}i         # favicon
+            || $path =~ m{^bare_mason}i            # internal GBrowse
+            || $path =~ m{^ajax/siteconfig}i       # site config (needed by page JS)
+        );
+
+        unless ($is_public) {
+            # AJAX / JSON requests get a 401 error instead of redirect
+            my $x_req = $c->req->headers->header('X-Requested-With') // '';
+            if ($x_req =~ /XMLHttpRequest/i
+                || ($c->req->headers->header('Accept') // '') =~ /json/i
+                || $path =~ m{^ajax/}i
+            ) {
+                $c->stash->{rest} = { error => 'Login required' };
+                $c->res->status(401);
+                $c->detach;
+                return 0;
+            }
+
+            # HTML pages redirect to login with return URL
+            my $url = '/' . $path;
+            my $query = $c->req->uri->query;
+            $url .= "?$query" if $query;
+            $c->res->redirect("/user/login?goto_url=$url");
+            $c->detach;
+            return 0;
+        }
+    }
+
     return 1;
 }
 

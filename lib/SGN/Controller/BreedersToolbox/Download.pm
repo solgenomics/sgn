@@ -919,7 +919,20 @@ sub build_accession_properties_info {
 sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my $self = shift;
     my $c = shift;
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+
+    # Pedigree download restricted to breeder or curator roles
+    if (!$c->user()) {
+        $c->stash->{template} = 'generic_message.mas';
+        $c->stash->{message} = 'You must be logged in to download pedigree information.';
+        return;
+    }
+    unless ($c->user->check_roles('breeder') || $c->user->check_roles('curator')) {
+        $c->stash->{template} = 'generic_message.mas';
+        $c->stash->{message} = 'Access denied: pedigree download is restricted to breeder or curator roles.';
+        return;
+    }
+
+    my $sp_person_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $dbh = $schema->storage->dbh;
 

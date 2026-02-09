@@ -87,7 +87,7 @@ accessor for sp_dataset primary key
 =cut
 
 
-has 'sp_dataset_id' => ( isa => 'Int',
+has 'sp_dataset_id' => ( isa => 'Maybe[Int]',
 			 is => 'rw',
 			 predicate => 'has_sp_dataset_id',
     );

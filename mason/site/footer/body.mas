@@ -1,83 +1,171 @@
 <%init>
   my $tag;
-    my $commit;
-    my $updated;
+  my $commit;
+  my $updated;
 
-    system("git -C . rev-parse 2>/dev/null");
-    my $isGit = `echo $?`;
-    if($isGit == 0) {
-        $tag = `git describe --abbrev=0 --tags`;
-        $commit = `git rev-parse --short HEAD`;
-        $updated = `git log -1 --format=%cd`;
-    } else {
-        $tag = $ENV{VERSION};
-        $updated = $ENV{BUILD_DATE};
-    }
+  # Priority: 1. Config file, 2. ENV vars, 3. git tags, 4. default
+  my $cfg_ver  = eval { $c->config->{footer_version} } || "";
+  my $cfg_date = eval { $c->config->{footer_build_date} } || "";
+  
+  # Start with config values
+  $tag     = $cfg_ver;
+  $updated = $cfg_date;
+
+  # If no config, try ENV variables
+  $tag     ||= $ENV{VERSION};
+  $updated ||= $ENV{BUILD_DATE};
+
+  # Optional: if git exists (dev images), show commit/tag/date
+  my $isGit = (system("git -C . rev-parse 2>/dev/null") == 0);
+  if ($isGit) {
+    my $git_tag = `git describe --abbrev=0 --tags 2>/dev/null`;
+    chomp($git_tag);
+    $tag ||= $git_tag;
+    $commit  = `git rev-parse --short HEAD 2>/dev/null`;
+    chomp($commit);
+  }
+
+  # Final fallback
+  $tag     ||= "unknown";
+  $updated ||= "";
+
 </%init>
 
-<!-- BEGIN SITE SPECIFIC FOOTER. -->
+<!-- BEGIN SITE FOOTER (SeedQuest). -->
 
-<div id="pagefooter" class="navbar navbar-default" style="margin-top:80px;margin-bottom:0px;min-height:200px">
+<div id="pagefooter" class="navbar navbar-default" style="margin-top:40px;margin-bottom:0px;min-height:auto;">
+  <div class="container-fluid" style="padding: 14px 18px;">
+    <div class="row">
 
-  <br />
-    <div class="container-fluid">
-      <div class="row">
-          <div class="col-12 col-md-9">
-            <span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span> is located at the <a href="https://btiscience.org">Boyce Thompson Institute</a>.<br />
-            <a href="https://btiscience.org"><img src="/static/img/bti_logo_2024.png" width="200"></a>
+      <div class="col-sm-12 col-md-8" style="margin-bottom:10px;">
+        <div class="sq-footer-brand">
+          <span class="sq-footer-title">SeedQuest</span>
+          <span class="sq-footer-sub">Agricultural analytics & breeding support</span>
+        </div>
+
+        <div class="sq-footer-credits">
+          Built on the open SGN / Breedbase ecosystem.
+          Credits: <a href="https://btiscience.org" target="_new" rel="noopener">Boyce Thompson Institute</a>,
+          <a href="https://solgenomics.net" target="_new" rel="noopener">Sol Genomics Network (SGN)</a>,
+          and collaborating institutions.
+        </div>
+
+        <div class="sq-footer-links">
+          <a href="/legal">Legal</a> | 
+          <a href="https://solgenomics.github.io/sgn/" target="_new">Manual</a> | 
+          <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">Video tutorials</a> | 
+          <a href="/help/faq.pl">FAQ</a>
+        </div>
+      </div>
+
+      <div class="col-sm-12 col-md-4">
+        <div class="sq-footer-version">
+          <div><strong>Version</strong></div>
+% if ($isGit == 0 && $commit) {
+          <div class="sq-muted">
+            <span>Commit:</span>
+            <a href="https://github.com/solgenomics/sgn/commits/<% $commit %>" target="_new" rel="noopener"><% $commit %></a>
           </div>
-
-
-          <div class="col-12 col-md-3">
-            <div class="git-version">
-              <p>
-                <strong>Version</strong>
-                <br />
-% if($isGit == 0) {
-                <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;
-                <span class="git-version-tag"><a href="https://github.com/solgenomics/sgn/commits/<% $tag %>"><% $tag %></a></span>
-% } else {
-                <span class=""><% $tag %></span>&nbsp;
 % }
-                <br />
-                <span class="git-version-updated"><% $updated %></span>
-		<br /><br />
-		<a target="_new" href="https://brapi.org/"><img src="/documents/img/brapi-logo.svg" width="160" /></a> 
-              </p>
-            </div>
+          <div class="sq-muted">
+            <span>Base:</span> <% $tag %>
+          </div>
+          <div class="sq-muted">
+            <span>Build date:</span> <% $updated %>
+          </div>
+          <div class="sq-muted" style="margin-top:8px;">
+            <a href="https://brapi.org/" target="_new" rel="noopener">BrAPI</a>
           </div>
         </div>
-    </div>
+      </div>
 
+    </div>
+  </div>
 </div>
 
-
-<!-- <script> -->
-<!-- (function(d, s, id) { -->
-<!--   var js, fjs = d.getElementsByTagName(s)[0]; -->
-<!--   if (d.getElementById(id)) return; -->
-<!--   js = d.createElement(s); js.id = id; -->
-<!--   js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.4"; -->
-<!--   fjs.parentNode.insertBefore(js, fjs); -->
-<!-- }(document, 'script', 'facebook-jssdk')); -->
-<!-- </script> -->
-
-<!-- <script src="https://platform.twitter.com/widgets.js" type="text/javascript"></script> -->
-
-
 <style>
-  .git-version {
-    display: inline-block;
-    margin-top: 10px;
+  /* Compact, modern footer styling without big images */
+  #pagefooter.navbar-default {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
   }
-  .git-version p {
-    color: #aaa;
-    font-size: 90%;
+
+  .sq-footer-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
   }
-  .git-version a {
-    color: #aaa
+
+  .sq-footer-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: #333;
   }
-  span.git-version-tag {
-    float: right;
+
+  .sq-footer-sub {
+    font-size: 12px;
+    color: #777;
+  }
+
+  .sq-footer-credits {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #777;
+    line-height: 1.35;
+  }
+
+  .sq-footer-links {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #888;
+  }
+
+  .sq-footer-links a {
+    color: #888;
+    text-decoration: none;
+  }
+
+  .sq-footer-links a:hover {
+    text-decoration: underline;
+  }
+
+  .sq-sep {
+    margin: 0 6px;
+    color: #bbb;
+  }
+
+  .sq-footer-version {
+    padding: 10px 12px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #fafafa;
+  }
+
+  .sq-footer-version strong {
+    font-size: 12px;
+    color: #444;
+  }
+
+  .sq-muted {
+    font-size: 12px;
+    color: #888;
+    line-height: 1.35;
+    margin-top: 4px;
+  }
+
+  .sq-footer-version a {
+    color: #888;
+    text-decoration: none;
+  }
+
+  .sq-footer-version a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    .sq-footer-version { margin-top: 8px; }
   }
 </style>

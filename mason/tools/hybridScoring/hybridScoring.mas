@@ -1,0 +1,284 @@
+<%doc>
+
+=head1 NAME
+
+/tools/hybridScoring/hybridScoring.mas - Hybrid Scoring (trimmed mean)
+
+=head1 DESCRIPTION
+
+Розраховує оцінку гібридів за методологією trimmed mean:
+  - ≥6 повт: відкидає 1 max + 2 min
+  - 4-5 повт: відкидає 1 max + 1 min
+  - 3 повт: лише центральне значення
+  - ≤2 повт: N/A
+Стандарт = середнє верхніх ⅔ гібридів.
+Бали = (trimmed_mean / standard) × 100%.
+
+=cut
+
+</%doc>
+
+<%args>
+$trial_id => undef
+</%args>
+
+<&| /page/info_section.mas,
+      collapsible => 1,
+      collapsed   => 1,
+      title       => 'Оцінка гібридів (Scoring)'
+&>
+
+<div id="hybrid_scoring_canvas" style="padding: 10px;">
+
+    <p class="text-muted" style="margin-bottom: 12px;">
+        <span class="glyphicon glyphicon-info-sign"></span>
+        Trimmed mean: відкидає крайні значення, рахує бали (%) відносно стандарту (середнє верхніх ⅔).
+    </p>
+
+    <button id="hs_calculate_btn" class="btn btn-primary" style="margin-bottom: 12px;">
+        <span class="glyphicon glyphicon-stats"></span> Розрахувати
+    </button>
+
+    <a id="hs_export_btn" href="#" class="btn btn-success" style="margin-bottom: 12px; display: none;" target="_blank">
+        <span class="glyphicon glyphicon-download-alt"></span> Excel
+    </a>
+
+    <div id="hs_spinner" style="display: none;">
+        <i class="glyphicon glyphicon-refresh spinning"></i> Розрахунок...
+    </div>
+
+    <div id="hs_error" class="alert alert-danger" style="display: none;"></div>
+
+    <div id="hs_results" style="display: none;"></div>
+</div>
+
+<style>
+.hs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 8px;
+}
+.hs-table th {
+    background: #2c3e50;
+    color: #fff;
+    padding: 6px 10px;
+    text-align: center;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.hs-table th:hover { background: #34495e; }
+.hs-table td {
+    padding: 5px 10px;
+    text-align: center;
+    border: 1px solid #eee;
+}
+.hs-table tr:nth-child(even) { background: #f9f9f9; }
+.hs-table tr:hover { background: #eef5ff; }
+.hs-good { background: #d5f5e3 !important; font-weight: bold; }
+.hs-bad  { background: #fadbd8 !important; }
+.hs-na   { color: #999; font-style: italic; }
+.hs-trait-tab {
+    display: inline-block;
+    padding: 6px 14px;
+    margin: 0 2px 6px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    font-size: 12px;
+    background: #f5f5f5;
+}
+.hs-trait-tab.active {
+    background: #2c3e50;
+    color: #fff;
+    border-color: #2c3e50;
+}
+.hs-summary {
+    background: #ecf0f1;
+    padding: 8px 14px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+.spinning { animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+
+<script>
+jQuery(document).ready(function() {
+    var trialId = '<% $trial_id %>';
+    if (!trialId) return;
+
+    var scoringData = null;
+
+    jQuery('#hs_calculate_btn').click(function() {
+        var btn = jQuery(this);
+        btn.prop('disabled', true);
+        jQuery('#hs_spinner').show();
+        jQuery('#hs_error').hide();
+        jQuery('#hs_results').hide();
+
+        jQuery.ajax({
+            url: '/ajax/hybridscoring/calculate',
+            type: 'POST',
+            data: { trial_id: trialId },
+            dataType: 'json',
+            success: function(data) {
+                jQuery('#hs_spinner').hide();
+                btn.prop('disabled', false);
+
+                if (data.error) {
+                    jQuery('#hs_error').text(data.error).show();
+                    return;
+                }
+
+                scoringData = data;
+                renderResults(data);
+                jQuery('#hs_export_btn')
+                    .attr('href', '/ajax/hybridscoring/export?trial_id=' + trialId)
+                    .show();
+            },
+            error: function() {
+                jQuery('#hs_spinner').hide();
+                btn.prop('disabled', false);
+                jQuery('#hs_error').text('Помилка з\'єднання з сервером').show();
+            }
+        });
+    });
+
+    function renderResults(data) {
+        var container = jQuery('#hs_results');
+        container.empty();
+
+        var traits = Object.keys(data.traits).sort();
+        if (traits.length === 0) {
+            container.html('<p class="text-muted">Немає даних для розрахунку.</p>');
+            container.show();
+            return;
+        }
+
+        // Trait tabs
+        var tabs = jQuery('<div id="hs_tabs"></div>');
+        traits.forEach(function(trait, idx) {
+            var tab = jQuery('<span class="hs-trait-tab"></span>')
+                .text(trait)
+                .data('trait', trait);
+            if (idx === 0) tab.addClass('active');
+            tabs.append(tab);
+        });
+        container.append(tabs);
+
+        // Content area
+        var content = jQuery('<div id="hs_content"></div>');
+        container.append(content);
+
+        // Tab click handler
+        tabs.on('click', '.hs-trait-tab', function() {
+            tabs.find('.hs-trait-tab').removeClass('active');
+            jQuery(this).addClass('active');
+            showTrait(jQuery(this).data('trait'));
+        });
+
+        // Show first trait
+        showTrait(traits[0]);
+        container.show();
+    }
+
+    function showTrait(traitName) {
+        var content = jQuery('#hs_content');
+        content.empty();
+
+        var t = scoringData.traits[traitName];
+        if (!t) return;
+
+        // Summary bar
+        var summary = jQuery('<div class="hs-summary"></div>');
+        summary.html(
+            '<strong>Стандарт: ' + t.trial_standard + '</strong> '
+            + '(середнє верхніх ⅔: ' + t.top_two_thirds_count
+            + ' з ' + t.total_hybrids + ' гібридів, '
+            + 'з даними: ' + t.valid_hybrids + ')'
+        );
+        content.append(summary);
+
+        // Sort hybrids by score descending, N/A at bottom
+        var hybrids = t.hybrids.slice().sort(function(a, b) {
+            if (a.score === null && b.score === null) return 0;
+            if (a.score === null) return 1;
+            if (b.score === null) return -1;
+            return parseFloat(b.score) - parseFloat(a.score);
+        });
+
+        // Build table
+        var table = jQuery(
+            '<table class="hs-table">'
+            + '<thead><tr>'
+            + '<th data-col="rank">#</th>'
+            + '<th data-col="name">Гібрид</th>'
+            + '<th data-col="reps">Повт.</th>'
+            + '<th data-col="trimmed_mean">Trimmed Mean</th>'
+            + '<th data-col="score">Бали (%)</th>'
+            + '<th data-col="diff">± стандарт</th>'
+            + '</tr></thead><tbody></tbody></table>'
+        );
+
+        var tbody = table.find('tbody');
+        hybrids.forEach(function(h, idx) {
+            var row = jQuery('<tr></tr>');
+            row.append('<td>' + (idx + 1) + '</td>');
+            row.append('<td style="text-align:left;font-weight:bold;">' + h.name + '</td>');
+            row.append('<td>' + h.reps + '</td>');
+
+            if (h.trimmed_mean !== null) {
+                row.append('<td>' + h.trimmed_mean + '</td>');
+                var score = parseFloat(h.score);
+                var cls = score >= 100 ? 'hs-good' : 'hs-bad';
+                row.append('<td class="' + cls + '">' + h.score + '</td>');
+                var diff = (score - 100).toFixed(1);
+                var diffStr = diff >= 0 ? '+' + diff + '%' : diff + '%';
+                row.append('<td>' + diffStr + '</td>');
+            } else {
+                row.append('<td class="hs-na">N/A</td>');
+                row.append('<td class="hs-na">N/A</td>');
+                row.append('<td class="hs-na">—</td>');
+            }
+            tbody.append(row);
+        });
+
+        content.append(table);
+
+        // Column sorting
+        var sortDir = {};
+        table.find('th').click(function() {
+            var col = jQuery(this).data('col');
+            sortDir[col] = !sortDir[col];
+            var rows = tbody.find('tr').get();
+            rows.sort(function(a, b) {
+                var aVal = getCellValue(a, col);
+                var bVal = getCellValue(b, col);
+                if (aVal === null && bVal === null) return 0;
+                if (aVal === null) return 1;
+                if (bVal === null) return -1;
+                return sortDir[col] ? aVal - bVal : bVal - aVal;
+            });
+            jQuery.each(rows, function(i, r) { tbody.append(r); });
+            // Re-number
+            tbody.find('tr').each(function(i) {
+                jQuery(this).find('td:first').text(i + 1);
+            });
+        });
+    }
+
+    function getCellValue(row, col) {
+        var colMap = { rank: 0, name: 1, reps: 2, trimmed_mean: 3, score: 4, diff: 5 };
+        var idx = colMap[col];
+        var text = jQuery(row).find('td').eq(idx).text().replace('%', '').replace('+', '');
+        if (text === 'N/A' || text === '—') return null;
+        if (col === 'name') return text.toLowerCase();
+        return parseFloat(text) || 0;
+    }
+});
+</script>
+
+</&>

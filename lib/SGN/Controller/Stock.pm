@@ -10,6 +10,7 @@ stocks (e.g. accession, population, etc.)
 use Moose;
 use namespace::autoclean;
 use YAML::Any qw/LoadFile/;
+use SGN::Role::CustomerAccess qw(is_customer user_can_access_stock);
 
 use URI::FromHash 'uri';
 use List::Compare;
@@ -158,6 +159,15 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$time = time();
 
 	if( $c->stash->{stock_row} ) {
+	    # Customer role gate: restrict access to stocks within user's BP
+	    if (is_customer($c)) {
+		my $sid = $c->stash->{stock_row}->stock_id;
+		unless (user_can_access_stock($c, $sid)) {
+		    $c->stash->{template} = 'generic_message.mas';
+		    $c->stash->{message}  = 'Access denied: this accession is not part of your breeding program.';
+		    return;
+		}
+	    }
 	    $c->forward('get_stock_extended_info');
 	}
 
@@ -166,12 +176,15 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
     my $curator;
     my $submitter;
     my $sequencer;
+    my $is_breeder;
     my $logged_user = $c->user;
     $person_id = $logged_user->get_object->get_sp_person_id if $logged_user;
     $user_role = 1 if $logged_user;
     $curator   = $logged_user->check_roles('curator') if $logged_user;
     $submitter = $logged_user->check_roles('submitter') if $logged_user;
     $sequencer = $logged_user->check_roles('sequencer') if $logged_user;
+    # Breeder role grants access to pedigree and sensitive genetic info
+    $is_breeder = $logged_user->check_roles('breeder') if $logged_user;
 
 	my $dbh = $c->dbc->dbh;
 
@@ -365,6 +378,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         original_stock_link => $original_stock_link,
         is_in_trial => $is_in_trial,
         is_a_parent => $is_a_parent,
+        is_breeder => $is_breeder,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
