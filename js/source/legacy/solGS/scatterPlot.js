@@ -12,6 +12,7 @@ solGS.scatterPlot = {
     var yLabel = regData.y_label || 'Y values';
     var xLabel = regData.x_label || 'X values';
     var regPlotDivId = regData.plot_div_id;
+    var corrValues = regData.corr_values || null;
     var canvas = regData.canvas;
     var downloadLinks = regData.download_links;
 
@@ -240,6 +241,25 @@ solGS.scatterPlot = {
         .style("fill", regLineColor)
         .style("font-weight", "bold");  
 
+    if (corrValues != null) {
+        
+        var rText = "r=" + d3.format(".2f")(corrValues.coef);
+        var pText = "p=" + d3.format(".2f")(corrValues.pvalue);
+    
+        var corrText = [rText, pText].filter(function (v) { return v; }).join(", ");
+        corrText = JSON.stringify(corrText);
+    
+        regPlot.append("g")
+            .attr("id", "corr_values")
+            .append("text")
+            .text(String(corrText).replace(/\"/g, ""))
+            .attr("x", pad.left + width - 5)
+            .attr("y", pad.top + height - 5)
+            .attr("text-anchor", "end")
+            .style("fill", regLineColor)
+            .style("font-weight", "bold");
+    }
+        
         if (downloadLinks) {
             if (!regPlotDivId.match('#')) {
                 regPlotDivId = '#' + regPlotDivId;
@@ -249,8 +269,6 @@ solGS.scatterPlot = {
    }
 
 }
-
-
 
 
 
