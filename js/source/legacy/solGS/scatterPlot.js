@@ -80,8 +80,8 @@ solGS.scatterPlot = {
    var yAxis = d3.axisLeft(yAxisLabel)
         .tickSize(3);
 
-    var xAxisMid = 0.5 * (totalH); 
-    var yAxisMid = 0.5 * (totalW);
+    var xAxisMid = pad.top + (height / 2); 
+    var yAxisMid = pad.left + (width / 2);
 
     var regLineColor = "#86B404";
     var dataPointColor = "#9A2EFE";
@@ -249,7 +249,6 @@ solGS.scatterPlot = {
    }
 
 }
-
 
 
 
