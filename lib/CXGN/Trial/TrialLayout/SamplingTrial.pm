@@ -13,10 +13,12 @@ sub BUILD {
 
     print STDERR "BUILD CXGN::Trial::TrialLayout::SamplingTrial...\n";
 
-    $self->set_source_primary_stock_types( [ "accession" ] );
-    $self->set_source_stock_types( [ "accession" ] );
+    #    $self->set_source_primary_stock_types( [ "accession" ]);
+    $self->set_source_stock_types( [ "accession", "plot", "plant", "tissue_sample", "subplot" ] );
+    $self->set_source_stock_types( [ "accession", "subplot" ] );
     $self->set_relationship_types( [ "tissue_sample_of" ] );
     $self->set_target_stock_types( [ "tissue_sample" ] );
+
     $self->convert_source_stock_types_to_ids();
 
         # probably better to lazy load the action design...
