@@ -1343,7 +1343,7 @@ sub get_trials {
     push @where_clause, "stock.type_id = $plot_type_id";
     if ($type eq 'plot') {
         push @where_clause, "stock.stock_id = $stock_id";
-    } elsif (($type eq 'accession') || ($type eq 'plant') || $type eq 'subplot') {
+    } elsif (($type eq 'accession') || ($type eq 'plant') || $type eq 'subplot' || $type eq 'cross' || $type eq 'family_name') {
         push @where_clause, "stock_relationship_1.object_id = $stock_id";
     } elsif ($type eq 'tissue_sample') {
         push @where_clause, "stock_relationship_2.subject_id = $stock_id OR nd_experiment_stock.stock_id = $stock_id";
