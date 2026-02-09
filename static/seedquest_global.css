@@ -23,14 +23,21 @@ body {
     background-color: #eef2f7;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    /* Flexbox sticky footer — keeps footer at viewport bottom
+       when content is short, allows normal scroll when long */
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
 }
 
-/* Wider container — uses most of screen width */
+/* Wider container — uses most of screen width.
+   flex:1 pushes #pagefooter to the bottom of viewport. */
 #outercontainer {
     max-width: 1480px !important;
     width: 98% !important;
     margin: 0 auto !important;
-    overflow-x: auto;
+    overflow: visible;
+    flex: 1 0 auto;
 }
 
 /* #outercontainer handles overflow — no body-level clipping needed */
@@ -74,20 +81,21 @@ body {
 .well {
     background: #fff !important;
     border: none !important;
-    border-left: 4px solid #38bdf8 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-    padding: 20px 24px !important;
-    margin-bottom: 20px;
-    transition: box-shadow 0.25s ease, transform 0.25s ease;
-    /* Allow horizontal scroll for wide tables, keep vertical overflow for dropdowns */
-    overflow-x: auto !important;
-    overflow-y: visible !important;
+    border-left: 3px solid #38bdf8 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    padding: 14px 18px !important;
+    margin-bottom: 16px;
+    transition: box-shadow 0.25s ease;
+    /* Do NOT set overflow-x here — per CSS spec, any non-visible
+       overflow-x forces overflow-y:visible to compute as auto,
+       silently clipping content at the bottom. Tables get their
+       own scroll via .dataTables_wrapper and .table-responsive. */
+    overflow: visible !important;
 }
 
 .well:hover {
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
-    transform: translateY(-1px);
 }
 
 /* Cycle accent colors through nth-child for visual interest */
@@ -124,94 +132,162 @@ body {
    4.  INFO SECTIONS → Dashboard-style colored panels
    ═══════════════════════════════════════════════ */
 
-/* Main info section header — soft, airy colored bar */
+/* Main info section header — muted colored bar with good text contrast */
 .infosectionhead,
-.infosectionhead_empty {
-    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+.infosectionhead_empty,
+.sub_infosectionhead,
+.sub_infosectionhead_empty {
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
     border: none !important;
-    border-radius: 10px 10px 0 0 !important;
-    padding: 4px 0 !important;
-    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.18);
+    border-radius: 8px 8px 0 0 !important;
+    padding: 2px 0 !important;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
 }
 
 .infosectiontitle,
-.infosectiontitle_empty {
-    font-weight: 700 !important;
-    font-size: 15px !important;
+.infosectiontitle_empty,
+.sub_infosectiontitle,
+.sub_infosectiontitle_empty,
+td.infosectiontitle,
+td.infosectiontitle_empty,
+td.sub_infosectiontitle,
+td.sub_infosectiontitle_empty {
+    font-weight: 600 !important;
+    font-size: 13.5px !important;
     color: #fff !important;
-    padding: 12px 18px !important;
-    letter-spacing: 0.3px;
+    padding: 8px 14px !important;
+    letter-spacing: 0.2px;
 }
 
 .infosectionsubtitle,
-.infosectionsubtitle_empty {
-    padding: 12px 18px !important;
-    font-size: 12.5px;
-    color: rgba(255, 255, 255, 0.85) !important;
+.infosectionsubtitle_empty,
+.sub_infosectionsubtitle,
+.sub_infosectionsubtitle_empty,
+td.infosectionsubtitle,
+td.infosectionsubtitle_empty,
+td.sub_infosectionsubtitle,
+td.sub_infosectionsubtitle_empty {
+    padding: 8px 14px !important;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff !important;
     cursor: pointer;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* All links/buttons inside info section headers must be white on colored bg */
+/* Nuclear catch-all: EVERY element inside a colored section header must be white.
+   This prevents any upstream stylesheet from leaking dark text onto blue bg. */
+.infosectionhead *,
+.infosectionhead_empty *,
+.sub_infosectionhead *,
+.sub_infosectionhead_empty * {
+    color: #fff !important;
+}
+
+/* All links/buttons inside info section headers must be white on colored bg.
+   Cover every pseudo-class (:link, :visited, :active, :hover) so that
+   new_sgn.css rules like  a:link { color:#0000ff }  cannot leak through. */
 .infosectionhead a,
+.infosectionhead a:link,
+.infosectionhead a:visited,
+.infosectionhead a:active,
 .infosectionhead_empty a,
+.infosectionhead_empty a:link,
+.infosectionhead_empty a:visited,
+.infosectionhead_empty a:active,
+.sub_infosectionhead a,
+.sub_infosectionhead a:link,
+.sub_infosectionhead a:visited,
+.sub_infosectionhead a:active,
+.sub_infosectionhead_empty a,
+.sub_infosectionhead_empty a:link,
+.sub_infosectionhead_empty a:visited,
+.sub_infosectionhead_empty a:active,
 .infosectionhead button,
 .infosectionhead_empty button,
+.sub_infosectionhead button,
+.sub_infosectionhead_empty button,
 .infosectionhead .btn,
-.infosectionhead_empty .btn {
+.infosectionhead_empty .btn,
+.sub_infosectionhead .btn,
+.sub_infosectionhead_empty .btn,
+.infosectionhead a.collapser,
+.infosectionhead_empty a.collapser,
+.sub_infosectionhead a.collapser,
+.sub_infosectionhead_empty a.collapser {
     color: #fff !important;
     text-decoration: underline;
-    opacity: 0.9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .infosectionhead a:hover,
-.infosectionhead_empty a:hover {
-    opacity: 1;
+.infosectionhead_empty a:hover,
+.sub_infosectionhead a:hover,
+.sub_infosectionhead_empty a:hover {
+    color: #fff !important;
     text-decoration: none;
 }
 
-/* Collapse/expand toggle icon — constrain the oversized PNG */
+/* Collapse/expand toggle — hide PNG, show CSS chevron arrow */
 .collapser_img,
 img.collapser_img {
-    width: 14px !important;
-    height: 14px !important;
+    width: 0 !important;
+    height: 0 !important;
+    visibility: hidden;
+    display: inline-block;
     vertical-align: middle;
-    opacity: 0.85;
+}
+
+/* Render a visible chevron via the parent .collapser wrapper */
+.collapser {
+    display: inline-flex;
+    align-items: center;
     cursor: pointer;
+}
+
+.collapser::before {
+    content: "▾";
+    display: inline-block;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+    margin-right: 6px;
+    transition: transform 0.2s ease;
+    line-height: 1;
 }
 
 .infosectioncontent,
 .infosectioncontent_empty {
-    padding: 20px !important;
+    padding: 12px 14px !important;
     background: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
     border-top: none;
-    border-radius: 0 0 10px 10px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.03);
 }
 
-/* Color cycling for info section headers — each section gets a soft accent */
+/* Color cycling for info section headers — deeper muted tones for readable white text */
 .infosectionhead:nth-of-type(4n+1),
 table.infosectionhead:nth-of-type(4n+1) {
-    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
-    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.18);
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15);
 }
 
 .infosectionhead:nth-of-type(4n+2),
 table.infosectionhead:nth-of-type(4n+2) {
-    background: linear-gradient(135deg, #34d399, #6ee7b7) !important;
-    box-shadow: 0 2px 8px rgba(52, 211, 153, 0.18);
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+    box-shadow: 0 1px 4px rgba(5, 150, 105, 0.15);
 }
 
 .infosectionhead:nth-of-type(4n+3),
 table.infosectionhead:nth-of-type(4n+3) {
-    background: linear-gradient(135deg, #a78bfa, #c4b5fd) !important;
-    box-shadow: 0 2px 8px rgba(167, 139, 250, 0.18);
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6) !important;
+    box-shadow: 0 1px 4px rgba(124, 58, 237, 0.15);
 }
 
 .infosectionhead:nth-of-type(4n+4),
 table.infosectionhead:nth-of-type(4n+4) {
-    background: linear-gradient(135deg, #fbbf24, #fcd34d) !important;
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.18);
+    background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+    box-shadow: 0 1px 4px rgba(217, 119, 6, 0.15);
 }
 
 /* Sub-info sections — lighter pastel accent */
@@ -243,34 +319,32 @@ table.infosectionhead:nth-of-type(4n+4) {
     border-radius: 8px !important;
     font-weight: 600 !important;
     font-size: 13px !important;
-    padding: 8px 18px !important;
-    transition: all 0.25s cubic-bezier(.4, 0, .2, 1) !important;
+    padding: 7px 16px !important;
+    transition: all 0.2s ease !important;
     border: none !important;
     letter-spacing: 0.2px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     position: relative;
     overflow: hidden;
 }
 
 .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
 }
 
 .btn:active {
-    transform: translateY(0);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-/* Primary — BreedBase teal-blue */
+/* Primary — deeper blue matching section headers */
 .btn-primary {
-    background: linear-gradient(135deg, #38bdf8, #60a5fa) !important;
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
     color: #fff !important;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #60a5fa, #3b82f6) !important;
-    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35) !important;
+    background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
 }
 
 /* Default — elevated with subtle gradient instead of flat white */
@@ -287,44 +361,44 @@ table.infosectionhead:nth-of-type(4n+4) {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10) !important;
 }
 
-/* Success — Green gradient */
+/* Success — deeper green */
 .btn-success {
-    background: linear-gradient(135deg, #34d399, #6ee7b7) !important;
+    background: linear-gradient(135deg, #059669, #10b981) !important;
     color: #fff !important;
 }
 
 .btn-success:hover {
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
 }
 
-/* Info — Cyan gradient */
+/* Info — deeper cyan */
 .btn-info {
-    background: linear-gradient(135deg, #22d3ee, #67e8f9) !important;
+    background: linear-gradient(135deg, #0891b2, #06b6d4) !important;
     color: #fff !important;
 }
 
 .btn-info:hover {
-    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3) !important;
 }
 
-/* Warning — Amber gradient */
+/* Warning — deeper amber */
 .btn-warning {
-    background: linear-gradient(135deg, #fbbf24, #fcd34d) !important;
+    background: linear-gradient(135deg, #d97706, #f59e0b) !important;
     color: #fff !important;
 }
 
 .btn-warning:hover {
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3) !important;
 }
 
-/* Danger — Red gradient */
+/* Danger — deeper red */
 .btn-danger {
-    background: linear-gradient(135deg, #f87171, #fca5a5) !important;
+    background: linear-gradient(135deg, #dc2626, #ef4444) !important;
     color: #fff !important;
 }
 
 .btn-danger:hover {
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35) !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3) !important;
 }
 
 /* Small buttons */
@@ -370,21 +444,21 @@ table.infosectionhead:nth-of-type(4n+4) {
     min-height: 0.01%;
 }
 
-/* Info section and panel body scroll if needed */
+/* Info section and panel body — keep overflow visible so content
+   isn't clipped. Tables scroll via .dataTables_wrapper. */
 .infosectioncontent,
 .panel-body {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
 }
 
 .table>thead>tr>th {
-    background: linear-gradient(90deg, #f0f9ff, #eff6ff) !important;
-    color: #3b82f6 !important;
+    background: linear-gradient(90deg, #e0f2fe, #dbeafe) !important;
+    color: #1e40af !important;
     font-weight: 700 !important;
     font-size: 12px !important;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 2px solid #dbeafe !important;
+    border-bottom: 2px solid #93c5fd !important;
     padding: 10px 10px !important;
     white-space: nowrap;
 }
@@ -611,10 +685,15 @@ ul.dropdown-menu>li>a {
     outline: none;
 }
 
-/* Select elements */
+/* Select elements — browsers render <select> padding differently
+   than text inputs, so we need explicit height and reduced vertical
+   padding to prevent text clipping */
 select.form-control {
     appearance: auto;
     cursor: pointer;
+    height: 38px !important;
+    padding: 6px 14px !important;
+    line-height: 1.4 !important;
 }
 
 /* Labels */
@@ -634,7 +713,6 @@ label {
     border: none !important;
     border-radius: 12px !important;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
-    overflow: hidden;
 }
 
 .panel-heading {
@@ -844,6 +922,17 @@ label {
    17.  FOOTER
    ═══════════════════════════════════════════════ */
 
+/* Override .navbar-default styles for the page footer so it doesn't
+   inherit the top-navbar min-height, background, and shadow. */
+#pagefooter.navbar-default {
+    background: #f8fafc !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+    min-height: auto !important;
+    border-radius: 0 !important;
+}
+
 #footer {
     background: #f8fafc !important;
     border-top: 1px solid #e2e8f0 !important;
@@ -962,22 +1051,7 @@ h5 {
     background: #34d399 !important;
 }
 
-/* Smooth page transition */
-.container-fluid {
-    animation: sq-page-in 0.25s ease;
-}
 
-@keyframes sq-page-in {
-    from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
 
 /* ═══════════════════════════════════════════════
@@ -1161,12 +1235,14 @@ h5 {
         margin-bottom: 8px !important;
     }
 
-    /* Exceptions: inline buttons (dropdown toggles, btn-group) */
+    /* Exceptions: inline buttons (dropdown toggles, btn-group, DataTables) */
     .btn-group .btn,
     .btn-xs,
     .pagination .btn,
     td .btn,
-    th .btn {
+    th .btn,
+    .dt-buttons .btn,
+    .dt-button {
         display: inline-block !important;
         width: auto !important;
     }
@@ -1323,6 +1399,131 @@ h5 {
     .navbar-nav>li>a {
         padding: 10px 12px !important;
         font-size: 13px !important;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   28b. RESPONSIVE — P0 Mobile Layout Fixes
+   Icon column, DataTables controls, form stacking
+   ═══════════════════════════════════════════════ */
+
+/* --- Tablet (≤992px): DataTables controls --- */
+@media (max-width: 992px) {
+
+    /* DataTables button bar — wrap on narrow screens */
+    .dt-buttons {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        justify-content: center !important;
+        margin-bottom: 8px !important;
+    }
+
+    .dt-buttons .dt-button,
+    .dt-buttons .btn {
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+        flex: 0 0 auto !important;
+    }
+
+    /* DataTables length + filter — center on tablet */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        text-align: center !important;
+        margin-bottom: 6px !important;
+    }
+}
+
+/* --- Mobile (≤768px): Icon column + form stacking --- */
+@media (max-width: 768px) {
+
+    /* Hide decorative icon column — saves 8.3% of screen width */
+    .col-sm-1:has(.glyphicon) {
+        display: none !important;
+    }
+
+    /* Content column takes full width when icon is hidden */
+    .col-sm-11 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* DataTables length + filter — stack vertically */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        float: none !important;
+        text-align: center !important;
+        margin-bottom: 8px !important;
+        width: 100% !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 80% !important;
+        max-width: 300px !important;
+        margin-left: 0 !important;
+        display: block !important;
+        margin: 4px auto 0 !important;
+    }
+
+    /* DataTables info + pagination — center and enlarge */
+    .dataTables_wrapper .dataTables_info {
+        text-align: center !important;
+        font-size: 12px !important;
+        padding-top: 6px !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        text-align: center !important;
+        margin-top: 8px !important;
+    }
+
+    /* Pagination buttons — touch-friendly 44px */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 10px 14px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        line-height: 24px !important;
+        font-size: 14px !important;
+    }
+
+    /* Phenotype summary form controls — stack vertically */
+    #pheno_summary_controls,
+    .well>form>.row,
+    .well form .form-inline {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    /* Date inputs — full width on mobile */
+    input[type="text"]#summary_start_date,
+    input[type="text"]#summary_end_date,
+    #display_trial_phenosummary,
+    #summary_phenotype_slider_range {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Bootstrap col-sm-* — force full width on mobile */
+    .form-horizontal .col-sm-2,
+    .form-horizontal .col-sm-3,
+    .form-horizontal .col-sm-4,
+    .form-horizontal .col-sm-6,
+    .form-horizontal .col-sm-8,
+    .form-horizontal .col-sm-10 {
+        width: 100% !important;
+        float: none !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+
+    /* Inline labels next to inputs — stack on mobile */
+    .form-horizontal .control-label {
+        text-align: left !important;
+        margin-bottom: 4px !important;
     }
 }
 
