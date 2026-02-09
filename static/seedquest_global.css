@@ -1529,6 +1529,228 @@ h5 {
 
 
 /* ═══════════════════════════════════════════════
+   28c. RESPONSIVE — P1 Touch & Visual
+   Weather widget, touch targets, histogram controls
+   ═══════════════════════════════════════════════ */
+
+/* --- Tablet (≤992px): Touch targets --- */
+@media (max-width: 992px) {
+
+    /* Minimum 44×44px touch targets (WCAG 2.5.5) */
+    .paginate_button,
+    .nav-tabs>li>a,
+    .infosectiontitle,
+    .infosectiontitle_empty {
+        min-height: 44px !important;
+    }
+
+    /* Checkboxes and radios — larger on touch devices */
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 20px !important;
+        height: 20px !important;
+        margin: 4px !important;
+        cursor: pointer !important;
+    }
+
+    /* Info section headers — ensure click area is comfortable */
+    .infosectionhead a,
+    .infosectiontitle,
+    .infosectiontitle_empty {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    /* Weather chart mode buttons — larger on tablet */
+    .tw-chart-btn {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+    }
+}
+
+/* --- Mobile (≤768px): Weather widget + histogram --- */
+@media (max-width: 768px) {
+
+    /* Weather panels — 2×2 grid instead of 4 across */
+    #trial_weather_summary .row.text-center {
+        display: flex !important;
+        flex-wrap: wrap !important;
+    }
+
+    #trial_weather_summary .col-xs-3 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        width: 50% !important;
+        margin-bottom: 8px !important;
+    }
+
+    #trial_weather_summary .col-xs-4 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        width: 50% !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Chart container — shorter on mobile for proportion */
+    #tw_chart_container {
+        height: 220px !important;
+    }
+
+    /* Chart mode buttons — full row on mobile */
+    #trial_weather_summary .btn-group {
+        float: none !important;
+        display: flex !important;
+        margin-top: 6px !important;
+    }
+
+    .tw-chart-btn {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+        min-height: 44px !important;
+        flex: 1 !important;
+    }
+
+    /* Export buttons — stack vertically on mobile */
+    #tw_export_hydro,
+    #tw_export_season,
+    #trial_weather_summary .btn-sm {
+        display: block !important;
+        width: 100% !important;
+        margin-bottom: 6px !important;
+        margin-right: 0 !important;
+        text-align: center !important;
+    }
+
+    /* Weather panel heading — stack title + period on mobile */
+    #trial_weather_summary .panel-heading .pull-right {
+        float: none !important;
+        display: block !important;
+        margin-top: 4px !important;
+    }
+
+    /* Histogram controls — stack vertically */
+    #trial_summary_hist_div .form-horizontal .form-group {
+        margin-bottom: 10px !important;
+    }
+
+    #trial_summary_hist_div .col-sm-2,
+    #trial_summary_hist_div .col-sm-3,
+    #trial_summary_hist_div .col-sm-4,
+    #trial_summary_hist_div .col-sm-8,
+    #trial_summary_hist_div .col-sm-10 {
+        width: 100% !important;
+        float: none !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+
+    /* Select2 / dropdown controls — full width */
+    .select2-container {
+        width: 100% !important;
+    }
+}
+
+/* --- Small mobile (≤480px): Single-column weather --- */
+@media (max-width: 480px) {
+
+    /* Weather metrics — single column stack */
+    #trial_weather_summary .col-xs-3,
+    #trial_weather_summary .col-xs-4 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    /* Chart even smaller on tiny screens */
+    #tw_chart_container {
+        height: 180px !important;
+    }
+}
+
+
+/* ═══════════════════════════════════════════════
+   28d. RESPONSIVE — P2 Polish
+   Landscape, touch devices, smooth scrolling
+   ═══════════════════════════════════════════════ */
+
+/* --- Landscape on tablets: optimize horizontal space --- */
+@media (max-width: 992px) and (orientation: landscape) {
+
+    /* Weather chart — taller in landscape */
+    #tw_chart_container {
+        height: 300px !important;
+    }
+
+    /* Forms can go horizontal in landscape */
+    .well>form>.row,
+    .well form .form-inline {
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+    }
+
+    /* Weather metrics — keep as row in landscape */
+    #trial_weather_summary .col-xs-3 {
+        flex: 0 0 25% !important;
+        max-width: 25% !important;
+        width: 25% !important;
+    }
+
+    #trial_weather_summary .col-xs-4 {
+        flex: 0 0 33.333% !important;
+        max-width: 33.333% !important;
+        width: 33.333% !important;
+    }
+}
+
+/* --- Touch devices: hover/tooltip adjustments --- */
+@media (hover: none) and (pointer: coarse) {
+
+    /* Tooltips — hidden on pure touch (confusing without hover) */
+    .tooltip {
+        display: none !important;
+    }
+
+    /* Touch scrollbar — thin and subtle */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 2px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    /* Touch: slightly larger form controls */
+    .form-control {
+        min-height: 44px !important;
+    }
+
+    select.form-control {
+        min-height: 44px !important;
+        padding: 8px 12px !important;
+    }
+}
+
+/* --- Smooth scrolling for all scrollable containers --- */
+.table-responsive,
+.well>.table,
+.infosectioncontent>.table,
+.panel-body>.table,
+.nav-tabs,
+.modal-body,
+.dataTables_scrollBody {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
+
+
+/* ═══════════════════════════════════════════════
    29.  PRINT STYLES
    ═══════════════════════════════════════════════ */
 
