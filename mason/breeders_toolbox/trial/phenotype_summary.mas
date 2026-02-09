@@ -177,6 +177,7 @@ input[type="text"] {
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
         var trial_id = "<% $trial_id %>";
+        var dates_ready = false;
     	jQuery.ajax( {
             url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     	}).done( function(r) {
@@ -193,8 +194,8 @@ input[type="text"] {
 	                "autoUpdateInput": true,
 	                "startDate": "1960-01-01",
 	                "yearSelect" : true,
-	                "minDate": jQuery('#summary_start_date').val(),
-	                "maxDate": jQuery('#summary_end_date').val(),
+	                "minDate": "2000-01-01",
+	                "maxDate": new Date(),
 	                locale: {
 	            	    format: 'YYYY-MM-DD'
 	                }
@@ -210,8 +211,8 @@ input[type="text"] {
 	                "singleDatePicker": true,
                     "showDropdowns": true,
 	                "autoUpdateInput": true,
-                    "minDate": jQuery('#summary_start_date').val(),
-	                "maxDate": jQuery('#summary_end_date').val(),
+                    "minDate": "2000-01-01",
+	                "maxDate": new Date(),
 	                "yearSelect" : true,
 	                locale: { 
 	            	    format: 'YYYY-MM-DD'
@@ -242,6 +243,18 @@ input[type="text"] {
                     datatables_display_phenosummary(type);
                 }
             });
+
+            dates_ready = true;
+
+            // If the tab was already open, load data now
+            if (jQuery('#trial_detail_traits_assayed_onswitch').hasClass('active')) {
+                init_summary_table(type);
+%  if ($trial_stock_type eq 'analysis_instance') {
+                trait_summary_hist_display_change('analysis_instance');
+%  } else {
+                trait_summary_hist_display_change('plot');
+%  }
+            }
 	    }).fail( function(xhr, status, error) { 
             alert('An error occurred!' + xhr.responseText);
             console.error("the status:", xhr.status);
@@ -271,6 +284,7 @@ input[type="text"] {
         });
 
         jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
+            if (!dates_ready) return; // Wait for date range AJAX
             init_summary_table(type);
         
 
