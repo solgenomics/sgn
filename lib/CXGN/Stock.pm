@@ -1346,7 +1346,7 @@ sub get_trials {
     } elsif (($type eq 'accession') || ($type eq 'plant') || $type eq 'subplot') {
         push @where_clause, "stock_relationship_1.object_id = $stock_id";
     } elsif ($type eq 'tissue_sample') {
-        push @where_clause, "stock_relationship_2.subject_id = $stock_id";
+        push @where_clause, "stock_relationship_2.subject_id = $stock_id OR nd_experiment_stock.stock_id = $stock_id";
     }
 
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
