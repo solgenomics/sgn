@@ -51,7 +51,13 @@ sub calculate_gdd_POST { shift->_do_gdd_calculation(@_); }
 
 sub _do_gdd_calculation {
     my ($self, $c) = @_;
-    
+
+    # Defense-in-depth: verify user is logged in
+    unless ($c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
+
     my $location_id = $c->req->param('location_id');
     my $seasons_json = $c->req->param('seasons');
     my $base_temp = $c->req->param('base_temp') || 10;
@@ -508,6 +514,12 @@ sub get_station_config_GET {
 sub save_station_config : Path('/ajax/weather/station/config') Args(0) ActionClass('REST') { }
 sub save_station_config_POST {
     my ($self, $c) = @_;
+
+    unless ($c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
+
     # Note: Config changes would need to be persisted to sgn_local.conf
     $c->stash->{rest} = { success => 1, message => "Configuration updated" };
 }
@@ -626,6 +638,12 @@ sub _timestamp_to_date {
 
 sub export_weather : Path('/ajax/weather/export') Args(0) {
     my ($self, $c) = @_;
+
+    unless ($c->user()) {
+        $c->res->status(401);
+        $c->res->body('Login required');
+        return;
+    }
 
     my $location_id = $c->req->param('location_id');
     my $start_date  = $c->req->param('start_date');

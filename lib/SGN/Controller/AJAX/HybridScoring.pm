@@ -28,6 +28,12 @@ sub calculate_POST { shift->_do_calculate(@_); }
 sub _do_calculate {
     my ($self, $c) = @_;
 
+    # Defense-in-depth: verify user is logged in
+    unless ($c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
+
     my $trial_id = $c->req->param('trial_id');
     unless ($trial_id) {
         $c->stash->{rest} = { error => 'trial_id is required' };
