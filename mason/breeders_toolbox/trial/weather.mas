@@ -102,16 +102,16 @@ my $hydro_end   = $year ? "${year}-09-01" : '';
       <div class="panel-body" style="padding:10px">
         <div class="row text-center">
           <div class="col-xs-3">
+            <h4 style="color:#3498db;margin:4px 0"><span id="tw_season_precip">—</span> <small>мм</small></h4>
+            <small class="text-muted">Осадки</small>
+          </div>
+          <div class="col-xs-3">
             <h4 style="color:#e67e22;margin:4px 0"><span id="tw_season_gdd">—</span></h4>
             <small class="text-muted">GDD (base 10°C)</small>
           </div>
           <div class="col-xs-3">
             <h4 style="color:#2ecc71;margin:4px 0"><span id="tw_season_chu">—</span></h4>
             <small class="text-muted">CHU</small>
-          </div>
-          <div class="col-xs-3">
-            <h4 style="color:#3498db;margin:4px 0"><span id="tw_season_precip">—</span> <small>мм</small></h4>
-            <small class="text-muted">Осадки</small>
           </div>
           <div class="col-xs-3">
             <h4 style="color:#8e44ad;margin:4px 0"><span id="tw_season_days">—</span></h4>
