@@ -477,16 +477,14 @@ jQuery(document).ready(function () {
 
         solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
         if (res.status.match(/success/)) {
-            corrArgs["corr_table_file"] = res.corre_table_file;
-
-            
+            corrArgs["corr_table_file"] = res.corre_table_file;    
             var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
             var heatmapArgs = {
               input_data: res.input_data,
               output_data: res.output_data,
-              heatmapCanvasDiv: canvas,
-              heatmapPlotDivId: corrPlotDivId,
-              downloadLinks: corrDownload
+              canvas: canvas,
+              plot_div_id: corrPlotDivId,
+              download_links: corrDownload
             };
 
             solGS.heatmap.plot(heatmapArgs);        
@@ -533,9 +531,9 @@ jQuery(document).ready(function () {
           var heatmapArgs = {
             input_data: res.input_data,
             output_data: res.output_data,
-            heatmapCanvasDiv: canvas,
-            heatmapPlotDivId: corrPlotDivId,
-            downloadLinks: corrDownload
+            canvas: canvas,
+            plot_div_id: corrPlotDivId,
+            download_links: corrDownload
           };
           solGS.heatmap.plot(heatmapArgs);
         } else {        
