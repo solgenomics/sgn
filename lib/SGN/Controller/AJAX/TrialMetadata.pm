@@ -353,6 +353,7 @@ sub trait_phenotypes : Chained('trial') PathPart('trait_phenotypes') Args(0) {
 	    start_date => $start_date,
 	    end_date => $end_date,
 	    include_dateless_items => $include_dateless_items,
+        exclude_phenotype_outlier => 1,
     );
 
     my @data = $phenotypes_search->get_phenotype_matrix();
@@ -512,6 +513,17 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     # print STDERR "date params : $date_params\n";
 
+    # --- Outlier exclusion: exclude phenotypes flagged by Quality Control ---
+    my $outlier_type_id_q = "SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'phenotype_property')";
+    my ($outlier_type_id) = $dbh->selectrow_array($outlier_type_id_q);
+
+    my $outlier_filter = '';
+    my $outlier_join = '';
+    if ($outlier_type_id) {
+        $outlier_join = "LEFT JOIN phenotypeprop outlier_prop ON (phenotype.phenotype_id = outlier_prop.phenotype_id AND outlier_prop.type_id = $outlier_type_id)";
+        $outlier_filter = 'AND outlier_prop.phenotypeprop_id IS NULL';
+    }
+
     my $q1 = "$treatment_with
     SELECT
         (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
@@ -534,12 +546,14 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         JOIN stock_relationship  ON plot.stock_id   = stock_relationship.subject_id
         JOIN stock     AS accession ON accession.stock_id = stock_relationship.object_id
         $treatment_join
+        $outlier_join
         WHERE project_id                = ?
         AND phenotype.value             ~ ?
         AND stock_relationship.type_id  = ?
         AND plot.type_id                = ?
         AND accession.type_id           = ?
         AND db.name NOT LIKE '\%TREATMENT\%'
+        $outlier_filter
         $date_params
         GROUP BY trait, cvterm.cvterm_id $group_by_additional $treatment_group_by
         ORDER BY cvterm.name ASC
@@ -627,11 +641,13 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         JOIN stock_relationship  ON plot.stock_id   = stock_relationship.subject_id
         JOIN stock     AS accession ON accession.stock_id = stock_relationship.object_id
         $treatment_join
+        $outlier_join
         WHERE project_id                = ?
         AND stock_relationship.type_id  = ?
         AND plot.type_id                = ?
         AND accession.type_id           = ?
         AND db.name NOT LIKE '\%TREATMENT\%'
+        $outlier_filter
         $date_params
         $exclude_numeric_trait_ids
         GROUP BY trait, cvterm.cvterm_id $group_by_additional $treatment_group_by

@@ -58,7 +58,6 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
         $ds->retrieve_phenotypes();
         my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
 
-        # my @traits_select = ();
         my $traits = $pf->traits();
 
         my $trait_options = "trait_options";
@@ -83,36 +82,36 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     }
 }
 
-sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $dbh = $c->dbc->dbh();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+# ============================================================================
+# Shared helper: parse a QC phenotype TSV file into structured data.
+# Returns ($data_aref, $unique_names_href) where $data_aref contains
+# hash-rows and $unique_names_href maps study names seen in the data.
+# ============================================================================
 
-    my $file = $c->req->param("file");
-    my $trait = $c->req->param("trait");
+sub _parse_phenotype_file {
+    my ($self, $c, $file_param, $trait) = @_;
 
-    $file = basename($file);
+    my $file = basename($file_param);
+    my $temppath = File::Spec->catfile(
+        $c->config->{basepath},
+        "static/documents/tempfiles/qualitycontrol/" . $file
+    );
 
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol/".$file);
     my $F;
-    if (! open($F, "<", $temppath)) {
-    $c->stash->{rest} = { error => "Can't find data." };
-    return;
+    unless (open($F, "<", $temppath)) {
+        return (undef, undef, "Can't find data.");
     }
 
     my $header = <$F>;
     chomp($header);
-
     my @keys = split("\t", $header);
 
-    my @data = ();
-
+    my @data;
     while (<$F>) {
         chomp;
         my @fields = split "\t";
-        my %line = ();
-        
+        my %line;
+
         for (my $n = 0; $n < @keys; $n++) {
             if (exists($fields[$n]) && defined($fields[$n])) {
                 $line{$keys[$n]} = $fields[$n];
@@ -122,7 +121,9 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
             push @data, \%line;
         }
     }
-    
+    close($F);
+
+    # Collect unique study (project) names from parsed data
     my %unique_names;
     foreach my $entry (@data) {
         if (defined $entry->{'studyName'} && $entry->{'studyName'} ne '') {
@@ -130,104 +131,82 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
         }
     }
 
-    # Format the unique project names for the SQL query
-    
+    return (\@data, \%unique_names, undef);
+}
+
+sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+
+    my $file = $c->req->param("file");
+    my $trait = $c->req->param("trait");
+
+    # Parse the phenotype TSV via shared helper
+    my ($data, $unique_names, $error) = $self->_parse_phenotype_file($c, $file, $trait);
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    # Strip ontology suffix for LIKE matching
     $trait =~ s/\|.*//;
     my $trait_like = $trait . '%';
-    
-    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
+
+    # Build parameterized query — no string interpolation in SQL
+    my @names = keys %$unique_names;
+    my $placeholders = join(',', ('?') x scalar(@names));
 
     my $trait_sql = qq{
-        select project."name" from projectprop
-        join project on project.project_id = projectprop.project_id 
-        where projectprop.type_id = (select cvterm_id from cvterm where cvterm."name" = 'validated_phenotype')
-        and project.name in ($project_names)
-        and projectprop.value like '$trait_like'
-        group by project."name";
+        SELECT project."name" FROM projectprop
+        JOIN project ON project.project_id = projectprop.project_id
+        WHERE projectprop.type_id = (SELECT cvterm_id FROM cvterm WHERE cvterm."name" = 'validated_phenotype')
+        AND project.name IN ($placeholders)
+        AND projectprop.value LIKE ?
+        GROUP BY project."name"
     };
 
     my @validated_projects;
     eval {
-        # Prepare and execute the query
         my $sth_trait = $dbh->prepare($trait_sql);
-        $sth_trait->execute();
+        $sth_trait->execute(@names, $trait_like);
 
-        # Collect project names from the query result
         while (my ($project_name) = $sth_trait->fetchrow_array) {
             push @validated_projects, $project_name;
-
         }
 
-        #print STDERR Dumper \@validated_projects;
-        my $list_projects = join(", ", @validated_projects);
-
         if (scalar(@validated_projects) > 0) {
-            my $project_names_str = join(", ", @validated_projects);
+            my $list_projects = join(", ", @validated_projects);
             my $message = "Trait $trait is already validated data for trials: $list_projects";
             $c->stash->{rest} = { message => $message };
         } else {
-            $c->stash->{rest} = { data => \@data, trait => $trait};
+            $c->stash->{rest} = { data => $data, trait => $trait };
         }
     };
 
     if ($@) {
-        $c->response->body("Failed to search data: $@");
-            return;
+        $c->stash->{rest} = { error => "Failed to search data: $@" };
+        return;
     }
 }
 
 sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $dbh = $c->dbc->dbh();
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
 
-    $file = basename($file);
-
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol/".$file);
-
-    my $F;
-    if (! open($F, "<", $temppath)) {
-    $c->stash->{rest} = { error => "Can't find data." };
-    return;
+    # Parse the phenotype TSV via shared helper
+    my ($data, $unique_names, $error) = $self->_parse_phenotype_file($c, $file, $trait);
+    if ($error) {
+        $c->stash->{rest} = { error => $error };
+        return;
     }
 
-    my $header = <$F>;
-    chomp($header);
-
-    my @keys = split("\t", $header);
-
-    my @data = ();
-
-    while (<$F>) {
-        chomp;
-        my @fields = split "\t";
-        my %line = ();
-        
-        for (my $n = 0; $n < @keys; $n++) {
-            if (exists($fields[$n]) && defined($fields[$n])) {
-                $line{$keys[$n]} = $fields[$n];
-            }
-        }
-        if (defined $line{$trait} && $line{$trait} ne '') {
-            push @data, \%line;
-        }
-    }
-
-    my %unique_names;
-    foreach my $entry (@data) {
-        if (defined $entry->{'studyName'} && $entry->{'studyName'} ne '') {
-            $unique_names{$entry->{'studyName'}} = 1;
-        }
-    }
-
-    # Format the unique project names for the SQL query
-    my $project_names = join(", ", map { "'$_'" } keys %unique_names);
-    
-    $c->stash->{rest} = { data => $project_names, trait => $trait};
+    # Return study names as comma-separated list (quoted via Perl, not SQL)
+    my $project_names = join(", ", keys %$unique_names);
+    $c->stash->{rest} = { data => $project_names, trait => $trait };
 }
 
 sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
@@ -236,19 +215,17 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my $operator = $c->user()->get_object()->get_first_name()." ".$c->user()->get_object()->get_last_name();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $dbh = $schema->storage->dbh;
 
     my @user_roles = $c->user()->roles;
     my $curator = (grep { $_ eq 'curator' || $_ eq 'breeder' } @user_roles) ? 1 : 0;
 
     my $response_data = {
-    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
+        is_curator => $curator ? 1 : 0,
     };
-
 
     # Retrieve and decode the outliers from the request
     my $outliers_string = $c->req->param('outliers');
-    
-    # Now proceed to decode JSON
     my $outliers_data = decode_json($outliers_string);
     my $main_trait = $c->req->param('trait');
 
@@ -264,7 +241,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my @unique_othertraits = keys %unique_traits;
 
     foreach my $entry (@$outliers_data) { 
-        $trait = $entry->{trait};  # Directly use the trait from the entry
+        $trait = $entry->{trait};
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
     }
@@ -274,39 +251,44 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
     }
 
-        
+    # Build validated trait label: "trait_name|operator_name"
     $main_trait =~ s/\|.*//;
     my $trait_operator = $main_trait."|".$operator;
 
-    # Convert unique study names to a comma-separated list in SQL format
     my @unique_study_names = keys %study_names;
-    return $c->response->body('No unique study names found.') unless @unique_study_names;
+    unless (@unique_study_names) {
+        $c->stash->{rest} = { error => 'No unique study names found.' };
+        return;
+    }
 
-    my $study_names_sql = join(", ", map { $schema->storage->dbh->quote($_) } @unique_study_names);  # Quote each name
-
-    # Add validated traits to projectprop
+    # Add validated traits to projectprop — parameterized query
+    my $study_placeholders = join(', ', ('?') x scalar(@unique_study_names));
     my $trial_sql = qq{
         INSERT INTO projectprop (project_id, type_id, value, rank)
         SELECT 
             p.project_id,
             (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'),
-            '$trait_operator',
-            COALESCE(MAX(pp.rank), 0) + 1  -- Increment rank
+            ?,
+            COALESCE(MAX(pp.rank), 0) + 1
         FROM project p
         LEFT JOIN projectprop pp
             ON p.project_id = pp.project_id
             AND pp.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype')
-        WHERE p.name in ($study_names_sql)
-        GROUP BY p.project_id;
+        WHERE p.name IN ($study_placeholders)
+        GROUP BY p.project_id
     };
 
     my $experiment_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    # Execute the first query unconditionally
+    # Execute the validated_phenotype insert
     eval {
-        my $sth_trial = $schema->storage->dbh->prepare($trial_sql);
-        $sth_trial->execute();
+        my $sth_trial = $dbh->prepare($trial_sql);
+        $sth_trial->execute($trait_operator, @unique_study_names);
     };
+
+    if ($@) {
+        $c->log->error("QC store_outliers: failed to insert validated_phenotype: $@");
+    }
 
     my @plot_names  = map { $_->{plotName} } @$outliers_data;
     my @plot_values = map { $_->{value} } @$outliers_data;
@@ -314,23 +296,16 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my %seen;
     @plot_names = grep { !$seen{$_}++ } @plot_names;
 
-    print("here are plots:\n");
-    print Dumper \@plot_names;
-    
-    # Proceed only if there are outliers
+    # Proceed only if there are outliers to store
     if (@plot_names) {
-        # Extract plot names from the outliers data
-        
-
         my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
-        my $trait_ids_sql    = join(", ", @unique_trait_ids);
 
-        # Proceed with query only if @plot_names and %trait_ids are valid
         if (@plot_names && %trait_ids) {
-            my $plot_names_sql = join(", ", map { $schema->storage->dbh()->quote($_) } @plot_names);
+            # Build fully parameterized outlier INSERT query
+            my $plot_placeholders  = join(', ', ('?') x scalar(@plot_names));
+            my $trait_placeholders = join(', ', ('?') x scalar(@unique_trait_ids));
 
-            # SQL Query to insert outliers
-            my $outlier_data_sql = "
+            my $outlier_data_sql = qq{
                 INSERT INTO phenotypeprop (phenotype_id, type_id, value)
                 SELECT phenotype.phenotype_id, 
                        cvterm_outlier.cvterm_id, 
@@ -346,18 +321,24 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
                     ON existing_prop.phenotype_id = phenotype.phenotype_id
                     AND existing_prop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
                 CROSS JOIN (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier') AS cvterm_outlier
-                WHERE stock.uniquename IN ($plot_names_sql)
-                AND nd_experiment_stock.type_id = $experiment_type
-                AND phenotype.observable_id IN ($trait_ids_sql)
-                AND existing_prop.phenotype_id IS NULL;";  
+                WHERE stock.uniquename IN ($plot_placeholders)
+                AND nd_experiment_stock.type_id = ?
+                AND phenotype.observable_id IN ($trait_placeholders)
+                AND existing_prop.phenotype_id IS NULL
+            };
 
-
-            # If curator flag is set, execute the second query
+            # Execute only if user has curator/breeder privileges
             if ($curator == 1) {
                 eval {
-                    my $sth_outliers = $schema->storage->dbh->prepare($outlier_data_sql);
-                    $sth_outliers->execute();
+                    my $sth_outliers = $dbh->prepare($outlier_data_sql);
+                    $sth_outliers->execute(@plot_names, $experiment_type, @unique_trait_ids);
                 };
+
+                if ($@) {
+                    $c->log->error("QC store_outliers: failed to insert outlier props: $@");
+                    $c->stash->{rest} = { error => "Failed to store outlier data: $@" };
+                    return;
+                }
             }
         }
     }
@@ -380,37 +361,51 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     my @user_roles = $c->user()->roles;
     
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
-    
 
-    # Retrieve and decode the outliers from the request
+    # Retrieve and decode the outlier trials from the request
     my $outliers_string = $c->req->param('outliers');
-    my $outlier_trials;
-    $outlier_trials = decode_json($outliers_string);
+    my $outlier_trials = decode_json($outliers_string);
     
-    # getting trait name
+    # getting trait name — strip ontology suffix for LIKE matching
     my $trait = $c->req->param('trait');
     $trait =~ s/\|.*//;
-
     my $trait_like = $trait . '%';
 
     my $response_data = {
-    is_curator => $curator ? 1 : 0,  # 1 if curator, 0 otherwise
+        is_curator => $curator ? 1 : 0,
     };
 
+    # Normalize $outlier_trials to an array of trial name strings
+    my @trial_list;
+    if (ref($outlier_trials) eq 'ARRAY') {
+        @trial_list = @$outlier_trials;
+    } elsif (!ref($outlier_trials)) {
+        # Scalar string — could be comma-separated
+        @trial_list = split(/,\s*/, $outlier_trials);
+    }
+
+    unless (@trial_list) {
+        $c->stash->{rest} = { error => 'No trial names provided.' };
+        return;
+    }
+
+    my $trial_placeholders = join(', ', ('?') x scalar(@trial_list));
+
+    # Parameterized DELETE: remove validated_phenotype projectprop entries
     my $trial_clean_sql = qq{
         DELETE FROM projectprop
         WHERE projectprop.project_id IN (
-            SELECT projectprop.project_id
-            FROM projectprop
-            JOIN project ON project.project_id = projectprop.project_id
-            WHERE project.name IN ($outlier_trials)
+            SELECT project.project_id
+            FROM project
+            WHERE project.name IN ($trial_placeholders)
         )
-        AND projectprop.value LIKE '$trait_like'
+        AND projectprop.value LIKE ?
         AND projectprop.type_id = (
             SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'
-        );
+        )
     };
 
+    # Parameterized DELETE: remove phenotypeprop outlier marks
     my $outliers_clean_sql = qq{
         DELETE FROM phenotypeprop
         WHERE phenotypeprop.phenotype_id IN (
@@ -420,27 +415,25 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
             JOIN nd_experiment_phenotype nep ON nep.phenotype_id = phenotypeprop.phenotype_id
             JOIN nd_experiment_project nes ON nes.nd_experiment_id = nep.nd_experiment_id
             JOIN project pr ON pr.project_id = nes.project_id
-            WHERE ph.observable_id = (
-                SELECT cvterm_id FROM cvterm WHERE cvterm.name like '$trait_like'
+            WHERE ph.observable_id IN (
+                SELECT cvterm_id FROM cvterm WHERE cvterm.name LIKE ?
             )
-            AND pr.name IN ($outlier_trials)
-        );
+            AND pr.name IN ($trial_placeholders)
+        )
     };
-    
-    
 
-    # Execute the SQL query
-    if ($curator eq 'curator'){
+    # Execute the cleanup queries (curators only)
+    if ($curator eq 'curator') {
         eval {
             my $sth_trial = $dbh->prepare($trial_clean_sql);
-            $sth_trial->execute();
+            $sth_trial->execute(@trial_list, $trait_like);
 
             my $sth_clean = $dbh->prepare($outliers_clean_sql);
-            $sth_clean->execute();
+            $sth_clean->execute($trait_like, @trial_list);
         };
 
         if ($@) {
-            $c->response->body("Failed to store data: $@");
+            $c->stash->{rest} = { error => "Failed to restore data: $@" };
             return;
         } else {
             $c->stash->{rest} = $response_data;
@@ -450,13 +443,7 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     }
 
     # Invalidate ANOVA/solGS cache after restoring outliers
-    my @trial_names_restore;
-    if (ref($outlier_trials) eq 'ARRAY') {
-        @trial_names_restore = @$outlier_trials;
-    } elsif (!ref($outlier_trials)) {
-        @trial_names_restore = split(/,\s*/, $outlier_trials);
-    }
-    $self->_invalidate_analysis_cache($c, \@trial_names_restore) if @trial_names_restore;
+    $self->_invalidate_analysis_cache($c, \@trial_list) if @trial_list;
 
     ## cleaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
@@ -475,7 +462,7 @@ sub _invalidate_analysis_cache {
     my $dbh = $c->dbc->dbh;
     my $tmp_dir = $c->config->{cluster_shared_tempdir} || '/home/production/tmp';
 
-    # Resolve trial names to project IDs
+    # Resolve trial names to project IDs (parameterized)
     my $placeholders = join(',', ('?') x scalar(@$trial_names));
     my $sth = $dbh->prepare(
         "SELECT project_id FROM project WHERE name IN ($placeholders)"
@@ -488,10 +475,7 @@ sub _invalidate_analysis_cache {
     }
     return unless @trial_ids;
 
-    # Delete cache files matching each trial ID under all known cache paths:
-    #   1. $tmp_dir/*/solgs/cache/   — solGS phenotype cache (hostname subdir)
-    #   2. $tmp_dir/*/anova/cache/   — ANOVA results (hostname subdir)
-    #   3. $tmp_dir/breedbase-site/anova/ — direct Anova.pm cache (no hostname)
+    # Delete cache files matching each trial ID under all known cache paths
     for my $tid (@trial_ids) {
         my @patterns = (
             # solGS phenotype data + traits

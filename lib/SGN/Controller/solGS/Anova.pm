@@ -248,12 +248,20 @@ sub check_categorical_dependent_variable {
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $trait_idx = firstidx { $_ eq $trait_abbr } @headers;
-    my $trait_col = $trait_idx + 1;
 
-    my $trait_values = `cut -f $trait_col $pheno_file 2>&1`;
-    $trait_values =~ s/$trait_abbr|\n//g;
-    my @trait_values = split( /\t/, $trait_values );
+    # Read the trait column directly via Perl I/O (avoid shell command injection)
+    my @trait_values;
+    open(my $pfh, '<:utf8', $pheno_file) or return 0;
+    my $skip_header = <$pfh>;  # skip header line
+    while (my $line = <$pfh>) {
+        chomp $line;
+        my @cols = split(/\t/, $line, -1);
+        my $val = $cols[$trait_idx] // '';
+        push @trait_values, $val if $val ne '';
+    }
+    close($pfh);
 
+    return 0 unless @trait_values;
     my $categorical = all { $_ =~ /[A-Za-z]/ } @trait_values;
 
     return $categorical;
@@ -1072,6 +1080,9 @@ sub begin : Private {
 sub save_points_scores : Path('/anova/save_points_scores/') Args(0) {
     my ( $self, $c ) = @_;
 
+    # Declared outside eval so the catch-block can rollback on error
+    my $_txn_dbh;
+
     eval {
 
     my $args = $c->req->param('arguments');
@@ -1086,12 +1097,22 @@ sub save_points_scores : Path('/anova/save_points_scores/') Args(0) {
         return;
     }
 
-    # Find adj_means file — scan known directories instead of glob
-    # (glob fails under mod_perl due to directory permission pecularities).
-    my @search_dirs = (
-        '/home/production/tmp/breedbase-site/anova',
-        '/home/production/tmp/breedbase.seedquest.com.ua/5/anova/cache',
-    );
+    # Find adj_means file — dynamically scan tmp directory structure
+    my $tmp_base = $c->config->{cluster_shared_tempdir} || '/home/production/tmp';
+    my @search_dirs;
+    if (opendir(my $top_dh, $tmp_base)) {
+        for my $subdir (readdir($top_dh)) {
+            next if $subdir =~ /^\./;
+            my $anova_cache = "$tmp_base/$subdir/anova/cache";
+            push @search_dirs, $anova_cache if -d $anova_cache;
+            my $anova_dir = "$tmp_base/$subdir/anova";
+            push @search_dirs, $anova_dir if -d $anova_dir && $anova_dir ne $anova_cache;
+        }
+        closedir($top_dh);
+    }
+    # Also include the flat breedbase-site/anova path if present
+    my $flat_anova = "$tmp_base/breedbase-site/anova";
+    push @search_dirs, $flat_anova if -d $flat_anova;
 
     my $prefix = "adj_means_${trial_id}_";
     my $means_file;
@@ -1171,6 +1192,10 @@ sub save_points_scores : Path('/anova/save_points_scores/') Args(0) {
 
     my $ps_cvterm_id = $ps_cvterm->cvterm_id();
     my $dbh = $schema->storage->dbh();
+    $_txn_dbh = $dbh;  # capture for rollback in outer catch
+
+    # Begin transaction — all deletes + inserts must be atomic
+    $dbh->begin_work;
 
     # Find plots for this trial with their accession names.
     # Use DISTINCT to avoid duplicates from multiple experiment links.
@@ -1295,13 +1320,19 @@ sub save_points_scores : Path('/anova/save_points_scores/') Args(0) {
         $saved++;
     }
 
+    # Commit the transaction — all records inserted successfully
+    $dbh->commit;
+
     $c->stash->{rest}{success} = "Saved $saved Points Score values.";
     $c->stash->{rest}{saved_count} = $saved;
 
     };  # end eval
 
     if ($@) {
-        $c->stash->{rest}{Error} = "Perl error: $@";
+        my $err = $@;
+        # Rollback on any error to maintain data consistency
+        eval { $_txn_dbh->rollback if $_txn_dbh; };
+        $c->stash->{rest}{Error} = "Perl error: $err";
     }
 }
 
