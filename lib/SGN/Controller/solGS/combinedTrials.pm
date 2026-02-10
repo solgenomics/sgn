@@ -1048,9 +1048,13 @@ sub combine_trait_data {
     my $combined_pops_pheno_file = $c->stash->{trait_combined_pheno_file};
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
-    my $geno_cnt = ( split( /\s+/, qx / wc -l $combined_pops_geno_file / ) )[0];
-    my $pheno_cnt =
-      ( split( /\s+/, qx / wc -l $combined_pops_pheno_file / ) )[0];
+    my $geno_cnt = 0;
+    open(FILE, "<", $combined_pops_geno_file) or die "can't open $combined_pops_geno_file: $!";
+    $geno_cnt++ while <FILE>;
+
+    my $pheno_cnt = 0;
+    open(FILE, "<", $combined_pops_pheno_file) or die "can't open $combined_pops_pheno_file: $!";
+    $pheno_cnt++ while <FILE>;
 
     unless ( $geno_cnt > 10 && $pheno_cnt > 10 ) {
         $self->get_combined_pops_list($c);

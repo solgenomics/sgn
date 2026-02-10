@@ -94,9 +94,9 @@ sub read_file_data_cols {
 sub count_data_rows {
     my ($self, $file) = @_;
 
-    my $geno = qx /wc -l $file/;
-    my ($geno_lines, $g_file) = split(" ", $geno);
-    my $count = $geno_lines > 1 ? $geno_lines - 1 : 0;
+    my $count = 0;
+    open(FILE, "<", $file) or die "can't open $file: $!";
+    $count++ while <FILE>;
 
     return $count;
 
