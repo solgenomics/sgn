@@ -52,6 +52,9 @@ The root page (/)
 
 sub population : Path('/solgs/population') Args() {
     my ( $self, $c, $training_pop_id, $gp, $protocol_id ) = @_;
+    $training_pop_id = quotemeta($training_pop_id);
+    $gp = quotemeta($gp);
+    $protocol_id = quotemeta($protocol_id);
 
     if ( !$training_pop_id ) {
         $c->stash->{message} =
