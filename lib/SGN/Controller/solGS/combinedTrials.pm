@@ -755,8 +755,10 @@ sub catalogue_combined_pops {
         write_file( $file, { binmode => ':utf8' }, ( $header, $entry ) );
     }
     else {
-        my (@entries) = map { $_ =~ s/\n// ? $_ : undef }
-          read_file( $file, { binmode => ':utf8' } );
+        my @entries;
+        for my $line ( read_file($file, { binmode => ':utf8' }) ) {
+            push @entries, $line =~ s/\n// ? $line : undef;
+        }
         my @intersect = intersect( @entry, @entries );
         unless (@intersect) {
             write_file(
@@ -990,8 +992,7 @@ sub predict_selection_pop_combined_pops_model {
     $c->stash->{training_pop_id} = $training_pop_id;
     $c->stash->{pop_id}          = $training_pop_id;
 
-    my @selected_traits = @{ $c->stash->{training_traits_ids} }
-      if $c->stash->{training_traits_ids};
+    my @selected_traits = $c->stash->{training_traits_ids} ? @{ $c->stash->{training_traits_ids} } : ();
 
     $c->controller('solGS::solGS')->traits_with_valid_models($c);
     my @traits_with_valid_models =
@@ -1049,12 +1050,12 @@ sub combine_trait_data {
     my $combined_pops_geno_file  = $c->stash->{trait_combined_geno_file};
 
     my $geno_cnt = 0;
-    open(FILE, "<", $combined_pops_geno_file) or die "can't open $combined_pops_geno_file: $!";
-    $geno_cnt++ while <FILE>;
+    open(my $fh_geno, "<", $combined_pops_geno_file) or die "can't open $combined_pops_geno_file: $!";
+    $geno_cnt++ while <$fh_geno>;
 
     my $pheno_cnt = 0;
-    open(FILE, "<", $combined_pops_pheno_file) or die "can't open $combined_pops_pheno_file: $!";
-    $pheno_cnt++ while <FILE>;
+    open(my $fh_pheno, "<", $combined_pops_pheno_file) or die "can't open $combined_pops_pheno_file: $!";
+    $pheno_cnt++ while <$fh_pheno>;
 
     unless ( $geno_cnt > 10 && $pheno_cnt > 10 ) {
         $self->get_combined_pops_list($c);
