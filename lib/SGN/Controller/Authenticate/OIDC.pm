@@ -313,10 +313,10 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         my $schema = $c->dbic_schema("Bio::Chado::Schema");
         my $q = "SELECT COUNT(*) FROM sgn_people.sp_person WHERE UPPER(private_email)=UPPER(?) OR UPPER(pending_email)=UPPER(?)";
         my $h = $schema->storage->dbh()->prepare($q);
-        my $num_rows = $h->execute($email, $email);
+        my $count = $h->execute($email, $email);
 
         # Uh oh, too many matches (not sure if this is even possible)
-        if ( $num_rows > 1 ) {
+        if ( $count > 1 ) {
             $c->stash->{error} = (
                 "Multiple users were found to have the email: '$email'." .
                 "\n\nPlease contact your system administrator for more help."
@@ -419,7 +419,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
 
         CXGN::Cookie::set_cookie( $LOGIN_COOKIE_NAME, $new_cookie_string );
         CXGN::Cookie::set_cookie( "user_prefs", $user_prefs );
-        $c->response->redirect($c->req->base);
+        $c->response->redirect($c->config->{'main_production_site_url'} . '/');
 
     } catch {
         $c->stash->{error} = $_;
