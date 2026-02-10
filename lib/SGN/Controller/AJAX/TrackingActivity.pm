@@ -189,7 +189,6 @@ sub generate_tracking_identifiers_POST : Args(0) {
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@check_identifier_names }
     });
     while (my $r=$rs->next){

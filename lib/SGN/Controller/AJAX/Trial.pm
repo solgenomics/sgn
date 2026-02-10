@@ -1208,7 +1208,6 @@ sub upload_trial_file_POST : Args(0) {
             # Lookup synonyms of accession names
             my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_synonym', 'stock_property')->cvterm_id();
             my $acc_synonym_rs = $chado_schema->resultset("Stock::Stock")->search({
-                'me.is_obsolete' => { '!=' => 't' },
                 'stockprops.value' => { -in => \@stock_names},
                 'stockprops.type_id' => $synonym_cvterm_id
             },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});

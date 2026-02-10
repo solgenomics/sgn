@@ -650,7 +650,6 @@ sub add_transformants_using_list_POST : Args(0) {
     my $new_transformant_names = $list->elements();
 
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => $new_transformant_names }
     });
     while (my $r=$rs->next){

@@ -80,7 +80,7 @@ sub existing_transformation_id {
     my $schema = $self->get_chado_schema();
     my $transformation_identifier = $self->get_transformation_identifier();
 
-    if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $transformation_identifier, 'is_obsolete' => { '!=' => 't' }})){
+    if ($schema->resultset('Stock::Stock')->find({ 'uniquename' => $transformation_identifier})){
         return 1;
     } else {
         return;
