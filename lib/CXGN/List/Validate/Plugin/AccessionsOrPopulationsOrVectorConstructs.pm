@@ -6,7 +6,7 @@ use Moose;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 
-sub name { 
+sub name {
     return "accessions_or_populations_or_vector_constructs";
 }
 
@@ -20,7 +20,7 @@ sub validate {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $population_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'population', 'stock_type')->cvterm_id();
     my $vector_construct_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
-    my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE (stock.type_id=$accession_type_id OR stock.type_id=$population_type_id or stock.type_id=$vector_construct_id) AND stock.is_obsolete = 'F';";
+    my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE (stock.type_id=$accession_type_id OR stock.type_id=$population_type_id or stock.type_id=$vector_construct_id);";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my %result;
