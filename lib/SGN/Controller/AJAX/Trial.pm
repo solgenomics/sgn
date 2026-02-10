@@ -322,7 +322,7 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
 	    $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
-	
+
         my $design_created = 0;
         if ($use_same_layout) {
             $design_created = 1;

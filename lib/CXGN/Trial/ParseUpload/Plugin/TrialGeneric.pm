@@ -44,7 +44,7 @@ sub _validate_with_plugin {
     my $treatments = $parsed->{'additional_columns'};
 
     my $trait_validator = CXGN::List::Validate->new();
-    
+
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
 
     foreach my $treatment (@{$treatments}) {
@@ -53,7 +53,7 @@ sub _validate_with_plugin {
         }
     }
 
-    if (@{$validate->{missing}}>0) { 
+    if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
             push @error_messages, "Treatment $missing does not exist in the database.\n";
         }
@@ -109,7 +109,7 @@ sub _validate_with_plugin {
             my $treatment_id = $treatment_id_list[0];
 
             my $treatment_obj = CXGN::Trait->new({
-                bcs_schema => $schema, 
+                bcs_schema => $schema,
                 cvterm_id => $treatment_id
             });
             if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
@@ -291,7 +291,6 @@ sub _validate_with_plugin {
     my @plot_names = keys %seen_plot_names;
     my @already_used_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@plot_names }
     });
     foreach my $r ($rs->all()) {
@@ -379,7 +378,6 @@ sub _parse_with_plugin {
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'stock_name'}};
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
-        'me.is_obsolete' => { '!=' => 't' },
         'stockprops.value' => { -in => \@accessions},
         'me.type_id' => $accession_cvterm_id,
         'stockprops.type_id' => $synonym_cvterm_id

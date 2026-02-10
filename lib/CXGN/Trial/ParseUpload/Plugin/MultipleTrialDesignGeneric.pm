@@ -13,7 +13,7 @@ use CXGN::Trait;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
-# Any additional columns that are not required or optional will be parsed as treatments. 
+# Any additional columns that are not required or optional will be parsed as treatments.
 
 # VALID DESIGN TYPES
 my %valid_design_types = (
@@ -78,7 +78,7 @@ sub _validate_with_plugin {
     my $treatments = $parsed->{'additional_columns'};
 
     my $trait_validator = CXGN::List::Validate->new();
-    
+
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
 
     foreach my $treatment (@{$treatments}) {
@@ -87,7 +87,7 @@ sub _validate_with_plugin {
         }
     }
 
-    if (@{$validate->{missing}}>0) { 
+    if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
             push @error_messages, "Treatment $missing does not exist in the database.\n";
         }
@@ -149,7 +149,7 @@ sub _validate_with_plugin {
             my $treatment_id = $treatment_id_list[0];
 
             my $treatment_obj = CXGN::Trait->new({
-                bcs_schema => $schema, 
+                bcs_schema => $schema,
                 cvterm_id => $treatment_id
             });
             if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
@@ -428,7 +428,6 @@ sub _validate_with_plugin {
     my @plot_names = keys %seen_plot_names;
     my @already_used_plot_names;
     my $rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@plot_names }
     });
     foreach my $r ($rs->all()) {
@@ -536,7 +535,6 @@ sub _parse_with_plugin {
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'accession_name'}};
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
-        'me.is_obsolete' => { '!=' => 't' },
         'stockprops.value' => { -in => \@accessions},
         'me.type_id' => $accession_cvterm_id,
         'stockprops.type_id' => $synonym_cvterm_id
