@@ -5554,6 +5554,60 @@ sub nirs_instances_GET {
 	_standard_response_construction($c, $brapi_package_result);
 }
 
+sub transcriptomics_single  : Chained('brapi') PathPart('transcriptomics') CaptureArgs(1) {
+	my $self = shift;
+	my $c = shift;
+	my $nd_protocol_id = shift;
+
+	$c->stash->{nd_protocol_id} = $nd_protocol_id;
+}
+
+sub transcriptomics : Chained('brapi') PathPart('transcriptomics') Args(0) : ActionClass('REST') { }
+
+sub transcriptomics_GET {
+    my $self = shift;
+    my $c = shift;
+    my $auth = _authenticate_user($c);
+    my $clean_inputs = $c->stash->{clean_inputs};
+    my $brapi = $self->brapi_module;
+    my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
+    my $brapi_package_result = $brapi_module->search($clean_inputs);
+
+    _standard_response_construction($c, $brapi_package_result);
+}
+
+sub transcriptomics_matrix  : Chained('transcriptomics_single') PathPart('matrix') Args(0) : ActionClass('REST') { }
+
+sub transcriptomics_matrix_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
+	my $brapi_package_result = $brapi_module->transcriptomics_matrix(
+		$c->stash->{nd_protocol_id},
+		$clean_inputs
+	);
+	_standard_response_construction($c, $brapi_package_result);
+}
+
+sub transcriptomics_protocol : Chained('brapi') PathPart('transcriptomics/protocols') Args(0) : ActionClass('REST') { }
+
+sub transcriptomics_protocol_GET {
+	my $self = shift;
+	my $c = shift;
+	my ($auth) = _authenticate_user($c);
+	my $clean_inputs = $c->stash->{clean_inputs};
+	my $brapi = $self->brapi_module;
+	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
+	my $brapi_package_result = $brapi_module->transcriptomics_protocols({
+		protocolDbId => $clean_inputs->{protocolDbId},
+		observationUnitDbId => $clean_inputs->{observationUnitDbId}
+	});
+	_standard_response_construction($c, $brapi_package_result);
+}
+
 =head2 brapi/v2/pedigree
 
 =cut
