@@ -1,6 +1,3 @@
-
-
-
 var solGS = solGS || function solGS(){};
 
 solGS.scatterPlot = {
@@ -28,13 +25,13 @@ solGS.scatterPlot = {
         jQuery.each(yData, function(i, yd) {
             if ( xd[0] === yd[0] ) {
                 
-                var ptY = parseFloat(yd[1]);
-                var ptX = parseFloat(xd[1]);
+                var yVal = parseFloat(yd[1]);
+                var xVal = parseFloat(xd[1]);
 
-                xValues.push(ptX);
-                yValues.push(ptY);
-                scatterData.push([{'name' : yd[0], 'x_val': ptX, 'y_val' : ptY,}]);
-                xyValues.push([ptX, ptY]);
+                xValues.push(xVal);
+                yValues.push(yVal);
+                scatterData.push([{'name' : yd[0], 'x_val': xVal, 'y_val' : yVal,}]);
+                xyValues.push([xVal, yVal]);
 
                 return false;
             }            
@@ -243,16 +240,14 @@ solGS.scatterPlot = {
 
     if (corrValues != null) {
         
-        var rText = "r=" + d3.format(".2f")(corrValues.coef);
-        var pText = "p=" + d3.format(".2f")(corrValues.pvalue);
-    
-        var corrText = [rText, pText].filter(function (v) { return v; }).join(", ");
-        corrText = JSON.stringify(corrText);
-    
+        var rVal = `r=${d3.format(".2f")(corrValues.coef)}`;
+        var pVal = `p=${d3.format(".2f")(corrValues.pvalue)}`;
+        var corrText = `${rVal}, ${pVal}`; 
+
         regPlot.append("g")
             .attr("id", "corr_values")
             .append("text")
-            .text(String(corrText).replace(/\"/g, ""))
+            .text(corrText)
             .attr("x", pad.left + width - 5)
             .attr("y", pad.top + height - 5)
             .attr("text-anchor", "end")
