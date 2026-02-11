@@ -85,7 +85,7 @@
 
 \title{Breedbase User Manual}
 \author{Breedbase team}
-\date{2026-01-30}
+\date{2026-02-11}
 
 \begin{document}
 \maketitle
@@ -1315,20 +1315,8 @@ At the bottom there is a brief summary of the trial followed by two buttons.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/trial_create_form_7_bottom} \end{center}
 
-\hypertarget{step-8.-add-field-management-factors-to-your-design-optional}{%
-\subsubsection*{Step 8. Add Field Management Factors to your design (Optional)}\label{step-8.-add-field-management-factors-to-your-design-optional}}
-
-
-You can add Field Management Factors by clicking ``Add Field Management Factor(s) to Design''. Clicking this opens a dialog to specify your factor. You can name this to account for fertilizer, watering regime, inoculation, or anything else. The types of management factors available is customizable in the SGN configuration file. This is optional and can be added from the trial detail page afterwards.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_management_factor_name_dialog} \end{center}
-
-Click ``Continue'' and a dialog will appear where you can specify plots or plants (if you added plants during trial creation) for which the factor was applied. There is a select all button as well.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_management_factor_dialog} \end{center}
-
-\hypertarget{step-9.-saving-new-trial-in-the-database}{%
-\subsubsection*{Step 9. Saving new trial in the database}\label{step-9.-saving-new-trial-in-the-database}}
+\hypertarget{step-7.-saving-new-trial-in-the-database}{%
+\subsubsection*{Step 7. Saving new trial in the database}\label{step-7.-saving-new-trial-in-the-database}}
 
 
 Once you are done reviewing the trial you can click ``Confirm'' to save the generated trial into the database. Once the trial has saved you will see the final completion screen:
@@ -1693,6 +1681,40 @@ Click on ``Download Layout'' on the \emph{Trial Detail} page under ``Experimenta
 The trial layout includes all information regarding the observation units in the experiment. The observation units can be plots, plants, or subplots. The trial layout can include trial design information such as the block\_number and rep\_number. It can also include physical map information such as the row\_number and col\_number, if that information is available for the trial. The trial layout also includes information regarding treatments that have been applied in the field. Optionally, the layout can give information regarding accession's global performance for a list of traits.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image347} \end{center}
+
+\hypertarget{adding-management-regimes}{%
+\subsection{Adding Management Regimes}\label{adding-management-regimes}}
+
+In addition to trial designs and trial layouts, you can specify the specific ways a trial was managed using the \emph{Management Regime} section of the \emph{Experimental Design} tab of the trial detail page.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/management_regime_section} \end{center}
+
+Here, you can view information like fertilization, irrigation, and weed management regimes. The total set of allowed management factor types is a matter of server configuration - contact your server administrator with questions.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/management_regime_details} \end{center}
+
+To add a new management factor, click on the `Add management factor' button in the management regime section. Most of the data is optional, although the type and description must be filled. You may specify the start date, end date, and schedule of the treatment, and you may even record specific instances of the factor being applied if you choose. Click `Submit' to add the factor.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_management_factor_dialog} \end{center}
+
+Once added, a management factor can be edited by clicking the green pen icon next to it. The same dialog as before will open pre-populated with that management factor's data, and you can make changes and submit them. Click on the red trash can to delete the management factor from the trial.
+
+\hypertarget{adding-experimental-treatments}{%
+\subsection{Adding Experimental Treatments}\label{adding-experimental-treatments}}
+
+In contrast to management regimes, which describe how a field trial as a whole was managed, you may wish to store information regarding treatments applied differentially to the stocks of a trial. Treatments may be added from the \emph{Treatments} section of the \emph{Experimental design} tab.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/trial_treatment_section} \end{center}
+
+Opening this tab gives a brief overview of the total number of stocks to which a treatment is applied and a table that allows you to search treatment values across different stock levels.
+
+Adding treatments is very similar to \protect\hyperlink{managing-phenotypic-data}{uploading phenotypic data}: click on the `Add Treatments' button to view the treatment upload dialog:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/trial_add_treatment_dialog} \end{center}
+
+Just as with phenotype uploads, you can supply a spreadsheet specifying the stocks and the treatments with optional timestamps. To ensure the treatment column headers are correct, consult the \protect\hyperlink{managing-observation-variables}{treatment search page} or the ontology browser.
+
+Unlike phenotypic data, however, treatments are automatically applied to the child stocks of any stock receiving a treatment. That means if a plot receives a treatment, all the subplots, plants, and tissue samples in that plot receive the same treatment.
 
 \hypertarget{adding-plant-entries-to-your-trial}{%
 \subsection{Adding Plant Entries To Your Trial}\label{adding-plant-entries-to-your-trial}}
@@ -2468,41 +2490,39 @@ In the future you will be able to directly export your genotyping plate plate la
 \hypertarget{managing-observation-variables-with-traits-methods-and-scales}{%
 \section{Managing Observation Variables with Traits, Methods, and Scales}\label{managing-observation-variables-with-traits-methods-and-scales}}
 
+Though the information in this section pertains to traits, it also applies to experimental treatments. In general, anything that can be done with a trait can be done with a treatment.
+
 Observation variables are the identifiers used when collecting phenotypic data. An observation variable is composed of a trait, a method, and a scale. The trait describes the attribute being measured e.g.~`Plant Height'. The method defines the protocol in which the trait was observed e.g.~`Using a one meter long measuring stick'. The scale defines the units or dimensions for which the measurement was taken e.g.~`Meters'.
 
-Generally, observation variables are defined in ontologies that are predefined. We often use ontologies from cropontology.org. In this case, you will not be able to define your own observation variables directly; instead, you will need to contact us and we will add the observation variable for you.
+Generally, variables are defined in ontologies that are predefined. We often use ontologies from cropontology.org. In this case, you will not be able to define your own variables directly; instead, you will need to contact us and we will add the variable for you. We will discuss manual trait or treatment creation later in this section.
 
-For databases where the user has greater control, we have an interface to allow addition of observation variables, along with traits, methods, and scales. To begin, go to the Search-\textgreater Traits page.
+Before setting out to introduce new traits, visit the trait search page under the \emph{Search} tab to make sure it isn't already present. Once a set of traits, methods, units, scales, and other terms have been added to the database, they can be composed into an observation variable from the \emph{Analyze} tab under \emph{Compose a new trait}.
 
-If the database you are on allows you to directly add observation variables, you will see the following button at the bottom of the page.
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/compose_a_new_trait_tab} \end{center}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_observation_variables_start_button} \end{center}
+A base trait term can be combined with an object/plant part, collection method, measurement unit, and time terms to combine into a new observation variable. The types of combinations available to be made determine which of these can be combined. The types of composed traits available to be made is determined in your server configuration - contact a server administrator with questions.
 
-When you click the button, the following workflow will appear. You should be logged in or else it will not allow addition of the observation variable. The workflow begins with an introduction.
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/compose_a_new_trait_page} \end{center}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_observation_variables_workflow_intro} \end{center}
+To proceed, select one or more term from each box. At the bottom of the page, you will see existing composed traits that match your selections as well as the new composed traits that can be made. Select one or more of the possible new composed traits and click `Submit' to create them.
 
-On the next workflow step, you select the ontology that you want to insert the new observation variable into. You must also give a name and a definition for the new observation variable.
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/compose_a_new_trait_selections} \end{center}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_observation_variables_workflow_observation_variable} \end{center}
+Afterwards, you can use the newly created observation variable ontology term in your phenotyping. The same interface can also be used for treatments, but on the \emph{Compose a new treatment} page.
 
-On the next workflow step, you select the trait ontology to use. Once you select a trait ontology, a select containing all the terms in the selected ontology will appear. You can either select a trait or if it does not exist in the select, you can create a new one by giving a name and a definition for the new trait.
+For databases where the user has greater control, we have an interface to allow curators to add new traits or treatments.
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_observation_variables_workflow_trait} \end{center}
+If the database you are on allows you to directly add observation variables (contact a server administrator to change this), you will see links in the tools section of the user profile page.
 
-On the next workflow step, you select the method ontology to use. Once you select a method ontology, a select containing all the terms in the selected ontology will appear. You can either select a method or if it does not exist in the select, you can create a new one by giving a name and a definition for the new method.
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/trait_designer_links} \end{center}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_observation_variables_workflow_method} \end{center}
+On the trait design page, you will see a form prompting you for the trait name, definition, and optional data like the default value, minimum, maximum, or categories. At the bottom of the page, the ontology browser is duplicated for your convenience.
 
-On the next workflow step, you select the scale ontology to use. Once you select a scale ontology, a select containing all the terms in the selected ontology will appear. You can either select a scale or if it does not exist in the select, you can create a new one by giving a name and a definition for the new scale. You can also define a format, minimum, maximum, categories, and default value for the new scale.
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/trait_design_page} \end{center}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_observation_variables_workflow_scale} \end{center}
+The final input box allows you to choose the parent term for the new term. The trait format dropdown allows you to specify numeric traits, categorical traits, or a new ontology. New ontologies allow you to organize your traits into hierarchies. For example, an `Agronomic trait' sub-ontology could be made to include all agronomic trait measurements in the same group. Note that once a new term has been designated as numeric or categorical, it cannot have more child terms - it is the end of the hierarchy.
 
-On the last page of the workflow, you confirm the submission.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_observation_variables_workflow_submit} \end{center}
-
-Afterwards, you can use the newly created observation variable ontology term in your phenotyping.
+Once a new trait has been submitted, the page will refresh and the trait will be available for use in the composition tool.
 
 \hypertarget{managing-drone-imagery}{%
 \chapter{Managing Drone Imagery}\label{managing-drone-imagery}}

@@ -23,7 +23,7 @@
 <meta name="author" content="Breedbase team" />
 
 
-<meta name="date" content="2026-01-30" />
+<meta name="date" content="2026-02-11" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -180,11 +180,13 @@
 <li class="chapter" data-level="" data-path="managing-field-trials.html"><a href="managing-field-trials.html#email-alert-for-multiple-trial-design-upload"><i class="fa fa-check"></i>Email alert for multiple trial design upload</a></li>
 <li class="chapter" data-level="10.2.5" data-path="managing-field-trials.html"><a href="managing-field-trials.html#viewing-plot-layout-and-trait-heatmap"><i class="fa fa-check"></i><b>10.2.5</b> Viewing Plot Layout and Trait HeatMap</a></li>
 <li class="chapter" data-level="10.2.6" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-additional-information-in-the-trial-detail-page"><i class="fa fa-check"></i><b>10.2.6</b> Adding additional information in the <em>Trial Detail</em> page</a></li>
-<li class="chapter" data-level="10.2.7" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-plant-entries-to-your-trial"><i class="fa fa-check"></i><b>10.2.7</b> Adding Plant Entries To Your Trial</a></li>
-<li class="chapter" data-level="10.2.8" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-tissue-sample-entries-to-your-trial"><i class="fa fa-check"></i><b>10.2.8</b> Adding Tissue Sample Entries To Your Trial</a></li>
-<li class="chapter" data-level="10.2.9" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-gps-coordinates-for-plots"><i class="fa fa-check"></i><b>10.2.9</b> Uploading GPS Coordinates For Plots</a></li>
-<li class="chapter" data-level="10.2.10" data-path="managing-field-trials.html"><a href="managing-field-trials.html#repetitive-measurements-section"><i class="fa fa-check"></i><b>10.2.10</b> Repetitive Measurements Section</a></li>
-<li class="chapter" data-level="10.2.11" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-additional-files-to-trial"><i class="fa fa-check"></i><b>10.2.11</b> Uploading Additional Files To Trial</a></li>
+<li class="chapter" data-level="10.2.7" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-management-regimes"><i class="fa fa-check"></i><b>10.2.7</b> Adding Management Regimes</a></li>
+<li class="chapter" data-level="10.2.8" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-experimental-treatments"><i class="fa fa-check"></i><b>10.2.8</b> Adding Experimental Treatments</a></li>
+<li class="chapter" data-level="10.2.9" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-plant-entries-to-your-trial"><i class="fa fa-check"></i><b>10.2.9</b> Adding Plant Entries To Your Trial</a></li>
+<li class="chapter" data-level="10.2.10" data-path="managing-field-trials.html"><a href="managing-field-trials.html#adding-tissue-sample-entries-to-your-trial"><i class="fa fa-check"></i><b>10.2.10</b> Adding Tissue Sample Entries To Your Trial</a></li>
+<li class="chapter" data-level="10.2.11" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-gps-coordinates-for-plots"><i class="fa fa-check"></i><b>10.2.11</b> Uploading GPS Coordinates For Plots</a></li>
+<li class="chapter" data-level="10.2.12" data-path="managing-field-trials.html"><a href="managing-field-trials.html#repetitive-measurements-section"><i class="fa fa-check"></i><b>10.2.12</b> Repetitive Measurements Section</a></li>
+<li class="chapter" data-level="10.2.13" data-path="managing-field-trials.html"><a href="managing-field-trials.html#uploading-additional-files-to-trial"><i class="fa fa-check"></i><b>10.2.13</b> Uploading Additional Files To Trial</a></li>
 </ul></li>
 <li class="chapter" data-level="10.3" data-path="managing-field-trials.html"><a href="managing-field-trials.html#updating-trial-data"><i class="fa fa-check"></i><b>10.3</b> Updating Trial Data</a></li>
 <li class="chapter" data-level="10.4" data-path="managing-field-trials.html"><a href="managing-field-trials.html#deleting-trial-data"><i class="fa fa-check"></i><b>10.4</b> Deleting Trial Data</a></li>
@@ -388,25 +390,23 @@
 <h1><span class="header-section-number">Chapter 20</span> Managing Observation Variables<a href="managing-observation-variables.html#managing-observation-variables" class="anchor-section" aria-label="Anchor link to header"></a></h1>
 <div id="managing-observation-variables-with-traits-methods-and-scales" class="section level2 hasAnchor" number="20.1">
 <h2><span class="header-section-number">20.1</span> Managing Observation Variables with Traits, Methods, and Scales<a href="managing-observation-variables.html#managing-observation-variables-with-traits-methods-and-scales" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Though the information in this section pertains to traits, it also applies to experimental treatments. In general, anything that can be done with a trait can be done with a treatment.</p>
 <p>Observation variables are the identifiers used when collecting phenotypic data. An observation variable is composed of a trait, a method, and a scale. The trait describes the attribute being measured e.g. ‘Plant Height’. The method defines the protocol in which the trait was observed e.g. ‘Using a one meter long measuring stick’. The scale defines the units or dimensions for which the measurement was taken e.g. ‘Meters’.</p>
-<p>Generally, observation variables are defined in ontologies that are predefined. We often use ontologies from cropontology.org. In this case, you will not be able to define your own observation variables directly; instead, you will need to contact us and we will add the observation variable for you.</p>
-<p>For databases where the user has greater control, we have an interface to allow addition of observation variables, along with traits, methods, and scales. To begin, go to the Search-&gt;Traits page.</p>
-<p>If the database you are on allows you to directly add observation variables, you will see the following button at the bottom of the page.</p>
-<p><img src="assets/images/manage_observation_variables_start_button.png" width="95%" style="display: block; margin: auto;" /></p>
-<p>When you click the button, the following workflow will appear. You should be logged in or else it will not allow addition of the observation variable.
-The workflow begins with an introduction.</p>
-<p><img src="assets/images/manage_observation_variables_workflow_intro.png" width="95%" style="display: block; margin: auto;" /></p>
-<p>On the next workflow step, you select the ontology that you want to insert the new observation variable into. You must also give a name and a definition for the new observation variable.</p>
-<p><img src="assets/images/manage_observation_variables_workflow_observation_variable.png" width="95%" style="display: block; margin: auto;" /></p>
-<p>On the next workflow step, you select the trait ontology to use. Once you select a trait ontology, a select containing all the terms in the selected ontology will appear. You can either select a trait or if it does not exist in the select, you can create a new one by giving a name and a definition for the new trait.</p>
-<p><img src="assets/images/manage_observation_variables_workflow_trait.png" width="95%" style="display: block; margin: auto;" /></p>
-<p>On the next workflow step, you select the method ontology to use. Once you select a method ontology, a select containing all the terms in the selected ontology will appear. You can either select a method or if it does not exist in the select, you can create a new one by giving a name and a definition for the new method.</p>
-<p><img src="assets/images/manage_observation_variables_workflow_method.png" width="95%" style="display: block; margin: auto;" /></p>
-<p>On the next workflow step, you select the scale ontology to use. Once you select a scale ontology, a select containing all the terms in the selected ontology will appear. You can either select a scale or if it does not exist in the select, you can create a new one by giving a name and a definition for the new scale. You can also define a format, minimum, maximum, categories, and default value for the new scale.</p>
-<p><img src="assets/images/manage_observation_variables_workflow_scale.png" width="95%" style="display: block; margin: auto;" /></p>
-<p>On the last page of the workflow, you confirm the submission.</p>
-<p><img src="assets/images/manage_observation_variables_workflow_submit.png" width="95%" style="display: block; margin: auto;" /></p>
-<p>Afterwards, you can use the newly created observation variable ontology term in your phenotyping.</p>
+<p>Generally, variables are defined in ontologies that are predefined. We often use ontologies from cropontology.org. In this case, you will not be able to define your own variables directly; instead, you will need to contact us and we will add the variable for you. We will discuss manual trait or treatment creation later in this section.</p>
+<p>Before setting out to introduce new traits, visit the trait search page under the <em>Search</em> tab to make sure it isn’t already present. Once a set of traits, methods, units, scales, and other terms have been added to the database, they can be composed into an observation variable from the <em>Analyze</em> tab under <em>Compose a new trait</em>.</p>
+<p><img src="assets/images/compose_a_new_trait_tab.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>A base trait term can be combined with an object/plant part, collection method, measurement unit, and time terms to combine into a new observation variable. The types of combinations available to be made determine which of these can be combined. The types of composed traits available to be made is determined in your server configuration - contact a server administrator with questions.</p>
+<p><img src="assets/images/compose_a_new_trait_page.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>To proceed, select one or more term from each box. At the bottom of the page, you will see existing composed traits that match your selections as well as the new composed traits that can be made. Select one or more of the possible new composed traits and click ‘Submit’ to create them.</p>
+<p><img src="assets/images/compose_a_new_trait_selections.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>Afterwards, you can use the newly created observation variable ontology term in your phenotyping. The same interface can also be used for treatments, but on the <em>Compose a new treatment</em> page.</p>
+<p>For databases where the user has greater control, we have an interface to allow curators to add new traits or treatments.</p>
+<p>If the database you are on allows you to directly add observation variables (contact a server administrator to change this), you will see links in the tools section of the user profile page.</p>
+<p><img src="assets/images/trait_designer_links.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>On the trait design page, you will see a form prompting you for the trait name, definition, and optional data like the default value, minimum, maximum, or categories. At the bottom of the page, the ontology browser is duplicated for your convenience.</p>
+<p><img src="assets/images/trait_design_page.png" width="95%" style="display: block; margin: auto;" /></p>
+<p>The final input box allows you to choose the parent term for the new term. The trait format dropdown allows you to specify numeric traits, categorical traits, or a new ontology. New ontologies allow you to organize your traits into hierarchies. For example, an ‘Agronomic trait’ sub-ontology could be made to include all agronomic trait measurements in the same group. Note that once a new term has been designated as numeric or categorical, it cannot have more child terms - it is the end of the hierarchy.</p>
+<p>Once a new trait has been submitted, the page will refresh and the trait will be available for use in the composition tool.</p>
 
 </div>
 </div>
