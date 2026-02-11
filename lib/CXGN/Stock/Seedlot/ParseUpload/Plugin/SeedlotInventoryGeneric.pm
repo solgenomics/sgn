@@ -22,11 +22,13 @@ sub _validate_with_plugin {
         required_columns => [ 'box_id', 'seed_id', 'inventory_date', 'inventory_person'],
         optional_columns => ['weight_gram', 'amount'],
         column_aliases => {
-            'box_id' => ['box id', 'box name', box_name],
+            'box_id' => ['box id', 'box name', 'box_name'],
             'seed_id' => ['seed id', 'seedlot_name', 'seedlot name'],
             'inventory_date' => ['inventory date'],
             'inventory_person' => ['inventory person'],
             'weight_gram' => ['weight(g)', 'weight gram'],
+            'amount' => ['count'],
+
         },
     );
 
@@ -57,7 +59,12 @@ sub _validate_with_plugin {
         my $amount = $row->{'amount'};
         my $weight = $row->{'weight_gram'};
 
-        if ( (!$amount || $amount eq '') && (!$weight || $weight eq '')) {
+        if (!$amount || $amount eq '') {
+            $amount = 'NA';
+        } elsif (!$weight || $weight eq '') {
+            $weight = 'NA';
+        }
+        if ($amount eq 'NA' && $weight eq 'NA') {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
         }
     }
@@ -101,33 +108,39 @@ sub _parse_with_plugin {
         my $box_id;
         my $inventory_date;
         my $inventory_person;
-        my $weight_gram;
+        my $weight;
         my $amount;
-        $seen_seedlot_names{$seed_id}++;
-
         $row_num = $row->{_row};
         $seed_id = $row->{'seed_id'};
         $box_id = $row->{'box_id'};
         $inventory_date = $row->{'inventory_date'};
         $inventory_person = $row->{'inventory_person'};
-        $weight_gram = $row->{'weight_gram'};
+        $weight = $row->{'weight_gram'};
         $amount = $row->{'amount'};
+        $seen_seedlot_names{$seed_id}++;
 
-        $parse_result{$seed_id} = {
+        if (!$amount || $amount eq '') {
+            $amount = 'NA';
+        } elsif (!$weight || $weight eq '') {
+            $weight = 'NA';
+        }
+
+        $parsed_result{$seed_id} = {
             box_id => $box_id,
             seedlot_name => $seed_id,
             inventory_date => $inventory_date,
             inventory_person => $inventory_person,
-            weight_gram => $weight_gram
+            weight_gram => $weight,
+            amount => $amount
         };
     }
 
     my @seedlot_names = keys %seen_seedlot_names;
     my $seedlots_rs = $schema->resultset("Stock::Stock")->search({uniquename => {-in => \@seedlot_names}});
     while (my $r = $seedlots_rs->next){
-        $parse_result{$r->uniquename}->{seedlot_id} = $r->stock_id;
+        $parsed_result{$r->uniquename}{seedlot_id} = $r->stock_id;
     }
-
+    print STDERR "PARSED RESULT PLUGIN =".Dumper(\%parsed_result)."\n";
     $self->_set_parsed_data(\%parsed_result);
 
     return 1;
