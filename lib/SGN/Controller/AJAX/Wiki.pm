@@ -131,7 +131,7 @@ sub store_POST {
     $c->stash->{rest} = {
 	success => 1,
 	wiki_content_id => $content_data->{wiki_content_id},
-	version => $content_data->{version},
+	version => $content_data->{page_version},
     };
 }
 
@@ -187,7 +187,7 @@ sub view : Chained('ajax_wiki') PathPart('view') Args(0) {
     eval {
 	my $page_data = $wiki->retrieve_page($c->stash->{page_name});
 
-	$page_content = $page_data->{content};
+	$page_content = $page_data->{page_content};
 
         $page_version = $wiki->get_version();
 
@@ -215,7 +215,7 @@ sub retrieve : Chained('ajax_wiki') PathPart('retrieve') Args(0) {
     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $c->stash->{page_name} }  );
 
     my $page_data = $wiki->retrieve_page($c->stash->{page_name});
-    my $page_content = $page_data->{content};
+    my $page_content = $page_data->{page_content};
     my $page_version = $page_data->{page_version};
 
     $c->stash->{rest} = {
