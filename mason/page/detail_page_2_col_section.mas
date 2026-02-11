@@ -221,7 +221,7 @@ $field_headers => ()
 % }
 
 % if ($info_section_id eq 'trial_analysis_tools') {
-    <& analysis_tools_section.mas, 
+    <& /breeders_toolbox/analysis_tools_section.mas, 
         trial_id => $trial_id, 
         trial_name => $trial_name 
     &>
