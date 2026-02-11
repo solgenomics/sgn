@@ -11,12 +11,15 @@ solGS.heatmap = {
 
   plot: function (heatmapArgs) {
     var outputData = heatmapArgs.output_data;
-    var heatmapCanvasDiv = heatmapArgs.heatmapCanvasDiv;
-    var heatmapPlotDivId = heatmapArgs.heatmapPlotDivId;
-    var downloadLinks = heatmapArgs.downloadLinks;
+    var inputData = heatmapArgs.input_data;
+    var heatmapCanvasDiv = heatmapArgs.canvas;
+    var heatmapPlotDivId = heatmapArgs.plot_div_id;
+    var downloadLinks = heatmapArgs.download_links;
+    var inputData = heatmapArgs.input_data;
 
+    console.log("inputData:", inputData);
     if (heatmapCanvasDiv == null) {
-      alert("The div element where the heatmap to draw is missing.");
+      alert("The heatmap canvas div element is missing.");
     }
 
     if (jQuery(heatmapPlotDivId).length == 0) {
@@ -24,15 +27,77 @@ solGS.heatmap = {
       jQuery(heatmapCanvasDiv).append("<div id=" + divId + "></div>");
     }
 
-    outputData = JSON.parse(outputData);
+    if (heatmapCanvasDiv.match(/#/) == null) {
+      heatmapCanvasDiv = "#" + heatmapCanvasDiv;
+    }
 
-    var labels = outputData.labels;
-    var values = outputData.values;
-    var pvalues = outputData.pvalues;
-    var nLabels = labels.length;
+    if (heatmapPlotDivId) {
+      if (!heatmapPlotDivId.match(/#/)) {
+        heatmapPlotDivId = "#" + heatmapPlotDivId;
+      }
+    } else {
+      heatmapPlotDivId = "#heatmap_plot";
+    }
 
+    var heatmapPlotDivIdRaw = heatmapPlotDivId.replace(/#/, "");
+    var scatterPlotDivId = heatmapPlotDivIdRaw + "_scatter_plot";
+    var scatterPlotMsgDivId = heatmapPlotDivIdRaw + "_scatter_plot_msg";
+
+    if (jQuery("#" + scatterPlotDivId).length == 0) {
+      jQuery(heatmapPlotDivId).after("<div id=" + scatterPlotDivId + "></div>");
+    }
+    if (jQuery("#" + scatterPlotMsgDivId).length == 0) {
+      jQuery("#" + scatterPlotDivId).before("<div id=" + scatterPlotMsgDivId + "></div>");
+    }
+
+    
+
+    var parsedInputData = null;
+    if (inputData) { 
+        parsedInputData = JSON.parse(inputData);
+    }
+
+    var parsedOutputData = null;
+    if (outputData) {
+        parsedOutputData = JSON.parse(outputData);
+    } else {
+        alert(`The heatmap output data is missing: ${outputData}`);
+        return;
+    }
+
+    var nLabels = parsedOutputData.labels.length;
+
+    if (nLabels >= 100) {
+      height = 600;
+      width = 600;
+      fontSize = "0.75em";
+    } else {
+      height = 500;
+      width = 500;
+    }
+
+    if (nLabels < 20) {
+      height = height * 0.5;
+      width = width * 0.5;
+    }
+
+    var pad = { left: 150, top: 20, right: 250, bottom: 100 };
+    var totalH = height + pad.top + pad.bottom;
+    var totalW = width + pad.left + pad.right;
+
+    var nve = "#6A0888";
+    var pve = "#86B404";
+    var nral = "#98AFC7"; //blue gray
+    var txtColor = "#523CB5";
+
+    var fontSize = "0.95em";
+    
     var corr = [];
     var coefs = [];
+
+    var labels = parsedOutputData.labels;
+    var values = parsedOutputData.values;
+    var pvalues = parsedOutputData.pvalues;
 
     for (var i = 0; i < values.length; i++) {
       var rw = values[i];
@@ -63,43 +128,6 @@ solGS.heatmap = {
         corr.push({ row: i, col: j, value: rwVl, pvalue: rwPV });
       }
     }
-
-    if (heatmapCanvasDiv.match(/#/) == null) {
-      heatmapCanvasDiv = "#" + heatmapCanvasDiv;
-    }
-
-    if (heatmapPlotDivId) {
-      if (!heatmapPlotDivId.match(/#/)) {
-        heatmapPlotDivId = "#" + heatmapPlotDivId;
-      }
-    } else {
-      heatmapPlotDivId = "#heatmap_plot";
-    }
-
-    var fs = "0.95em";
-
-    if (nLabels >= 100) {
-      height = 600;
-      width = 600;
-      fs = "0.75em";
-    } else {
-      height = 500;
-      width = 500;
-    }
-
-    if (nLabels < 20) {
-      height = height * 0.5;
-      width = width * 0.5;
-    }
-
-    var pad = { left: 150, top: 20, right: 250, bottom: 100 };
-    var totalH = height + pad.top + pad.bottom;
-    var totalW = width + pad.left + pad.right;
-
-    var nve = "#6A0888";
-    var pve = "#86B404";
-    var nral = "#98AFC7"; //blue gray
-    var txtColor = "#523CB5";
 
     var rmax = d3.max(coefs);
     var rmin = d3.min(coefs);
@@ -155,7 +183,7 @@ solGS.heatmap = {
       .attr("y", 0)
       .attr("dy", ".3em")
       .attr("fill", txtColor)
-      .style("font-size", fs);
+      .style("font-size", fontSize);
 
     corrplot
       .append("g")
@@ -169,7 +197,7 @@ solGS.heatmap = {
       .attr("dy", ".3em")
       .attr("transform", "rotate(-90)")
       .attr("fill", txtColor)
-      .style("font-size", fs);
+      .style("font-size", fontSize);
       
     corrplot
       .selectAll()
@@ -204,21 +232,24 @@ solGS.heatmap = {
       .on("mouseover", function (d) {
         if (d.value != "NA") {
           d3.select(this).attr("stroke", "green");
+          var rowLabel = labels[d.row];
+          var colLabel = labels[d.col];
+        
           corrplot
             .append("text")
             .attr("id", "corrtext")
             .html(function () {
               if (d.pvalue != "NA") {
                 var pv;
-                if (labels[d.row] === labels[d.col]) {
-                  pv = 0.000;
+                if (rowLabel === colLabel) {
+                  pv = 0.00;
                 } else {
                   pv = d.pvalue;
                 }
-                return `${labels[d.row]} vs. ${labels[d.col]}:  
-              ${d.value}, &alpha;: <${d3.format(".3f")(pv)}`;
+                return `${rowLabel} vs. ${colLabel}:  
+              r=${d.value}, p=${d3.format(".2f")(pv)}`;
               } else {
-                return `${labels[d.row]} vs. ${labels[d.col]}:  
+                return `${rowLabel} vs. ${colLabel}:  
                 ${d.value}`;
               }
             })
@@ -236,12 +267,53 @@ solGS.heatmap = {
             .attr("font-weight", "bold")
             .attr("dominant-baseline", "middle")
             .attr("text-anchor", "middle");
+
+          if (parsedInputData) {
+            jQuery("#" + scatterPlotMsgDivId)
+              .html("Scatter plot: " + rowLabel + " vs. " + colLabel)
+              .show();
+
+            var xData = [];
+            var yData = [];
+
+            
+            jQuery.each(parsedInputData, function (sampleName, colValues) {
+              if (!colValues) {
+                return true;
+              }
+              var xVal = colValues[colLabel];
+              var yVal = colValues[rowLabel];
+        
+              if (xVal === "NA" || yVal === "NA") {
+                return true;
+              }
+            
+              xData.push([sampleName, xVal]);
+              yData.push([sampleName, yVal]);
+            });
+
+    
+            var corrValues = {row: rowLabel, col: colLabel, coef: d.value, pvalue: d.pvalue};
+            jQuery("#" + scatterPlotDivId).empty();
+            solGS.scatterPlot.plotRegression({
+              x_data: xData,
+              y_data: yData,
+              x_label: colLabel,
+              y_label: rowLabel,
+              plot_div_id: scatterPlotDivId,
+              corr_values: corrValues,
+              canvas: heatmapCanvasDiv
+            });
+          } else {
+            console.log("No input data available for scatter plot.");
+          }
         }
       })
       .on("mouseout", function () {
         d3.selectAll("text.corrlabel").remove();
         d3.selectAll("text#corrtext").remove();
         d3.select(this).attr("stroke", "white");
+        jQuery("#" + scatterPlotMsgDivId).empty();
       });
 
     corrplot
