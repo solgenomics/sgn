@@ -140,7 +140,7 @@ sub _parse_with_plugin {
     while (my $r = $seedlots_rs->next){
         $parsed_result{$r->uniquename}{seedlot_id} = $r->stock_id;
     }
-    print STDERR "PARSED RESULT PLUGIN =".Dumper(\%parsed_result)."\n";
+    
     $self->_set_parsed_data(\%parsed_result);
 
     return 1;

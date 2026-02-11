@@ -922,7 +922,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
             my $inventory_weight = $val->{weight_gram};
             my $inventory_amount = $val->{amount};
 
-            if (defined $inventory_weight) {
+            if ($inventory_weight ne 'NA') {
                 $weight_difference = $inventory_weight - $current_stored_weight;
                 if ($weight_difference >= 0){
                     $factor = 1;
@@ -932,7 +932,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
                 }
             }
 
-            if (defined $inventory_amount) {
+            if ($inventory_amount ne 'NA') {
                 $amount_difference = $inventory_amount - $current_stored_count;
                 if ($amount_difference >= 0){
                     $factor = 1;
@@ -949,8 +949,11 @@ sub upload_seedlots_inventory_POST : Args(0) {
             my $from_stock_name = $val->{seedlot_name};
             $transaction->from_stock([ $from_stock_id, $from_stock_name ]);
             $transaction->to_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
-            $transaction->weight_gram($weight_difference);
-            $transaction->amount($amount_difference);
+            if ($inventory_weight ne 'NA') {
+                $transaction->weight_gram($weight_difference);
+            } elsif ($inventory_amount ne 'NA') {
+                $transaction->amount($amount_difference);
+            }
             $transaction->timestamp($val->{inventory_date});
             $transaction->description('Seed inventory upload.');
             $transaction->operator($val->{inventory_person});
