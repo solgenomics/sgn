@@ -44,15 +44,17 @@ sub BUILD {
 
 sub new_page {
     my $self = shift;
-    my $page_name = shift;
-    my $sp_person_id = shift;
+    my $page_name = shift || $self->page_name();
+    my $sp_person_id = shift || $self->sp_person_id();
 
     my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $page_name } );
 
     if ($row) {
 	die "Page named $page_name already exists!\n";
     }
-
+    elsif (! $sp_person_id) {
+	die "The sp_person_id parameter is required!";
+    }
     else {
 	my $new_data = {
 	    page_name => $page_name,
@@ -87,15 +89,22 @@ sub retrieve_page {
     else {
 	my $sp_wiki_id = $row->sp_wiki_id();
 
+	print STDERR "RETRIEVING PAGE $page_name WITH sp_wiki_id $sp_wiki_id\n";
 	my $content_rs = $self->people_schema()->resultset("SpWikiContent")->search( { sp_wiki_id => $sp_wiki_id }, { order_by => { -desc => 'page_version' } } );
 
 	my $content_row;
 	if ($content_rs->count() > 0) {
 	    $content_row = $content_rs->next();
 
+	    $self->page_name($page_name);
+	    $self->page_version($content_row->page_version());
+	    $self->page_content($content_row->page_content());
+	    $self->sp_person_id($row->sp_person_id());
+
 	    return {
-		content => $content_row->page_content(),
-		version => $content_row->page_version(),
+		page_content => $content_row->page_content(),
+		page_version => $content_row->page_version(),
+		sp_person_id => $row->sp_person_id(),
 	    };
 	}
 
@@ -109,7 +118,7 @@ sub retrieve_page {
 
 sub store_page {
     my $self = shift;
-    my $page_name = shift || 'WikiHome';
+    my $page_name = shift || $self->page_name() || 'WikiHome';
     my $content = shift || $self->page_content();
     my $sp_person_id = shift || $self->sp_person_id();
 
@@ -120,7 +129,6 @@ sub store_page {
     if (! $row && $page_name eq 'WikiHome') {
 	$row = $self->people_schema()->resultset("SpWiki")->create(
 	    {
-		sp_wiki_id => 1,
 		sp_person_id => $sp_person_id,
 		page_name => "WikiHome",
 	    });
@@ -148,6 +156,10 @@ sub store_page {
     if ($previous_content_rs->count() > 0) {
 	print STDERR "WE HAVE PREVIOUS DATA...\n";
 	$previous_content_row = $previous_content_rs->next();
+	if ($previous_content_row->page_content() eq $content) {
+	    return { error => "The new content is identical to the content of the page already exists!" };
+	}
+
 	if ($previous_content_row) {
 	    print STDERR "WE HAVE A ROW...\n";
 	    $current_version = $previous_content_row->page_version();
@@ -176,8 +188,11 @@ sub store_page {
 	return { error => $@ };
     }
 
+    $self->page_content($content);
+    $self->page_version($new_version);
+
     return {
-	version => $new_row->page_version(),
+	page_version => $new_row->page_version(),
 	wiki_content_id => $new_row->sp_wiki_content_id()
     };
 }
@@ -221,7 +236,7 @@ sub all_pages {
 	push @pages, $row->page_name();
     }
 
-    my @pages = sort(@pages);
+    @pages = sort(@pages);
 
     print STDERR "PAGES ".Dumper(\@pages);
     return @pages;
