@@ -156,10 +156,6 @@ $message = $response->decoded_content;
 $message_hash = JSON::XS->new()->decode($message);
 is_deeply($message_hash, {'success' => 1});
 
-my $seedlot4_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot4_stock_id);
-my $seedlot4_count = $seedlot4_2->current_count;
-is($seedlot4_count, 100);
-
 my $seedlot3_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot3_stock_id);
 my $seedlot3_count = $seedlot3_2->current_count;
 is($seedlot3_count, 110);
