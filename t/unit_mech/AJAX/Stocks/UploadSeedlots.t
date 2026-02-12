@@ -105,13 +105,14 @@ my $message_hash = JSON::XS->new()->decode($message);
 is_deeply($message_hash->{'success'}, 1);
 my $added_seedlot2 = $message_hash->{'added_seedlot'};
 
-$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_android_app";
+#test seedlot_inventory csv upload with weight info
+$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_android_app.csv";
 $ua = LWP::UserAgent->new;
 $response = $ua->post(
         'http://localhost:3010/ajax/breeders/seedlot-inventory-upload',
         Content_Type => 'form-data',
         Content => [
-            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_upload', Content_Type => 'application/vnd.ms-excel', ],
+            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_android_app.csv'],
             "sgn_session_id"=>$sgn_session_id
         ]
     );
@@ -120,8 +121,52 @@ $response = $ua->post(
 ok($response->is_success);
 $message = $response->decoded_content;
 $message_hash = JSON::XS->new()->decode($message);
-print STDERR Dumper $message_hash;
+#print STDERR Dumper $message_hash;
 is_deeply($message_hash, {'success' => 1});
+
+my $seedlot4_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession4_001' })->stock_id();
+my $seedlot4 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot4_stock_id);
+my $seedlot4_weight = $seedlot4->current_weight;
+is($seedlot4_weight, 10);
+
+my $seedlot3_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession3_001' })->stock_id();
+my $seedlot3 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot3_stock_id);
+my $seedlot3_weight = $seedlot3->current_weight;
+is($seedlot3_weight, 12);
+
+my $seedlot2_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession2_001' })->stock_id();
+my $seedlot2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot2_stock_id);
+my $seedlot2_weight = $seedlot2->current_weight;
+is($seedlot2_weight, 0);
+
+#test seedlot_inventory xlsx upload with amount info
+$file = $f->config->{basepath}."/t/data/stock/seedlot_inventory_amount.xlsx";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/seedlot-inventory-upload',
+        Content_Type => 'form-data',
+        Content => [
+            seedlot_uploaded_inventory_file => [ $file, 'seedlot_inventory_amount.xlsx', Content_Type => 'application/vnd.ms-excel'],
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response->is_success);
+$message = $response->decoded_content;
+$message_hash = JSON::XS->new()->decode($message);
+is_deeply($message_hash, {'success' => 1});
+
+my $seedlot4_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot4_stock_id);
+my $seedlot4_count = $seedlot4_2->current_count;
+is($seedlot4_count, 100);
+
+my $seedlot3_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot3_stock_id);
+my $seedlot3_count = $seedlot3_2->current_count;
+is($seedlot3_count, 110);
+
+my $seedlot2_2 = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $seedlot2_stock_id);
+my $seedlot2_count = $seedlot2_2->current_count;
+is($seedlot2_count, 120);
 
 #test seedlot list details
 my $seedlot_list_id = CXGN::List::create_list($f->dbh(), 'test_seedlot_list', 'test_desc', 41);
