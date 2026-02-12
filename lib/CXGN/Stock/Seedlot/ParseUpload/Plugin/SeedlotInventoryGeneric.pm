@@ -59,12 +59,7 @@ sub _validate_with_plugin {
         my $amount = $row->{'amount'};
         my $weight = $row->{'weight_gram'};
 
-        if (!$amount || $amount eq '') {
-            $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
-            $weight = 'NA';
-        }
-        if ($amount eq 'NA' && $weight eq 'NA') {
+        if (!defined $amount && !defined $weight) {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
         }
     }
@@ -119,12 +114,6 @@ sub _parse_with_plugin {
         $amount = $row->{'amount'};
         $seen_seedlot_names{$seed_id}++;
 
-        if (!$amount || $amount eq '') {
-            $amount = 'NA';
-        } elsif (!$weight || $weight eq '') {
-            $weight = 'NA';
-        }
-
         $parsed_result{$seed_id} = {
             box_id => $box_id,
             seedlot_name => $seed_id,
@@ -140,7 +129,7 @@ sub _parse_with_plugin {
     while (my $r = $seedlots_rs->next){
         $parsed_result{$r->uniquename}{seedlot_id} = $r->stock_id;
     }
-    
+
     $self->_set_parsed_data(\%parsed_result);
 
     return 1;
