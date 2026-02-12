@@ -313,7 +313,8 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         my $schema = $c->dbic_schema("Bio::Chado::Schema");
         my $q = "SELECT COUNT(*) FROM sgn_people.sp_person WHERE UPPER(private_email)=UPPER(?) OR UPPER(pending_email)=UPPER(?)";
         my $h = $schema->storage->dbh()->prepare($q);
-        my $count = $h->execute($email, $email);
+        $h->execute($email, $email);
+        my ($count) = $h->fetchrow_array();
 
         # Uh oh, too many matches (not sure if this is even possible)
         if ( $count > 1 ) {
