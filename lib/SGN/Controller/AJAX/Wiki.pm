@@ -79,13 +79,14 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
     }
 }
 
-sub ajax_edit_page : Chained('ajax_wiki') PathPart('edit') Args(0) {
-    my $self = shift;
-    my $c = shift;
+# sub ajax_edit_page : Chained('ajax_wiki') PathPart('edit') Args(0) {
+#     my $self = shift;
+#     my $c = shift;
 
-    print STDERR "EDIT WIKI\n";
-    $c->stash->{rest} = { error => '' };
-}
+#     print STDERR "EDIT WIKI\n";
+#     $c->stash->{rest} = { error => '' };
+# }
+
 
 # this needs to be POST
 # stores the content for a given wiki_id
