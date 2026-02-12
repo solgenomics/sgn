@@ -1,6 +1,7 @@
 
 package SGN::Controller::AJAX::Wiki;
 
+use Data::Dumper;
 use URI::FromHash 'uri';
 use Text::MultiMarkdown qw | markdown |;
 use CXGN::People::Wiki;
@@ -64,9 +65,11 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
     };
 
     if ($@) {
+	print STDERR "This error occurred trying to generate a page: $@\n";
 	$c->stash->{rest} = { error => $@ };
     }
     else {
+	print STDERR "Page creation a success! $sp_wiki_id\n";
 	$c->stash->{rest} = { success => 1, sp_wiki_id => $sp_wiki_id, page_name => $wiki_page_name };
     }
 }
@@ -187,6 +190,7 @@ sub view : Chained('ajax_wiki') PathPart('view') Args(0) {
     eval {
 	my $page_data = $wiki->retrieve_page($c->stash->{page_name});
 
+	print STDERR "PAGE NOW: ".Dumper($page_data);
 	$page_content = $page_data->{page_content};
 
         $page_version = $wiki->get_version();
