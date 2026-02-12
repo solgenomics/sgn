@@ -78,11 +78,18 @@ sub retrieve_page {
 
     my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $page_name });
 
-    if (! $row && ($page_name eq "WikiHome" )) {
-	return "WELCOME TO THE WIKI!";
-    }
+    # if (! $row && ($page_name eq "" || $page_name eq "WikiHome" )) {
+
+    # 	print STDERR "NO PAGE EXISTS... RETURNING GREETING\n";
+    # 	return {
+    # 	    page_content => "WELCOME TO THE WIKI!",
+    # 	    page_version => 0,
+    # 	};
+
+    # }
 
     if (! $row) {
+	print STDERR "PAGE DOES NOT EXIST!\n";
 	die "The page with name $page_name does not exist!";
     }
 
@@ -126,16 +133,16 @@ sub store_page {
 
     my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $page_name });
 
-    if (! $row && $page_name eq 'WikiHome') {
-	$row = $self->people_schema()->resultset("SpWiki")->create(
-	    {
-		sp_person_id => $sp_person_id,
-		page_name => "WikiHome",
-	    });
+    # if (! $row && $page_name eq 'WikiHome') {
+    # 	$row = $self->people_schema()->resultset("SpWiki")->create(
+    # 	    {
+    # 		sp_person_id => $sp_person_id,
+    # 		page_name => "WikiHome",
+    # 	    });
 
-	$row->insert();
+    # 	$row->insert();
 
-    }
+    # }
     if (! $row) {
 	print STDERR "THE WIKI PAGE DOES NOT EXIST ($page_name)\n";
  	die "The page with page name $page_name does not exist!";
@@ -214,6 +221,10 @@ sub get_version {
     my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $page_name });
 
     my $page_version;
+
+    if (! $row) {
+	return 0;
+    }
 
     my $version_rs = $self->people_schema()->resultset("SpWikiContent")->search( { sp_wiki_id => $row->sp_wiki_id() }, { order_by => { -desc => 'page_version' } } );
 
