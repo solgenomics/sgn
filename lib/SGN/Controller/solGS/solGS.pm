@@ -148,8 +148,13 @@ sub get_markers_count {
         }
     }
 
-    my $markers     = qx / head -n 1 $geno_file /;
-    my $markers_cnt = split( /\t/, $markers ) - 1;
+    open(my $fh, '<', $geno_file) or die "Could not open genotype file $geno_file: $!";
+    my $markers = <$fh> || '';
+    close $fh;
+
+    chomp $markers;
+    my @fields = split(/\t/, $markers);
+    my $markers_cnt = @fields ? scalar(@fields) - 1 : 0;
 
     return $markers_cnt;
 

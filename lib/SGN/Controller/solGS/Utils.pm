@@ -97,6 +97,7 @@ sub count_data_rows {
     my $count = 0;
     open(my $fh, "<", $file) or die "can't open $file: $!";
     $count++ while <$fh>;
+    close $fh;
 
     return $count;
 

@@ -1052,10 +1052,12 @@ sub combine_trait_data {
     my $geno_cnt = 0;
     open(my $fh_geno, "<", $combined_pops_geno_file) or die "can't open $combined_pops_geno_file: $!";
     $geno_cnt++ while <$fh_geno>;
+    close $fh_geno;
 
     my $pheno_cnt = 0;
     open(my $fh_pheno, "<", $combined_pops_pheno_file) or die "can't open $combined_pops_pheno_file: $!";
     $pheno_cnt++ while <$fh_pheno>;
+    close $fh_pheno;
 
     unless ( $geno_cnt > 10 && $pheno_cnt > 10 ) {
         $self->get_combined_pops_list($c);
