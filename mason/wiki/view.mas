@@ -126,7 +126,14 @@ jQuery(window).ready( function() {
 	    jQuery.ajax( {
 		url: '/ajax/wiki/'+page_name+'/delete',
 	    }).then(
-		function(r) { alert('Page deleted!'); window.location.href="/wiki"; },
+		function(r) {
+	            if (r.error) {
+			alert(r.error);
+		    }
+		    else {
+			alert('Page deleted!'); window.location.href="/wiki";
+		    }
+		},
 		function(r) { alert('An error occurred deleting the page'); }
 	    );
 	}
