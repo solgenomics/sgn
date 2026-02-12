@@ -8,14 +8,14 @@ $page_name => 'WikiHome'
   /* Adds space between the content and cell border */
   padding: 0.6em;
   /* Adds borders to all cells */
-  border: 1px solid #ddd;
+  border: 1px solid #ddd
   /* Aligns text within cells */
   text-align: left;
     }
 </style>
 
 <h3><a href="/wiki"><b>Wiki</b></a>&nbsp;&nbsp;&nbsp;
-    <button id="new_wiki_page" class="btn" data-toggle="modal" data-target="#new_wiki_page_modal">New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
+    <button id="new_wiki_page_button" class="btn" data-toggle="modal" data-target="#new_wiki_page_modal">New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
     <hr>
     <b><span id="page_name" title="page name">?</span> (v<span id="page_version">?</span></b>)
     <hr>
@@ -50,7 +50,7 @@ $page_name => 'WikiHome'
         </button>
       </div>
       <div class="modal-body">
-    <p><textarea id="wiki_page_content" rows="100" cols="200">:-)</textarea></p>
+    <p><textarea id="wiki_page_content" rows="50" cols="400" alt="ENTER WIKI PAGE IN MARKDOWN"></textarea></p>
       </div>
       <div class="modal-footer">
         <button type="button" id="save_wiki_page_button" class="btn btn-primary">Save Page</button>
@@ -93,7 +93,7 @@ jQuery(window).ready( function() {
 		else {
 		    jQuery('#edit_wiki_page_modal').modal('hide');
 		    view_page(page_name);
-		    alert('Successfully stored page '+page_name);
+		    // alert('Successfully stored page '+page_name);
 		}
 	    },
 	    function(r) { alert('ERROR!'); }
@@ -147,7 +147,7 @@ function create_page(page_name) {
 		    alert('An error occurred. '+r.error);
 		}
 		else if (r.success) {
-		    alert('Page successfully stored. id ='+r.sp_wiki_id);
+		//  alert('Page successfully stored. id ='+r.sp_wiki_id);
 		    page_name = r.page_name;
 		    jQuery('#edit_wiki_page_modal').modal('show');
 		}
