@@ -48,6 +48,11 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    if (! $c->user()->check_roles("curator")) {
+	$c->stash->{rest} = { error => "You do not have the privileges to modify wiki pages." };
+	$c->detach();
+    }
+
     my $user_id = $c->user->get_object->get_sp_person_id();
 
     my $page_name = $c->req->param('page_name');
