@@ -217,7 +217,7 @@ The command submitted to be run.
 
 =cut
 
-has 'cmd' => (isa => 'Str', is => 'rw');
+has 'cmd' => (isa => 'Maybe[Str]', is => 'rw');
 
 =head2 logfile()
 

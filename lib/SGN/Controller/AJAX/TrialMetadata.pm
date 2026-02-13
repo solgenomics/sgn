@@ -40,6 +40,7 @@ use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
 use Sort::Key::Natural qw(natkeysort);
 use CXGN::Trial::ParseUpload;
+use CXGN::Job;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -3681,6 +3682,25 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
+    my $trial_obj = CXGN::Project->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id
+    });
+
+    my $job = CXGN::Job->new({
+        sp_person_id => $user_id,
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        name => $trial_obj->get_name()." spatial layout upload",
+        job_type => 'upload',
+        cmd => "",
+        finish_logfile => $c->config->{job_finish_log},
+        submit_page =>  $c->request->headers->referer,
+        results_page =>  $c->request->headers->referer
+    });
+
+    $job->update_status("submitted");
+
     my $parser = CXGN::Trial::ParseUpload->new({
         chado_schema => $schema,
         trial_id => $trial_id,
@@ -3695,7 +3715,6 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
 
         if (! $parser->has_parse_errors() ){
             $return_error = "Parsing failed, but we could not get parsing errors...";
-            $c->stash->{rest} = {error_string => $return_error,};
         }
         else {
             my $parse_errors = $parser->get_parse_errors();
@@ -3706,6 +3725,10 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         }
 
         $c->stash->{rest} = {error => $return_error};
+        $job->additional_args({
+            error => $return_error
+        });
+        $job->update_status("failed");
         return;
     }
 
@@ -3723,6 +3746,10 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     };
     if ($@) {
         $c->stash->{rest} = {error => "The upload was successful, but an error occurred trying to save the row and column data: $@\n"};
+        $job->additional_args({
+            error => $@
+        });
+        $job->update_status("failed");
         return;
     }
 
@@ -3731,6 +3758,8 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
     my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
+
+    $job->update_status("finished");
 
     $c->stash->{rest} = {success => 1};
 }
