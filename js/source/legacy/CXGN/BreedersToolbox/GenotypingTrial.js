@@ -95,7 +95,7 @@ jQuery(document).ready(function ($) {
 
     jQuery('#genotyping_trial_dialog').on('show.bs.modal', function (e) {
         var l = new CXGN.List();
-        var html = l.listSelect('accession_select_box', [ 'accessions', 'plots', 'plants', 'tissue_samples' ], undefined, undefined, undefined);
+        var html = l.listSelect('accession_select_box', [ 'accessions', 'plots', 'subplots', 'plants', 'tissue_samples' ], undefined, undefined, undefined);
         jQuery('#accession_select_box_span').html(html);
     })
 
@@ -111,8 +111,8 @@ jQuery(document).ready(function ($) {
         plate_data.list_id = jQuery('#accession_select_box_list_select').val();
 
         var l = new CXGN.List();
-        if (! l.legacy_validate(plate_data.list_id, 'accessions', true) && ! l.legacy_validate(plate_data.list_id, 'plots', true) && ! l.legacy_validate(plate_data.list_id, 'plants', true) && ! l.legacy_validate(plate_data.list_id, 'tissue_samples', true)) {
-            alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
+        if (! l.legacy_validate(plate_data.list_id, 'accessions', true) && ! l.legacy_validate(plate_data.list_id, 'plots', true) && ! l.legacy_validate(plate_data.list_id, 'subplots', true)&& ! l.legacy_validate(plate_data.list_id, 'plants', true) && ! l.legacy_validate(plate_data.list_id, 'tissue_samples', true)) {
+            alert('The list contains elements that are not accessions or plots or subplots or plants or tissue_samples.');
             return;
         }
 
