@@ -3679,32 +3679,6 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
 
-#     my $error_string = '';
-#    # open file and remove return of line
-#     open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
-#     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-#     my $header = <$F>;
-#     while (<$F>) {
-#     	chomp;
-#     	$_ =~ s/\r//g;
-#     	my ($plot,$row,$col) = split /\t/ ;
-#     	my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot });
-#     	if ($rs->count()== 1) {
-#       	my $r =  $rs->first();
-#       	print STDERR "The plots $plot was found.\n Loading row $row col $col\n";
-#       	$r->create_stockprops({row_number => $row, col_number => $col});
-#       }
-#       else {
-#       	print STDERR "WARNING! $plot was not found in the database.\n";
-#         $error_string .= "WARNING! $plot was not found in the database.";
-#       }
-#     }
-
-#     if ($error_string){
-#         $c->stash->{rest} = {error_string => $error_string};
-#         $c->detach();
-#     }
-
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
 
     my $parser = CXGN::Trial::ParseUpload->new({
@@ -3731,7 +3705,24 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
             }
         }
 
-        $c->stash->{rest} = {error_string => $return_error};
+        $c->stash->{rest} = {error => $return_error};
+        return;
+    }
+
+    # store all row/column data here
+    eval {
+        foreach my $plot_id (keys(%{$parsed_data->{spatial_layout}})) {
+            my $plot_name = $parsed_data->{spatial_layout}->{$plot_id}->{plot_name};
+            my $row = $parsed_data->{spatial_layout}->{$plot_id}->{row_number};
+            my $col = $parsed_data->{spatial_layout}->{$plot_id}->{col_number};
+
+            my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot_name });
+            my $r = $rs->first();
+            $r->create_stockprops({row_number => $row, col_number => $col});
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = {error => "The upload was successful, but an error occurred trying to save the row and column data: $@\n"};
         return;
     }
 

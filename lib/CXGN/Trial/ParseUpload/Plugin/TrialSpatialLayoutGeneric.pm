@@ -6,6 +6,7 @@ use CXGN::File::Parse;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use CXGN::Stock;
+use CXGN::Project;
 
 my @REQUIRED_COLUMNS = qw|plot_name row_number col_number|;
 my @OPTIONAL_COLUMNS = qw||;
@@ -15,6 +16,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $trial_id = $self->get_trial_id();
 
     # List validator
     my $validator = CXGN::List::Validate->new();
@@ -80,43 +82,9 @@ sub _validate_with_plugin {
         }
     }
 
-    # Plot Names: must exist in the database as plots
-    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    # Plots must exist
     my @plot_names = @{$parsed_values->{'plot_name'}};
-    my @missing_plots;
-    my %plot_trial_map;  # map of plot_name => trial_id
-
-    foreach my $plot_name (@plot_names) {
-        my $rs = $schema->resultset("Stock::Stock")->search({
-            'me.uniquename' => $plot_name,
-            'me.type_id' => $plot_cvterm_id,
-            'me.is_obsolete' => { '!=' => 't' }
-        });
-
-        if ($rs->count() == 0) {
-            push @missing_plots, $plot_name;
-        }
-        else {
-            # Get the trial that this plot belongs to
-            my $plot_stock = $rs->first();
-            my $plot_id = $plot_stock->stock_id();
-
-            # Get trial from plot
-            my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-            my $project_rs = $schema->resultset("Project::Project")->search({
-                'nd_experiment_stocks.stock_id' => $plot_id,
-                'nd_experiment_projects.nd_experiment_id' => { -ident => 'nd_experiment_stocks.nd_experiment_id' }
-            }, {
-                join => { 'nd_experiment_projects' => { 'nd_experiment' => 'nd_experiment_stocks' } }
-            });
-
-            if ($project_rs->count() > 0) {
-                my $trial = $project_rs->first();
-                my $trial_id = $trial->project_id();
-                $plot_trial_map{$plot_name} = $trial_id;
-            }
-        }
-    }
+    my @missing_plots = @{$validator->validate($schema, 'plots', \@plot_names)->{'missing'}};
 
     # Report missing plots
     if (scalar(@missing_plots) > 0) {
@@ -124,12 +92,23 @@ sub _validate_with_plugin {
     }
 
     # Check that all plots belong to the same trial
-    my @trial_ids = uniq values %plot_trial_map;
-    if (scalar(@trial_ids) > 1) {
-        push @error_messages, "All plots must belong to the same trial. Found plots from multiple trials.";
+    my $trial = CXGN::Project->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id
+    });
+
+    my %trial_plots = map {$_->[1] => 1} @{$trial->get_plots()};
+
+    my @mismatched_plots;
+
+    foreach my $plot (@plot_names) {
+        if (!defined($trial_plots{$plot})) {
+            push @mismatched_plots, $plot;
+        }
     }
-    elsif (scalar(@trial_ids) == 0 && scalar(@missing_plots) == 0) {
-        push @error_messages, "Could not determine trial for the provided plots.";
+
+    if (scalar(@mismatched_plots) > 0) {
+        push @error_messages, "All plots must belong to ".$trial->get_name().". ";
     }
 
     # Check for unique row/col positions
@@ -189,7 +168,10 @@ sub _parse_with_plugin {
     }
 
 
-    $self->_set_parsed_data(\%spatial_layout_data);
+    $self->_set_parsed_data({
+        trial_id => $self->get_trial_id(),
+        spatial_layout => \%spatial_layout_data
+    });
 
     return 1;
 }
