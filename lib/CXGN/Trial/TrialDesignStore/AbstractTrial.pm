@@ -752,6 +752,43 @@ sub store {
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_rs->first->object_id };
                     }
                 }
+                # For genotyping plate, if the well tissue_sample is sourced from a subplot, then we store relationships between the tissue_sample and the subplot, and the tissue sample and the subplot's accession.
+                if ($stock_type_checked == $self->get_subplot_cvterm_id){
+                    my $parent_subplot_rs;
+                    my $parent_subplot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_subplot_of_cvterm_id,
+                        'object.type_id'=>$self->get_accession_cvterm_id
+                    }, {join => 'object'});
+
+                    my $parent_subplot_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_subplot_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => 'object'});
+
+                    my $parent_subplot_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_subplot_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => 'object'});
+
+                    if ($parent_subplot_accession_rs->count > 0) {
+                        $parent_subplot_rs = $parent_subplot_accession_rs;
+                    } elsif ($parent_subplot_cross_rs->count > 0) {
+                        $parent_subplot_rs = $parent_subplot_cross_rs;
+                    } elsif ($parent_subplot_family_name_rs->count > 0) {
+                        $parent_subplot_rs = $parent_subplot_family_name_rs;
+                    }
+
+                    if ($parent_subplot_rs->count > 1){
+                        die "Subplot $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+
+                    if ($parent_subplot_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_subplot_rs->first->object_id };
+                    }
+                }
                 #   For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
                 if ($stock_type_checked == $self->get_plant_cvterm_id){
                     my $parent_plant_rs;
@@ -1011,12 +1048,12 @@ sub store {
                     my $parent_plant_id;
                     if ($parent_plant_stock) {
                         $parent_plant_id = $parent_plant_stock->stock_id;
-                    } 
+                    }
                     #print STDERR "parent plant id: $parent_plant_id";
                     if ($parent_plant_id) {
                         push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $parent_plant_id };
                     }
-                    
+
                     my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.object_id'=>$parent_plant_id,
                         'me.type_id'=>$self->get_plant_of_cvterm_id,
