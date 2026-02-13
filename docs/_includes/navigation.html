@@ -1,0 +1,31 @@
+<!-- modifed from https://gist.github.com/kasperisager/9416313 -->
+{% capture html %}
+<ul class="nav-tree">
+    {% assign entries = site.pages | sort: "path" %}
+    {% for entry in entries %}
+        {% unless entry.tags contains 'no_toc' %}
+        {% capture slug    %}{{ entry.url | split: "/"   | last                       }}{% endcapture %}
+        {% capture current %}{{ entry.url | remove: slug | replace: "//", "/" }}{% endcapture %}
+        {% if current==entry.url %} {% assign current = "_ROOT" %} {% endif %}
+        {% if current == include.context %}
+            <li>
+                {% if page.url == entry.url %}<strong>{% elsif page.url contains entry.url %}<em>{% endif %}
+                    <a href="{{ site.baseurl }}{{ entry.url }}">{{ entry.title }}</a>
+                {% if page.url == entry.url %}</strong>{% elsif page.url contains entry.url %}</em>{% endif %}
+                {% assign ccon = entry.content | stringify%}
+                {% if ccon contains '<!-- TOC-START -->' %}
+                    {% assign toc = ccon | split: '<!-- TOC-END -->' | first | split: '<!-- TOC-START -->' | last %}
+                    {% assign link_prefix = 'href="' | append: site.baseurl | append: entry.url | append: "#" %}
+                    {{toc | replace: 'href="#',  link_prefix }}
+                {% endif %}
+                {% include navigation.html context=entry.url %}
+            </li>
+        {% endif %}
+        {% endunless %}
+    {% endfor %}
+    {% if include.context == "/" %}
+            </ul>
+        </li>
+    {% endif %}    
+</ul>
+{% endcapture %}{{ html | strip_newlines | replace:'    ','' | replace:'    ','' | replace:'  ',' ' | remove: '<ul class="nav-tree"></ul>'}}

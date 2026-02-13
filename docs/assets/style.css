@@ -1,0 +1,15 @@
+/*--- LOGO ---*/
+
+.toc-logo {
+  width: 200px !important;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
+.toc-logo img {
+  max-width: 100%;
+}
+
+.tab {
+  margin-left: 40px;
+}
