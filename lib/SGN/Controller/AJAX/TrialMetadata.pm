@@ -39,6 +39,7 @@ use List::Util qw(max);
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
 use Sort::Key::Natural qw(natkeysort);
+use CXGN::Trial::ParseUpload;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -3678,36 +3679,66 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
 
-    my $error_string = '';
-   # open file and remove return of line
-    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-    my $header = <$F>;
-    while (<$F>) {
-    	chomp;
-    	$_ =~ s/\r//g;
-    	my ($plot,$row,$col) = split /\t/ ;
-    	my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot });
-    	if ($rs->count()== 1) {
-      	my $r =  $rs->first();
-      	print STDERR "The plots $plot was found.\n Loading row $row col $col\n";
-      	$r->create_stockprops({row_number => $row, col_number => $col});
-      }
-      else {
-      	print STDERR "WARNING! $plot was not found in the database.\n";
-        $error_string .= "WARNING! $plot was not found in the database.";
-      }
-    }
+#     my $error_string = '';
+#    # open file and remove return of line
+#     open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
+#     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+#     my $header = <$F>;
+#     while (<$F>) {
+#     	chomp;
+#     	$_ =~ s/\r//g;
+#     	my ($plot,$row,$col) = split /\t/ ;
+#     	my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot });
+#     	if ($rs->count()== 1) {
+#       	my $r =  $rs->first();
+#       	print STDERR "The plots $plot was found.\n Loading row $row col $col\n";
+#       	$r->create_stockprops({row_number => $row, col_number => $col});
+#       }
+#       else {
+#       	print STDERR "WARNING! $plot was not found in the database.\n";
+#         $error_string .= "WARNING! $plot was not found in the database.";
+#       }
+#     }
 
-    if ($error_string){
-        $c->stash->{rest} = {error_string => $error_string};
-        $c->detach();
+#     if ($error_string){
+#         $c->stash->{rest} = {error_string => $error_string};
+#         $c->detach();
+#     }
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+
+    my $parser = CXGN::Trial::ParseUpload->new({
+        chado_schema => $schema,
+        trial_id => $trial_id,
+        filename => $archived_filename_with_path
+    });
+    $parser->load_plugin('TrialSpatialLayoutGeneric');
+
+    my $parsed_data = $parser->parse();
+
+    if (!$parsed_data || $parser->has_parse_errors()) {
+        my $return_error = '';
+
+        if (! $parser->has_parse_errors() ){
+            $return_error = "Parsing failed, but we could not get parsing errors...";
+            $c->stash->{rest} = {error_string => $return_error,};
+        }
+        else {
+            my $parse_errors = $parser->get_parse_errors();
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error=$return_error.$error_string."<br>";
+            }
+        }
+
+        $c->stash->{rest} = {error_string => $return_error};
+        return;
     }
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $trial_id, experiment_type => 'field_layout' });
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
 
     $c->stash->{rest} = {success => 1};
