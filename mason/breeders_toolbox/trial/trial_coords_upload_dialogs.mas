@@ -89,11 +89,10 @@ $trial_name
         <div class="container-fluid">
 
 <b>
-trial coordinates may be uploaded in tab-delimited text file format
+Trial coordinates may be uploaded as tab-separated values (.tsv), comma-separated values (.csv), excel (.xls/.xlsx), and open document format (.ods).
 </b>
 <br>
-(.xls or .xlsx formats are NOT supported)
-<br><br>
+<br>
 <b>
   Header:
 </b>
