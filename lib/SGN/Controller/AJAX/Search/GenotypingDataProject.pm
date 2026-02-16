@@ -421,7 +421,7 @@ sub genotyping_project_accession_search_POST : Args(0) {
         while (my ($acc_id, $gen_ids) = $h->fetchrow_array()) {
             $gen_by_acc{$acc_id} = $gen_ids;
             foreach my $gen_id ( @$gen_ids ) {
-                push @{$acc_by_gen{$gen_id}}, $acc_id;
+                push @{$acc_by_gen{$gen_id}}, $acc_id if $gen_id && $gen_id != '';
             }
         }
         foreach my $acc_id (keys %gen_by_acc) {
