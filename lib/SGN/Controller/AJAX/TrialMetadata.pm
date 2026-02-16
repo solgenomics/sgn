@@ -3730,6 +3730,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
             error => $return_error
         });
         $job->update_status("failed");
+        $c->detach();
         return;
     }
 
@@ -3753,6 +3754,8 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         $job->update_status("failed");
         return;
     }
+
+    # print STDERR Dumper $parsed_data->{spatial_layout};
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );

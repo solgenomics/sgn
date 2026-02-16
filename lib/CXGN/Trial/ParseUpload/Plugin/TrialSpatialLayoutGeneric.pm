@@ -7,6 +7,7 @@ use SGN::Model::Cvterm;
 use CXGN::List::Validate;
 use CXGN::Stock;
 use CXGN::Project;
+use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|plot_name row_number col_number|;
 my @OPTIONAL_COLUMNS = qw||;
@@ -167,9 +168,9 @@ sub _parse_with_plugin {
         }
     }
 
+    # print STDERR Dumper \%spatial_layout_data;
 
     $self->_set_parsed_data({
-        trial_id => $self->get_trial_id(),
         spatial_layout => \%spatial_layout_data
     });
 

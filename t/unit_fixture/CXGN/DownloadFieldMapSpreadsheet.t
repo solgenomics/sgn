@@ -26,6 +26,7 @@ print STDERR $sgn_session_id."\n";
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_trial'})->project_id();
 
 my $file = $test->config->{basepath}."/t/data/trial/field_coord_upload.csv";
+print STDERR "Upload file path: $file \n";
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
         'http://localhost:3010/ajax/breeders/trial/coordsupload',
@@ -36,6 +37,8 @@ $response = $ua->post(
             "sgn_session_id"=>$sgn_session_id
         ]
     );
+
+sleep(20);
 
 #print STDERR Dumper $response;
 ok($response->is_success);
