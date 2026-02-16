@@ -1,13 +1,13 @@
-# Managing Image Data
+# Managing Drone Imagery
 
 ## Image-Phenotyping Dashboard
 
-1. Upload raw image-captures in a compressed file (.zip) for orthophotomosaic assembly or upload previously stitched orthophotomosaic raster (.PNG, .JPG) imagery.
-2. Dashboard shows all field trials and uploaded imaging events in collapsible sections.
-3. Follow standard processes to manually create templates for assignment of plot-polygon images to the field experiment design.
-4. All imagery is shown with the spectral category within collapsible sections. Figure shows NIR imagery.
-5. Apply Fourier transform filtering, thresholding, and vegetation index masking. Plot-polygon images for all image processes are shown.
-6. Extract and export phenotypic values from plot-polygon images for analyses and model training.
+1.  Upload raw image-captures in a compressed file (.zip) for orthophotomosaic assembly or upload previously stitched orthophotomosaic raster (.PNG, .JPG) imagery.
+2.  Dashboard shows all field trials and uploaded imaging events in collapsible sections.
+3.  Follow standard processes to manually create templates for assignment of plot-polygon images to the field experiment design.
+4.  All imagery is shown with the spectral category within collapsible sections. Figure shows NIR imagery.
+5.  Apply Fourier transform filtering, thresholding, and vegetation index masking. Plot-polygon images for all image processes are shown.
+6.  Extract and export phenotypic values from plot-polygon images for analyses and model training.
 
 ## Image Input
 
@@ -41,9 +41,7 @@ The uploaded data can be raw image-captures or complete raster images. Here you 
 knitr::include_graphics('assets/images/manage_image_phenotyping_upload_image_info_2.png')
 ```
 
-In the case that orthophotomosaic stitching is required, select 'yes'. On the next step you will see the following:
-Upload a zipfile with the raw-captures.
-When uploading Micasense RedEdge raw-captures, provide images of the Micasense calibration panels in a zipfile as well.
+In the case that orthophotomosaic stitching is required, select 'yes'. On the next step you will see the following: Upload a zipfile with the raw-captures. When uploading Micasense RedEdge raw-captures, provide images of the Micasense calibration panels in a zipfile as well.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/manage_image_phenotyping_upload_images_zipfile.png')

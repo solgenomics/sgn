@@ -1,4 +1,4 @@
-# Managing Phenotypic Image Data
+# Managing Images
 
 ## Uploading Image files
 
@@ -33,3 +33,25 @@ In the Images section on a stock details page you can add a new image associated
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/stock_add_image.png')
 ```
+
+## Uploading Images from the Field Trial and Image Analysis Pages
+
+Another way to upload images is through the field trial details page. Navigate to a field trial details page and open the "Images" section.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/field_trial_images.png')
+```
+
+Then click the "Add New Image" button to open the image upload dialog, where images can be uploaded in the same formats as described previously.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_new_image_trial.png')
+```
+
+To upload images from the Image Analysis page, click on "Image Analysis" under the "Analyze" menu. Then click the "Upload New Images" button on this page.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/image_analysis_add_image.png')
+```
+
+This will open the same image upload dialog.
