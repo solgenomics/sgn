@@ -1389,7 +1389,16 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 "text-anchor": text_alignment, //middle
                 "alignment-baseline": "middle",
             })
-            .text(text)
+            .selectAll("tspan")
+            .data(text.split("\n"))
+            .enter()
+            .append("tspan")
+            .attr("x", 0)
+            .attr("type", type)
+            .attr("value", field)
+            .attr("dy", (d, i) => i === 0 ? "0em" : "1.2em") // line spacing
+            .text(d => d);
+
             //console.log("Field is: "+field+" and size is: "+size+" and type is: "+type+" and font size is: "+font_size+" and font is: "+font+" and style is: "+font_styles[font]+" and text is: "+text);
 
             break;
@@ -1546,23 +1555,33 @@ function checkIfVisible(element) {
 }
 
 function getLabelDetails(element) {
-    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
-    //console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
+    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform'));
     var coords = transform_attributes.translate;
-    var scale = transform_attributes.scale || new Array(1,1);
+    var scale = transform_attributes.scale || [1, 1];
     var rect = element.getBBox();
     var width = rect.width * scale[0];
     var height = rect.height * scale[1];
-    //console.log("Height is: "+height+" and width is: "+width);
     var type = element.getAttribute("type");
-    var x;
-    var y;
+    var x, y;
+
     if (type.match(/Text/)) {
-        x = parseInt(coords[0])
-        y = parseInt(coords[1])
+        x = parseInt(coords[0]);
+        y = parseInt(coords[1]);
     } else {
-        x = parseInt(coords[0]) + (width/2);
-        y = parseInt(coords[1]) + (height/2);
+        x = parseInt(coords[0]) + (width / 2);
+        y = parseInt(coords[1]) + (height / 2);
+    }
+
+    let value = "";
+    if (type.match(/Text/)) {
+        const tspans = element.querySelectorAll("tspan");
+        if (tspans.length > 1) {
+            value = Array.from(tspans).map(t => t.textContent).join("\n");
+        } else {
+            value = element.getAttribute("value");
+        }
+    } else {
+        value = element.getAttribute("value");
     }
 
     return {
@@ -1570,8 +1589,8 @@ function getLabelDetails(element) {
         y: y,
         height: height,
         width: width,
-        value: element.getAttribute("value"),
-        type: element.getAttribute("type"),
+        value: value,
+        type: type,
         font: element.getAttribute("font") || 'Courier',
         size: element.getAttribute("size")
     };

@@ -338,6 +338,31 @@ my $undo_seedlot = CXGN::Stock::Seedlot->new(
 my $undo_current_count = $undo_seedlot->get_current_count_property();
 is($undo_current_count, '10');
 
+#test retrieving accession seedlot info
+my $test_accession1_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession1' })->stock_id();
+$mech->post_ok("http://localhost:3010/ajax/stock/stock_related_seedlots/$test_accession1_id");
+$response = decode_json $mech->content;
+my $all_seedlots = $response->{data};
+my $number_of_seedlots = scalar (@$all_seedlots);
+my $seedlot_info = $all_seedlots->[0];
+my $seedlot_name = $seedlot_info->{seedlot_stock_uniquename};
+my $amount = $seedlot_info->{count};
+my $weight_gram = $seedlot_info->{weight_gram};
+my $seedlot_quality = $seedlot_info->{seedlot_quality};
+my $material_type = $seedlot_info->{material_type};
+my $box_name = $seedlot_info->{box};
+my $location = $seedlot_info->{location};
+my $breeding_program_name = $seedlot_info->{breeding_program_name};
+is($number_of_seedlots, 1);
+is($seedlot_name, 'seedlot_test1');
+is($amount, 10);
+is($weight_gram, 12);
+is($seedlot_quality, 'mold');
+is($material_type, 'seed');
+is($box_name, 'box1');
+is($location, 'test_location');
+is($breeding_program_name, 'test');
+
 #delete seedlot list
 my $delete = CXGN::List::delete_list($f->dbh(), $seedlot_list_id);
 

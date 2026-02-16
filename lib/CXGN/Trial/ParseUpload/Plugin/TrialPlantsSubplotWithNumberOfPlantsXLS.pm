@@ -109,10 +109,10 @@ sub _validate_with_plugin {
             $coords_given = 1;
         }
         if ($coords_given && (!$num_rows || !$num_cols)) {
-            push @error_messages, "Number of rows and columns given, but missing for plot $plot_name.";
+            push @error_messages, "Number of rows and columns given, but missing for plot $subplot_name.";
         }
-        if($coords_given && $num_rows * $num_cols < $num_plants_per_plot) {
-            push @error_messages, "Number of rows and columns not sufficient for the number of plants in $plot_name.";
+        if($coords_given && $num_rows * $num_cols < $num_plants_per_subplot) {
+            push @error_messages, "Number of rows and columns not sufficient for the number of plants in $subplot_name.";
         }
 
         if (!$subplot_name || $subplot_name eq '' ) {

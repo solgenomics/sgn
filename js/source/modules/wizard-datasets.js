@@ -124,6 +124,10 @@ export function WizardDatasets(main_id,wizard){
         }
         return response.json();
       }).then(data => {
+          if (data.error) {
+            alert("Error storing dataset: "+data.error);
+            return;
+          }
           console.log("New dataset... got id:"+data.id);
           var id = data.id;
           var details = '';
@@ -139,7 +143,7 @@ export function WizardDatasets(main_id,wizard){
             } 
           },
           error: function(res) {
-            alert("Error storing tool compatibility: " + res);
+            alert("Error storing tool compatibility, check console.");
           }
         });
         load_datasets();

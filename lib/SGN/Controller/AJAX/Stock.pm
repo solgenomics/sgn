@@ -25,7 +25,6 @@ use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Stock;
-use CXGN::Stock::Plot;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
@@ -2196,7 +2195,7 @@ sub stock_lookup_POST {
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
-sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
+sub get_child_stocks : Path('/stock/get_child_stocks') Args(1) {
     my $self = shift;
     my $c = shift;
     my $plot_id = shift;
@@ -2206,9 +2205,9 @@ sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
     my $plot_contents;
 
     eval {
-        $plot = CXGN::Stock::Plot->new({schema => $schema, stock_id=>$plot_id});
+        $plot = CXGN::Stock->new({schema => $schema, stock_id=>$plot_id});
 
-        $plot_contents = $plot->get_plot_contents();
+        $plot_contents = $plot->get_child_stocks();
     };
 
     if ($@) {
@@ -3216,6 +3215,47 @@ sub stock_obsolete_in_bulk_GET {
 
     $c->stash->{rest} = { success => 1 };
 }
+
+
+sub get_stock_related_seedlots :Path('/ajax/stock/stock_related_seedlots') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+    my @stock_seedlots;
+
+    my $stock_related_seedlots = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
+    my $seedlots = $stock_related_seedlots->get_stock_related_seedlots();
+    foreach my $seedlot (@$seedlots) {
+        my $content_html = '';
+        my $accession_stock_id = $seedlot->{accession_stock_id};
+        my $accession_name = $seedlot->{accession_name};
+        my $cross_stock_id = $seedlot->{cross_stock_id};
+        my $cross_name = $seedlot->{cross_name};
+        if ($accession_stock_id) {
+            $content_html = qq{<a href="/stock/$accession_stock_id/view">$accession_name</a>};
+        } elsif ($cross_stock_id) {
+            $content_html = qq{<a href = "/cross/$cross_stock_id">$cross_name</a>}
+        }
+
+        push @stock_seedlots, {
+            seedlot_stock_id => $seedlot->{seedlot_stock_id},
+            seedlot_stock_uniquename => $seedlot->{seedlot_stock_uniquename},
+            breeding_program_name => $seedlot->{breeding_program_name},
+            location => $seedlot->{location},
+            contents_html => $content_html,
+            count => $seedlot->{count},
+            weight_gram => $seedlot->{weight_gram},
+            box => $seedlot->{box_name},
+            seedlot_quality => $seedlot->{seedlot_quality},
+            material_type => $seedlot->{material_type},
+        }
+    }
+
+    $c->stash->{rest} = { data => \@stock_seedlots };
+}
+
 
 
 1;

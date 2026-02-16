@@ -27,7 +27,8 @@ $t->while_logged_in_as("curator", sub {
         sleep(1);
 
         # SCREEN 2 /File formating/
-        $t->find_element_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)");
+        $t->find_element_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)")->click();
+        sleep(1);
         $t->find_element_ok('next_step_file_formatting_button', 'id', 'go to next screen - Intro')->click();
         sleep(1);
 

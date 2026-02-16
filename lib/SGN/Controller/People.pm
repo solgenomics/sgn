@@ -129,7 +129,18 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
         $c->stash->{user_status} = $user_info->{$user_type};
     }
 
+    my $allow_trait_edits = 0;
+    if ($c->config->{allow_trait_edits}) {
+        $allow_trait_edits = 1;
+    }
+    my $allow_treatment_edits = 0;
+    if ($c->config->{allow_treatment_edits}) {
+        $allow_treatment_edits = 1;
+    }
+
     $c->stash->{site_name} = $c->config->{project_name};
+    $c->stash->{allow_trait_edits} = $allow_trait_edits;
+    $c->stash->{allow_treatment_edits} = $allow_treatment_edits;
     $c->stash->{user_roles} = \%roles_hash;
     $c->stash->{sp_person_id} = $p->get_sp_person_id;
     $c->stash->{username} = $c->user->get_object->get_username;

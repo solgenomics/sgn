@@ -1,6 +1,6 @@
 =head1 NAME
 
-SGN::Controller::AJAX::VectorConstruct - a REST controller class for Vector Constructs. 
+SGN::Controller::AJAX::VectorConstruct - a REST controller class for Vector Constructs.
 
 =head1 DESCRIPTION
 
@@ -38,7 +38,7 @@ __PACKAGE__->config(
 
 sub sync_cass_constructs : Path('/ajax/cass_vector_construct/sync') Args(0) ActionClass('REST') { }
 
-sub sync_cass_constructs_POST { 
+sub sync_cass_constructs_POST {
     my $self = shift;
     my $c = shift;
     my $status = '';
@@ -91,12 +91,11 @@ sub sync_cass_constructs_POST {
 
 sub create_vector_construct: Path('/ajax/create_vector_construct') Args(0) ActionClass('REST') { }
 
-sub create_vector_construct_POST { 
+sub create_vector_construct_POST {
     my $self = shift;
     my $c = shift;
     my $status = '';
     my $vector_list;
-    my $organism_list;
     my $user_id = $c->user ? $c->user->get_object()->get_sp_person_id():undef;
 
     if (!$user_id){
@@ -114,9 +113,7 @@ sub create_vector_construct_POST {
 
     foreach (@$data){
         my $vector = $_->{uniqueName} || undef;
-        my $organism = $_->{species_name} || undef;
         push @$vector_list, $vector;
-        push @$organism_list, $organism;
     }
 
     #validate accessions/vector
@@ -144,37 +141,12 @@ sub create_vector_construct_POST {
         return;
     }
 
-    #validate organism
-    my $organism_search = CXGN::BreedersToolbox::OrganismFuzzySearch->new({schema => $schema});
-    my $organism_result = $organism_search->get_matches($organism_list, '1');
-
-    my @allowed_organisms;
-    my $missing_organisms = '';
-    my $found = $organism_result->{found};
-
-    foreach (@$found){
-        push @allowed_organisms, $_->{unique_name};
-    }
-    my %allowed_organisms = map {$_=>1} @allowed_organisms;
-
-    foreach (@$organism_list){
-        if (!exists($allowed_organisms{$_})){
-            $missing_organisms = $missing_organisms . $_ . ",";
-        }
-    }
-    if (length($missing_organisms) >0){
-        $status = sprintf('Organisms were not found on the database: %s', $missing_organisms);
-        $c->stash->{rest} = {error=>$status};
-        return;
-    }
-
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
 
     my @added_stocks;
     my @added_fullinfo_stocks;
     my $coderef_bcs = sub {
         foreach my $params (@$data){
-            my $species = $params->{species_name} || undef;
             my $uniquename = $params->{uniqueName} || undef;
             my $strain = $params->{Strain} || undef;
             my $backbone = $params->{Backbone} || undef;
@@ -189,34 +161,31 @@ sub create_vector_construct_POST {
             my $plant_antibiotic_resistant_marker = $params->{PlantAntibioticResistantMarker} || undef;
             my $bacterial_resistant_marker = $params->{BacterialResistantMarker} || undef;
 
-            if (exists($allowed_organisms{$species})){
-                my $stock = CXGN::Stock::Vector->new({
-                    schema=>$schema,
-                    check_name_exists=>0,
-                    type=>'vector_construct',
-                    type_id=>$type_id,
-                    sp_person_id => $user_id,
-                    user_name => $user_name,
-                    species=>$species,
-                    name=>$uniquename,
-                    uniquename=>$uniquename,
-                    Strain=>$strain,
-                    Backbone=>$backbone,
-                    CloningOrganism=>$cloning_organism,
-                    InherentMarker=>$inherent_marker,
-                    SelectionMarker=>$selection_marker,
-                    CassetteName=>$cassette_name,
-                    VectorType=>$vector_type,
-                    Gene=>$gene,
-                    Promotors=>$promotors,
-                    Terminators=>$terminators,
-                    PlantAntibioticResistantMarker=>$plant_antibiotic_resistant_marker,
-                    BacterialResistantMarker=>$bacterial_resistant_marker
-                });
-                my $added_stock_id = $stock->store();
-                push @added_stocks, $added_stock_id;
-                push @added_fullinfo_stocks, [$added_stock_id, $uniquename];
-            }
+            my $stock = CXGN::Stock::Vector->new({
+                schema=>$schema,
+                check_name_exists=>0,
+                type=>'vector_construct',
+                type_id=>$type_id,
+                sp_person_id => $user_id,
+                user_name => $user_name,
+                name=>$uniquename,
+                uniquename=>$uniquename,
+                Strain=>$strain,
+                Backbone=>$backbone,
+                CloningOrganism=>$cloning_organism,
+                InherentMarker=>$inherent_marker,
+                SelectionMarker=>$selection_marker,
+                CassetteName=>$cassette_name,
+                VectorType=>$vector_type,
+                Gene=>$gene,
+                Promotors=>$promotors,
+                Terminators=>$terminators,
+                PlantAntibioticResistantMarker=>$plant_antibiotic_resistant_marker,
+                BacterialResistantMarker=>$bacterial_resistant_marker
+            });
+            my $added_stock_id = $stock->store();
+            push @added_stocks, $added_stock_id;
+            push @added_fullinfo_stocks, [$added_stock_id, $uniquename];
         }
 
     };
@@ -251,7 +220,7 @@ sub create_vector_construct_POST {
 sub verify_vectors_file : Path('/ajax/vectors/verify_vectors_file') : ActionClass('REST') { }
 sub verify_vectors_file_POST : Args(0) {
     my ($self, $c) = @_;
-    
+
     my $user_id;
     my $user_name;
     my $user_role;
@@ -345,7 +314,7 @@ sub verify_vectors_file_POST : Args(0) {
                 $return_error .= $error_string."<br>";
             }
         }
-        $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
+        $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
 
@@ -370,16 +339,13 @@ sub verify_vectors_file_POST : Args(0) {
         absent => $parsed_data->{absent_vectors},
         fuzzy => $parsed_data->{fuzzy_vectors},
         found => $parsed_data->{found_vectors},
-        absent_organisms => $parsed_data->{absent_organisms},
-        fuzzy_organisms => $parsed_data->{fuzzy_organisms},
-        found_organisms => $parsed_data->{found_organisms}
     );
 
     if ($parsed_data->{error_string}){
         $return{error_string} = $parsed_data->{error_string};
     }
 
-        
+
     $c->stash->{rest} = \%return;
 }
 
@@ -438,7 +404,7 @@ sub get_new_vector_uniquename_GET : Args(0) {
     my $stocks = $schema->resultset("Stock::Stock")->search({
         type_id => $stock_type_id,
     });
-    
+
     my $id;
     my $max=0;
     while (my $r = $stocks->next()) {
@@ -448,7 +414,7 @@ sub get_new_vector_uniquename_GET : Args(0) {
             if($max < $id){
                 $max = $id;
             }
-        } 
+        }
     }
     $max += 1;
     #Vector construct has letter T before autogenerated number.
@@ -465,7 +431,7 @@ sub _parse_list_from_json {
         debug($c, "LIST_JSON is utf8? ".utf8::is_utf8($list_json)." valid utf8? ".utf8::valid($list_json)."\n");
         print STDERR "JSON NOW: $list_json\n";
         my $decoded_list = $json->decode($list_json);
-        
+
         my @array_of_list_items = ();
         if (ref($decoded_list) eq "ARRAY" ) {
             @array_of_list_items = @{$decoded_list};

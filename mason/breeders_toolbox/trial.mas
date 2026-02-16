@@ -188,14 +188,22 @@ $project_id => undef
 %    $design_section_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>';
 % }
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, has_col_and_row_numbers => $has_col_and_row_numbers, has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, has_col_and_row_numbers => $has_col_and_row_numbers, has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, trial_stock_type => $trial_stock_type, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
 
 
 % if (! $can_read_phenotyping) {
 <& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Phenotyping Data</h4>", info_section_subtitle => 'Experimental Design, Phenotype Summary Statistics, Phenotype Raw Data', info_section_id=> 'access_denied', data_type => 'phenotyping' &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => $design_section_buttons, icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
-
+% my $experimental_design_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button>';
+% if ($user_can_modify) {
+%    $experimental_design_buttons .= ' <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>';
+%    if ($design_name eq 'greenhouse'){
+%        $experimental_design_buttons .= '<button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_additional_stocks"></button>';
+%    }
+% }
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.',
+buttons_html => $experimental_design_buttons,
+icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type, management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
 
 % }
 % else {
@@ -249,10 +257,11 @@ $project_id => undef
 <& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries &>
 <& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/upload_plot_gps_dialogs.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/add_management_factor_dialog.mas, management_factor_types => $management_factor_types, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/add_subplots_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/add_plants_per_subplot.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas, management_factor_types => $management_factor_types &>
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
 <& /breeders_toolbox/trial/change_plot_accessions_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 <& /breeders_toolbox/trial/update_experimental_design_type.mas, trial_id => $trial_id, trial_name => $trial_name, design_name => $design_name &>
@@ -346,7 +355,7 @@ jQuery(document).ready(function () {
         button_label = 'Add Additional Accessions or Plants';
     }
 
-    document.getElementById('trial_detail_page_add_additional_stocks').innerHTML = button_label;
+    jQuery('#trial_detail_page_add_additional_stocks').text(button_label);
 
 });
 
