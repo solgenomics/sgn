@@ -31,7 +31,7 @@ $response = $ua->post(
         'http://localhost:3010/ajax/breeders/trial/coordsupload',
         Content_Type => 'form-data',
         Content => [
-            trial_coordinates_uploaded_file => [ $file, 'coords_upload', Content_Type => 'application/vnd.ms-excel', ],
+            trial_coordinates_uploaded_file => [ $file, 'coords_upload', Content_Type => 'application/octet-stream', ],
             "trial_coordinates_upload_trial_id"=>$trial_id,
             "sgn_session_id"=>$sgn_session_id
         ]
