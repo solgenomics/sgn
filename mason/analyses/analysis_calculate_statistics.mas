@@ -1,4 +1,4 @@
-analysis_calculate_statistics_select<%args>
+<%args>
 </%args>
 
 <!--button class='btn btn-primary' style='margin:3px;float:right' id='analysis_calculate_statistics_link'>Single/Multi Trial GEBV Analysis</button-->

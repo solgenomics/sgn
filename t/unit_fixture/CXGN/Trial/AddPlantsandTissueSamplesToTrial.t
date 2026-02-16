@@ -12,6 +12,9 @@ use CXGN::Trial::Download;
 use Spreadsheet::WriteExcel;
 use Spreadsheet::Read;
 use CXGN::Fieldbook::DownloadTrial;
+use File::Temp 'tempfile';
+use DateTime;
+use CXGN::Stock;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -1087,7 +1090,7 @@ for my $extension ("xls", "xlsx") {
     ], "check col2");
 
     #print STDERR Dumper $contents->[1]->{'cell'}->[3];
-    is_deeply($contents->[1]->{'cell'}->[3], [
+    is_deeply($contents->[1]->{'cell'}->[3], [ #test 40
         undef,
         'Spreadsheet format',
         'Operator',
@@ -1452,9 +1455,34 @@ for my $extension ("xls", "xlsx") {
         'fresh root weight|CO_334:0000012'
     ], "check col13");
 
-    $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id });
-    is($trial->create_tissue_samples(['leaf', ], 1, 0), 1, 'test create tissue samples without tissue numbers');
-    is($trial->create_tissue_samples(['root', 'fruit' ], 1, 1), 1, 'test create tissue samples with tissue numbers');
+    $trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema(), trial_id => $trial_id, phenome_schema => $f->phenome_schema, metadata_schema => $f->metadata_schema});
+    my $temp_basedir = $f->config->{tempfiles_subdir};
+    my $site_basedir = $f->config->{basepath};
+    if (! -d "$site_basedir/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$site_basedir/$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$site_basedir/$temp_basedir/delete_nd_experiment_ids/fileXXXX");
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $phenotype_store_config = {
+        basepath => "$site_basedir/$temp_basedir",
+        dbhost => $f->config->{dbhost},
+        dbuser => $f->config->{dbuser},
+        dbname => $f->config->{dbname},
+        dbpass => $f->config->{dbpass},
+        temp_file_nd_experiment_id => $tempfile,
+        user_id => '41',
+        metadata_hash => {
+            archived_file => 'none',
+            archived_file_type => 'new stock treatment auto inheritance',
+            operator => 'janedoe',
+            date => $timestamp
+        }
+    };
+    is($trial->create_tissue_samples(['leaf', ], 1, 0, undef, undef, $phenotype_store_config), 1, 'test create tissue samples without tissue numbers');#test 51
+    is($trial->create_tissue_samples(['root', 'fruit' ], 1, 1, undef, undef, $phenotype_store_config), 1, 'test create tissue samples with tissue numbers');#test 52
+
+    `rm $tempfile`;
 
     my $trial_with_tissues_layout = CXGN::Trial::TrialLayout->new({ schema => $f->bcs_schema(), trial_id => $trial_id, experiment_type => 'field_layout' })->get_design();
     print STDERR Dumper $trial_with_tissues_layout;
@@ -1518,6 +1546,65 @@ for my $extension ("xls", "xlsx") {
     is($plot_name_3, 'test_trial211');
     is($plant_name_3, 'test_trial211_plant_1');
     is($tissue_sample_name_3, 'test_trial211_plant_1_root1');
+
+    #test retrieving trial for accessions, plots, plants and tissue $sample
+    my $schema = $f->bcs_schema();
+    my $accession_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
+    my $plot_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial22'})->stock_id();
+    my $plant_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial22_plant_1'})->stock_id();
+    my $tissue_sample_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial25_plant_1_leaf'})->stock_id();
+
+    #accession
+    my $accession_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $accession_stock_id
+    );
+    my @accession_trials = $accession_stock->get_trials();
+    my $accession_number_of_trials = scalar @accession_trials;
+    my $accession_trial_name = $accession_trials[0][1];
+    my $accession_trial_location = $accession_trials[0][3];
+    is($accession_number_of_trials, 1);
+    is($accession_trial_name, 'test_trial');
+    is($accession_trial_location, 'test_location');
+
+    #plot
+    my $plot_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $plot_stock_id
+    );
+    my @plot_trials = $plot_stock->get_trials();
+    my $plot_number_of_trials = scalar @plot_trials;
+    my $plot_trial_name = $plot_trials[0][1];
+    my $plot_trial_location = $plot_trials[0][3];
+    is($plot_number_of_trials, 1);
+    is($plot_trial_name, 'test_trial');
+    is($plot_trial_location, 'test_location');
+
+    #plant
+    my $plant_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $plant_stock_id
+    );
+    my @plant_trials = $plant_stock->get_trials();
+    my $plant_number_of_trials = scalar @plant_trials;
+    my $plant_trial_name = $plant_trials[0][1];
+    my $plant_trial_location = $plant_trials[0][3];
+    is($plant_number_of_trials, 1);
+    is($plant_trial_name, 'test_trial');
+    is($plant_trial_location, 'test_location');
+
+    #tissue_sample
+    my $tissue_sample_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $tissue_sample_stock_id
+    );
+    my @tissue_sample_trials = $tissue_sample_stock->get_trials();
+    my $tissue_sample_number_of_trials = scalar @tissue_sample_trials;
+    my $tissue_sample_trial_name = $tissue_sample_trials[0][1];
+    my $tissue_sample_trial_location = $tissue_sample_trials[0][3];
+    is($tissue_sample_number_of_trials, 1);
+    is($tissue_sample_trial_name, 'test_trial');
+    is($tissue_sample_trial_location, 'test_location');
 
     $f->clean_up_db();
 }

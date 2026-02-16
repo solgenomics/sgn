@@ -134,24 +134,9 @@ At the bottom there is a brief summary of the trial followed by two buttons.
 knitr::include_graphics('assets/images/trial_create_form_7_bottom.png')
 ```
 
-#### Step 8. Add Field Management Factors to your design (Optional) {-}
 
-You can add Field Management Factors by clicking "Add Field Management Factor(s) to Design". Clicking this opens a dialog to specify your factor. You can name this to account for fertilizer, watering regime, inoculation, or anything else. The types of management factors available is customizable in the SGN configuration file. This is optional and can be added from the trial detail page afterwards.
+#### Step 7. Saving new trial in the database {-}
 
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/add_management_factor_name_dialog.png')
-```
-
-
-Click "Continue" and a dialog will appear where you can specify plots or plants (if you added plants during trial creation) for which the factor was applied. There is a select all button as well.
-
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/add_management_factor_dialog.png')
-```
-
-#### Step 9. Saving new trial in the database {-}
 
 Once you are done reviewing the trial you can click "Confirm" to save the generated trial into the database. Once the trial has saved you will see the final completion screen:
 
@@ -504,6 +489,50 @@ Optionally, the layout can give information regarding accession's global perform
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
 knitr::include_graphics('assets/images/image347.png')
 ```
+
+### Adding Management Regimes
+
+In addition to trial designs and trial layouts, you can specify the specific ways a trial was managed using the *Management Regime* section of the *Experimental Design* tab of the trial detail page.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_section.png')
+```
+
+Here, you can view information like fertilization, irrigation, and weed management regimes. The total set of allowed management factor types is a matter of server configuration - contact your server administrator with questions.
+
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/management_regime_details.png')
+```
+
+To add a new management factor, click on the 'Add management factor' button in the management regime section. Most of the data is optional, although the type and description must be filled. You may specify the start date, end date, and schedule of the treatment, and you may even record specific instances of the factor being applied if you choose. Click 'Submit' to add the factor. 
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/add_management_factor_dialog.png')
+```
+
+Once added, a management factor can be edited by clicking the green pen icon next to it. The same dialog as before will open pre-populated with that management factor's data, and you can make changes and submit them. Click on the red trash can to delete the management factor from the trial.
+
+### Adding Experimental Treatments
+
+In contrast to management regimes, which describe how a field trial as a whole was managed, you may wish to store information regarding treatments applied differentially to the stocks of a trial. Treatments may be added from the *Treatments* section of the *Experimental design* tab.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_treatment_section.png')
+```
+
+Opening this tab gives a brief overview of the total number of stocks to which a treatment is applied and a table that allows you to search treatment values across different stock levels. 
+
+Adding treatments is very similar to [uploading phenotypic data](#managing-phenotypic-data): click on the 'Add Treatments' button to view the treatment upload dialog:
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/trial_add_treatment_dialog.png')
+```
+
+Just as with phenotype uploads, you can supply a spreadsheet specifying the stocks and the treatments with optional timestamps. To ensure the treatment column headers are correct, consult the [treatment search page](#managing-observation-variables) or the ontology browser. 
+
+Unlike phenotypic data, however, treatments are automatically applied to the child stocks of any stock receiving a treatment. That means if a plot receives a treatment, all the subplots, plants, and tissue samples in that plot receive the same treatment. 
 
 ### Adding Plant Entries To Your Trial
 

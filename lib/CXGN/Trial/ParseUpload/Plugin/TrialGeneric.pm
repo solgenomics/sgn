@@ -5,8 +5,10 @@ use List::MoreUtils qw(uniq);
 use CXGN::File::Parse;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
+use CXGN::List::Transform;
 use CXGN::Stock::Seedlot;
 use CXGN::Trial;
+use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|stock_name plot_number block_number|;
 # stock_name can also be accession_name, cross_unique_id, or family_name
@@ -40,6 +42,22 @@ sub _validate_with_plugin {
     my $parsed_data = $parsed->{'data'};
     my $parsed_values = $parsed->{'values'};
     my $treatments = $parsed->{'additional_columns'};
+
+    my $trait_validator = CXGN::List::Validate->new();
+    
+    my $validate = $trait_validator->validate($schema, "traits", $treatments);
+
+    foreach my $treatment (@{$treatments}) {
+        if ($treatment !~ m/_TREATMENT:/) {
+            push @error_messages, "Column $treatment is not formatted like a treatment. Use only full, valid treatment names.\n";
+        }
+    }
+
+    if (@{$validate->{missing}}>0) { 
+        foreach my $missing (@{$validate->{missing}}) {
+            push @error_messages, "Treatment $missing does not exist in the database.\n";
+        }
+    }
 
     # Return file parsing errors
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
@@ -82,6 +100,32 @@ sub _validate_with_plugin {
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
+
+        foreach my $treatment (@{$treatments}) {
+            my $lt = CXGN::List::Transform->new();
+
+            my $transform = $lt->transform($schema, 'traits_2_trait_ids', [$treatment]);
+            my @treatment_id_list = @{$transform->{transform}};
+            my $treatment_id = $treatment_id_list[0];
+
+            my $treatment_obj = CXGN::Trait->new({
+                bcs_schema => $schema, 
+                cvterm_id => $treatment_id
+            });
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
+                push @error_messages, "Row $row: value for $treatment is lower than the allowed minimum for that treatment.";
+            }
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($data->{$treatment}) && $data->{$treatment} > $treatment_obj->maximum()) {
+                push @error_messages, "Row $row: value for $treatment is higher than the allowed maximum for that treatment.";
+            }
+            if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($data->{$treatment})) {
+                my $qual_value = $data->{$treatment};
+                my $categories = $treatment_obj->categories();
+                if ( $categories !~ m/$qual_value/) {
+                    push @error_messages, "Row $row: value for $treatment is not in the valid categories for that treatment.";
+                }
+            }
+        }
 
 
         # Plot Number: must be a positive number
@@ -153,14 +197,6 @@ sub _validate_with_plugin {
         # Entry Number: must be a positive integer, if provided
         if ($entry_number && !($entry_number =~ /^\d+?$/)) {
             push @error_messages, "Row $row: entry_number <strong>$entry_number</strong> must be a positive integer.";
-        }
-
-        # Treatment Values: must be either blank, 0, or 1
-        foreach my $treatment (@$treatments) {
-            my $treatment_value = $data->{$treatment};
-            if ( $treatment_value && $treatment_value ne '' && $treatment_value ne '0' && $treatment_value ne '1' ) {
-                push @error_messages, "Row $row: Treatment value for treatment <strong>$treatment</strong> should be either 1 (applied) or empty (not applied).";
-            }
         }
 
 
@@ -358,6 +394,7 @@ sub _parse_with_plugin {
     # Build trial design
     my %design;
     my %seen_entry_numbers;
+    my $treatment_design;
     foreach (@$data) {
         my $r = $_;
         my $row = $r->{'_row'};
@@ -378,13 +415,6 @@ sub _parse_with_plugin {
         my $num_seed_per_plot = $r->{'num_seed_per_plot'} || 0;
         my $weight_gram_seed_per_plot = $r->{'weight_gram_seed_per_plot'} || 0;
         my $entry_number = $r->{'entry_number'};
-
-        foreach my $treatment_name (@$treatments) {
-            my $treatment_value = $r->{$treatment_name};
-            if ($treatment_value) {
-                push @{$design{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
-            }
-        }
 
         if ($stock_synonyms_lookup{$stock_name}) {
             my @stock_names = keys %{$stock_synonyms_lookup{$stock_name}};
@@ -424,12 +454,19 @@ sub _parse_with_plugin {
             $design{$row}->{num_seed_per_plot} = $num_seed_per_plot;
             $design{$row}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
         }
+        foreach my $treatment (@{$treatments}) {
+            if (defined($r->{$treatment})) {
+                $treatment_design->{$plot_name}->{$treatment} = $r->{$treatment};
+            }
+        }
     }
 
     my %parsed_data = (
         design => \%design,
-        entry_numbers => \%seen_entry_numbers
+        entry_numbers => \%seen_entry_numbers,
+        treatment_design => $treatment_design
     );
+
     $self->_set_parsed_data(\%parsed_data);
 
     return 1;

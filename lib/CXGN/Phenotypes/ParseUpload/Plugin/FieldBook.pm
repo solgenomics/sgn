@@ -35,11 +35,44 @@ sub validate {
     my $nd_protocol_id = shift; #not relevant for this plugin
     my $nd_protocol_filename = shift; #not relevant for this plugin
     my %parse_result;
+
     my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
 
-    ## Check that the file can be read
-    my @file_lines = read_file($filename);
+    my ($extension) = $filename =~/(\.[^.]+)$/;
+    my $parser;
+    my $excel_obj;
+    my $worksheet;
+    my @file_lines;
+   
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    
+        $excel_obj = $parser->parse($filename);
+        if (!$excel_obj) {
+            $parse_result{'error'} = $parser->error();
+            return \%parse_result;
+        }
+        $worksheet = ( $excel_obj->worksheets() )[0];
+        my ( $row_min, $row_max ) = $worksheet->row_range();
+        my ( $col_min, $col_max ) = $worksheet->col_range();
+
+        for my $row ($row_min .. $row_max) {
+            my @cells;
+            for my $col ($col_min .. $col_max ) {
+                my $cell = $worksheet->get_cell($row, $col);
+                push @cells, $cell ? $cell->value() : '';
+            }
+            push @file_lines, join(",", map {
+                my $v = $_ // '';
+                $v =~ s/"/""/g;
+                qq("$v");
+            } @cells);
+        }
+    } else {
+        ## Check that the file can be read
+        @file_lines = read_file($filename);
+    }
 
     # fix DOS-style line-endings!!!
     #
@@ -136,7 +169,41 @@ sub parse {
     my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
 
-    @file_lines = read_file($filename);
+    my ($extension) = $filename =~/(\.[^.]+)$/;
+    my $parser;
+    my $excel_obj;
+    my $worksheet;
+    my @file_lines;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+
+        $excel_obj = $parser->parse($filename);
+        if (!$excel_obj) {
+            $parse_result{'error'} = $parser->error();
+            return \%parse_result;
+        }
+
+        $worksheet = ( $excel_obj->worksheets() )[0];
+        my ( $row_min, $row_max ) = $worksheet->row_range();
+        my ( $col_min, $col_max ) = $worksheet->col_range();
+
+        for my $row ($row_min .. $row_max) {
+            my @cells;
+            for my $col ($col_min .. $col_max ) {
+                my $cell = $worksheet->get_cell($row, $col);
+                push @cells, $cell ? $cell->value() : '';
+            }
+            push @file_lines, join(",", map {
+                my $v = $_ // '';
+                $v =~ s/"/""/g;
+                qq("$v");
+            } @cells);
+        }
+    } else {
+        ## Check that the file can be read
+        @file_lines = read_file($filename);
+    }
 
     # fix DOS-style line-endings!!!
     #

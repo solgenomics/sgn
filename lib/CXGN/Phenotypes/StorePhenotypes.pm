@@ -657,7 +657,7 @@ sub check_measurement {
         #check that trait value is valid for trait name (but only if we have a trait_value)
         if ((defined($trait_value) && $trait_value ne '' && $trait_value ne 'NA' && $trait_value ne '.') && exists($self->check_trait_format()->{$trait_cvterm_id})) { 
             # print STDERR "Trait minimum value checks if it exists: " . $self->check_trait_min_value->{$trait_cvterm_id} . "\n";
-            if ($self->check_trait_format()->{$trait_cvterm_id} eq 'numeric') {
+            if ($self->check_trait_format()->{$trait_cvterm_id} =~ m/numeric|counter|percent|boolean/i ) {
                 my $trait_format_checked = looks_like_number($trait_value);
                 if (!$trait_format_checked && $trait_value ne '') {
                     $error_message .= "<small>This trait value should be numeric: <br/>Plot Name: ".$plot_name."<br/>Trait Name: ".$trait_name."<br/>Value: ".$trait_value."</small><hr>";
@@ -705,8 +705,12 @@ sub check_measurement {
                     }
                 }
             } else {
-                # Catch everything else ## not sure what this is for
-                %trait_categories_hash = map { $_ => 1 } @trait_categories;
+                if (grep { m/=/ } @trait_categories) { #different style of categories where each value is 0=value/1=value/...
+                    %trait_categories_hash = map { $_ =~ m/(\d+)=/ => $_ =~ m/=(.*)/} @trait_categories;
+                } else {
+                    # Catch everything else ## not sure what this is for
+                    %trait_categories_hash = map { $_ => 1 } @trait_categories;
+                }
             }
 
             # print STDERR "TRAIT CATEGORIES: ".Dumper(\%trait_categories_hash)."\n";
@@ -714,7 +718,9 @@ sub check_measurement {
 
             my @check_values;
             if (exists($self->check_trait_category()->{$trait_cvterm_id}) &&
-                $self->check_trait_format->{$trait_cvterm_id} eq 'Multicat') {
+                ($self->check_trait_format->{$trait_cvterm_id} eq 'Multicat' || 
+                $self->check_trait_format->{$trait_cvterm_id} eq 'categorical' || 
+                $self->check_trait_format->{$trait_cvterm_id} eq 'qualitative')) {
 
                 # print STDERR "Dealing with a categorical trait!\n\n";
 

@@ -266,6 +266,10 @@ sub get_db_stats {
     $rs = $self->metadata_schema()->resultset('MdImage')->search( {}, { columns => [ { image_id_max => { max => 'image_id' }} ] });
     $stats->{images} = defined $rs->get_column('image_id_max')->first() ? $rs->get_column('image_id_max')->first() :0;
 
+    # count dbxrefs
+    $rs = $self->bcs_schema()->resultset('General::Dbxref')->search( {}, { columns => [ { 'dbxref_id_max' => { max => 'dbxref_id' }} ] } );
+    $stats->{dbxrefs} = $rs->get_column('dbxref_id_max')->first();
+
     print STDERR "IMAGE STATS : $stats->{images}\n";
     
     # count metadata file entries
@@ -321,9 +325,9 @@ sub clean_up_db {
 
     my $stats = $self->get_db_stats();
 
-    if (! defined($self->dbstats_start())) { print STDERR "Can't clean up becaues dbstats were not run at the beginning of the test!\n"; }
+    if (! defined($self->dbstats_start())) { print STDERR "Can't clean up because dbstats were not run at the beginning of the test!\n"; }
 
-    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'cvtermprops', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images');
+    my @deletion_order = ('stock_owners', 'stock_relationships', 'stockprops', 'stocks', 'project_owners', 'project_relationships', 'projectprops', 'project_images', 'projects', 'cvterms', 'cvtermprops', 'datasets', 'list_elements', 'lists', 'phenotypes', 'genotypes', 'locations', 'protocols', 'metadata_files', 'metadata', 'experiment_files', 'experiment_json', 'experiments', 'images', 'dbxrefs');
 
     foreach my $table (@deletion_order) {
 	    print STDERR "CLEANING $table...\n";
@@ -435,6 +439,10 @@ sub delete_table_entries {
 
     if ($table eq "metadata_files") {
 	#$rs = $self->metadata_schema()->resultset('MdFiles')->search( { file_id => { '>' => $previous_max_id }});
+    }
+
+    if ($table eq "dbxrefs") {
+	$rs = $self->bcs_schema()->resultset('General::Dbxref')->search( { dbxref_id => { '>' => $previous_max_id } } );
     }
 
     if ($table eq "metadata") {
