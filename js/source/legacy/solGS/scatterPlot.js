@@ -10,6 +10,10 @@ solGS.scatterPlot = {
     var xLabel = regData.x_label || 'X values';
     var regPlotDivId = regData.plot_div_id;
     var corrValues = regData.corr_values || null;
+    var axisMode = regData.axis_mode || regData.quadrants || "auto";
+    if (axisMode === 2) {axisMode = "two";}
+    if (axisMode === 4) {axisMode = "four";}
+
     var canvas = regData.canvas;
     var downloadLinks = regData.download_links;
 
@@ -40,7 +44,8 @@ solGS.scatterPlot = {
      
     var height = 300;
     var width  = 500;
-    var pad    = {left:20, top:20, right:20, bottom: 40}; 
+    var statsBlockWidth = 140;
+    var pad    = {left:40, top:20, right:20 + statsBlockWidth, bottom: 60}; 
     var totalH = height + pad.top + pad.bottom;
     var totalW = width + pad.left + pad.right;
 
@@ -53,33 +58,70 @@ solGS.scatterPlot = {
         .attr("id", regPlotDivId)
         .attr("transform", "translate(" + (pad.left - 5) + "," + (pad.top - 5) + ")");
    
-    var xLimits = d3.max([Math.abs(d3.min(xValues)), d3.max(xValues)]);
-    var yLimits = d3.max([Math.abs(d3.min(yValues)), d3.max(yValues)]);
+    var minX = d3.min(xValues);
+    var maxX = d3.max(xValues);
+    var minY = d3.min(yValues);
+    var maxY = d3.max(yValues);
 
-    var xAxisScale = d3.scaleLinear()
-        .domain([0, xLimits])
-        .range([0, width/2]);
-    
-    var xAxisLabel = d3.scaleLinear()
-        .domain([(-1 * xLimits), xLimits])
-        .range([0, width]);
+    if (axisMode === "auto") {
+        axisMode = (minX < 0 || minY < 0) ? "four" : "two";
+    }
 
-    var yAxisScale = d3.scaleLinear()
-        .domain([0, yLimits])
-        .range([0, (height/2)]);
+    var xLimits;
+    var yLimits;
+    var xAxisScale;
+    var yAxisScale;
+    var xAxisLabel;
+    var yAxisLabel;
+    var xAxisMid;
+    var yAxisMid;
+
+    if (axisMode === "four") {
+        xLimits = d3.max([Math.abs(minX), maxX]);
+        yLimits = d3.max([Math.abs(minY), maxY]);
+
+        xAxisScale = d3.scaleLinear()
+            .domain([0, xLimits])
+            .range([0, width/2]);
+        
+        xAxisLabel = d3.scaleLinear()
+            .domain([(-1 * xLimits), xLimits])
+            .range([0, width]);
+
+        yAxisScale = d3.scaleLinear()
+            .domain([0, yLimits])
+            .range([0, (height/2)]);
+
+        yAxisLabel = d3.scaleLinear()
+            .domain([(-1 * yLimits), yLimits])
+            .range([height, 0]);
+
+        xAxisMid = pad.top + (height / 2); 
+        yAxisMid = pad.left + (width / 2);
+    } else {
+        xLimits = maxX;
+        yLimits = maxY;
+
+        xAxisScale = d3.scaleLinear()
+            .domain([0, xLimits])
+            .range([0, width]);
+
+        yAxisScale = d3.scaleLinear()
+            .domain([0, yLimits])
+            .range([height, 0]);
+
+        xAxisLabel = xAxisScale;
+        yAxisLabel = yAxisScale;
+
+        xAxisMid = pad.top + height; 
+        yAxisMid = pad.left;
+    }
 
     var xAxis = d3.axisBottom(xAxisLabel)
         .tickSize(3);
           
-    var yAxisLabel = d3.scaleLinear()
-        .domain([(-1 * yLimits), yLimits])
-        .range([height, 0]);
-    
-   var yAxis = d3.axisLeft(yAxisLabel)
+    var yAxis = d3.axisLeft(yAxisLabel)
         .tickSize(3);
-
-    var xAxisMid = pad.top + (height / 2); 
-    var yAxisMid = pad.left + (width / 2);
 
     var regLineColor = "#86B404";
     var dataPointColor = "#9A2EFE";
@@ -106,23 +148,46 @@ solGS.scatterPlot = {
         .attr("fill", "green")
         .style("fill", regLineColor);
 
-    regPlot.append("g")
-        .attr("id", "x_axis_label")
-        .append("text")
-        .text(xLabel)
-        .attr("y", pad.top + (height/2) + 40)
-        .attr("x", (pad.left + width) - 100)
-        .attr("font-size", 10)
-        .style("fill", regLineColor)
+    if (axisMode === "four") {
+        regPlot.append("g")
+            .attr("id", "x_axis_label")
+            .append("text")
+            .text(xLabel)
+            .attr("y", pad.top + (height/2) + 40)
+            .attr("x", (pad.left + width) - 100)
+            .attr("font-size", 10)
+            .style("fill", regLineColor);
 
-    regPlot.append("g")
-        .attr("id", "y_axis_label")
-        .append("text")
-        .text(yLabel)
-        .attr("y", (pad.top -  10))
-        .attr("x", pad.left + (width/2) - 10)
-        .attr("font-size", 10)
-        .style("fill", regLineColor)
+        regPlot.append("g")
+            .attr("id", "y_axis_label")
+            .append("text")
+            .text(yLabel)
+            .attr("y", (pad.top -  10))
+            .attr("x", pad.left + (width/2) - 10)
+            .attr("font-size", 10)
+            .style("fill", regLineColor);
+    } else {
+        regPlot.append("g")
+            .attr("id", "x_axis_label")
+            .append("text")
+            .text(xLabel)
+            .attr("x", pad.left + (width / 2))
+            .attr("y", pad.top + height + 40)
+            .attr("text-anchor", "middle")
+            .attr("font-size", 10)
+            .style("fill", regLineColor);
+
+        regPlot.append("g")
+            .attr("id", "y_axis_label")
+            .append("text")
+            .text(yLabel)
+            .attr("x", pad.left - 35)
+            .attr("y", pad.top + (height / 2))
+            .attr("text-anchor", "middle")
+            .attr("font-size", 10)
+            .attr("transform", "rotate(-90," + (pad.left - 35) + "," + (pad.top + (height / 2)) + ")")
+            .style("fill", regLineColor);
+    }
 
     regPlot.append("g")
         .selectAll("circle")
@@ -133,20 +198,26 @@ solGS.scatterPlot = {
         .attr("r", 3)
         .attr("cx", function(d) {
             var xVal = d[0].x_val;
-           
-            if (xVal >= 0) {
-                return  (pad.left + (width/2)) + xAxisScale(xVal);
-            } else {   
-                return (pad.left + (width/2)) - (-1 * xAxisScale(xVal));
-           }
+            if (axisMode === "four") {
+                if (xVal >= 0) {
+                    return  (pad.left + (width/2)) + xAxisScale(xVal);
+                } else {   
+                    return (pad.left + (width/2)) - (-1 * xAxisScale(xVal));
+               }
+            } else {
+                return pad.left + xAxisScale(xVal);
+            }
         })
         .attr("cy", function(d) {             
             var yVal = d[0].y_val;
-            
-            if (yVal >= 0) {
-                return ( pad.top + (height/2)) - yAxisScale(yVal);
+            if (axisMode === "four") {
+                if (yVal >= 0) {
+                    return ( pad.top + (height/2)) - yAxisScale(yVal);
+                } else {
+                    return (pad.top + (height/2)) +  (-1 * yAxisScale(yVal));                  
+                }
             } else {
-                return (pad.top + (height/2)) +  (-1 * yAxisScale(yVal));                  
+                return pad.top + yAxisScale(yVal);
             }
         })        
         .on("mouseover", function(d) {
@@ -195,16 +266,24 @@ solGS.scatterPlot = {
 
     var regLine = d3.line()
         .x(function(d) {
-            if (d[0] >= 0) {
-                return  (pad.left + (width/2)) + xAxisScale(d[0]);
-            } else {   
-                return (pad.left + (width/2)) - (-1 * xAxisScale(d[0]));
+            if (axisMode === "four") {
+                if (d[0] >= 0) {
+                    return  (pad.left + (width/2)) + xAxisScale(d[0]);
+                } else {   
+                    return (pad.left + (width/2)) - (-1 * xAxisScale(d[0]));
+                }
+            } else {
+                return pad.left + xAxisScale(d[0]);
             }})
         .y(function(d) { 
-            if (d[1] >= 0) {
-                return ( pad.top + (height/2)) - yAxisScale(d[1]);
+            if (axisMode === "four") {
+                if (d[1] >= 0) {
+                    return ( pad.top + (height/2)) - yAxisScale(d[1]);
+                } else {
+                    return  (pad.top + (height/2)) +  (-1 * yAxisScale(d[1]));                  
+                }
             } else {
-                return  (pad.top + (height/2)) +  (-1 * yAxisScale(d[1]));                  
+                return pad.top + yAxisScale(d[1]);
             }});
      
     
@@ -220,12 +299,16 @@ solGS.scatterPlot = {
         .attr('stroke-width', 2)
         .attr('fill', 'none');
 
+     var statsX = pad.left + width + 10;
+     var statsY = pad.top + (height / 2);
+
      regPlot.append("g")
         .attr("id", "equation")
         .append("text")
         .text(equation)
-        .attr("x", 20)
-        .attr("y", 30)
+        .attr("x", statsX)
+        .attr("y", statsY - 12)
+        .attr("text-anchor", "start")
         .style("fill", regLineColor)
         .style("font-weight", "bold");  
     
@@ -233,8 +316,9 @@ solGS.scatterPlot = {
         .attr("id", "rsquare")
         .append("text")
         .text(rSquared)
-        .attr("x", 20)
-        .attr("y", 50)
+        .attr("x", statsX)
+        .attr("y", statsY + 4)
+        .attr("text-anchor", "start")
         .style("fill", regLineColor)
         .style("font-weight", "bold");  
 
@@ -248,9 +332,9 @@ solGS.scatterPlot = {
             .attr("id", "corr_values")
             .append("text")
             .text(corrText)
-            .attr("x", pad.left + width - 5)
-            .attr("y", pad.top + height - 5)
-            .attr("text-anchor", "end")
+            .attr("x", statsX)
+            .attr("y", statsY + 20)
+            .attr("text-anchor", "start")
             .style("fill", regLineColor)
             .style("font-weight", "bold");
     }
@@ -264,10 +348,4 @@ solGS.scatterPlot = {
    }
 
 }
-
-
-
-
-
-
 

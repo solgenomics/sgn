@@ -302,7 +302,8 @@ solGS.heatmap = {
               y_label: rowLabel,
               plot_div_id: scatterPlotDivId,
               corr_values: corrValues,
-              canvas: heatmapCanvasDiv
+              canvas: heatmapCanvasDiv,
+              axis_mode: 2,
             });
           } else {
             console.log("No input data available for scatter plot.");
