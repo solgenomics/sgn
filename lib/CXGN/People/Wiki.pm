@@ -116,7 +116,7 @@ sub retrieve_page {
 	}
 
 	else {
-	    return undef;
+	    return;
 	}
     }
 
