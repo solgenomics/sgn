@@ -599,9 +599,9 @@ sub get_stocks {
 
 =head2 get_trials
 
-Usage: $image->get_stocks
- Desc:  find all stock objects linked with this image
- Ret:   a list of Bio::Chado::Schema::Result::Stock::Stock
+Usage: $image->get_trials
+ Desc:  find all trial objects linked with this image
+ Ret:   a list of Bio::Chado::Schema::Result::Project::Project
  Args:  none
 
 =cut
@@ -984,6 +984,7 @@ sub get_associated_object_links {
 
         if ($assoc->[0] eq "trial") {
             $s .= "<a href=\"/breeders/trial/$assoc->[1]/\">Trial name: $assoc->[2].</a>";
+            $s .= " | ";
         }
 
         if ($assoc->[0] eq "experiment") {
