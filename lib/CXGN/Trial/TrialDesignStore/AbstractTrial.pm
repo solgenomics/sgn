@@ -788,19 +788,6 @@ sub store {
                     if ($parent_subplot_rs->count == 1){
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_subplot_rs->first->object_id };
                     }
-
-                    my $parent_plot_of_subplot_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
-                        'me.object_id'=>$stock_id_checked,
-                        'me.type_id'=>$self->get_subplot_of_cvterm_id,
-                        'subject.type_id'=>$self->get_plot_cvterm_id
-                    }, {join => "subject"});
-                    if ($parent_plot_of_subplot_rs->count > 1){
-                        die "subplot $stock_id_checked is linked to more than one plot!\n"
-                    }
-                    if ($parent_plot_of_subplot_rs->count == 1){
-                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_of_subplot_rs->first->subject_id };
-                    }
-
                 }
                 #   For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
                 if ($stock_type_checked == $self->get_plant_cvterm_id){

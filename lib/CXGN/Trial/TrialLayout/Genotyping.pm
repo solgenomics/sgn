@@ -14,7 +14,7 @@ sub BUILD {
     print STDERR "BUILD CXGN::Trial::TrialLayout::Genotyping...\n";
 
     $self->set_source_primary_stock_types( [ "accession" ] );
-    $self->set_source_stock_types( [ "accession", "plot", "plant", "tissue_sample", "subplot" ] );
+    $self->set_source_stock_types( [ "accession", "plot", "subplot", "plant", "tissue_sample"] );
     $self->set_relationship_types( [ "tissue_sample_of" ] );
     $self->set_target_stock_types( [ "tissue_sample" ] );
     $self->convert_source_stock_types_to_ids();
@@ -32,9 +32,7 @@ sub retrieve_plot_info {
      my $self = shift;
      my $plot = shift;
      my $design = shift;
-
-     # print STDERR "DESIGN INFO = ".Dumper($design);
-
+     
      $self->SUPER::retrieve_plot_info($plot, $design);
 
      my $plot_properties = $plot->search_related('stockprops', { type_id => { -in => [ $self->cvterm_id('plot number') ] }});
@@ -55,7 +53,7 @@ sub retrieve_plot_info {
 	 ->search_related("nd_experiment")
 	 ->search_related("nd_experimentprops")
 	 ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
-     if ($genotyping_user_id_row) { 
+     if ($genotyping_user_id_row) {
 	 $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
      }
 
@@ -85,7 +83,7 @@ sub retrieve_plot_info {
          $genotyping_project_name = $genotyping_project->name();
          print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
      }
-     
+
     print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
 
      $design->{$plot_number}->{genotyping_user_id} = $genotyping_user_id;
@@ -118,6 +116,13 @@ sub retrieve_plot_info {
 	     $design->{$plot_number}->{"source_observation_unit_name"} = $r->uniquename;
 	     $design->{$plot_number}->{"source_observation_unit_id"} = $r->stock_id;
 	 }
+     if ($r->type_id == $self->cvterm_id('subplot')){
+         print STDERR "Dealing with subplot metadata.\n";
+         $design->{$plot_number}->{"source_subplot_id"} = $r->stock_id;
+         $design->{$plot_number}->{"source_subplot_name"} = $r->uniquename;
+         $design->{$plot_number}->{"source_observation_unit_name"} = $r->uniquename;
+         $design->{$plot_number}->{"source_observation_unit_id"} = $r->stock_id;
+     }
 	 if ($r->type_id == $self->cvterm_id('plant')){
 	     print STDERR "Dealing with plant metadata\n";
 	     $design->{$plot_number}->{"source_plant_id"} = $r->stock_id;
