@@ -63,6 +63,12 @@ CREATE TABLE sgn_people.sp_wiki (sp_wiki_id serial primary key, page_name varcha
 CREATE TABLE sgn_people.sp_wiki_content (sp_wiki_content_id serial primary key, sp_wiki_id bigint references sgn_people.sp_wiki on delete cascade, page_content text, page_version bigint,  create_date timestamp without time zone default now());
 
 
+grant select,insert,delete on table sgn_people.sp_wiki to web_usr;
+grant usage on sgn_people.sp_wiki_sp_wiki_id_seq to web_usr;
+
+grant select,insert,delete on table sgn_people.sp_wiki_content to web_usr;
+grant usage on sgn_people.sp_wiki_content_sp_wiki_content_id_seq to web_usr;
+
 EOSQL
 
 print "You're done!\n";
