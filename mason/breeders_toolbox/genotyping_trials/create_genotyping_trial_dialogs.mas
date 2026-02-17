@@ -20,7 +20,7 @@ $facilities => ();
                             <p>Genotyping plates represent 96 or 384 well plates.</p>
                             <p>Each plate has a globally unique Plate ID.</p>
                             <p>Each well in the plate has a globally unique tissue sample ID.</p>
-                            <p>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
+                            <p>The "contents" of each well can be either a tissue sample, plant name, subplot name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or subplot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
                             <p>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</p>
                             <p>In addition to sample ID, you have an option to include facility identifier for each well. </p>
                             <br/><br/>
@@ -201,7 +201,7 @@ $facilities => ();
                                     <div class="well well-sm">
                                         <ul>
                                             <li>Select a list for the source material going into each well. Your list should be a one to one pairing to each well e.g. if you want to fill 95 wells you should supply a list of 95 elements.</li>
-                                            <li>Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, plots, or accessions</li>
+                                            <li>Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, subplots, plots, or accessions</li>
                                         </ul>
                                     </div>
                                     <div class="form-group">
@@ -292,7 +292,7 @@ $facilities => ();
                             </&>
                             <&| /util/workflow.mas:step, title=> "Trial Linkage" &>
                                 <& /page/page_title.mas, title=>"Is your genotyping plate linked with field trials in the database? This information can also be added from the genotyping plate detail page once the trial is saved in the database." &>
-                                <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
+                                <p>If you provided us with information about where the tissue sample in each well originated (e.g. it came from a plot name or a subplot name or plant name or tissue sample name in a field trial), we will automatically create linkage between the field trial(s) and this genotyping plate.</p>
                                 <br/>
                                 <div style="text-align: center">
                                     <button id="trial_linkage_intro_button"  class="btn btn-lg btn-primary" onclick="Workflow.complete(this); return false;" >Continue to Next Step</button>
@@ -391,7 +391,7 @@ $facilities => ();
                     <li>well_A01 (the position of the sample in the plate e.q. A10)</li>
                     <li>row (the row position of the sample in the plate e.g. A)</li>
                     <li>column (the column position of the sample in the plate e.g. 10)</li>
-                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
+                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
                     <li>tissue_type (must be either leaf, root, stem, seed, fruit or tuber)</li>
                     </ul>
 
@@ -463,7 +463,7 @@ $facilities => ();
                     <li>sample_id (the unique identifier for the sample in the well. e.g. 18DNA00001_A01)</li>
                     <li>well_A01 (the position of the sample in the plate in this format A01)</li>
                     <li>well_01A (the position of the sample in the plate in this format 01A)</li>
-                    <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
+                    <li>tissue_id (the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. this can also say 'BLANK' to indicate a blank well.)</li>
                     <li>dna_person (the name of the person who plated the individual sample. can be any name.)</li>
                     <li>tissue_type (must be either leaf, root, or stem)</li>
                     </ul>
@@ -523,7 +523,7 @@ $facilities => ();
                     <br/><br/>
                     <b>Required fields:</b>
                     <ul>
-                        <li>Value (the identifier of the origin material. e.g. 2018MyPlant0001. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. This can also say 'exclude' to indicate a BLANK)</li>
+                        <li>Value (the identifier of the origin material. e.g. 2018MyPlant0001. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, subplot name, plot name, accession name. This can also say 'exclude' to indicate a BLANK)</li>
                         <li>Column (the column position of the sample e.g. 10)</li>
                         <li>Row (the row position of the sample e.g. A)</li>
                         <li>Identification (free text)</li>
