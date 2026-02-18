@@ -49,7 +49,7 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
     my $c = shift;
 
     if (! $c->user()->check_roles("curator")) {
-	$c->stash->{rest} = { error => "You do not have the privileges to modify wiki pages." };
+	$c->stash->{rest} = { error => "You do not have the privileges to create wiki pages." };
 	$c->detach();
     }
 
@@ -66,7 +66,9 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
 
 
     eval {
-	$sp_wiki_id = $wiki->new_page($wiki_page_name, $user_id);
+	$wiki->page_name($wiki_page_name);
+	$wiki->sp_person_id($user_id);
+	$sp_wiki_id = $wiki->new_page();
     };
 
     if ($@) {
@@ -74,21 +76,11 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
 	$c->stash->{rest} = { error => $@ };
     }
     else {
-	print STDERR "Page creation a success! $sp_wiki_id\n";
+	print STDERR "Page creation a success! $sp_wiki_id with $wiki_page_name\n";
 	$c->stash->{rest} = { success => 1, sp_wiki_id => $sp_wiki_id, page_name => $wiki_page_name };
     }
 }
 
-# sub ajax_edit_page : Chained('ajax_wiki') PathPart('edit') Args(0) {
-#     my $self = shift;
-#     my $c = shift;
-
-#     print STDERR "EDIT WIKI\n";
-#     $c->stash->{rest} = { error => '' };
-# }
-
-
-# this needs to be POST
 # stores the content for a given wiki_id
 #
 sub store : Chained('ajax_wiki') PathPart('store')  Args(0) ActionClass('REST') { }
@@ -110,15 +102,13 @@ sub store_POST {
 	$c->stash->{rest} = { error => "You do not have the privileges to modify wiki pages." };
 	$c->detach();
     }
-    my $user_id = $c->user()->get_object->get_sp_person_id();
-
 
     print STDERR "WIKI ID FOR STORE: $page_name\n";
 
     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $page_name } );
 
     print STDERR "PAGE OWNED BY ".$wiki->sp_person_id()."\n";
-    if ($wiki->sp_person_id() != $user_id) {
+    if ($wiki->sp_person_id() != $sp_person_id) {
 	$c->stash->{rest} = { error => "Only the original owner can modify the wiki page." };
 	$c->detach();
     }
@@ -159,6 +149,8 @@ sub delete : Chained('ajax_wiki') PathPart('delete') Args(0) {
 
 
     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $c->stash->{page_name} } );
+
+    print STDERR "WIKI PAGE OWNER: ".$wiki->sp_person_id()." (user id is $user_id)\n";
 
     if ($user_id != $wiki->sp_person_id()) {
 	$c->stash->{rest} = { error => "Only the original page creator can delete the page. It is not you." };
