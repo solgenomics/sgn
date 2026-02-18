@@ -59,6 +59,7 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
 
     my $wiki_page_name = $page_name;
     $wiki_page_name =~ s/(_|-|\s+)(\w)/\U$2/g;
+    $wiki_page_name =~ s/\W//g;
 
     my $sp_wiki_id;
 
