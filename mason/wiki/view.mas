@@ -172,7 +172,7 @@ function create_page(new_page_name) {
 		}
 		else {
 		    if (r.success) {
-			alert('Page successfully stored. id = '+r.page_name);
+			//alert('Page successfully stored. id = '+r.page_name);
 			page_name = r.page_name;
 			jQuery('#page_name').val(page_name);
 			jQuery('#edit_page_name').html(page_name);
