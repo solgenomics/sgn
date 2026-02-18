@@ -151,6 +151,7 @@ jQuery(window).ready( function() {
 
 function create_page(page_name) {
     jQuery('#page_name').html(page_name);
+    jQuery('#wiki_page_content').val('');
     jQuery.ajax( {
 	url : '/ajax/wiki/new?page_name='+page_name,
     }).then(
