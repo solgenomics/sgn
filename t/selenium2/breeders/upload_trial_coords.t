@@ -5,6 +5,8 @@ use Test::More 'tests' => 12;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 
+use strict;
+
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
 
