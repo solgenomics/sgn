@@ -25,7 +25,6 @@ use Try::Tiny;
 use CXGN::Phenome::Schema;
 use CXGN::Phenome::Allele;
 use CXGN::Stock;
-use CXGN::Stock::Plot;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html info_table_html html_alternate_show /;
 use CXGN::Phenome::DumpGenotypes;
 use CXGN::BreederSearch;
@@ -2064,7 +2063,7 @@ sub stock_lookup_POST {
     $c->stash->{rest} = { $lookup_from_field => $value_to_lookup, $lookup_field => $value };
 }
 
-sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
+sub get_child_stocks : Path('/stock/get_child_stocks') Args(1) {
     my $self = shift;
     my $c = shift;
     my $plot_id = shift;
@@ -2074,9 +2073,9 @@ sub get_plot_contents : Path('/stock/get_plot_contents') Args(1) {
     my $plot_contents;
 
     eval {
-        $plot = CXGN::Stock::Plot->new({schema => $schema, stock_id=>$plot_id});
+        $plot = CXGN::Stock->new({schema => $schema, stock_id=>$plot_id});
 
-        $plot_contents = $plot->get_plot_contents();
+        $plot_contents = $plot->get_child_stocks();
     };
 
     if ($@) {
