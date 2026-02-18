@@ -139,7 +139,12 @@ jQuery(window).ready( function() {
 
     jQuery('#delete_wiki_page_button').click( function() {
 
+	var page_title = jQuery('#page_title').html();
+
 	var yes = confirm('Are you sure you would like to delete the page '+page_name+'?');
+
+
+
 	if (yes) {
 	    jQuery.ajax( {
 		url: '/ajax/wiki/'+page_name+'/delete',
