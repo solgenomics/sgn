@@ -17,7 +17,7 @@ $t->while_logged_in_as("submitter", sub {
     my $heatmap_onswitch = $t->find_element_ok("pheno_heatmap_onswitch",  "id",  "click to open pheno heatmap panel");
 
     $heatmap_onswitch->click();
-    sleep(3);
+    sleep(5);
 
     $t->find_element_ok("heatmap_upload_trial_coords_link", "id", "click on upload_trial_coords_link ")->click();
 
@@ -54,7 +54,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("delete_field_map_hm_link", "id", "find a delete coordinates after upload button and click")->click();
     sleep(1);
 
-    $t->find_element_ok("delete_field_coords_ok_button", "id", "find confirm deletion of coordinates after upload");
+    $t->accept_alert_ok("find confirm deletion of coordinates after upload");
     }
 );
 
