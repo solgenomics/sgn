@@ -492,6 +492,7 @@ sub upload_image {
     my $self = shift;
     my $temp_file = shift;
     my $upload_fh = shift;
+    my $fh;
 
     ### 11/30/07 - change this so it removes existing file
     #     -deanx
@@ -501,15 +502,15 @@ sub upload_image {
         unlink $temp_file;
     }
 
-    open UPLOADFILE, '>', $temp_file or die "Could not write to $temp_file: $!\n";
+    open $fh, '>', $temp_file or die "Could not write to $temp_file: $!\n";
 
-    binmode UPLOADFILE;
+    binmode $fh;
     while (<$upload_fh>) {
 
         #warn "Read another chunk...\n";
         print UPLOADFILE;
     }
-    close UPLOADFILE;
+    close $fh;
     warn "Done uploading.\n";
 
     return $temp_file;
@@ -549,7 +550,7 @@ sub associate_stock  {
             die "No username. Could not save image-stock association!\n";
         }
     }
-    return undef;
+    return;
 }
 
 =head2 remove_stock
@@ -571,7 +572,7 @@ sub remove_stock  {
         my $sth = $self->get_dbh->prepare($q);
         $sth->execute($stock_id, $self->get_image_id);
     }
-    return undef;
+    return;
 }
 
 =head2 get_stocks
@@ -1087,7 +1088,7 @@ sub remove_associated_cvterm {
         $self->get_image_id,
     );
 
-    return undef;
+    return;
 }
 
 sub associate_phenotype {
@@ -1104,7 +1105,7 @@ sub associate_phenotype {
         $sth->execute($nd_experiment_id, $image_id);
     }
 
-    return undef;
+    return;
 }
 
 sub remove_associated_phenotypes {
