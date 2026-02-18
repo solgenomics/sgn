@@ -15,7 +15,7 @@ $page_name => 'WikiHome'
 </style>
 
 <h3><a href="/wiki"><b>Wiki</b></a>&nbsp;&nbsp;&nbsp;
-    <button id="new_wiki_page_button" class="btn" data-toggle="modal" data-target="#new_wiki_page_modal">New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
+    <button id="new_wiki_page_button" class="btn" >New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
     <hr>
     <b><span id="page_name" title="page name">?</span> (v<span id="page_version">?</span></b>)
     <hr>
@@ -44,7 +44,7 @@ $page_name => 'WikiHome'
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-	<h5 class="modal-title">Create New Wiki Page</h5>
+	<h5 class="modal-title">Edit Wiki Page <b><span id="edit_page_name"></span></b></h5>
 	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 	  <span aria-hidden="true">&times;</span>
         </button>
@@ -71,14 +71,21 @@ jQuery(window).ready( function() {
 
     view_page(page_name);
 
+    jQuery('#new_wiki_page_button').click( function() {
+	jQuery('#wiki_page_name').val('');
+	jQuery('#new_wiki_page_modal').modal("show");
+    });
+
     jQuery('#create_wiki_page_button').click( function() {
 	page_name = jQuery('#wiki_page_name').val();
+	jQuery('#page_name').val(page_name);
 	create_page(page_name);
 	jQuery('#new_wiki_page_modal').modal("hide");
     });
 
     jQuery('#save_wiki_page_button').click( function() {
-	//alert('page_name = '+page_name);
+	page_name = jQuery('#page_name').val();
+	//	alert('page_name before save = ' + page_name);
 	var content = jQuery('#wiki_page_content').val();
 	//alert('Content: '+content);
     	jQuery.ajax( {
@@ -102,6 +109,7 @@ jQuery(window).ready( function() {
 
     jQuery('#edit_wiki_page_button').click( function() {
 	jQuery('#wiki_page_content').val('');
+	jQuery('#edit_page_name').val(page_name);
 	jQuery.ajax( {
 	    url: '/ajax/wiki/'+page_name+'/retrieve',
 	}).then(
@@ -111,15 +119,13 @@ jQuery(window).ready( function() {
 		}
 		else {
 		    if (r.raw) {
-
 			jQuery('#wiki_page_content').val(r.raw);
-
-			jQuery('#edit_wiki_page_modal').modal('show');
 		    }
+	            jQuery('#edit_wiki_page_modal').modal('show');
 		}
 	    },
 	    function(r) {
-		alert('An error occurred :-(');
+		alert('An error occurred :-( '+r.responseText);
 	    }
 	);
 
@@ -149,28 +155,37 @@ jQuery(window).ready( function() {
 });
 
 
-function create_page(page_name) {
-    jQuery('#page_name').html(page_name);
+function create_page(new_page_name) {
+//    alert('PAGE NAME in create_page: '+new_page_name);
+    jQuery('#page_name').html('');
     jQuery('#wiki_page_content').val('');
+    jQuery('#wiki_page_markdown').val('');
     jQuery.ajax( {
-	url : '/ajax/wiki/new?page_name='+page_name,
+	url : '/ajax/wiki/new?page_name='+new_page_name,
     }).then(
 	function(r) {
 	    if (r.error) { alert(r.error); }
 	    else {
 		if (r.error) {
 		    alert('An error occurred. '+r.error);
+		    window.location.href="/wiki";
 		}
-		else if (r.success) {
-		//  alert('Page successfully stored. id ='+r.sp_wiki_id);
-		    page_name = r.page_name;
-		    jQuery('#edit_wiki_page_modal').modal('show');
+		else {
+		    if (r.success) {
+			alert('Page successfully stored. id = '+r.page_name);
+			page_name = r.page_name;
+			jQuery('#page_name').val(page_name);
+			jQuery('#edit_page_name').html(page_name);
+			jQuery('#edit_wiki_page_modal').modal('show');
+		    }
+		    else { alert('Not sure what is going on!'); }
 		}
 	    }
 
 	},
 	function(r) {
 	    alert('An error occurred!');
+	    window.location.href="/wiki";
 	}
     );
 }
