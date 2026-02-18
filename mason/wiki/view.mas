@@ -28,7 +28,8 @@ $page_name => 'WikiHome'
 	  <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <div class="modal-body">
+    <div class="modal-body">
+    <p>Please enter a page name in camelCase (for example: myFavoritePage). Spaces and special characters will be converted.</p>
 	<p>Page Name <input type="text" id="wiki_page_name" alt="enter page name" length="20" /></p>
       </div>
       <div class="modal-footer">
@@ -77,15 +78,15 @@ jQuery(window).ready( function() {
     });
 
     jQuery('#create_wiki_page_button').click( function() {
-	page_name = jQuery('#wiki_page_name').val();
-	jQuery('#page_name').val(page_name);
+	var page_name = jQuery('#wiki_page_name').val();
+	jQuery('#page_name').html(page_name);
 	create_page(page_name);
 	jQuery('#new_wiki_page_modal').modal("hide");
     });
 
     jQuery('#save_wiki_page_button').click( function() {
-	page_name = jQuery('#page_name').val();
-	//	alert('page_name before save = ' + page_name);
+	var page_name = jQuery('#page_name').html();
+	//alert('page_name before save = ' + page_name);
 	var content = jQuery('#wiki_page_content').val();
 	//alert('Content: '+content);
     	jQuery.ajax( {
@@ -99,6 +100,7 @@ jQuery(window).ready( function() {
 		}
 		else {
 		    jQuery('#edit_wiki_page_modal').modal('hide');
+		    page_new = jQuery('#page_name').html();
 		    view_page(page_name);
 		    // alert('Successfully stored page '+page_name);
 		}
@@ -109,7 +111,10 @@ jQuery(window).ready( function() {
 
     jQuery('#edit_wiki_page_button').click( function() {
 	jQuery('#wiki_page_content').val('');
-	jQuery('#edit_page_name').val(page_name);
+	var page_name = jQuery('#page_name').html();
+	//alert('PAGE NAME FOR PAGE EDIT = '+page_name);
+	jQuery('#edit_page_name').html(page_name);
+	jQuery('#page_name').html(page_name);
 	jQuery.ajax( {
 	    url: '/ajax/wiki/'+page_name+'/retrieve',
 	}).then(
@@ -159,7 +164,7 @@ function create_page(new_page_name) {
 //    alert('PAGE NAME in create_page: '+new_page_name);
     jQuery('#page_name').html('');
     jQuery('#wiki_page_content').val('');
-    jQuery('#wiki_page_markdown').val('');
+    jQuery('#wiki_page_markdown').html('');
     jQuery.ajax( {
 	url : '/ajax/wiki/new?page_name='+new_page_name,
     }).then(
@@ -174,11 +179,11 @@ function create_page(new_page_name) {
 		    if (r.success) {
 			//alert('Page successfully stored. id = '+r.page_name);
 			page_name = r.page_name;
-			jQuery('#page_name').val(page_name);
+			jQuery('#page_name').html(page_name);
 			jQuery('#edit_page_name').html(page_name);
 			jQuery('#edit_wiki_page_modal').modal('show');
 		    }
-		    else { alert('Not sure what is going on!'); }
+		    else { alert('The page creation was not successful for unknown reasons.'); }
 		}
 	    }
 
@@ -191,6 +196,7 @@ function create_page(new_page_name) {
 }
 
 function view_page(page_name) {
+ //   alert('PAGE NAME FOR VIEW PAGE = '+page_name);
     jQuery('#page_name').html(page_name);
     jQuery.ajax( {
 	url : '/ajax/wiki/'+page_name+'/view',
