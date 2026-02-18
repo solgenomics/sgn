@@ -74,6 +74,9 @@ use JSON::Any;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
 
+use strict;
+use warnings;
+
 =head1 ACCESSORS
 
 =head2 people_schema()
@@ -752,7 +755,7 @@ sub enforce_finish_logfile {
 
 =head1 CLASS METHODS
 
-=head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id)
+=head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id, user_role)
 
 Returns a listref of sp_job_ids submitted by the given user id
 
@@ -932,6 +935,134 @@ sub delete_finished_upload_jobs {
 
     # get jobs, filter by user id, type id, status, and additional args (for what subtype of upload this is)
     # TODO
+}
+
+=head2 get_user_in_progress_uploads(bcs_schema, people_schema, user_id, user_role)
+
+Gets all in-progress upload jobs attributed to that user. Gets all upload jobs if curator. 
+Note that "in progress" does not mean the same thing as a background job status. If validation and 
+final upload are carried out in two steps with different background jobs, they are considered part 
+of the same upload. Thus, you may retrieve a "finished" job_id that corresponds to a validation step,
+but the upload is in-progress because the final step must be completed. File ids and other data in
+the additional arguments hash will tie different jobs together in this way. 
+
+=cut
+
+sub get_user_in_progress_uploads {
+
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+    my $user_role = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.";
+    }
+
+    my @user_uploads;
+
+    my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
+    my $cv_id = $cv_rs->cv_id();
+    my $cvterm_row = $bcs_schema->resultset("Cv::Cvterm")->find({name => "upload", cv_id => $cv_id});
+
+    my $upload_cvterm_id = $cvterm_row->cvterm_id();
+
+    my $uploads_rs;
+    if ($user_role eq "curator") {
+        $uploads_rs = $people_schema->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+    } else {
+        $uploads_rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+    }
+
+    while (my $upload = $uploads_rs->next()) {
+        my $job_args = JSON::Any->decode($upload->args());
+        my $status = $upload->status();
+        if ($job_args->{additional_args}->{is_validation} || $status eq "submitted") { #validation jobs can be finished/failed and still be considered "in-progress"
+            if ($user_role eq "curator") {
+                push @user_uploads, {
+                    job_id => $upload->sp_job_id(), 
+                    user_id => $upload->sp_person_id(),
+                    status => $upload->status(),
+                    create_timestamp => $upload->create_timestamp(),
+                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
+                    args => $upload->args()
+                };
+            } else {
+                push @user_uploads, {
+                    job_id => $upload->sp_job_id(), 
+                    status => $upload->status(),
+                    create_timestamp => $upload->create_timestamp(),
+                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
+                    args => $upload->args()
+                };
+            }
+        }  
+    }
+    
+    return \@user_uploads;
+}
+
+=head2 get_user_completed_uploads(bcs_schema, people_schema, user_id, user_role)
+
+Get all completed upload jobs for this user. Gets all jobs if curator. 
+Completed upload jobs are jobs that have a finished status and have a "final_upload"
+attribute in the args hash.
+
+=cut
+
+sub get_user_completed_uploads {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+    my $user_role = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.";
+    }
+
+    my @user_uploads;
+
+    my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
+    my $cv_id = $cv_rs->cv_id();
+    my $cvterm_row = $bcs_schema->resultset("Cv::Cvterm")->find({name => "upload", cv_id => $cv_id});
+
+    my $upload_cvterm_id = $cvterm_row->cvterm_id();
+
+    my $uploads_rs;
+    if ($user_role eq "curator") {
+        $uploads_rs = $people_schema->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+    } else {
+        $uploads_rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+    }
+
+    while (my $upload = $uploads_rs->next()) {
+        my $job_args = JSON::Any->decode($upload->args());
+        my $status = $upload->status();
+        if ($job_args->{additional_args}->{final_upload} && $status ne "submitted" ) { #validation jobs can be finished/failed and still be considered "in-progress"
+            if ($user_role eq "curator") {
+                push @user_uploads, {
+                    job_id => $upload->sp_job_id(), 
+                    user_id => $upload->sp_person_id(),
+                    status => $upload->status(),
+                    create_timestamp => $upload->create_timestamp(),
+                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
+                    args => $upload->args()
+                };
+            } else {
+                push @user_uploads, {
+                    job_id => $upload->sp_job_id(), 
+                    status => $upload->status(),
+                    create_timestamp => $upload->create_timestamp(),
+                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
+                    args => $upload->args()
+                };
+            }
+        }  
+    }
+    
+    return \@user_uploads;
 }
 
 1;

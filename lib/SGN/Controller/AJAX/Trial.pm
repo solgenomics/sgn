@@ -1171,8 +1171,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $dbuser                     = $c->config->{dbuser};
     my $time                       = DateTime->now();
     my $timestamp                  = $time->ymd()."_".$time->hms();
-    my $upload_original_name       = $upload->filename();
-    my $upload_tempfile            = $upload->tempname;
+    my $upload_original_name       = $upload ? $upload->filename() : "";
+    my $upload_tempfile            = $upload ? $upload->tempname : "";
     my $subdirectory               = "trial_upload";
     my $archive_filename           = $timestamp . "_" . $upload_original_name;
 
@@ -1199,7 +1199,11 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $archived_filename_with_path;
     my $archive_path = $c->config->{archive_path};
 
-    unless ($archived_file_id) {
+    if ($archived_file_id) {
+        print STDERR "Skipping archive step, already have a file with ID $archived_file_id\n";
+    }
+
+    if (! $archived_file_id) {
         ## Store uploaded temporary file in archive
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
@@ -1217,12 +1221,12 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         }
         unlink $upload_tempfile;
     } else {
-        # $archived_filename_with_path = # need to implement a file utility
-        # my $archived_file = CXGN::File->new({
-        #     file_id => $archived_file_id,
-        #     metadata_schema => $
-        # });
-        # $archived_filename_with_path = $archived_file->filename();
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
 
     # Build the backend script command to parse, validate, and upload the trials
@@ -1240,7 +1244,11 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         name => "$upload_original_name multiple trial designs upload",
         results_page => '/breeders/trials',
         job_type => 'upload',
-        finish_logfile => $c->config->{job_finish_log}
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            final_upload => 1,
+            file_type => "trials"
+        }
     });
     if ( $email_option_enabled && $email_address ) {
         #$runner->run_async($cmd);
@@ -1306,11 +1314,13 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
         if ( scalar(@errors) > 0 ) {
             $c->stash->{rest} = {errors => \@errors};
+            $job->additional_args->{error_messages} = \@errors;
             $job->update_status("failed");
             return;
         }
         if ( scalar(@warnings) > 0 ) {
             $c->stash->{rest} = {warnings => \@warnings};
+            $job->additional_args->{warning_messages} = \@warnings;
             $job->update_status("failed");
             return;
         }

@@ -37,6 +37,9 @@ use File::Path qw( make_path );
 use JSON::Any;
 use CXGN::Metadata::Schema;
 
+use strict;
+use warnings;
+
 =head1 ACCESSORS
 
 =head2 metadata_schema()
@@ -110,12 +113,37 @@ has 'filename' => (
 
 =head2 dirname()
 
-Parent directories of archived file. Should be combined with the archive path config key ($file->archive_path or $c->config->{archive_path}) for a complete path to a file
+Parent directories of archived file. Should be combined with the archive path config key ($file->archive_path or $c->config->{archive_path}) for a complete path to a file.
+Ideally, $c->config->{archive_path} should NOT be found in the dirname of a given file. The dirname should have only the user ID folder and the subdirectory, such that the 
+complete file path on the system is $archive_path/$dirname/$basename. 
 
 =cut
 
 has 'dirname' => (
     isa => 'Maybe[Str]',
+    is => 'rw'
+);
+
+=head2 subdirectory()
+
+The archive subdirectory holding this file. This loosely corresponds to what type of file it is or where it was uploaded from. However, there is no enforcement of this at all.
+This is a substring of dirname.
+
+=cut
+
+has 'subdirectory' => (
+    isa => 'Maybe[Str]',
+    is => 'rw'
+);
+
+=head2 user_id()
+
+The ID of the user that uploaded this file. Generally, this will also be part of the dirname. 
+
+=cut
+
+has 'user_id' => (
+    isa => 'Int',
     is => 'rw'
 );
 
@@ -211,25 +239,36 @@ sub BUILD {
         die "Need a file ID. Creating new file entries is handled with CXGN::UploadFile.\n";
     }
 
-    my $file_rs = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+    my $file_rs = $metadata_schema->resultset("MdFiles")->search(
+        {'me.file_id' => $file_id},
+        {
+            join => 'metadata_id',
+            '+select' => ['metadata_id.create_person_id'],
+            '+as' => ['create_person_id']
+        }
+    )->single;
 
     if (!$file_rs) {
         die "File not found. Is the file ID valid?";
     }
 
-    my $basename = $file_rs->basename();
+    my $basename = $file_rs->get_column('basename');
     $basename =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
     $self->basename($basename);
     $self->filename($+{FILENAME});
     $self->timestamp($+{TIMESTAMP});
-    $self->dirname($file_rs->dirname());
-    $self->filetype($file_rs->filetype());
-    $self->comment($file_rs->comment());
-    $self->alt_filename($file_rs->alt_filename());
-    $self->md5checksum($file_rs->md5checksum());
-    $self->metadata_id($file_rs->metadata_id());
-    $self->urlsource($file_rs->urlsource());
-    $self->urlsource_md5checksum($file_rs->urlsource_md5checksum());
+    $self->dirname($file_rs->get_column('dirname'));
+    my $dirname = $file_rs->get_column('dirname');
+    $dirname =~ m/(?<USER_DIR>\d+)\/(?<SUBDIR>\w+)/;
+    $self->subdirectory($+{SUBDIR});
+    $self->user_id($file_rs->get_column('create_person_id'));
+    $self->filetype($file_rs->get_column('filetype'));
+    $self->comment($file_rs->get_column('comment'));
+    $self->alt_filename($file_rs->get_column('alt_filename'));
+    $self->md5checksum($file_rs->get_column('md5checksum'));
+    $self->metadata_id($file_rs->get_column('metadata_id'));
+    $self->urlsource($file_rs->get_column('urlsource'));
+    $self->urlsource_md5checksum($file_rs->get_column('urlsource_md5checksum'));
 }
 
 sub store {
@@ -237,8 +276,8 @@ sub store {
     my $metadata_schema = $self->metadata_schema();
 
     eval {
-        $metadata_schema->resultset("MdFiles")->update({
-            file_id => $self->file_id(),
+        my $mdfile_rs = $metadata_schema->resultset("MdFiles")->find({file_id => $self->file_id()});
+        $mdfile_rs->update({
             basename => $self->basename(),
             dirname => $self->dirname(),
             filetype => $self->filetype(),
@@ -267,6 +306,17 @@ sub set_file_type {
 
     $self->filetype($new_type);
     $self->store();
+}
+
+=head2 get_path()
+
+Get the full filepath and name for this file.
+
+=cut
+
+sub get_path {
+    my $self = shift;
+    return $self->dirname()."/".$self->basename();
 }
 
 =head1 CLASS METHODS
