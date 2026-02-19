@@ -3,6 +3,8 @@
 $page_name => 'WikiHome'
 </%args>
 
+<& /util/import_javascript.mas, classes => [ 'CXGN.Login' ] &>
+
 <style>
     th, td {
   /* Adds space between the content and cell border */
@@ -15,10 +17,10 @@ $page_name => 'WikiHome'
 </style>
 
 <h3><a href="/wiki"><b>Wiki</b></a>&nbsp;&nbsp;&nbsp;
-    <button id="new_wiki_page_button" class="btn" >New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
-    <hr>
-    <b><span id="page_name" title="page name">?</span> (v<span id="page_version">?</span></b>)
-    <hr>
+  <button id="new_wiki_page_button" class="btn" >New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
+<hr>
+<b><span id="page_name" title="page name">?</span> (v<span id="page_version">?</span></b>)
+<hr>
 <div class="modal" id="new_wiki_page_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -39,7 +41,6 @@ $page_name => 'WikiHome'
     </div>
   </div>
 </div>
-
 
 <div class="modal" id="edit_wiki_page_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
@@ -71,6 +72,19 @@ jQuery(window).ready( function() {
     var page_name = '<% $page_name %>';
 
     view_page(page_name);
+
+    if (isLoggedIn()) {
+	if (getUserRoles().includes("curator")) {
+	    jQuery('#new_wiki_page_button').prop('disabled', false);
+	    jQuery('#edit_wiki_page_button').prop('disabled', false);
+	    jQuery('#delete_wiki_page_button').prop('disabled', false);
+	}
+	else {
+	    jQuery('#new_wiki_page_button').prop('disabled', true);
+	    jQuery('#edit_wiki_page_button').prop('disabled', true);
+	    jQuery('#delete_wiki_page_button').prop('disabled', true);
+	}
+    }
 
     jQuery('#new_wiki_page_button').click( function() {
 	jQuery('#wiki_page_name').val('');
@@ -136,7 +150,6 @@ jQuery(window).ready( function() {
 
     });
 
-
     jQuery('#delete_wiki_page_button').click( function() {
 
 	var page_title = jQuery('#page_title').html();
@@ -163,7 +176,6 @@ jQuery(window).ready( function() {
     })
 
 });
-
 
 function create_page(new_page_name) {
 //    alert('PAGE NAME in create_page: '+new_page_name);
