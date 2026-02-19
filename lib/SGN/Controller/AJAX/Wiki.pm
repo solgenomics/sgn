@@ -61,12 +61,17 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
     $wiki_page_name =~ s/(_|-|\s+)(\w)/\U$2/g;
     $wiki_page_name =~ s/\W//g;
 
+
     my $sp_wiki_id;
 
     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
 
 
     eval {
+	if (length($wiki_page_name) == 0) {
+	    die "The name of the wiki page cannot be the empty string or consist only of special characters.";
+	}
+
 	$wiki->page_name($wiki_page_name);
 	$wiki->sp_person_id($user_id);
 	$sp_wiki_id = $wiki->new_page();
