@@ -152,25 +152,27 @@ jQuery(window).ready( function() {
 
     jQuery('#delete_wiki_page_button').click( function() {
 
-	var page_title = jQuery('#page_title').html();
+	var delete_page_name = jQuery('#page_name').html();
 
-	var yes = confirm('Are you sure you would like to delete the page '+page_name+'?');
-
-
+	var yes = confirm('Are you sure you would like to delete the page '+delete_page_name+'?');
 
 	if (yes) {
 	    jQuery.ajax( {
-		url: '/ajax/wiki/'+page_name+'/delete',
+		url: '/ajax/wiki/'+delete_page_name+'/delete',
 	    }).then(
 		function(r) {
 	            if (r.error) {
 			alert(r.error);
+			window.location.href="/wiki";
 		    }
 		    else {
-			alert('Page deleted!'); window.location.href="/wiki";
+			alert('Page '+delete_page_name+' deleted!'); window.location.href="/wiki";
 		    }
 		},
-		function(r) { alert('An error occurred deleting the page'); }
+		function(r) {
+		    alert('An error occurred deleting the page '+delete_page_name);
+		    window.location.href="/wiki";
+		}
 	    );
 	}
     })
@@ -186,7 +188,10 @@ function create_page(new_page_name) {
 	url : '/ajax/wiki/new?page_name='+new_page_name,
     }).then(
 	function(r) {
-	    if (r.error) { alert(r.error); }
+	    if (r.error) {
+		alert(r.error);
+		window.location.href="/wiki";
+	    }
 	    else {
 		if (r.error) {
 		    alert('An error occurred. '+r.error);
@@ -200,7 +205,10 @@ function create_page(new_page_name) {
 			jQuery('#edit_page_name').html(page_name);
 			jQuery('#edit_wiki_page_modal').modal('show');
 		    }
-		    else { alert('The page creation was not successful for unknown reasons.'); }
+		    else {
+			alert('The page creation was not successful for unknown reasons.');
+			window.location.href="/wiki";
+		    }
 		}
 	    }
 
