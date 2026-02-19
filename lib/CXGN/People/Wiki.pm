@@ -206,7 +206,9 @@ sub store_page {
 
 sub delete {
     my $self = shift;
-    my $page_name = shift;
+    my $page_name = shift || $self->page_name();
+
+    print STDERR "DELETING PAGE $page_name\n";
 
     my $row = $self->people_schema()->resultset("SpWiki")->find( { page_name => $page_name });
 

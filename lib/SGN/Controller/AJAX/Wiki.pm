@@ -148,7 +148,6 @@ sub delete : Chained('ajax_wiki') PathPart('delete') Args(0) {
     }
     my $user_id = $c->user()->get_object->get_sp_person_id();
 
-
     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema"), page_name => $c->stash->{page_name} } );
 
     print STDERR "WIKI PAGE OWNER: ".$wiki->sp_person_id()." (user id is $user_id)\n";
@@ -159,7 +158,8 @@ sub delete : Chained('ajax_wiki') PathPart('delete') Args(0) {
     }
 
     eval {
-	$wiki->delete($c->stash->{page_name});
+	$wiki->page_name($c->stash->{page_name});
+	$wiki->delete();
     };
     if ($@) {
 	$c->stash->{rest} = { error => $@ };
