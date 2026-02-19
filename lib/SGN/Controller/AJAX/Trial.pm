@@ -1163,7 +1163,6 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $email_address              = $c->req->param('trial_email_address_upload');
     my $email_option_enabled       = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
     my $archived_file_id           = $c->req->param('archived_file_id') || undef;
-    my $force_async                = $c->req->param('force_async') || undef;
 
     my $dbhost                     = $c->config->{dbhost};
     my $dbname                     = $c->config->{dbname};
@@ -1258,7 +1257,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             user_name => "$user_first_name $user_last_name"
         }
     });
-    if ( ($email_option_enabled && $email_address) || $force_async) {
+    if ( ($email_option_enabled && $email_address)) {
         #$runner->run_async($cmd);
         $job->submit();
         #my $err = $runner->err();
