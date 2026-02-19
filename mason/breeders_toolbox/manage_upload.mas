@@ -86,6 +86,7 @@ $editable_vector_props
 <br>
 <button class="btn btn-sm btn-primary">Dismiss all completed uploads</button>
 <br>
+<br>
     <table id="upload_factory_completed_uploads_table">
         <thead>
         </thead>
@@ -201,35 +202,36 @@ function load_archived_files_table() {
             if (response.error) {
                 alert(response.error);
             } else {
+                
+                if (jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable('#upload_factory_archived_files_table')) {
+                    let dt = jQuery('#upload_factory_archived_files_table').DataTable();
+                    dt.clear().destroy();
+                }
+
+                let header_row = jQuery('<tr>');
+                header_row.append(jQuery('<th>').text("Timestamp"));
+                header_row.append(jQuery('<th>').text("File Name"));
+
+                if (response.data.length > 0 && response.data[0].hasOwnProperty('user_id')) {
+                    header_row.append(jQuery('<th>').text("Uploader"));
+                }
+
+                header_row.append(jQuery('<th>').text("Upload As"));
+                header_row.append(jQuery('<th>').text("Check formatting rules"));
+                //header_row.append(jQuery('<th>').text("Delete"));
+                header_row.append(jQuery('<th>').text("Process File"));
+
+                jQuery('#upload_factory_archived_files_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>')
+
+                let file_tbody = jQuery('#upload_factory_archived_files_table tbody');
+                let file_thead = jQuery('#upload_factory_archived_files_table thead');
+                let file_tfoot = jQuery('#upload_factory_archived_files_table tfoot');
+
+                file_thead.append(header_row);
+
+                archived_files_list = response.data;
+
                 if (response.data.length > 0 ) {
-
-                    if (jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable('#upload_factory_archived_files_table')) {
-                        let dt = jQuery('#upload_factory_archived_files_table').DataTable();
-                        dt.clear().destroy();
-                    }
-
-                    let header_row = jQuery('<tr>');
-                    header_row.append(jQuery('<th>').text("Timestamp"));
-                    header_row.append(jQuery('<th>').text("File Name"));
-
-                    if (response.data[0].hasOwnProperty('user_id')) {
-                        header_row.append(jQuery('<th>').text("Uploader"));
-                    }
-
-                    header_row.append(jQuery('<th>').text("Upload As"));
-                    header_row.append(jQuery('<th>').text("Check formatting rules"));
-                    //header_row.append(jQuery('<th>').text("Delete"));
-                    header_row.append(jQuery('<th>').text("Process File"));
-
-                    jQuery('#upload_factory_archived_files_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>')
-
-                    let file_tbody = jQuery('#upload_factory_archived_files_table tbody');
-                    let file_thead = jQuery('#upload_factory_archived_files_table thead');
-                    let file_tfoot = jQuery('#upload_factory_archived_files_table tfoot');
-
-                    file_thead.append(header_row);
-
-                    archived_files_list = response.data;
 
                     response.data.forEach(row => {
                         //archived_files_list.push({file_id : row.file_id, file_name : for.filename});
@@ -249,11 +251,11 @@ function load_archived_files_table() {
                         tr.append(jQuery("<td>").html("<button class='btn btn-success process-file-btn' id='process_file_"+row.file_id+"'><span class='glyphicon glyphicon-play-circle'></span></button>"));
                         file_tbody.append(tr);
                     });
-
-                    let archived_files = jQuery('#upload_factory_archived_files_table').DataTable({
-                        order : [[0, 'desc']]
-                    });
                 } 
+
+                let archived_files = jQuery('#upload_factory_archived_files_table').DataTable({
+                    order : [[0, 'desc']]
+                });
             }
         },
         error : function() {
@@ -269,48 +271,51 @@ function load_in_progress_uploads_table() {
             if (response.error) {
                 alert(response.error);
             } else {
+                console.log("In progress uploads:");
+                console.log(response.data);
+
+                if (jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable('#upload_factory_in_progress_uploads_table')) {
+                    let dt = jQuery('#upload_factory_in_progress_uploads_table').DataTable();
+                    dt.clear().destroy();
+                }
+
+                let header_row = jQuery('<tr>');
+                header_row.append(jQuery('<th>').text("Upload Name"));
+
+                if (response.data.length > 0 && response.data[0].hasOwnProperty('user_id')) {
+                    header_row.append(jQuery('<th>').text("Uploader"));
+                }
+
+                header_row.append(jQuery('<th>').text("Uploaded As"));
+                header_row.append(jQuery('<th>').text("Status"));
+                header_row.append(jQuery('<th>').text("Actions"));
+
+                jQuery('#upload_factory_in_progress_uploads_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>');
+
+                let file_tbody = jQuery('#upload_factory_in_progress_uploads_table tbody');
+                let file_thead = jQuery('#upload_factory_in_progress_uploads_table thead');
+                let file_tfoot = jQuery('#upload_factory_in_progress_uploads_table tfoot');
+
+                file_thead.append(header_row);
+
                 if (response.data.length > 0 ) {
-
-                    if (jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable('#upload_factory_in_progress_uploads_table')) {
-                        let dt = jQuery('#upload_factory_in_progress_uploads_table').DataTable();
-                        dt.clear().destroy();
-                    }
-
-                    let header_row = jQuery('<tr>');
-                    header_row.append(jQuery('<th>').text("Upload Name"));
-
-                    if (response.data[0].hasOwnProperty('user_id')) {
-                        header_row.append(jQuery('<th>').text("Uploader"));
-                    }
-
-                    header_row.append(jQuery('<th>').text("Uploaded As"));
-                    header_row.append(jQuery('<th>').text("Status"));
-                    header_row.append(jQuery('<th>').text("Actions"));
-
-                    jQuery('#upload_factory_in_progress_uploads_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>');
-
-                    let file_tbody = jQuery('#upload_factory_in_progress_uploads_table tbody');
-                    let file_thead = jQuery('#upload_factory_in_progress_uploads_table thead');
-                    let file_tfoot = jQuery('#upload_factory_in_progress_uploads_table tfoot');
-
-                    file_thead.append(header_row);
 
                     response.data.forEach(row => {
                         let tr = jQuery("<tr>");
-                        tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>"${row.args.name}</div>`));
+                        tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
                         if (response.data[0].hasOwnProperty('user_id')) {
-                            tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
+                            tr.append(jQuery("<td>").html(`<a href='/solpeople/profile/${row.user_id}'>${row.args.additional_args?.user_name}</a>`));
                         }
-                        tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args.file_type]}</div>`));
+                        tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args?.file_type]}</div>`));
                         tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
-                        tr.append(jQuery("<td>").html("<button class='btn btn-success process-file-btn' id='process_file_"+row.file_id+"'><span class='glyphicon glyphicon-play-circle'></span></button>"));
+                        tr.append(jQuery("<td>").html(`<button class='btn btn-success'>Nothing here yet</button>`));
                         file_tbody.append(tr);
                     });
 
-                    let archived_files = jQuery('#upload_factory_in_progress_uploads_table').DataTable({
-                        order : [[0, 'desc']]
-                    });
+                     
                 } 
+
+                let uploads_in_progress = jQuery('#upload_factory_in_progress_uploads_table').DataTable();
             }
         },
         error : function() {
@@ -320,7 +325,64 @@ function load_in_progress_uploads_table() {
 }
 
 function load_completed_uploads_table() {
-    // TODO
+    jQuery.ajax({
+        url: '/ajax/job/completed_uploads/<% $sp_person_id %>',
+        success: function(response) {
+            if (response.error) {
+                alert(response.error);
+            } else {
+
+                console.log("Completed uploads:");
+                console.log(response.data);
+
+                if (jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable('#upload_factory_completed_uploads_table')) {
+                    let dt = jQuery('#upload_factory_completed_uploads_table').DataTable();
+                    dt.clear().destroy();
+                }
+
+                let header_row = jQuery('<tr>');
+                header_row.append(jQuery('<th>').text("Upload Name"));
+
+                if (response.data.length > 0 && response.data[0].hasOwnProperty('user_id')) {
+                    header_row.append(jQuery('<th>').text("Uploader"));
+                }
+
+                header_row.append(jQuery('<th>').text("Uploaded As"));
+                header_row.append(jQuery('<th>').text("Status"));
+                header_row.append(jQuery('<th>').text("Actions"));
+
+                jQuery('#upload_factory_completed_uploads_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>');
+
+                let file_tbody = jQuery('#upload_factory_completed_uploads_table tbody');
+                let file_thead = jQuery('#upload_factory_completed_uploads_table thead');
+                let file_tfoot = jQuery('#upload_factory_completed_uploads_table tfoot');
+
+                file_thead.append(header_row);
+
+                if (response.data.length > 0 ) {
+
+                    response.data.forEach(row => {
+                        let tr = jQuery("<tr>");
+                        tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
+                        if (response.data[0].hasOwnProperty('user_id')) {
+                            tr.append(jQuery("<td>").html(`<a href='/solpeople/profile/${row.user_id}'>${row.args.additional_args?.user_name}</a>`));
+                        }
+                        tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args?.file_type]}</div>`));
+                        tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
+                        tr.append(jQuery("<td>").html(`<button class='btn btn-success'>Nothing here yet</button>`));
+                        file_tbody.append(tr);
+                    });
+
+                     
+                } 
+
+                let uploads_in_progress = jQuery('#upload_factory_completed_uploads_table').DataTable();
+            }
+        },
+        error : function() {
+            alert("Something went terribly wrong, check console.");
+        }
+    });
 }
 
 function refresh_upload_tables() {
@@ -1750,8 +1812,6 @@ function submit_upload_job() {
     jQuery('.modal.fade').each(function(index, element){
         jQuery(this).modal("hide");
     });
-    
-    jQuery('#working_modal').modal("show");
 
     switch(submit_params.upload_type) {
         case 'trials' : 
@@ -1761,17 +1821,15 @@ function submit_upload_job() {
                 data: {
                     'upload_multiple_trials_ignore_warnings' : 'on',
                     'email_option_to_recieve_trial_upload_status' : 'off',
-                    'archived_file_id' : submit_params.file_id
+                    'archived_file_id' : submit_params.file_id,
+                    'force_async' : 1
                 },
                 success: function(response) {
-                    jQuery("#working_modal").modal("hide");
                     if (response.error) {
                         alert(response.error);
                     }
-                    refresh_upload_tables();
                 },
                 error: function() {
-                    jQuery("#working_modal").modal("hide");
                     alert("An error occurred processing trial upload, check console.");
                     return;
                 }
@@ -1781,6 +1839,7 @@ function submit_upload_job() {
             alert("Something strange happened... I got an invalid upload type: "+submit_params.upload_type);
             break;
     }
+    refresh_upload_tables();
 }
 
 function submit_file_(options) {
@@ -1859,6 +1918,8 @@ jQuery(document).ready(function(){
 
     load_archived_files_table();
     refresh_upload_tables();
+
+    setInterval(refresh_upload_tables, 10000);
 
     jQuery('#upload_factory_new_file_btn').click(function(event){
         event.preventDefault();

@@ -1163,6 +1163,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $email_address              = $c->req->param('trial_email_address_upload');
     my $email_option_enabled       = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
     my $archived_file_id           = $c->req->param('archived_file_id') || undef;
+    my $force_async                = $c->req->param('force_async') || undef;
 
     my $dbhost                     = $c->config->{dbhost};
     my $dbname                     = $c->config->{dbname};
@@ -1188,6 +1189,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $username = $c->user()->get_object()->get_username();
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
 
     # Check filename for spaces and/or slashes
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
@@ -1229,6 +1232,10 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my @split_path = split("/", $archived_filename_with_path);
+    my $clean_file_name = $split_path[-1];
+    $clean_file_name =~ s/\d+-\d+-\d+_\d+:\d+:\d+_//;
+
     # Build the backend script command to parse, validate, and upload the trials
     my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -i \"$archive_path/$archived_filename_with_path\" -un \"$username\"";
     $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
@@ -1241,16 +1248,17 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         cmd => $cmd,
-        name => "$upload_original_name multiple trial designs upload",
+        name => "$clean_file_name multiple trial designs upload",
         results_page => '/breeders/trials',
         job_type => 'upload',
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             final_upload => 1,
-            file_type => "trials"
+            file_type => "trials",
+            user_name => "$user_first_name $user_last_name"
         }
     });
-    if ( $email_option_enabled && $email_address ) {
+    if ( ($email_option_enabled && $email_address) || $force_async) {
         #$runner->run_async($cmd);
         $job->submit();
         #my $err = $runner->err();

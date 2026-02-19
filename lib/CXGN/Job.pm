@@ -977,24 +977,30 @@ sub get_user_in_progress_uploads {
 
     while (my $upload = $uploads_rs->next()) {
         my $job_args = JSON::Any->decode($upload->args());
-        my $status = $upload->status();
+        my $job_id = $upload->sp_job_id();
+        my $job = CXGN::Job->new({
+            schema => $bcs_schema,
+            people_schema => $people_schema,
+            sp_job_id => $job_id
+        });
+        my $status = $job->check_status();
         if ($job_args->{additional_args}->{is_validation} || $status eq "submitted") { #validation jobs can be finished/failed and still be considered "in-progress"
             if ($user_role eq "curator") {
                 push @user_uploads, {
-                    job_id => $upload->sp_job_id(), 
-                    user_id => $upload->sp_person_id(),
-                    status => $upload->status(),
-                    create_timestamp => $upload->create_timestamp(),
-                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
-                    args => $upload->args()
+                    job_id => $job->sp_job_id(), 
+                    user_id => $job->sp_person_id(),
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
                 };
             } else {
                 push @user_uploads, {
-                    job_id => $upload->sp_job_id(), 
-                    status => $upload->status(),
-                    create_timestamp => $upload->create_timestamp(),
-                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
-                    args => $upload->args()
+                    job_id => $job->sp_job_id(), 
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
                 };
             }
         }  
@@ -1039,24 +1045,30 @@ sub get_user_completed_uploads {
 
     while (my $upload = $uploads_rs->next()) {
         my $job_args = JSON::Any->decode($upload->args());
-        my $status = $upload->status();
+        my $job_id = $upload->sp_job_id();
+        my $job = CXGN::Job->new({
+            schema => $bcs_schema,
+            people_schema => $people_schema,
+            sp_job_id => $job_id
+        });
+        my $status = $job->check_status();
         if ($job_args->{additional_args}->{final_upload} && $status ne "submitted" ) { #validation jobs can be finished/failed and still be considered "in-progress"
             if ($user_role eq "curator") {
                 push @user_uploads, {
-                    job_id => $upload->sp_job_id(), 
-                    user_id => $upload->sp_person_id(),
-                    status => $upload->status(),
-                    create_timestamp => $upload->create_timestamp(),
-                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
-                    args => $upload->args()
+                    job_id => $job->sp_job_id(), 
+                    user_id => $job->sp_person_id(),
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
                 };
             } else {
                 push @user_uploads, {
-                    job_id => $upload->sp_job_id(), 
-                    status => $upload->status(),
-                    create_timestamp => $upload->create_timestamp(),
-                    finish_timestamp => $upload->finish_timestamp() ? $upload->finish_timestamp() : "",
-                    args => $upload->args()
+                    job_id => $job->sp_job_id(), 
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
                 };
             }
         }  
