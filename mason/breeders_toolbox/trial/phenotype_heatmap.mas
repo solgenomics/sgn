@@ -3,12 +3,15 @@ $trial_id
 $stockref => undef
 $data_level => 'plot'
 $has_col_and_row_numbers => undef
+$has_subplot_entries => undef
+$has_plant_entries => undef
+$trial_stock_type => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
 <& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
-<style>
+<style id='heatmap_stylesheet'>
     #trait_heatmap {display: inline; }
     #trial_no_phenoMSG {display: none; }
     #trial_no_rowColMSG {display: none; }
@@ -19,7 +22,7 @@ $has_col_and_row_numbers => undef
     #plot_image_ids {display: none;}
 
 
-    #tooltip {	
+    #tooltip {
         position: absolute;
         max-width: 400px;
         max-height: 200px;
@@ -30,7 +33,7 @@ $has_col_and_row_numbers => undef
         border-radius: 8px;
         pointer-events: none;
     }
-    
+
     #container_heatmap {
         /*border:2px dashed #000;*/
         height: 390px;
@@ -65,10 +68,10 @@ $has_col_and_row_numbers => undef
         margin-left: auto;
         margin-right: auto;
     }
-    
+
     rect.bordered {
         stroke: #E6E6E6;
-        stroke-width:2px;   
+        stroke-width:2px;
       }
 
       text.mono {
@@ -84,9 +87,9 @@ $has_col_and_row_numbers => undef
       text.axis-worktime {
         fill: #000;
       }
-      
+
       .legend { list-style: none; }
-      .legend li { float: left; margin-right: 10px; }
+      .legend li { float: left; margin-left: 10px; margin-right: 10px;}
       .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
 
       .legend .border_plots { background-color: #d3d3d3}
@@ -96,13 +99,33 @@ $has_col_and_row_numbers => undef
       .legend .rep_even_number { background-color: red;}
       .legend .rep_odd_number { background-color: green;}
       .legend .overlapping_plot { background-color: #000; }
-      
+      .legend .trait_not_measured {background-color: darkgrey;} 
+      .legend .value_scale {display: inline-block; width: 80px;}
+
       .rotated {
           transform: rotate(-180deg);
       }
 
+    ul {
+        list-style-type: none;
+        padding-left: 20px;
+    }
+    .collapsible {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+    .arrow {
+        margin-right: 5px;
+        transition: transform 0.2s ease;
+    }
+    .hidden {
+        display: none;
+    }
+
     
 </style>
+
 
 <div class="well well-sm">
     <div style="display: flex; gap: 25px">
@@ -143,19 +166,24 @@ $has_col_and_row_numbers => undef
 </div>
 
 <div id="container_heatmap" ></div>
+
 <div id="container_legend">
-    <ul class="legend">
-        <li><span class="border_plots"></span> Border Plots and Filler Plots</li>
-        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...)</li>
+
+    <ul id='legend_list' class="legend">
+        <li><span class="border_plots"></span> Border Plots and Filler Plots </li>
+        <li><span class="block_even_number"></span> Even Block Numbers (e.g. 2,4,...) </li>
         <li><span class="block_odd_number"></span> Odd Block Numbers (e.g. 1,3,...)</li>
         <li><span class="checks"></span> Checks</li>
-        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
-        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)</li>
-        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image</li>
+        <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...) </li>
+        <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...) </li>
+        <li><span class="overlapping_plot"></span> Overlapping Plots (2+ plots at some position)  </li>
+        <li> <img src="/static/css/images/plot_images.png" alt="Camera" height="20" width="20"> Plot Has Image </li>
+        <li><span class="trait_not_measured"></span>No measurement </li>
+        <li style='display:flex'><div>Low trait value</div> <span class="value_scale" id="pheno_color_scale"></span> <div>High trait value</div></li>
     </ul>
 </div>
 <br><br>
+
 <div id="container_fm">
     <div style="margin-top: 2%; position: relative">
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
@@ -175,19 +203,19 @@ $has_col_and_row_numbers => undef
         <br />
         <div style="display: flex; flex-wrap: wrap; gap: 25px">
             <div class="form-inline">
-                <label for="top_border_selection">Top Border</label>                       
+                <label for="top_border_selection">Top Border</label>
                 <input type="checkbox" id="top_border_selection" name="top_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="left_border_selection">Left Border</label>                       
+                <label for="left_border_selection">Left Border</label>
                 <input type="checkbox" id="left_border_selection" name="left_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="right_border_selection">Right Border</label>                       
+                <label for="right_border_selection">Right Border</label>
                 <input type="checkbox" id="right_border_selection" name="right_border_selection" value="yes" class="fieldmap_edit">
             </div>
             <div class="form-inline">
-                <label for="bottom_border_selection">Bottom Border</label>                       
+                <label for="bottom_border_selection">Bottom Border</label>
                 <input type="checkbox" id="bottom_border_selection" name="bottom_border_selection" value="yes" class="fieldmap_edit">
             </div>
         </div>
@@ -198,7 +226,8 @@ $has_col_and_row_numbers => undef
         <div class="interactive_fieldmap_buttons">
             <button type="button" class="btn btn-primary fieldmap_edit" id="transpose_fieldmap">Transpose</button>
             <button type="button" class="btn btn-primary fieldmap_edit" id="change_dimensions_button">Change Dimensions</button>
-            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit">Submit Field Layout</button>  
+            <button type="button" id="print_fieldmap" name="print_fieldmap" class="btn btn-primary fieldmap_edit">Print Fieldmap</button>
+            <button type="button" id="submit_fieldmap" name="submit_fieldmap" class="btn btn-success fieldmap_edit">Submit Field Layout</button>
         </div>
     </div>
     <div id="fieldmap_wrapper">
@@ -213,6 +242,7 @@ $has_col_and_row_numbers => undef
                 <select class="form-control" name="plot_download_type" id="plot_download_type">
                     <option value="">--Select Type--</option>
                     <option value="planting">Planting Order</option>
+                    <option value="collection">Collection Order</option>
                     <option value="harvest">Harvest Order</option>
                     <option value="harvestmaster">HarvestMaster</option>
                 </select>
@@ -245,6 +275,18 @@ $has_col_and_row_numbers => undef
                     <label for="plot_download_gaps">Include Gaps</label>
                     <input type="checkbox" id="plot_download_gaps" name="plot_download_gaps" value="no">
                 </div>
+% if ( $has_subplot_entries ) {
+                <div>
+                    <label for="plot_download_subplots">Include Subplots</label>
+                    <input type="checkbox" id="plot_download_subplots" name="plot_download_subplots" value="no">
+                </div>
+% }
+% if ( $has_plant_entries ) {
+                <div>
+                    <label for="plot_download_plants">Include Plants</label>
+                    <input type="checkbox" id="plot_download_plants" name="plot_download_plants" value="no">
+                </div>
+% }
             </div>
         </div>
         <div id="plot_download_harvestmaster_options" style="display: none; padding: 15px">
@@ -326,35 +368,35 @@ $has_col_and_row_numbers => undef
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="suppress_plot_pheno_form" name="suppress_plot_pheno_form">
-                    
+
                     <center>
                     <p3> Suppressed measurement will be seen as an outlier and can be excluded during phenotype analysis and download.</p3>
                     </center></br>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Plot Name:</label>
                             <div class="col-sm-8" id="myplot_name">
-                                
+
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Phenotype Value: </label>
                             <div class="col-sm-8" id="pheno_value">
-                            
+
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Phenotype ID: </label>
                             <div class="col-sm-8" id="mypheno_id">
-                            
+
                             </div>
                         </div>
-                         
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">Trait ID: </label>
                             <div class="col-sm-8" id="mytrait_id">
-                            
+
                             </div>
                         </div>
 
@@ -442,6 +484,110 @@ $has_col_and_row_numbers => undef
     </div>
 </div>
 
+<div class="modal fade" id="download_field_layout_modal" name="download_field_layout_modal" tabindex="-1" role="dialog" aria-labelledby="DownloadTrialLayoutDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="DownloadTrialLayoutDialog"><b>Download Spatial Layout Options</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" >
+                        <div class="well">
+                            <div class="form-group">
+                                <div class="col-sm-3 control-label"><strong>Information to include: </strong></div>
+                                <div class="col-sm-9" >
+% if ($trial_stock_type eq "cross") {
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id="accession_name" value="accession_name" checked> Cross/Accession Name </label>
+                                    </div>
+% }
+% else {
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id ="accession_name" value="accession_name" checked> Accession Name </label>
+                                    </div>
+% }
+                                    <div class="checkbox">
+                                        <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> Observation Unit Name </label>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label> <input type="checkbox" id="plot_id" value="plot_id"> Plot ID </label>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label><input type="checkbox" id="plot_num" value="plot_num"> Plot Number </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_download_layout_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="download_field_layout_button" title="Download">Download</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="hm_plot_details_modal" name="hm_plot_details_modal" tabindex="-1" role="dialog" aria-labelledby="HmPlotDetailsModal">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="HmPlotDetailsModal">Plot Details</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="hm_plot_details_form" name="hm_plot_details_form">
+                      <div id="hm_plot_information">
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Name: </label>
+                        <div class="col-sm-9" id="hm_plot_name">
+
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Number: </label>
+                        <div class="col-sm-9" id="hm_plot_number">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Plot Database ID: </label>
+                        <div class="col-sm-9" id="hm_plot_id">
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <label class="col-sm-3 control-label">Accession: </label>
+                        <div class="col-sm-9" id="hm_plot_accession">
+                        </div>
+                      </div>
+
+                      <div class="form-group" id="hm_plot_structure_container" hidden>
+                        <label class="col-sm-3 control-label">Plot Structure: </label>
+                        <div class="col-sm-9" id="hm_plot_structure_data_container">
+                        </div>
+                      </div>
+
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Images</button>
+                <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="hm_edit_plot_info" id="hm_edit_plot_info" onclick="jQuery('#hm_replace_plot_accessions_dialog').modal('show')">Edit Plot Info</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="hm_replace_plot_accessions_dialog" name="hm_replace_plot_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="HmReplacePlotAccessionsDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
@@ -455,37 +601,17 @@ $has_col_and_row_numbers => undef
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="hm_replace_plot_accession_form" name="hm_replace_plot_accession_form">
                       <div id="hm_edit_plot_information">
                       </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Name: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_name">
-
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Number: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_number">
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Plot Database ID: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_id">
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="col-sm-3 control-label">Accession: </label>
-                        <div class="col-sm-9" id="hm_edit_plot_accession">
-                        </div>
-                      </div>
-
-                      
+                     
                       <div class="form-group">
                         <label class="col-sm-3 control-label">Enter New Accession: </label>
                         <div class="col-sm-9" >
                           <input class="form-control" id="hm_accession" name="hm_accession"></input>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="col-sm-9" >
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible.</i></p>
                         </div>
                       </div>
 
@@ -501,7 +627,6 @@ $has_col_and_row_numbers => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary " name="hm_view_plot_image_submit" id="hm_view_plot_image_submit">View Plot Images</button>
                 <button id="hm_close_replace_plot_accession_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="hm_replace_plot_accession_submit" id="hm_replace_plot_accession_submit">Replace Plot Accession</button>
             </div>
@@ -564,7 +689,7 @@ $has_col_and_row_numbers => undef
                 <div class="container-fluid">
 
                     <big>
-                        <span>&#9888;</span> 
+                        <span>&#9888;</span>
                         <p3>
                             One or more traits have been assayed for this trial; <br>
                             It is not recommended to change accessions at this point. Are you sure?
@@ -599,11 +724,11 @@ my $image_ids =  $stockref->{image_ids} || [] ;
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="view_plot_image_form" name="view_plot_image_form">
-                    
+
                     <div class="col-sm-9" id="plot_image_ids"></div>
-                    
+
                     <div class="col-sm-9" id="show_plot_image_ids"></div>
-                    
+
                     </form>
                 </div>
             </div>
@@ -627,12 +752,12 @@ my $image_ids =  $stockref->{image_ids} || [] ;
                     <label style="margin-left: 15%;">Dimensions: </label>
                     <div style="display: inline;">
                         <div style="margin-left: 4%; margin-right: 2%; display: inline-block; width: 10%;">
-                            <label for="row-dims" style="display:block;">Rows</label> 
+                            <label for="row-dims" style="display:block;">Rows</label>
                             <input style="width: 100%;" type="text" id="row-dims" name="row-dims">
                         </div>
                         x
                         <div style="margin: 2%; display: inline-block; width: 10%;">
-                            <label for="col-dims" style="display:block">Columns</label> 
+                            <label for="col-dims" style="display:block">Columns</label>
                             <input style="width: 100%;" type="text" id="col-dims" name="col-dims">
                         </div>
                     </div><br><br>
@@ -696,17 +821,19 @@ jQuery(document).ready( function() {
       } else {
         jQuery("#hm_view_plot_image_submit").removeClass("disabled");
       }
-      return true; 
+      return true;
     }
     var list_of_checks;
     var checks = {};
     var data;
     var additionalInfo = [];
 
-   
+
 
     function field_map_view() {
         jQuery("#ctrldiv").css("display", "none");
+        var colors = FieldMap.get_pheno_colors();
+        jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
         jQuery.ajax({
             headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
             method: 'GET',
@@ -734,10 +861,11 @@ jQuery(document).ready( function() {
                 }
             },
             error: function(response) {
-                alert('Error displaying traits assayed heatmap');   
+                jQuery("#working_modal").modal("hide");
+                alert('Error displaying traits assayed heatmap');
             }
         })
-       
+
         .then(
             function() {
                     num_real_plots = Object.keys(FieldMap.plot_object).length;
@@ -745,51 +873,108 @@ jQuery(document).ready( function() {
                     FieldMap.meta_data.retain_layout = true;
                     FieldMap.meta_data.transpose = false;
                     FieldMap.load();
+                    jQuery('#working_modal').modal("hide");
             }
         )
     }
 
     function heatmap(selected) {
-        if (FieldMap.heatmap_queried) {
-            FieldMap.load();
+        jQuery('#working_modal').modal("show");
+        if (selected.includes("(corrected)")) {
+            var trait_id = selected.replace(" (corrected)", "");
+            get_heatmap_observations(trait_id).then((observations) => {
+                var corrected_observations = observations.map(pheno => ({
+                    ... pheno, 
+                    value : globalThis.spatial_adjustments.hasOwnProperty(pheno.observationUnitName) ? Number(globalThis.spatial_adjustments[pheno.observationUnitName][trait_id]) + Number(pheno.value) : pheno.value
+                }));
+                FieldMap.filter_heatmap(corrected_observations);
+                FieldMap.load();
+                var colors = FieldMap.get_pheno_colors();
+                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+            }).catch((err) => {
+                jQuery('#working_modal').modal("hide");
+                alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+            });
+            jQuery('#working_modal').modal("hide");
+        } else if (selected.includes("(adjustment)")) {
+            var trait_id = selected.replace(" (adjustment)", "");
+            get_heatmap_observations(trait_id).then((observations) => {
+                var adjustment_observations = observations.map(pheno => ({
+                    ... pheno, 
+                    value : globalThis.spatial_adjustments.hasOwnProperty(pheno.observationUnitName) ? globalThis.spatial_adjustments[pheno.observationUnitName][trait_id] : 0
+                }));
+                FieldMap.filter_heatmap(adjustment_observations);
+                FieldMap.load();
+                var colors = FieldMap.get_pheno_colors();
+                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+            }).catch((err) => {
+                jQuery('#working_modal').modal("hide");
+                alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+            });
+            jQuery('#working_modal').modal("hide");
         } else {
-            var observations;
+            get_heatmap_observations(selected).then((observations) => {
+                FieldMap.filter_heatmap(observations);
+                FieldMap.load();
+                var colors = FieldMap.get_pheno_colors();
+                jQuery('#pheno_color_scale').css('background',`linear-gradient(90deg,${colors.join(',')})`)
+                jQuery('#working_modal').modal("hide");
+            }).catch((err) => {
+                jQuery('#working_modal').modal("hide");
+                alert(`ERROR: Could not load phenotype heatmap: ${err}`);
+            });
+        }
+    }
+
+    async function get_heatmap_observations(observationVariableDbId, pageSize=5000, page=0, observations=[]) {
+        return new Promise((resolve, reject) => {
+            if ( FieldMap.heatmap_cached_data.hasOwnProperty(observationVariableDbId) ) {
+                return resolve(FieldMap.heatmap_cached_data[observationVariableDbId]);
+            }
+
             jQuery.ajax({
-                headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
+                headers: (auth_token) ? {'Authorization': `Bearer ` + auth_token } : {},
                 method: 'GET',
                 url: '/brapi/v2/observations',
                 data: {
+                    observationVariableDbId,
                     studyDbId: trial_ids,
-                    pageSize: 10000
+                    pageSize,
+                    page
                 },
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                },
-                success: function(response) {
-                    FieldMap.heatmap_queried = true;
-                    observations = response.result.data;
+                success: async function(response) {
+                    if ( response && response.result && response.metadata && response.metadata.pagination ) {
+                        const data = response.result.data || [];
+                        const pages = response.metadata.pagination.totalPages || 0;
+                        observations.push(...data);
+
+                        if ( page < (pages-1) ) {
+                            observations = await get_heatmap_observations(observationVariableDbId, pageSize, page+1, observations);
+                        }
+
+                        FieldMap.heatmap_cached_data[observationVariableDbId] = observations;
+                        resolve(observations);
+                        jQuery('#working_modal').modal("hide");
+                    }
+                    else {
+                        jQuery('#working_modal').modal("hide");
+                        reject(`Error loading heatmap obsevations (page: ${page})`);
+                    }
                 },
                 error: function(response) {
-                    alert("Error loading Heatmap");
+                    jQuery('#working_modal').modal("hide");
+                    reject(`Error loading heatmap observations (page: ${page})`);
                 }
-            }).then(
-                function() {
-                    return FieldMap.filter_heatmap(observations);
-                }
-            ).then(
-                function() {
-                    return FieldMap.load();
-                }
-            )
-        }
+            });
+        });
     }
-    
+
     function geo_field_map_view(){
 
         jQuery('#container_heatmap_geo_div').width(jQuery('#container_heatmap_geo').parent().width());
         jQuery('#container_heatmap_geo_div').height(jQuery('#container_heatmap_geo').parent().width()*0.7);
 
-     
+
         var brapi_endpoint = "/brapi/v2";
         var auth_token;
         var require_login = "<%  $c->get_conf('brapi_require_login') %>";
@@ -805,21 +990,21 @@ jQuery(document).ready( function() {
         fieldMap.brapi_endpoint = brapi_endpoint;
         fieldMap.opts.brapi_pageSize = 1000;
         fieldMap.opts.brapi_auth = auth_token;
-        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert("No geo reference data in this trial!"); } ); 
+        fieldMap.load('<% $trial_id %>').then((value)=>{if (!value) alert("No geo reference data in this trial!"); } );
 
     }
 
-    var r = 0; 
+    var r = 0;
     var toggleWidthFM = 0;
-    jQuery('#rotate_map').click(function(){ 
+    jQuery('#rotate_map').click(function(){
         jQuery("#container_fm").css('transform','rotate(' + (r += 90) + 'deg)');
         jQuery("#container_fm").width(390 + 'px');
         //toggleWidthFM = jQuery("#container_fm").width();
         if ((r/90) % 2 == 0){
             jQuery("#container_fm").width(700 + 'px');
         }
-    }); 
-    
+    });
+
     jQuery('#change_dimensions_button').click(function() {
         jQuery("#change_dimensions_dialog").modal("show");
         jQuery("#row-dims").val(FieldMap.meta_data.num_rows);
@@ -853,7 +1038,7 @@ jQuery(document).ready( function() {
                         FieldMap.meta_data.num_rows = changed_dim_rows;
                         FieldMap.meta_data.num_cols = changed_dim_cols;
                         FieldMap.meta_data.retain_layout = false;
-                        FieldMap.load();         
+                        FieldMap.load();
                     }
                 },
                 error: function(response) {
@@ -934,6 +1119,8 @@ jQuery(document).ready( function() {
         let start = jQuery("#plot_download_start").val();
         let include_borders = jQuery("#plot_download_borders").is(":checked");
         let include_gaps = jQuery("#plot_download_gaps").is(":checked");
+        let include_subplots = jQuery("#plot_download_subplots").is(":checked");
+        let include_plants = jQuery("#plot_download_plants").is(":checked");
         if ( !type || type === '' ) {
             alert("Please select a type");
             return;
@@ -951,7 +1138,7 @@ jQuery(document).ready( function() {
             hm_range: jQuery("#hm_range").val(),
             hm_row: jQuery("#hm_row").val()
         }
-        FieldMap.get_plot_order(type, order, start, include_borders, include_gaps, additional_properties);
+        FieldMap.get_plot_order({type, order, start, include_borders, include_gaps, include_subplots, include_plants, additional_properties});
     });
 
     jQuery("#invert_row_checkmark").change(function() {
@@ -963,7 +1150,7 @@ jQuery(document).ready( function() {
             type: "POST",
             url: '/ajax/breeders/trial/<% $trial_id %>/check_curator_privileges',
             dataType: "json",
-            data: { 
+            data: {
                 'trial_id': trial_id,
             },
             success: function(response) {
@@ -975,20 +1162,22 @@ jQuery(document).ready( function() {
                         jQuery('#working_modal').modal("hide");
                     }
                 } else {
+                    jQuery('#working_modal').modal("hide");
                     alert(response.error);
                 }
             },
             error: function(response) {
+                jQuery('#working_modal').modal("hide");
                 alert(response);
             }
         });
-        
+
     });
 
     jQuery("#hm_view_plot_image_submit").click( function() {
         jQuery("#view_plot_image_dialog").modal("show");
     });
-    
+
     jQuery("#hm_accession").autocomplete({
         appendTo: "#hm_replace_plot_accessions_dialog",
         source: '/ajax/stock/accession_autocomplete',
@@ -1021,8 +1210,11 @@ jQuery(document).ready( function() {
                 'trial_id': trial_id,
             },
 
-            success: function(response) {},
+            success: function(response) {
+                jQuery('#working_modal').modal("hide");
+            },
             error: function(response) {
+                jQuery('#working_modal').modal("hide");
                 alert('Error refreshing cache');
             },
         })
@@ -1035,7 +1227,7 @@ jQuery(document).ready( function() {
     };
 
     function submit_fieldmap_metadata() {
-        jQuery('#working_modal').modal("show");  
+        jQuery('#working_modal').modal("show");
         let filler_plot_object = FieldMap.format_brapi_post_object();
         var stringifiedPostData = JSON.stringify(filler_plot_object);
         if (FieldMap.meta_data.post) {
@@ -1082,9 +1274,9 @@ jQuery(document).ready( function() {
 
       var new_accession = jQuery('#hm_accession').val();
       var new_plot_name = jQuery('#hm_new_plot_name').val();
-      var old_accession = jQuery('#hm_edit_plot_accession').html();
-      var old_plot_id = jQuery('#hm_edit_plot_id').html();
-      var old_plot_name = jQuery('#hm_edit_plot_name').html();
+      var old_accession = jQuery('#hm_plot_accession').html();
+      var old_plot_id = jQuery('#hm_plot_id').html();
+      var old_plot_name = jQuery('#hm_plot_name').html();
 
       new jQuery.ajax({
         type: 'POST',
@@ -1118,67 +1310,89 @@ jQuery(document).ready( function() {
         }
       });
     }
-    
+
     jQuery('#pheno_heatmap_onswitch').click( function() {
         jQuery("#trait_heatmap").css("display", "none");
         field_map_view();
-        jQuery.ajax ( {
-            headers: (auth_token)? {'Authorization': `Bearer ` + auth_token } : {},
-            url: '/brapi/v1/studies/'+ <% $trial_id %> +'/observationvariables?pageSize=1000000',
-            //url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/traits_assayed?stock_type='+value,
+        jQuery.ajax({
+            headers: (auth_token) ? {'Authorization': `Bearer ` + auth_token } : {},
+            method: 'GET',
+            url: '/brapi/v2/variables',
+            data: {
+                studyDbId: trial_ids,
+                pageSize: 10000
+            },
             beforeSend: function() {
               jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                var data = response.result.data;
-                var varName = [];
-                var varID = [];
-                jQuery.each(data, function(key_obj, value_obj) {
-                    jQuery.each(value_obj, function(key, value) {
-                        if (key == 'name'){
-                            varName.push(value);
+                var data = response?.result?.data || [];
+                var variables = {};
+                data.forEach((v) => {
+                    if ( v.hasOwnProperty('observationVariableName') && v.hasOwnProperty('observationVariableDbId') ) {
+                        if ( v.observationVariableName !== '' && v.observationVariableDbId !== '' ) {
+                            variables[v.observationVariableName] = v.observationVariableDbId;
                         }
-                        if (key == 'observationVariableDbId'){
-                            varID.push(value);
-                        }
-                    });
+                    }
                 });
 
-                if (varName != '' && varID != '' ) {
-                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
-                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
-                    traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
-                    for (i=0; i<varID.length; i++) {
-                        traits_assayed_html = traits_assayed_html + "<option value='"+ varID[i] + "' >" + varName[i] + "</option>";
+                var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
+                traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
+                traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
+                traits_assayed_html = traits_assayed_html + "<optgroup label='Treatments & Assayed Traits'>";
+                Object.keys(variables).sort().forEach((name) => {
+                    traits_assayed_html = traits_assayed_html + `<option value='${variables[name]}'>${name}</option>`;
+                });
+                traits_assayed_html = traits_assayed_html +"</optgroup>";
+                traits_assayed_html = traits_assayed_html +"</select>";
+
+                jQuery.ajax({
+                    'url':'/ajax/spatial_model/retrieve_spatial_adjustments/'+trial_id,
+                    success: function(response) {
+                        if (response.error) {
+                            // do nothing
+                        } else {
+                            if (response.data !== "") {
+                                globalThis.spatial_adjustments = JSON.parse(response.data);
+
+                                let unique_spatial_traits = new Set();
+                                //find the traits
+                                Object.values(globalThis.spatial_adjustments).forEach(obj => {
+                                    Object.keys(obj).forEach(key => unique_spatial_traits.add(key));
+                                });
+
+                                let unique_traits_array = [... unique_spatial_traits];
+
+                                let trait_id_to_trait = Object.fromEntries(
+                                    Object.entries(variables).map(([key, value]) => [value, key])
+                                );
+
+
+                                let adjusted_traits = jQuery('<optgroup>', {label:"Spatial corrections"});
+                                unique_traits_array.forEach((trait_id) => {
+                                    adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (corrected)`, text : `${trait_id_to_trait[trait_id]} (corrected)` }));
+                                    adjusted_traits.append(jQuery("<option>", {value : `${trait_id} (adjustment)`, text : `${trait_id_to_trait[trait_id]} (adjustment)` }));
+                                });
+                                jQuery('#trait_list_dropdown').append(adjusted_traits);
+                            }
+                        }
                     }
-                    traits_assayed_html = traits_assayed_html +"</optgroup>";
-                    traits_assayed_html = traits_assayed_html +"</select>";
+                });
 
-                    // traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
+                // traits_assayed_html = traits_assayed_html + "<br/><button class='btn btn-primary btn-sm' id='trial_phenotype_heatmap_download'>Download Heatmap</button>";
 
-                    jQuery("#trait_heatmap").css("display", "none");                   
-                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                } 
-                else {
-                    var traits_assayed_html = "<select class='form-control' id='trait_list_dropdown'>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Field Map'>";
-                    traits_assayed_html = traits_assayed_html + "<option value='fieldmap'>view field layout</option>";
-                    traits_assayed_html = traits_assayed_html + "<option value='geofieldmap'>view geo field layout</option></optgroup>";
-                    traits_assayed_html = traits_assayed_html + "<optgroup label='Assayed Traits'>";
-                    traits_assayed_html = traits_assayed_html +"</optgroup>";
-                    traits_assayed_html = traits_assayed_html +"</select>";
-                    jQuery("#trait_heatmap").css("display", "none");                   
-                    jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
-                }
+                jQuery("#trait_heatmap").css("display", "none");
+                jQuery("#heatmap_traits_assayed_dropdown").html(traits_assayed_html);
+                
             },
             error: function(response){
+                jQuery('#working_modal').modal('hide');
                 alert('Error retrieving traits assayed in this trial');
             }
-        });           
+        });
     });
-    
+
     jQuery('#pheno_heatmap_offswitch').click( function() {
         d3.select("svg").remove();
         jQuery("#trait_heatmap").css("display", "none");
@@ -1227,7 +1441,8 @@ jQuery(document).ready( function() {
             jQuery("#view_ctrl_button").show();
             jQuery("#include_linked_trials").css("display", "block");
             FieldMap.heatmap_selected = true;
-            FieldMap.heatmap_selection = selected;
+            var selection_text = jQuery("#trait_list_dropdown option:selected").text().replace(/ \(adjustment\)| \(corrected\)/,'');
+            FieldMap.heatmap_selection = selection_text;
             heatmap(selected);
         }
     }
@@ -1274,18 +1489,26 @@ jQuery(document).ready( function() {
             _finish();
         }
 
-        function _finish() {
+function _finish() {
             jQuery(".fieldmap_edit").prop("disabled", include_linked_trials);
             jQuery("#fieldmap_edit_info").css("display", include_linked_trials ? 'block' : 'none');
             jQuery("#include_linked_trials_list_container").css("display", include_linked_trials ? 'block' : 'none');
             jQuery("#trait_list_dropdown").val("fieldmap");
             on_change_view();
-            FieldMap.heatmap_queried = false;
             field_map_view();
         }
     });
 
   jQuery("#trial_fieldmap_download_layout_button").click( function () {
+    jQuery("#download_field_layout_modal").modal("show");
+  });
+  
+  jQuery("#download_field_layout_button").click( function () {
+    const includeAccessionName = jQuery('#accession_name').is(':checked');
+    const includeObsUnitName = jQuery('#obs_unit_name').is(':checked');
+    const includePlotId = jQuery('#plot_id').is(':checked');
+    const includePlotNum = jQuery('#plot_num').is(':checked');
+
     let cols_csv_header = [];
     for (let i = FieldMap.meta_data.min_col; i <= FieldMap.meta_data.max_col; i++) {
         cols_csv_header.push(i);
@@ -1300,17 +1523,37 @@ jQuery(document).ready( function() {
     let row = "positionCoordinateY";
     let col = "positionCoordinateX";
     let temp_plot_arr = [...FieldMap.plot_arr];
+    let cellVal = '';
     for (let plot of temp_plot_arr.filter(plot => plot.type != "border")) {
+        console.log("plot:", plot);
         if (!coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row]) {
             coord_matrix[plot.observationUnitPosition[row] - FieldMap.meta_data.min_row] = [];
         }
-        let value = plot.germplasmName;
-        if ( plot.additionalInfo.intercropGermplasm ) {
-            for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
-                value += `,${plot.additionalInfo.intercropGermplasm[i].germplasmName}`;
+        if (includeAccessionName) {
+            if (plot.germplasmName) {
+                cellVal = plot.germplasmName;
+            } else if (plot.crossName) {
+                cellVal = plot.crossName;
             }
+            if ( plot.additionalInfo.intercropGermplasm ) {
+                for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
+                    cellVal += `,${plot.additionalInfo.intercropGermplasm[i].germplasmName}`;
+                }
+            }
+        } else {
+            cellVal = '';
         }
-        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = `"${value}"`;
+        if (includeObsUnitName && plot.observationUnitName) {
+            cellVal += (cellVal ? '\n' : '') + plot.observationUnitName;
+        }
+        if (includePlotId && plot.observationUnitDbId) {
+            cellVal += (cellVal ? '\n' : '') + plot.observationUnitDbId;
+        }
+        if (includePlotNum && plot.observationUnitPosition.observationLevel.levelCode) {
+            cellVal += (cellVal ? '\n' : '') + plot.observationUnitPosition.observationLevel.levelCode;
+        }
+        cellVal = `"${cellVal}"`;
+        coord_matrix[plot.observationUnitPosition[row]-FieldMap.meta_data.min_row][plot.observationUnitPosition[col]-FieldMap.meta_data.min_col] = cellVal;
     }
     if (!FieldMap.meta_data.invert_row_checkmark) {
         coord_matrix.reverse();
@@ -1330,10 +1573,10 @@ jQuery(document).ready( function() {
     let hiddenElement = document.createElement('a');
         hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
         hiddenElement.target = '_blank';
-        
+
         hiddenElement.download = `Trial_${FieldMap.trial_id}_spatial_layout.csv`;
-        hiddenElement.click();  
-  });
+        hiddenElement.click();
+  })
 
   jQuery(document).on('click', '#trial_phenotype_heatmap_download', function(){
       var html = d3.select("svg")
@@ -1341,7 +1584,7 @@ jQuery(document).ready( function() {
             .attr("xmlns", "http://www.w3.org/2000/svg")
             .node().parentNode.innerHTML;
       var imgsrc = 'data:image/svg+xml;base64,'+ btoa(html);
-      var img = '<img src="'+imgsrc+'">'; 
+      var img = '<img src="'+imgsrc+'">';
 
       var canvas = document.getElementById("trial_phenotype_heatmap_download_image_canvas"),
       context = canvas.getContext("2d");
@@ -1353,7 +1596,7 @@ jQuery(document).ready( function() {
 
         var canvasdata = canvas.toDataURL("image/png");
 
-        var pngimg = '<img src="'+canvasdata+'">'; 
+        var pngimg = '<img src="'+canvasdata+'">';
 
         var a = document.createElement("a");
         a.download = "trial_phenotype_heatmap.png";
@@ -1365,14 +1608,14 @@ jQuery(document).ready( function() {
   jQuery("#suppress_plot_pheno_dialog_submit").click(function() {
     suppress_plot_phenotype();
   });
-  
+
   function suppress_plot_phenotype() {
     jQuery("#suppress_plot_pheno_dialog").modal("hide");
     var sup_plotName = jQuery('#myplot_name').html();
     var sup_traitValue = jQuery('#pheno_value').html();
     var sup_traitID = jQuery('#mytrait_id').html();
     var sup_phenoID = jQuery('#mypheno_id').html();
-    
+
     new jQuery.ajax({
         type: 'POST',
         url: '/ajax/breeders/trial/<% $trial_id %>/suppress_phenotype',
@@ -1400,14 +1643,14 @@ jQuery(document).ready( function() {
           }
     });
   }
-  
+
   jQuery("#delete_trait").click(function() {
     jQuery("#delete_trait_dialog_confirm_message").modal("show");
   });
   jQuery("#delete_selected_trait_dialog_submit").click(function() {
     delete_selected_assayed_trait();
-  }); 
-  
+  });
+
   function delete_selected_assayed_trait() {
     var pheno_id = phenotypes_id;
     new jQuery.ajax({
@@ -1434,9 +1677,9 @@ jQuery(document).ready( function() {
             alert('An error occurred deleting trait');
         }
     });
-  
+
   }
-  
+
   function heatmap_check_change(value) {
       var val = jQuery("#check_list_dropdown").val(value);
       var ret = value.split(",");
@@ -1444,12 +1687,12 @@ jQuery(document).ready( function() {
       var valPlot = ret[1];
       jQuery('#check_plot_link').html(valPlot + " came from Plot:"+ valStock);
   }
-  
+
    jQuery("#view_ctrl_id_button").click(function(){
        jQuery("#view_ctrl_button").css("display", "none");
        jQuery("#ctrldiv").css("display", "inline-block");
-       
-       var list_of_checks = checks;  
+
+       var list_of_checks = checks;
        var trial_checks_html = "<select class='form-control' id='check_list_dropdown'>";
        trial_checks_html = trial_checks_html + "<option value=''>checks and plot numbers</option>";
        jQuery.each(list_of_checks, function( key, value) {
@@ -1461,7 +1704,30 @@ jQuery(document).ready( function() {
            heatmap_check_change(this.value);
        });
    });
-      
+
+   jQuery('#print_fieldmap').click(function(){
+
+    alert("You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.");
+
+    let printWindow = window.open('', '', 'width=800,height=600');
+    printWindow.document.write('<html><head><title>Print</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">')
+
+    var title = document.querySelector("#trait_list_dropdown option:checked").textContent;
+
+    printWindow.document.write('<h1>' + title + '</h1>');
+
+    divIds = ['heatmap_stylesheet','legend_list','fieldmap_chart'];
+    divIds.forEach(id => {
+        let divContent = document.getElementById(id).cloneNode(true); 
+        printWindow.document.body.appendChild(divContent);
+    });
+
+    printWindow.document.write('</body></html>');
+    printWindow.document.close(); 
+    printWindow.print(); 
+
+   })
+
 });
 
 </script>

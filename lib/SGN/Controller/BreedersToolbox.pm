@@ -332,6 +332,10 @@ sub manage_nirs :Path("/breeders/nirs") Args(0) {
     my $sampling_facilities = $c->config->{sampling_facilities};
     my @sampling_facilities = split ',',$sampling_facilities;
 
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
     $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{nirs_files} = $data->{files};
     $c->stash->{deleted_nirs_files} = $data->{deleted_files};
@@ -358,6 +362,11 @@ sub manage_transcriptomics :Path("/breeders/transcriptomics") Args(0) {
     my $sampling_facilities = $c->config->{sampling_facilities};
     my @sampling_facilities = split ',',$sampling_facilities;
 
+    my $sample_tissue_types_string = $c->config->{sample_tissue_types};
+    my @sample_tissue_types = split ',',$sample_tissue_types_string;
+    print STDERR Dumper(@sample_tissue_types);
+
+    $c->stash->{sample_tissue_types} = \@sample_tissue_types;
     $c->stash->{sampling_facilities} = \@sampling_facilities;
     $c->stash->{transcriptomics_files} = $data->{files};
     $c->stash->{deleted_transcriptomics_files} = $data->{deleted_files};
@@ -972,6 +981,11 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
     my @breeding_programs = @$breeding_programs;
     my @roles = $c->user->roles();
 
+    my $is_curator;
+    if (grep { /curator/ } @roles) {
+        $is_curator = 1;
+    }
+
     foreach my $role (@roles) {
         for (my $i=0; $i < scalar @breeding_programs; $i++) {
             if ($role eq $breeding_programs[$i][1]){
@@ -989,6 +1003,8 @@ sub manage_transformations : Path("/breeders/transformations") Args(0) {
     $c->stash->{programs} = \@breeding_programs;
 
     $c->stash->{roles} = $c->user()->roles();
+
+    $c->stash->{is_curator} = $is_curator;
 
     $c->stash->{template} = '/transformation/manage_transformation.mas';
 

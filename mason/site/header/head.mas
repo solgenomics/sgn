@@ -21,7 +21,7 @@
     '/css/bootstrap-select.min.css'
   ] &>
 
-  <!-- <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" /> -->
+  <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" />
   <!-- <link rel="stylesheet" type="text/css" href="/css/dataTables.bootstrap.min.css"> -->
 
 <script language="javascript" type="text/javascript">
@@ -32,7 +32,7 @@
 
 <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
 % if ($c->config->{production_server}) {
-    <& /util/import_javascript.mas, classes => [ "jquerymigrate-min", "jquery.dataTables-min" ] &>
+    <& /util/import_javascript.mas, classes => [ "jquerymigrate-min", "jquery.dataTables" ] &>
 % } else {
     <& /util/import_javascript.mas, classes => [ "jquerymigrate", "jquery.dataTables" ] &>
 % }

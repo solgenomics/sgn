@@ -198,8 +198,14 @@ export function WizardDownloads(main_id,wizard){
         var outliers = d3.selectAll('.wizard-download-phenotypes-outliers').property('checked')?1:0;
         var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
         var min = d3.select(".wizard-download-phenotypes-min").node().value;
-        var max = d3.select(".wizard-download-phenotypes-max").node().value;
+	      var max = d3.select(".wizard-download-phenotypes-max").node().value;
+	      var repetitive_measurements = d3.select(".wizard-download-repetitive-measurements-type").node().value;
+	      var phenotype_start_date = d3.select(".wizard-download-start-date").node().value;
+	      var phenotype_end_date = d3.select(".wizard-download-end-date").node().value;
 
+	  //alert('start date = '+phenotype_start_date);
+	  //alert('repetitive type = '+repetitive_measurements);
+	  
         var url = document.location.origin+'/breeders/trials/phenotype/download';
         openWindowWithPost(url, {
             trial_list: trial_ids,
@@ -222,6 +228,9 @@ export function WizardDownloads(main_id,wizard){
             include_row_and_column_numbers: 1,
             exclude_phenotype_outlier: outliers,
             include_pedigree_parents: 0,
+	          repetitive_measurements: repetitive_measurements,
+	          phenotype_start_date: phenotype_start_date,
+	          phenotype_end_date: phenotype_end_date
         });
       });
 });

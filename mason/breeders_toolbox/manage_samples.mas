@@ -2,6 +2,7 @@
 <%args>
 $facilities => ()
 $sampling_facilities => ()
+$sample_tissue_types => ()
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
@@ -17,7 +18,7 @@ $sampling_facilities => ()
 <& /help/workflow_guided/tissue_sample_help.mas &>
 <& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities=>$facilities &>
 <& /breeders_toolbox/create_tissue_samples_dialogs.mas &>
-<& /breeders_toolbox/sampling_trials/create_sampling_trials_dialogs.mas, sampling_facilities=>$sampling_facilities &>
+<& /breeders_toolbox/sampling_trials/create_sampling_trials_dialogs.mas, sampling_facilities=>$sampling_facilities, sample_tissue_types=>$sample_tissue_types &>
 
 <script>
 

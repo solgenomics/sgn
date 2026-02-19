@@ -1,6 +1,7 @@
 import "../legacy/d3/d3v4Min.js";
 import "../legacy/jquery.js";
 import "../legacy/brapi/BrAPI.js";
+import { html, randomExponential } from "d3";
 
 // Colors to use when labelling multiple trials
 const trial_colors = [
@@ -28,6 +29,13 @@ const trial_colors_text = [
     "#ffffff",
 ];
 
+var colors = [
+    "white",
+    "darkred",
+];
+
+var colorScale;
+
 export function init() {
     class FieldMap {
         constructor(trial_id) {
@@ -36,9 +44,9 @@ export function init() {
             this.plot_object = Object;
             this.meta_data = {};
             this.brapi_plots = Object;
-            this.heatmap_queried = false;
             this.heatmap_selected = false;
             this.heatmap_selection = String;
+            this.heatmap_cached_data = {};
             this.heatmap_object = Object;
             this.display_borders = true;
             this.linked_trials = {};
@@ -63,6 +71,10 @@ export function init() {
 
         get_linked_trials() {
             return this.linked_trials;
+        }
+
+        get_pheno_colors () {
+            return colors;
         }
 
         format_brapi_post_object() {
@@ -197,33 +209,37 @@ export function init() {
         filter_heatmap(observations) {
             this.heatmap_object = {};
             for (let observation of observations) {
-                let trait_name = observation.observationVariableName;
-                if (!this.heatmap_object[trait_name]) {
-                    this.heatmap_object[trait_name] = {
-                        [observation.observationUnitDbId]: {
+                if ( ! isNaN(observation.value)) {
+                    let trait_name = observation.observationVariableName;
+                    if (!this.heatmap_object[trait_name]) {
+                        this.heatmap_object[trait_name] = {
+                            [observation.observationUnitDbId]: {
+                                val: observation.value,
+                                plot_name: observation.observationUnitName,
+                                id: observation.observationDbId,
+                            },
+                        };
+                    } else {
+                        this.heatmap_object[trait_name][observation.observationUnitDbId] = {
                             val: observation.value,
                             plot_name: observation.observationUnitName,
                             id: observation.observationDbId,
-                        },
-                    };
-                } else {
-                    this.heatmap_object[trait_name][observation.observationUnitDbId] = {
-                        val: observation.value,
-                        plot_name: observation.observationUnitName,
-                        id: observation.observationDbId,
-                    };
+                        };
+                    }
                 }
             }
         }
 
-        get_plot_order(
+        get_plot_order({
             type,
             order,
             start,
             include_borders,
             include_gaps,
+            include_subplots,
+            include_plants,
             additional_properties
-        ) {
+        } = {}) {
             let q = new URLSearchParams({
                 trial_ids: [
                     this.trial_id,
@@ -242,6 +258,8 @@ export function init() {
                 left_border:
                     !!include_borders && !!this.meta_data.left_border_selection,
                 gaps: !!include_gaps,
+                subplots: !!include_subplots,
+                plants: !!include_plants,
                 ...additional_properties,
             }).toString();
             window.open(`/ajax/breeders/trial_plot_order?${q}`, "_blank");
@@ -658,6 +676,7 @@ export function init() {
                     return true;
                 }
                 if (plot.type == "data") {
+
                     var image_ids = plot.plotImageDbIds || [];
                     var replace_accession = plot.germplasmName;
                     var replace_plot_id = plot.observationUnitDbId;
@@ -672,15 +691,197 @@ export function init() {
                         btnClick(image_ids);
                     });
                     jQuery("#hm_edit_plot_information").html(
-                        "<b>Selected Plot Information: </b>"
+                        //"<b>Selected Plot Information: </b>"
                     );
-                    jQuery("#hm_edit_plot_name").html(replace_plot_name);
-                    jQuery("#hm_edit_plot_number").html(replace_plot_number);
-                    var old_plot_id = jQuery("#hm_edit_plot_id").html(replace_plot_id);
-                    var old_plot_accession = jQuery("#hm_edit_plot_accession").html(
+                    jQuery("#hm_plot_name").html(replace_plot_name);
+                    jQuery("#hm_plot_number").html(replace_plot_number);
+                    var old_plot_id = jQuery("#hm_plot_id").html(replace_plot_id);
+                    var old_plot_accession = jQuery("#hm_plot_accession").html(
                         replace_accession
                     );
-                    jQuery("#hm_replace_plot_accessions_dialog").modal("show");
+
+                    jQuery("#hm_plot_details_modal").modal("show");
+                    jQuery('#hm_plot_structure_container').hide();
+
+                    new jQuery.ajax({
+                        url: '/stock/get_child_stocks/'+replace_plot_id,
+                        success: function (response) {
+                            jQuery("#working_modal").modal("hide");
+                            if (response.error) {
+                                alert("Error retrieving plot contents " + response.error);
+                            } else {
+
+                                function createCollapsibleList(obj) {
+                                    let ul = document.createElement("ul");;
+
+                                    const right_arrow = "&#x25B6;";
+                                    const down_arrow = "&#x25BC;";
+
+                                    for (const key of Object.keys(obj).sort()) {
+                                        if (obj.hasOwnProperty(key)) {
+                                            let li = document.createElement("li");
+
+                                            if (typeof obj[key] === "object" && obj[key] !== null) {
+                                                let arrow = document.createElement("span");
+                                                arrow.innerHTML = right_arrow;
+                                                arrow.classList.add("arrow");
+
+                                                let span = document.createElement("span");
+                                                span.textContent = key;
+                                                span.classList.add("collapsible");
+                                                span.prepend(arrow); 
+
+                                                span.onclick = function () {
+                                                    nestedUl.classList.toggle("hidden");
+                                                    arrow.innerHTML = nestedUl.classList.contains("hidden") ? right_arrow : down_arrow; 
+                                                };
+
+                                                li.appendChild(span);
+
+                                                let nestedUl = createCollapsibleList(obj[key]);
+                                                nestedUl.classList.add("hidden");
+                                                li.appendChild(nestedUl);
+                                            } else {
+                                                li.textContent = `${key}: ${obj[key]}`;
+                                            }
+
+                                            ul.appendChild(li);
+                                        }
+                                    }
+                                    return ul;
+                                }
+
+                                function createTableWithSubplots(obj) {
+                                    // the idea will be to create two tables and then call createTable for each subplot. But first we need to figure out if table should be wide or tall
+                                    
+                                    let max_row = 1;
+                                    let max_col = 1;
+                                    for (let subplot in obj["has"]) {
+                                        for (let plant in obj["has"][subplot]["has"]) {
+                                            let row = obj["has"][subplot]["has"][plant]["attributes"]["row_number"]["value"];
+                                            let col = obj["has"][subplot]["has"][plant]["attributes"]["col_number"]["value"];
+                                            if (row > max_row) {
+                                                max_row = row;
+                                            }
+                                            if (col > max_col) {
+                                                max_col = col;
+                                            }
+                                        }
+                                    }
+
+                                    let subplot_map = ["<table style=\"border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+
+                                    for (let subplot of Object.keys(obj["has"]).sort()) {
+                                        subplot_map.push("<tr><td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
+                                        subplot_map.push(createTable(obj["has"][subplot]));
+                                        subplot_map.push("</td></tr>");
+                                    }
+                            
+                                    subplot_map.push("</tr>");
+
+                                    return(subplot_map.join(""));
+                                }
+
+                                function createTable(obj) {
+                                    let max_row = 1;
+                                    let max_col = 1;
+                                    let coord_dictionary = [];
+                                    for (let plant in obj["has"]) {
+                                        let row = obj["has"][plant]["attributes"]["row_number"]["value"];
+                                        let col = obj["has"][plant]["attributes"]["col_number"]["value"];
+                                        if (row > max_row) {
+                                            max_row = row;
+                                        }
+                                        if (col > max_col) {
+                                            max_col = col;
+                                        }
+                                        coord_dictionary[""+row+","+col+""] = plant;
+                                    }
+                                    
+                                    // table will have max_row + 1 rows and max_col + 1 cols
+
+                                    let table_elems = ["<table style=\"aspect-ratio:"+(max_col+1)+"/"+(max_row+1)+"; border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+
+                                    for (let row = max_row; row >= 0; row--){
+                                        table_elems.push("<tr>");
+                                        for (let col = 0; col <= max_col; col++){
+                                            if (row == 0) { // add headers
+                                                if (col == 0) {// bottom left should be empty
+                                                    table_elems.push("<th style=\"border:none;\"></th>");
+                                                } else {
+                                                    table_elems.push("<th style=\"border:none;text-align:center; vertical-align:middle;\">"+col+"</th>");
+                                                }
+                                            } else { // Not last row, not a header row
+                                                if (col == 0) {// row header
+                                                    table_elems.push("<th style=\"border:none;text-align:left; vertical-align:middle;padding-right:5px;\">"+row+"</th>");
+                                                } else {// normal plant
+                                                    let coord = "" + row + "," + col + "";
+                                                    if (coord in coord_dictionary) {
+                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
+                                                    } else {
+                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">empty space</td>");
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        table_elems.push("</tr>");
+                                    }
+
+                                    table_elems.push("</table>");
+
+                                    return(table_elems.join(""));
+                                }
+
+                                let plot_structure = JSON.parse(response.data);
+                                console.dir(plot_structure);
+                                // Check if there are plants with row and column data. If yes, then we do a map display. If not, then we do a list display
+                                let display_layout = false;
+                                let structure;
+                                for (let key in plot_structure["has"]) {
+                                    console.log(key);
+                                    if (plot_structure["has"][key]["type"] === "subplot") {
+                                        for (let subkey in plot_structure["has"][key]["has"]) {
+                                            if (plot_structure["has"][key]["has"][subkey]["type"] == "plant") {
+                                                structure = "plot:subplot:plant";
+                                                if (plot_structure["has"][key]["has"][subkey]["attributes"]?.["row_number"]?.["value"] > 0) {
+                                                    display_layout = true;
+                                                }
+                                            }
+                                        }
+                                    } else if (plot_structure["has"][key]["type"] === "plant") {
+                                        structure = "plot:plant";
+                                        if (plot_structure["has"][key]["attributes"]?.["row_number"]?.["value"] > 0) {
+                                            display_layout = true;
+                                        }
+                                    } else {
+                                        structure = "plot"
+                                    }
+                                }
+
+                                let hm_plot_structure_data_container = document.getElementById("hm_plot_structure_data_container");
+
+                                delete plot_structure["stock_id"];
+                                delete plot_structure["type"];
+                                delete plot_structure["name"];
+
+                                if (display_layout) {
+                                    if (structure == "plot:subplot:plant") {
+                                        hm_plot_structure_data_container.innerHTML = createTableWithSubplots(plot_structure);
+                                    } else if (structure == "plot:plant") {
+                                        hm_plot_structure_data_container.innerHTML = createTable(plot_structure);
+                                    }
+                                    hm_plot_structure_data_container.prepend(createCollapsibleList(plot_structure));
+                                } else {
+                                    hm_plot_structure_data_container.replaceChildren(createCollapsibleList(plot_structure));
+                                }
+                                jQuery('#hm_plot_structure_container').show();
+                            }
+                        },
+                        error: function (error) {
+                            jQuery("#working_modal").modal("hide");
+                            alert("Error retrieving plot contents: " + error);
+                        },
+                    });
 
                     new jQuery.ajax({
                         type: "POST",
@@ -722,17 +923,8 @@ export function init() {
         FieldMap() {
             this.addEventListeners();
             var cc = this.clickcancel();
-            const colors = [
-                "#ffffd9",
-                "#edf8b1",
-                "#c7e9b4",
-                "#7fcdbb",
-                "#41b6c4",
-                "#1d91c0",
-                "#225ea8",
-                "#253494",
-                "#081d58",
-            ];
+            // this is where colors was originally
+
             var trait_name = this.heatmap_selection;
             var heatmap_object = this.heatmap_object;
             var plot_click = !this.heatmap_selected
@@ -742,12 +934,48 @@ export function init() {
             var local_this = this;
 
             if (this.heatmap_selected) {
-                let plots_with_selected_trait = heatmap_object[trait_name];
+                let plots_with_selected_trait = heatmap_object[trait_name] || {};
+                var has_negatives = 0;
+                var has_positives = 0;
                 for (let obs_unit of Object.values(plots_with_selected_trait)) {
-                    trait_vals.push(obs_unit.val);
+                    trait_vals.push(Number(obs_unit.val));
+                    if (obs_unit.val < 0) {
+                        has_negatives = 1;
+                    }
+                    if (obs_unit.val > 0) {
+                        has_positives = 1;
+                    }
                 }
 
-                var colorScale = d3.scaleQuantile().domain(trait_vals).range(colors);
+                var domain;
+                var power = 1;
+
+                function pearsonSkewness(arr) {
+                    arr.sort((a, b) => a - b);
+                    const median = arr[Math.floor(arr.length / 2)];
+                    const mean = arr.reduce((sum, val) => sum + val, 0) / arr.length;
+                    const stdDev = Math.sqrt(arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / arr.length);
+                
+                    return (3 * (mean - median)) / stdDev;
+                }
+
+                var skew = pearsonSkewness(trait_vals);
+                console.log("Skew: " + skew);
+                if (skew > 0.5) {
+                    power = 0.5
+                }
+                
+                if (has_negatives == 1 && has_positives == 0) {
+                    colors = ['darkblue', 'white'];
+                    domain = [Math.min(...trait_vals), 0];
+                } else if (has_negatives == 0 && has_positives == 1) {
+                    colors = ['white', 'darkred'];
+                    domain = [0, Math.max(...trait_vals)];
+                } else {
+                    colors = ['darkblue', 'white', 'darkred'];
+                    domain = [Math.min(...trait_vals), 0, Math.max(...trait_vals)];
+                }
+                colorScale = d3.scalePow().exponent(power).domain(domain).range(colors).interpolate(d3.interpolateRgb);
             }
 
             var is_plot_overlapping = function (plot) {
@@ -796,11 +1024,12 @@ export function init() {
                 } else {
                     var cs = heatmap_object.hasOwnProperty(trait_name) && heatmap_object[trait_name].hasOwnProperty(plot.observationUnitDbId)
                         ? colorScale(heatmap_object[trait_name][plot.observationUnitDbId].val)
-                        : "white";
+                        : "darkgrey";
                     color = cs ? cs : "lightgrey";
                 }
                 return color;
             };
+
             var get_stroke_color = function (plot) {
                 var stroke_color;
                 if (plot.observationUnitPosition.observationLevel) {
@@ -857,6 +1086,7 @@ export function init() {
                                 v = heatmap_object[trait_name][plot.observationUnitDbId].val;
                                 v = isNaN(v) ? v : Math.round((parseFloat(v) + Number.EPSILON) * 100) / 100;
                             }
+                            html += `<br /><strong>Trait Name:</strong> ${local_this.heatmap_selection}`;
                             html += `<br /><strong>Trait Value:</strong> ${v}`;
                         }
                     }

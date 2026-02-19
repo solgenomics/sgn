@@ -25,7 +25,8 @@ $t->while_logged_in_as("curator", sub {
         sleep(1);
 
         # SCREEN 2 /File formating/
-        $t->find_element_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)");
+        $t->find_element_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)")->click();
+        sleep(1);
         $t->find_element_ok('next_step_file_formatting_button', 'id', 'go to next screen - Intro')->click();
         sleep(1);
 
@@ -206,16 +207,16 @@ $t->while_logged_in_as("curator", sub {
         $t->find_element_ok("trial_plots_onswitch", "id", "view trial plots")->click();
         sleep(5);
 
-        $t->find_element_ok("plot_select_all", "id", "select plots")->click();
+        $t->find_element_ok("select_all_plots_btn", "id", "select plots")->click();
         sleep(1);
 
-        $t->find_element_ok("plot_data_new_list_name", "id", "find add list input");
+        $t->find_element_ok("plot_select_new_list_name", "id", "find add list input");
 
-        my $add_list_input = $t->find_element_ok("plot_data_new_list_name", "id", "find add list input test");
+        my $add_list_input = $t->find_element_ok("plot_select_new_list_name", "id", "find add list input test");
 
         $add_list_input->send_keys("plots_list");
 
-        $t->find_element_ok("plot_data_add_to_new_list", "id", "find add list button")->click();
+        $t->find_element_ok("plot_select_add_to_new_list_btn", "id", "find add list button")->click();
         sleep(1);
         $t->accept_alert_ok();
         sleep(1);

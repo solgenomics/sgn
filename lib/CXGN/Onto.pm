@@ -7,6 +7,8 @@ use JSON::Any;
 use Try::Tiny;
 use Bio::Chado::Schema;
 use SGN::Model::Cvterm;
+use Sort::Naturally;
+use List::Util qw/max/;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -42,12 +44,67 @@ sub get_terms {
 
       my @results;
       while (my ($id, $accession, $name) = $h->fetchrow_array()) {
-	  if ($accession +0 != 0) {
-	      push @results, [$id, $name];
-	  }
+          if ($accession +0 != 0) {
+              push @results, [$id, $name];
+          }
+      }
+      #sort naturally by cvterm name
+      my @sorted = sort { ncmp($a->[1], $b->[1]) } @results;
+      return @sorted;
+}
+
+=head2 get_variables
+
+parameters: namespace
+
+returns: terms with variable_od relationship in a namespace
+
+Side Effects: none
+
+=cut
+
+sub get_variables {
+      my $self = shift;
+      my $cv_id = shift;
+
+      my $schema = $self->schema();
+
+      my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+      my $rel_cv_id;
+      if ($relationship_cv) {
+          $rel_cv_id = $relationship_cv->cv_id ;
+      } else {
+          print STDERR "relationship ontology is not found in the database\n";
       }
 
-      return @results;
+      my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
+
+      my $variable_id;
+      if ($variable_relationship) {  $variable_id = $variable_relationship->cvterm_id(); }
+
+      my $query = "SELECT distinct(cvterm_id), dbxref.accession, (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS name
+                  FROM cvterm
+                  JOIN dbxref USING(dbxref_id)
+                  JOIN db USING(db_id)
+                  JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+                  WHERE cv_id = ? AND is_subject.type_id = ? AND is_obsolete = ?
+                  GROUP BY 1,2,3
+                  ORDER BY 3";
+
+
+      my $h = $self->schema->storage->dbh->prepare($query);
+      $h->execute($cv_id, $variable_id,'0');
+
+      my @results;
+      while (my ($id, $accession, $name) = $h->fetchrow_array()) {
+          if ($accession +0 != 0) {
+              push @results, [$id, $name];
+          }
+      }
+      #sort naturally by cvterm name
+      my @sorted = sort { ncmp($a->[1], $b->[1]) } @results;
+
+      return @sorted;
 }
 
 sub get_root_nodes {
@@ -78,13 +135,22 @@ sub get_root_nodes {
 sub store_composed_term {
     my $self = shift;
     my $new_trait_names = shift;
+    my $type = shift || 'trait';
     #print STDERR Dumper $new_trait_names;
 
     my $schema = $self->schema();
     my $dbh = $schema->storage->dbh;
 
-    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' });
-    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF' });
+    my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+    my $rel_cv_id;
+    if ($relationship_cv) {
+        $rel_cv_id = $relationship_cv->cv_id ;
+    } else {
+        print STDERR "relationship ontology is not found in the database\n";
+    }
+
+    my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' , cv_id => $rel_cv_id });
+    my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
 
     my @new_terms;
     foreach my $name (sort keys %$new_trait_names){
@@ -101,39 +167,74 @@ sub store_composed_term {
             next;
         }
 
-        my $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP' });
-        my $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
+        my $db;
+        my $cv;
+        my $root_term_name;
+        my $accession;
+        my $dbname;
 
-        my $accession_query = "SELECT nextval('composed_trait_ids')";
-        my $h = $dbh->prepare($accession_query);
-        $h->execute();
-        my $accession = $h->fetchrow_array();
+        my $h;
 
-      my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create(
-      {   db_id     => $db->get_column('db_id'),
-		      accession => sprintf("%07d",$accession)
-		  });
+        if ($type eq 'trait') {
+            $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP' });
+            $dbname = 'COMP';
+            $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_trait' });
+            $root_term_name = 'Composed traits';
 
-      my $parent_term= $schema->resultset("Cv::Cvterm")->find(
-        { cv_id  =>$cv->cv_id(),
-          name   => 'Composed traits',
-      });
+            my $accession_query = "SELECT nextval('composed_trait_ids')";
+            $h = $dbh->prepare($accession_query);
+            $h->execute();
+            $accession = $h->fetchrow_array();
+        } elsif ($type eq 'experiment_treatment') {
+            $db = $schema->resultset("General::Db")->find_or_create({ name => 'COMP_EXP_TREATMENT' });
+            $dbname = 'COMP_EXP_TREATMENT';
+            $cv= $schema->resultset('Cv::Cv')->find_or_create( { name => 'composed_experiment_treatment' });
+            $root_term_name = 'Composed experimental treatment ontology';
 
-    #print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
+            my $get_db_accessions_sql = "SELECT accession FROM dbxref JOIN db USING (db_id) WHERE db.name='COMP_EXP_TREATMENT';";
 
-    my $new_term = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
-    if ($new_term){
-        print STDERR "Cvterm with name $name already exists... so components must be new\n";
-    } else {
-        $new_term= $schema->resultset("Cv::Cvterm")->create({
-            cv_id  =>$cv->cv_id(),
-            name   => $name,
-            dbxref_id  => $new_term_dbxref-> dbxref_id()
+            $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
+            $h->execute();
+
+            my @accessions;
+
+            while (my $accession = $h->fetchrow_array()) {
+                push @accessions, int($accession =~ s/^0+//r);
+            }
+
+            if (scalar(@accessions) > 0) {
+                $accession = max(@accessions) + 1;
+            } else {
+                $accession = 1;
+            }
+        }
+
+        my $new_term_dbxref =  $schema->resultset("General::Dbxref")->create( {
+            db_id     => $db->get_column('db_id'),
+            accession => sprintf("%07d",$accession)
         });
-    }
 
+        #parent term for post-composed traits should already be in the database.
+        #Using here create_with if for some reason the root term for the COMP ontology needs to be created
+        my $parent_term= $schema->resultset("Cv::Cvterm")->create_with(
+            { cv     =>$cv,
+            name   => $root_term_name,
+            db     => $db
+        });
 
-    #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
+        print STDERR "Parent cvterm_id = " . $parent_term->cvterm_id();
+
+        my $new_term = $schema->resultset('Cv::Cvterm')->find({ name=>$name });
+        if ($new_term){
+            print STDERR "Cvterm with name $name already exists... so components must be new\n";
+        } else {
+            $new_term= $schema->resultset("Cv::Cvterm")->create_with({
+                cv     =>$cv,
+                name   => $name,
+                dbxref => $new_term_dbxref
+            });
+        }
+        #print STDERR "New term cvterm_id = " . $new_term->cvterm_id();
 
         my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->find_or_create({
             subject_id => $new_term->cvterm_id(),
@@ -147,9 +248,21 @@ sub store_composed_term {
                 object_id  => $new_term->cvterm_id(),
                 type_id    => $contains_relationship->cvterm_id()
             });
+
+            #copy cvtermprops from the component to the new post-composed term
+            my $component = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $component_id });
+            my $component_props_rs = $component->cvtermprops();
+            while ( my $component_prop = $component_props_rs->next() ) {
+                my $new_term_prop = $schema->resultset('Cv::Cvtermprop')->find_or_create({
+                    cvterm_id => $new_term->cvterm_id(),
+                    type_id   => $component_prop->type_id(),
+                    value     => $component_prop->value(),
+                    rank      => $component_prop->rank()
+                });
+            }
         }
 
-        push @new_terms, [$new_term->cvterm_id, $new_term->name().'|COMP:'.sprintf("%07d",$accession)];
+        push @new_terms, [$new_term->cvterm_id, $new_term->name()."|$dbname:".sprintf("%07d",$accession)];
     }
 
     #Takes long on cassavabase.. instead the materialized view is refreshed automatically in a background ajax process.
@@ -318,10 +431,16 @@ sub store_observation_variable_trait_method_scale {
             definition => $new_observation_variable_definition,
             dbxref_id => $new_term_observation_variable_dbxref->dbxref_id()
         });
-
-        my $is_a_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'is_a' })->first();
-        my $contains_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'contains' })->first();
-        my $variable_relationship = $schema->resultset("Cv::Cvterm")->search({ name => 'VARIABLE_OF' })->first();
+        my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship'});
+        my $rel_cv_id;
+        if ($relationship_cv) {
+            $rel_cv_id = $relationship_cv->cv_id ;
+        } else {
+            print STDERR "relationship ontology is not found in the database\n";
+        }
+        my $contains_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'contains' , cv_id => $rel_cv_id });
+        my $variable_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF'  , cv_id => $rel_cv_id });
+        my $is_a_relationship = $schema->resultset("Cv::Cvterm")->find({ name => 'is_a' , cv_id => $rel_cv_id });
 
         my $variable_rel = $schema->resultset('Cv::CvtermRelationship')->create({
             subject_id => $new_observation_variable_cvterm->cvterm_id(),
@@ -494,7 +613,7 @@ sub store_observation_variable_trait_method_scale {
 #   - definition = definition of the child cvterm
 #   - children = children of the child cvterm
 #   - accession = dbxref accession of the child cvterm
-# 
+#
 sub get_children {
     my $self = shift;
     my $cvterm_id = shift;
@@ -520,7 +639,7 @@ sub get_children {
             }
         }
     }
-    
+
     my @sorted =  sort { $a->{accession} <=> $b->{accession} } @children;
     return \@sorted;
 }

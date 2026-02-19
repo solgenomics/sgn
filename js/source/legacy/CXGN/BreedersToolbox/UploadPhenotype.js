@@ -1,132 +1,178 @@
 
 jQuery( document ).ready( function() {
 
-    //For Spreadsheet Upload
-    jQuery('#upload_spreadsheet_phenotype_submit_verify').click( function() {
-        initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Verifying Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_verify/spreadsheet", jQuery('#upload_spreadsheet_phenotype_file_format').val());
-    });
-
-    jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
-        json: true,
-        post: function () { },
-        timeout: 7200000,
-        complete: function (response) {
-            hidePhenotypeUploadWorkingModal();
-            displayPhenotypeUploadVerifyResponse(response, "spreadsheet");
-
-            jQuery("#upload_spreadsheet_phenotype_submit_store").click( function() {
-                initializeUploadPhenotype(jQuery("#upload_spreadsheet_phenotype_file_input").val(), "Storing Spreadsheet File and Data", "#upload_spreadsheet_phenotype_file_form", "/ajax/phenotype/upload_store/spreadsheet");
-            });
-
-            jQuery("#upload_spreadsheet_phenotype_file_form").iframePostForm({
-                json: true,
-                post: function () { },
-                timeout: 7200000,
-                complete: function (response) {
-                    hidePhenotypeUploadWorkingModal();
-                    displayPhenotypeUploadStoreResponse(response, "spreadsheet");
-                },
-            });
+    function verifyData(formSelector, fileSelector, url, upload_type, div_type) {
+        jQuery(`#upload_spreadsheet_${div_type}_submit_store`).attr('disabled', true);
+        jQuery(`#upload_${div_type}_spreadsheet_verify_status`).html("");
+        if (div_type !== 'treatment') {
+            jQuery(`#upload_datacollector_${div_type}_submit_store`).attr('disabled', true);
+            jQuery(`#upload_${div_type}_datacollector_verify_status`).html("");
+            jQuery(`#upload_fieldbook_${div_type}_submit_store`).attr('disabled', true);
+            jQuery(`#upload_${div_type}_fieldbook_verify_status`).html("");
         }
-    });
 
-    const handlePhenotypeFileFormatChange = function() {
-        var val = jQuery('#upload_spreadsheet_phenotype_file_format').val();
-        if (val == 'simple') {
-            jQuery('#upload_spreadsheet_phenotype_data_level_div').hide();
-            jQuery('#upload_phenotype_spreadsheet_info').show();
-        } else {
-            jQuery('#upload_spreadsheet_phenotype_data_level_div').show();
-            jQuery('#upload_phenotype_spreadsheet_info').hide();
+        let file = jQuery(fileSelector).val();
+        if ( !file || file === '' ) {
+            return alert("Please select a file");
         }
+
+        showPhenotypeUploadWorkingModal("Verifying file and data");
+        jQuery.ajax({
+            url: url,
+            type: 'POST',
+            data: new FormData(jQuery(formSelector)[0]),
+            processData: false,
+            contentType: false,
+            timeout: 0,
+            success: function(response) {
+                hidePhenotypeUploadWorkingModal();
+                displayPhenotypeUploadVerifyResponse(response, upload_type, div_type);
+            },
+            error: function(response) {
+                hidePhenotypeUploadWorkingModal();
+                alert("An error occurred while trying to verify this file. Please check the formatting and try again");
+            }
+        });
     }
-    jQuery('#upload_spreadsheet_phenotype_file_format').change(handlePhenotypeFileFormatChange);
-    handlePhenotypeFileFormatChange();
+
+    function storeData(formSelector, fileSelector, url, upload_type, div_type) {
+        let file = jQuery(fileSelector).val();
+        if ( !file || file === '' ) {
+            return alert("Please select a file");
+        }
+
+        showPhenotypeUploadWorkingModal("Storing file and data");
+        jQuery.ajax({
+            url: url,
+            type: 'POST',
+            data: new FormData(jQuery(formSelector)[0]),
+            processData: false,
+            contentType: false,
+            timeout: 0,
+            success: function(response) {
+                hidePhenotypeUploadWorkingModal();
+                displayPhenotypeUploadStoreResponse(response, upload_type, div_type);
+            },
+            error: function(response) {
+                hidePhenotypeUploadWorkingModal();
+                alert("An error occurred while trying to store this file. Please check the formatting and try again");
+            }
+        });
+    }
+
+    //For Spreadsheet Upload
+    jQuery('#upload_spreadsheet_phenotype_submit_verify').click(function() {
+        verifyData(
+            "#upload_spreadsheet_phenotype_file_form",
+            "#upload_spreadsheet_phenotype_file_input",
+            "/ajax/phenotype/upload_verify/spreadsheet",
+            "spreadsheet",
+            "phenotype"
+        );
+    });
+
+    jQuery("#upload_spreadsheet_phenotype_submit_store").click(function() {
+        storeData(
+            "#upload_spreadsheet_phenotype_file_form",
+            "#upload_spreadsheet_phenotype_file_input",
+            "/ajax/phenotype/upload_store/spreadsheet",
+            "spreadsheet",
+            "phenotype"
+        );
+    });
+
+    jQuery('#upload_spreadsheet_treatment_submit_verify').click(function() {
+        verifyData(
+            "#upload_spreadsheet_treatment_file_form",
+            "#upload_spreadsheet_treatment_file_input",
+            "/ajax/phenotype/upload_verify/spreadsheet/treatment",
+            "spreadsheet",
+            "treatment"
+        );
+    });
+
+    jQuery("#upload_spreadsheet_treatment_submit_store").click(function() {
+        storeData(
+            "#upload_spreadsheet_treatment_file_form",
+            "#upload_spreadsheet_treatment_file_input",
+            "/ajax/phenotype/upload_store/spreadsheet/treatment",
+            "spreadsheet",
+            "treatment"
+        );
+    });
 
     //For Datacollector Upload
-    jQuery('#upload_datacollector_phenotype_submit_verify').click( function() {
-        initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Verifying Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_verify/datacollector");
+    jQuery('#upload_datacollector_phenotype_submit_verify').click(function() {
+        verifyData(
+            "#upload_datacollector_phenotype_file_form",
+            "#upload_datacollector_phenotype_file_input",
+            "/ajax/phenotype/upload_verify/datacollector",
+            "datacollector",
+            "phenotype"
+        );
     });
 
-    jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
-        json: true,
-        post: function () { },
-        timeout: 7200000,
-        complete: function (response) {
-            hidePhenotypeUploadWorkingModal();
-            displayPhenotypeUploadVerifyResponse(response, "datacollector");
-
-            jQuery("#upload_datacollector_phenotype_submit_store").click( function() {
-                initializeUploadPhenotype(jQuery("#upload_datacollector_phenotype_file_input").val(), "Storing Datacollector File and Phenotype Data", "#upload_datacollector_phenotype_file_form", "/ajax/phenotype/upload_store/datacollector");
-            });
-
-            jQuery("#upload_datacollector_phenotype_file_form").iframePostForm({
-                json: true,
-                post: function () { },
-                timeout: 7200000,
-                complete: function (response) {
-                    hidePhenotypeUploadWorkingModal();
-                    displayPhenotypeUploadStoreResponse(response, "datacollector");
-                },
-            });
-        }
+    jQuery("#upload_datacollector_phenotype_submit_store").click(function() {
+        storeData(
+            "#upload_datacollector_phenotype_file_form",
+            "#upload_datacollector_phenotype_file_input",
+            "/ajax/phenotype/upload_store/datacollector",
+            "datacollector",
+            "phenotype"
+        );
     });
 
     //For Fieldbook Upload
-    jQuery('#upload_fieldbook_phenotype_submit_verify').click( function() {
-        initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Verifying Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_verify/fieldbook");
+    jQuery('#upload_fieldbook_phenotype_submit_verify').click(function() {
+        verifyData(
+            "#upload_fieldbook_phenotype_file_form",
+            "#upload_fieldbook_phenotype_file_input",
+            "/ajax/phenotype/upload_verify/fieldbook",
+            "fieldbook",
+            "phenotype"
+        );
     });
 
-    jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
-        json: true,
-        post: function () { },
-        timeout: 7200000,
-        complete: function (response) {
-            hidePhenotypeUploadWorkingModal();
-            displayPhenotypeUploadVerifyResponse(response, "fieldbook");
+    jQuery("#upload_fieldbook_phenotype_submit_store").click( function() {
+        storeData(
+            "#upload_fieldbook_phenotype_file_form",
+            "#upload_fieldbook_phenotype_file_input",
+            "/ajax/phenotype/upload_store/fieldbook",
+            "fieldbook",
+            "phenotype"
+        );
+    });
 
-            jQuery("#upload_fieldbook_phenotype_submit_store").click( function() {
-                initializeUploadPhenotype(jQuery("#upload_fieldbook_phenotype_file_input").val(), "Storing Fieldbook File and Phenotype Data", "#upload_fieldbook_phenotype_file_form", "/ajax/phenotype/upload_store/fieldbook");
-            });
-
-            jQuery("#upload_fieldbook_phenotype_file_form").iframePostForm({
-                json: true,
-                post: function () { },
-                timeout: 7200000,
-                complete: function (response) {
-                    hidePhenotypeUploadWorkingModal();
-                    displayPhenotypeUploadStoreResponse(response, "fieldbook");
-                },
-            });
+    const handlePhenotypeFileFormatChange = function(div_type) {
+        var val = jQuery(`#upload_spreadsheet_${div_type}_file_format`).val();
+        if (val == 'simple') {
+            jQuery(`#upload_spreadsheet_${div_type}_data_level_div`).hide();
+            jQuery(`#upload_${div_type}_spreadsheet_info`).show();
+        } else {
+            jQuery(`#upload_spreadsheet_${div_type}_data_level_div`).show();
+            jQuery(`#upload_${div_type}_spreadsheet_info`).hide();
         }
+    }
+    jQuery(`#upload_spreadsheet_phenotype_file_format`).change( function () {
+        handlePhenotypeFileFormatChange('phenotype')
+    });
+    jQuery(`#upload_spreadsheet_treatment_file_format`).change( function () {
+        handlePhenotypeFileFormatChange('treatment')
     });
 
-//	jQuery('#upload_phenotype_spreadsheet_dialog').on('hidden.bs.modal', function () {
-//		location.reload();
-//	})
-//	jQuery('#upload_datacollector_phenotypes_dialog').on('hidden.bs.modal', function () {
-//		location.reload();
-//	})
-//	jQuery('#upload_fieldbook_phenotypes_dialog').on('hidden.bs.modal', function () {
-//		location.reload();
-//	})
+    jQuery('#delete_pheno_file_link').click(function() {
+        alert('Deleted successfully.');
+    });
 
-	jQuery('#delete_pheno_file_link').click( function() {
-		alert('Deleted successfully.');
-        });
+    jQuery('#phenotype_reset_dialog').click( function() {
+        reset_dialog(jQuery('#upload_spreadsheet_phenotype_file_format').val(), 'phenotype');
+    });
+
+    jQuery('#treatment_reset_dialog').click( function() {
+        reset_dialog(jQuery('#upload_spreadsheet_treatment_file_format').val(), 'treatment');
+    });
 
 });
-
-function initializeUploadPhenotype(uploadFile, message, file_form, url, upload_format) {
-    if (uploadFile === '') {
-        alert("Please select a file");
-    }
-    else {
-        showPhenotypeUploadWorkingModal(message);
-        jQuery(file_form).attr("action", url);
-        jQuery(file_form).submit();
-    }
-}
 
 function showPhenotypeUploadWorkingModal(message) {
     jQuery('#working_msg').html(message);
@@ -139,21 +185,22 @@ function hidePhenotypeUploadWorkingModal() {
 }
 
 
-function displayPhenotypeUploadVerifyResponse(response, upload_type) {
+function displayPhenotypeUploadVerifyResponse(response, upload_type, div_type) {
+    let submit_store_button, submit_verify_button, upload_phenotype_status;
     if (upload_type == "spreadsheet") {
-        var submit_verify_button = "#upload_spreadsheet_phenotype_submit_verify";
-        var submit_store_button = "#upload_spreadsheet_phenotype_submit_store";
-        var upload_phenotype_status = "#upload_phenotype_spreadsheet_verify_status";
+        submit_verify_button = `#upload_spreadsheet_${div_type}_submit_verify`;
+        submit_store_button = `#upload_spreadsheet_${div_type}_submit_store`;
+        upload_phenotype_status = `#upload_${div_type}_spreadsheet_verify_status`;
     }
     else if (upload_type == "datacollector") {
-        var submit_verify_button = "#upload_datacollector_phenotype_submit_verify";
-        var submit_store_button = "#upload_datacollector_phenotype_submit_store";
-        var upload_phenotype_status = "#upload_phenotype_datacollector_verify_status";
+        submit_verify_button = `#upload_datacollector_${div_type}_submit_verify`;
+        submit_store_button = `#upload_datacollector_${div_type}_submit_store`;
+        upload_phenotype_status = `#upload_${div_type}_datacollector_verify_status`;
     }
     else if (upload_type == "fieldbook") {
-        var submit_verify_button = "#upload_fieldbook_phenotype_submit_verify";
-        var submit_store_button = "#upload_fieldbook_phenotype_submit_store";
-        var upload_phenotype_status = "#upload_phenotype_fieldbook_verify_status";
+        submit_verify_button = `#upload_fieldbook_${div_type}_submit_verify`;
+        submit_store_button = `#upload_fieldbook_${div_type}_submit_store`;
+        upload_phenotype_status = `#upload_${div_type}_fieldbook_verify_status`;
     }
 
     jQuery(submit_verify_button).attr('disabled', true);
@@ -186,11 +233,11 @@ function displayPhenotypeUploadVerifyResponse(response, upload_type) {
             message_text += "<li class='list-group-item list-group-item-warning'>";
             message_text += "<span class='badge'><span class='glyphicon glyphicon-asterisk'></span></span>";
             message_text += "Warnings are shown in yellow. Either fix the file and try again or continue with storing the data.";
-            message_text += "<hr>To overwrite previously stored values instead: <input type='checkbox' id='phenotype_upload_overwrite_values' name='phenotype_upload_overwrite_values' />";
-            message_text += "<div id='phenotype_upload_remove_values_div' style='display: none'>To remove previously stored values if left blank in your file: <input type='checkbox' id='phenotype_upload_remove_values' name='phenotype_upload_remove_values' /></div>";
-            message_text += "<hr><div id='phenotype_upload_details_default'>New values will be uploaded. Any previously stored values will be skipped.</div>";
-            message_text += "<div id='phenotype_upload_details_overwrite' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will be skipped.</div>";
-            message_text += "<div id='phenotype_upload_details_remove' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will remove any previously stored values.</div>";
+            message_text += `<hr>To overwrite previously stored values instead: <input type='checkbox' id='${div_type}_upload_overwrite_values' name='phenotype_upload_overwrite_values' />`;
+            message_text += `<div id='${div_type}_upload_remove_values_div' style='display: none'>To remove previously stored values if left blank in your file: <input type='checkbox' id='${div_type}_upload_remove_values' name='${div_type}_upload_remove_values' /></div>`;
+            message_text += `<hr><div id='${div_type}_upload_details_default'>New values will be uploaded. Any previously stored values will be skipped.</div>`;
+            message_text += `<div id='${div_type}_upload_details_overwrite' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will be skipped.</div>`;
+            message_text += `<div id='${div_type}_upload_details_remove' style='display: none'>New values will be uploaded. Any previously stored values will be replaced by non-blank values.  Blank values in the upload file will remove any previously stored values.</div>`;
             message_text += "<br>";
             message_text += "</li>";
             for (var i = 0; i < warningarrayLength; i++) {
@@ -203,32 +250,33 @@ function displayPhenotypeUploadVerifyResponse(response, upload_type) {
     }
     message_text += "</ul>";
     jQuery(upload_phenotype_status).html(message_text);
-    jQuery('#phenotype_upload_overwrite_values').off('change').on('change', function() {
-        jQuery("#phenotype_upload_remove_values_div").css('display', this.checked ? 'block' : 'none');
+    jQuery(`#${div_type}_upload_overwrite_values`).off('change').on('change', function() {
+        jQuery(`#${div_type}_upload_remove_values_div`).css('display', this.checked ? 'block' : 'none');
         updateDetails();
     });
-    jQuery('#phenotype_upload_remove_values').off('change').on('change', updateDetails);
+    jQuery(`#${div_type}_upload_remove_values`).off('change').on('change', updateDetails);
     function updateDetails() {
-        const overwrite = jQuery('#phenotype_upload_overwrite_values').is(':checked');
-        const remove = jQuery('#phenotype_upload_remove_values').is(':checked');
-        jQuery('#phenotype_upload_details_default').css('display', !overwrite && !remove ? 'block' : 'none');
-        jQuery('#phenotype_upload_details_overwrite').css('display', overwrite && !remove ? 'block' : 'none');
-        jQuery('#phenotype_upload_details_remove').css('display', overwrite && remove ? 'block' : 'none');
+        const overwrite = jQuery(`#${div_type}_upload_overwrite_values`).is(':checked');
+        const remove = jQuery(`#${div_type}_upload_remove_values`).is(':checked');
+        jQuery(`#${div_type}_upload_details_default`).css('display', !overwrite && !remove ? 'block' : 'none');
+        jQuery(`#${div_type}_upload_details_overwrite`).css('display', overwrite && !remove ? 'block' : 'none');
+        jQuery(`#${div_type}_upload_details_remove`).css('display', overwrite && remove ? 'block' : 'none');
     }
 }
 
-function displayPhenotypeUploadStoreResponse(response, upload_type) {
+function displayPhenotypeUploadStoreResponse(response, upload_type, div_type) {
+    let submit_store_button, upload_phenotype_status;
     if (upload_type == "spreadsheet") {
-        var submit_store_button = "#upload_spreadsheet_phenotype_submit_store";
-        var upload_phenotype_status = "#upload_phenotype_spreadsheet_verify_status";
+        submit_store_button = `#upload_spreadsheet_${div_type}_submit_store`;
+        upload_phenotype_status = `#upload_${div_type}_spreadsheet_verify_status`;
     }
     else if (upload_type == "datacollector") {
-        var submit_store_button = "#upload_datacollector_phenotype_submit_store";
-        var upload_phenotype_status = "#upload_phenotype_datacollector_verify_status";
+        submit_store_button = `#upload_datacollector_${div_type}_submit_store`;
+        upload_phenotype_status = `#upload_${div_type}_datacollector_verify_status`;
     }
     else if (upload_type == "fieldbook") {
-        var submit_store_button = "#upload_fieldbook_phenotype_submit_store";
-        var upload_phenotype_status = "#upload_phenotype_fieldbook_verify_status";
+        submit_store_button = `#upload_fieldbook_${div_type}_submit_store`;
+        upload_phenotype_status = `#upload_${div_type}_fieldbook_verify_status`;
     }
 
     jQuery(upload_phenotype_status).empty();
@@ -252,11 +300,28 @@ function displayPhenotypeUploadStoreResponse(response, upload_type) {
             message_text += "</li>";
         }
         if (errorarrayLength == 0) {
-            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+            message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
         }
     } else {
-        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successfull!</h3></li>";
+        message_text += "<li class='list-group-item list-group-item-success'><hr><h3>Upload Successful!</h3></li>";
     }
     message_text += "</ul>";
     jQuery(upload_phenotype_status).html(message_text);
+}
+
+function reset_dialog(upload_type, div_type) {
+    jQuery(`#upload_spreadsheet_${div_type}_file_input`).val("");
+    jQuery(`#upload_spreadsheet_${div_type}_submit_verify`).attr('disabled', false);
+    jQuery(`#upload_spreadsheet_${div_type}_submit_store`).attr('disabled', true);
+    jQuery(`#upload_${div_type}_spreadsheet_verify_status`).html("");
+
+    jQuery(`#upload_datacollector_${div_type}_file_input`).val("");
+    jQuery(`#upload_datacollector_${div_type}_submit_verify`).attr('disabled', false);
+    jQuery(`#upload_datacollector_${div_type}_submit_store`).attr('disabled', true);
+    jQuery(`#upload_${div_type}_datacollector_verify_status`).html("");
+
+    jQuery(`#upload_fieldbook_${div_type}_file_input`).val("");
+    jQuery(`#upload_fieldbook_${div_type}_submit_verify`).attr('disabled', false);
+    jQuery(`#upload_fieldbook_${div_type}_submit_store`).attr('disabled', true);
+    jQuery(`#upload_${div_type}_fieldbook_verify_status`).html("");
 }

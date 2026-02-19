@@ -147,45 +147,20 @@ sub _search {
         }
 
         ## Formatting treatments
-        my @brapi_treatments;
+        # my @brapi_treatments;
 
-        if ($c->config->{brapi_treatments_no_management_factor}) {
-            my $treatments = $obs_unit->{treatments};
-            foreach my $treatment (@$treatments) {
-                while (my ($factor, $modality) = each %$treatment) {
-                    my $modality = $modality ? $modality : undef;
-                    push @brapi_treatments, {
-                        factor   => $factor,
-                        modality => $modality,
-                    };
-                }
-            }
-        }
-
-        ## Getting gps coordinates
-        my $sp_rs ='';
-        eval {
-            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        };
-        my %geolocation_lookup;
-        while( my $r = $sp_rs->next()){
-            $geolocation_lookup{$r->stock_id} = $r->value;
-        }
-        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{obsunit_stock_id}} ?$geolocation_lookup{$obs_unit->{obsunit_stock_id}} : undef;
-        my $geo_coordinates;
-
-        if ($geo_coordinates_string){
-            $geo_coordinates = decode_json $geo_coordinates_string;
-        }
-
-        ## Getting additional info
-        my $additional_info;
-
-        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        if ($rs->count() > 0){
-            my $additional_info_json = $rs->first()->value();
-            $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
-        }
+        # if ($c->config->{brapi_treatments_no_management_factor}) {
+        #     my $treatments = $obs_unit->{treatments};
+        #     foreach my $treatment (@$treatments) {
+        #         while (my ($factor, $modality) = each %$treatment) {
+        #             my $modality = $modality ? $modality : undef;
+        #             push @brapi_treatments, {
+        #                 factor   => $factor,
+        #                 modality => $modality,
+        #             };
+        #         }
+        #     }
+        # }
 
 	my %numbers;
 
@@ -202,9 +177,12 @@ sub _search {
 
         my $plant;
 
+        my $tissue_sample;
+
         my $family_stock_id;
 
         my $family_name;
+        my $additional_info = $obs_unit->{additional_info};
 
         ## Following code lines add observationUnitParent to additionalInfo, useful for BI
         if ($obs_unit->{obsunit_type_name} eq 'plant') {
@@ -266,10 +244,17 @@ sub _search {
                 levelOrder => _order("plant"),
             }
         }
+        if ($tissue_sample) {
+            push @observationLevelRelationships, {
+                levelCode => $tissue_sample,
+                levelName => "tissue_sample",
+                levelOrder => _order("tissue_sample"),
+            }
+        }
 
         my %observationUnitPosition = (
             entryType => $entry_type,
-            geoCoordinates => $geo_coordinates,
+            geoCoordinates => $obs_unit->{plot_geo_json},
             positionCoordinateX => $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
             positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
@@ -293,20 +278,6 @@ sub _search {
         });
         my $external_references = $references->search();
         my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
-
-        ## Get plot images
-        my @plot_image_ids;
-			eval {
-	            my $image_id = CXGN::Stock->new({
-	    			schema => $self->bcs_schema,
-	    			stock_id => $obs_unit->{obsunit_stock_id},
-	    		});
-	    		@plot_image_ids = $image_id->get_image_ids();
-	    	};
-            my @ids;
-            foreach my $arrayimage (@plot_image_ids){
-                push @ids, $arrayimage->[0];
-            }
 
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
@@ -342,8 +313,8 @@ sub _search {
             seedLotName => $obs_unit->{seedlot_name} ? qq|$obs_unit->{seedlot_name}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            plotImageDbIds => \@ids,
-            treatments => \@brapi_treatments,
+            plotImageDbIds => $obs_unit->{image_ids},
+            #treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };
@@ -432,7 +403,7 @@ sub observationunits_update {
         my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
         my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
-        my $treatments = $params->{treatments} || ""; #not implemented yet
+        #my $treatments = $params->{treatments} || ""; #not implemented yet
 
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
@@ -478,8 +449,8 @@ sub observationunits_update {
         my $stock = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$observation_unit_db_id});
         my $stock_type = $stock->type_id;
 
-        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot')){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot' or 'plant' allowed for observation level and observationUnitDbId."), 400);
+        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot' && $level_name ne 'tissue_sample')){
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot', 'plant' or 'tissue_sample' allowed for observation level and observationUnitDbId."), 400);
         }
 
         #Update: accession
@@ -694,8 +665,8 @@ sub observationunits_store {
             return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
         }
 
-        if ($ou_level ne 'plant' && $ou_level ne 'plot') {
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Only "plot" or "plant" allowed for observation level.'), 400);
+        if ($ou_level ne 'plant' && $ou_level ne 'plot' && $ou_level ne 'tissue_sample') {
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Only "plot", "plant" or "tissue_sample" allowed for observation level.'), 400);
         }
 
         my $project = $self->bcs_schema->resultset("Project::Project")->find({ project_id => $study_id });
@@ -752,6 +723,32 @@ sub observationunits_store {
                 additional_info => \%additional_info,
                 external_refs   => $observationUnit_x_ref
             };
+        } elsif ($ou_level eq 'tissue_sample') {
+            my $plot_parent_name;
+            if ($plot_parent_id) {
+                my $rs = $schema->resultset("Stock::Stock")->search({stock_id=>$plot_parent_id});
+                if ($rs->count() eq 0){
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Plot with id %s does not exist.', $plot_parent_id), 404);
+                }
+                $plot_parent_name = $rs->first()->uniquename();
+            } else {
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('addtionalInfo.observationUnitParent for observation unit with level "tissue_sample" is required'), 404);
+            }
+
+            $plot_hash = {
+                plot_name       =>  $plot_parent_name,
+                tissue_sample_names => [ $plot_name ],                
+                stock_name => $accession_name,
+                plot_number => $plot_number,
+                block_number    => $block_number,
+                is_a_control    => $is_a_control,
+                rep_number      => $rep_number,
+                range_number    => $range_number,
+                row_number      => $row_number,
+                col_number      => $col_number,
+                additional_info => \%additional_info,
+                external_refs   => $observationUnit_x_ref
+            }
         } else {
             $plot_hash = {
                 plot_name => $plot_name,
@@ -807,7 +804,7 @@ sub observationunits_store {
                 $location_id = $row->value();
             }
             else {
-                die {error => sprintf('Erro retrieving the location of the study'), errorCode => 500};
+                die {error => sprintf('Error retrieving the location of the study'), errorCode => 500};
             }
 
             my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
@@ -816,8 +813,8 @@ sub observationunits_store {
                 nd_geolocation_id                 => $location_id,
                 # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
                 is_genotyping                     => 0,
-                new_treatment_has_plant_entries   => 0,
-                new_treatment_has_subplot_entries => 0,
+                #new_treatment_has_plant_entries   => 0,
+                #new_treatment_has_subplot_entries => 0,
                 operator                          => $user_name,
                 trial_stock_type                  => 'accessions',
                 design_type                       => $design_type,

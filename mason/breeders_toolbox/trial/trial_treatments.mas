@@ -1,115 +1,158 @@
 
 <%args>
 $trial_id
+$user_can_modify
 </%args>
 
-<& /util/import_javascript.mas, classes => [  ] &>
+<& /util/import_javascript.mas, classes => [ ] &>
+
+% if ($user_can_modify) {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>
+% }
 
 <div id="trial_treatments_html">
+    <br>
+    <table id="trial_treatments_table">
+    </table>
+    <br>
+    <select id="trial_treatment_to_stock_select">
+    </select>
+    <select id="trial_treatment_level_applied_select">
+        <option value="plot">Plot</option>
+        <option value="subplot">Subplot</option>
+        <option value="plant">Plant</option>
+        <option value="tissue_sample">Tissue Sample</option>
+    </select>
+    <button class="btn btn-sm btn-primary" id="treatments_get_raw_data_btn">Get treatment data</button>
+    <br>
+    <table id="trial_treatments_raw_data">
+    </table>
 </div>
 
 <script>
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_treatments_onswitch').one("click", function() {
-
-        jQuery.ajax ( {
+    function get_trial_overview_data() {
+        jQuery.ajax ({
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/treatments',
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
             success: function(response){
-                //console.log(response);
                 jQuery("#working_modal").modal("hide");
-                var trial_treatments_html = "<table class='table table-hover table-condensed table-bordered' id='trial_treatments_table_html'><thead><tr><th>Name</th></tr></thead><tbody>";
-                for (i=0; i<response.treatments.length; i++) {
-                    trial_treatments_html = trial_treatments_html + "<tr><td><a href='/breeders/trial/" + response.treatments[i][0] +"'>"+ response.treatments[i][1] + "</a></td></tr>";
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    let seen_treatments = {};
+                    if (""+<% $user_can_modify %>+"") {
+                        jQuery('#trial_treatments_table').DataTable({
+                            data: JSON.parse(response.data),
+                            columns: [
+                                {
+                                    data : 'trait_name', 
+                                    title : 'Treatment',
+                                    orderable : false,
+                                    render : function(data, type, row, meta) {
+                                        
+                                        if (!(row.trait_id in seen_treatments)) {
+                                            jQuery('#trial_treatment_to_stock_select').append('<option value="'+row.trait_id+'">'+data+'</option>');
+                                            seen_treatments[row.trait_id] = 1;
+                                        }
+                                        
+                                        let html = '<a href="/cvterm/'+row.trait_id+'/view/">'+data+'</a>';
+                                        return html;
+                                    }
+                                },
+                                {data : 'count', title : 'Total Stock Count'},
+                                {
+                                    data : 'trait_id',
+                                    title : 'Remove treatment',
+                                    orderable : false,
+                                    render : function(data, type, row, meta) {
+                                        let html = `<button class="btn btn-small btn-danger treatment-delete-btn" id="delete_treatment_${data}"><span class="glyphicon glyphicon-trash"></span></button>`;
+                                        return html;
+                                    }
+                                }
+                            ]
+                        });
+                    } else {
+                        jQuery('#trial_treatments_table').DataTable({
+                            data: JSON.parse(response.data),
+                            columns: [
+                                {
+                                    data : 'trait_name', 
+                                    title : 'Treatment',
+                                    orderable : false,
+                                    render : function(data, type, row, meta) {
+                                        
+                                        if (!(row.trait_id in seen_treatments)) {
+                                            jQuery('#trial_treatment_to_stock_select').append('<option value="'+row.trait_id+'">'+data+'</option>');
+                                            seen_treatments[row.trait_id] = 1;
+                                        }
+                                        
+                                        let html = '<a href="/cvterm/'+row.trait_id+'/view/">'+data+'</a>';
+                                        return html;
+                                    }
+                                },
+                                {data : 'count', title : 'Total Stock Count'},
+                            ]
+                        });
+                    }
+                    
                 }
-                trial_treatments_html = trial_treatments_html + "</tbody></table>";
-                jQuery('#trial_treatments_html').empty();
-                jQuery('#trial_treatments_html').html(trial_treatments_html);
-                enable_treatments_datatable('trial_treatments_table_html');
             },
             error: function(response){
                 jQuery("#working_modal").modal("hide");
                 alert("Error retrieving treatments.");
             }
         });
+    }
 
+    jQuery('#trial_treatments_onswitch').one("click", function() {
+        get_trial_overview_data();
     });
+
+    jQuery('#treatments_get_raw_data_btn').click(function() {
+        jQuery('#working_modal').modal("show");
+        let trial_id = "" + <% $trial_id %> + "";
+        let treatment_id = jQuery('#trial_treatment_to_stock_select').val();
+        let stock_type = jQuery('#trial_treatment_level_applied_select').val();
+        jQuery.ajax({
+    	   	url: "/brapi/v2/search/observations/",
+		    data: { studyDbIds: [ trial_id ], observationVariableDbIds: [ treatment_id ], observationLevel: [ stock_type ]},
+		    method: "POST"
+        }).then((result) => fetch_raw_observation_data_table(result.result.searchResultsDbId))
+        .then((result) => {
+            jQuery('#working_modal').modal("hide");
+            jQuery('#trial_treatments_raw_data').DataTable().clear().destroy();
+            jQuery('#trial_treatments_raw_data').DataTable({
+                data : result.result.data,
+                columns : [
+                    {
+                        data : 'observationUnitName',
+                        title : 'Stock',
+                        orderable : true,
+                        render : function(data, type, row, meta) {
+                            let html = '<a href="/stock/'+row.observationUnitDbId+'/view/">'+data+'</a>';
+                            return html;
+                        }
+                    },
+                    {data : 'value', title : 'Treatment Value'}
+                ],
+                columnDefs : [
+                    {targets : 0, width : "50%"}
+                ]
+            });
+        }).catch((error) => {
+            jQuery('#working_modal').modal("hide"); 
+            console.log(error);
+        });
+    });
+
 
     jQuery('#trial_detail_page_add_treatment').click(function(){
-        jQuery('#trial_design_add_treatments').modal('show');
-    });
-
-    jQuery('#new_trial_add_treatments_continue').click(function(){
-        var treatment_name = jQuery('#new_treatment_name').val();
-        var treatment_description = jQuery('#new_treatment_description').val();
-        var treatment_unit = jQuery('#new_treatment_unit').val();
-
-        if (jQuery('#new_treatment_name') == '') {
-            alert('Please give a treatment name.');
-            return false;
-        }
-        if (jQuery('#new_treatment_description') == '') {
-            alert('Please give a treatment description.');
-            return false;
-        }
-        if (jQuery('#new_treatment_date') == '') {
-            alert('Please select a date.');
-            return false;
-        }
-        if (jQuery('#new_treatment_year') == '') {
-            alert('Please select a year.');
-            return false;
-        }
-
-        jQuery.ajax ( {
-            url : '/ajax/breeders/trial/'+<% $trial_id %>+'/layout',
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                //console.log(response);
-                var design_hash = response.design;
-                var keys = Object.keys(design_hash);
-                keys.sort();
-
-                var html = "";
-                if(treatment_unit == 'plot'){
-                    html += "<table id='treatment_layout_table' class='table table-hover'><thead><tr><th>plot_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
-                    keys.forEach(function(key){
-                        var plot_obj = design_hash[key];
-                        html += "<tr><td><a href='/stock/"+plot_obj.plot_id+"/view'>"+plot_obj.plot_name+"</a></td><td><a href='/stock/"+plot_obj.accession_id+"/view'>"+plot_obj.accession_name+"</a></td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plot_name='"+plot_obj.plot_name+"' data-trial_treatment='"+treatment_name+"' data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-subplot_names='"+JSON.stringify(plot_obj.subplot_names)+"'  data-tissue_sample_names='"+JSON.stringify(plot_obj.tissue_sample_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
-                    });
-                    html += "</tbody></table>";
-                }
-
-                if(treatment_unit == 'plant'){
-                    html += "<table id='treatment_layout_table' class='table table-hover'><thead><tr><th>plant_name</th><th>accession</th><th>plot_number</th><th>block_number</th><th>rep_number</th><th>is_a_control</th><th>row_number</th><th>col_number</th><th class='table-success'>"+treatment_name+" [Select all <input type='checkbox' name='add_trial_treatment_select_all' />]</th></tr></thead><tbody>";
-                    keys.forEach(function(key){
-                        var plot_obj = design_hash[key];
-                        var plant_names = plot_obj['plant_names'];
-                        var plant_ids = plot_obj['plant_ids'];
-                        for (var i=0; i<plant_ids.length; i++) {
-                            html += "<tr><td><a href='/stock/"+plant_ids[i]+"/view'>"+plant_names[i]+"</a></td><td><a href='/stock/"+plot_obj.accession_id+"/view'>"+plot_obj.accession_name+"</a></td><td>"+plot_obj.plot_number+"</td><td>"+plot_obj.block_number+"</td><td>"+plot_obj.rep_number+"</td><td>"+plot_obj.is_a_control+"</td><td>"+plot_obj.row_number+"</td><td>"+plot_obj.col_number+"</td><td><input data-plant_name='"+plant_names[i]+"' data-trial_treatment='"+treatment_name+"' data-plant_names='"+JSON.stringify(plot_obj.plant_names)+"' data-tissue_sample_names='"+JSON.stringify(plot_obj.tissue_sample_names)+"' type='checkbox' name='add_trial_treatment_input'/></td></tr>";
-                        }
-                    });
-                    html += "</tbody></table>";
-                }
-
-                jQuery("#working_modal").modal("hide");
-                jQuery('#trial_design_add_treatment_select_html').html(html);
-                enable_treatments_datatable('treatment_layout_table');
-                jQuery('#trial_design_add_treatment_select').modal('show');
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert("Error retrieving layout.");
-            }
-        });
-
+        jQuery('#upload_treatment_spreadsheet_dialog').modal('show');
     });
 
     jQuery(document).on('change', 'input[name="add_trial_treatment_select_all"]', function(){
@@ -124,133 +167,55 @@ jQuery(document).ready(function () {
         }
     });
 
-    jQuery('#new_trial_add_treatments_submit').click(function(){
-        var apply_to_plants;
-        if(jQuery('#new_trial_add_treatments_apply_to_plants').is(":checked")){
-            apply_to_plants = 1;
+    function fetch_raw_observation_data_table(searchResultsDbId) {
+       	return jQuery.ajax( {
+       		url: "/brapi/v2/search/observations/"+searchResultsDbId,
+	    	data: { pageSize: 10000 },
+	    	method: "GET"
+	    });     
+    }
+
+    jQuery('#trial_treatments_raw_data').DataTable({
+        'destroy': true,
+        'columns': [
+            { title: 'Stock' },
+            { title: 'Treatment value' },
+        ]
+    });
+
+    jQuery(document).on('click', '.treatment-delete-btn',function() {
+
+        let this_id = jQuery(this).attr('id');
+        let splits = this_id.split('_');
+        let treatment_id = splits[2];
+
+        if (confirm("Delete treatment data from all stocks?")) {
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+<% $trial_id %>+'/remove_treatment',
+                data : {
+                    'treatment_id' : treatment_id
+                },
+                beforeSend: function() {
+                    jQuery('#working_modal').modal("show");
+                },
+                success : function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert(response.error);
+                    } else {
+                        alert("Treatment data removed.");
+                        window.location.reload();
+                    }
+                },
+                error : function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    console.log(response);
+                    alert("An error occurred deleting treatment data.");
+                }
+            });
         }
-
-        var new_treatment_year = jQuery('#new_treatment_year').val();
-        var new_treatment_description = jQuery('#new_treatment_description').val();
-        var new_treatment_date = jQuery('#new_treatment_date').val();
-        var new_treatment_type = jQuery('#new_treatment_type').val();
-        new_treatment_date = moment(new_treatment_date).format('YYYY/MM/DD HH:mm:ss')
-
-        var design = {};
-        var trial = {};
-        var has_plant_entries;
-        var has_subplot_entries;
-        var has_tissue_sample_entries;
-        var new_treatment_stocks = [];
-
-        jQuery('input[name="add_trial_treatment_input"]').each(function() {
-            if (this.checked){
-                var plot_name = jQuery(this).data('plot_name');
-                var plant_name = jQuery(this).data('plant_name');
-                var trial_treatment = jQuery(this).data('trial_treatment');
-                trial[trial_treatment] = {};
-                var plant_names = jQuery(this).data('plant_names');
-                var subplot_names = jQuery(this).data('subplot_names');
-                var tissue_names = jQuery(this).data('tissue_sample_names');
-                if (trial_treatment in trial){
-                    if (plot_name) {
-                        new_treatment_stocks.push(plot_name);
-                    }
-                    else if (plant_name) {
-                        new_treatment_stocks.push(plant_name);
-                    }
-                } else {
-                    if (plot_name) {
-                        new_treatment_stocks = [plot_name];
-                    }
-                    else if (plant_name) {
-                        new_treatment_stocks = [plant_name];
-                    }
-                }
-
-                if (plant_name) {
-                    if(plant_names.length > 0){
-                        has_plant_entries = plant_names.length;
-                    }
-                }
-                else if (!plant_name && plant_names && plant_names != 'undefined' && plant_names != undefined){
-                    if(plant_names.length > 0){
-                        has_plant_entries = plant_names.length;
-                    }
-                    for(var i=0; i<plant_names.length; i++){
-                        var plant_name = plant_names[i];
-                        if (plant_name) {
-                            new_treatment_stocks.push(plant_name);
-                        }
-                    }
-                }
-                if (subplot_names && subplot_names != 'undefined' && subplot_names != undefined){
-                    if(subplot_names.length > 0){
-                        has_subplot_entries = subplot_names.length;
-                    }
-                    for(var i=0; i<subplot_names.length; i++){
-                        var subplot_name = subplot_names[i];
-                        if (subplot_name) {
-                            new_treatment_stocks.push(subplot_name);
-                        }
-                    }
-                }
-                if (tissue_names && tissue_names != 'undefined' && tissue_names != undefined){
-                    if(tissue_names.length > 0){
-                        has_tissue_sample_entries = tissue_names.length;
-                    }
-                    for(var i=0; i<tissue_names.length; i++){
-                        var tissue_name = tissue_names[i];
-                        if (tissue_name) {
-                            new_treatment_stocks.push(tissue_name);
-                        }
-                    }
-                }
-                trial[trial_treatment]["new_treatment_stocks"] = new_treatment_stocks;
-                trial[trial_treatment]["new_treatment_type"] = new_treatment_type;
-                trial[trial_treatment]["new_treatment_description"] = new_treatment_description;
-                trial[trial_treatment]["new_treatment_date"] = new_treatment_date;
-                trial[trial_treatment]["new_treatment_year"] = new_treatment_year;
-            }
-        });
-
-        design['treatments'] = trial;
-        //console.log(design);
-
-        jQuery.ajax ( {
-            url: '/ajax/breeders/trial/'+<% $trial_id %>+'/add_treatment',
-            type: 'POST',
-            data: {
-                'design':JSON.stringify(design),
-                'has_plant_entries':has_plant_entries,
-                'has_subplot_entries':has_subplot_entries,
-                'has_tissue_sample_entries':has_tissue_sample_entries,
-            },
-            beforeSend: function() {
-                jQuery("#working_modal").modal("show");
-            },
-            success: function(response){
-                //console.log(response);
-                jQuery("#working_modal").modal("hide");
-                if (response.error){
-                    alert(response.error);
-                }
-                if (response.success){
-                    alert('Treatment saved!');
-                }
-            },
-            error: function(response){
-                jQuery("#working_modal").modal("hide");
-                alert("Error saving treatment.");
-            }
-        });
+        
     });
 });
-
-function enable_treatments_datatable(table_id) {
-    jQuery('#'+table_id).DataTable({
-        paging: false
-    });
-}
 
 </script>

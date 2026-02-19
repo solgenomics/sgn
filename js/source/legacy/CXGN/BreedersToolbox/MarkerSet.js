@@ -1,19 +1,24 @@
+// Cached allele values by marker name
+// This is updated each time the selected markerset is changed
+var ALLELES = {}
 
 jQuery(document).ready(function (){
+    ALLELES_BY_MARKER = {};
+    MARKER_BY_ALLELE = {};
 
     get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
 
     var lo = new CXGN.List();
-    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a markerset', 'refresh', 'hide_public_lists' ));
+    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a list of marker alleles', 'refresh', 'hide_public_lists' ));
 
     var list = new CXGN.List();
-    jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a markerset', 'refresh', undefined));
+    jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a list of marker alleles', 'refresh', undefined));
 
 
     jQuery("#save_marker_set").click(function(){
         var name = $('#new_marker_set').val();
         if (!name) {
-            alert("Markerset name is required");
+            alert("List name is required");
             return;
         }
 
@@ -32,11 +37,6 @@ jQuery(document).ready(function (){
         var protocol_name = $('#selected_protocol').find(":selected").text();
         var desc = $('#marker_set_desc').val();
 
-        if (!desc) {
-            alert("Please provide description");
-            return;
-        }
-
         var list_id = lo.newList(name, desc);
         lo.setListType(list_id, 'markers');
 
@@ -46,14 +46,10 @@ jQuery(document).ready(function (){
         markersetProtocol.genotyping_data_type = data_type;
 
         var markersetProtocolString = JSON.stringify(markersetProtocol);
+        lo.addToList(list_id, markersetProtocolString);
 
-        var protocolAdded = lo.addToList(list_id, markersetProtocolString);
-        if (protocolAdded){
-            alert ("Added new markerset: " + name + " for genotyping protocol: " + protocol_name + " ," + "data type: " + data_type);
-        }
         location.reload();
         return list_id;
-
     });
 
     var markersetType;
@@ -89,10 +85,11 @@ jQuery(document).ready(function (){
 
     jQuery("#add_marker").click(function(){
         var markerInfo = {};
+        var markerAdded = false;
 
         var markerSetID = $('#selected_marker_set1').val();
         if (markerSetID == '') {
-            alert("Markerset name is required");
+            alert("List name is required");
             return;
         }
 
@@ -113,34 +110,63 @@ jQuery(document).ready(function (){
             markerInfo.allele_dosage = dosage;
             var markerInfoString = JSON.stringify(markerInfo);
 
-            var markerAdded = lo.addToList(markerSetID, markerInfoString);
-            if (markerAdded){
-                alert("Added "+markerInfoString);
-            }
+            markerAdded = lo.addToList(markerSetID, markerInfoString);
         }
 
         if (markersetType == "SNP") {
-            var markerNameSNP = $('#marker_name_snp').val();
-            var allele1 = $('#allele_1').val();
-            var allele2 = $('#allele_2').val();
+            var multiple_tab_selected = jQuery("#markerset_snp_section_tab li.active")[0]?.id === "markerset_snp_section_multiple";
 
-            if (markerNameSNP == '') {
-                alert("Marker name is required");
-                return;
+            if ( multiple_tab_selected ) {
+                var markerInfos = [];
+                var missingAlleles = [];
+                var alleleNames = jQuery("#allele_names").val()?.split('\n');
+
+                // Find corresponding marker for each allele
+                alleleNames.forEach((alleleName) => {
+                    var marker_name = MARKER_BY_ALLELE[alleleName];
+                    if ( marker_name && marker_name !== "" ) {
+                        markerInfo[marker_name] = alleleName;
+                        markerInfos.push(
+                            JSON.stringify({
+                                marker_name: marker_name,
+                                allele1: alleleName,
+                                allele2: alleleName
+                            })
+                        );
+                    }
+                    else {
+                        missingAlleles.push(alleleName);
+                    }
+                });
+
+                // Display error message for alleles with no matching marker
+                if ( missingAlleles.length > 0 ) {
+                    alert(`The following alleles do not have a corresponding marker: ${missingAlleles.join(', ')}`);
+                    return;
+                }
+
+                markerAdded = lo.addBulk(markerSetID, markerInfos);
             }
-            if ((allele1 == '') || ( allele2 == '')) {
-                alert("Please indicate SNP alleles");
-                return;
-            }
 
-            markerInfo.marker_name = markerNameSNP;
-            markerInfo.allele1 = allele1;
-            markerInfo.allele2 = allele2;
-            var markerInfoString = JSON.stringify(markerInfo);
+            else {
+                var markerNameSNP = $('#marker_name_snp').val();
+                var allele1 = $('#allele_1').val();
+                var allele2 = $('#allele_2').val();
 
-            var markerAdded = lo.addToList(markerSetID, markerInfoString);
-            if (markerAdded){
-                alert("Added "+markerInfoString);
+                if (markerNameSNP == '') {
+                    alert("Marker name is required");
+                    return;
+                }
+                if ((allele1 == '') || ( allele2 == '')) {
+                    alert("Please indicate SNP alleles");
+                    return;
+                }
+
+                markerInfo.marker_name = markerNameSNP;
+                markerInfo.allele1 = allele1;
+                markerInfo.allele2 = allele2;
+                var markerInfoString = JSON.stringify(markerInfo);
+                markerAdded = lo.addToList(markerSetID, markerInfoString);
             }
         }
 
@@ -160,22 +186,30 @@ jQuery(document).ready(function (){
                 markerInfoString = JSON.stringify(markerInfo);
                 markerNameArray.push(markerInfoString);
             }
-            var markerAdded = lo.addBulk(markerSetID, markerNameArray);
-            if (markerAdded){
-                alert("Added "+markerNameArray);
-            }
-
+            markerAdded = lo.addBulk(markerSetID, markerNameArray);
         }
 
-        location.reload();
-        return markerSetName;
+        if ( markerAdded ) {
+            jQuery(".marker_name").val("");
+            onMarkerChange();
 
+            var html = "<strong>New Item(s) Added!</strong>&emsp;";
+            var items = [];
+            Object.entries(markerInfo).forEach(([key, value]) => {
+                items.push(`<strong>${key}</strong>: ${value}`);
+            });
+            html += `<br />${items.join('&emsp;')}`;
+
+            jQuery("#add-marker-success").html(html).css("display", "block");
+        }
     });
+
+    jQuery("#close_add_marker").click(show_table);
 
     jQuery("#add_parameters").click(function(){
         var markerSetName = $('#selected_marker_set2').val();
         if (!markerSetName) {
-            alert("Markerset name is required");
+            alert("List name is required");
             return;
         }
 
@@ -230,6 +264,9 @@ jQuery(document).ready(function (){
 
     show_table();
 
+    jQuery('#selected_marker_set1').on('change', onMarkerSetChange);
+    jQuery('#marker_name_snp').on('input change blur', onMarkerChange);
+    jQuery('#allele_names').on('input change blur', onAlleleNamesChange);
 });
 
 function show_table() {
@@ -237,7 +274,7 @@ function show_table() {
         'destroy': true,
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
-            {title: "Markerset Name", "data": "markerset_name"},
+            {title: "List Name", "data": "markerset_name"},
             {title: "Number of Markers", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'showMarkersetDetail("+row.markerset_id+")'>Detail</a>" ;}},
@@ -257,7 +294,6 @@ function removeMarkerSet (markerset_id){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert("The markerset has been deleted.");
                     location.reload();
                 }
                 if (response.error) {
@@ -274,6 +310,7 @@ function removeMarkerSet (markerset_id){
 
 
 function showMarkersetDetail (markerset_id){
+    jQuery('#markerset_detail_table').empty();
     jQuery.ajax({
         url: '/markerset/items',
         data: {'markerset_id': markerset_id},
@@ -288,7 +325,30 @@ function showMarkersetDetail (markerset_id){
                     'destroy': true,
                     'data': response.data,
                     'columns': [
-                        {title: "Item", "data": "item_name"},
+                        {
+                            title: "Item",
+                            data: "item_name",
+                            render: function(data) {
+                                let parsed = JSON.parse(data);
+                                let items = [];
+                                Object.entries(parsed).forEach(([key, value]) => {
+                                    items.push(`<strong>${key}</strong>: ${value}`);
+                                });
+                                return items.join('&emsp;');
+                            }
+                        },
+                        {
+                            title: "Remove",
+                            data: "item_id",
+                            render: function(data, type, row, meta) {
+                                let index = meta.row;
+                                let html = '';
+                                if ( index > 0 ) {
+                                    html = `<a href="#" onclick="removeMarkerSetListItem(${markerset_id}, ${data})">Remove</a>`;
+                                }
+                                return html;
+                            }
+                        }
                     ],
                 });
             } else {
@@ -300,4 +360,97 @@ function showMarkersetDetail (markerset_id){
             alert('An error occurred getting markerset detail');
         }
     });
+}
+
+// Handle a change in selected markerset
+// - Update the marker name autocomplete
+// - Update the cached allele values for every marker in markerset protocol
+function onMarkerSetChange() {
+    var list_id = jQuery(this).val();
+
+    jQuery("#markerset_snp_section_tab").css("display", "none");
+    ALLELES_BY_MARKER = {};
+    MARKER_BY_ALLELE = {};
+
+    if ( list_id && list_id !== '' ) {
+        var lo = new CXGN.List();
+        var markerset_list = lo.getList(list_id);
+        var metadata = JSON.parse(markerset_list[0]);
+        var protocol_id = metadata.genotyping_protocol_id;
+
+        // Set marker name autocomplete
+        jQuery("#marker_name_snp").autocomplete({
+            source: `/ajax/genotyping_protocol/locus_marker_autocomplete?protocol_id=${protocol_id}`,
+        });
+        jQuery("#marker_name_snp").on("autocompleteclose", onMarkerChange);
+
+        // Get all possible allele values
+        jQuery.ajax({
+            url: `/ajax/genotyping_protocol/get_marker_metadata/${protocol_id}`,
+            success: function(resp) {
+                if ( resp ) {
+                    Object.keys(resp).forEach((marker) => {
+                        ALLELES_BY_MARKER[marker] = resp[marker].alleles.map((x) => x.allele_name);
+                        (resp[marker].alleles || []).forEach((a) => {
+                            MARKER_BY_ALLELE[a.allele_name] = marker;
+                        })
+                    });
+                }
+                jQuery("#allele_names").attr("placeholder", ["Enter Allele names, one per line", ...Object.keys(MARKER_BY_ALLELE)].join('\n'));
+                if ( Object.keys(ALLELES_BY_MARKER).length > 0 ) {
+                    jQuery("#markerset_snp_section_tab").css("display", "block");
+                }
+            }
+        });
+    }
+}
+
+// Handle a change in marker name
+// - Hide the success message
+// - Update the displayed allele values
+function onMarkerChange() {
+    jQuery("#add-marker-success").css("display", "none");
+    let html = "<option>Enter marker name first</option>";
+    let disabled = true;
+
+    var marker = jQuery('#marker_name_snp').val();
+    if ( marker && marker !== "" ) {
+
+        // Default to ATCG alleles
+        var alleles = ["A", "T", "G", "C"];
+        disabled = false;
+        html = "";
+
+        // Set alleles based on marker metadata
+        if ( ALLELES_BY_MARKER.hasOwnProperty(marker) ) {
+            alleles = ALLELES_BY_MARKER[marker]
+        }
+
+        // Build options based on available alleles
+        alleles.forEach((allele) => {
+            html += `<option value="${allele}">${allele}</option>`;
+        });
+
+    }
+
+    jQuery("#allele_1").html(html).attr("disabled", disabled);
+    jQuery("#allele_2").html(html).attr("disabled", disabled);
+}
+
+// Handle a change in the allele names textarea
+// - Hide the success message
+function onAlleleNamesChange() {
+    jQuery("#add-marker-success").css("display", "none");
+}
+
+// Remove the specified list item from the list
+// - Display the list details dialog again after removing
+function removeMarkerSetListItem(list_id, list_item_id) {
+    var confirmation = confirm("Are you sure you want remove this item from the marker set?");
+    if ( confirmation ) {
+        var lo = new CXGN.List();
+        lo.removeItem(list_id, list_item_id);
+        showMarkersetDetail(list_id);
+        show_table();
+    }
 }

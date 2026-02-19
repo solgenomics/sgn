@@ -57,7 +57,7 @@ Used from CXGN::Trial::TrialCreate for saving newly designed genotyping plate OR
 
 =back
 
-This is used for storing new treatment (field management factor) trials.
+This is used for storing new treatment trials.
 
 =over 4
 
@@ -76,8 +76,7 @@ To add new treatments, There should be a key in the design called "treatments" s
     {
         "treatments" =>
             {
-                "fertilizer_10ml" => ["plot1", "plot2", "plot1_plant1", "plot2_plant1"],
-                "water" => ["plot1", "plot2"]
+                "treatment_name|EXPERIMENT_TREATMENT0000001" => ["plot1", "plot2", "plot1_plant1", "plot2_plant1"]
             }
     }
 
@@ -276,6 +275,7 @@ use CXGN::Trial::TrialDesignStore::GenotypingTrial;
 use CXGN::Trial::TrialDesignStore::Analysis;
 use CXGN::Trial::TrialDesignStore::CrossingTrial;
 use CXGN::Trial::TrialDesignStore::SamplingTrial;
+use strict;
 
 sub new {
     my $class = shift;

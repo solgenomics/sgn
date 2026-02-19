@@ -5,7 +5,7 @@ download_obo.pl - script to download obo file of an ontology
 
 =head1 SYNOPSIS
 
-perl download_obo.pl -i prefix -H host -D dbname
+perl download_obo.pl -i prefix -o out_directory -H host -D dbname -U dbuser -P dbpass
 
 =head1 DESCRIPTION
 
@@ -70,7 +70,7 @@ Naama Menda <nm249@cornell.edu>
 
 use strict;
 
-use Getopt::Std;
+use Getopt::Long;
 use Data::Dumper;
 use Try::Tiny;
 use DateTime;
@@ -79,25 +79,25 @@ use Bio::Chado::Schema;
 use CXGN::DB::InsertDBH;
 use File::Slurp;
 
-our ($opt_H, $opt_D, $opt_U, $opt_P, $opt_i);
+my ($dbhost, $dbname, $dbuser, $dbpass, $prefix, $outdir);
 
-getopts('H:D:U:P:i:');
+GetOptions(
+    'H=s' => \$dbhost,
+    'D=s' => \$dbname,
+    'U=s' => \$dbuser,
+    'P=s' => \$dbpass,
+    'i=s' => \$prefix,
+    'o=s' => \$outdir
+);
 
-my $dbhost = $opt_H;
-my $dbname = $opt_D;
-my $dbuser = $opt_U;
-my $dbpass = $opt_P;
-my $prefix = $opt_i;
+print STDERR "Beginning obo dump to $outdir...\n";
 
-        dbname=>$dbname,
-        dbargs => {AutoCommit => 0,
-        RaiseError => 1}
-    } );
+my $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
 
 print STDERR "Connecting to database...\n";
-my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
+my $schema = Bio::Chado::Schema->connect($dsn, $dbuser, $dbpass);
 
-my $obo_file = $prefix . ".breedbase.obo";
+my $obo_file = "$outdir/$prefix.breedbase.obo";
 
 #resultset of all cvterms
 my $cvterm_rs = $schema->resultset("Cv::Cvterm")->search(
@@ -116,7 +116,6 @@ write_file( $obo_file,  {append => 0 }, $obo_header  ) ;
 my $count=0;
 while(my $cvterm = $cvterm_rs->next() ) {
     my $accession = $cvterm->dbxref->accession();
-    my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
     print STDERR "Looking at Accession $accession\n";
     my $cvterm_name = $cvterm->name();
     my $namespace = $cvterm->cv->name();

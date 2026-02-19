@@ -71,12 +71,19 @@ sub parse {
   my @col_indices;    # array of column indices to process
 
   # Set data columns
+  my %seen_column_headers;
   my $skips_in_a_row = 0;
   foreach my $col ( 0 .. $col_max ) {
     my $c = $rows[0]->[$col];
     my $v = $super->clean_header($c);
 
     if ( $v && $v ne '' ) {
+      # check for duplicated column header
+      if ( exists $seen_column_headers{$v} && !exists $column_arrays->{$v} ) {
+        push @{$rtn{errors}}, "The column header $v was duplicated in column " . ($col+1) . " of your file and should only be included once.";
+      }
+      $seen_column_headers{$v}++;
+
       push @{$rtn{columns}}, $v;
       push @col_indices, $col;
       $values_map{$v} = {};
@@ -118,6 +125,7 @@ sub parse {
         # Add value to values map
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
+            push @{$row_info{$h}}, @$v;
             foreach (@$v) {
               $values_map{$h}->{$_} = 1;
             }
@@ -125,10 +133,14 @@ sub parse {
           }
         }
         else {
+          $row_info{$h} = $v;
           $values_map{$h}->{$v} = 1;
           $skip_row = 0;
         }
 
+      }
+      else {
+        $row_info{$h} = $row_info{$h} || undef;
       }
     }
 

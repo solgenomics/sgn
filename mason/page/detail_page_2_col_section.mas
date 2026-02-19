@@ -54,6 +54,7 @@ $identifier_prefix => undef
 $genotyping_facility => undef
 $management_factor_date => undef
 $management_factor_type => undef
+$management_factor_types => undef
 $trial_stock_type => undef
 $trial_stock_count => undef
 $trial_owner => undef
@@ -84,6 +85,11 @@ $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
 $is_obsolete => undef
+$derived_accession_relationship => undef
+$related_stock_link => undef
+$original_stock_link => undef
+$is_in_trial => undef
+$is_a_parent => undef
 
 #Specific to genotyping protocol detail page
 $protocol_id => undef
@@ -99,6 +105,9 @@ $marker_type => undef
 $genotype_data_type => undef
 $marker_info_headers => undef
 $assay_type => undef
+
+#Specific to genotyping plate detail page
+$number_of_samples_with_data => undef
 
 #Specific to drone run detail page
 $drone_run_date => undef
@@ -128,6 +137,7 @@ $all_nirs_files => undef
 $all_deleted_nirs_files => undef
 $locations => undef
 $sampling_facilities => ()
+$sample_tissue_types => ()
 
 #Specific to manage transcriptomics page
 $transcriptomics_files => undef
@@ -188,10 +198,10 @@ $field_headers => ()
                             <div class="panel-body">
 
 % if ($info_section_id eq 'pheno_heatmap'){
-                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers &>
+                                <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, trial_stock_type => $trial_stock_type &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
-                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
+                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
 % } #End trial_design_section
 % if ($info_section_id eq 'trial_detail_traits_assayed'){
 
@@ -207,6 +217,9 @@ $field_headers => ()
    <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 % }
 
+% if ($info_section_id eq 'repetitive_measurements_data') {
+    <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type &>
+% }
 
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
@@ -223,7 +236,8 @@ $field_headers => ()
 				&>
                                 <!-- Phenotypic correlation analysis -->
                                 <& /solgs/tools/correlation/analysis.mas,
-                                    corr_pop_id => $trial_id
+                                    corr_pop_id => $trial_id,
+                                    corr_pop_name => $trial_name
                                 &>
 
                                 <& /solgs/tools/anova/analysis.mas,
@@ -264,6 +278,9 @@ $field_headers => ()
                                 <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
 % }
 % } #End trial_analysis_tools
+% if ($info_section_id eq 'trial_nirs_section'){
+                                <& /breeders_toolbox/trial/trial_nirs_data.mas, trial_id => $trial_id &>
+% } #End trial nirs data
 % if ($info_section_id eq 'trial_weather_data'){
                                 <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
 % } #End trial_weather_data
@@ -277,9 +294,15 @@ $field_headers => ()
                                 <&| /page/info_section.mas, title => 'Field Trial to Genotyping Plate Linkage', id => 'genotyping_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/genotyping_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
+                                <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_experiment_from_field_trial_section', collapsible => 1, collapsed => 1 &>
+                                    <& /breeders_toolbox/trial/crossing_experiment_from_field_trial_linkage.mas, trial_id => $trial_id &>
+                                </&>
+
+                                <!--
                                 <&| /page/info_section.mas, title => 'Field Trial to Crossing Experiment Linkage', id => 'crossing_trial_from_field_trial_section', collapsible => 1, collapsed => 1 &>
                                     <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'field_trial' &>
                                 </&>
+                                -->
 %} #End trial_linkage_section
 % if ($info_section_id eq 'trial_deletion_section'){
                                 <&| /page/info_section.mas, title=>'Delete trial data', subtitle=>'<font color="red" role="">Deletion cannot be undone</font>', collapsed=>1, collapsible=>1 &>
@@ -299,8 +322,12 @@ $field_headers => ()
                                 <& /image/plot_images.mas, trial_id => $trial_id &>
 % } #End trial_images_section
 
+% if ($info_section_id eq 'vector_view') {
+   <& /vectorviewer/vectorviewer.mas, stock_id => $stock_id, type_name => $type_name, edit_privs => $edit_privs, is_owner => $is_owner &>
+% }
+
 % if ($info_section_id eq 'stock_additional_info_section'){
-                                <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner &>
+                                <& /stock/additional_info_section.mas, stock_id => $stock_id, type_name => $type_name, stockprops => $stockprops, edit_privs => $edit_privs, editable_stock_props => $editable_stock_props, editor_link => $editor_link, source_dbs => $source_dbs, locus_add_uri => $locus_add_uri, allele_div => $allele_div, is_owner => $is_owner , derived_accession_relationship => $derived_accession_relationship, related_stock_link => $related_stock_link, original_stock_link => $original_stock_link &>
 % } #End stock_additional_info_section
 % if ($info_section_id eq 'stock_trials_section'){
                                 <& /stock/trials.mas, stock_id => $stock_id, type_name => $type_name, trial_id => $trial_id, trial_name => $trial_name, name => $name, project_id => $project_id&>
@@ -329,7 +356,14 @@ $field_headers => ()
 % } #End vector_related_accessions_section
 % if ($info_section_id eq 'vector_obsoleted_accessions_section'){
                                 <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_related_accessions_section
+% } #End vector_obsoleted_accessions_section
+% if ($info_section_id eq 'vector_transgenic_line_details_section'){
+                                <& /stock/vector_transformant_details.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
+% } #End vector_transgenic_line_details_section
+% if ($info_section_id eq 'related_transformation_info_section'){
+                                <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
+% } #End related_transformation_info_section
+
 
 % if ($info_section_id eq 'stock_images_section'){
                                 <& /image/compare_images.mas, stock_id => $stock_id &>
@@ -381,7 +415,7 @@ $field_headers => ()
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % } #End stock_comments_section
 % if ($info_section_id eq 'stock_delete_section'){
-                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete &>
+                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete, is_in_trial=>$is_in_trial, is_a_parent=>$is_a_parent &>
 % } #End stock_delete_section
 % if ($info_section_id eq 'population_delete_section'){
                                 <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>
@@ -389,6 +423,10 @@ $field_headers => ()
 % if ($info_section_id eq 'population_members_section'){
                                 <& /stock/population_members.mas, stock_id=>$stock_id &>
 % } #End population_members_section
+% if ($info_section_id eq 'population_seedlot_info_section'){
+                                <& /stock/population_seedlots.mas, stock_id=>$stock_id &>
+% } #End population_seedlot_info_section
+
 % if ($info_section_id eq 'manage_tissue_samples_field_trials'){
                                 <& /breeders_toolbox/tissue_samples/field_trials_with_tissue_samples.mas &>
 % } #End manage_tissue_samples_field_trials
@@ -445,6 +483,9 @@ $field_headers => ()
 % if ($info_section_id eq 'genotyping_protocol_markers'){
                                 <& /breeders_toolbox/genotyping_protocol/markers.mas, protocol_id => $protocol_id, marker_info_headers => $marker_info_headers &>
 % } #End genotyping_protocol_markers
+% if ($info_section_id eq 'marker_metadata'){
+                                <& /breeders_toolbox/genotyping_protocol/marker_metadata.mas, protocol_id => $protocol_id &>
+% } #End marker_metadata
 % if ($info_section_id eq 'genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/genotype_data.mas, protocol_id => $protocol_id &>
 % } #End genotyping_protocol_genotype_data
@@ -457,7 +498,12 @@ $field_headers => ()
 % if ($info_section_id eq 'pcr_genotyping_protocol_genotype_data'){
                                 <& /breeders_toolbox/genotyping_protocol/pcr_genotype_data.mas, protocol_id => $protocol_id, marker_names => $marker_names &>
 % } #End pcr_genotyping_protocol_genotype_data
-
+% if ($info_section_id eq 'plate_genotyping_data'){
+                                <& /breeders_toolbox/genotyping_trials/plate_genotyping_data.mas, trial_id => $trial_id &>
+% } #End plate_genotyping_data
+% if ($info_section_id eq 'delete_genotyping_plate_section'){
+                                <& /breeders_toolbox/genotyping_trials/delete_genotyping_plate.mas, trial_id => $trial_id, number_of_samples_with_data => $number_of_samples_with_data &>
+% } #End delete_genotyping_plate_section
 
 
 % if ($info_section_id eq 'crossingtrial_details'){
@@ -492,6 +538,10 @@ $field_headers => ()
                                 <& /breeders_toolbox/trial/crossing_trial_from_field_trial_linkage.mas, trial_id => $trial_id, trial_type => 'crossing_trial' &>
 % } #End crossing_trial_from_field_trial_section
 
+% if ($info_section_id eq 'crossing_experiment_and_trial_linkage_section'){
+                                <& /breeders_toolbox/cross/crossing_experiment_and_trial_linkage.mas, trial_id => $trial_id  &>
+% } #End crossing_experiment_and_trial_linkage_section
+
 % if ($info_section_id eq 'marker_set_summary_section'){
                                 <& /breeders_toolbox/markers/marker_set_summary.mas &>
 % } #End marker_set_summary_section
@@ -521,11 +571,11 @@ $field_headers => ()
 %} #End all_cross_entries_section
 
 % if ($info_section_id eq 'manage_nirs_main'){
-                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities=>$sampling_facilities &>
+                                <& /tools/nirs/manage_nirs_main.mas, nirs_files => $nirs_files, deleted_nirs_files => $deleted_nirs_files, all_nirs_files => $all_nirs_files, all_deleted_nirs_files => $all_deleted_nirs_files, locations => $locations, sampling_facilities=>$sampling_facilities, sample_tissue_types=>$sample_tissue_types &>
 % } #End manage_nirs_main
 
 % if ($info_section_id eq 'manage_transcriptomics_main'){
-                                <& /tools/transcriptomics/manage_transcriptomics_main.mas, transcriptomics_files => $transcriptomics_files, deleted_transcriptomics_files => $deleted_transcriptomics_files, all_transcriptomics_files => $all_transcriptomics_files, all_deleted_transcriptomics_files => $all_deleted_transcriptomics_files, locations => $locations, sampling_facilities=>$sampling_facilities &>
+                                <& /tools/transcriptomics/manage_transcriptomics_main.mas, transcriptomics_files => $transcriptomics_files, deleted_transcriptomics_files => $deleted_transcriptomics_files, all_transcriptomics_files => $all_transcriptomics_files, all_deleted_transcriptomics_files => $all_deleted_transcriptomics_files, locations => $locations, sampling_facilities=>$sampling_facilities, sample_tissue_types=>$sample_tissue_types &>
 % } #End manage_transcriptomics_main
 
 % if ($info_section_id eq 'manage_sequence_metadata'){

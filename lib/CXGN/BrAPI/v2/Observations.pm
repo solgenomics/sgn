@@ -10,6 +10,7 @@ use CXGN::BrAPI::Pagination;
 use CXGN::BrAPI::FileRequest;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::TimeUtils;
+use DateTime;
 use utf8;
 use JSON;
 
@@ -27,7 +28,7 @@ sub search {
     my $limit;
     my $brapi_study_ids_arrayref = $params->{studyDbId} || ($params->{studyDbIds} || ());
     if (!$brapi_study_ids_arrayref || scalar (@$brapi_study_ids_arrayref) < 1) { $limit=1000000; } # if no ids, limit should be set to max and retrieve whole database. If ids no limit to retrieves all
-
+    #TODO: figure out why this has no brapi study Id arrayref
     ($data,$counter) = _search($self,$params,$limit);
 
     my %result = (data=>$data);
@@ -232,13 +233,14 @@ sub _search {
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
-    
 
     # my $observation_db_ids = $params->{observationDbId};
     my $observation_db_ids = $params->{observationDbId} || ($params->{observationDbIds} || ());
 
-    my @observation_variable_db_ids = $params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}} : ();
-    my @observation_variable_names = $params->{observationVariableNames} ? @{$params->{observationVariableNames}} : ();
+    my @observation_variable_db_ids = $params->{observationVariableDbId} ? @{$params->{observationVariableDbId}} :
+        ($params->{observationVariableDbIds} ? @{$params->{observationVariableDbIds}}: ());
+    my @observation_variable_names = $params->{observationVariableName} ? @{$params->{observationVariableName}} :
+        ($params->{observationVariableNames} ? @{$params->{observationVariableNames}}: ());
     # externalReferenceID
     # externalReferenceSource
     my $observation_level = $params->{observationLevel}->[0] || 'all'; # need to be changed in v2
@@ -248,8 +250,9 @@ sub _search {
     my $brapi_trial_ids_arrayref = $params->{trialDbId} || ($params->{trialDbIds} || ());
     my $accession_ids_arrayref = $params->{germplasmDbId} || ($params->{germplasmDbIds} || ());
     my $program_ids_arrayref = $params->{programDbId} || ($params->{programDbIds} || ());
-    my $start_time = $params->{observationTimeStampRangeStart}->[0] || undef;
-    my $end_time = $params->{observationTimeStampRangeEnd}->[0] || undef;
+    my $start_date = $params->{observationTimeStampRangeStart}->[0] || undef;
+    my $end_date = $params->{observationTimeStampRangeEnd}->[0] || undef;
+    my $repetitive_measurements_type = $params->{repetitiveMeasurementsType} || 'average'; #use default to average 
     my $observation_unit_db_id = $params->{observationUnitDbId} || ($params->{observationUnitDbIds} || ());
     # observationUnitLevelName
     # observationUnitLevelOrder
@@ -279,7 +282,11 @@ sub _search {
             limit=>$limit,
             offset=>$offset,
             order_by=>"plot_number",
-            include_timestamp=>1
+            #include_timestamp=>1,
+            start_date => $start_date,
+	        end_date => $end_date,
+            repetitive_measurements => $repetitive_measurements_type,
+	        include_dateless_items => 1
         }
     );
     my ($data, $unique_traits) = $phenotypes_search->search();
@@ -299,8 +306,23 @@ sub _search {
                 seasonDbId => $_->{year}
             );
             my $obs_timestamp = $_->{collect_date} ? $_->{collect_date} : $_->{timestamp};
-            if ( $start_time && $obs_timestamp < $start_time ) { next; } #skip observations before date range
-            if ( $end_time && $obs_timestamp > $end_time ) { next; } #skip observations after date range
+            #since, the collect_date as stored as the timestamp in the database, we need to convert it to the correct format
+	        if ($obs_timestamp) {
+                my ($obs_date, $obs_time) = split / /, $obs_timestamp;
+		        my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
+		        my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
+		        my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
+
+		        if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
+		            my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });
+		            my $start_date_obj = DateTime->new({ year => $start_year, month => $start_month, day => $start_day });
+		            my $end_date_obj = DateTime->new({ year => $end_year, month => $end_month, day => $end_day });
+
+
+		            if ( $start_date && (DateTime->compare($obs_date_obj, $start_date_obj) == -1 ) ) { next; } #skip observations before date range
+		            if ( $end_date && (DateTime->compare($obs_date_obj, $end_date_obj) == 1 ) ) { next; } #skip observations after date range
+		        }
+	        }
 
             if ($counter >= $start_index && $counter <= $end_index) {
                 push @data_window, {
@@ -326,6 +348,7 @@ sub _search {
         }
     }
 
+    # print STDERR "Values of all the params: " . Dumper(\@data_window) . "\n";
     return (\@data_window,$counter);
 }
 

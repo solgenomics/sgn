@@ -1,4 +1,3 @@
-
 var page_formats = {};
 page_formats["Select a page format"] = {};
 page_formats["US Letter PDF"] = {
@@ -53,8 +52,8 @@ page_formats["US Letter PDF"] = {
                 top_margin: 36.7,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             },
             'CASS [1" x 5 1/4"]': {
                 label_width: 378,
@@ -122,8 +121,8 @@ page_formats["A4 PDF"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -142,13 +141,15 @@ page_formats["Zebra printer file"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
 
 page_formats["Custom"] = {
+    page_width: 0,
+    page_height: 0,
     label_sizes: {
             'Select a label format' : {},
             'Custom' : {
@@ -158,8 +159,8 @@ page_formats["Custom"] = {
                 top_margin: 0,
                 horizontal_gap:0,
                 vertical_gap:0,
-                number_of_columns:1,
-                number_of_rows:1
+                // number_of_columns:1,
+                // number_of_rows:1
             }
         }
 };
@@ -490,12 +491,42 @@ $(document).ready(function($) {
         var page = d3.select("#page_format").node().value;
         var custom_label = page_formats[page].label_sizes['Custom'];
 
-        custom_label.label_width = document.getElementById("label_width").value;
-        custom_label.label_height = document.getElementById("label_height").value;
+        var format = 'imperial';
+
+        if (jQuery('#dim_cm').prop('checked')) {
+            format = 'metric';
+        }
+
+        var naive_label_width = document.getElementById("label_width").value;
+        var naive_label_height = document.getElementById("label_height").value;
+
+        if (format == 'imperial') { // 72 pixels per inch
+            custom_label.label_width = naive_label_width * 72;
+            custom_label.label_height = naive_label_height * 72;
+        } else if (format == 'metric') { // 28.35 pixels per cm
+            custom_label.label_width = naive_label_width * 28.35;
+            custom_label.label_height = naive_label_height * 28.35;
+        }
+
         changeLabelSize(custom_label.label_width, custom_label.label_height);
         $("#d3-add-and-download-div").removeAttr('style');
         enableDrawArea();
         $('#d3-add-type-input').focus();
+
+        // If there is a custom page size, apply that too
+        if (page == "Custom") {
+            var naive_page_width = document.getElementById("page_width").value;
+            var naive_page_height = document.getElementById("page_height").value;
+
+            if (format == 'imperial') { // 72 pixels per inch
+                page_formats[page].page_width = naive_page_width * 72;
+                page_formats[page].page_height = naive_page_height * 72;
+            } else if (format == 'metric') { // 28.35 pixels per cm
+                page_formats[page].page_width = naive_page_width * 28.35;
+                page_formats[page].page_height = naive_page_height * 28.35;
+            }
+        }
+
     });
 
     $('#d3-add-field-input').change(function() {
@@ -539,10 +570,10 @@ $(document).ready(function($) {
 
     $("#d3-edit-additional-settings").on("click", function() {
         saveAdditionalOptions(
-            document.getElementById("top_margin").value,
-            document.getElementById("left_margin").value,
-            document.getElementById("horizontal_gap").value,
-            document.getElementById("vertical_gap").value,
+            convertPageDimensions(document.getElementById("top_margin").value),
+            convertPageDimensions(document.getElementById("left_margin").value),
+            convertPageDimensions(document.getElementById("horizontal_gap").value),
+            convertPageDimensions(document.getElementById("vertical_gap").value),
             document.getElementById("number_of_columns").value,
             document.getElementById("number_of_rows").value,
             document.getElementById("plot_filter").value,
@@ -599,6 +630,83 @@ $(document).ready(function($) {
         var download_type = $(this).val();
         var design = retrievePageParams();
         downloadLabels(design, download_type);
+    });
+
+    jQuery('input[type="radio"][name="alignmentradio"]').click(function() {
+        var text_alignment = getAlignmentSpecs();
+        d3.selectAll(".label-element")
+            .attr("text-anchor", text_alignment)
+        d3.select(".selection-tools").remove()
+    });
+
+    jQuery('input[type="radio"][name="dimoptradio"], input[type="radio"][name="dimoptradio2"]').click(function() {
+
+        var format = "imperial";
+
+        if (jQuery(this).attr("class") == "radio-select-metric") {
+            format = "metric";
+        }
+
+        var page_width = jQuery('#page_width').val();
+        var page_height = jQuery('#page_height').val();
+        var label_width = jQuery('#label_width').val();
+        var label_height = jQuery('#label_height').val();
+
+        var top_margin = jQuery('#top_margin').val();
+        var left_margin = jQuery('#left_margin').val();
+        var horizontal_gap = jQuery('#horizontal_gap').val();
+        var vertical_gap = jQuery('#vertical_gap').val();
+
+        if (format == "metric") {
+            jQuery('#page_width').attr('placeholder', 'In centimeters');
+            jQuery('#page_height').attr('placeholder', 'In centimeters');
+            jQuery('#label_width').attr('placeholder', 'In centimeters');
+            jQuery('#label_height').attr('placeholder', 'In centimeters');
+            jQuery('#top_margin').attr('placeholder', 'In centimeters');
+            jQuery('#left_margin').attr('placeholder', 'In centimeters');
+            jQuery('#horizontal_gap').attr('placeholder', 'In centimeters');
+            jQuery('#vertical_gap').attr('placeholder', 'In centimeters');
+            jQuery('#page_width').val(Math.round(page_width * 2.54 * 100) / 100);
+            jQuery('#page_height').val(Math.round(page_height * 2.54 * 100) / 100);
+            jQuery('#label_width').val(Math.round(label_width * 2.54 * 100) / 100);
+            jQuery('#label_height').val(Math.round(label_height * 2.54 * 100) / 100);
+            jQuery('#top_margin').val(Math.round(top_margin * 2.54 * 100) / 100);
+            jQuery('#left_margin').val(Math.round(left_margin * 2.54 * 100) / 100);
+            jQuery('#horizontal_gap').val(Math.round(horizontal_gap * 2.54 * 100) / 100);
+            jQuery('#vertical_gap').val(Math.round(vertical_gap * 2.54 * 100) / 100);
+
+            jQuery(".radio-select-metric").each(function() {
+                jQuery(this).prop("checked", true)
+            });
+            jQuery(".radio-select-imperial").each(function() {
+                jQuery(this).prop("checked", false)
+            });
+        } else {
+            jQuery('#page_width').attr('placeholder', 'In inches');
+            jQuery('#page_height').attr('placeholder', 'In inches');
+            jQuery('#label_width').attr('placeholder', 'In inches');
+            jQuery('#label_height').attr('placeholder', 'In inches');
+            jQuery('#top_margin').attr('placeholder', 'In inches');
+            jQuery('#left_margin').attr('placeholder', 'In inches');
+            jQuery('#horizontal_gap').attr('placeholder', 'In inches');
+            jQuery('#vertical_gap').attr('placeholder', 'In inches');
+            jQuery('#page_width').val(Math.round(page_width / 2.54 * 100)/100);
+            jQuery('#page_height').val(Math.round(page_height / 2.54 * 100)/100);
+            jQuery('#label_width').val(Math.round(label_width / 2.54 * 100)/100);
+            jQuery('#label_height').val(Math.round(label_height / 2.54 * 100)/100);
+            jQuery('#top_margin').val(Math.round(top_margin / 2.54 * 100)/100);
+            jQuery('#left_margin').val(Math.round(left_margin / 2.54 * 100)/100);
+            jQuery('#horizontal_gap').val(Math.round(horizontal_gap / 2.54 * 100)/100);
+            jQuery('#vertical_gap').val(Math.round(vertical_gap / 2.54 * 100)/100);
+
+            jQuery(".radio-select-imperial").each(function() {
+                jQuery(this).prop("checked", true)
+            });
+            jQuery(".radio-select-metric").each(function() {
+                jQuery(this).prop("checked", false)
+            });
+        }
+        
     });
 
 });
@@ -725,11 +833,23 @@ function updateFields(data_type, source_id, data_level){
 }
 
 function changeLabelSize(width, height) {
+    var in_width = width/72;
+    var cm_width = width/72*2.54;
+    var in_height = height/72;
+    var cm_height = height/72*2.54;
     var width = width * 2.83 //convert from pixels to dots (72/inch to 8/mm)
     var height = height * 2.83 //convert from pixels to dots (72/inch to 8/mm)
     d3.select(".label-template").attr("viewBox", "0 0 " + width + " " + height);
     d3.select(".d3-bg").attr("width", width);
     d3.select(".d3-bg").attr("height", height);
+
+    d3.select("#dimensions-text").remove();
+
+    var canvas = d3.select("#d3-draw-area");
+    canvas.append("text")
+        .attr("id", "dimensions-text")
+        .text("("+in_width.toFixed(2)+" in. / "+cm_width.toFixed(2)+" cm.) x ("+in_height.toFixed(2)+" in. / "+cm_height.toFixed(2)+" cm.)");
+
     updateGrid(7);
 }
 
@@ -780,6 +900,19 @@ function initializeDrawArea() {
         })
         .text('Set source, page, and label formats above to start designing.');
 
+    d3.select('body')
+    .append('div')
+    .attr('class', 'd3-tooltip')
+    .attr('id', 'label_element_tooltip')
+    .style('position', 'absolute')
+    .style('padding', '6px 10px')
+    .style('background', 'rgba(0, 0, 0, 0.7)')
+    .style('color', '#fff')
+    .style('border-radius', '4px')
+    .style('pointer-events', 'none')
+    .style('font-size', '12px')
+    .style('visibility', 'hidden');
+
     //set up grid
     var grid = svg.append("g").classed("d3-bg-grid", true);
     grid.append('g').classed("d3-bg-grid-vert", true);
@@ -803,7 +936,7 @@ function draggable(d, i) {
 function selectable(selection, resizeable) {
     this.on("mousedown", function() {
         d3.select(".selection-tools").remove();
-    })
+    });
     this.on("click", function() {
         var o = d3.select(".d3-draw-svg");
         var bb = getTransGroupBounds(this);
@@ -853,7 +986,29 @@ function selectable(selection, resizeable) {
                     stroke: "none"
                 }).call(resizer_behaviour);
         }
+    });
+    
+    this.on('mouseover', function(event, d) {
+        var value = d3.select(this).select(".label-element").attr("value");
+        var tooltip = d3.select('#label_element_tooltip');
+        tooltip
+        .style('visibility', 'visible')
+        .text(value)
+        .style('border', '1px solid red')
+        .style('z-index', '1000');
+
     })
+    .on('mousemove', function(event) {
+        var tooltip = d3.select('#label_element_tooltip');
+        var [x, y] = d3.mouse(document.body);
+        tooltip
+        .style('top', (y + 10) + 'px')
+        .style('left', (x + 10) + 'px');
+    })
+    .on('mouseout', function() {
+        var tooltip = d3.select('#label_element_tooltip');
+        tooltip.style('visibility', 'hidden');
+    });
 }
 
 function doTransform(selection, transformFunc) {
@@ -940,26 +1095,51 @@ function doSnap(state, selection) {
 }
 
 function getDataSourceSelect() {
+    const sourceTypeFromUrl = getURLParameter("source_type");
+
     get_select_box('label_data_source_types', 'data_source_type', {
         name: 'source_type_select',
         id: 'source_type_select',
         default: 'Select a type of data source for the labels',
-        live_search: 0
+        live_search: 0,
+        after_load: function () {
+            if (sourceTypeFromUrl) {
+                jQuery('#source_type_select').val(sourceTypeFromUrl);
+            }
+        }
     });
+    console.log(sourceTypeFromUrl);
+    
     updateDataSourceSelect();
     jQuery(document).off("change").on("change", "#source_type_select", updateDataSourceSelect);
 }
 
 function updateDataSourceSelect() {
+    const sourceIdFromUrl = getURLParameter("source_id");
+
     get_select_box('label_data_sources', 'data_source',
         {
             name: 'source_select',
             id: 'source_select',
             default: 'Select a data source for the labels',
             live_search: 1,
-            type: jQuery("#source_type_select option:selected").val()
+            type: jQuery("#source_type_select option:selected").val(),
+            after_load: function () {
+                if (sourceIdFromUrl) {
+                    jQuery("#source_select").val(sourceIdFromUrl).trigger("change");
+                }
+            }
         }
     );
+}
+
+function getURLParameter(name) {
+    name = name.replace(/[\[\]]/g, "\\$&");
+    let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+    let results = regex.exec(window.location.href);
+    if (!results || !results[2]) return null;
+
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
 function switchPageDependentOptions(page) {
@@ -1062,10 +1242,10 @@ function switchLabelDependentOptions(label) {
         enableDrawArea();
     }
     //set addtional options
-    document.getElementById("top_margin").value = label_sizes[label].top_margin;
-    document.getElementById("left_margin").value = label_sizes[label].left_margin;
-    document.getElementById("horizontal_gap").value = label_sizes[label].horizontal_gap;
-    document.getElementById("vertical_gap").value = label_sizes[label].vertical_gap;
+    document.getElementById("top_margin").value = convertPixelsToPageDimensions(label_sizes[label].top_margin);
+    document.getElementById("left_margin").value = convertPixelsToPageDimensions(label_sizes[label].left_margin);
+    document.getElementById("horizontal_gap").value = convertPixelsToPageDimensions(label_sizes[label].horizontal_gap);
+    document.getElementById("vertical_gap").value = convertPixelsToPageDimensions(label_sizes[label].vertical_gap);
     document.getElementById("number_of_columns").value = label_sizes[label].number_of_columns;
     document.getElementById("number_of_rows").value = label_sizes[label].number_of_rows;
 }
@@ -1124,6 +1304,8 @@ function switchTypeDependentOptions(type){
 function addToLabel(field, text, type, size, font, x, y, width, height) {
      //console.log("Field is: "+field+" and text is: "+text+" and type is: "+type+" and size is: "+size+" and font is: "+font);
     svg = d3.select(".d3-draw-svg");
+
+    var text_alignment = getAlignmentSpecs();
 
     //get x,y coords and scale
     if ((typeof x || typeof y ) === 'undefined') {
@@ -1204,10 +1386,19 @@ function addToLabel(field, text, type, size, font, x, y, width, height) {
                 "font-size": font_size,
                 "font": font,
                 "style": font_styles[font],
-                "text-anchor": "middle",
+                "text-anchor": text_alignment, //middle
                 "alignment-baseline": "middle",
             })
-            .text(text)
+            .selectAll("tspan")
+            .data(text.split("\n"))
+            .enter()
+            .append("tspan")
+            .attr("x", 0)
+            .attr("type", type)
+            .attr("value", field)
+            .attr("dy", (d, i) => i === 0 ? "0em" : "1.2em") // line spacing
+            .text(d => d);
+
             //console.log("Field is: "+field+" and size is: "+size+" and type is: "+type+" and font size is: "+font_size+" and font is: "+font+" and style is: "+font_styles[font]+" and text is: "+text);
 
             break;
@@ -1229,10 +1420,10 @@ function saveAdditionalOptions(top_margin, left_margin, horizontal_gap, vertical
     page_formats[page].label_sizes[label].sort_order_2 = sort_order_2;
     page_formats[page].label_sizes[label].sort_order_3 = sort_order_3;
     page_formats[page].label_sizes[label].copies_per_plot = copies_per_plot;
-    document.getElementById("top_margin").value = top_margin;
-    document.getElementById("left_margin").value = left_margin;
-    document.getElementById("horizontal_gap").value = horizontal_gap;
-    document.getElementById("vertical_gap").value = vertical_gap;
+    document.getElementById("top_margin").value = convertPixelsToPageDimensions(top_margin);
+    document.getElementById("left_margin").value = convertPixelsToPageDimensions(left_margin);
+    document.getElementById("horizontal_gap").value = convertPixelsToPageDimensions(horizontal_gap);
+    document.getElementById("vertical_gap").value = convertPixelsToPageDimensions(vertical_gap);
     document.getElementById("number_of_columns").value = number_of_columns;
     document.getElementById("number_of_rows").value = number_of_rows;
     document.getElementById("plot_filter").value = plot_filter || 'all';
@@ -1364,23 +1555,33 @@ function checkIfVisible(element) {
 }
 
 function getLabelDetails(element) {
-    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform')); // return transform attributes as an object
-    //console.log("Transform attributes are: "+JSON.stringify(transform_attributes));
+    var transform_attributes = parseTransform(element.parentNode.getAttribute('transform'));
     var coords = transform_attributes.translate;
-    var scale = transform_attributes.scale || new Array(1,1);
+    var scale = transform_attributes.scale || [1, 1];
     var rect = element.getBBox();
     var width = rect.width * scale[0];
     var height = rect.height * scale[1];
-    //console.log("Height is: "+height+" and width is: "+width);
     var type = element.getAttribute("type");
-    var x;
-    var y;
+    var x, y;
+
     if (type.match(/Text/)) {
-        x = parseInt(coords[0])
-        y = parseInt(coords[1])
+        x = parseInt(coords[0]);
+        y = parseInt(coords[1]);
     } else {
-        x = parseInt(coords[0]) + (width/2);
-        y = parseInt(coords[1]) + (height/2);
+        x = parseInt(coords[0]) + (width / 2);
+        y = parseInt(coords[1]) + (height / 2);
+    }
+
+    let value = "";
+    if (type.match(/Text/)) {
+        const tspans = element.querySelectorAll("tspan");
+        if (tspans.length > 1) {
+            value = Array.from(tspans).map(t => t.textContent).join("\n");
+        } else {
+            value = element.getAttribute("value");
+        }
+    } else {
+        value = element.getAttribute("value");
     }
 
     return {
@@ -1388,8 +1589,8 @@ function getLabelDetails(element) {
         y: y,
         height: height,
         width: width,
-        value: element.getAttribute("value"),
-        type: element.getAttribute("type"),
+        value: value,
+        type: type,
         font: element.getAttribute("font") || 'Courier',
         size: element.getAttribute("size")
     };
@@ -1426,14 +1627,14 @@ function retrievePageParams() {
 
     var page_params = {
         page_format: page,
-        page_width: page_formats[page].page_width || document.getElementById("page_width").value,
-        page_height: page_formats[page].page_height || document.getElementById("page_height").value,
-        left_margin: label_sizes[label].left_margin,
-        top_margin: label_sizes[label].top_margin,
-        horizontal_gap: label_sizes[label].horizontal_gap,
-        vertical_gap: label_sizes[label].vertical_gap,
-        number_of_columns: label_sizes[label].number_of_columns,
-        number_of_rows: label_sizes[label].number_of_rows,
+        page_width: page_formats[page].page_width || convertPageDimensions("page_width"),
+        page_height: page_formats[page].page_height || convertPageDimensions("page_height"),
+        left_margin: label_sizes[label].left_margin || convertPageDimensions("left_margin"),
+        top_margin: label_sizes[label].top_margin || convertPageDimensions("top_margin"),
+        horizontal_gap: label_sizes[label].horizontal_gap || convertPageDimensions("horizontal_gap"),
+        vertical_gap: label_sizes[label].vertical_gap || convertPageDimensions("vertical_gap"),
+        number_of_columns: (label == "Custom" || page == "Custom") ? document.getElementById("number_of_columns").value : label_sizes[label].number_of_columns,
+        number_of_rows: (label == "Custom" || page == "Custom") ? document.getElementById("number_of_rows").value : label_sizes[label].number_of_rows,
         plot_filter: document.getElementById("plot_filter").value,
         sort_order_1: document.getElementById("sort_order_1").value,
         sort_order_2: document.getElementById("sort_order_2").value,
@@ -1449,9 +1650,55 @@ function retrievePageParams() {
         label_height: label_sizes[label].label_height,
         start_col: document.getElementById("start_col").value,
         start_row: document.getElementById("start_row").value,
+        text_alignment : getAlignmentSpecs(),
+        page_units : getPageUnits()
     }
     return page_params;
 
+}
+
+function convertPageDimensions(elem_id) {
+    var format = 'imperial';
+
+    if (jQuery('#dim_cm').prop('checked')) {
+        format = 'metric';
+    } 
+
+    var naive_dim = document.getElementById(elem_id).value;
+
+    if (format == 'imperial') { // 72 pixels per inch
+        return naive_dim * 72;
+    } else if (format == 'metric') { // 28.35 pixels per cm
+        return naive_dim * 28.35;
+    }
+}
+
+function convertPixelsToPageDimensions(value) {
+    var format = 'imperial';
+
+    if (jQuery('#dim_cm').prop('checked')) {
+        format = 'metric';
+    } 
+
+    if (format == 'imperial') { // 72 pixels per inch
+        return value / 72;
+    } else if (format == 'metric') { // 28.35 pixels per cm
+        return value / 28.35;
+    }
+}
+
+function getAlignmentSpecs() {
+    if(jQuery('#align_left').prop('checked')) {
+        return "left";
+    }   
+    return "middle";
+}
+
+function getPageUnits() {
+    if(jQuery('#dim_inches').prop('checked')) {
+        return "imperial";
+    }   
+    return "metric";
 }
 
 function initializeCustomModal(add_fields) {
@@ -1590,26 +1837,55 @@ function loadDesign (list_id) {
         }
     }
 
+     var page_units = params['page_units'];
+
+    if (page_units == "imperial") {
+        jQuery(".radio-select-metric").each(function() {
+            jQuery(this).prop("checked", false)
+        });
+        jQuery(".radio-select-imperial").each(function() {
+            jQuery(this).prop("checked", true)
+        });
+    } else {
+        jQuery(".radio-select-metric").each(function() {
+            jQuery(this).prop("checked", true)
+        });
+        jQuery(".radio-select-imperial").each(function() {
+            jQuery(this).prop("checked", false)
+        });
+    }
+
     var page = params['page_format'];
     document.getElementById('page_format').value = page;
     //console.log("page is "+page);
     switchPageDependentOptions(page);
     if (page == 'Custom') {
-        document.getElementById("page_width").value = params['page_width'];
-        document.getElementById("page_height").value = params['page_height'];
+        document.getElementById("page_width").value = convertPixelsToPageDimensions(params['page_width']);
+        document.getElementById("page_height").value = convertPixelsToPageDimensions(params['page_height']);
     }
 
     var label = params['label_format'];
     document.getElementById('label_format').value = label;
     switchLabelDependentOptions(label);
     if (label == 'Custom') {
-        document.getElementById("label_width").value = params['label_width'];
-        document.getElementById("label_height").value = params['label_height'];
+        document.getElementById("label_width").value = convertPixelsToPageDimensions(params['label_width']);
+        document.getElementById("label_height").value = convertPixelsToPageDimensions(params['label_height']);
         page_formats[page].label_sizes['Custom'].label_width = params['label_width'];
         page_formats[page].label_sizes['Custom'].label_height = params['label_height'];
         changeLabelSize(params['label_width'], params['label_height']);
         $("#d3-add-and-download-div").removeAttr('style');
         enableDrawArea();
+    }
+
+    var text_alignment = params['text_alignment'];
+    d3.selectAll(".label-element")
+            .attr("text-anchor", text_alignment)
+    d3.select(".selection-tools").remove();
+
+    if (text_alignment == "left") {
+        jQuery('#align_left').prop("checked", true);
+    } else {
+        jQuery('#align_middle').prop("checked", true);
     }
 
     saveAdditionalOptions(

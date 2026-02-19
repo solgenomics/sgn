@@ -1,7 +1,11 @@
 
 <%args>
-
+%services
 </%args>
+
+<script src="/js/source/legacy/CXGN/BreedersToolbox/UploadImages.js"></script>
+
+% use JSON::Any;
 
 <& /util/import_javascript.mas,
   classes => ['jquery.dataTables-buttons-min',
@@ -39,12 +43,6 @@ tr.shown td.details-control {
 
 <& /page/page_title.mas, title=>"Image Analysis" &>
 <hr>
-
-<div class="well well-sm">
-    <center>
-    <h4>The Necrosis Image Analysis is explained in the paper here: <a href="https://csce.ucmss.com/cr/books/2018/LFS/CSREA2018/IPC3638.pdf">Necrosis Image Analysis</a>.</h4>
-    </center>
-</div>
 
 <div class="well well-sm">
     <center>
@@ -128,12 +126,17 @@ tr.shown td.details-control {
                     <label class="col-sm-6 control-label">Image Analysis Service: </label>
                     <div class="col-sm-6" >
                         <select class="form-control" id="image_analysis_service_select" name="image_analysis_service_select">
-                            <option value="">Select An Analysis Service</option>
-                            <option value="necrosis">Necrosis(Makerere AIR Lab)</option>
+                            <option value="">Select An Analysis Service:</option>
+
+% foreach my $s (keys %services) {
+ 		            <option value="<% $s %>"><% $services{$s}->{description} %></option>
+% }
+
+                            <!-- option value="necrosis">Necrosis(Makerere AIR Lab)</option>
                             <option value="largest_contour_percent">Necrosis Largest Contour Mask Percent</option>
                             <option value="count_contours">Count Contours</option>
                             <option value="count_sift">SIFT Feature Count</option>
-                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option>
+                            <option value="whitefly_count">Whitefly Count (Makerere AIR Lab)</option  -->
                         </select>
                     </div>
                 </div>
@@ -287,12 +290,14 @@ jQuery(document).ready(function(){
 
     jQuery('#image_analysis_service_select').change(function() {
         var service = jQuery('#image_analysis_service_select').val();
+	var service_defs = JSON.parse('<% JSON::encode_json(\%services) %>');
         jQuery('#image_analysis_trait_select').html('<option value="">Select A Trait</option>');
         if (service) {
             jQuery('#working_modal').modal('show');
             // add crop and service specific trait options
-            var all_traits = service_traits[service];
+            var all_traits = service_defs[service].service_traits;
             var trait_names = Object.keys(all_traits);
+            // console.log("trait names", trait_names);
             var options =  [];
 
             jQuery.ajax({
@@ -300,15 +305,17 @@ jQuery(document).ready(function(){
                 method: 'GET',
                 success: function(response) {
                     // console.log("Retrieved crop names and they are: "+response.result.data);
-                    var supportedcrops = response.result.data;
-                    supportedcrops.forEach(function(crop) {
+//                    var supportedcrops = response.result.data;
+//                    supportedcrops.forEach(function(crop) {
+//		        alert("CROP = "+crop);
                         trait_names.forEach(function(name) {
-                            if (all_traits[name] == crop) {
+//                            if (all_traits[name] == crop) {
                                 // console.log("Id is "+id);
                                 options.push('<option value="'+ name +'">'+ name +'</option>');
-                            }
-                        });
-                    });
+//                              console.log("options: ", options);
+//                            }
+//                        });
+			});
                     jQuery('#image_analysis_trait_select').append(options);
                     jQuery('#image_analysis_trait_group').show();
                     jQuery('#working_modal').modal('hide');
@@ -342,8 +349,10 @@ jQuery(document).ready(function(){
         }
     });
 
+    const selected_image_ids = [];
+    let submit_results;
+
     jQuery('#image_analysis_submit').click(function(){
-        var selected_image_ids = [];
         jQuery('input[name="image_analysis_select"]').each(function() {
             if (this.checked){
                 selected_image_ids.push(this.value);
@@ -418,15 +427,29 @@ jQuery(document).ready(function(){
             // console.log("Results are:");
             // console.log(results);
             var first = results[0];
-            let metricsData = Object.entries(first.result.analysis_info).map(( [key, value] ) => ({ key : value }));
+            submit_results = first;
+            // console.log("stock type:", first.stock_type_name);
 
-            jQuery('#metrics_table').DataTable({
-                "data": metricsData,
-                "columns": [
-                    { "data": "metric" },
-                    { "data": "value" },
-                ]
-            });
+            if (first.stock_type_name === "plot") {
+                alert("The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.")
+            }
+
+            let metricsData = Object.entries(first.result.analysis_info)
+                .filter(([key, value]) => key != null && value != null)
+                .map(([key, value]) => ({
+                    metric: key,
+                    value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+                }));
+
+            if (metricsData.length > 0) {
+                jQuery('#metrics_table').DataTable({
+                    "data": metricsData,
+                    "columns": [
+                        { "data": "metric" },
+                        { "data": "value" },
+                    ]
+                });
+            }
 
             if (results.length > 0) {
                 jQuery.ajax({
@@ -517,8 +540,250 @@ jQuery(document).ready(function(){
     jQuery('#image_analysis_save_results').click(function(){
 
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
-        // console.log(table_data);
-        jQuery.ajax({
+        let dt = new DataTransfer();
+
+        jQuery('#working_modal').modal('show');
+        let plantData = [
+            {
+                additionalInfo: {
+                    observationUnitParent: table_data[0].observationUnitDbId
+                },
+                observationUnitName: table_data[0].observationUnitName + "_" + selected_image_ids[0] +  "_plant",
+                studyDbId: table_data[0].studyDbId, // trial ID
+                germplasmDbId: table_data[0].germplasmDbId,
+                observationUnitPosition: {
+                    observationLevel: {
+                        levelName: "plant",
+                        levelCode: table_data[0].observationUnitDbId,
+                        levelOrder: 4
+                    },
+                    positionCoordinateX: null,
+                    positionCoordinateY: null,
+                    observationLevelRelationships: [],
+                    geoCoordinates: null
+                }
+            }
+        ];
+
+        let tissueSamplesData = [];
+        let tissueSampleMap = {};
+        let existingCreatedSamples = [];
+
+        let plantId = table_data[0].observationUnitDbId;
+        
+        if (jQuery('#image_analysis_service_select option:selected').text() === "Citrus Image Multi Analysis") {
+            if (submit_results.stock_type_name === "plot") {
+                jQuery.ajax({
+                    type: 'GET',
+                    contentType: 'application/json',
+                    url: `/brapi/v2/observationunits?observationUnitName=${encodeURIComponent(plantData[0].observationUnitName)}`,
+                    headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+                    success: function(response) {
+                        if (response.result.data.length > 0) {
+                            plantId = response.result.data[0].observationUnitDbId;
+                        } else {
+                            jQuery.ajax({
+                                type: 'POST',
+                                contentType: 'application/json',
+                                url: '/brapi/v2/observationunits',
+                                headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+                                data: JSON.stringify(plantData),
+                                beforeSend: function() {
+                                    jQuery('#working_modal').modal('show');
+                                },
+                                success: function(response) {
+                                    if (response.result.data.length > 0) {
+                                        plantId = response.result.data[0].observationUnitDbId;
+                                    }                                
+                                },
+                                error: function(response) {
+                                    jQuery('#working_modal').modal('hide');
+                                    jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while creating a new plant. Deets: '+response.responseText+'</li></ul>');
+                                    jQuery('#saveResultModal').modal('show');
+                                }
+                            });
+                        }                        
+                    },
+                    error: function(response) {
+                        jQuery('#working_modal').modal('hide');
+                        jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results. Deets: '+response.responseText+'</li></ul>');
+                        jQuery('#saveResultModal').modal('show');
+                    }
+                })
+            } 
+
+            const fileData = {};
+            let imageFiles;
+            let imageData;
+
+            table_data.forEach(function(row) {
+                let plotId = row.observationUnitDbId;
+                let studyDbId = row.studyDbId;
+                let germplasmName = plantData[0].observationUnitName;
+                let accessionId = table_data[0].germplasmDbId;
+                //const imageId = selected_image_ids[0].toString();
+
+                row.details.forEach(function(detail, i) {
+                    let sampleNumber = parseInt(detail.sample_num) + 1 + i;
+                    let sampleName = submit_results.result.trait_id + '_' + germplasmName + '_' + 'sample' + sampleNumber;
+                    let proxyUrl = "/get_image_file?url=" + encodeURIComponent(detail.analyzed_link);
+                    
+
+                    fetch(proxyUrl)
+                        .then(response => {
+                            if (!response.ok) throw new Error("Failed to fetch " + proxyUrl);
+                            return response.blob();
+                        })
+                        .then(blob => {
+                            let filename = sampleName + ".png";
+                            let file = new File([blob], filename, {type: blob.type || "image/png" });
+                            dt.items.add(file);
+
+                            document.getElementById('upload_images_file_input').files = dt.files;
+                            imageFiles = document.getElementById('upload_images_file_input').files;
+
+                            fileData[file.name] = {
+                                "imageFileName": file.name,
+                                "imageFileSize": file.size,
+                                "mimeType": file.type
+                            };
+                        })
+                        .catch(err => console.error(err));
+
+                    tissueSamplesData.push(
+                        {
+                            additionalInfo: {
+                                observationUnitParent: plantId
+                            },
+                            observationUnitName: sampleName,
+                            studyDbId: studyDbId,
+                            germplasmDbId: accessionId,
+                            observationUnitPosition: {
+                                observationLevel: {
+                                    levelName: "tissue_sample",
+                                    levelCode: "tissue_sameple" + sampleNumber,
+                                    levelOrder: 4
+                                },
+                                observationLevelRelationships: [
+                                    {
+                                        levelName: "plant",
+                                        observationUnitDbId: plantId,
+                                        levelOrder: 4
+                                    }
+                                ],
+                                positionCoordinateX: null,
+                                positionCoordinateY: null,
+                                geoCoordinates: null
+                            }
+                        }
+                    )
+
+                    tissueSampleMap[sampleName] = detail.value;
+                })
+            })
+
+            // Add observations to existing samples if analysis has been run on current image before
+            if (table_data[0].image_analyzed == 1) {
+                getOrCreateSamples(tissueSamplesData).then(sampleData => {
+                    //console.log("samples data", sampleData);
+
+                    const observationData = [];
+                    for (const sampleId of Object.keys(sampleData)) {
+                        observationData.push({
+                            //additionalInfo: { observationUnitParent: plantId },
+                            collector: table_data[0].collector,
+                            observationUnitDbId: sampleId,
+                            observationVariableDbId: table_data[0].observationVariableDbId,
+                            observationVariableName: table_data[0].observationVariableName,
+                            observationTimeStamp: table_data[0].observationTimeStamp,
+                            value: tissueSampleMap[sampleData[sampleId]]
+                        });
+                    }
+
+                    // console.log("observation json", JSON.stringify(observationData));
+
+                    jQuery.ajax({
+                        type: 'POST',
+                        contentType: 'application/json',
+                        url: '/brapi/v2/observations',
+                        headers: { "Authorization": "Bearer " + jQuery.cookie("sgn_session_id") },
+                        data: JSON.stringify(observationData),
+                        success: function (obsResponse) {
+                            jQuery('#working_modal').modal('hide');
+                            jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
+                            jQuery('#saveResultModal').modal('show');
+                        },
+                        error: function (err) {
+                            console.error("Error saving observations", err.responseText);
+                        }
+                    });
+                });
+            } else {
+                jQuery.ajax({
+                    type: 'POST',
+                    contentType: 'application/json',
+                    url: '/brapi/v2/observationunits',
+                    headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+                    data: JSON.stringify(tissueSamplesData),
+                    success: function(response) {
+                        const observationUnitDbIdsMap = {};
+                        response.result.data.forEach(unit => {
+                            observationUnitDbIdsMap[unit.observationUnitName] = unit.observationUnitDbId;
+                        });
+
+                        imageData = Object.values(fileData).map(file => {
+                            const sampleName = file.imageFileName.replace(/\.[^/.]+$/, "");
+                            file.observationUnitDbId = observationUnitDbIdsMap[sampleName];
+                            return file;
+                        });
+
+                        const observationData = [];
+
+                        response.result.data.forEach(unit => {
+                            observationData.push(
+                                {
+                                    collector: table_data[0].collector,
+                                    observationUnitDbId: unit.observationUnitDbId,
+                                    observationVariableDbId: table_data[0].observationVariableDbId,
+                                    observationVariableName: table_data[0].observationVariableName,
+                                    observationTimeStamp: table_data[0].observationTimeStamp,
+                                    value: tissueSampleMap[unit.observationUnitName]
+                                }
+                            )
+                        })
+
+                        jQuery.ajax({
+                            type: 'POST',
+                            contentType: 'application/json',
+                            url: '/brapi/v2/observations',
+                            headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
+                            data: JSON.stringify(observationData),
+                            success: function(obsResponse) {    
+                                loadAllImages(imageFiles, imageData).then(function(uploadStatus) {
+                                    console.log("Upload completed!");
+                                    jQuery('#working_modal').modal('hide');
+                                    jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
+                                    jQuery('#saveResultModal').modal('show');
+                                });
+                                
+                            },
+                            error: function(response) {
+                                jQuery('#working_modal').modal('hide');
+                                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results. Deets: '+response.responseText+'</li></ul>');
+                                jQuery('#saveResultModal').modal('show');
+                            }
+                        })
+                    },
+                    error: function(response) {
+                        jQuery('#working_modal').modal('hide');
+                        jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results. Deets: '+response.responseText+'</li></ul>');
+                        jQuery('#saveResultModal').modal('show');
+                    }
+                });
+            }
+        } else if (jQuery('#image_analysis_service_select option:selected').text() === "Citrus Image Analysis") {
+            table_data[0].observationUnitDbId = plantId;
+            jQuery.ajax({
             url: '/brapi/v2/observations/',
             method: 'POST',
             headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
@@ -536,15 +801,51 @@ jQuery(document).ready(function(){
             error: function(response) {
                 // console.log(response);
                 jQuery('#working_modal').modal('hide');
-                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results.</li></ul>');
+                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-danger"><span class="badge"><span class="glyphicon glyphicon-remove"></span></span>Error while trying to save the analysis results. Deets: '+response.responseText+'</li></ul>');
                 jQuery('#saveResultModal').modal('show');
             }
         });
-
-
+        }
+        
     });
 
 });
+
+function getOrCreateSamples(sampleData) {
+    const existingSamples = {};
+    const requests = sampleData.map(sample => {
+        return new Promise((resolve, reject) => {
+            jQuery.ajax({
+                url: `/brapi/v2/observationunits?observationUnitName=${encodeURIComponent(sample.observationUnitName)}`,
+                method: 'GET',
+                headers: { "Authorization": "Bearer " + jQuery.cookie("sgn_session_id") },
+                success: function (response) {
+                    if (response.result.data.length > 0) {
+                        existingSamples[response.result.data[0].observationUnitDbId] = response.result.data[0].observationUnitName;
+                        resolve();
+                    } else {
+                        jQuery.ajax({
+                            type: 'POST',
+                            url: '/brapi/v2/observationunits',
+                            headers: { "Authorization": "Bearer " + jQuery.cookie("sgn_session_id") },
+                            contentType: 'application/json',
+                            data: JSON.stringify([sample]),
+                            success: function (sampleResp) {
+                                existingSamples[sampleResp.result.data[0].observationUnitDbId] =
+                                    sampleResp.result.data[0].observationUnitName;
+                                resolve();
+                            },
+                            error: reject
+                        });
+                    }
+                },
+                error: reject
+            });
+        });
+    });
+
+    return Promise.all(requests).then(() => existingSamples);
+}
 
 function _load_image_search_results() {
     images_table = jQuery('#image_analysis_image_search_results').DataTable({
@@ -556,6 +857,7 @@ function _load_image_search_results() {
         'scrollX': true,
         'lengthMenu': [10,20,50,100,1000,5000],
         'ajax': { 'url':  '/ajax/search/images',
+            'method': 'POST',
             'data': function(d) {
               d.html_select_box = "image_analysis_select";
               d.image_description_filename_composite = jQuery('#image_description_filename_composite').val();
@@ -683,7 +985,7 @@ function format ( d ) {
         if (result.startsWith("Error: ")) {
             text = result;
         } else {
-            text = '<img src="'+result+'">';
+            text = '<img src="'+result+'" width="100">';
         }
         detail_rows +=
         `<tr>

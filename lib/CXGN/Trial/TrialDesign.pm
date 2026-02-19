@@ -65,6 +65,10 @@ has 'block_size' => (isa => 'Int', is => 'rw', predicate => 'has_block_size', cl
 
 has 'greenhouse_num_plants' => (isa => 'ArrayRef[Int]', is => 'rw', predicate => 'has_greenhouse_num_plants', clearer => 'clear_greenhouse_num_plants');
 
+has 'num_rows_per_plot' => (isa => 'Int', is => 'rw', predicate => 'has_num_rows_per_plot', clearer => 'clear_num_rows_per_plot');
+
+has 'num_cols_per_plot' => (isa => 'Int', is => 'rw', predicate => 'has_num_cols_per_plot', clearer => 'clear_num_cols_per_plot');
+
 has 'maximum_block_size' => (isa => 'Int', is => 'rw', predicate => 'has_maximum_block_size', clearer => 'clear_maximum_block_size');
 
 has 'plot_name_prefix' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_prefix', clearer => 'clear_plot_name_prefix');
@@ -94,7 +98,7 @@ has 'fieldmap_row_number' => (isa => 'Int',is => 'rw',predicate => 'has_fieldmap
 
 has 'plot_layout_format' => (isa => 'Str', is => 'rw', predicate => 'has_plot_layout_format', clearer => 'clear_plot_layout_format');
 
-has 'treatments' => (isa => 'ArrayRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
+has 'treatments' => (isa => 'HashRef', is => 'rw', predicate => 'has_treatments', clearer => 'clear_treatments');
 
 has 'num_plants_per_plot' => (isa => 'Int',is => 'rw',predicate => 'has_num_plants_per_plot',clearer => 'clear_num_plants_per_plot');
 
@@ -132,7 +136,7 @@ has 'randomization_method' => (isa => 'RandomizationMethodType', is => 'rw', def
 
 subtype 'DesignType',
   as 'Str',
-  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RRC" || $_ eq "DRRC" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
+  where { $_ eq "CRD" || $_ eq "RCBD" || $_ eq "RRC" || $_ eq "DRRC" || $_ eq "URDD" || $_ eq "Alpha" || $_ eq "Lattice" || $_ eq "Augmented" || $_ eq "MAD" || $_ eq "genotyping_plate" || $_ eq "greenhouse" || $_ eq "p-rep" || $_ eq "splitplot" || $_ eq "Westcott" || $_ eq "Analysis" },
   message { "The string, $_, was not a valid design type" };
 
 has 'design_type' => (isa => 'DesignType', is => 'rw', predicate => 'has_design_type', clearer => 'clear_design_type');
@@ -178,7 +182,7 @@ sub calculate_design {
     }
 }
 
-sub isint{
+sub isint {
   my $val = shift;
   return ($val =~ m/^\d+$/);
 }

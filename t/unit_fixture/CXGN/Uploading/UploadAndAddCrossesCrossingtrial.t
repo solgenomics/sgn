@@ -612,6 +612,43 @@ for my $extension ("xls", "xlsx") {
     my $number_of_progenies = @$progenies;
     is($number_of_progenies, 2);
 
+    #test retrieving cross and family info using progeny name
+    my $progeny_rs = $schema->resultset("Stock::Stock")->find( { uniquename => 'update_progeny3' });
+    my @progeny_array = ($progeny_rs->stock_id);
+    my $info = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_array);
+    my $female_parent_name = $info->[0]->[3];
+    my $male_parent_name = $info->[0]->[5];
+    my $cross_type = $info->[0]->[6];
+    my $cross_unique_id = $info->[0]->[8];
+    my $family_name = $info->[0]->[10];
+    my $family_type = $info->[0]->[11];
+    my $crossing_experiment = $info->[0]->[13];
+    is($female_parent_name, 'UG120001');
+    is($male_parent_name, 'UG120002');
+    is($cross_type, 'biparental');
+    is($cross_unique_id, 'test_cross_upload1');
+    is($family_name, 'family1x2');
+    is($family_type, 'same_parents');
+    is($crossing_experiment, 'test_crossingtrial2');
+
+    my $progeny_rs_2 = $schema->resultset("Stock::Stock")->find( { uniquename => 'update_progeny5' });
+    my @progeny_array_2 = ($progeny_rs_2->stock_id);
+    my $info_2 = CXGN::Cross->get_progeny_cross_family_info($schema, \@progeny_array_2);
+    my $female_parent_name_2 = $info_2->[0]->[3];
+    my $male_parent_name_2 = $info_2->[0]->[5];
+    my $cross_type_2 = $info_2->[0]->[6];
+    my $cross_unique_id_2 = $info_2->[0]->[8];
+    my $family_name_2 = $info_2->[0]->[10];
+    my $family_type_2 = $info_2->[0]->[11];
+    my $crossing_experiment_2 = $info_2->[0]->[13];
+    is($female_parent_name_2, 'UG120001');
+    is($male_parent_name_2, 'UG120001');
+    is($cross_type_2, 'self');
+    is($cross_unique_id_2, 'test_cross_upload2');
+    is($family_name_2, 'family1');
+    is($family_type_2, 'same_parents');
+    is($crossing_experiment_2, 'test_crossingtrial2');
+
     #test adding tissue culture samples
     my $before_adding_samples_stockprop = $schema->resultset("Stock::Stockprop")->search({})->count();
 
@@ -764,6 +801,38 @@ for my $extension ("xls", "xlsx") {
     is($first_cross->[11], '2017/02/02');
     is($first_cross->[13], 8);
     is($first_cross->[15], 'test_crossingtrial');
+
+    #test_retrieving trial sources of parents linkages
+    my $trial_linkage = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $crossing_trial2_id });
+    my $trial_sources_of_parents = $trial_linkage->get_field_trial_sources_of_crossing_experiment();
+    my $number_of_linkages = scalar(@$trial_sources_of_parents);
+    is($number_of_linkages, '2');
+    my $first_field_trial_id = $trial_sources_of_parents->[0]->[0];
+    my $first_field_trial_name = $trial_sources_of_parents->[0]->[1];
+    my $second_field_trial_id = $trial_sources_of_parents->[1]->[0];
+    my $second_field_trial_name = $trial_sources_of_parents->[1]->[1];
+    is($first_field_trial_name, 'Kasese solgs trial');
+    is($second_field_trial_name, 'CASS_6Genotypes_Sampling_2015');
+
+    #test retrieving trial-crossing experiment linkage
+    my $trial_crossing_experiment_linkage_1 = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $first_field_trial_id });
+    my $crossing_experiment_1 = $trial_crossing_experiment_linkage_1->get_crossing_experiments_from_field_trial();
+    my $number_of_crossing_experiment_linkages = scalar(@$crossing_experiment_1);
+    is($number_of_crossing_experiment_linkages, '2');
+    my $crossing_experiment_id_1 = $crossing_experiment_1->[0]->[0];
+    my $crossing_experiment_name_1 = $crossing_experiment_1->[0]->[1];
+    my $crossing_experiment_id_2 = $crossing_experiment_1->[1]->[0];
+    my $crossing_experiment_name_2 = $crossing_experiment_1->[1]->[1];
+    is($crossing_experiment_name_1, 'test_crossingtrial');
+    is($crossing_experiment_name_2, 'test_crossingtrial2');
+
+    my $trial_crossing_experiment_linkage_2 = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $second_field_trial_id });
+    my $crossing_experiment_2 = $trial_crossing_experiment_linkage_2->get_crossing_experiments_from_field_trial();
+    my $number_of_crossing_experiment_linkages_2 = scalar(@$crossing_experiment_2);
+    my $crossing_experiment_id_2 = $crossing_experiment_2->[0]->[0];
+    my $crossing_experiment_name_2 = $crossing_experiment_2->[0]->[1];
+    is($number_of_crossing_experiment_linkages_2, '1');
+    is($crossing_experiment_name_2, 'test_crossingtrial2');
 
     #test deleting cross
     my $before_deleting_crosses = $schema->resultset("Stock::Stock")->search({ type_id => $cross_type_id })->count();

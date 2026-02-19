@@ -5,9 +5,11 @@
 
 /breeders_toolbox/trial.mas - a mason component to display a trial detail page
 
-=head1 AUTHOR
+=head1 AUTHORS
 
 Jeremy D. Edwards
+Christine Nyaga
+
 
 =cut
 
@@ -67,6 +69,7 @@ $project_id => undef
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'CXGN.Trial' , 'jstree/dist/jstree', 'CXGN.BreedersToolbox.HTMLSelect', 'moment_min', 'daterangepicker' ] &>
 
 
+
 <br/>
 
 <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
@@ -83,36 +86,129 @@ $project_id => undef
 % } else {
 %     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
 % }
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.11.2/b-2.0.1/b-html5-2.0.1/b-print-2.0.1/fc-4.1.2/fh-3.1.9/r-2.2.9/sp-1.4.0/sl-1.3.3/datatables.min.css"/>
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs4/jszip-2.5.0/dt-1.11.2/b-2.0.1/b-html5-2.0.1/b-print-2.0.1/fc-4.1.2/fh-3.1.9/r-2.2.9/sp-1.4.0/sl-1.3.3/datatables.min.js"></script>
+<script  src="https://cdn.datatables.net/buttons/2.3.2/js/dataTables.buttons.min.js"></script>
+<script  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.print.min.js"></script>
+<script  src="https://cdn.datatables.net/select/1.5.0/js/dataTables.select.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
+
 <div class="row">
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, button_id => "generate_trial_barcode_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, label_design_btn_id => "label_designer_link", legacy_barcode_btn_id => "generate_trial_barcode_link" &>
     </div>
     <div class="col-sm-6">
-        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", button_id => "direct_phenotyping_link" &>
+        <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", go_btn_id => "direct_phenotyping_link" &>
     </div>
 </div>
+
+<div class="modal fade" id="calculate_spatial_correction_dialog" name="calculate_spatial_correction_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadLocationsDialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="calculate_spatial_correction_title">Calculate Spatial Correction</h4>
+      </div>
+      <div class="modal-body">
+      <div class="container-fluid">
+        <&| /util/workflow.mas, id=> "spatial_model_analysis_workflow" &>
+          <&| /util/workflow.mas:step, title=> "Check Data Quality" &>
+            <& /page/page_title.mas, title=>"Check data quality before running spatial analysis" &>
+              <div class="container-fluid">
+                <p>To proceed, check presence of spatial autocorrelation. Click Confirm.</p>
+                <button type="button" class="btn btn-primary" name="confirm_calculating_spatial_correction" id="confirm_calculating_spatial_correction">Confirm</button>
+                <br />
+                <br />
+                <div id="calculate_spatial_correction_status_message"></div>
+                <br />
+                <button class="btn btn-main" id="check_quality_prepare_button"         onclick="Workflow.complete(this);">Accept and continue</button>
+                <hr>
+                <table id= "spatial_correction_needed_results_table" ></table>
+              </div>
+            </&>
+          <&| /util/workflow.mas:step, title=> "Run Spatial Analysis" &>
+            <& /page/page_title.mas, title=>"Run corrections for spatially autocorrelated traits" &>
+              <div id="spatial_correction_results_buttons">
+                <input name="include_rc_random_effects" id="include_rc_random_effects" type="checkbox" checked/> <label for="include_rc_random_effects">Include rows and columns as random effects?</label><br> <p><i>The spatial corrections model will smooth with 2D splines, but can also include rows and columns as random effects to capture more variability due to spatial autocorrelation. Be sure that subsequent analyses based on these corrections do not attempt to model spatial effects a second time.</i></p>
+                <br>
+                <input name="genotype_as_random" id="genotype_as_random" type="checkbox"/> <label for="genotype_as_random">Use genotype (accession) as a random effect instead of fixed?</label><br> <p><i>In general, accessions should be a fixed effect. But if the accessions of this trial are representative of genetic diversity in the crop as a whole, and are drawn randomly from a larger population of genotypes, you can model them as a random effect.</i></p>
+                <br>
+                <input name="nseg_ratio_select" id="nseg_ratio_select" type="range" min="1" max="100" value="33"><label for="nseg_ratio_select">Degree of smoothing:</label> &nbsp; <span id='nseg_ratio_readout'>0.33</span><br> <p><i>Degree of smoothing refers to the ratio of number of spline segments to the number of rows/columns. A high degree of smoothing may oversmooth plot-level variation, but a low degree of smoothing may overfit the data and fail to smooth out field-level spatial variation. The value given is a good starting point.</i></p>
+                <br>
+                <table style="width:100%">
+                  <tr>
+                <td><button id="correct_spatial" type="button" class="btn btn-default"> Run Spatial Correction </button></td>
+                <td style="float:right"><button type="button" class="btn btn-primary" name="confirm_store_spatial_correction" id="confirm_store_spatial_correction" data-toggle="modal" data-analysis_type="fitted" data-target="#generic_save_analysis_dialog" disabled>Store Spatial Correction</button></td>
+                  </tr>
+                </table>
+              </div>
+              <br />
+              <hr>
+              <div id="trait_spatial_selector"><select id="dropdown" style="">  <option value="">All</option></select></div>
+              <br>
+              <table id= "spatial_correction_new_moran_table" ></table>
+              <br>
+              <hr>
+              <br>
+              <table id= "spatial_correction_blue_results_table" ></table>
+              <!-- <table id= "spatial_correction_fitted_results_table" ></table> -->
+          </&>
+        </&>
+      </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 % my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
 % my $layout_buttons = '';
 % if ($has_col_and_row_numbers){
-%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button><button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="gps_field_map_link">Edit Geo Field Layout</button><button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
+%     $layout_buttons = '<h3><span class="glyphicon glyphicon-ok-sign text-success"></span>&nbsp;&nbsp;&nbsp;This experiment has spatial layout info uploaded!</h3><button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button><button class="btn btn-primary" style="margin:3px" id="trial_fieldmap_download_layout_button">Download Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="gps_field_map_link">Edit Geo Field Layout</button><button class="btn btn-primary" style="margin:3px" id="calculate_spatial_correction">Calculate Spatial Correction</button><button class="btn btn-danger" id="delete_field_map_hm_link" style="margin:3px">Delete Spatial Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % } else {
 %    $layout_buttons = '<h3><span class="glyphicon glyphicon-remove-sign text-danger"></span>&nbsp;&nbsp;&nbsp;This experiment does not have spatial layout info!</h3><button class="btn btn-primary" style="margin:3px" id="heatmap_upload_trial_coords_link">Upload Spatial Layout</button> <button class="btn btn-primary" style="margin:3px" id="edit_field_map_link">Edit Field Layout</button> <button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#fieldmap_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>';
 % }
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, has_col_and_row_numbers => $has_col_and_row_numbers, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
+% my $design_section_buttons = '';
+% if ($design_name eq 'greenhouse'){
+%     $design_section_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button><button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_additional_stocks"></button>' ;
+% } else {
+%    $design_section_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatment</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>';
+% }
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_treatment">Add Management Factor</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, has_col_and_row_numbers => $has_col_and_row_numbers, has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, trial_stock_type => $trial_stock_type, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
+
+% my $experimental_design_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button>';
+% if ($user_can_modify) {
+%    $experimental_design_buttons .= ' <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>';
+%    if ($design_name eq 'greenhouse'){
+%        $experimental_design_buttons .= '<button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_additional_stocks"></button>';
+%    }
+% }
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.', 
+buttons_html => $experimental_design_buttons, 
+icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type, management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Raw Data</h4>", info_section_subtitle => 'View phenotyping raw data.', info_section_id => "trial_raw_data", trial_name => $trial_name, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Summary Statistics</h4>", info_section_subtitle => 'View and download uploaded phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Trial Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", has_expression_atlas => $has_expression_atlas, trial_name => $trial_name, expression_atlas_url => $expression_atlas_url, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Phenotype Raw Data</h4>", info_section_subtitle => 'View phenotyping raw data.', info_section_id => "trial_raw_data", trial_name => $trial_name, site_project_name => $site_project_name, sgn_session_id => $sgn_session_id, user_name => $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type &>
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, site_projct_name => $site_project_name, sgn_session_id => $sgn_session_id, username=> $user_name, main_production_site_url => $main_production_site_url, trial_stock_type => $trial_stock_type, info_section_title => "<h4 style='display:inline'>Repetitive Measurements</h4>", info_section_subtitle => 'View a plot by repetitive measurements level', info_section_id => "repetitive_measurements_data", icon_class => "glyphicon glyphicon-repeat" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Compute New Phenotypes</h4>", info_section_subtitle => 'Compute derived traits or compute plot phenotypes from plant phenotypes.', icon_class => "glyphicon glyphicon-floppy-save", info_section_id => "compute_derived_traits" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Upload Data Files</h4>", info_section_subtitle => 'Phenotypic data collection using Excel or Android Fieldbook. Also upload any additional files for this trial.', icon_class => "glyphicon glyphicon-cloud-upload", info_section_id => "trial_upload_files", trial_stock_type => $trial_stock_type &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Analysis Tools</h4>", info_section_subtitle => 'Run correlation, anova, population structure (PCA), or clustering. Also access HIDAP, if enabled on this site.', icon_class => "glyphicon glyphicon-signal", info_section_id => "trial_analysis_tools", hidap_enabled => $hidap_enabled, main_production_site_url => $main_production_site_url, breeding_program_name => $breeding_program_name, folder_name => $folder_name, trial_name => $trial_name &>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>NIRS Data</h4>", info_section_subtitle => 'View and plot NIRS data for this trial.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' name='upload_high_dim_phenotypes_spreadsheet_link'>Upload NIRS</button>", icon_class => "glyphicon glyphicon-stats", info_section_id => "trial_nirs_section" &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Weather Data</h4>", info_section_subtitle => 'View rainfall, temperature, light intensity and other weather data for this location.', icon_class => "glyphicon glyphicon-cloud", info_section_id => "trial_weather_data", location_name => $location_name &>
 
@@ -145,13 +241,15 @@ $project_id => undef
 <& /breeders_toolbox/trial/download_layout_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries &>
 <& /breeders_toolbox/trial/add_trial_used_seedlots.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/upload_plot_gps_dialogs.mas, trial_id => $trial_id &>
+<& /breeders_toolbox/trial/add_management_factor_dialog.mas, management_factor_types => $management_factor_types, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/add_subplots_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/add_plants_per_plot.mas, trial_id => $trial_id, trial_name => $trial_name &>
 <& /breeders_toolbox/trial/add_plants_per_subplot.mas, trial_id => $trial_id, trial_name => $trial_name &>
-<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas, management_factor_types => $management_factor_types &>
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas &>
 <& /breeders_toolbox/trial/change_plot_accessions_dialogs.mas, trial_id => $trial_id &>
 <& /breeders_toolbox/trial/download_phenotypes_dialog.mas, trial_ids => $trial_id, dialog_name => $trial_name, dialog_type => 'Trial' &>
 <& /breeders_toolbox/trial/update_experimental_design_type.mas, trial_id => $trial_id, trial_name => $trial_name, design_name => $design_name &>
+<& /breeders_toolbox/trial/greenhouse_add_additional_accessions_dialog.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
 
 <& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
 <& /fieldbook/upload_phenotype_fieldbook.mas &>
@@ -167,6 +265,8 @@ $project_id => undef
 
 <& /breeders_toolbox/upload_images.mas &>
 
+<& /tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas &>
+
 <div id="trialIDDiv" class="trialIDDivClass" style="display:none;">
 % print $trial_id;
 </div>
@@ -175,6 +275,13 @@ $project_id => undef
 <script defer="defer">
 
 jQuery(document).ready(function () {
+
+  var slider = document.getElementById('nseg_ratio_select');
+  var nseg_val = document.getElementById('nseg_ratio_readout');
+
+  slider.oninput = function() {
+    nseg_val.textContent = this.value / 100;
+  }
 
     var can_modify = '<% $user_can_modify %>';
     // alert('can modify: '+can_modify);
@@ -222,6 +329,21 @@ jQuery(document).ready(function () {
         window.open('/tools/fieldmap?trial_id=' + id ,'_blank');
     });
 
+    let button_label = '';
+    const trial_stock_type = "<%$trial_stock_type%>";
+    if (trial_stock_type == 'cross') {
+        button_label = 'Add Additional Crosses or Plants';
+    } else if (trial_stock_type == 'family_name') {
+        button_label = 'Add Additional Families or Plants';
+    } else {
+        button_label = 'Add Additional Accessions or Plants';
+    }
+
+    jQuery('#trial_detail_page_add_additional_stocks').text(button_label);
+
 });
 
+
+
+//jQuery(document).on('click', '#confirm_store_spatial_correction',  function(e) {}
 </script>

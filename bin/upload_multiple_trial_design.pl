@@ -46,6 +46,8 @@ use CXGN::Trial::ParseUpload;
 use CXGN::Trial::TrialCreate;
 use CXGN::Contact;
 use CXGN::TrialStatus;
+use File::Temp qw/tempfile/;
+use CXGN::Phenotypes::StorePhenotypes;
 
 my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $infile, $username, $email_address, $ignore_warnings);
 GetOptions(
@@ -134,8 +136,51 @@ finish("User not found in database for username $username!") if !$sp_person_id;
 my %all_designs = %{$parsed_data};
 my %saved_trials;
 my $coderef = sub {
+
+    my $phenotime = DateTime->now();
+    my $phenotimestamp = $phenotime->ymd()."_".$phenotime->hms();
+    my $phenotype_metadata = {
+        archived_file => $infile,
+        archived_file_type => 'multi trial upload',
+        operator => $username,
+        date => $phenotimestamp
+    };
+    my $temp_basedir_key = `cat $basepath/sgn.conf $basepath/sgn_local.conf | grep tempfiles_subdir`;
+    my (undef, $temp_basedir) = split(/\s+/, $temp_basedir_key);
+    $temp_basedir = "$basepath/$temp_basedir";
+    if (! -d "$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$temp_basedir/delete_nd_experiment_ids/");
+    }
+    my (undef, $tempfile) = tempfile("$temp_basedir/delete_nd_experiment_ids/fileXXXX"); #tempfile
+
+    my @phenostore_stocks;
+    my %phenostore_traits;
+    my $phenostore_values = {};
+
+    my $metadata_schema = CXGN::Metadata::Schema->connect( 
+        sub { $dbh }, 
+        { on_connect_do => ['SET search_path TO public,metadata;'] }
+    );
+    my $phenome_schema = CXGN::Phenome::Schema->connect( 
+        sub { $dbh },
+        { on_connect_do => ['SET search_path TO public,phenome;'] }
+    );
+
     for my $trial_name ( keys %all_designs ) {
         my $trial_design = $all_designs{$trial_name};
+        if ($trial_design->{'design_details'}{'treatments'}) { #construct treatment hash
+            foreach my $plot (keys(%{$trial_design->{'design_details'}{'treatments'}})) {
+                foreach my $treatment (keys(%{$trial_design->{'design_details'}{'treatments'}->{$plot}})) {
+                    push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, $phenotimestamp;
+                    push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, $username;
+                    push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, '';
+                    push @{$trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment}}, '';
+                    $phenostore_traits{$treatment} = 1;
+                    $phenostore_values->{$plot}->{$treatment} = $trial_design->{'design_details'}{'treatments'}->{$plot}->{$treatment};
+                }
+                push @phenostore_stocks, $plot;
+            }
+        }
         my %trial_info_hash = (
             chado_schema => $chado_schema,
             dbh => $dbh,
@@ -145,6 +190,7 @@ my $coderef = sub {
             trial_location => $trial_design->{'location'},
             trial_name => $trial_name,
             design_type => $trial_design->{'design_type'},
+            trial_stock_type => $trial_design->{'trial_stock_type'},
             design => $trial_design->{'design_details'},
             program => $trial_design->{'breeding_program'},
             upload_trial_file => $infile,
@@ -227,6 +273,38 @@ my $coderef = sub {
             my $trial = CXGN::Trial->new({ bcs_schema => $chado_schema, trial_id => $current_save->{'trial_id'} });
             $trial->set_entry_numbers(\%entry_numbers_prop);
         }
+    }
+
+    my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
+        basepath => $temp_basedir,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        temp_file_nd_experiment_id => $tempfile,
+        bcs_schema => $chado_schema,
+        metadata_schema => $metadata_schema,
+        phenome_schema => $phenome_schema,
+        user_id => $sp_person_id,
+        stock_list => \@phenostore_stocks,
+        trait_list => [keys(%phenostore_traits)],
+        values_hash => $phenostore_values,
+        metadata_hash => $phenotype_metadata
+    });
+
+    my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+
+    if ($verified_warning) {
+        push @warnings, $verified_warning;
+    }
+    if ($verified_error) {
+        push @errors, $verified_error
+    }
+
+    my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
+
+    if ($stored_phenotype_error) {
+        push @errors, $verified_error
     }
 
 };

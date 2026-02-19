@@ -48,6 +48,7 @@ use Try::Tiny;
 use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
+use CXGN::Trial;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
 
@@ -210,6 +211,7 @@ sub search {
     my $field_trial_is_planned_to_cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_trial_is_planned_to_cross', 'project_property')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $analysis_instance_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
     my $tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $subplot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
@@ -238,6 +240,8 @@ sub search {
     my %design_layout_hash;
     my $using_layout_hash;
     #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
+
+    print STDERR "start date here: ".$self->start_date()." and the end date here: ".$self->end_date()."\n";
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
 
@@ -277,7 +281,8 @@ sub search {
                     $self->plot_list(\@plots_list);
                 }
             }
-            
+
+            print STDERR "\n\n fetching layout for  ".$self->data_level. " time: ".  localtime ."\n";
             if ($self->data_level eq 'plot'){
                 if (!$self->plot_list){
                     $self->plot_list([]);
@@ -287,6 +292,28 @@ sub search {
                     push @{$self->plot_list}, $_->[0];
                 }
             }
+
+            if ($self->data_level eq 'accession'){
+                if (!$self->accession_list){
+                    $self->accession_list([]);
+                }
+                my $accessions = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_accessions();
+                # print STDERR "Accessions for trial $_ : ".Dumper($accessions)."\n";
+                foreach (@$accessions){
+                    print STDERR "iterating accessions: " . Dumper( $_) . "\n";
+                    print STDERR "Pushing accession ".$_->{'stock_id'}."\n";
+                    push @{$self->accession_list}, $_->{'stock_id'};
+                }
+
+                if (!$self->plot_list){
+                    $self->plot_list([]);
+                }
+                my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
+                foreach (@$plots){
+                    push @{$self->plot_list}, $_->[0];
+                }
+            }
+
             if ($self->data_level eq 'plant'){
                 if (!$self->plant_list){
                     $self->plant_list([]);
@@ -443,19 +470,11 @@ sub search {
                     external_references.value ".$design_layout_select;
 
     my @where_clause;
-
     my $accession_list = $self->accession_list;
     print STDERR "Native search Accession list is ".Dumper($accession_list)."\n";
 
     my $analysis_result_stock_list = $self->analysis_result_stock_list;
-    print STDERR "Native search analysis result_stock_list is ".Dumper($analysis_result_stock_list)."\n";
-
-    if ($self->accession_list && scalar(@{$self->accession_list})>0) {
-        print STDERR "Native search adding accession_list to sql\n";
-        my $accession_sql = _sql_from_arrayref($self->accession_list);
-        push @where_clause, "germplasm.stock_id in ($accession_sql)";
-    }
-
+    
     if ($self->analysis_result_stock_list && scalar(@{$self->analysis_result_stock_list})>0) {
         print STDERR "Native search adding analysis result_stock_list to sql\n";
         my $accession_sql = _sql_from_arrayref($self->analysis_result_stock_list);
@@ -475,7 +494,7 @@ sub search {
     } elsif (($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
         my $plant_and_subplot_sql = _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
         push @where_clause, "observationunit.stock_id in ($plant_and_subplot_sql)";
-    } elsif ($self->plot_list && scalar(@{$self->plot_list})>0) {
+    } elsif ($self->plot_list && scalar(@{$self->plot_list})>0 && (!$self->accession_list || scalar(@{$self->accession_list}) == 0)) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);
         push @where_clause, "observationunit.stock_id in ($plot_sql)";
     } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
@@ -484,6 +503,15 @@ sub search {
     } elsif ($self->subplot_list && scalar(@{$self->subplot_list})>0) {
         my $subplot_sql = _sql_from_arrayref($self->subplot_list);
         push @where_clause, "observationunit.stock_id in ($subplot_sql)";
+
+    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->accession_list && scalar(@{$self->accession_list})>0)) {
+        #if only accessions are given, we need to join to analysis_result and get all analysis results for those accessions
+        my $accession_sql = _sql_from_arrayref($self->accession_list);
+        my $plot_sql = _sql_from_arrayref($self->plot_list);
+        push @where_clause, "observationunit.stock_id in ($plot_sql) AND germplasm.stock_id in ($accession_sql)";
+    } elsif (($self->accession_list && scalar(@{$self->accession_list})>0) && ($self->plot_list && scalar(@{$self->plot_list})==0)) {
+        my $accession_sql = _sql_from_arrayref($self->accession_list);
+        push @where_clause, "germplasm.stock_id in ($accession_sql)";
     }
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
@@ -527,7 +555,7 @@ sub search {
     my $datelessq = "";
 
     if ($self->include_dateless_items()) {
-	$datelessq = " phenotype.create_date IS NULL OR ";
+	$datelessq = " phenotype.collect_date IS NULL OR ";
     }
 
     my ($start_date, $end_date);
@@ -535,13 +563,16 @@ sub search {
 	$start_date = $1;
     }
 
-    if ($self->end_date() =~ m/\d{4}\-\d{2}\-\d{2}/ ) {
+    if ($self->end_date() =~ m/(\d{4}\-\d{2}\-\d{2})/) {
 	$end_date = $1;
     }
 
-    if ($start_date && $end_date) {
-	push @where_clause, " ( $datelessq ( phenotype.create_date > $start_date and phenotype.create_date < $end_date ) ) ";
+    #print STDERR "the start date here: $start_date. And the end date here: $end_date\n";
 
+    if ($start_date && $end_date) {
+        #print STDERR "including the date query\n";
+	    push @where_clause, " ( $datelessq ( phenotype.collect_date >= '$start_date'::date and phenotype.collect_date <= '$end_date'::date ) ) ";
+        #push @where_clause, " ( $datelessq ( phenotype.collect_date >= $start_date and phenotype.collect_date <= $end_date ) ) ";
     }
 
     if ($self->observation_id_list && scalar(@{$self->observation_id_list})>0) {
@@ -566,11 +597,17 @@ sub search {
     }
 
     if ($self->data_level ne 'all') {
-        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
+        print STDERR "\n\n data level is ".$self->data_level."\n\n";
+        my $data_level = $self->data_level;
+        if ($data_level eq 'accession'){
+            $data_level = 'plot';
+        }
+        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $data_level, 'stock_type')->cvterm_id();
         push @where_clause, "observationunit.type_id = $stock_type_id"; #ONLY plot or plant or subplot or tissue_sample
     } else {
         push @where_clause, "(observationunit.type_id = $plot_type_id 
-        OR observationunit.type_id = $plant_type_id 
+        OR observationunit.type_id = $plant_type_id
+        OR observationunit.type_id = $analysis_instance_id 
         OR observationunit.type_id = $subplot_type_id 
         OR observationunit.type_id = $tissue_sample_type_id)"; #plots AND plants AND subplots AND tissue_samples
     }

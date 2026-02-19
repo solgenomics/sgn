@@ -187,6 +187,11 @@ has 'stock_name_list' => (
     is => 'rw',
 );
 
+has 'related_stock_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw',
+);
+
 has 'project_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
@@ -246,6 +251,7 @@ sub search {
     my $stock_type = $self->stock_type;
     my $stock_id_list = $self->stock_id_list;
     my $stock_name_list = $self->stock_name_list;
+    my $related_stock_list = $self->related_stock_list;
     my $stock_names_exact = $self->stock_names_exact;
     my $project_id_list = $self->project_id_list;
     my $project_name_list = $self->project_name_list;
@@ -395,6 +401,11 @@ sub search {
             }
         }
     }
+    if ($related_stock_list && scalar(@$related_stock_list)>0) {
+        my $sql = join(", ", @$related_stock_list);
+        push @where_clause, "related_stock.uniquename IN (?)";
+    push @question_mark_values, $sql;
+    }
     if ($project_id_list && scalar(@$project_id_list)>0) {
         my $sql = join ("," , @$project_id_list);
         push @where_clause, "project.project_id in (?)";
@@ -450,6 +461,10 @@ sub search {
         to_char (image.modified_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD\"T\"HH24:MI:SSOF:00') as modified_date,
         image.obsolete, image.md5sum, stock.stock_id, stock.uniquename, stock_type.name, project.project_id, project.name, project_image.project_md_image_id, project_image_type.name,
         COALESCE(
+            json_agg(jsonb_build_object('stock_id', related_stock.stock_id, 'uniquename', related_stock.uniquename)) 
+            FILTER (WHERE related_stock.stock_id IS NOT NULL), '[]'
+        ) AS related_stocks,
+        COALESCE(
             json_agg(json_build_object('tag_id', tags.tag_id, 'name', tags.name, 'description', tags.description, 'sp_person_id', tags.sp_person_id, 'modified_date', tags.modified_date, 'create_date', tags.create_date, 'obsolete', tags.obsolete))
             FILTER (WHERE tags.tag_id IS NOT NULL), '[]'
         ) AS tags,
@@ -463,7 +478,11 @@ sub search {
         LEFT JOIN metadata.md_tag_image AS image_tag ON (image.image_id=image_tag.image_id)
         LEFT JOIN metadata.md_tag AS tags ON (image_tag.tag_id=tags.tag_id)
         LEFT JOIN phenome.stock_image AS stock_image ON (image.image_id=stock_image.image_id)
-        LEFT JOIN stock ON (stock_image.stock_id=stock.stock_id)
+        LEFT JOIN stock ON (stock_image.stock_id = stock.stock_id)
+        LEFT JOIN stock_relationship
+            ON stock_relationship.object_id = stock.stock_id
+            OR stock_relationship.subject_id = stock.stock_id
+        LEFT JOIN stock AS related_stock ON (related_stock.stock_id = stock_relationship.subject_id AND stock_relationship.object_id = stock.stock_id) OR (related_stock.stock_id = stock_relationship.object_id AND stock_relationship.subject_id = stock.stock_id)
         LEFT JOIN cvterm AS stock_type ON (stock.type_id=stock_type.cvterm_id)
         LEFT JOIN phenome.project_md_image AS project_image ON(project_image.image_id=image.image_id)
         LEFT JOIN cvterm AS project_image_type ON(project_image.type_id=project_image_type.cvterm_id)
@@ -485,7 +504,7 @@ sub search {
 
     my @result;
     my $total_count = 0;
-    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $tags, $observations, $full_count) = $h->fetchrow_array()) {
+    while (my ($image_id, $image_name, $image_description, $image_original_filename, $image_file_ext, $image_sp_person_id, $image_username, $image_create_date, $image_modified_date, $image_obsolete, $image_md5sum, $stock_id, $stock_uniquename, $stock_type_name, $project_id, $project_name, $project_md_image_id, $project_image_type_name, $related_stocks, $tags, $observations, $full_count) = $h->fetchrow_array()) {
         push @result, {
             image_id => $image_id,
             image_name => $image_name,
@@ -507,6 +526,7 @@ sub search {
             project_image_type_name => $project_image_type_name,
             tags_array => decode_json $tags,
             observations_array => decode_json $observations,
+            related_stocks_array =>decode_json $related_stocks,
         };
         $total_count = $full_count;
     }

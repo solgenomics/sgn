@@ -1,107 +1,167 @@
 <%args>
-$management_factor_types => ()
 </%args>
 
-<div class="modal fade" id="trial_design_add_treatments" name="trial_design_add_treatments" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignTreatmentsDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTrialDesignTreatmentsDialog">Add Field Management Factor to Design</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <form class="form-horizontal" role="form">
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Add Field Management Factor Name: </label>
-                            <div class="col-sm-8">
-                                <input class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="e.g. Fertilizer01_20N40P50K or Weeding01_Manual"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Add Field Management Factor Description: </label>
-                            <div class="col-sm-8">
-                                <input class="form-control" id="new_treatment_description" name="new_treatment_description" type="text" placeholder="e.g. Fertilizer Brand Sprayed with 20N40P50K"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Field Management Factor Type: </label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="new_treatment_type" name="new_treatment_type">
-% foreach my $management_factor_type(@$management_factor_types){
-    <option value="<%$management_factor_type%>"><%$management_factor_type%></option>
-%}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Field Management Factor Year: </label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="new_treatment_year" name="new_treatment_year" type="text"></select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Field Management Factor Date: </label>
-                            <div class="col-sm-8">
-                                <input class="form-control" id="new_treatment_date" name="new_treatment_date" title="planting_date" type="text"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Applied To: </label>
-                            <div class="col-sm-8">
-                                <select class="form-control" id="new_treatment_unit" name="new_treatment_unit">
-                                    <option value='plot'>Plots</option>
-                                    <option value='plant'>Plants</option>
-                                    <!--option value='subplot'>Subplots</option-->
-                                </select>
-                            </div>
-                        </div>
-                    </form>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jqueryui', 'jquery.iframe-post-form', 'CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial' ] &>
+
+<div class="modal fade" id="upload_treatment_spreadsheet_dialog" name="upload_treatment_spreadsheet_dialog" tabindex="-1" role="dialog" aria-labelledby="addSpreadsheetTreatmentDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="addSpreadsheetTreatmentDialog">Upload Treatment Spreadsheet</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <&| /page/explanation.mas, title=>'Template Information' &>
+                <p>
+                <b>File format information</b>
+                <br>
+                <a id="treatment_upload_spreadsheet_format_info">Spreadsheet Format</a>
+                </p>
+            </&>
+
+            <form class="form-horizontal" role="form" method="POST" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_spreadsheet_treatment_file_form" name="upload_spreadsheet_treatment_file_form">
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Spreadsheet Format: </label>
+                    <div class="col-sm-6" >
+                        <select class="form-control" id="upload_spreadsheet_treatment_file_format" name="upload_spreadsheet_treatment_file_format">
+                            <option value="detailed">Detailed</option>
+                            <option value="simple">Simple</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-info" id="new_trial_add_treatments_continue" >Continue</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Timestamps Included: </label>
+                    <div class="col-sm-6" >
+                        <input type="checkbox" id="upload_spreadsheet_treatment_timestamp_checkbox" name="upload_spreadsheet_treatment_timestamp_checkbox" />
+                    </div>
+                </div>
+                <div id="upload_spreadsheet_treatment_data_level_div">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">Data Level: </label>
+                        <div class="col-sm-6" >
+                            <select class="form-control" id="upload_spreadsheet_treatment_data_level" name="upload_spreadsheet_treatment_data_level">
+                                <option value="plots">Plots</option>
+                                <option value="plants">Plants</option>
+                                <option value="subplots">Subplots</option>
+                                <option value="tissue_samples">Tissue Samples</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Treatment Spreadsheet: </label>
+                    <div class="col-sm-6" >
+                        <input type="file" id="upload_spreadsheet_treatment_file_input" name="upload_spreadsheet_treatment_file_input" encoding="multipart/form-data" />
+                    </div>
+                </div>
+
+                <div id="upload_treatment_spreadsheet_verify_status"></div>
+                </div>
+
+                <div id="upload_treatment_spreadsheet_info" style="display: none">
+                    <& /help/file_upload_type.mas, type => "Simple treatment spreadsheets" &>
+                </div>
+
+            </form><br/>
+
         </div>
+
+        <div class="modal-footer">
+	    <button type="button" class="btn btn-default" name="reset_dialog" id="treatment_reset_dialog">Reset form</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-info" name="upload_spreadsheet_treatment_submit_verify" id="upload_spreadsheet_treatment_submit_verify">Verify</button>
+            <button disabled type="button" class="btn btn-primary" name="upload_spreadsheet_treatment_submit_store" id="upload_spreadsheet_treatment_submit_store" title="First Verify Your File">Store</button>
+        </div>
+
     </div>
+  </div>
 </div>
 
-<div class="modal fade" id="trial_design_add_treatment_select" name="trial_design_add_treatment_select" tabindex="-1" role="dialog" aria-labelledby="addTrialDesignTreatmentSelectDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addTrialDesignTreatmentSelectDialog">Add Field Management Factor to Design</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div id="trial_design_add_treatment_select_html"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                Apply Field Management Factors to Plants and Subplots and Tissue Samples (if available): <input type="checkbox" id="new_trial_add_treatments_apply_to_plants" checked disabled />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button type="button" class="btn btn-info" id="new_trial_add_treatments_submit" >Continue</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+<div class="modal fade" id="treatment_upload_spreadsheet_info_dialog" name="treatment_upload_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="treatmentUploadInfoDialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="treatmentUploadInfoDialog">Template Information</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+
+            <h4>Treatment spreadsheet must be uploaded in .xls or .xlsx excel file format</h4>
+            <p>(tab-delimited text formats are NOT supported)</p>
+
+            <hr>
+            <button class="btn btn-primary" name="create_spreadsheet_link">Create Treatment Spreadsheet for Trial</button>
+            <hr>
+
+            <h4>Required Data:</h4>
+            <ul>
+                <li>Please click the above button to generate the required treatment spreadsheet. Note that treatment lists can be made just like trait lists.</li>
+            </ul>
+
+            <h4>Notes:</h4>
+            <ul>
+                <li>For  a hypothetical term <i>"light intensity"</i>, <i>"treatment name|treatment id"</i><br> should be written as <i>"light intensity|EXPERIMENT_TREATMENT:00000XX"</i>.</li>
+                <li>Two or more treatments can be uploaded at the same time.</li>
+            </ul>
+
+            <h4>Simple and Detailed Spreadsheet Format:</h4>
+            <ul>
+                <li>The "Simple" format requires only a column called 'observationunit_name' followed by your treatment columns.  Other acceptable headers for the first column include: 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'plotName', 'sublotName', 'plantName'</li>
+                <li>The "Detailed" format includes a special header as well as additional columns for design information.</li>
+            </ul>
+
+            <h4>Timestamps:</h4>
+            <ul>
+                <li>To include timestamp information for your measurements, click the checkbox "Includes Timestamps".</li>
+                <li>For timestamps, values should be recorded as <i>"Value,Timestamp"</i>.<br/>For no timestamps, values should be recorded as <i>"Value"</i>.</li>
+                <li>Timestamp format must be YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000</li><br/>
+                <li>Example with timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>light intensity|EXPERIMENT_TREATMENT:00000XX</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>20,2016-04-28 16:30:40-0500</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+                <li>Example without timestamps: <br/><br/>
+                <table class="table table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th>light intensity|EXPERIMENT_TREATMENT:00000XX</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>20</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </li>
+            </ul>
+
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
 </div>
 
-<script>
-jQuery(document).ready(function(){
-    get_select_box('years', 'new_treatment_year', {'auto_generate': 1 });
-    var treatment_date_element = jQuery("#new_treatment_date");
-    set_daterangepicker_default (treatment_date_element);
-    jQuery('input[title="planting_date"]').daterangepicker(
-        {
-            "singleDatePicker": true,
-            "showDropdowns": true,
-            "autoUpdateInput": false,
-        },
-        function(start){
-            treatment_date_element.val(start.format('MM/DD/YYYY'));
-        }
-    );
+<script defer="defer">
+jQuery(document).ready(function () {
+
+    jQuery("#treatment_upload_spreadsheet_format_info").click( function () {
+        jQuery("#treatment_upload_spreadsheet_info_dialog" ).modal("show");
+    });
 });
 </script>

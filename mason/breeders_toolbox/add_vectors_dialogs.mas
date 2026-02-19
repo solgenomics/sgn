@@ -92,7 +92,6 @@ $editable_stock_props_definitions
                         <tbody>
                             <tr>
                                 <td>uniquename </td>
-                                <td>species_name</td>
 %  foreach my $editable_stockprop (@$editable_vector_props) {
 %                               print "<td>$editable_stockprop</td>";
 % }
@@ -100,16 +99,9 @@ $editable_stock_props_definitions
                         </tbody>
                     </table>
 
-                    <b>Comma Separated Fields:</b>
-                    <ul>
-                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: 
-                    </li>
-                    </ul>
-
                     <b>Required Fields:</b>
                     <ul>
                     <li>name (must be unique)</li>
-                    <li>species_name (must exist in the database)</li>
                     </ul>
                     <b>Optional Fields:</b>
                     <ul>
@@ -140,8 +132,6 @@ $editable_stock_props_definitions
       <div class="modal-body">
         <div class="container-fluid">
             <div id="add_vectors_using_list_inputs" style="display:none">
-                <label for="species_name_input">Species name for added vectors</label>
-                <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
                 <br><br>
                 <label for="population_name_input">Population name for added vectors (optional)</label>
                 <input class="form-control" type="text" id="population_name_input"></input>

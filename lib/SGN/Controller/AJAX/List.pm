@@ -13,6 +13,7 @@ use CXGN::List::FuzzySearch;
 use CXGN::List::Desynonymize;
 use CXGN::Cross;
 use JSON;
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
@@ -255,6 +256,51 @@ sub download_list :Path('/list/download') Args(0) {
     $c->res->content_type("text/plain");
     $c->res->header('Content-Disposition'=>"attachment; filename=$name.txt");
     $c->res->body(join "\n", map { $_->[1] }  @$list);
+}
+
+sub download_lists :Path('/list/download_multiple') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $data = decode_json $c->req->param('list_ids');
+    my @list_ids = @{ $data };
+
+    my $zip = Archive::Zip->new();
+
+    my @combined_content;
+    foreach my $list_id (@list_ids) {
+        my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id=>$list_id });
+        my $public = $list->check_if_public();
+        if ($public == 0) {
+        my $error = $self->check_user($c, $list_id);
+        if ($error) {
+            $c->res->content_type("text/plain");
+            $c->res->body($error);
+            return;
+        }
+        }
+        $list = $self->retrieve_list($c, $list_id);
+        my ($name_ref) = $self->get_list_metadata($c, $list_id);
+        my $name = $name_ref->{name};
+
+        my $content = join "\n", map { $_->[1] } @$list;
+        push @combined_content, map { $_->[1] } @$list;
+
+        $zip->addString($content, "$name.txt");
+    }
+    @combined_content = uniq(sort @combined_content);
+    $zip->addString(join("\n", @combined_content), "combined_list_items.txt");
+
+    my $zip_data;
+    my $io = IO::Scalar->new(\$zip_data);
+    unless ( $zip->writeToFileHandle($io) == AZ_OK ) {
+        $c->res->status(500);
+        $c->res->body("Error creating zip file");
+        return;
+    }
+
+    $c->res->content_type('application/zip');
+    $c->res->header('Content-Disposition' => 'attachment; filename=lists.zip');
+    $c->res->body($zip_data);
 }
 
 =head2 available_lists()
@@ -839,6 +885,27 @@ sub intersect_lists : Path('/list/intersect') Args(2) {
     }
 }
 
+sub compare_lists : Path('/list/compare') Args(0) {
+    my ($self, $c) = @_;
+    my $list_ids = $c->req->param('list_ids') || '';
+    my ($list1_id, $list2_id) = split /,/, $list_ids;
+
+    my $list1 = $self->retrieve_list($c, $list1_id) || [];
+    my $list2 = $self->retrieve_list($c, $list2_id) || [];
+
+    my %list_one_names = map { lc($_->[1]) => 1 } @$list1;
+    my %list_two_names = map { lc($_->[1]) => 1 } @$list2;
+
+    my @only_in_1 = grep { !$list_two_names{$_} } keys %list_one_names;
+    my @only_in_2 = grep { !$list_one_names{$_} } keys %list_two_names;
+    my @in_both = grep { $list_two_names{$_} } keys %list_one_names;
+
+    $c->stash->{rest} = {
+        only_in_list1 => [sort @only_in_1],
+        only_in_list2 => [sort @only_in_2],
+        in_both => [sort @in_both],
+    };
+}
 
 sub remove_element_action :Path('/list/item/remove') Args(0) {
     my $self = shift;
@@ -1046,7 +1113,7 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to use markerset.", };
+        $c->stash->{rest} = { error => "You must be logged in to use marker alleles.", };
         return;
     }
 
@@ -1072,7 +1139,7 @@ sub delete_markerset : Path('/markerset/delete') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to delete markerset.', };
+    	$c->stash->{rest} = { error => 'You must be logged in to delete marker alleles.', };
     	return;
     }
 
@@ -1105,7 +1172,7 @@ sub get_markerset_items :Path('/markerset/items') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to use markerset.', };
+    	$c->stash->{rest} = { error => 'You must be logged in to use marker alleles.', };
     	return;
     }
 
@@ -1135,7 +1202,7 @@ sub get_markerset_type :Path('/markerset/type') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to use markerset.', };
+    	$c->stash->{rest} = { error => 'You must be logged in to use marker alleles.', };
     	return;
     }
 

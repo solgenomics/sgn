@@ -95,6 +95,9 @@ sub download {
     my $include_intercrop_stocks = $self->include_intercrop_stocks();
     my $include_entry_numbers = $self->include_entry_numbers();
     my $search_type = $self->search_type();
+    my $phenotype_start_date = $self->start_date();
+    my $phenotype_end_date = $self->end_date();
+    my $repetitive_measurements = $self->repetitive_measurements();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
@@ -130,6 +133,9 @@ sub download {
             include_pedigree_parents=>$include_pedigree_parents,
             include_intercrop_stocks=>$include_intercrop_stocks,
             include_entry_numbers=>$include_entry_numbers
+            phenotype_start_date => $phenotype_start_date,
+            phenotype_end_date => $phenotype_end_date,
+            repetitive_measurements => $repetitive_measurements,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }
@@ -164,7 +170,11 @@ sub download {
         my $num_col = scalar(@$header);
         for (my $line =0; $line< @data; $line++) {
             my $columns = $data[$line];
-            print $F join ',', map { $_ =~ s/"/""/g; qq!"$_"! } @$columns;
+            print $F join ',', map {
+                my $field = $_;
+                $field =~ s/"/""/g;
+                qq!"$field"!;
+            } @$columns;
             print $F "\n";
         }
     close($F);
