@@ -10,7 +10,6 @@ use JSON::XS qw(decode_json);
 use LWP::UserAgent;
 use MIME::Base64::URLSafe;
 use Try::Tiny;
-use Data::Dumper;
 
 use CatalystX::GlobalContext '$c';
 
@@ -60,11 +59,12 @@ sub login : Chained('provider') PathPart('login') Args(0) {
     # Use this template if we encounter an error
     $c->stash->{template} = "/authenticate/oidc/error.mas";
 
+    # Parse the name of the provider from the URL path
+    my $provider = $c->stash->{provider};
+
     try {
-        # Parse the name of the provider from the URL path
-        my $provider = $c->stash->{provider};
         # Read the provider configuration
-        my $config = $c->get_conf('oidc_client')->{$provider};
+        my $config = $c->get_conf('oidc_client')->{$provider} || die "The provider '$provider' is not configured for this instance.\n";
 
         # ---------------------------------------------------------------------
         # Client-Side Secrets
@@ -90,22 +90,25 @@ sub login : Chained('provider') PathPart('login') Args(0) {
         # Universal Provider Parameters
 
         # Fetch the .well-known JSON configuration
-        my $well_known = fetch_json($config->{well_known_url});
+        my $well_known_url = $config->{well_known_url} || die "The well known url is not configured for '$provider'.\n";
+        my $well_known = fetch_json($well_known_url);
+
         my ($error, $error_description) = (
             $well_known->{error},
             $well_known->{error_description}
         );
         if ($error) {
-            $c->stash->{error} = "$error\n$error_description";
-            return
+            die "Failed to fetch well known url. $error. $error_description\n";
         }
 
+        my $client_id = $config->{client_id} || die " The client ID is not configured for '$provider'.\n";
+
         my $params = {
-            client_id     => $config->{client_id},
-            redirect_uri  => $c->config->{'main_production_site_url'} . "/authenticate/oidc/$provider/callback",
+            client_id     => $client_id,
+            redirect_uri  => $c->uri_for("/authenticate/oidc/$provider/callback"),
             scope         => 'openid email profile',
             response_type => 'code',
-            audience      => $config->{client_id},
+            audience      => $client_id,
             state         => $state,
             nonce         => $nonce,
         };
@@ -137,6 +140,7 @@ sub login : Chained('provider') PathPart('login') Args(0) {
         $c->res->redirect( $auth_url );
 
     } catch {
+        cleanup_cookies($provider);
 	    $c->stash->{error} = $_;
     }
 }
@@ -164,12 +168,12 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
 
     # Use this template in case of errors
     $c->stash->{template} = '/authenticate/oidc/error.mas';
+    # Parse the name of the provider from the URL path
+    my $provider = $c->stash->{provider};
 
     try {
-        # Parse the name of the provider from the URL path
-        my $provider = $c->stash->{provider};
         # Read the provider configuration
-        my $config = $c->get_conf('oidc_client')->{$provider};
+        my $config = $c->get_conf('oidc_client')->{$provider} || die "The provider '$provider' is not configured for this instance.\n";
 
         # ---------------------------------------------------------------------
         # Error handling and state verification
@@ -178,29 +182,17 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         my $error = $c->req->param("error");
         my $error_description = $c->req->param("error_description");
         if ($error) {
-            $c->stash->{error} = "$error\n\n$error_description";
-            return
+            die "Received error in the callback params. $error. $error_description\n";
         }
 
         # Check that the state is correct
-        my $state_verifier = $c->request->cookies->{$provider . "_state_verifier"};
-        if (! defined $state_verifier ) {
-            $c->stash->{error} = (
-                "The state verifiers could not be found." .
-                "\n\nPlease try to login again, or contact your system administrator."
-            );
-            return
-        } else {
-            $state_verifier = $state_verifier->value;
-        }
+        my $state_verifier = $c->request->cookies->{$provider . "_state_verifier"} || die "The state verifier could not be found. Please try to login again, or contact your system administrator.\n";
+        $state_verifier = $state_verifier->value;
+
         my $state_expected = urlsafe_b64encode(sha256($state_verifier));
         my $state_observed = $c->req->param("state");
         if ($state_expected ne $state_observed) {
-            $c->stash->{error} = (
-                "The state returned by the provider does not match the initiating state." .
-                "\n\nPlease try to login again, or contact your system administrator for more help."
-            );
-            return
+            die "The state returned by the provider does not match the initiating state. Please try to login again, or contact your system administrator for more help.\n";
         }
 
         # ---------------------------------------------------------------------
@@ -213,8 +205,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
             $well_known->{error_description}
         );
         if ($error) {
-            $c->stash->{error} = "$error\n$error_description";
-            return
+            die "Failed to fetch well known url. $error. $error_description\n";
         }
 
         # Fetch the certificates for verifying token signatures
@@ -225,8 +216,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
             $certs->{error_description}
         );
         if ($error) {
-            $c->stash->{error} = "$error\n$error_description";
-            return
+            die "Failed to fetch provider's certificate. $error. $error_description\n";
         }
 
         # Universal Provider Parameters
@@ -235,7 +225,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
             grant_type    => 'authorization_code',
             client_id     => $config->{client_id},
             client_secret => $config->{client_secret},
-            redirect_uri  => $c->config->{'main_production_site_url'} . "/authenticate/oidc/$provider/callback",
+            redirect_uri  => $c->uri_for("/authenticate/oidc/$provider/callback"),
         };
 
         # Provider-Specific Parameter
@@ -254,8 +244,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         );
 
         if ($error) {
-            $c->stash->{error} = "$error\n$error_description";
-            return
+            die "Failed to fetch access token. $error. $error_description\n";
         }
 
         # Extract the tokens
@@ -283,8 +272,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
             $userinfo->{error_description}
         );
         if ($error) {
-            $c->stash->{error} = "$error\n\n$error_description";
-            return
+            die "Failed to fetch  userinfo. $error. $error_description\n";
         }
 
         my $first_name = $userinfo->{given_name};
@@ -299,12 +287,11 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
         }
 
         if (! $userinfo->{email_verified}) {
-            $c->stash->{error} = (
-                "Your email is not verified with the external provider." .
-                "\n\nPlease verify your email with $provider first."
-            );
-            return
+            die "Your email is not verified with the external provider. Please verify your email with $provider first.\n";
         }
+
+        # Clean up short-lived verifier cookies, we're done with them now
+        cleanup_cookies($provider);
 
         # ---------------------------------------------------------------------
         # 3. Check if the User Exists in the System
@@ -318,11 +305,7 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
 
         # Uh oh, too many matches (not sure if this is even possible)
         if ( $count > 1 ) {
-            $c->stash->{error} = (
-                "Multiple users were found to have the email: '$email'." .
-                "\n\nPlease contact your system administrator for more help."
-            );
-            return;
+            die "Multiple users were found to have the email: '$email'. Please contact your system administrator for more help.\n";
         }
 
         $q = "
@@ -349,22 +332,13 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
             my $num_rows = $h->execute($email, $email);
             my ($other_username) = $h->fetchrow_array();
             if ( $num_rows > 0 ) {
-                $c->stash->{error} = (
-                    "The provided email '$email' is associated with a different user '$other_username'." .
-                    "\n\nPlease contact your system administrator for more help."
-                );
-                return;
+                die "The provided email '$email' is associated with a different user '$other_username'. Please contact your system administrator for more help.\n";
             }
 
 
             # Not auto-provision, raise error
             if (! $config->{auto_provision}) {
-                $c->stash->{error} = (
-                    "No system user was found with the email '$email'." .
-                    "\n\nIf you have not yet registered for an account, please do so first." .
-                    "\nOtherwise, please contact your system administrator."
-                );
-                return;
+                die "No system user was found with the email '$email'. If you have not yet registered for an account, please do so first. Otherwise, please contact your system administrator.\n";
             }
 
             # ---------------------------------------------------------------------
@@ -372,23 +346,14 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
 
             # Check for mirror site status
             if ($c->config->{is_mirror}) {
-                $c->stash->{error} = (
-                    "This site is a mirror site and does not support adding users." .
-                    "\n\nPlease go to the main site to create an account."
-                );
-                return;
+                die "This site is a mirror site and does not support adding users. Please go to the main site to create an account.\n";
             }
 
             # breedbase specific requirements for username composition
             if (length($username) < 7) {
-                $c->stash->{error} = (
-                    "The username '$username' is too short." .
-                    "\n\nUsername must be 7 or more characters."
-                );
-                return
+                die "The username '$username' is too short. Username must be 7 or more characters.\n";
             } elsif ( $username =~ /\s/ ) {
-                $c->stash->{error} = "The username '$username' contains spaces.";
-                return
+                die "The username '$username' contains spaces.\n";
             }
 
             # generate random password. if the user laters wants to use the
@@ -420,9 +385,11 @@ sub callback : Chained('provider') PathPart('callback') Args(0) {
 
         CXGN::Cookie::set_cookie( $LOGIN_COOKIE_NAME, $new_cookie_string );
         CXGN::Cookie::set_cookie( "user_prefs", $user_prefs );
-        $c->response->redirect($c->config->{'main_production_site_url'} . '/');
+
+        $c->response->redirect($c->uri_for("/"));
 
     } catch {
+        cleanup_cookies($provider);
         $c->stash->{error} = $_;
     }
 
@@ -445,9 +412,21 @@ sub set_cookie {
         path     => $path,
         samesite => 'Lax',
         httponly => 1,
-        secure   => 1,
         expires  => '+5m',
     };
+}
+
+# Delete all the verifier cookies client-side by expiring them
+sub cleanup_cookies {
+    my ($provider) = @_;
+
+    my $path = "/authenticate/oidc/$provider";
+    my $expires = '-1d';
+    my $value = '';
+
+    $c->response->cookies->{$provider . "_state_verifier"} = {value => $value, path => $path, expires => $expires };
+    $c->response->cookies->{$provider . "_code_verifier"}  = {value => $value, path => $path, expires => $expires };
+    $c->response->cookies->{$provider . "_nonce_verifier"} = {value => $value, path => $path, expires => $expires };
 }
 
 # Fetch the OIDC .well-known configuration
@@ -455,7 +434,13 @@ sub fetch_json {
     my ($url) = @_;
     my $ua = LWP::UserAgent->new();
     my $response = $ua->get($url);
-    my $content = decode_json $response->{_content};
+    my $content;
+    try {
+        $content = decode_json $response->{_content};
+    } catch {
+        $content->{error} = "Failed to fetch the well known configuration.";
+        $content->{error_description} = $response->{_content};
+    };
     return $content
 }
 
