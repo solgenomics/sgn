@@ -200,14 +200,14 @@ $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 
 #retrieving related accessions for vector page after obsoleting a transformant
-$mech->get_ok("http://localhost:3010/stock/$vector_stock_id/datatables/vector_related_accessions");
+$mech->get_ok('http://localhost:3010/ajax/transformation/vector_transgenic_line_details?vector_id='.$vector_stock_id);
 $response = decode_json $mech->content;
 my $related_accessions = $response->{'data'};
 my $related_accessions_count = scalar(@$related_accessions);
 is($related_accessions_count, '1');
 
 #retrieving obsoleted accessions for vector page
-$mech->get_ok("http://localhost:3010/stock/$vector_stock_id/datatables/vector_obsoleted_accessions");
+$mech->get_ok('http://localhost:3010/ajax/transformation/vector_obsoleted_accessions?vector_id='.$vector_stock_id);
 $response = decode_json $mech->content;
 my $obsoleted_accessions = $response->{'data'};
 my $obsoleted_accession_count = scalar(@$obsoleted_accessions);
