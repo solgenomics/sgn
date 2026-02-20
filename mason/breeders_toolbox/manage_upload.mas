@@ -35,66 +35,85 @@ $editable_vector_props
 
 <div class="well well-sm">
     <h3>Archived files</h3>
-    <table style="width:100%">
-        <tr>
-            <td>
-            </td>
-            <td>
-                &nbsp; &nbsp; &nbsp; &nbsp; 
-            </td>
-            <td>
-                <div style="display:flex;justify-content:flex-end;">
-                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
-                        <div class="form-group">
-                            <label class="col-sm-4 control-label">Archive files: </label>
-                            <div class="col-sm-6">
-                                <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file[]" multiple>
-                            </div>
-                            <div class="col-sm-2">
-                                <button type="submit" class="btn btn-primary" id="upload_factory_new_file_btn"><span class="glyphicon glyphicon-floppy-open"></span></button>
-                            </div>
+        <&| /page/info_section.mas, title => ' ',  id => 'archived_files_table_section', collapsible => 1, collapsed => 0 &>
+            <table style="width:100%">
+                <tr>
+                    <td>
+                    </td>
+                    <td>
+                        &nbsp; &nbsp; &nbsp; &nbsp; 
+                    </td>
+                    <td>
+                        <div style="display:flex;justify-content:flex-end;">
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">Archive files: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file[]" multiple>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button type="submit" class="btn btn-primary" id="upload_factory_new_file_btn"><span class="glyphicon glyphicon-floppy-open"></span></button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                    </form>
-                </div>
-            </td>
-    <table id="upload_factory_archived_files_table">
-        <thead>
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-        </tfoot>
-    </table>
+                    </td>
+            <table id="upload_factory_archived_files_table">
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+                <tfoot>
+                </tfoot>
+            </table>
+        </&>
 </div>
 
-<i>Some file types include a file validation step. Be sure to complete the upload after passing validation. </i>
 <div class="well well-sm">
-<h3>In-progress uploads</h3>
-    <table id="upload_factory_in_progress_uploads_table">
-        <thead>
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-        </tfoot>
-    </table>
+<h3>File validation</h3>
+    <&| /page/info_section.mas, title => ' ',  id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
+        <table id="upload_factory_validated_files_table">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </table>
+        </&>
+</div>
+
+<div class="well well-sm">
+<h3>Uploads in-progress</h3>
+    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to complete the upload after passing validation. ', id => 'in_progress_uploads_table_section', collapsible => 1, collapsed => 1 &>
+        <table id="upload_factory_in_progress_uploads_table">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </table>
+    </&>
 </div>
 
 
 <div class="well well-sm">
 <h3>Completed uploads</h3>
-<br>
-<button class="btn btn-sm btn-primary">Dismiss all completed uploads</button>
-<br>
-<br>
-    <table id="upload_factory_completed_uploads_table">
-        <thead>
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-        </tfoot>
-    </table>
+    <&| /page/info_section.mas, title => ' ', id => 'completed_uploads_table_section', collapsible => 1, collapsed => 1 &>
+        <br>
+        <button class="btn btn-sm btn-primary">Dismiss all completed uploads</button>
+        <br>
+        <br>
+        <table id="upload_factory_completed_uploads_table">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </table>
+    </&>
 </div>
 
 
@@ -1941,7 +1960,7 @@ jQuery(document).ready(function(){
     load_archived_files_table();
     refresh_upload_tables();
 
-    setInterval(refresh_upload_tables, 10000);
+    setInterval(refresh_upload_tables, 15000);
 
     jQuery('#upload_factory_new_file_btn').click(function(event){
         event.preventDefault();
@@ -1998,6 +2017,18 @@ jQuery(document).ready(function(){
     });
 
     jQuery(document).on('click', '.job-dismiss-btn', function() {
+        let job_id = jQuery(this).attr("id").replace('dismiss_job_', '');
+    });
+
+    jQuery(document).on('click', '.job-cancel-btn', function() {
+
+    });
+
+    jQuery(document).on('click', '.validation-commit-btn', function() {
+
+    });
+
+    jQuery(document).on('click', '.view-report-btn', function() {
 
     });
 
