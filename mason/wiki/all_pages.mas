@@ -1,0 +1,13 @@
+
+<%args>
+@all_pages
+</%args>
+
+    <h3><a href="/wiki/"><b>Wiki</b></a></h3>
+% use Data::Dumper;
+% print STDERR "PAGES NOW: ".Dumper(\@all_pages);
+<h4>Wiki - all pages</h4>
+
+%    foreach my $p (@all_pages) {
+	<a href="/wiki/<% $p %>"><% $p %></a><br />
+%    }
