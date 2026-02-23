@@ -911,7 +911,7 @@ sub store {
                     nd_experiment_stocks => \@plot_nd_experiment_stocks,
                 };
                 my $plot;
-                if ((! defined $plant_names || scalar $plant_names eq 0) && (! defined $tissue_sample_names || scalar $tissue_sample_names eq 0) && (! defined $subplot_names || scalar $subplot_names eq 0)) {
+                if ((! defined $plant_names || scalar $plant_names == 0) && (! defined $tissue_sample_names || scalar $tissue_sample_names == 0) && (! defined $subplot_names || scalar $subplot_names == 0)) {
                     $plot = $stock_rs->create($plot_params);
                 } else {
                     $plot = $stock_rs->find_or_create($plot_params);
