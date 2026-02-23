@@ -88,9 +88,7 @@ $trial_name
       <div class="modal-body">
         <div class="container-fluid">
 
-<b>
-Trial coordinates may be uploaded as tab-separated values (.tsv), comma-separated values (.csv), excel (.xls/.xlsx), and open document format (.ods).
-</b>
+<& /help/file_upload_type.mas, type => "Trial Coordinates" &>
 <br>
 <br>
 <b>
