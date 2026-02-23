@@ -110,19 +110,7 @@ sub parse {
       my $v = $rows[$r]->[$c];
       $v = $super->clean_value($v, $h);
 
-      # Only process defined and non-empty values...
       if ( defined($v) && $v ne '' ) {
-
-        # Add value to row info
-        if ( exists $row_info{$h} && exists $column_arrays->{$h} ) {
-          my @merged = uniq(@{$row_info{$h}}, @$v);
-          $row_info{$h} = \@merged;
-        }
-        else {
-          $row_info{$h} = $v;
-        }
-
-        # Add value to values map
         if ( ref($v) eq 'ARRAY' ) {
           if ( scalar(@$v) > 0 ) {
             push @{$row_info{$h}}, @$v;
@@ -137,13 +125,11 @@ sub parse {
           $values_map{$h}->{$v} = 1;
           $skip_row = 0;
         }
-
       }
       else {
         $row_info{$h} = $row_info{$h} || undef;
       }
     }
-
     $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;
     last if $skips_in_a_row > 5;
     push @{$rtn{data}}, \%row_info if !$skip_row;

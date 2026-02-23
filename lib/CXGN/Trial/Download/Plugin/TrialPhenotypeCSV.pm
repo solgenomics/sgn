@@ -132,7 +132,7 @@ sub download {
             phenotype_max_value=>$phenotype_max_value,
             include_pedigree_parents=>$include_pedigree_parents,
             include_intercrop_stocks=>$include_intercrop_stocks,
-            include_entry_numbers=>$include_entry_numbers
+            include_entry_numbers=>$include_entry_numbers,
             phenotype_start_date => $phenotype_start_date,
             phenotype_end_date => $phenotype_end_date,
             repetitive_measurements => $repetitive_measurements,

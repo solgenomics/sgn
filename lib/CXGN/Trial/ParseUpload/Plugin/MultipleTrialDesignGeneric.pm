@@ -67,7 +67,7 @@ sub _validate_with_plugin {
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
         optional_columns => \@OPTIONAL_COLUMNS,
-        column_arrays => [ 'intercrop_accession_name' ]
+        column_arrays => [ 'intercrop_accession_name' ],
         column_aliases => {
             'accession_name' => [ 'stock_name', 'cross_unique_id', 'family_name' ]
         }
@@ -539,7 +539,7 @@ sub _parse_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'accession_name'}};
-    my @intercrop_accessions = $parsed_values->{'intercrop_accession_name'} ? @{$parsed_values->{'intercrop_accession_name'}} : ();
+    my @intercrop_accessions = $values->{'intercrop_accession_name'} ? @{$values->{'intercrop_accession_name'}} : ();
     my @merged_accessions = uniq(@accessions, @intercrop_accessions);
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },
