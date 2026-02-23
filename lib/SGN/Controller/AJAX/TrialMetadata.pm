@@ -26,6 +26,7 @@ use Try::Tiny;
 use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
+use SGN::Model::Cvterm;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Genotype::DownloadFactory;
 use POSIX qw | !qsort !bsearch |;
@@ -3736,16 +3737,17 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         return;
     }
 
+    my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property');
+    my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property');
+
     # store all row/column data here
     eval {
         foreach my $plot_id (keys(%{$parsed_data->{spatial_layout}})) {
-            my $plot_name = $parsed_data->{spatial_layout}->{$plot_id}->{plot_name};
             my $row = $parsed_data->{spatial_layout}->{$plot_id}->{row_number};
             my $col = $parsed_data->{spatial_layout}->{$plot_id}->{col_number};
 
-            my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot_name });
-            my $r = $rs->first();
-            $r->create_stockprops({row_number => $row, col_number => $col});
+            $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$plot_id, rank=>0, value=>$row },{ key=>'stockprop_c1' }); 
+            $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$plot_id, rank=>0, value=>$col },{ key=>'stockprop_c1' });
         }
     };
     if ($@) {
@@ -3762,7 +3764,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $trial_id, experiment_type => 'field_layout' });
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
 
     $job->update_status("finished");
