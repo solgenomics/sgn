@@ -269,7 +269,10 @@ project.project_id=? ) );");
 				$msg_formula_sub =~ s/\Q$1\E\|\Q$2\E/$map_hash{$full_trait}/g;
 			}
 			#print STDERR Dumper $msg_formula_sub;
-			$msg_formual_sub =~ s/[{}[];]//g; # untaint variable
+			$msg_formual_sub =~ s/[{}[];]//g; # possibly untaint variable
+			## no critic (BuiltinFunctions::ProhibitStringEval)
+			eval $dynamic_code;
+			## use critic
 			my $calc_value = eval($msg_formula_sub);
 			#print STDERR Dumper $calc_value;
 			$data{$valid_plot_name}->{$selected_trait} = [$calc_value,$timestamp];
