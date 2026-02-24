@@ -17,9 +17,7 @@ solGS.heatmap = {
     var downloadLinks = heatmapArgs.download_links;
     var inputData = heatmapArgs.input_data;
     var axisMode = heatmapArgs.axis_mode || 2;
-    console.log("heatmapArgs:", heatmapArgs);
 
-    console.log("inputData:", inputData);
     if (heatmapCanvasDiv == null) {
       alert("The heatmap canvas div element is missing.");
     }
