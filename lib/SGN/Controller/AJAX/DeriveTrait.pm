@@ -65,7 +65,6 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	my $trial_id = $c->req->param('trial_id');
     	my $selected_trait = $c->req->param('trait');
 	my %parse_result;
-	my $trait_found;
 	my $time = DateTime->now();
   	my $timestamp = $time->ymd()."_".$time->hms();
 
@@ -111,7 +110,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	}
 
 
-	foreach $trait_found (@{$triat_name}) {
+	foreach my $trait_found (@{$triat_name}) {
 	    	if  ($selected_trait_cvterm_id && ($trait_found->[0] eq $selected_trait_cvterm_id)) {
 			print "Trait found = $trait_found->[1] with id $trait_found->[0]\n";
 			$c->stash->{rest} = {error => "$trait_found->[1] has been computed and uploaded for this trial." };
@@ -184,7 +183,7 @@ sub compute_derive_traits : Path('/ajax/phenotype/create_derived_trait') Args(0)
 	print STDERR "DEBUG: traits_cvterm_ids from formula: " . join(', ', @traits_cvterm_ids) . "\n";
 	print STDERR "DEBUG: assayed traits: " . join(', ', map { $_->[0] . '=' . $_->[1] } @{$triat_name}) . "\n";
 	for (my $x=0; $x<scalar(@traits_cvterm_ids); $x++){
-		foreach $trait_found (@{$triat_name}) {
+		foreach my $trait_found (@{$triat_name}) {
 			if ($trait_found->[0] eq $traits_cvterm_ids[$x]) {
 				push @found_trait_cvterm_ids, $trait_found->[0];
 			}
@@ -270,7 +269,8 @@ project.project_id=? ) );");
 				$msg_formula_sub =~ s/\Q$1\E\|\Q$2\E/$map_hash{$full_trait}/g;
 			}
 			#print STDERR Dumper $msg_formula_sub;
-			my $calc_value = eval "$msg_formula_sub";
+			$msg_formual_sub =~ s/[{}[];]//g; # untaint variable
+			my $calc_value = eval($msg_formula_sub);
 			#print STDERR Dumper $calc_value;
 			$data{$valid_plot_name}->{$selected_trait} = [$calc_value,$timestamp];
 		}
