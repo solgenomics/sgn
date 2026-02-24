@@ -370,7 +370,7 @@ sub get_phenotype_matrix {
     else {  ### NATIVE ??!!
 
         $data = $phenotypes_search->search();
-        print STDERR "the download data structure =". Dumper($data)."\n";
+        #print STDERR "the download data structure =". Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
