@@ -269,7 +269,7 @@ project.project_id=? ) );");
 				$msg_formula_sub =~ s/\Q$1\E\|\Q$2\E/$map_hash{$full_trait}/g;
 			}
 			#print STDERR Dumper $msg_formula_sub;
-			$msg_formal_sub =~ s/[{}[];]//g; # possibly untaint variable
+			$msg_formula_sub =~ s/[{}[];]//g; # possibly untaint variable
 			## no critic (BuiltinFunctions::ProhibitStringEval)
 			my $calc_value = eval($msg_formula_sub);
 			## use critic
