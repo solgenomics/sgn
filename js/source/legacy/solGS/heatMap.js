@@ -16,6 +16,8 @@ solGS.heatmap = {
     var heatmapPlotDivId = heatmapArgs.plot_div_id;
     var downloadLinks = heatmapArgs.download_links;
     var inputData = heatmapArgs.input_data;
+    var axisMode = heatmapArgs.axis_mode || 2;
+    console.log("heatmapArgs:", heatmapArgs);
 
     console.log("inputData:", inputData);
     if (heatmapCanvasDiv == null) {
@@ -303,7 +305,7 @@ solGS.heatmap = {
               plot_div_id: scatterPlotDivId,
               corr_values: corrValues,
               canvas: heatmapCanvasDiv,
-              axis_mode: 2,
+              axis_mode: axisMode,
             });
           } else {
             console.log("No input data available for scatter plot.");

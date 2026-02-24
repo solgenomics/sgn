@@ -484,7 +484,8 @@ jQuery(document).ready(function () {
               output_data: res.output_data,
               canvas: canvas,
               plot_div_id: corrPlotDivId,
-              download_links: corrDownload
+              download_links: corrDownload,
+              axis_mode: 'two',
             };
 
             solGS.heatmap.plot(heatmapArgs);        
@@ -533,7 +534,8 @@ jQuery(document).ready(function () {
             output_data: res.output_data,
             canvas: canvas,
             plot_div_id: corrPlotDivId,
-            download_links: corrDownload
+            download_links: corrDownload,
+            axis_mode: 'four',
           };
           solGS.heatmap.plot(heatmapArgs);
         } else {        
