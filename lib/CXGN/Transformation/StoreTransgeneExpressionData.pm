@@ -163,29 +163,45 @@ sub store_qPCR_data {
         my %CT_expression_data_details;
         my %relative_expression_data_details;
 
-        if ($CT_expression_data) {
-            $CT_expression_data_details{'CT_values'} = $CT_expression_data;
-            $CT_expression_data_details{'endogenous_control'} = $endogenous_control;
-            $CT_expression_data_details{'notes'} = $notes;
-            $CT_expression_data_details{'uploaded_by'} = $operator_id;
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
-        }
-
-        $relative_expression_data_details{'relative_expression_values'} = $relative_expression_data;
-        $relative_expression_data_details{'endogenous_control'} = $endogenous_control;
-        $relative_expression_data_details{'notes'} = $notes;
-        $relative_expression_data_details{'uploaded_by'} = $operator_id;
-        $relative_expression_data_details{'normalized_values_derived_from'} = $normalized_values_derived_from;
 
         my $previous_expression_data_stockprop_rs = $transformant_stock->stockprops({type_id=>$expression_data_cvterm->cvterm_id});
         if ($previous_expression_data_stockprop_rs->count == 1){
             $expression_data_json = $previous_expression_data_stockprop_rs->first->value();
             $expression_data_hash = decode_json $expression_data_json;
-
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
+			print STDERR "PREVIOUS DATA =".Dumper($expression_data_hash)."\n";
             if ($CT_expression_data) {
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
-            }
+			    foreach my $gene (keys %$CT_expression_data) {
+				    my $gene_CT_data = $CT_expression_data->{$gene};
+				    $expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'CT_values'} = $gene_CT_data;
+				    $expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'endogenous_control'} = $endogenous_control;
+				    $expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'notes'} = $notes;
+				    $expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'uploaded_by'} = $operator_id;
+			    }
+		    }
+
+			foreach my $gene (keys %$relative_expression_data) {
+		        my $gene_relative_data = $relative_expression_data->{$gene};
+				$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'relative_expression_values'} = $gene_relative_data;
+				$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'endogenous_control'} = $endogenous_control;
+				$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'notes'} = $notes;
+				$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'uploaded_by'} = $operator_id;
+				$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'normalized_values_derived_from'} = $normalized_values_derived_from;
+			}
+
+#			$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'relative_expression_data'} = $gene_relative_data;
+#            if ($CT_expression_data) {
+#				foreach my $gene (keys %$CT_expression_data) {
+#					my $gene_CT_data = $CT_expression_data->{$gene};
+#					$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'CT_expression_data'} = $gene_CT_data;
+#				}
+#			}
+
+
+#            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
+#            if ($CT_expression_data) {
+#                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
+#            }
+            print STDERR "UPDATED DATA =".Dumper($expression_data_hash)."\n";
 
             $updated_expression_data_json = encode_json $expression_data_hash;
             $previous_expression_data_stockprop_rs->first->update({value=>$updated_expression_data_json});
@@ -193,11 +209,44 @@ sub store_qPCR_data {
             $return{error} = "More than one expression data stockprop found for: $transformant_name!";
             return \%return;
         } else {
-            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
-            if ($CT_expression_data) {
-                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
-            }
+#            $expression_data_hash->{$tissue_type}->{$assay_date}->{'relative_expression_data'} = \%relative_expression_data_details;
+#            if ($CT_expression_data) {
+#                $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
+#            }
 
+if ($CT_expression_data) {
+#            $CT_expression_data_details{'CT_values'} = $CT_expression_data;
+#            $CT_expression_data_details{'endogenous_control'} = $endogenous_control;
+#            $CT_expression_data_details{'notes'} = $notes;
+#            $CT_expression_data_details{'uploaded_by'} = $operator_id;
+	foreach my $gene (keys %$CT_expression_data) {
+		my $gene_CT_data = $CT_expression_data->{$gene};
+		$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'CT_values'} = $gene_CT_data;
+		$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'endogenous_control'} = $endogenous_control;
+		$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'notes'} = $notes;
+		$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'uploaded_by'} = $operator_id;
+	}
+#            $expression_data_hash->{$tissue_type}->{$assay_date}->{'CT_expression_data'} = \%CT_expression_data_details;
+}
+
+#        $relative_expression_data_details{'relative_expression_values'} = $relative_expression_data;
+#        $relative_expression_data_details{'endogenous_control'} = $endogenous_control;
+#        $relative_expression_data_details{'notes'} = $notes;
+#        $relative_expression_data_details{'uploaded_by'} = $operator_id;
+#        $relative_expression_data_details{'normalized_values_derived_from'} = $normalized_values_derived_from;
+foreach my $gene (keys %$relative_expression_data) {
+	my $gene_relative_data = $relative_expression_data->{$gene};
+	$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'relative_expression_values'} = $gene_relative_data;
+	$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'endogenous_control'} = $endogenous_control;
+	$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'notes'} = $notes;
+	$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'uploaded_by'} = $operator_id;
+	$expression_data_hash->{$tissue_type}->{$assay_date}->{$gene}->{'normalized_values_derived_from'} = $normalized_values_derived_from;
+}
+
+
+
+
+            print STDERR "NEW DATA =".Dumper($expression_data_hash)."\n";
             $expression_data_json = encode_json $expression_data_hash;
             $transformant_stock->create_stockprops({$expression_data_cvterm->name() => $expression_data_json});
         }
