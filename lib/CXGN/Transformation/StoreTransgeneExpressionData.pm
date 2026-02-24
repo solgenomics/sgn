@@ -106,9 +106,9 @@ sub store_qPCR_data {
     my $transaction_error;
     my $transformant_name = $self->get_transformant_name();
     my $vector_construct_name = $self->get_vector_construct_name();
-
     my $CT_expression_data = $self->get_CT_expression_data();
     my $relative_expression_data = $self->get_relative_expression_data();
+
     my $tissue_type = $self->get_tissue_type();
     my $assay_date = $self->get_assay_date();
     my $endogenous_control = $self->get_endogenous_control();
@@ -119,7 +119,8 @@ sub store_qPCR_data {
     my %return;
 
     my $coderef = sub {
-        if ($CT_expression_data && (!$relative_expression_data)) {
+
+        if ($CT_expression_data) {
             if ($normalization_method eq "CASS_Delta_Cq") {
                 $relative_expression_data = _CASS_normalized_values($CT_expression_data, $endogenous_control);
                 $normalized_values_derived_from = 'calculated using CASS normalization method';
@@ -238,49 +239,50 @@ sub store_qPCR_data {
 sub _CASS_normalized_values {
     my $CT_data = shift;
 	my $endogenous_control = shift;
-	my @replicates = keys %$CT_data;
-	my $number_of_replicates = scalar @replicates;
+
 	my %normalized_values_hash;
 	my %normalized_data;
 
-    foreach my $rep (keys %$CT_data) {
-        my $CT_values = $CT_data->{$rep};
-        my $endogenous_control_CT = $CT_values->{'endogenous_control'}->{$endogenous_control};
-        my $two_power_control = 2**$endogenous_control_CT;
-        my $target_CT_values = $CT_values->{'target'};
-        foreach my $gene (keys %$target_CT_values) {
-            my $normalized_value;
-            my $CT = $target_CT_values->{$gene};
-            my $two_power_target = 2**$CT;
-            $normalized_values_hash{$gene}{$rep} = $two_power_control / $two_power_target;
-        }
+	foreach my $gene (keys %$CT_data) {
+		my @replicates = ();
+		my $number_of_replicates = '';
+		my $gene_data = {};
+        $gene_data = $CT_data->{$gene};
+		@replicates = keys %$gene_data;
+		$number_of_replicates = scalar @replicates;
+		foreach my $rep (keys %$gene_data) {
+            my $CT_values = $gene_data->{$rep};
+	        my $endogenous_control_CT = $CT_values->{'endogenous_control'}->{$endogenous_control};
+	        my $two_power_control = 2**$endogenous_control_CT;
+	        my $CT = $CT_values->{'target'}->{$gene};
+	        my $normalized_value;
+			my $two_power_target = 2**$CT;
+	        $normalized_values_hash{$rep} = $two_power_control / $two_power_target;
+		}
+
+		my @all_normalized_values = ();
+		@all_normalized_values = values %normalized_values_hash;
+		my $stat = Statistics::Descriptive::Full->new();
+		$stat->add_data(@all_normalized_values);
+
+		my $mean_value =  sprintf("%.6f", $stat->mean());
+		my $stdevp_value;
+		if ($number_of_replicates > 1) {
+		    my $sum_of_squared_differences;
+			foreach my $normalized_value (@all_normalized_values) {
+				my $squared_difference;
+				$squared_difference = ($normalized_value - $mean_value) ** 2;
+				$sum_of_squared_differences += $squared_difference;
+			}
+			$stdevp_value = sqrt($sum_of_squared_differences/$number_of_replicates);
+			$stdevp_value =  sprintf("%.6f", $stdevp_value);
+		} else {
+			$stdevp_value = "NA";
+		}
+		$normalized_data{$gene}{'relative_expression'} = $mean_value;
+		$normalized_data{$gene}{'number_of_replicates'} = $number_of_replicates;
+		$normalized_data{$gene}{'stdevp'} = $stdevp_value;
 	}
-
-    foreach my $gene_name ( keys %normalized_values_hash) {
-        my @all_normalized_values = ();
-        my $all_rep_hash = $normalized_values_hash{$gene_name};
-        @all_normalized_values = values %$all_rep_hash;
-        my $stat = Statistics::Descriptive::Full->new();
-        $stat->add_data(@all_normalized_values);
-
-        my $mean_value =  sprintf("%.6f", $stat->mean());
-        my $stdevp_value;
-        if ($number_of_replicates > 1) {
-            my $sum_of_squared_differences;
-            foreach my $normalized_value (@all_normalized_values) {
-                my $squared_difference;
-                $squared_difference = ($normalized_value - $mean_value) ** 2;
-                $sum_of_squared_differences += $squared_difference;
-            }
-            $stdevp_value = sqrt($sum_of_squared_differences/$number_of_replicates);
-            $stdevp_value =  sprintf("%.6f", $stdevp_value);
-        } else {
-            $stdevp_value = "NA";
-        }
-        $normalized_data{$gene_name}{'relative_expression'} = $mean_value;
-        $normalized_data{$gene_name}{'number_of_replicates'} = $number_of_replicates;
-        $normalized_data{$gene_name}{'stdevp'} = $stdevp_value;
-    }
 
     return \%normalized_data;
 }

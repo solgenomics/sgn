@@ -1715,15 +1715,26 @@ sub upload_qPCR_data_POST : Args(0) {
 
     if ($parsed_data){
         foreach my $transformant_name (keys %$parsed_data) {
-            my $CT_expression_data;
-            my $relative_expression_data;
+            my $parsed_CT_expression_data = {};
+            my $CT_expression_data = {};
+            my $relative_expression_data = {};
             my $error;
             if ($CT_upload) {
-                $CT_expression_data = $parsed_data->{$transformant_name};
+                $parsed_CT_expression_data = $parsed_data->{$transformant_name};
+                foreach my $rep (keys %$parsed_CT_expression_data) {
+                    my $target_genes = $parsed_CT_expression_data->{$rep}->{'target'};
+                    my $endogenous_control_CT_value = $parsed_CT_expression_data->{$rep}->{'endogenous_control'}->{$endogenous_control};
+                    foreach my $gene (keys %$target_genes) {
+                        my $target_CT_value = $parsed_CT_expression_data->{$rep}->{'target'}->{$gene};
+                        $CT_expression_data->{$gene}->{$rep}->{'target'}->{$gene} = $target_CT_value;
+                        $CT_expression_data->{$gene}->{$rep}->{'endogenous_control'}->{$endogenous_control} = $endogenous_control_CT_value;
+                    }
+                }
+
             } elsif ($normalized_upload) {
                 $relative_expression_data = $parsed_data->{$transformant_name};
             }
-
+            print STDERR "CT EXPRESSION DATA =".Dumper($CT_expression_data)."\n";
             my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
                 chado_schema => $schema,
                 transformant_name => $transformant_name,
