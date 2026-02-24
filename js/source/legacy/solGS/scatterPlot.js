@@ -238,31 +238,9 @@ solGS.scatterPlot = {
                 d3.selectAll("text#dLabel").remove();
             });
 
-        var regEquation = ss.linear_regression()
-            .data(xyValues)
-            .line();
-
-        var regParams = ss.linear_regression()
-            .data(xyValues)
-
-        var intercept = regParams.b();
-        intercept = Math.round(intercept * 100) / 100;
-
-        var slope = regParams.m();
-        slope = Math.round(slope * 100) / 100;
-
-        var sign;
-        if (slope > 0) {
-            sign = ' + ';
-        } else {
-            sign = ' - ';
-        };
-
-        var equation = 'y = ' + intercept + sign + slope + 'x';
-
-        var rSquared = ss.r_squared(xyValues, regEquation);
-        rSquared = Math.round(rSquared * 100) / 100;
-        rSquared = 'R-squared = ' + rSquared;
+        var olsStats = solGS.olsLine.compute({
+            xy_values: xyValues,
+        });
 
         var regLine = d3.line()
             .x(function (d) {
@@ -290,14 +268,8 @@ solGS.scatterPlot = {
             });
 
 
-        var fittedData = [];
-        xData.forEach(function (x) {
-            var predictedValue = regEquation(parseFloat(x[1]));
-            fittedData.push([parseFloat(x[1]), predictedValue]);
-        });
-
         regPlot.append("svg:path")
-            .attr("d", regLine(fittedData))
+            .attr("d", regLine(olsStats.fitted_data))
             .attr('stroke', regLineColor)
             .attr('stroke-width', 2)
             .attr('fill', 'none');
@@ -308,7 +280,7 @@ solGS.scatterPlot = {
         regPlot.append("g")
             .attr("id", "equation")
             .append("text")
-            .text(equation)
+            .text(olsStats.equation_label)
             .attr("x", statsX)
             .attr("y", statsY - 12)
             .attr("text-anchor", "start")
@@ -318,7 +290,7 @@ solGS.scatterPlot = {
         regPlot.append("g")
             .attr("id", "rsquare")
             .append("text")
-            .text(rSquared)
+            .text(olsStats.r_squared)
             .attr("x", statsX)
             .attr("y", statsY + 4)
             .attr("text-anchor", "start")
@@ -327,8 +299,8 @@ solGS.scatterPlot = {
 
         if (corrValues != null) {
 
-            var rVal = `r=${d3.format(".2f")(corrValues.coef)}`;
-            var pVal = `p=${d3.format(".2f")(corrValues.pvalue)}`;
+            var rVal = `r = ${d3.format(".2f")(corrValues.coef)}`;
+            var pVal = `p = ${d3.format(".2f")(corrValues.pvalue)}`;
             var corrText = `${rVal}, ${pVal}`;
 
             regPlot.append("g")
@@ -351,4 +323,3 @@ solGS.scatterPlot = {
     }
 
 }
-

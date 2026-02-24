@@ -186,55 +186,34 @@
 
         // draw a trendline using ordinary least squares (OLS) regression
         if (options.drawOls) {
-            allDates = data.map(d => d.date);
-            const uniqueDates = [...new Map(allDates.map(d => [d.toDateString(), d])).values()];
+            // allDates = data.map(d => d.date);
+            // const uniqueDates = [...new Map(allDates.map(d => [d.toDateString(), d])).values()];
 
-            const lsData = data.map(function(d, i) {
-                const idx = uniqueDates.findIndex(ud => ud.toDateString() === d.date.toDateString());
-                return [idx, d.value];
+            // const lsData = data.map(function(d, i) {
+            //     const idx = uniqueDates.findIndex(ud => ud.toDateString() === d.date.toDateString());
+            //     return [idx, d.value];
+            // });
+
+            const olsStats = solGS.olsLine.compute({
+                xy_values: data,  
+                x_data_type: "date",      
             });
 
-            const olsRegression = ss.linear_regression()
-                .data(lsData)
-                .line(); 
-    
-            const lineParams = ss.linear_regression()
-                .data(lsData);
-            
-            let alpha = lineParams.b();
-            alpha =  Math.round(alpha*100) / 100;
-            
-            let beta = lineParams.m();
-            beta = Math.round(beta*100) / 100;
-            
-            let sign; 
-            if (beta < 0) {
-                beta = Math.abs(beta);
-                sign = ' - ';
-            } else {
-                sign = ' + ';
-            };
-
-            const equation = `y = ${alpha} ${sign} ${beta}x`; 
-
-            let rq = ss.r_squared(lsData, olsRegression);
-            rq = Math.round(rq*100) / 100;
-            rq = `R\u00B2 = ${rq}`;
+            // const equationLabel = olsStats.equation_label;
+            // const rq = olsStats.r_squared;
+            // const fittedData = olsStats.fitted_data;
+            // console.log("OLS Equation:", equation);
+            // console.log("R-squared:", rq);
+            // console.log("Fitted Data:", fittedData);
 
             const olsLine = d3.line()
                 .x(function(d) {return xAxisScale(d[0]); })
                 .y(function(d) {return yAxisScale(d[1]); })
    
-            const olsPredictions = data.map(d => {
-                const idx = uniqueDates.findIndex(ud => ud.toDateString() === d.date.toDateString());
-                const predictedValue = olsRegression(Number(idx));
-                return [d.date, predictedValue];
-            });
-
             const olsColor = "#6A1B9A";
 
             svg.append("path")
-                .attr("d", olsLine(olsPredictions))
+                .attr("d", olsLine(olsStats.fitted_data))
                 .attr('stroke', olsColor)
                 .attr('stroke-width', 2)
                 .attr('fill', 'none');
@@ -242,7 +221,7 @@
             svg.append("g")
                 .attr("id", "equation")
                 .append("text")
-                .text(equation)
+                .text(olsStats.equation_label)
                 .attr("x", width - 10)
                 .attr("y", 30)
                 .style("fill", olsColor)
@@ -252,7 +231,7 @@
             svg.append("g")
                 .attr("id", "rsquare")
                 .append("text")
-                .text(rq)
+                .text(olsStats.r_squared)
                 .attr("x", width - 10)
                 .attr("y", 50)
                 .style("fill", olsColor)
