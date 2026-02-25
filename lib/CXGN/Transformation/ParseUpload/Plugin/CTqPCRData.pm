@@ -73,8 +73,8 @@ sub _validate_with_plugin {
     }
 
     foreach my $Cq_value (@$seen_Cq_values) {
-        if (!looks_like_number($Cq_value)) {
-            push @error_messages, "Cq value is not a number: $Cq_value.";
+        if ((!looks_like_number($Cq_value)) && ($Cq_value ne 'ND')) {
+            push @error_messages, "Cq value is not a number or 'ND': $Cq_value.";
         }
     }
 

@@ -1816,14 +1816,18 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
 
                         if ($gene_relative_expression_value) {
                             push @display_info, $gene_relative_expression_value->{'relative_expression'};
-                            $number_of_replicates = $gene_relative_expression_value->{'number_of_replicates'};
-                            if ($number_of_replicates == 1) {
-                                push @display_info, $number_of_replicates." replicate";
-                            } else {
-                                push @display_info, $number_of_replicates." replicates";
+
+                            if (($gene_relative_expression_value->{'relative_expression'}) ne 'ND') {
+                                $number_of_replicates = $gene_relative_expression_value->{'number_of_replicates'};
+                                if ($number_of_replicates == 1) {
+                                    push @display_info, $number_of_replicates." replicate";
+                                } else {
+                                    push @display_info, $number_of_replicates." replicates";
+                                }
+                                $standard_deviation = $gene_relative_expression_value->{'stdevp'};
+                                push @display_info, "stdevp: ". $standard_deviation;
                             }
-                            $standard_deviation = $gene_relative_expression_value->{'stdevp'};
-                            push @display_info, "stdevp: ". $standard_deviation;
+
                             $value_string = join("<br>", @display_info);
                             push @expression_values, $value_string;
                         } else {
@@ -1856,14 +1860,18 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
 
                     if ($gene_relative_expression_value) {
                         push @display_info, $gene_relative_expression_value->{'relative_expression'};
-                        $number_of_replicates = $gene_relative_expression_value->{'number_of_replicates'};
-                        if ($number_of_replicates == 1) {
-                            push @display_info, $number_of_replicates." replicate";
-                        } else {
-                            push @display_info, $number_of_replicates." replicates";
+
+                        if (($gene_relative_expression_value->{'relative_expression'}) ne 'ND') {
+                            $number_of_replicates = $gene_relative_expression_value->{'number_of_replicates'};
+                            if ($number_of_replicates == 1) {
+                                push @display_info, $number_of_replicates." replicate";
+                            } else {
+                                push @display_info, $number_of_replicates." replicates";
+                            }
+                            $standard_deviation = $gene_relative_expression_value->{'stdevp'};
+                            push @display_info, "stdevp: ". $standard_deviation;
                         }
-                        $standard_deviation = $gene_relative_expression_value->{'stdevp'};
-                        push @display_info, "stdevp: ". $standard_deviation;
+                        
                         $value_string = join("<br>", @display_info);
                         push @expression_values, $value_string;
                     } else {
