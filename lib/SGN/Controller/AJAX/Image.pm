@@ -105,6 +105,66 @@ sub image_stock_connection_POST {
     $c->stash->{stock_id} = shift;
 }
 
+sub image_associated_objects : Chained('basic_ajax_image') PathPart('associated_objects') Args(0) ActionClass('REST') { }
+
+sub image_associated_objects_GET {
+    my $self = shift;
+    my $c = shift;
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $image_id = shift;
+
+    my $image = $c->stash->{image};
+
+    my @associated_objects = $image->get_associated_objects();
+    my @results;
+    my $stock_type;
+
+    foreach my $association (@associated_objects) {
+        my ($type, $id, $name) = @$association;
+        $name ||= '';
+        my $link;
+        my $stock_type_name;
+
+        if ($type eq "stock") {
+            $link = "<a href=\"/stock/$id/view\">$name.</a>";
+            my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $id });
+            $stock_type = $stock->type;
+            $stock_type_name = $stock_type->name;
+        }
+
+        if ($type eq "trial") {
+            $link = "<a href=\"/breeders/trial/$id/\">$name.</a>";
+        }
+
+        if ($type eq "experiment") {
+            $link = "<a href=\"/insitu/detail/experiment.pl?experiment_id=$id&amp;action=view\">insitu experiment $name</a>";
+        }
+
+        if ($type eq "fished_clone") {
+            $link = qq { <a href="/maps/physical/clone_info.pl?id=$id">FISHed clone id:$id</a> };
+        }
+        if ($type eq "locus" ) {
+            $link = qq { <a href="/phenome/locus_display.pl?locus_id=$id">Locus name:$name</a> };
+        }
+        if ($type eq "organism" ) {
+            $link = qq { <a href="/organism/$id/view/">Organism name:$name</a> };
+        }
+
+        if ($type eq "cvterm" ) {
+            $link = qq { <a href="/cvterm/$id/view/">Cvterm: $name</a> };
+        }
+
+        push @results, {
+            type => $type,
+            id => $id,
+            name => $link,
+            stock_type => $stock_type_name
+        }
+    }
+    $c->stash->{rest} = \@results;
+}
+
 # GET endpoint /ajax/image/<image_id>/stock/<stock_id>/display_order
 #
 sub get_image_stock_display_order : Chained('image_stock_connection') PathPart('display_order') Args(0) ActionClass('REST') { }
