@@ -239,11 +239,6 @@ has 'display_pedigree' => (
 	default => 0
 );
 
-has 'stockprops' => (
-    isa => 'ArrayRef',
-    is => 'rw',
-);
-
 sub search {
     my $self = shift;
     print STDERR "CXGN::Stock::SearchVector search start\n";
@@ -600,12 +595,12 @@ sub search {
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
         my @stockprop_view = keys %{$self->stockprop_columns_view};
         my $result_stock_ids_sql = join ",", @result_stock_ids;
-        my $stockprop_where = "WHERE stock_id IN ($result_stock_ids_sql)";
+        my $stockprop_where = " stock_id IN ($result_stock_ids_sql)";
 
 	print STDERR "STOCKPROP VIEW: ".Dumper(\@stockprop_view);
-        my $stockprop_select_sql = "'" . join ("'", @stockprop_view) . "'";
+        my $stockprop_select_sql = "'" . join ("', '", @stockprop_view) . "'";
 
-	my $stockprop_query = "SELECT stock_id, cvterm.name, value FROM stockprop join cvterm on (cvterm.cvterm_id = stockprop.type_id) WHERE cvterm.name in ($stockprop_select_sql)";
+	my $stockprop_query = "SELECT stock_id, cvterm.name, value FROM stockprop join cvterm on (cvterm.cvterm_id = stockprop.type_id) WHERE cvterm.name in ($stockprop_select_sql) and $stockprop_where ";
 
 	print STDERR "NEXT STOCKPROP QUERY: $stockprop_query\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
