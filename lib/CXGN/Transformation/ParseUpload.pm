@@ -34,17 +34,24 @@ has '_parsed_data' => (
     predicate => '_has_parsed_data',
 );
 
+has 'vector_stock_id' => (
+    isa => 'Maybe[Int]',
+    is => 'ro',
+    required => 0,
+);
+
 has 'vector_construct_genes' => (
-    isa => 'ArrayRef',
+    isa => 'ArrayRef|Undef',
     is => 'ro',
     required => 0,
 );
 
 has 'endogenous_control' => (
-    isa => 'Str',
+    isa => 'Maybe[Str]',
     is => 'ro',
     required => 0,
 );
+
 
 sub parse {
     my $self = shift;

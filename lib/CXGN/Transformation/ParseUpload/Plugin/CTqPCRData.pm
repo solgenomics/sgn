@@ -7,13 +7,14 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 use Scalar::Util qw(looks_like_number);
+use CXGN::Stock::RelatedStocks;
 
 sub _validate_with_plugin {
     my $self = shift;
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-
+    my $vector_stock_id = $self->get_vector_stock_id();
     my $genes = $self->get_vector_construct_genes();
     my %valid_genes;
     foreach my $gene (@$genes) {
@@ -66,6 +67,17 @@ sub _validate_with_plugin {
         push @error_messages, "The following accessions are not in the database, or are not in the database as uniquenames: ".join(',',@accessions_missing);
     }
 
+    my $related_transformants = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_stock_id});
+    my $transformants = $related_transformants->get_vector_related_accession_list();
+    my @all_transformants = @$transformants;
+    foreach my $accession (@$seen_accession_names) {
+        if ($accession ~~ @all_transformants) {
+            next;
+        } else {
+            push @error_messages, "This accession doesn't contain expected vector construct: $accession";
+        }
+    }
+
     foreach my $gene_name (@$seen_genes) {
         if (!exists $valid_genes{$gene_name}) {
             push @error_messages, "Gene not in this vector construct: $gene_name.";
@@ -77,6 +89,9 @@ sub _validate_with_plugin {
             push @error_messages, "Cq value is not a number or 'ND': $Cq_value.";
         }
     }
+
+
+
 
     if (scalar(@error_messages) >= 1) {
         $errors{'error_messages'} = \@error_messages;

@@ -299,6 +299,34 @@ sub get_vector_obsoleted_accessions {
 }
 
 
+sub get_vector_related_accession_list {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT transformant.uniquename
+        FROM stock AS vector
+        JOIN stock_relationship ON (stock_relationship.subject_id = vector.stock_id) AND stock_relationship.type_id = ?
+        JOIN stock as transformant ON (stock_relationship.object_id = transformant.stock_id) AND transformant.type_id = ?
+        WHERE vector.stock_id = ? AND vector.type_id = ? AND transformant.is_obsolete = 'F' ORDER BY transformant.uniquename";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($male_parent_type_id, $accession_type_id, $stock_id, $vector_construct_type_id);
+
+    my @transformant_list =();
+
+    while(my $transformant_name = $h->fetchrow_array()) {
+        push @transformant_list, $transformant_name;
+    }
+
+    return \@transformant_list;
+}
+
+
 sub get_plots_and_plants {
     my $self = shift;
     my $stock_id = $self->stock_id;

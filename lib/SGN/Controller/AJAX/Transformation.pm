@@ -1692,7 +1692,7 @@ sub upload_qPCR_data_POST : Args(0) {
         }
     }
 
-    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes, endogenous_control => $endogenous_control);
+    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes, endogenous_control => $endogenous_control, vector_stock_id => $vector_id);
 
     $parser->load_plugin($plugin_type);
     $parsed_data = $parser->parse();
