@@ -32,7 +32,7 @@ use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_select
 
 my $accession_cvterm_id;
 
-for (my $i=0; $i<= scalar(@$stock_types); $i++) {
+for (my $i=0; $i< scalar(@$stock_types); $i++) {
      if ( $stock_types->[$i][1] eq "accession" ) {
      	$accession_cvterm_id = $stock_types->[$i][0];
 	last();

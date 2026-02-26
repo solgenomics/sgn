@@ -885,6 +885,27 @@ sub intersect_lists : Path('/list/intersect') Args(2) {
     }
 }
 
+sub compare_lists : Path('/list/compare') Args(0) {
+    my ($self, $c) = @_;
+    my $list_ids = $c->req->param('list_ids') || '';
+    my ($list1_id, $list2_id) = split /,/, $list_ids;
+
+    my $list1 = $self->retrieve_list($c, $list1_id) || [];
+    my $list2 = $self->retrieve_list($c, $list2_id) || [];
+
+    my %list_one_names = map { lc($_->[1]) => 1 } @$list1;
+    my %list_two_names = map { lc($_->[1]) => 1 } @$list2;
+
+    my @only_in_1 = grep { !$list_two_names{$_} } keys %list_one_names;
+    my @only_in_2 = grep { !$list_one_names{$_} } keys %list_two_names;
+    my @in_both = grep { $list_two_names{$_} } keys %list_one_names;
+
+    $c->stash->{rest} = {
+        only_in_list1 => [sort @only_in_1],
+        only_in_list2 => [sort @only_in_2],
+        in_both => [sort @in_both],
+    };
+}
 
 sub remove_element_action :Path('/list/item/remove') Args(0) {
     my $self = shift;
@@ -1092,7 +1113,7 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-        $c->stash->{rest} = { error => "You must be logged in to use markerset.", };
+        $c->stash->{rest} = { error => "You must be logged in to use marker alleles.", };
         return;
     }
 
@@ -1118,7 +1139,7 @@ sub delete_markerset : Path('/markerset/delete') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to delete markerset.', };
+    	$c->stash->{rest} = { error => 'You must be logged in to delete marker alleles.', };
     	return;
     }
 
@@ -1151,7 +1172,7 @@ sub get_markerset_items :Path('/markerset/items') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to use markerset.', };
+    	$c->stash->{rest} = { error => 'You must be logged in to use marker alleles.', };
     	return;
     }
 
@@ -1181,7 +1202,7 @@ sub get_markerset_type :Path('/markerset/type') Args(0) {
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
-    	$c->stash->{rest} = { error => 'You must be logged in to use markerset.', };
+    	$c->stash->{rest} = { error => 'You must be logged in to use marker alleles.', };
     	return;
     }
 

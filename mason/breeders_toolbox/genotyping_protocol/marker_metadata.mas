@@ -1,0 +1,88 @@
+<%args>
+    $protocol_id
+</%args>
+
+<& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables','jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+
+<div id="marker_metadata_loading">
+    <p>Loading...</p>
+</div>
+
+<div id="marker_metadata_table_container" style="display: none">
+    <table id="marker_metadata_table" class="table table-hover table-bordered" style="width: 100%"></table>
+</div>
+
+<div id="marker_metadata_upload" style="display:none">
+    <p>
+        To upload metadata and alleles for markers in this protocol, go to the 
+        <a href="/breeders/genotyping_projects">Manage Genotyping Projects</a>
+        page and select the <strong>Add Marker Metadata</strong> button.
+    </p>
+</div>
+
+<script type="text/javascript">
+    jQuery(window).ready(() => {
+        jQuery.ajax({
+            url: '/ajax/genotyping_protocol/get_marker_metadata/<% $protocol_id %>',
+            method: 'GET',
+            success: displayMetadata,
+            error: displayError
+        });
+    });
+
+    function displayMetadata(response) {
+
+        // Metadata found, generate table...
+        if ( response && Object.keys(response).length > 0 ) {
+            jQuery("#marker_metadata_upload").hide();
+            new jQuery("#marker_metadata_table").DataTable({
+                dom: 'Bfrtip',
+                buttons: [
+                    'pageLength',
+                    {
+                        extend: 'excelHtml5',
+                        title: 'marker_metadata',
+                        exportOptions: { orthogonal: "export" }
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        title: 'marker_metadata',
+                        exportOptions: { orthogonal: "export" }
+                    }
+                ],
+                data: Object.values(response),
+                columns: [
+                    { title: "Marker", render: (data, type, row) => {
+                        var html = `<a href='/locus/${row.locus_id}/view'>`;
+                        html += row.marker_name;
+                        if ( row.locus_name !== row.marker_name ) html += ` = ${row.locus_name}`;
+                        html += '</a>';
+                        return html;
+                    }},
+                    { title: "Description", data: "locus_description" },
+                    { title: "Alleles", render: (data, type, row) => { return row.alleles.map((x) => x.allele_name).join(type === 'export' ? ', ' : '<br />') } }
+                ]
+            })
+        }
+
+        // No Metadata found, show upload information...
+        else {
+            let html = "<p style='font-style: italic; padding-bottom: 10px'>There are no metadata or allele values set for the markers in this protocol.</p>";
+            jQuery("#marker_metadata_table_container").html(html);
+            jQuery("#marker_metadata_upload").show();
+        }
+
+        jQuery("#marker_metadata_loading").hide();
+        jQuery("#marker_metadata_table_container").show();
+
+    }
+
+    function displayError() {
+        let html = "<p><strong>ERROR:</strong> There was an error getting the marker metadata for this protocol.</p>";
+        jQuery("#marker_metadata_table_container").html(html);
+
+        jQuery("#marker_metadata_loading").hide();
+        jQuery("#marker_metadata_table_container").show();
+        jQuery("#marker_metadata_upload").hide();
+    }
+</script>

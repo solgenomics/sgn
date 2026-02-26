@@ -280,6 +280,7 @@ sub search {
                 }
             }
 
+            print STDERR "\n\n fetching layout for  ".$self->data_level. " time: ".  localtime ."\n";
             if ($self->data_level eq 'plot'){
                 if (!$self->plot_list){
                     $self->plot_list([]);
@@ -289,6 +290,28 @@ sub search {
                     push @{$self->plot_list}, $_->[0];
                 }
             }
+
+            if ($self->data_level eq 'accession'){
+                if (!$self->accession_list){
+                    $self->accession_list([]);
+                }
+                my $accessions = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_accessions();
+                # print STDERR "Accessions for trial $_ : ".Dumper($accessions)."\n";
+                foreach (@$accessions){
+                    print STDERR "iterating accessions: " . Dumper( $_) . "\n";
+                    print STDERR "Pushing accession ".$_->{'stock_id'}."\n";
+                    push @{$self->accession_list}, $_->{'stock_id'};
+                }
+
+                if (!$self->plot_list){
+                    $self->plot_list([]);
+                }
+                my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
+                foreach (@$plots){
+                    push @{$self->plot_list}, $_->[0];
+                }
+            }
+
             if ($self->data_level eq 'plant'){
                 if (!$self->plant_list){
                     $self->plant_list([]);
@@ -443,14 +466,7 @@ sub search {
     print STDERR "Native search Accession list is ".Dumper($accession_list)."\n";
 
     my $analysis_result_stock_list = $self->analysis_result_stock_list;
-    print STDERR "Native search analysis result_stock_list is ".Dumper($analysis_result_stock_list)."\n";
-
-    if ($self->accession_list && scalar(@{$self->accession_list})>0) {
-        print STDERR "Native search adding accession_list to sql\n";
-        my $accession_sql = _sql_from_arrayref($self->accession_list);
-        push @where_clause, "germplasm.stock_id in ($accession_sql)";
-    }
-
+    
     if ($self->analysis_result_stock_list && scalar(@{$self->analysis_result_stock_list})>0) {
         print STDERR "Native search adding analysis result_stock_list to sql\n";
         my $accession_sql = _sql_from_arrayref($self->analysis_result_stock_list);
@@ -470,7 +486,7 @@ sub search {
     } elsif (($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
         my $plant_and_subplot_sql = _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
         push @where_clause, "observationunit.stock_id in ($plant_and_subplot_sql)";
-    } elsif ($self->plot_list && scalar(@{$self->plot_list})>0) {
+    } elsif ($self->plot_list && scalar(@{$self->plot_list})>0 && (!$self->accession_list || scalar(@{$self->accession_list}) == 0)) {
         my $plot_sql = _sql_from_arrayref($self->plot_list);
         push @where_clause, "observationunit.stock_id in ($plot_sql)";
     } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
@@ -479,6 +495,15 @@ sub search {
     } elsif ($self->subplot_list && scalar(@{$self->subplot_list})>0) {
         my $subplot_sql = _sql_from_arrayref($self->subplot_list);
         push @where_clause, "observationunit.stock_id in ($subplot_sql)";
+
+    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->accession_list && scalar(@{$self->accession_list})>0)) {
+        #if only accessions are given, we need to join to analysis_result and get all analysis results for those accessions
+        my $accession_sql = _sql_from_arrayref($self->accession_list);
+        my $plot_sql = _sql_from_arrayref($self->plot_list);
+        push @where_clause, "observationunit.stock_id in ($plot_sql) AND germplasm.stock_id in ($accession_sql)";
+    } elsif (($self->accession_list && scalar(@{$self->accession_list})>0) && ($self->plot_list && scalar(@{$self->plot_list})==0)) {
+        my $accession_sql = _sql_from_arrayref($self->accession_list);
+        push @where_clause, "germplasm.stock_id in ($accession_sql)";
     }
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
@@ -562,7 +587,12 @@ sub search {
     }
 
     if ($self->data_level ne 'all') {
-        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $self->data_level, 'stock_type')->cvterm_id();
+        print STDERR "\n\n data level is ".$self->data_level."\n\n";
+        my $data_level = $self->data_level;
+        if ($data_level eq 'accession'){
+            $data_level = 'plot';
+        }
+        my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $data_level, 'stock_type')->cvterm_id();
         push @where_clause, "observationunit.type_id = $stock_type_id"; #ONLY plot or plant or subplot or tissue_sample
     } else {
         push @where_clause, "(observationunit.type_id = $plot_type_id 

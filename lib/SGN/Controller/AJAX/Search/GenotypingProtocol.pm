@@ -17,6 +17,8 @@ use Data::Dumper;
 use CXGN::People::Login;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::MarkersSearch;
+use CXGN::List;
+use CXGN::List::Transform;
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -201,5 +203,125 @@ sub genotyping_protocol_pcr_markers_GET : Args(0) {
     
 }
 
+
+sub genotyping_protocol_accession_search : Path('/ajax/genotyping_protocol/search/accession_list') : ActionClass('REST') { }
+
+sub genotyping_protocol_accession_search_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $dbh = $schema->storage->dbh();
+    my $accession_list_id = $c->req->param('accession_list_id');
+    my @accession_ids = split(/, ?/, $c->req->param('accession_ids') || '');
+
+    # Results to return
+    my $error;
+    my $acc_counts_total;   # total number of accessions in the list
+    my %gen_by_acc;         # genotyping protocols found for each accession (key = accession id, value = array of genotyping protocol ids)
+    my %acc_by_gen;         # accessions used in each genotyping protocol (key = genotyping protocol id, value = array of accession ids)
+    my %gen_counts_by_acc;  # counts of genoyping protocols found for each accession (key = accession id, value = count of matching genotyping protocols)
+    my %acc_counts_by_gen;  # counts of accessions in each genotyping protocol (key = genotyping protocol id, value = count of matching accessions)
+    my @ranked_gen;         # sorted genotyping protocol ids, the first item is the geno proto id of the proto that has the most accessions
+    my %lookup_acc;         # lookup hash of accession name by id (key = accession id, value = accession uniquename)
+    my %lookup_gen;         # lookup hash of genotyping protocol name by id (key = geno proto id, value = geno proto name)
+
+    # Make sure we have a list id or accessions ids
+    if ( (!defined $accession_list_id || $accession_list_id eq "") && scalar @accession_ids == 0 ) {
+        $error = "You must define the accession_list_id or accession_ids!";
+    }
+
+    # Get Accession IDs from specified List
+    if ( defined $accession_list_id && $accession_list_id ne "" ) {
+
+        # Get accession names in list
+        my $list = CXGN::List->new({ dbh => $dbh, list_id => $accession_list_id });
+        my $names = $list->elements();
+
+        # Make sure there are list items
+        if ( scalar(@$names) > 0 ) {
+
+            # Transform accession names to accession ids
+            my $t = CXGN::List::Transform->new();
+            my $accession_t = $t->can_transform("accessions", "accession_ids");
+            my $accession_id_hash = $t->transform($schema, $accession_t, $names);
+            @accession_ids = @{$accession_id_hash->{transform}};
+
+        }
+        else {
+            $error = "List does not contain any list items!";
+        }
+
+    }
+
+    # Check if we have any accessions
+    $acc_counts_total = scalar @accession_ids;
+    if ( $acc_counts_total > 0 ) {
+
+        # Find Genotyping Protocols for the selected Accessions
+        my $ph = join(',', ('?') x @accession_ids);
+        my $q = "SELECT accession_id, ARRAY_AGG(genotyping_protocol_id)
+                FROM accessionsxgenotyping_protocols
+                WHERE accession_id IN ($ph)
+                GROUP BY accession_id;";
+        my $h = $dbh->prepare($q);
+        $h->execute(@accession_ids);
+
+        # Summarize query results
+        while (my ($acc_id, $gen_ids) = $h->fetchrow_array()) {
+            $gen_by_acc{$acc_id} = $gen_ids;
+            foreach my $gen_id ( @$gen_ids ) {
+                push @{$acc_by_gen{$gen_id}}, $acc_id;
+            }
+        }
+        foreach my $acc_id (keys %gen_by_acc) {
+            $gen_counts_by_acc{$acc_id} = scalar @{$gen_by_acc{$acc_id}};
+        }
+        foreach my $gen_id (keys %acc_by_gen) {
+            $acc_counts_by_gen{$gen_id} = scalar @{$acc_by_gen{$gen_id}};
+        }
+        @ranked_gen = sort { $acc_counts_by_gen{$b} <=> $acc_counts_by_gen{$a} } keys(%acc_counts_by_gen);
+
+        # Generate lookup of accession ids -> accession names
+        $ph = join(',', ('?') x @accession_ids);
+        $q = "SELECT stock_id, uniquename FROM stock WHERE stock_id IN ($ph)";
+        $h = $dbh->prepare($q);
+        $h->execute(@accession_ids);
+        while (my ($acc_id, $acc_name) = $h->fetchrow_array()) {
+            $lookup_acc{$acc_id} = $acc_name;
+        }
+
+        # Generate lookup of genotyping protocol ids -> genotyping protocol names
+        my @gen_ids = keys %acc_by_gen;
+        if ( scalar @gen_ids > 0 ) {
+            $ph = join(',', ('?') x @gen_ids);
+            $q = "SELECT nd_protocol_id, name FROM nd_protocol WHERE nd_protocol_id IN ($ph)";
+            $h = $dbh->prepare($q);
+            $h->execute(@gen_ids);
+            while (my ($gen_id, $gen_name) = $h->fetchrow_array()) {
+                $lookup_gen{$gen_id} = $gen_name;
+            }
+        }
+    }
+
+    $c->stash->{rest} = {
+        error => $error,
+        results => {
+            matches => {
+                genotyping_protocols_by_accession => \%gen_by_acc,
+                accessions_by_genotyping_protocol => \%acc_by_gen
+            },
+            counts => {
+                accessions_total => $acc_counts_total,
+                genotyping_protocols_by_accession => \%gen_counts_by_acc,
+                accessions_by_genotyping_protocol => \%acc_counts_by_gen,
+                ranked_genotyping_protocols => \@ranked_gen
+            },
+            lookups => {
+                accessions => \%lookup_acc,
+                genotyping_protocols => \%lookup_gen
+            }
+        }
+    }
+}
 
 1;

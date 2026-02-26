@@ -45,7 +45,7 @@ has 'list_id' => (isa => 'Int',
 		  required => 1,
     );
 
-has 'owner' => (isa => 'Int',
+has 'owner' => (isa => 'Maybe[Int]',
 		is => 'rw',
     );
 

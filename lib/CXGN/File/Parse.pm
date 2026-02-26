@@ -171,8 +171,7 @@ When both required_columns and optional_columns are included in the constructor,
     - an array of the column headers in the file that are neither required nor optional
 
 For example, the trial upload template can specify the required columns (such as trial_name, plot_number, etc),
-and the optional columns (such as planting_date, harvest_date, etc).  Any of the 'additional_columns' will
-be treated as treatments.
+and the optional columns (such as planting_date, harvest_date, etc).  Any of the 'additional_columns' will result in a warning.
 
 =head1 PLUGINS
 
@@ -298,6 +297,7 @@ sub parse {
   my $type = $self->type();
   my $required_columns = $self->required_columns();
   my $optional_columns = $self->optional_columns();
+  my $column_arrays = $self->column_arrays();
 
   # If type is not defined, use the file extension
   if ( !$type ) {
@@ -401,6 +401,10 @@ sub parse {
 
     }
 
+    # Add columns that are arrays, as defined in the CXGN::File::Parse constructor
+    my @array_columns = $column_arrays ? keys %$column_arrays : [];
+    $parsed->{'array_columns'} = \@array_columns || [];
+
     return $parsed;
   }
 
@@ -473,6 +477,9 @@ sub clean_value {
 
     # trim whitespace
     $value =~ s/^\s+|\s+$//g;
+
+    # trim unicode no-break space
+    $value =~s/\xa0//g;
 
     # split values
     if ( $column && $column_arrays && exists $column_arrays->{$column} ) {

@@ -7,6 +7,11 @@ $goto_url => '/'
 
 <%init>
     my $join_breeding_programs = eval{ $c->get_conf('user_registration_join_breeding_programs') };
+    my $random_factor = int rand(5);
+    my $minimum = int(rand(10)) * 10**$random_factor;
+    my $val_2 = int rand(20);
+    my $challenge_question = "$minimum + $val_2";
+    my $challenge_answer = $minimum + $val_2;
 </%init>
 
 <div class="modal fade" id="site_login_dialog" name="site_login_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_dialog_title">
@@ -204,6 +209,13 @@ $goto_url => '/'
                                             <p class="help-block">An email will be sent to this address requiring you to confirm its receipt to activate your account.</p>
                                         </div>
                                     </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">Are you Human? </label>
+                                        <div class="col-sm-9">
+                                            <p style="padding-top: 7px">What is <% $challenge_question %>?</p>
+                                            <input class="form-control" type="text" name="challenge_response" value="" />
+                                        </div>
+                                    </div>
 
                                     <div align="right">
                                         <button class="btn btn-default btn-lg" type="reset" >Reset</button>
@@ -290,13 +302,21 @@ jQuery(document).ready( function() {
         jQuery('#site_login_new_user_dialog').modal('show');
     });
     jQuery("#site_login_new_user_dialog").on('shown.bs.modal', function() {
-        get_select_box('breeding_programs', 'breeding_programs_div', { 'name': 'breeding_programs', 'id': 'breeding_programs', 'default': -1, 'multiple': 1 });
+        get_select_box('breeding_programs', 'breeding_programs_div', { 'name': 'breeding_programs', 'id': 'breeding_programs', 'default': -1, 'multiple': 1, 'empty': 1 });
     });
 
     jQuery('#new_account_form').submit(function(event) {
         event.preventDefault();
         var form_data = jQuery('#new_account_form').serialize();
         //alert(JSON.stringify(form_data));
+
+        // Check bot challenge response and answer
+        var response = jQuery("input[name='challenge_response']").val();
+        if ( response !== "<% $challenge_answer %>" ) {
+            alert("Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!");
+            return;
+        }
+
         jQuery.ajax({
             url: '/ajax/user/new',
             beforeSend: function(){

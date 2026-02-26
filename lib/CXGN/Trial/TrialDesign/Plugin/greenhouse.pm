@@ -33,12 +33,25 @@ sub create_design {
     %greenhouse_design = %{$self->_build_plot_names(\%greenhouse_design)};
 
     foreach my $plot_num (keys %greenhouse_design) {
+        my @plant_coords = ();
+        if ($self->get_num_rows_per_plot && $self->get_num_cols_per_plot){
+            foreach my $row (1..$self->get_num_rows_per_plot) {
+                foreach my $col (1..$self->get_num_cols_per_plot) {
+                    push @plant_coords, "$row,$col";
+                }
+            }
+        }
         my @plant_names;
         my $plot_name = $greenhouse_design{$plot_num}->{'plot_name'};
         my $stock_name = $greenhouse_design{$plot_num}->{'stock_name'};
         for my $n (1..$num_accession_hash{$stock_name}) {
+            my $coord_pair = "";
+            if (@plant_coords) {
+                $coord_pair = shift(@plant_coords);
+                $coord_pair = "_COORDS{$coord_pair}";
+            }
             my $plant_name = $plot_name."_plant_$n";
-            push @plant_names, $plant_name;
+            push @plant_names, $plant_name.$coord_pair;
         }
         $greenhouse_design{$plot_num}->{'plant_names'} = \@plant_names;
     }

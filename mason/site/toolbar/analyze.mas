@@ -31,7 +31,8 @@
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Other</li>
     <li><a href="/tools/onto/">Ontology Browser</a></li>
-    <li><a href="/tools/compose/">Compose a New Trait</a></li>
+    <li><a href="/tools/compose_trait/">Compose a New Trait</a></li>
+    <li><a href="/tools/compose_treatment/">Compose a New Treatment</a></li>
 
   </ul>
 </li>
