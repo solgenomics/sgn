@@ -4118,7 +4118,7 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
 		push @plot_No, $plot_number;
 		push @block_No, $block_number;
 		push @rep_No, $rep;
-        push @phenoID, $phenotype_id;
+        push @phenoID, $phenotype_id if $phenotype_id;
     }
 
     my $false_coord;
