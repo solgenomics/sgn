@@ -1779,10 +1779,16 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
 
     my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
     my $vector_related_genes = $vector_construct->Gene;
-    my @gene_names = split ',',$vector_related_genes;
+    my @genes_array = split ',',$vector_related_genes;
+    my @gene_names = ();
+    foreach my $name (@genes_array) {
+        $name =~ s/^\s+|\s+$//g;
+        push @gene_names, $name;
+    }
 
     my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_id});
     my $result = $related_stocks->get_vector_related_accessions();
+    my @sorted_result = natkeysort {($_->[1])} @$result;
     my @transgenic_lines;
 
     if (!$selected_assay_date) {
@@ -1797,7 +1803,7 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
     }
 
     my @expression_array;
-    foreach my $r (@$result){
+    foreach my $r (@sorted_result){
         my @expression_values = ();
         my @row = ();
         my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data_string) = @$r;
@@ -1871,7 +1877,7 @@ sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transg
                             $standard_deviation = $gene_relative_expression_value->{'stdevp'};
                             push @display_info, "stdevp: ". $standard_deviation;
                         }
-                        
+
                         $value_string = join("<br>", @display_info);
                         push @expression_values, $value_string;
                     } else {
@@ -1909,9 +1915,10 @@ sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted
 
     my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_id});
     my $result = $related_stocks->get_vector_obsoleted_accessions();
+    my @sorted_result = natkeysort {($_->[1])} @$result;
     my @obsoleted_accessions;
 
-    foreach my $r (@$result){
+    foreach my $r (@sorted_result){
         my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
         my $transformation_info;
         if ($transformation_id) {

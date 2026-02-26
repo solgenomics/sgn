@@ -103,7 +103,7 @@ sub get_transformant_qPCR_data {
                                 $standard_deviation = $qPCR_relative_values->{'stdevp'};
                                 push @details, "stdevp: ". $standard_deviation;
                             }
-                            
+
                             $detail_string = join("<br>", @details);
                             push @gene_relative_values, $detail_string;
                         } else {
@@ -179,13 +179,20 @@ sub _get_transgenes {
     my $self = shift;
     my $schema = $self->schema();
     my $vector_construct = $self->vector_construct();
-    my @transgenes;
+    my @transgenes = ();
     if ($vector_construct) {
         my $vector_stock_id = $vector_construct->[0];
         if ($vector_stock_id) {
             my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_stock_id);
             my $vector_related_genes = $vector_construct->Gene;
-            @transgenes = split ',',$vector_related_genes
+            if ($vector_related_genes) {
+                my @genes_array = ();
+                @genes_array = split ',',$vector_related_genes;
+                foreach my $gene (@genes_array) {
+                    $gene =~ s/^\s+|\s+$//g;
+                    push @transgenes, $gene;
+                }
+            }
         }
     }
 
