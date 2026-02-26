@@ -43,6 +43,8 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
 
     my $stockprops_values = $params->{editable_stockprop_values} ? decode_json $params->{editable_stockprop_values} : {};
 
+    my @editable_stockprops = split /\,/, $c->config->{editable_vector_props};
+    print STDERR "STOCKPROP VALUE = ".Dumper(\@editable_stockprops);
 
     #This defines the stockprops that will be returned in the results.
     my $stockprop_columns_view = $params->{extra_stockprop_columns_view} ? decode_json $params->{extra_stockprop_columns_view} : {};
@@ -53,7 +55,7 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         people_schema=>$people_schema,
         phenome_schema=>$phenome_schema,
         match_type=>$params->{any_name_matchtype},
-        match_name=>$params->{any_name}, 
+        match_name=>$params->{any_name},
         operator=>$params->{operator},
         stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
@@ -61,7 +63,8 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
-        display_pedigree=>0
+        display_pedigree=>0,
+	stockprops => \@editable_stockprops,
     });
     my ($result, $records_total) = $stock_search->search();
 
