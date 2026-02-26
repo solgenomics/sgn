@@ -6,6 +6,11 @@ use Data::Dumper;
 use Text::CSV;
 use CXGN::List::Validate;
 
+#
+# DEPRECATED: This plugin has been replaced by the SeedlotInventoryGeneric plugin
+#
+
+
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
