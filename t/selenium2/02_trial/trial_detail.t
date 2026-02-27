@@ -1,7 +1,7 @@
 use lib 't/lib';
 use strict;
 
-use Test::More 'tests' => 172;
+use Test::More 'tests' => 171;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
