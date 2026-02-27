@@ -1,0 +1,181 @@
+<%args>
+$propagation_group_stock_id
+</%args>
+
+
+<&| /page/info_section.mas, title => 'Active Propagation IDs', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table class="table table-hover table-bordered" id="propagation_ids_table">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</&>
+
+<div class="modal fade" id="update_propagation_status_dialog" name="update_propagation_status_dialog" tabindex="-1" role="dialog" aria-labelledby="updatePropagationStatusDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="updatePropagationStatusDialog">Update Status</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="update_propagation_status_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="reset" id="close_update_propagation_status_dialog" name="close_update_propagation_status_dialog" class="btn btn-default" >Close</button>
+                <button id="update_propagation_status_button" type="button" class="btn btn-primary" >Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="propagation_update_saved_dialog" name="propagation_update_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="propagationUpdateSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="propagationUpdateSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The propagation status has been updated.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_propagation_update_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    const propagation_group_stock_id = "<%$propagation_group_stock_id%>";
+    const propagation_ids_table = jQuery('#propagation_ids_table').DataTable({
+        'ajax': '/ajax/propagation/active_propagation_ids_in_group/'+propagation_group_stock_id,
+        'autoWidth': false,
+        'columns': [
+            { title: "Propagation ID", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.propagation_stock_id+"/view'>"+row.propagation_name+"</a>"; } },
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.accession_stock_id+"/view'>"+row.accession_name+"</a>"; } },
+            { title: "Rootstock", "data": null, "render": function ( data, type, row ) {
+                if (row.rootstock_stock_id === null){
+                    return ' '
+                } else {
+                    return "<a href='/stock/"+row.rootstock_stock_id+"'>"+row.rootstock_name+"</a>"
+                }
+            }},
+            { title: "Status", "data": "propagation_status" },
+            { title: "Updated Date", "data": "updated_date" },
+            { title: "Updated by", "data": "updated_by" },
+            { title: "Update Status", "data": "null", "render": function ( data, type, row ) { return "<a onclick='updatePropagationStatus("+row.propagation_stock_id+",\""+row.propagation_name+"\")'>Update</a>"; } },
+
+        ],
+
+    });
+
+    jQuery('#update_propagation_status_button').click( function() {
+        const propagation_stock_id = jQuery('#propagation_stock_id').val();
+        const propagation_status = jQuery('#update_propagation_status').val();
+        const inventory_identifier = jQuery('#propagation_inventory_identifier').val();
+
+        if (!propagation_status) {
+            alert ("Please select a status");
+            return;
+        }
+
+        if ((propagation_status === 'Inventoried') && !inventory_identifier) {
+            alert ("Please provide Inventory Identifier");
+            return;
+        }
+
+        const propagation_status_notes = jQuery('#propagation_status_notes').val();
+
+        jQuery.ajax({
+            url: '/ajax/propagation/update_status',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'propagation_stock_id' : propagation_stock_id,
+                'propagation_status': propagation_status,
+                'propagation_status_notes': propagation_status_notes,
+                'inventory_identifier': inventory_identifier,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#propagation_update_saved_dialog').modal('show');
+                    jQuery('#update_propagation_status_dialog').modal('hide');
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating the propagation status');
+            }
+        });
+    });
+
+    jQuery("#dismiss_propagation_update_saved_dialog").click(function(){
+        location.reload();
+    });
+
+    jQuery("#close_update_propagation_status_dialog").click(function() {
+        jQuery("#update_propagation_status_dialog").modal('hide');
+        location.reload();
+    });
+
+});
+
+function updatePropagationStatus(propagation_stock_id, propagation_name){
+    var html = '';
+    html += '<form class="form-horizontal"><div class="form-group"><label class="col-sm-3 control-label">Propagation ID: </label><div class="col-sm-9" ><input class="form-control" id="update_propagation_name" name="update_propagation_name" value="'+propagation_name+'" disabled></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Status: </label><div class="col-sm-9" ><select class="form-control" id="update_propagation_status" name="update_propagation_status"><option disabled value="" selected hidden>Select a status</option>';
+    html += '<option value='+"inventoried"+'>'+"inventoried"+'</option>';
+    html += '<option value='+"in_trial"+'>'+"in trial"+'</option>';
+    html += '<option value='+"distributed"+'>'+"distributed"+'</option>';
+    html += '<option value='+"dead"+'>'+"dead"+'</option>';
+    html += '<option value='+"disposed"+'>'+"disposed"+'</option>';
+    html += '</select></div></div>';
+    html += '<div class="form-group"><label class="col-sm-3 control-label">Notes: </label><div class="col-sm-9" ><input class="form-control" id="propagation_status_notes" placeholder="Optional"></div></div>'
+    html += '<div id="inventory_id_section" style="display:none"><div class="form-group"><label class="col-sm-3 control-label">Inventory ID: </label><div class="col-sm-9" ><input class="form-control" id="propagation_inventory_identifier" placeholder="must be globally unique"></div></div>'
+
+    html += '<div class="form-group" style="display:none" ><div class="col-sm-9" ><input class="form-control" id="propagation_stock_id" value="'+propagation_stock_id+'"></div></div></div></form>';
+
+    jQuery('#update_propagation_status_div').html(html);
+    jQuery('#update_propagation_status_dialog').modal('show');
+
+    jQuery("#update_propagation_status").change(function() {
+        var status = jQuery('#update_propagation_status').val();
+        if (status == "inventoried") {
+            jQuery('#inventory_id_section').modal('show');
+        } else {
+            jQuery('#inventory_id_section').modal('hide');
+        }
+
+    });
+
+}
+
+
+
+
+</script>

@@ -179,6 +179,7 @@ sub get_trials_by_breeding_program {
     my $sampling_trial_projects;
     my $tracking_activity_projects;
     my $transformation_projects;
+    my $propagation_projects;
 
     my $h = $self->_get_all_trials_by_breeding_program($breeding_project_id);
     my $crossing_trial_cvterm_id = $self->get_crossing_trial_cvterm_id();
@@ -186,6 +187,7 @@ sub get_trials_by_breeding_program {
     my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
     my $tracking_project_cvterm_id = $self->get_tracking_project_cvterm_id();
     my $transformation_project_cvterm_id = $self->get_transformation_project_cvterm_id();
+    my $propagation_project_cvterm_id = $self->get_propagation_project_cvterm_id();
 
     my %projects_that_are_crosses;
     my %project_year;
@@ -200,6 +202,7 @@ sub get_trials_by_breeding_program {
     my %projects_that_are_sampling_trials;
     my %projects_that_are_tracking_projects;
     my %projects_that_are_transformation_projects;
+    my %projects_that_are_propagation_projects;
 
     while (my ($id, $name, $desc, $prop, $propvalue) = $h->fetchrow_array()) {
         #print STDERR "PROP: $prop, $propvalue \n";
@@ -247,6 +250,9 @@ sub get_trials_by_breeding_program {
                 if ($propvalue eq "transformation_project") {
                     $projects_that_are_transformation_projects{$id} = 1;
                 }
+                if ($propvalue eq "propagation_project") {
+                    $projects_that_are_propagation_projects{$id} = 1;
+                }
             }
         }
     }
@@ -254,7 +260,7 @@ sub get_trials_by_breeding_program {
     my @sorted_by_year_keys = sort { $project_year{$a} cmp $project_year{$b} } keys(%project_year);
 
     foreach my $id_key (@sorted_by_year_keys) {
-        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key} && !$projects_that_are_sampling_trials{$id_key} && !$projects_that_are_tracking_projects{$id_key} && !$projects_that_are_transformation_projects{$id_key}) {
+        if (!$projects_that_are_crosses{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_genotyping_trials{$id_key} && !$projects_that_are_treatment_trials{$id_key} && !$projects_that_are_genotyping_data_projects{$id_key} && !$projects_that_are_drone_run_projects{$id_key} && !$projects_that_are_drone_run_band_projects{$id_key} && !$projects_that_are_analyses{$id_key} && !$projects_that_are_sampling_trials{$id_key} && !$projects_that_are_tracking_projects{$id_key} && !$projects_that_are_transformation_projects{$id_key} && !$projects_that_are_propagation_projects{$id_key}) {
             push @$field_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_crosses{$id_key}) {
             push @$cross_trials, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
@@ -276,10 +282,12 @@ sub get_trials_by_breeding_program {
             push @$tracking_activity_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         } elsif ($projects_that_are_transformation_projects{$id_key}) {
             push @$transformation_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
+        } elsif ($projects_that_are_propagation_projects{$id_key}) {
+            push @$propagation_projects, [ $id_key, $project_name{$id_key}, $project_description{$id_key}];
         }
     }
 
-    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activity_projects);
+    return ($field_trials, $cross_trials, $genotyping_trials, $genotyping_data_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activity_projects, $propagation_projects);
 }
 
 sub get_genotyping_trials_by_breeding_program {
@@ -769,6 +777,13 @@ sub get_transformation_project_cvterm_id {
 
     my $transformation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'transformation_project',  'project_type');
     return $transformation_project_cvterm_id->cvterm_id();
+}
+
+sub get_propagation_project_cvterm_id {
+    my $self = shift;
+
+    my $propagation_project_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'propagation_project',  'project_type');
+    return $propagation_project_cvterm_id->cvterm_id();
 }
 
 sub _get_design_trial_cvterm_id {

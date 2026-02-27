@@ -1,0 +1,42 @@
+<%args>
+$trial_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.List', 'jquery.iframe-post-form' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="propagation_groups_in_project_table">
+        <thead>
+            <tr>
+                <th>Propagation Group ID</th>
+                <th>Accession</th>
+                <th>Variety</th>
+                <th>Material Type</th>
+                <th>Source Type</th>
+                <th>Source Name</th>
+                <th>Date</th>
+                <th>Sub-Location</th>
+                <th>Purpose</th>
+                <th>Description</th>
+                <th>Operator</th>
+                <th>Number of Propagation IDs</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+    var project_id = "<% $trial_id %>";
+    var propagation_group_table = jQuery('#propagation_groups_in_project_table').DataTable({
+        'ajax': '/ajax/propagation/propagation_groups_in_project/'+project_id,
+        'autoWidth': false,
+
+    });
+
+});
+
+</script>
