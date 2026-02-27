@@ -4105,20 +4105,21 @@ sub phenotype_heatmap : Chained('trial') PathPart('heatmap') Args(0) {
                 $row_number = $rep;
             }
 		}
-
-        my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
-        push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$phenotype_id} ;
-		if ($col_number){
-            push @col_No, $col_number;
+        if ( $phenotype_id ) {
+            my $plot_popUp = $plot_name."\nplot_No:".$plot_number."\nblock_No:".$block_number."\nrep_No:".$rep."\nstock:".$stock_name."\nvalue:".$value;
+            push @$result,  {plotname => $plot_name, stock => $stock_name, plotn => $plot_number, blkn=>$block_number, rep=>$rep, row=>$row_number, col=>$col_number, pheno=>$value, plot_msg=>$plot_popUp, pheno_id=>$phenotype_id} ;
+            if ($col_number){
+                push @col_No, $col_number;
+            }
+            push @row_No, $row_number;
+            push @pheno_val, $value;
+            push @plot_Name, $plot_name;
+            push @stock_Name, $stock_name;
+            push @plot_No, $plot_number;
+            push @block_No, $block_number;
+            push @rep_No, $rep;
+            push @phenoID, $phenotype_id;
         }
-		push @row_No, $row_number;
-		push @pheno_val, $value;
-		push @plot_Name, $plot_name;
-		push @stock_Name, $stock_name;
-		push @plot_No, $plot_number;
-		push @block_No, $block_number;
-		push @rep_No, $rep;
-        push @phenoID, $phenotype_id if $phenotype_id;
     }
 
     my $false_coord;
