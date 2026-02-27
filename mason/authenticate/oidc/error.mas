@@ -1,0 +1,9 @@
+<%args>
+$error
+</%args>
+
+<script>
+  $(document).ready(function(){
+    alert(`<% $error %>`);
+  });
+</script>

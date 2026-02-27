@@ -61,6 +61,20 @@ $goto_url => '/'
                         </div>
                     </div>
                 </form>
+% if ($c->config->{oidc_client}){
+                <div class="container-fluid" style="display: grid; margin-top: 20px;">
+% for my $provider (sort { $a <=> $b} keys %{$c->config->{oidc_client}}) {
+                    <button class="btn btn-default" id="login_with_<% $provider %>" name="login_with_<% $provider %>" onclick="location.href = '/authenticate/oidc/<% $provider %>/login';" style="margin-bottom: 20px;">
+% if ($provider =~ 'google') {
+                        <img style="width:20px" src="/documents/img/Google_logo.png"/>
+% } elsif ($provider =~ 'keycloak') {
+                        <img style="width:20px" src="/documents/img/Keycloak_logo.png"/>
+% }
+                        <% ucfirst($provider) %>
+                    </button>
+% }
+                </div>
+% }
             </div>
             <div class="modal-footer">
 %  if (!$c->config->{require_login}) {
