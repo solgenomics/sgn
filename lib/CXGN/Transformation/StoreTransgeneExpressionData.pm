@@ -159,12 +159,10 @@ sub store_qPCR_data {
 
         my $expression_data_json;
         my $expression_data_hash = {};
-        my $updated_expression_data_json;
-        my %CT_expression_data_details;
-        my %relative_expression_data_details;
 
         my $previous_expression_data_stockprop_rs = $transformant_stock->stockprops({type_id=>$expression_data_cvterm->cvterm_id});
         if ($previous_expression_data_stockprop_rs->count == 1){
+			my $updated_expression_data_json;
             $expression_data_json = $previous_expression_data_stockprop_rs->first->value();
             $expression_data_hash = decode_json $expression_data_json;
 

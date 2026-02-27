@@ -1906,8 +1906,6 @@ sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted
     my $c = shift;
     my $vector_id = $c->req->param('vector_id');
     my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
-#    print STDERR "VECTOR ID =".Dumper($vector_id)."\n";
-#    print STDERR "TRANSFORMATION ID =".Dumper($filter_by_transformation_id)."\n";
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
