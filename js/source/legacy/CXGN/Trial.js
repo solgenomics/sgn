@@ -667,7 +667,9 @@ jQuery(document).ready(function ($) {
 
             if (response.success) {
                 $('#trial_coord_upload_success_dialog_message').modal("show");
-                //alert("File uploaded successfully");
+                $('#trial_coord_upload_success_dialog_message_cancel').on('click', function() {
+                    location.reload();
+                });
                 return;
             }
 
