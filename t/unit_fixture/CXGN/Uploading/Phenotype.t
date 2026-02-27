@@ -315,6 +315,188 @@ my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 print STDERR Dumper @traits_assayed_sorted;
 my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15, undef, undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
 
+
+
+#####################################
+# Test the Phenotype Matrix Native Search
+# to ensure plots with no trait observations are still returned
+
+my $filename = "t/data/trial/upload_phenotyping_spreadsheet_plots_with_no_trait_data.$extension";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+print STDERR "NOW UPLOADING FILE $filename\n";
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $filename,
+  subdirectory => 'temp_fieldbook',
+  archive_path => '/tmp',
+  archive_filename => "upload_phenotyping_spreadsheet_plots_with_no_trait_data.$extension",
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path_plots_with_no_trait_data = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path_plots_with_no_trait_data);
+ok($archived_filename_with_path_plots_with_no_trait_data);
+ok($md5);
+
+print STDERR "NOW PARSING FILE $archived_filename_with_path_plots_with_no_trait_data\n";
+
+#Now parse phenotyping spreadsheet file using correct parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path_plots_with_no_trait_data, 0, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for phenotype file");
+
+my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path_plots_with_no_trait_data, 0, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works ($extension)");
+
+# Now store the phenotype data
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path_plots_with_no_trait_data;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_01:10:56";
+my %parsed_data = %{$parsed_file->{'data'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+  basepath=>$f->config->{basepath},
+  dbhost=>$f->config->{dbhost},
+  dbname=>$f->config->{dbname},
+  dbuser=>$f->config->{dbuser},
+  dbpass=>$f->config->{dbpass},
+  temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_plots_with_no_trait_data",
+  bcs_schema=>$f->bcs_schema,
+  metadata_schema=>$f->metadata_schema,
+  phenome_schema=>$f->phenome_schema,
+  user_id=>41,
+  stock_list=>\@plots,
+  trait_list=>\@traits,
+  values_hash=>\%parsed_data,
+  has_timestamps=>0,
+  overwrite_values=>1,
+  remove_values=>1,
+  metadata_hash=>\%phenotype_metadata,
+  composable_validation_check_name=>$f->config->{composable_validation_check_name}
+);
+
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works 4");
+
+print STDERR "STORED PHENOTYPE ERROR MESG 4: $stored_phenotype_error_msg\n";
+
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});
+
+
+# Get the Phenotype Matrix and make sure all of the plots are included
+my @trials = (137);
+my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+    bcs_schema=>$f->bcs_schema,
+    search_type=>'Native',
+    data_level=>'plot',
+    trial_list=>\@trials
+);
+my @data = $phenotypes_search->get_phenotype_matrix();
+
+# check plot count
+is(scalar(@data), 16, '15 plots plus header row count');
+
+my @expected_data = (['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber','dry matter content percentage|CO_334:0000092','fresh root weight|CO_334:0000012','fresh shoot weight measurement in kg|CO_334:0000016','harvest index variable|CO_334:0000015','notes'],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38857,'test_trial21','1','1','1',undef,undef,'test',undef,'35','15','20','0.8','test note1(Operator: janedoe, Time: )'],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','test_accession3_synonym1','plot',38866,'test_trial210','3','1','10',undef,undef,'test',undef,'30',undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','test_accession1_synonym1','plot',38867,'test_trial211','3','1','11',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38868,'test_trial212','3','1','12',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','test_accession2_synonym1,test_accession2_synonym2','plot',38869,'test_trial213','2','1','13',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38870,'test_trial214','3','1','14',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','test_accession2_synonym1,test_accession2_synonym2','plot',38871,'test_trial215','3','1','15',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38858,'test_trial22','1','1','2',undef,undef,'test',undef,undef,undef,undef,undef,'testnote2(Operator: janedoe, Time: )'],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','test_accession3_synonym1','plot',38859,'test_trial23','1','1','3',undef,undef,'test',undef,'38','15','22',undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','test_accession3_synonym1','plot',38860,'test_trial24','2','1','4',undef,undef,'test',undef,'39','15',undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','test_accession1_synonym1','plot',38861,'test_trial25','1','1','5',undef,undef,'test',undef,'35',undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38862,'test_trial26','2','1','6',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38863,'test_trial27','2','1','7',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','test_accession1_synonym1','plot',38864,'test_trial28','2','1','8',undef,undef,'test',undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','test_accession2_synonym1,test_accession2_synonym2','plot',38865,'test_trial29','1','1','9',undef,undef,'test',undef,undef,undef,undef,undef,undef]);
+
+# check plot data
+is_deeply(\@expected_data, \@data, 'Check data from Native Phenotype Matrix with plots with no trait data');
+
+#
+# restore original data
+# 
+
+my $filename = "t/data/trial/upload_phenotypin_spreadsheet.$extension";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+print STDERR "NOW UPLOADING FILE $filename\n";
+
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $filename,
+  subdirectory => 'temp_fieldbook',
+  archive_path => '/tmp',
+  archive_filename => "upload_phenotypin_spreadsheet.$extension",
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
+#check that parse fails for fieldbook file when using phenotype spreadsheet parser
+my $parser = CXGN::Phenotypes::ParseUpload->new();
+my $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
+my $validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
+ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for fieldbook - restore");
+
+#check that parse fails for datacollector file when using phenotype spreadsheet parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/trial/data_collector_upload.$extension";
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
+ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for datacollector - restore");
+
+#Now parse phenotyping spreadsheet file using correct parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for phenotype file - restore");
+
+my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works - restore");
+
+print STDERR "PARSED FILE FOR $archived_filename_with_path".Dumper($parsed_file);
+
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_01:10:56";
+my %parsed_data = %{$parsed_file->{'data'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+  basepath=>$f->config->{basepath},
+  dbhost=>$f->config->{dbhost},
+  dbname=>$f->config->{dbname},
+  dbuser=>$f->config->{dbuser},
+  dbpass=>$f->config->{dbpass},
+  temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+  bcs_schema=>$f->bcs_schema,
+  metadata_schema=>$f->metadata_schema,
+  phenome_schema=>$f->phenome_schema,
+  user_id=>41,
+  stock_list=>\@plots,
+  trait_list=>\@traits,
+  values_hash=>\%parsed_data,
+  has_timestamps=>1,
+  overwrite_values=>1,
+  metadata_hash=>\%phenotype_metadata,
+  composable_validation_check_name=>$f->config->{composable_validation_check_name}
+);
+
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works 1 - restore");
+
+
 #
 # Tests for phenotype spreadsheet parsing - this time updating and removing
 # some observations
