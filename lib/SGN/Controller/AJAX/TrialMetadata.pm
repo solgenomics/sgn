@@ -26,6 +26,7 @@ use Try::Tiny;
 use CXGN::BreederSearch;
 use CXGN::Page::FormattingHelpers qw / html_optional_show /;
 use SGN::Image;
+use SGN::Model::Cvterm;
 use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Genotype::DownloadFactory;
 use POSIX qw | !qsort !bsearch |;
@@ -40,6 +41,8 @@ use List::Util 'sum';
 use CXGN::Trial::TrialLayout;
 use CXGN::BreedersToolbox::Projects;
 use Sort::Key::Natural qw(natkeysort);
+use CXGN::Trial::ParseUpload;
+use CXGN::Job;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -3676,40 +3679,95 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
     	return;
     }
 
+    # print STDERR "Proceeding with $archived_filename_with_path \n";
+
     $md5 = $uploader->get_md5($archived_filename_with_path);
     unlink $upload_tempfile;
 
-    my $error_string = '';
-   # open file and remove return of line
-    open(my $F, "< :encoding(UTF-8)", $archived_filename_with_path) || die "Can't open archive file $archived_filename_with_path";
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-    my $header = <$F>;
-    while (<$F>) {
-    	chomp;
-    	$_ =~ s/\r//g;
-    	my ($plot,$row,$col) = split /\t/ ;
-    	my $rs = $schema->resultset("Stock::Stock")->search({uniquename=> $plot });
-    	if ($rs->count()== 1) {
-      	my $r =  $rs->first();
-      	print STDERR "The plots $plot was found.\n Loading row $row col $col\n";
-      	$r->create_stockprops({row_number => $row, col_number => $col});
-      }
-      else {
-      	print STDERR "WARNING! $plot was not found in the database.\n";
-        $error_string .= "WARNING! $plot was not found in the database.";
-      }
+
+    my $trial_obj = CXGN::Project->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id
+    });
+
+    my $job = CXGN::Job->new({
+        sp_person_id => $user_id,
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        name => $trial_obj->get_name()." spatial layout upload",
+        job_type => 'upload',
+        cmd => "",
+        finish_logfile => $c->config->{job_finish_log},
+        submit_page =>  $c->request->headers->referer,
+        results_page =>  $c->request->headers->referer
+    });
+
+    $job->update_status("submitted");
+
+    my $parser = CXGN::Trial::ParseUpload->new({
+        chado_schema => $schema,
+        trial_id => $trial_id,
+        filename => $archived_filename_with_path
+    });
+    $parser->load_plugin('TrialSpatialLayoutGeneric');
+
+    my $parsed_data = $parser->parse();
+
+    if (!$parsed_data || $parser->has_parse_errors()) {
+        my $return_error = '';
+
+        if (! $parser->has_parse_errors() ){
+            $return_error = "Parsing failed, but we could not get parsing errors...";
+        }
+        else {
+            my $parse_errors = $parser->get_parse_errors();
+
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error=$return_error.$error_string."<br>";
+            }
+        }
+
+        $c->stash->{rest} = {error => $return_error};
+        $job->additional_args({
+            error => $return_error
+        });
+        $job->update_status("failed");
+        $c->detach();
+        return;
     }
 
-    if ($error_string){
-        $c->stash->{rest} = {error_string => $error_string};
-        $c->detach();
+    my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property');
+    my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property');
+
+    # store all row/column data here
+    eval {
+        foreach my $plot_id (keys(%{$parsed_data->{spatial_layout}})) {
+            my $row = $parsed_data->{spatial_layout}->{$plot_id}->{row_number};
+            my $col = $parsed_data->{spatial_layout}->{$plot_id}->{col_number};
+
+            $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$plot_id, rank=>0, value=>$row },{ key=>'stockprop_c1' }); 
+            $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$plot_id, rank=>0, value=>$col },{ key=>'stockprop_c1' });
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = {error => "The upload was successful, but an error occurred trying to save the row and column data: $@\n"};
+        $job->additional_args({
+            error => $@
+        });
+        $job->update_status("failed");
+        return;
     }
+
+    # print STDERR Dumper $parsed_data->{spatial_layout};
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
-    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), trial_id => $trial_id, experiment_type => 'field_layout' });
+    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+    my $trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $trial_id, experiment_type => 'field_layout' });
     $trial_layout->generate_and_cache_layout();
+
+    $job->update_status("finished");
 
     $c->stash->{rest} = {success => 1};
 }
