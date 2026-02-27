@@ -150,10 +150,7 @@ $t->while_logged_in_as("curator", sub {
             sleep(15);
 
             $t->find_element_ok("trial_coord_upload_success_dialog_message_cancel", "id", "close success msg")->click();
-            sleep(1);
-
-            $t->find_element_ok("upload_trial_coords_cancel_button", "id", "close upload modal")->click();
-            sleep(5);
+            sleep(10); #wait for page to refresh
         }
 
         my $trial_details = $t->find_element_ok(
