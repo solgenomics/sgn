@@ -52,12 +52,15 @@ jQuery(document).ready(function (){
                 console.log(response.data);
                 jQuery('#clear_dead_jobs_button').click(function() {
                     jsMod['job'].dismiss_dead_jobs(<% $sp_person_id %>);
+                    window.location.reload();
                 });
                 jQuery('#clear_old_jobs_button').click(function() {
                     jsMod['job'].keep_recent_jobs(<% $sp_person_id %>);
+                    window.location.reload();
                 });
                 jQuery('#clear_finished_jobs_button').click(function() {
                     jsMod['job'].dismiss_finished_jobs(<% $sp_person_id %>);
+                    window.location.reload();
                 });
             }
         }, 

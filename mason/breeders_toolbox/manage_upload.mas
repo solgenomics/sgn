@@ -21,7 +21,7 @@ $editable_vector_props
     }
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+<& /util/import_javascript.mas, entries => ["job"], classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
 
 <& /page/page_title.mas, title=>"Upload Factory" &>
 
@@ -317,6 +317,8 @@ function load_in_progress_uploads_table() {
 
                 if (response.data.length > 0 ) {
 
+                    jQuery("#in_progress_uploads_table_section_onswitch").trigger("click");
+
                     response.data.forEach(row => {
                         in_progress_uploads[row.job_id] = row;
                         let tr = jQuery("<tr>");
@@ -346,7 +348,9 @@ function load_in_progress_uploads_table() {
                         tr.append(jQuery("<td>").html(`${view_report_btn} ${commit_validation_btn} ${dismiss_btn} ${cancel_btn}`));
                         file_tbody.append(tr);
                     });
-                } 
+                } else {
+                    jQuery("#in_progress_uploads_table_section_offswitch").trigger("click");
+                }
 
                 let uploads_in_progress = jQuery('#upload_factory_in_progress_uploads_table').DataTable({
                     order : [[0, 'desc']]
@@ -394,6 +398,8 @@ function load_completed_uploads_table() {
 
                 if (response.data.length > 0 ) {
 
+                    jQuery("#completed_uploads_table_section_onswitch").trigger("click");
+
                     response.data.forEach(row => {
                         completed_uploads[row.job_id] = row;
                         let tr = jQuery("<tr>");
@@ -412,7 +418,9 @@ function load_completed_uploads_table() {
                         tr.append(jQuery("<td>").html(`${view_report_btn} ${dismiss_btn}`));
                         file_tbody.append(tr);
                     });
-                } 
+                } else {
+                    jQuery("#completed_uploads_table_section_offswitch").trigger("click");
+                }
 
                 let uploads_in_progress = jQuery('#upload_factory_completed_uploads_table').DataTable({
                     order : [[0, 'desc']]
@@ -2018,10 +2026,12 @@ jQuery(document).ready(function(){
 
     jQuery(document).on('click', '.job-dismiss-btn', function() {
         let job_id = jQuery(this).attr("id").replace('dismiss_job_', '');
+        jsMod["job"].dismiss_job(job_id);
     });
 
     jQuery(document).on('click', '.job-cancel-btn', function() {
-
+        let job_id = jQuery(this).attr("id").replace('cancel_job_', '');
+        jsMod["job"].cancel_job(job_id);
     });
 
     jQuery(document).on('click', '.validation-commit-btn', function() {

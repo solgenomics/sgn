@@ -271,8 +271,7 @@ sub BUILD {
         }
         my $logfile;
         if (!$self->has_finish_logfile()) {
-            $logfile = `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
-            $self->finish_logfile($logfile);
+            die "Need a finish logfile to create new jobs.";
         }
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
         if (!$self->has_cxgn_tools_run_config()) {
@@ -300,11 +299,11 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        my $logfile = $job_args->{finish_logfile} ? $job_args->{finish_logfile} : `cat /home/production/cxgn/sgn/sgn.conf | grep job_finish_log | sed 's/\\w+\\s//'`;
+        my $logfile = $job_args->{finish_logfile};
         $self->finish_logfile($logfile);
     }
 
-    $self->enforce_finish_logfile();
+    # $self->enforce_finish_logfile();
 }
 
 =head2 check_status()
