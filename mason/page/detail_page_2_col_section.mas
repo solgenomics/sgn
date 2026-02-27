@@ -221,66 +221,35 @@ $field_headers => ()
     <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type &>
 % }
 
+% if ($info_section_id eq 'trial_analysis_tools') {
+    <& /breeders_toolbox/analysis_tools_section.mas, 
+        trial_id => $trial_id, 
+        trial_name => $trial_name 
+    &>
+
+% if ($hidap_enabled) {
+    <& /hidap/hidap_trial_link.mas,
+        main_production_site_url => $main_production_site_url,
+        program                  => $breeding_program_name,
+        folder                   => $folder_name,
+        trial                    => $trial_name
+    &>
+% }
+% } #End trial_analysis_tools
+
+% if ($info_section_id eq 'trial_nirs_section') {
+    <& /breeders_toolbox/trial/trial_nirs_data.mas,
+        trial_id => $trial_id
+    &>
+% } #End trial nirs data
+
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
 % if ($info_section_id eq 'trial_upload_files'){
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
-% if ($info_section_id eq 'trial_analysis_tools'){
 
-
-			        <!-- analysis tools on saved measurements -->
-			       <& /breeders_toolbox/trial/saved_measurement_analysis.mas,
-				     trial_id => $trial_id
-				&>
-                                <!-- Phenotypic correlation analysis -->
-                                <& /solgs/tools/correlation/analysis.mas,
-                                    corr_pop_id => $trial_id,
-                                    corr_pop_name => $trial_name
-                                &>
-
-                                <& /solgs/tools/anova/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                 <!-- Population structure analysis PCA -->
-                                <& /solgs/tools/pca/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- Clustering -->
-                                <& /solgs/tools/cluster/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- kinship and inbreeding-->
-                                <& /solgs/tools/kinship/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-
-                                  <& /tools/heritability/heritability.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                <& /solgs/population/trait_acronyms.mas,
-                                  trial_id => $trial_id
-                              &>
-
-% if ($c->req->base =~ /sweetpotatobase/) {
-                                <& /tools/qualityControl/qualityControl.mas,
-                                    trial_id => $trial_id
-                                &>
-% }
-
-% if ($hidap_enabled) {
-                                <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
-% }
-% } #End trial_analysis_tools
-% if ($info_section_id eq 'trial_nirs_section'){
-                                <& /breeders_toolbox/trial/trial_nirs_data.mas, trial_id => $trial_id &>
-% } #End trial nirs data
 % if ($info_section_id eq 'trial_weather_data'){
                                 <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
 % } #End trial_weather_data

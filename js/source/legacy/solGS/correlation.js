@@ -476,25 +476,27 @@ jQuery(document).ready(function () {
         jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
         solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
-        if (res.data) {
-            corrArgs["corr_table_file"] = res.corre_table_file;
-
-            
+        if (res.status.match(/success/)) {
+            corrArgs["corr_table_file"] = res.corre_table_file;    
             var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
+            var heatmapArgs = {
+              input_data: res.input_data,
+              output_data: res.output_data,
+              canvas: canvas,
+              plot_div_id: corrPlotDivId,
+              download_links: corrDownload,
+              axis_mode: 'two',
+            };
 
-            solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
+            solGS.heatmap.plot(heatmapArgs);        
+        } else {
+            jQuery(corrMsgDiv).html(res.status + " There is no correlation output for this dataset.").fadeOut(8400);
+        }
 
+            jQuery(runCorrBtnId).show();
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(corrMsgDiv).empty();
-            jQuery(runCorrBtnId).show();
-        } else {
-            jQuery(`${canvas} .multi-spinner-container`).hide();
-
-            jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
-
-            jQuery(runCorrBtnId).show();
-        }
-    });
+        });
 
     solGS.correlation.runPhenoCorrelation(corrArgs).fail(function (res) {
       jQuery(`${canvas} .multi-spinner-container`).hide();
@@ -527,9 +529,18 @@ jQuery(document).ready(function () {
         if (res.status.match(/success/)) {
           args["corr_table_file"] = res.corre_table_file;
           var corrDownload = solGS.correlation.createCorrDownloadLink(args);
-          solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
-        } else {
-          jQuery(corrMsgDiv).html(res.status).fadeOut(8400);
+          var heatmapArgs = {
+            input_data: res.input_data,
+            output_data: res.output_data,
+            canvas: canvas,
+            plot_div_id: corrPlotDivId,
+            download_links: corrDownload,
+            axis_mode: 'four',
+          };
+          solGS.heatmap.plot(heatmapArgs);
+        } else {        
+            jQuery(corrMsgDiv).html(res.status + " There is no correlation output for this dataset.").fadeOut(8400);
+            
         }
 
         jQuery(`${canvas} .multi-spinner-container`).hide();
@@ -537,7 +548,10 @@ jQuery(document).ready(function () {
         jQuery(runCorrBtnId).show();
       })
       .fail(function (res) {
-        jQuery(corrMsgDiv).html("Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).html(res.status + " Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(runCorrBtnId).show();
+        
       });
   });
 });
