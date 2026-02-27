@@ -138,7 +138,7 @@ $response = decode_json $mech->content;
 #17
 
 is_deeply($response,
-	  {
+{
   'result' => {
     'data' => [
       [
@@ -146,28 +146,28 @@ is_deeply($response,
         134,
         'test',
         'test',
-        139,
-        'Kasese solgs trial',
-        'This trial was loaded into the fixture to test solgs.',
-        'Alpha',
+        137,
+        'test_trial',
+        'test trial',
+        'CRD',
         undef,
         undef,
         undef,
         undef,
         undef,
-        undef,
-        undef,
+        '2017-July-04',
+        '2017-July-21',
         '23',
         'test_location',
-        39086,
-        'UG120250',
+        38843,
+        'test_accession4',
         '',
         'plot',
-        39691,
-        'KASESE_TP2013_1000',
+        38857,
+        'test_trial21',
         '1',
-        '53',
-        '36014',
+        '1',
+        '1',
         undef,
         undef,
         'test',
@@ -195,28 +195,28 @@ is_deeply($response,
         134,
         'test',
         'test',
-        139,
-        'Kasese solgs trial',
-        'This trial was loaded into the fixture to test solgs.',
-        'Alpha',
+        137,
+        'test_trial',
+        'test trial',
+        'CRD',
         undef,
         undef,
         undef,
         undef,
         undef,
-        undef,
-        undef,
+        '2017-July-04',
+        '2017-July-21',
         '23',
         'test_location',
-        38960,
-        'UG120092',
-        '',
+        38842,
+        'test_accession3',
+        'test_accession3_synonym1',
         'plot',
-        39493,
-        'KASESE_TP2013_1001',
+        38866,
+        'test_trial210',
+        '3',
         '1',
-        '53',
-        '36015',
+        '10',
         undef,
         undef,
         'test',
@@ -250,16 +250,16 @@ is_deeply($response,
         'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'
       },
       {
-        'observationVariableDbId' => '77556',
-        'observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010'
+        'observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010',
+        'observationVariableDbId' => '77556'
       },
       {
         'observationVariableDbId' => '77548',
         'observationVariableName' => 'cass source leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000002'
       },
       {
-        'observationVariableDbId' => '77553',
-        'observationVariableName' => 'cass source leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000007'
+        'observationVariableName' => 'cass source leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000007',
+        'observationVariableDbId' => '77553'
       },
       {
         'observationVariableDbId' => '77549',
@@ -270,8 +270,8 @@ is_deeply($response,
         'observationVariableName' => 'cass storage root|3-phosphoglyceric acid|ug/g|week 16|COMP:0000006'
       },
       {
-        'observationVariableDbId' => '77550',
-        'observationVariableName' => 'cass storage root|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000004'
+        'observationVariableName' => 'cass storage root|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000004',
+        'observationVariableDbId' => '77550'
       },
       {
         'observationVariableName' => 'cass storage root|ADP|ug/g|week 16|COMP:0000005',
@@ -286,12 +286,12 @@ is_deeply($response,
         'observationVariableName' => 'cass upper stem|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000008'
       },
       {
-        'observationVariableName' => 'cass upper stem|ADP|ug/g|week 16|COMP:0000009',
-        'observationVariableDbId' => '77555'
+        'observationVariableDbId' => '77555',
+        'observationVariableName' => 'cass upper stem|ADP|ug/g|week 16|COMP:0000009'
       },
       {
-        'observationVariableName' => 'dry matter content percentage|CO_334:0000092',
-        'observationVariableDbId' => '70741'
+        'observationVariableDbId' => '70741',
+        'observationVariableName' => 'dry matter content percentage|CO_334:0000092'
       },
       {
         'observationVariableDbId' => '70666',
@@ -302,8 +302,8 @@ is_deeply($response,
         'observationVariableDbId' => '70773'
       },
       {
-        'observationVariableDbId' => '70668',
-        'observationVariableName' => 'harvest index variable|CO_334:0000015'
+        'observationVariableName' => 'harvest index variable|CO_334:0000015',
+        'observationVariableDbId' => '70668'
       }
     ],
     'headerRow' => [
@@ -341,28 +341,28 @@ is_deeply($response,
   },
   'metadata' => {
     'datafiles' => [],
+    'pagination' => {
+      'totalCount' => 1955,
+      'pageSize' => 2,
+      'currentPage' => 0,
+      'totalPages' => 978
+    },
     'status' => [
       {
-        'messageType' => 'INFO',
-        'message' => 'BrAPI base call found with page=0, pageSize=2'
+        'message' => 'BrAPI base call found with page=0, pageSize=2',
+        'messageType' => 'INFO'
       },
       {
         'message' => 'Loading CXGN::BrAPI::v2::ObservationTables',
         'messageType' => 'INFO'
       },
       {
-        'message' => 'Observations table result constructed',
-        'messageType' => 'INFO'
+        'messageType' => 'INFO',
+        'message' => 'Observations table result constructed'
       }
-    ],
-    'pagination' => {
-      'totalPages' => 508,
-      'currentPage' => 0,
-      'pageSize' => 2,
-      'totalCount' => 1016
-    }
+    ]
   }
-	  }, "table test");
+}, "table test");
 
 
 # is_deeply($response, {'result' => {'observationVariables' => [{'observationVariableDbId' => '77559','observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013'},{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','observationVariableDbId' => '77557'},{'observationVariableDbId' => '77556','observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010'},{'observationVariableName' => 'cass source leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000002','observationVariableDbId' => '77548'},{'observationVariableName' => 'cass source leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000007','observationVariableDbId' => '77553'},{'observationVariableDbId' => '77549','observationVariableName' => 'cass source leaf|ADP|ug/g|week 16|COMP:0000003'},{'observationVariableName' => 'cass storage root|3-phosphoglyceric acid|ug/g|week 16|COMP:0000006','observationVariableDbId' => '77552'},{'observationVariableDbId' => '77550','observationVariableName' => 'cass storage root|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000004'},{'observationVariableDbId' => '77551','observationVariableName' => 'cass storage root|ADP|ug/g|week 16|COMP:0000005'},{'observationVariableDbId' => '77558','observationVariableName' => 'cass upper stem|3-phosphoglyceric acid|ug/g|week 16|COMP:0000012'},{'observationVariableDbId' => '77554','observationVariableName' => 'cass upper stem|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000008'},{'observationVariableName' => 'cass upper stem|ADP|ug/g|week 16|COMP:0000009','observationVariableDbId' => '77555'},{'observationVariableName' => 'dry matter content percentage|CO_334:0000092','observationVariableDbId' => '70741'},{'observationVariableName' => 'fresh root weight|CO_334:0000012','observationVariableDbId' => '70666'},{'observationVariableDbId' => '70773','observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016'},{'observationVariableDbId' => '70668','observationVariableName' => 'harvest index variable|CO_334:0000015'}],'data' => [[ '2014', 134, 'test', 'test', 139, 'Kasese solgs trial', 'This trial was loaded into the fixture to test solgs.', 'Alpha', undef, undef, undef, undef, undef, undef, undef, '23', 'test_location', 39086, 'UG120250', '', 'plot', 39691, 'KASESE_TP2013_1000', '1', '53', '36014', undef, undef, 'test', undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef ], [ '2014', 134, 'test', 'test', 139, 'Kasese solgs trial', 'This trial was loaded into the fixture to test solgs.', 'Alpha', undef, undef, undef, undef, undef, undef, undef, '23', 'test_location', 38960, 'UG120092', '', 'plot', 39493, 'KASESE_TP2013_1001', '1', '53', '36015', undef, undef, 'test', undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef ]],'headerRow' => ['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber']},'metadata' => {'pagination' => {'currentPage' => 0,'totalPages' => 508,'totalCount' => 1016,'pageSize' => 2},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=2','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationTables','messageType' => 'INFO'},{'message' => 'Observations table result constructed','messageType' => 'INFO'}],'datafiles' => []}}, "GET observations table test");
