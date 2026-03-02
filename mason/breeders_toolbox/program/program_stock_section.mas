@@ -22,4 +22,7 @@ $program_id
     <&| /page/info_section.mas, id=>"program_seedlots", title=>"Seedlots", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
         <& /breeders_toolbox/program/program_seedlots.mas, program_id => $program_id &>
     </&>
+    <&| /page/info_section.mas, id=>"program_propagation_identifiers", title=>"Propagation Identifiers", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+        <& /breeders_toolbox/program/program_propagation_identifiers.mas, program_id => $program_id &>
+    </&>
 </div>
