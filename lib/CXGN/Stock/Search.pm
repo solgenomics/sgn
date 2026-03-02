@@ -701,7 +701,8 @@ ORDER BY organism_id ASC;";
     # Get additional stock properties (pedigree, synonyms, donor info, create date in ISO Date format)
     my $stock_query = "SELECT stock.stock_id, stock.uniquename, stock.organism_id,
                mother.uniquename AS female_parent, father.uniquename AS male_parent, m_rel.value AS cross_type,
-               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name, to_char(stock.create_date, 'YYYY-MM-DD')
+#               props.stock_synonym, props.donor, props.\"donor institute\", props.\"donor PUI\", family.uniquename AS family_name, to_char(stock.create_date, 'YYYY-MM-DD')
+		cvterm.name, stockprop.value
         FROM stock
         LEFT JOIN stock_relationship m_rel ON (stock.stock_id = m_rel.object_id AND m_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent'))
         LEFT JOIN stock mother ON (m_rel.subject_id = mother.stock_id)
@@ -709,7 +710,8 @@ ORDER BY organism_id ASC;";
         LEFT JOIN stock father ON (f_rel.subject_id = father.stock_id)
         LEFT JOIN stock_relationship family_rel ON (stock.stock_id = family_rel.subject_id AND family_rel.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of'))
         LEFT JOIN stock family ON (family_rel.object_id = family.stock_id)
-        LEFT JOIN materialized_stockprop props ON (stock.stock_id = props.stock_id)
+        LEFT JOIN stockprop on(stock.stock_id=stockprop.stock_id)
+	LEFT JOIN cvterm ON(stockprop.type_id=cvterm.cvterm_id)
         WHERE stock.stock_id IN ($id_ph);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
     $sth->execute(@result_stock_ids);
@@ -720,7 +722,9 @@ ORDER BY organism_id ASC;";
         my $organism_id = $r[2];
         my $mother = $r[3] || 'NA';
         my $father = $r[4] || 'NA';
-        my $syn_json = $r[6] ? decode_json(encode("utf8",$r[6])) : {};
+
+
+	my $syn_json = $r[6] ? decode_json(encode("utf8",$r[6])) : {};
         my @synonyms = sort keys %{$syn_json};
         my $donor_json = $r[7] ? decode_json(encode("utf8",$r[7])) : {};
         my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
@@ -813,9 +817,7 @@ sub _refresh_materialized_stockprop {
         $h->execute();
     };
     if ($@) {
-        my @stock_props = ('block', 'col_number', 'igd_synonym', 'is a control', 'location_code', 'organization', 'plant_index_number', 'subplot_index_number', 'tissue_sample_index_number', 'plot number', 'plot_geo_json', 'range', 'replicate', 'row_number', 'stock_synonym', 'T1', 'T2', 'variety', 'transgenic',
-        'notes', 'state', 'accession number', 'PUI', 'donor', 'donor institute', 'donor PUI', 'seed source', 'institute code', 'institute name', 'biological status of accession code', 'country of origin', 'type of germplasm storage code', 'entry number', 'acquisition date', 'current_count', 'current_weight_gram', 'crossing_metadata_json', 'ploidy_level', 'genome_structure',
-        'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality', 'SelectionMarker', 'CloningOrganism', 'CassetteName','Strain', 'InherentMarker', 'Backbone', 'VectorType', 'Gene', 'Promotors', 'Terminators', 'PlantAntibioticResistantMarker', 'BacterialResistantMarker');
+        my @stock_props = ('FOC-TR4','FOC-R1','BXW','Black Sigatoka','Weevils','Nematodes','year_of_cloning','variety_release_id', 'block', 'col_number', 'igd_synonym', 'is a control', 'location_code', 'organization', 'plant_index_number', 'subplot_index_number', 'tissue_sample_index_number', 'plot number', 'plot_geo_json', 'range', 'replicate', 'row_number', 'stock_synonym', 'T1', 'T2', 'variety', 'transgenic', 'notes', 'state', 'accession number', 'PUI', 'donor', 'donor institute', 'donor PUI', 'seed source', 'institute code', 'institute name', 'biological status of accession code', 'country of origin', 'type of germplasm storage code', 'entry number', 'acquisition date', 'current_count', 'current_weight_gram', 'crossing_metadata_json', 'ploidy_level', 'genome_structure', 'introgression_parent', 'introgression_backcross_parent', 'introgression_map_version', 'introgression_chromosome', 'introgression_start_position_bp', 'introgression_end_position_bp', 'is_blank', 'concentration', 'volume', 'extraction', 'dna_person', 'tissue_type', 'ncbi_taxonomy_id', 'seedlot_quality', 'SelectionMarker', 'CloningOrganism', 'CassetteName','Strain', 'InherentMarker', 'Backbone', 'VectorType', 'Gene', 'Promotors', 'Terminators', 'PlantAntibioticResistantMarker', 'BacterialResistantMarker');
         my %stockprop_check = map { $_ => 1 } @stock_props;
         my @additional_terms;
         foreach (@$stockprop_view) {
