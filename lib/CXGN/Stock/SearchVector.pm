@@ -463,14 +463,14 @@ sub search {
                 print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
             }
         }
-        my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
+        #my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
 
 	my $where_clause = join(" or ", @where_clauses);
-        my $stockprop_query = "SELECT stock_id FROM stockprop where $where_clause";
+        my $stockprop_query = "SELECT stock_id, type_id FROM stockprop where $where_clause";
 	print STDERR "QUERY: $stockprop_query\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
-        while (my $stock_id = $h->fetchrow_array()) {
+        while (my ($stock_id, $type_id) = $h->fetchrow_array()) {
             push @vectorprop_filtered_stock_ids, $stock_id;
         }
 	print STDERR "RETRIEVED ".scalar(@vectorprop_filtered_stock_ids)." stocks\n";
@@ -479,8 +479,10 @@ sub search {
 
 
     if ($stock_type_search == $stock_type_id){
+	print STDERR "ADDING STOCK REL QUERY\n";
         $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
     } else {
+	print STDERR "NOT ADDING STOCK REL QUERY\n";
         $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
     }
 
@@ -497,6 +499,7 @@ sub search {
     }
 
     if ( scalar(@vectorprop_filtered_stock_ids)>0){
+	print STDERR "ADDING vectorprop_filtered_stock_ids... ".Dumper(\@vectorprop_filtered_stock_ids)."\n";
         $search_query->{'me.stock_id'} = {'in'=>\@vectorprop_filtered_stock_ids};
     }
 
@@ -507,6 +510,8 @@ sub search {
     my @result_stock_ids;
 
     if ($using_vectorprop_filter == 0 || ($using_vectorprop_filter = 1 && scalar(@vectorprop_filtered_stock_ids)>0 )){
+	print STDERR "SEARCHING VECTORPROPS... ".Dumper(\@vectorprop_filtered_stock_ids)."\n";
+	print STDERR "DBIX QUERY NOW: ".Dumper($search_query)."\n";
 
         my $rs = $schema->resultset("Stock::Stock")->search(
         $search_query,
@@ -518,7 +523,11 @@ sub search {
             distinct=>1
         });
 
+
+
         $records_total = $rs->count();
+	print STDERR "TOTAL RECORDS: $records_total\n";
+
         if (defined($limit) && defined($offset)){
             $rs = $rs->slice($offset, $limit);
         }
@@ -531,6 +540,7 @@ sub search {
 
         while (my $a = $rs->next()) {
             my $uniquename  = $a->uniquename;
+	    print STDERR "RETRIEVING VECTOR $uniquename ...\n";
             my $stock_id    = $a->stock_id;
             push @result_stock_ids, $stock_id;
 
@@ -568,6 +578,8 @@ sub search {
 
     # Comma separated list of query placeholders for the result stock ids
     #
+    print STDERR "RESULT STOCK IDS: ".Dumper(\@result_stock_ids);
+
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
 
     my $stock_query = "SELECT stock_id, uniquename, organism_id, stockprop.value from stock join stockprop using(stock_id) where stockprop.type_id=? and stock.stock_id in ($id_ph)";
@@ -593,6 +605,7 @@ sub search {
     }
 
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
+	print STDERR "BUILD STOCKPROP COLUMN VIEW...\n";
         my @stockprop_view = keys %{$self->stockprop_columns_view};
         my $result_stock_ids_sql = join ",", @result_stock_ids;
         my $stockprop_where = " stock_id IN ($result_stock_ids_sql)";
@@ -611,10 +624,10 @@ sub search {
 	    print STDERR "RETRIEVED VALUE $value FOR $prop\n";
 	    push @stockprop_values, $value;
 
-	    my $stockprop_vals_string = join ',', @stockprop_values;
-	    $result_hash{$stock_id}->{$prop} = $stockprop_vals_string;
-        }
 
+	    $result_hash{$stock_id}->{$prop} = $value;
+        }
+#	my $stockprop_vals_string = join ',', @stockprop_values;
         while (my ($uniquename, $info) = each %result_hash){
             foreach (@stockprop_view){
                 if (!$info->{$_}){
