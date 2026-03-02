@@ -301,7 +301,7 @@ sub search {
     } else {
         $or_conditions = [ { 'me.uniquename' => { '!=' => undef } } ];
     }
-
+    
     foreach (@uniquename_array){
         if ($_){
             if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
@@ -416,21 +416,21 @@ sub search {
     }
 
     my @vectorprop_filtered_stock_ids;
-
+    
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
 	my @where_clauses;
-
-        my @stockprop_wheres;
-        foreach my $term_name (keys %{$self->stockprops_values}){
-
+	
+	my @stockprop_wheres;
+	foreach my $term_name (keys %{$self->stockprops_values}){
+	    
 	    print STDERR "PROCESSING TERM $term_name\n";
             my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
             if ($property_term){
-
+		
 		my $type_id = $property_term->cvterm_id();
                 my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
                 my $value = $self->stockprops_values->{$term_name}->{'value'};
-
+		
                 my $start = '%';
                 my $end = '%';
                 if ( $matchtype eq 'exactly' ) {
@@ -445,26 +445,26 @@ sub search {
                 if ($matchtype eq 'contains'){ #for 'wildcard' matching it replaces * with % and ? with _
                     $search =~ tr/*?/%_/;
                 }
-
+		
                 if ( $matchtype eq 'one of' ) {
 		    print STDERR "ONE OF...\n";
                     my @values = split ',', $value;
-
+		    
 		    push @where_clauses, " (type_id = $type_id and value in ('", join("'", @values).") ) ";
-#                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
-
+		    #                    push @stockprop_wheres, "\"".$term_name."\"::text \\?| array[$search_vals_sql]";
+		    
                 } else {
 		    print STDERR "ANY...\n";
                     #push @stockprop_wheres, "\"".$term_name."\"::text ilike $search";
 		    push @where_clauses, "  (type_id = $type_id and value ilike '$start$value$end') ";
                 }
-
+		
             } else {
                 print STDERR "Stockprop $term_name is not in this database! Only use stock_property in sgn_local configuration!\n";
             }
         }
-        #my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
 
+        #my $stockprop_where = 'WHERE ' . join ' OR ', @stockprop_wheres;
 	my $where_clause = join(" or ", @where_clauses);
         my $stockprop_query = "SELECT stock_id, type_id FROM stockprop where $where_clause";
 	print STDERR "QUERY: $stockprop_query\n";
@@ -475,9 +475,9 @@ sub search {
         }
 	print STDERR "RETRIEVED ".scalar(@vectorprop_filtered_stock_ids)." stocks\n";
     }
-
-
-
+    
+    
+    
     if ($stock_type_search == $stock_type_id){
 	print STDERR "ADDING STOCK REL QUERY\n";
         $stock_join = { stock_relationship_objects => { subject => { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins }}}};
@@ -485,65 +485,60 @@ sub search {
 	print STDERR "NOT ADDING STOCK REL QUERY\n";
         $stock_join = { nd_experiment_stocks => { nd_experiment => $nd_experiment_joins } };
     }
-
+    
     #$schema->storage->debug(1);
     my $operator = $default_operator ? $default_operator : (scalar(@vectorprop_filtered_stock_ids)>0 ? "or" : "and");
     my $search_query = {
         -$operator => [
-            $or_conditions,
-            $and_conditions,
-        ],
+	     $or_conditions,
+	     $and_conditions,
+	    ],
     };
     if (!$self->include_obsolete) {
         $search_query->{'me.is_obsolete'} = 'f';
     }
-
+    
     if ( scalar(@vectorprop_filtered_stock_ids)>0){
 	print STDERR "ADDING vectorprop_filtered_stock_ids... ".Dumper(\@vectorprop_filtered_stock_ids)."\n";
         $search_query->{'me.stock_id'} = {'in'=>\@vectorprop_filtered_stock_ids};
     }
-
+    
     #skip rest of query if no results
     my @result;
     my $records_total = 0;
     my %result_hash;
     my @result_stock_ids;
-
+    
     if ($using_vectorprop_filter == 0 || ($using_vectorprop_filter = 1 && scalar(@vectorprop_filtered_stock_ids)>0 )){
-	print STDERR "SEARCHING VECTORPROPS... ".Dumper(\@vectorprop_filtered_stock_ids)."\n";
-	print STDERR "DBIX QUERY NOW: ".Dumper($search_query)."\n";
-
         my $rs = $schema->resultset("Stock::Stock")->search(
-        $search_query,
-        {
-            join => ['type', 'organism', 'stockprops', $stock_join],
-            '+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
-            '+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
-            order_by  => 'me.name',
-            distinct=>1
-        });
-
-
-
+	    $search_query,
+	    {
+		join => ['type', 'organism', 'stockprops', $stock_join],
+		'+select' => [ 'type.name' , 'organism.species' , 'organism.common_name', 'organism.genus'],
+		'+as'     => [ 'cvterm_name' , 'species', 'common_name', 'genus'],
+		order_by  => 'me.name',
+		distinct=>1
+	    });
+	
         $records_total = $rs->count();
 	print STDERR "TOTAL RECORDS: $records_total\n";
 
         if (defined($limit) && defined($offset)){
             $rs = $rs->slice($offset, $limit);
         }
-
+	
         my $owners_hash;
         if (!$self->minimal_info){
             my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema} );
             $owners_hash = $stock_lookup->get_owner_hash_lookup();
         }
-
+	
         while (my $a = $rs->next()) {
             my $uniquename  = $a->uniquename;
 	    print STDERR "RETRIEVING VECTOR $uniquename ...\n";
             my $stock_id    = $a->stock_id;
             push @result_stock_ids, $stock_id;
-
+	    
             if (!$self->minimal_info){
                 # my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_id});
                 my @owners = $owners_hash->{$stock_id} ? @{$owners_hash->{$stock_id}} : ();
@@ -554,7 +549,7 @@ sub search {
                 my $stock_name  = $a->name;
                 my $common_name = $a->get_column('common_name');
                 my $genus       = $a->get_column('genus');
-
+		
                 $result_hash{$stock_id} = {
                     stock_id => $stock_id,
                     uniquename => $uniquename,
@@ -575,20 +570,20 @@ sub search {
             }
         }
     }
-
+    
     # Comma separated list of query placeholders for the result stock ids
     #
     print STDERR "RESULT STOCK IDS: ".Dumper(\@result_stock_ids);
 
     my $id_ph = scalar(@result_stock_ids) > 0 ? join ",", ("?") x @result_stock_ids : "NULL";
-
+    
     my $stock_query = "SELECT stock_id, uniquename, organism_id, stockprop.value from stock join stockprop using(stock_id) where stockprop.type_id=? and stock.stock_id in ($id_ph)";
-
+    
     print STDERR "STOCK QUERY: $stock_query\n";
-
+    
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
     $sth->execute($stock_synonym_cvterm_id, @result_stock_ids);
-
+    
     # Add additional organism and stock properties to the result hash for each stock
     while (my @r = $sth->fetchrow_array()) {
 	print STDERR "RESULT: ".Dumper(\@r);
@@ -599,15 +594,16 @@ sub search {
         #my @synonyms = sort keys %{$syn_json};
 	my @synonyms;
 	push @synonyms, $syn;
-
+	
         # add stock props to the result hash
         $result_hash{$stock_id}{synonyms} = \@synonyms;
     }
-
+    
     if ($self->stockprop_columns_view && scalar(keys %{$self->stockprop_columns_view})>0 && scalar(@result_stock_ids)>0){
 	print STDERR "BUILD STOCKPROP COLUMN VIEW...\n";
         my @stockprop_view = keys %{$self->stockprop_columns_view};
         my $result_stock_ids_sql = join ",", @result_stock_ids;
+
         my $stockprop_where = " stock_id IN ($result_stock_ids_sql)";
 
 	print STDERR "STOCKPROP VIEW: ".Dumper(\@stockprop_view);
@@ -618,16 +614,15 @@ sub search {
 	print STDERR "NEXT STOCKPROP QUERY: $stockprop_query\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute();
-
+	
 	my @stockprop_values;
 	while (my ($stock_id, $prop, $value) = $h->fetchrow_array()) {
 	    print STDERR "RETRIEVED VALUE $value FOR $prop\n";
 	    push @stockprop_values, $value;
 
-
 	    $result_hash{$stock_id}->{$prop} = $value;
         }
-#	my $stockprop_vals_string = join ',', @stockprop_values;
+
         while (my ($uniquename, $info) = each %result_hash){
             foreach (@stockprop_view){
                 if (!$info->{$_}){
@@ -636,12 +631,12 @@ sub search {
             }
         }
     }
-
+    
     foreach (sort keys %result_hash){
         push @result, $result_hash{$_};
     }
-
-
+    
+    
     print STDERR "CXGN::Stock::SearchVector search end\n";
     return (\@result, $records_total);
 }
