@@ -887,7 +887,7 @@ sub upload_seedlots_inventory_POST : Args(0) {
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Stock::Seedlot::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('SeedlotInventoryCSV');
+    $parser->load_plugin('SeedlotInventoryGeneric');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
@@ -907,46 +907,54 @@ sub upload_seedlots_inventory_POST : Args(0) {
         $c->stash->{rest} = {error_string => $return_error, missing_seedlots => $parse_errors->{'missing_seedlots'} };
         $c->detach();
     }
-
     eval {
         while (my ($key, $val) = each(%$parsed_data)){
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $val->{seedlot_id});
             $sl->box_name($val->{box_id});
-            $sl->description($val->{description});
-
-	    print STDERR "QUALITY: $val->{quality}\n";
-	    $sl->quality($val->{quality});
-
             my $return = $sl->store();
 
-	    my $current_stored_count = $sl->get_current_count_property();
+	        my $current_stored_count = $sl->get_current_count_property();
             my $current_stored_weight = $sl->get_current_weight_property();
-
-            my $weight_difference = $val->{weight_gram} - $current_stored_weight;
+            my $weight_difference;
+            my $amount_difference;
             my $factor;
-            if ($weight_difference >= 0){
-                $factor = 1;
-            } else {
-                $factor = -1;
-                $weight_difference = $weight_difference * -1; #Store positive values only
+            my $inventory_weight = $val->{weight_gram};
+            my $inventory_amount = $val->{amount};
+
+            if (defined $inventory_weight) {
+                $weight_difference = $inventory_weight - $current_stored_weight;
+                if ($weight_difference >= 0){
+                    $factor = 1;
+                } else {
+                    $factor = -1;
+                    $weight_difference = $weight_difference * -1; #Store positive values only
+                }
+            }
+
+            if (defined $inventory_amount) {
+                $amount_difference = $inventory_amount - $current_stored_count;
+                if ($amount_difference >= 0){
+                    $factor = 1;
+                } else {
+                    $factor = -1;
+                    $amount_difference = $amount_difference * -1; #Store positive values only
+                }
             }
 
             my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
             $transaction->factor($factor);
 
-	    my $from_stock_id = $val->{seedlot_id};
-	    my $from_stock_name = $val->{seedlot_name};
-
-	    if ($val->{source_id}) {
-		$from_stock_id = $val->{source_id};
-		$from_stock_name = $val->{source};
-	    }
-
+            my $from_stock_id = $val->{seedlot_id};
+            my $from_stock_name = $val->{seedlot_name};
             $transaction->from_stock([ $from_stock_id, $from_stock_name ]);
             $transaction->to_stock([$val->{seedlot_id}, $val->{seedlot_name}]);
-            $transaction->weight_gram($weight_difference);
+            if (defined $inventory_weight) {
+                $transaction->weight_gram($weight_difference);
+            } elsif (defined $inventory_amount) {
+                $transaction->amount($amount_difference);
+            }
             $transaction->timestamp($val->{inventory_date});
-            $transaction->description('Seed inventory CSV upload.');
+            $transaction->description('Seed inventory upload.');
             $transaction->operator($val->{inventory_person});
             $transaction->store();
 
