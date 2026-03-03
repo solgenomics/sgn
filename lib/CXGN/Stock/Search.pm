@@ -729,6 +729,7 @@ ORDER BY organism_id ASC;";
     $sth->execute(@result_stock_ids);
 
     # Add additional organism and stock properties to the result hash for each stock
+
     while (my @r = $sth->fetchrow_array()) {
         my $stock_id = $r[0];
         my $organism_id = $r[2];
@@ -736,29 +737,30 @@ ORDER BY organism_id ASC;";
         my $father = $r[4] || 'NA';
 	my $rel_type = $r[5] || 'NA';
 	my $family_name = $r[6] || 'NA';
-	my $create_date = $r[7] || 'NA';
+	my $create_date = $r[7] || undef; # not NA because it ends up in acquisition date...
 	my $prop_name = $r[8];
 	my $prop_value = $r[9];
-
+	print STDERR "PROCESSING PROP NAME $prop_name (VALUE $prop_value)\n";
 	# my @synonyms = sort keys %{$syn_json};
-	if ($prop_name eq "synonyms") {
-	    my $syn_json = $r[6] ? decode_json(encode("utf8",$r[6])) : {};
-	    my @synonyms = sort keys %{$syn_json};
-	    $prop_value = \@synonyms;
+
+	if ($prop_name eq "stock_synonym") {
+	    print STDERR "PARSING SYNONYMS!!! ($r[9])\n";
+	    push @{$result_hash{$stock_id}{synonyms}}, $prop_value;
 	}
 
         # my $donor_json = $r[7] ? decode_json(encode("utf8",$r[7])) : {};
 	my @donor_accessions;
 	if ($prop_name eq "donor") {
-	    my $donor_json = $r[7] ? decode_json(encode("utf8",$r[7])) : {};
-	    @donor_accessions = keys %{$donor_json};
-	    $prop_value = \@donor_accessions;
+	    my $donor = $r[9];  #decode_json(encode("utf8",$r[9])) : {};
+	    push @donors, $donor;
+	    $prop_value = \@donors;
 	}
+
 
         # my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
 	my @donor_institutes;
 	if ($prop_name eq "donor_institution") {
-	    my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
+	    my $donor_inst_json = $r[9] ? decode_json(encode("utf8",$r[9])) : {};
 	    @donor_institutes = keys %{$donor_inst_json};
 	    $prop_value = \@donor_institutes;
 	}
@@ -766,16 +768,13 @@ ORDER BY organism_id ASC;";
         # my $donor_pui_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
 	my @donor_puis;
 	if ($prop_name eq "donor PUI") {
-	    my $donor_pui_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
+	    my $donor_pui_json = $r[9] ? decode_json(encode("utf8",$r[9])) : {};
 	    @donor_puis = keys %{$donor_pui_json};
 	    $prop_value = \@donor_puis;
 	}
 
-	if ($prop_name eq "pedigree") {
-	    $prop_value = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
-	}
-        #$result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
-        #$result_hash{$stock_id}{synonyms} = \@synonyms;
+	$result_hash{$stock_id}{pedigree} = $self->display_pedigree ? $mother . '/' . $father : 'DISABLED';
+        if (! exists( $result_hash{$stock_id}{synonyms} ) ) { $result_hash{$stock_id}{synonyms} = []; }
 	$result_hash{$stock_id}{$prop_name} = $prop_value;
 
         my @donor_array;
@@ -844,7 +843,7 @@ ORDER BY organism_id ASC;";
         push @result, $result_hash{$_};
     }
 
-    #print STDERR Dumper \@result;
+    print STDERR "RESULT AFTER SEARCH: ".Dumper(\@result);
     print STDERR "CXGN::Stock::Search search end\n";
     return (\@result, $records_total);
 }
