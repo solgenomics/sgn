@@ -736,7 +736,7 @@ ORDER BY organism_id ASC;";
         my $mother = $r[3] || 'NA';
         my $father = $r[4] || 'NA';
 	my $rel_type = $r[5] || 'NA';
-	my $family_name = $r[6] || 'NA';
+	my $family_name = $r[6] || undef; # not NA because of test
 	my $create_date = $r[7] || undef; # not NA because it ends up in acquisition date...
 	my $prop_name = $r[8];
 	my $prop_value = $r[9];
@@ -752,10 +752,15 @@ ORDER BY organism_id ASC;";
 	my @donor_accessions;
 	if ($prop_name eq "donor") {
 	    my $donor = $r[9];  #decode_json(encode("utf8",$r[9])) : {};
-	    push @donors, $donor;
-	    $prop_value = \@donors;
+	    #push @donor_accessions, $donor;
+	    $prop_value = $donor; #\@donor_accessions;
 	}
 
+	my @puis;
+	if ($prop_name eq "PUI") {
+	    push @puis, $r[9];
+	    $prop_value = \@puis;
+	}
 
         # my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
 	my @donor_institutes;
@@ -764,6 +769,8 @@ ORDER BY organism_id ASC;";
 	    @donor_institutes = keys %{$donor_inst_json};
 	    $prop_value = \@donor_institutes;
 	}
+
+
 
         # my $donor_pui_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
 	my @donor_puis;
@@ -795,7 +802,7 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
 
-#        $result_hash{$stock_id}{population_name} = $population_name;
+	$result_hash{$stock_id}{population_name} = $family_name;
         $result_hash{$stock_id}{create_date} = $create_date;
     }
 
