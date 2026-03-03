@@ -375,7 +375,7 @@ sub search {
       LEFT JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
       LEFT JOIN db USING(db_id)
       LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
-      LEFT JOIN project USING(project_id)
+      LEFT JOIN project USING (project_id)
       LEFT JOIN project_relationship ON (project.project_id=project_relationship.subject_project_id AND project_relationship.type_id = $breeding_program_rel_type_id)
       LEFT JOIN project as breeding_program ON (breeding_program.project_id=project_relationship.object_project_id)
       LEFT JOIN projectprop as year ON (project.project_id=year.project_id AND year.type_id = $year_type_id)
@@ -630,7 +630,6 @@ sub search {
     while( my $r = $location_rs->next()){
         $location_id_lookup{$r->nd_geolocation_id} = $r->description;
     }
-
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my @result;
