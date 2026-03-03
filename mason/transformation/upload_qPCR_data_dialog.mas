@@ -286,13 +286,16 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#upload_qPCR_data_submit").click(function(){
+        upload_qPCR_data();
+    });
+
+    function upload_qPCR_data() {
         const Cq_upload_file = jQuery("#Cq_qPCR_data_file").val();
         const tissue_type = jQuery("#qPCR_tissue_type").val();
         const endogenous_control = jQuery("#qPCR_endogenous_control").val();
         const assay_date = jQuery("#assay_date").val();
         const normalization_method = jQuery("#qPCR_normalization_method").val();
 
-        jQuery('#upload_qPCR_data_form').attr("action", "/ajax/transformation/upload_qPCR_data");
         if (tissue_type === ''){
             alert("Please select a tissue type");
             return;
@@ -318,33 +321,32 @@ jQuery(document).ready(function(){
             return;
         }
 
-        jQuery("#upload_qPCR_data_form").submit();
-        jQuery("#upload_qPCR_data_dialog").modal("hide");
-    });
-
-    jQuery('#upload_qPCR_data_form').iframePostForm({
-        json: true,
-        post: function(){
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_qPCR_data_error_display tbody").html('');
-                jQuery("#upload_qPCR_data_error_display tbody").append(response.error_string);
-                jQuery("#upload_qPCR_data_error_display").modal("show");
-                return;
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: "/ajax/transformation/upload_qPCR_data",
+            type: 'POST',
+            data: new FormData(jQuery("#upload_qPCR_data_form")[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error_string) {
+                    jQuery("#upload_qPCR_data_error_display tbody").html('');
+                    jQuery("#upload_qPCR_data_error_display tbody").append(response.error_string);
+                    jQuery("#upload_qPCR_data_error_display").modal("show");
+                    return;
+                }
+                if (response.error) {
+                    alert(response.error);
+                    return;
+                }
+                if (response.success) {
+                    jQuery('#upload_qPCR_data_dialog').modal('hide');
+                    jQuery('#qPCR_data_saved_dialog_message').modal("show");
+                }
             }
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            if (response.success == 1) {
-                jQuery('#upload_qPCR_data_dialog').modal('hide');
-                jQuery('#qPCR_data_saved_dialog_message').modal("show");
-            }
-        }
-    });
+        });
+    };
 
     jQuery("[name='upload_qPCR_data_dismiss_button']").click(function() {
         jQuery('#upload_qPCR_data_dialog').modal('hide');
