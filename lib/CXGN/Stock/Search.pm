@@ -770,8 +770,6 @@ ORDER BY organism_id ASC;";
 	    $prop_value = \@donor_institutes;
 	}
 
-
-
         # my $donor_pui_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
 	my @donor_puis;
 	if ($prop_name eq "donor PUI") {
@@ -797,11 +795,14 @@ ORDER BY organism_id ASC;";
         }
         $result_hash{$stock_id}{donors} = \@donor_array;
 
+	$result_hash{$stock_id}{documentationURL} = join(",", @puis);
         # add organism props for each stock
         $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
         $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
 
+	
+	$result_hash{$stock_id}{PUI} = join(",", @puis);
 	$result_hash{$stock_id}{population_name} = $family_name;
         $result_hash{$stock_id}{create_date} = $create_date;
     }
