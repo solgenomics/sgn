@@ -45,11 +45,12 @@ sub anova_check_design : Path('/anova/check/design/') Args(0) {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    my $design    = $self->get_trial_design($c);
-    my $supported = $self->check_design_support($design) if $design;
+    my $design = $self->get_trial_design($c);
+    my $supported;
+    $supported = $self->check_design_support($design) if $design;
 
     if ( !$design ) {
-        $c->stash->{rest}{'Error'} = 'This trial has no design to apply ANOVA.';
+        $c->stash->{rest}{'Error'} = 'This trial has no design. ANOVA can not be applied.';
     }
     elsif ( $design && !$supported ) {
         $c->stash->{rest}{'Error'} = $design
