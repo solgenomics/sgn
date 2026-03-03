@@ -45,6 +45,9 @@ Convenience accessors for driver functions:
 
 For all other driver functions, use the driver() accessor, for example: $swd->driver->get_window_size().
 
+For downloads, a /download dir needs to be mapped in the breedbase_web docker and in the selenium docker to the same host dir. The download dir can be obtained from this object using $d->download_dir(); .
+
+
 =head1 AUTHOR
 
 Lukas Mueller <lam87@cornell.edu>
@@ -60,7 +63,10 @@ use Moose;
 use Try::Tiny;
 use Test::More;
 use File::Spec::Functions;
+use Selenium::Firefox;
+use Selenium::Firefox::Profile;
 use Selenium::Remote::Driver;
+
 
 has 'host' => ( is => 'rw',
 	      isa => 'Str',
@@ -87,6 +93,37 @@ has 'user_data' => ( is => 'rw',
 			     },
 			 }
 		     });
+
+has 'download_dir' => (is => 'ro',
+		       isa => 'Str',
+		       default => sub {
+			        return "/downloads";
+			   }
+    );
+
+our $webdriver_instance;
+
+sub BUILD {
+    my $self = shift;
+
+    $webdriver_instance = $self;
+
+    my $download_dir = $self->download_dir();
+
+    chown 1200, 1250, $download_dir;
+    chmod 0777, $download_dir;
+    
+    my $profile = Selenium::Firefox::Profile->new;
+    $profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
+    $profile->set_preference( 'browser.download.dir', $download_dir );
+    $profile->set_preference( 'browser.download.manager.showWhenStarting', 0 );
+    $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream,text/csv,application/zip,text/plain' );
+    
+    my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
+    
+
+    $self->driver($driver);
+}
 
 sub login_as { 
     my $self = shift;
