@@ -2314,7 +2314,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
     $h->execute($intercrop_plot_of_id, $plot_of_id, \@plots, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
 
-    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Plot Number</th><th>Row</th><th>Column</th><th>Rep</th><th>Block</th><th>Accession(s)</th></tr></thead><tbody>";
+    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Number</th><th>Row</th><th>Column</th><th>Rep</th><th>Block</th><th>Accession</th></tr></thead><tbody>";
 
     while (my ($plot_id, $plot_name, $plot_number, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms, $intercrop_accession_id, $intercrop_accession_name, $intercrop_synonyms) = $h->fetchrow_array()) {
 
@@ -2407,7 +2407,7 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
     $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
 
-    my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table id=\"subplots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
         $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";

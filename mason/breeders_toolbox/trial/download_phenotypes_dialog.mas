@@ -65,23 +65,23 @@ $dialog_name => undef
 
 <&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
 
-        <div class="form-group">
-	      	<label class="col-sm-3 control-label">For repeated measurements, return the </label>
-			<div class="col-sm-9">
-		  		<select class="form-control" id="download_trial_phenotypes_repetitive_measurements_option">
-		    		<option value="first">First value</option>
-		    		<option value="last">Last value</option>
-		    		<option value="average" selected>Averaged value</option>
-                    <option value="sum">Sum values</option>
-		    		<option value="all_values_single_line">All Values Single Line</option>
-                    <option value="all_values_multiple_line">All Values Multiple Line</option>
-		  		</select>
-			</div>
-	    </div>
-	    
             <div class="form-group">
-                <label class="col-sm-3 control-label">Include Timestamps: </label>
-                <div class="col-sm-9" >
+                <label class="col-sm-7 control-label">For repeated measurements, return the: </label>
+                <div class="col-sm-5">
+                    <select class="form-control" id="download_trial_phenotypes_repetitive_measurements_option">
+                        <option value="first">First value</option>
+                        <option value="last">Last value</option>
+                        <option value="average" selected>Averaged value</option>
+                        <option value="sum">Sum values</option>
+                        <option value="all_values_single_line">All Values Single Line</option>
+                        <option value="all_values_multiple_line">All Values Multiple Line</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-7 control-label">Include Timestamps: </label>
+                <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_timestamp_option">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
@@ -90,28 +90,28 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Include Intercrop Accessions: </label>
-                <div class="col-sm-9" >
+                <label class="col-sm-7 control-label">Include Intercrop Accessions: </label>
+                <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_intercrop_option">
                         <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="1" selected="selected">Yes</option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Include Entry Numbers: </label>
-                <div class="col-sm-9" >
+                <label class="col-sm-7 control-label">Include Entry Numbers: </label>
+                <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_entry_numbers_option">
                         <option value="0">No</option>
-                        <option value="1">Yes</option>
+                        <option value="1" selected="selected">Yes</option>
                     </select>
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Suppress User Defined Phenotype Outliers: </label>
-                <div class="col-sm-9" >
+                <label class="col-sm-7 control-label">Suppress User Defined Phenotype Outliers: </label>
+                <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_exclude_outliers">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
@@ -120,25 +120,25 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Trait Name Contains: </label>
-                <div class="col-sm-9" >
-                    <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="Example: storage root,oxoglutarate"/>
+                <label class="col-sm-7 control-label">Trait Name Contains: </label>
+                <div class="col-sm-5" >
+                    <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="storage root,oxoglutarate" style="width: 100%"/>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-8 control-label">Minimum Phenotype Value: </label>
-                        <div class="col-sm-4" >
+                        <label class="col-sm-7 control-label">Min Phenotype Value: </label>
+                        <div class="col-sm-5" >
                             <input id="download_trial_phenotype_phenotype_min" name="download_trial_phenotype_phenotype_min" type="number" class="form-control" />
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-8 control-label">Maximum Phenotype Value: </label>
-                        <div class="col-sm-4" >
+                        <label class="col-sm-7 control-label">Max Phenotype Value: </label>
+                        <div class="col-sm-5" >
                             <input id="download_trial_phenotype_phenotype_max" name="download_trial_phenotype_phenotype_max" type="number" class="form-control" />
                         </div>
                     </div>
