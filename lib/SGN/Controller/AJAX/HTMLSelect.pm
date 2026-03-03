@@ -2251,6 +2251,14 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         name => 'plot_of',
         cv_id => $stock_relationship_cv_id
     })->cvterm_id();
+    my $intercrop_plot_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'intercrop_plot_of',
+        cv_id => $stock_relationship_cv_id
+    })->cvterm_id();
+    my $plot_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plot number',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
     my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'row_number',
         cv_id => $stockprop_cv_id
@@ -2276,38 +2284,63 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
 
     my $plots_q = "
     WITH plot AS 
-        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+        (SELECT stock_relationship.subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name, ics.stock_id AS intercrop_accession_id, ics.uniquename AS intercrop_accession_name FROM stock_relationship 
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
+            LEFT JOIN stock_relationship AS icsr ON (icsr.subject_id=myplot.stock_id) AND icsr.type_id=?
+            LEFT JOIN stock AS ics ON (ics.stock_id = icsr.object_id)
         WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)), 
     stockprops AS (
         SELECT
             stock_id,
+            MAX(value) FILTER (WHERE type_id = ?) AS plot_number,
             MAX(value) FILTER (WHERE type_id = ?) AS row_number,
             MAX(value) FILTER (WHERE type_id = ?) AS col_number,
             MAX(value) FILTER (WHERE type_id = ?) AS rep,
             MAX(value) FILTER (WHERE type_id = ?) AS block,
-            MAX(value) FILTER (WHERE type_id = ?) AS synonyms
+            STRING_AGG(value, ', ') FILTER (WHERE type_id = ?) AS synonyms
         FROM stockprop
-        WHERE type_id IN (?, ?, ?, ?, ?)
+        WHERE type_id IN (?, ?, ?, ?, ?, ?)
         GROUP BY stock_id
     )
-    SELECT plot.plot_id, plot.plot_name, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms
+    SELECT plot.plot_id, plot.plot_name, plotprops.plot_number, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms, 
+        STRING_AGG(plot.intercrop_accession_id::text, ';'), STRING_AGG(plot.intercrop_accession_name, ';'), STRING_AGG(icsprops.synonyms, ';')
     FROM plot 
     LEFT JOIN stockprops AS plotprops ON plotprops.stock_id=plot.plot_id
-    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id;"; 
+    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id
+    LEFT JOIN stockprops AS icsprops ON icsprops.stock_id=plot.intercrop_accession_id
+    GROUP BY 1,2,3,4,5,6,7,8,9,10;"; 
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
-    $h->execute($plot_of_id, \@plots, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
+    $h->execute($intercrop_plot_of_id, $plot_of_id, \@plots, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
 
-    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Row</th><th>Column</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Plot Number</th><th>Row</th><th>Column</th><th>Rep</th><th>Block</th><th>Accession(s)</th></tr></thead><tbody>";
 
-    while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
-        my $coordinates = "NA";
-        if ($row && $column){
-            $coordinates = "($row,$column)";
+    while (my ($plot_id, $plot_name, $plot_number, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms, $intercrop_accession_id, $intercrop_accession_name, $intercrop_synonyms) = $h->fetchrow_array()) {
+
+        # Build text for accession name and synonyms
+        my $accession_list = "<td>";
+        $accession_list .= "<a href=\"/stock/$accession_id/view\">$accession_name";
+        $accession_list .= " ($synonyms)" if ($synonyms && $synonyms ne '');
+        $accession_list .= "</a>";
+
+        # Add intercrop accessions, if they're found
+        if ( $intercrop_accession_name && $intercrop_accession_name ne '' ) {
+            my @ics_ids = split(';', $intercrop_accession_id);
+            my @ics_names = split(';', $intercrop_accession_name);
+            my @ics_syns = split(';', $intercrop_synonyms);
+            while (my ($index, $id) = each @ics_ids) {
+                my $name = $ics_names[$index];
+                my $syns = $ics_syns[$index];
+                $accession_list .= "<br /><a href=\"/stock/$id/view\">$name";
+                $accession_list .= " ($syns)" if ( $syns && $syns ne '' );
+                $accession_list .= "</a>"
+            }
         }
-        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$row</td><td>$column</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+
+        $accession_list .= "</td>";
+
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$row</td><td>$column</td><td>$rep</td><td>$block</td>$accession_list</tr>";
     }
 
     $html .= "</tbody></thead></table>";
