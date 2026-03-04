@@ -228,7 +228,7 @@ The logfile used to store and retrieve finish timestamps. Required for object cr
 
 =cut
 
-has 'finish_logfile' => (isa => 'Str', is => 'rw', predicate => 'has_finish_logfile', required => 1);
+has 'finish_logfile' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_finish_logfile', required => 0);
 
 =head2 name()
 
@@ -256,11 +256,6 @@ sub BUILD {
 
     my $bcs_schema = $args->{schema};
     my $people_schema = $args->{people_schema};
-    my $logfile = $args->{finish_logfile};
-
-    if (!$logfile) {
-        die "finish_logfile is required for job creation.\n";
-    }
 
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
         my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );

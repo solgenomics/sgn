@@ -224,6 +224,8 @@ $editable_vector_props
 
 <& /file_formats/spatial_layout.mas &>
 
+<& /file_formats/treatment_upload.mas &>
+
 <script>
 
 function load_archived_files_table() {
@@ -549,7 +551,7 @@ function upload_type_options() {
         "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
         "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
         "<option value='datacollector_spreadsheet'>Datacollector Spreadsheet</option>"+
-        "<option value='treatments' disabled>Treatments</option>"+
+        "<option value='treatments'>Treatments</option>"+
         "<option value='gps_coords'>Plot GPS Coordinates</option>"+
         "<option value='spatial_layout'>Trial Spatial Layout</option>" +
         "<option value='change_accessions'>Accession Swap</option>" +
@@ -693,7 +695,9 @@ function process_file(file_data, upload_type) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'treatments' : 
-            // wait for update to master
+            display_phenotyping_spreadsheet_upload_choices()
+            jQuery('#phenotyping_spreadsheet_upload_next_btn').on('click', {file_data:file_data}, populate_treatment_spreadsheet_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'gps_coords' : 
             display_gps_upload_choices();
@@ -858,7 +862,7 @@ function display_upload_formats(upload_type) {
             // nothing, there is no file format since the file has to be exported from the fieldbook app.
             break;
         case 'treatments' : 
-            // not implemented yet, need to wait for treatments to merge into master branch. 
+            jQuery('#treatment_upload_spreadsheet_info_dialog').modal("show");
             break;
         case 'gps_coords' : 
             jQuery('#upload_plot_gps_spreadsheet_info_dialog').modal("show");
@@ -1742,6 +1746,19 @@ function populate_phenotyping_spreadsheet_validate_submit_data(event) {
     });
 }
 
+function populate_treatment_spreadsheet_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let include_timestamps = jQuery('#upload_spreadsheet_phenotype_timestamp_checkbox').prop('checked') ? 'yes' : 'no';
+    let spreadsheet_format = jQuery('#upload_spreadsheet_phenotype_file_format').val();
+    let data_level = jQuery('#upload_spreadsheet_phenotype_data_level').val();
+
+    populate_validate_submit_data('treatments', file_data, {
+        include_timestamps : include_timestamps,
+        spreadsheet_format : spreadsheet_format,
+        data_level : data_level
+    });
+}
+
 function populate_fieldbook_validate_submit_data(event) {
     let file_data = event.data.file_data;
     let images_zipfile_select = jQuery('#upload_fieldbook_images_select option:selected');
@@ -1760,8 +1777,6 @@ function populate_fieldbook_validate_submit_data(event) {
             data_level : data_level
         });
     }
-
-    
 }
 
 function populate_datacollector_spreadsheet_validate_submit_data(event) {
@@ -2049,7 +2064,8 @@ var upload_type_dict = {
     'images_barcodes' : "Images with barcodes",
     'images_phenotypes' : "Images with associated phenotypes",
     'soil_data' : "Soil data",
-    'vectors' : "Vector constructs"
+    'vectors' : "Vector constructs",
+    'treatments' : "Treatments"
 };
 
 var job_dict = {};
