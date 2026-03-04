@@ -57,7 +57,7 @@ The query will do an AND between keys and an OR between comma separated values f
 To return stockprop values in your result, use "stockprop_columns_view".
 stockprop_columns_view is a HashRef of the form for example:
 {
-    'country of orogin' => 1,
+    'country of origin' => 1,
     'ploidy_level' => 1
 }
 This example would include these keys in each resulting hashref for each stock that is returned.
@@ -455,7 +455,7 @@ sub search {
     my $using_stockprop_filter;
     if ($self->stockprops_values && scalar(keys %{$self->stockprops_values})>0){
         $using_stockprop_filter = 1;
-        #print STDERR Dumper $self->stockprops_values;
+        print STDERR "STOCKPROPS VALUES: ".Dumper($self->stockprops_values);
         my @stockprop_joins;
         my @stockprop_wheres;
 	my @placeholders;
@@ -759,7 +759,7 @@ ORDER BY organism_id ASC;";
 	my @puis;
 	if ($prop_name eq "PUI") {
 	    push @puis, $r[9];
-	    $prop_value = \@puis;
+	    $prop_value = join(",",@puis);
 	}
 
         # my $donor_inst_json = $r[8] ? decode_json(encode("utf8",$r[8])) : {};
