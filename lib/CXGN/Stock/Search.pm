@@ -795,7 +795,7 @@ ORDER BY organism_id ASC;";
         }
         $result_hash{$stock_id}{donors} = \@donor_array;
 
-	$result_hash{$stock_id}{documentationURL} = join(",", @puis);
+	#$result_hash{$stock_id}{documentationURL} = join(",", @puis);
         # add organism props for each stock
         $result_hash{$stock_id}{speciesAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'species authority'} : undef;
         $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
