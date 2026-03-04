@@ -362,6 +362,26 @@ sub program_seedlots :Chained('ajax_breeding_program') PathPart('seedlots') Args
 }
 
 
+sub program_propagation_identifiers :Chained('ajax_breeding_program') PathPart('propagation_identifiers') Args(0){
+    my $self = shift;
+    my $c = shift;
+    my $program = $c->stash->{program};
+    my $result = $program->get_propagation_identifiers;
+
+    my @propagation_identifiers;
+    foreach my $r (@$result){
+        my ($propagation_id, $propagation_name, $material_id, $material_name, $rootstock_id, $rootstock_name, $propagation_group_id, $propagation_group_name) = @$r;
+        push @propagation_identifiers, [qq{<a href="/stock/$propagation_id/view">$propagation_name</a>},
+        qq{<a href="/stock/$material_id/view">$material_name</a>},
+        qq{<a href="/stock/$rootstock_id/view">$rootstock_name</a>},
+        qq{<a href="/propagation_group/$propagation_group_id">$propagation_group_name</a>}]
+    }
+
+    $c->stash->{rest} = {data => \@propagation_identifiers};
+
+}
+
+
 sub add_product_profile : Path('/ajax/breeders/program/add_product_profile') : ActionClass('REST') { }
 
 sub add_product_profile_POST : Args(0) {

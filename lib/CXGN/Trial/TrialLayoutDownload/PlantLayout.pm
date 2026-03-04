@@ -12,10 +12,8 @@ my $trial_plant_layout = CXGN::Trial::TrialLayoutDownload::PlantLayout->new({
     data_level => $data_level,
     selected_columns => \%selected_cols,
     selected_trait_ids => \@selected_traits,
-    treatment_project_ids => $treatments,
     design => $design,
     trial => $selected_trial,
-    treatment_info_hash => \%treatment_info_hash,
     overall_performance_hash => \%fieldbook_trait_hash,
     all_stats => $all_stats,
 });
@@ -47,10 +45,6 @@ sub retrieve {
     my %selected_cols = %{$self->selected_columns};
     my %design = %{$self->design};
     my $trial = $self->trial;
-    my $treatment_info_hash = $self->treatment_info_hash || {};
-    my $treatment_list = $treatment_info_hash->{treatment_trial_list} || [];
-    my $treatment_name_list = $treatment_info_hash->{treatment_trial_names_list} || [];
-    my $treatment_units_hash_list = $treatment_info_hash->{treatment_units_hash_list} || [];
     my $trait_header = $self->trait_header || [];
     my $exact_performance_hash = $self->exact_performance_hash || {};
     my $overall_performance_hash = $self->overall_performance_hash || {};
@@ -73,9 +67,6 @@ sub retrieve {
         }
     }
 
-    foreach (@$treatment_name_list){
-        push @header, "Treatment:".$_;
-    }
     foreach (@$trait_header){
         push @header, $_;
     }
@@ -163,7 +154,6 @@ sub retrieve {
                 }
             }
         }
-        $line = $self->_add_treatment_to_line($treatment_units_hash_list, $line, $design_info->{plant_name});
         $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{plant_name});
         $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info, $all_stats);
         push @output, $line;

@@ -66,7 +66,7 @@ replicate <- "replicate"
 # 3. Process the phenotypic data
 ###################################################################
 # read in the phenotypic data
-userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE)
+userPheno <- read.delim(phenotypeFile, header = TRUE, sep = "\t", fill = TRUE, check.names = FALSE)
 # and the traits
 userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse

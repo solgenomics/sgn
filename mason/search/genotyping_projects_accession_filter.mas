@@ -1,0 +1,210 @@
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+
+<p style="padding: 12px">Starting with a list of Accessions, this tool will identify the genotyping projects that contain the highest number of your accessions.</p>
+
+<div class="well well-sm" style="padding: 24px">
+    <p><strong>Filter Genotyping Projects by Accessions:</strong></p>
+
+    <div style="display: flex; gap: 12px">
+        <select class="form-control" id="accession_list_select"></select>
+        <button class="btn btn-primary" id="genotyping_project_search">Search</button>
+    </div>
+
+
+    <div id="genotyping_project_filter_results_container" style="display: none;">
+
+        <p style="margin-top: 48px"><strong>Best Genotyping Projects</strong></p>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div id="genotyping_project_filter_results"></div>
+            </div>
+        </div>
+
+        <p style="margin-top: 48px"><strong>Accession Usage Details</strong></p>
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id="genotyping_project_filter_usage" class="table display"><thead></thead><tr><th>Accession</th></tr><tbody></tbody></table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="genotyping_project_accessions_list" name="genotyping_project_accessions_list" tabindex="-1" role="dialog" aria-labelledby="genotypingProjectAccessionsListDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="genotypingProjectAccessionsListDialog"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <pre><code id="genotyping_project_accessions_list_results"></code></pre>
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <&| /page/info_section.mas, title => 'Copy Results to a List', collapsible=>1, collapsed=>0, subtitle=>'' &>
+                            <br>
+                            <div style="text-align:right" id="gen_acc_results_to_list_menu"></div>
+                            <div id="gen_acc_search_result_names" style="display: none;"></div>
+                            </&>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+var GENO_SEARCH_ACC_RESULTS = {};
+
+jQuery(document).ready(function() {
+
+    var lo = new CXGN.List();
+    jQuery('#accession_list_select').html(lo.listSelect('accession_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+
+    jQuery("#genotyping_project_search").click(() => {
+        jQuery("#genotyping_project_search").attr("disabled", true);
+        jQuery("#genotyping_project_filter_results_container").hide();
+        GENO_SEARCH_ACC_RESULTS = {};
+        jQuery.ajax({
+            method: 'POST',
+            url: '/ajax/genotyping_project/search/accession_list',
+            data: {
+                accession_list_id: jQuery("#accession_list_select").val()
+            },
+            success: (response) => {
+                if ( response?.error ) {
+                    alert(response.error);
+                }
+                if ( response?.results?.counts?.ranked_genotyping_projects?.length === 0 ) {
+                    alert("No genotyping projects found for accessions");
+                }
+                else {
+                    GENO_SEARCH_ACC_RESULTS = response?.results || {};
+                    displayResults(response?.results || {});
+                }
+            },
+            error: (err) => {
+                alert(err);
+            },
+            complete: () => {
+                jQuery("#genotyping_project_search").attr("disabled", false);
+            }
+        })
+    });
+
+});
+
+
+function displayResults(results) {
+    let html = "";
+
+    // Display the top genotyping projects
+    if ( results?.counts?.ranked_genotyping_projects ) {
+        let ranked_gen_table = "<table class='table'>";
+        ranked_gen_table += `<thead><tr><th>Genotyping Project</th><th>Accession Count (total: ${results.counts.accessions_total})</th><th></th></tr></thead>`;
+        ranked_gen_table += "<tbody>";
+        const display = results.counts.ranked_genotyping_projects.length < 3 ? results.counts.ranked_genotyping_projects.length : 3;
+        for ( let i = 0; i < display; i++ ) {
+            const gen_id = results.counts.ranked_genotyping_projects[i];
+            const count_matches = results.counts.accessions_by_genotyping_project[gen_id];
+            const count_missing = results.counts.accessions_total - count_matches;
+            ranked_gen_table += "<tr>";
+            ranked_gen_table += `<td><a href="/breeders_toolbox/trial/${gen_id}">${results.lookups.genotyping_projects[gen_id]}</a></td>`;
+            ranked_gen_table += `<td>${count_matches}</td>`;
+            ranked_gen_table += '<td>';
+            ranked_gen_table += (count_matches > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='matching'>View List of ${count_matches} Matching Accessions</a><br />` : '');
+            ranked_gen_table += (count_missing > 0 ? `<a href='#' class='show_accessions_list' data-gen-id=${gen_id} data-list-type='missing'>View List of ${count_missing} Missing Accessions</a>` : '');
+            ranked_gen_table += '</td>';
+            ranked_gen_table += "</tr>";
+        }
+        ranked_gen_table += "</tbody>";
+        ranked_gen_table += "</table>";
+        html += ranked_gen_table;
+    }
+
+    // Display the accession usage in the top projects
+    let table = "<thead><tr>";
+    table += "<th>Accession</th>";
+    for ( let gen_id in (results?.lookups?.genotyping_projects || {}) ) {
+        table += `<th>${(results?.lookups?.genotyping_projects || {})[gen_id]}</th>`;
+    }
+    table += "</tr></thead>";
+    table += "<tbody>";
+    for ( let acc_id in (results?.lookups?.accessions || {}) ) {
+        const gen_ids = (results?.matches?.genotyping_projects_by_accession || {})[acc_id] || [];
+        table += "<tr>";
+        table += `<td>${(results?.lookups?.accessions || {})[acc_id]}</td>`;
+        for ( let gen_id in (results?.lookups?.genotyping_projects || {}) ) {
+            const acc_in_gen = gen_ids.includes(parseInt(gen_id));
+            table += `<th>${acc_in_gen ? '✅' : '✕'}</th>`;
+        }
+        table += "</tr>";
+    }
+    table += "</tbody>";
+
+    jQuery("#genotyping_project_filter_results").html(html);
+    jQuery("#genotyping_project_filter_results_container").show();
+    jQuery(".show_accessions_list").off("click").on("click", showAccessionsList);
+
+    // Setup the Accession Usage DataTable
+    let DT_BUTTONS = [
+        {
+            extend: 'excelHtml5',
+            title: 'accession_genotype_usage',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        },
+        {
+            extend: 'csvHtml5',
+            title: 'accession_genotype_usage',
+            exportOptions: {
+                orthogonal: 'export'
+            }
+        }
+    ];
+    if ( $.fn.DataTable.isDataTable('#genotyping_project_filter_usage') ) {
+        jQuery('#genotyping_project_filter_usage').DataTable().destroy();
+    }
+    jQuery("#genotyping_project_filter_usage").empty();
+    jQuery("#genotyping_project_filter_usage").html(table);
+    jQuery('#genotyping_project_filter_usage').dataTable({
+        dom: 'lfBrtip',
+        buttons: DT_BUTTONS,
+        pageLength: 25
+    });
+}
+
+function showAccessionsList() {
+    let gen_id = jQuery(this).data("gen-id");
+    let gen_name = (GENO_SEARCH_ACC_RESULTS?.lookups?.genotyping_projects || {})[gen_id];
+    let list_type = jQuery(this).data("list-type");
+
+    // Get Accessions to Display
+    const acc_names = [];
+    for ( let acc_id in (GENO_SEARCH_ACC_RESULTS?.lookups?.accessions || {}) ) {
+        const gen_ids = (GENO_SEARCH_ACC_RESULTS?.matches?.genotyping_projects_by_accession || {})[acc_id] || [];
+        const acc_in_gen = gen_ids.includes(gen_id);
+        if ( (acc_in_gen && list_type === "matching") || (!acc_in_gen && list_type === "missing") ) {
+            const acc_name = (GENO_SEARCH_ACC_RESULTS?.lookups?.accessions || {})[acc_id];
+            if ( acc_name && acc_name !== '' ) acc_names.push(acc_name)
+        }
+    }
+    acc_names.sort();
+
+    // Show Dialog of Accessions List
+    jQuery("#genotypingProjectAccessionsListDialog").html(list_type === "matching" ? `Accessions Found in Project ${gen_name}` : `Accessions Missing From Project ${gen_name}`);
+    jQuery("#genotyping_project_accessions_list_results").html(acc_names.join("\n"));
+    jQuery("#genotyping_project_accessions_list").modal("show");
+
+    // Enable List Tool
+    jQuery('#gen_acc_search_result_names').html(acc_names.join("\n"));
+    addToListMenu('gen_acc_results_to_list_menu', 'gen_acc_search_result_names', { listType: 'accessions' });
+}
+</script>

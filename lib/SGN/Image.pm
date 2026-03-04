@@ -492,6 +492,7 @@ sub upload_image {
     my $self = shift;
     my $temp_file = shift;
     my $upload_fh = shift;
+    my $fh;
 
     ### 11/30/07 - change this so it removes existing file
     #     -deanx
@@ -501,15 +502,15 @@ sub upload_image {
         unlink $temp_file;
     }
 
-    open UPLOADFILE, '>', $temp_file or die "Could not write to $temp_file: $!\n";
+    open $fh, '>', $temp_file or die "Could not write to $temp_file: $!\n";
 
-    binmode UPLOADFILE;
+    binmode $fh;
     while (<$upload_fh>) {
 
         #warn "Read another chunk...\n";
         print UPLOADFILE;
     }
-    close UPLOADFILE;
+    close $fh;
     warn "Done uploading.\n";
 
     return $temp_file;
@@ -549,7 +550,7 @@ sub associate_stock  {
             die "No username. Could not save image-stock association!\n";
         }
     }
-    return undef;
+    return;
 }
 
 =head2 remove_stock
@@ -571,7 +572,7 @@ sub remove_stock  {
         my $sth = $self->get_dbh->prepare($q);
         $sth->execute($stock_id, $self->get_image_id);
     }
-    return undef;
+    return;
 }
 
 =head2 get_stocks
@@ -596,6 +597,31 @@ sub get_stocks {
     }
     return @stocks;
 }
+
+=head2 get_trials
+
+Usage: $image->get_trials
+ Desc:  find all trial objects linked with this image
+ Ret:   a list of Bio::Chado::Schema::Result::Project::Project
+ Args:  none
+
+=cut
+
+sub get_trials {
+    my $self = shift;
+    my $schema = $self->config->dbic_schema('Bio::Chado::Schema' , 'sgn_chado');
+    my @trials;
+    my $q = "SELECT DISTINCT project.project_id FROM phenome.stock_image JOIN stock ON phenome.stock_image.stock_id = stock.stock_id JOIN nd_experiment_stock ON stock.stock_id = nd_experiment_stock.stock_id JOIN nd_experiment ON nd_experiment_stock.nd_experiment_id = nd_experiment.nd_experiment_id JOIN nd_experiment_project ON nd_experiment.nd_experiment_id = nd_experiment_project.nd_experiment_id JOIN project ON nd_experiment_project.project_id = project.project_id WHERE stock_image.image_id = ?";
+    my $sth = $self->get_dbh->prepare($q);
+    $sth->execute($self->get_image_id);
+    while (my ($trial_id) = $sth->fetchrow_array) {
+        my $trial = $schema->resultset("Project::Project")->find( { project_id => $trial_id } );
+        push @trials, $trial;
+    }
+    return @trials;
+
+}
+
 =head2 associate_individual
 
  Usage:        DEPRECATED, Individual table is not used any more . Please use stock instead
@@ -800,6 +826,13 @@ sub get_associated_objects {
         #print "<a href=\"/insitu/detail/experiment.pl?experiment_id=$experiment_id&amp;action=view\">".($exp->get_name())."</a>";
     }
 
+    my @trials = $self->get_trials();
+    foreach my $trial (@trials) {
+        my $trial_id = $trial->project_id();
+        my $trial_name = $trial->name();
+        push @associations, ["trial", $trial_id, $trial_name ];
+    }
+
     foreach my $fish_result_clone_id ($self->get_fish_result_clone_ids()) {
         push @associations, [ "fished_clone", $fish_result_clone_id ];
     }
@@ -947,6 +980,12 @@ sub get_associated_object_links {
 
         if ($assoc->[0] eq "stock") {
             $s .= "<a href=\"/stock/$assoc->[1]/view\">Stock name: $assoc->[2].</a>";
+            $s .= " | ";
+        }
+
+        if ($assoc->[0] eq "trial") {
+            $s .= "<a href=\"/breeders/trial/$assoc->[1]/\">Trial name: $assoc->[2].</a>";
+            $s .= " | ";
         }
 
         if ($assoc->[0] eq "experiment") {
@@ -1049,7 +1088,7 @@ sub remove_associated_cvterm {
         $self->get_image_id,
     );
 
-    return undef;
+    return;
 }
 
 sub associate_phenotype {
@@ -1066,7 +1105,7 @@ sub associate_phenotype {
         $sth->execute($nd_experiment_id, $image_id);
     }
 
-    return undef;
+    return;
 }
 
 sub remove_associated_phenotypes {

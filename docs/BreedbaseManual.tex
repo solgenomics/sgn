@@ -85,7 +85,7 @@
 
 \title{Breedbase User Manual}
 \author{Breedbase team}
-\date{2025-10-23}
+\date{2026-01-30}
 
 \begin{document}
 \maketitle
@@ -1882,286 +1882,269 @@ Further down you can see a graphical representation of your plate with well posi
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/manage_genotyping_trials_detail_table} \end{center}
 
-\hypertarget{using-fieldbook-app}{%
-\chapter{Using Field Book App}\label{using-fieldbook-app}}
+\hypertarget{Using-Field-Book-with-BreedBase}{%
+\chapter{Using Field Book and BreedBase for Data Collection and Storage}\label{Using-Field-Book-with-BreedBase}}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image21} \end{center}
+\begin{center}\includegraphics[width=0.75\linewidth]{assets/images/FB_Section_Header} \end{center}
 
-SGN databases support the Android Field Book App for collecting phenotypic data in the field with tablet computers. The app is available here:
+\hypertarget{introduction-1}{%
+\section{Introduction}\label{introduction-1}}
 
-\href{https://play.google.com/store/apps/details?id=com.fieldbook.tracker}{\emph{https://play.google.com/store/apps/details?id=com.fieldbook.tracker}}
+\textbf{Field Book} is an open-source Android application designed to streamline phenotypic data collection, replacing traditional paper field books and reducing transcription errors.
+
+\textbf{BreedBase} supports integration with Field Book by enabling users to generate properly formatted field layout and trait files, import collected data, and optionally exchange data via \textbf{BrAPI}.
+
+This section provides step-by-step guidance on preparing Field Book for data collection using trial data stored in BreedBase, including file generation, manual file import, and data export. It assumes that trial fields and trait definitions already exist in BreedBase and that users have access to an Android device.
+
+\href{https://fieldbook.phenoapps.org/\#/}{\emph{Field Book User Manual}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{installing-field-book}{%
+\section{Installing Field Book}\label{installing-field-book}}
+
+Field Book can be installed on an Android device via the Google Play Store or manually from GitHub. To ensure access to the latest features and fixes, we recommend checking for updates regularly.
+
+\hypertarget{option-1-downloading-from-the-google-play-store}{%
+\subsection{Option 1: Downloading from the Google Play Store}\label{option-1-downloading-from-the-google-play-store}}
+
+Download the Field Book app directly from the \href{https://play.google.com/store/apps/details?id=com.fieldbook.tracker}{Google Play Store} or scan the QR code below.
+
+\begin{center}\includegraphics[width=0.25\linewidth]{assets/images/QR_FieldBook_PlayStore} \end{center}
+
+\href{https://scribehow.com/shared/Fieldbook_Installation_and_Initial_Setup__3E-cowQMRcOKhfRl_sqFDQ}{\textbf{Walkthrough: Installation and Setup}}
+
+\hypertarget{option-2-manual-installation-from-github}{%
+\subsection{Option 2: Manual Installation from Github}\label{option-2-manual-installation-from-github}}
+
+\href{https://scribehow.com/shared/Installing_Field_Book_from_GitHub__M0qchs3uThGb_ms2nDRg3A}{\textbf{Walkthrough: Installing Field Book from GitHub}}
+
+\hypertarget{keeping-field-book-updated}{%
+\subsection{Keeping Field Book Updated}\label{keeping-field-book-updated}}
+
+Regular updates are recommended to access new features and bug fixes.
+
+\href{https://scribehow.com/shared/Updating_the_Field_Book_App__qdTEMk1lSkadYj8zXgOYgA}{\textbf{Walkthrough: Updating the Field Book App}}.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{preparing-field-layout-files-in-breedbase}{%
+\section{Preparing Field Layout Files in BreedBase}\label{preparing-field-layout-files-in-breedbase}}
+
+Field Book requires a \textbf{field layout file} containing a unique identifier for each plot or plant to be observed. Optionally, columns for row, column, pedigree, or previous phenotype data may be included for context.
+
+BreedBase provides tools to generate layout files directly from trial metadata. These files can be exported and then uploaded to Field Book for data collection.
+
+\href{https://scribehow.com/shared/Creating_a_Field_Layout_File_for_Field_Book_in_Breedbase__FDBwW83OS66kHXIvVsP-1A?referrer=documents}{\textbf{Walkthrough: Creating a Field Layout File in BreedBase}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{importing-field-layout-files-into-field-book}{%
+\section{Importing Field Layout Files into Field Book}\label{importing-field-layout-files-into-field-book}}
+
+Field layout files can be imported into Field Book via cloud storage or directly from the device.
+
+\hypertarget{option-1-import-from-cloud-storage}{%
+\subsection{Option 1: Import from Cloud Storage}\label{option-1-import-from-cloud-storage}}
+
+Requirements:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  A generated field layout file.
+\item
+  Linked cloud service (e.g., Google Drive) on the device.
+\item
+  File uploaded to the cloud account.
+\end{enumerate}
+
+\href{https://scribehow.com/shared/Importing_Field_Layout_Files_to_Field_Book_from_Cloud_Storage__5JLV59I8TzCgDeTkUPbIdA}{\textbf{Walkthrough: Importing from Cloud Storage}}
+
+\hypertarget{option-2-import-from-local-storage-device}{%
+\subsection{Option 2: Import from Local Storage Device}\label{option-2-import-from-local-storage-device}}
+
+Requirements:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  A generated field layout file.
+\item
+  File transferred to the Android device's local storage.
+\end{enumerate}
+
+\href{link\%20to\%20be\%20added}{\textbf{Walkthrough: Importing from Local Device}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{adding-traits-to-field-book-using-breedbase}{%
+\section{Adding Traits to Field Book Using BreedBase}\label{adding-traits-to-field-book-using-breedbase}}
+
+For exported data to be compatible with BreedBase, trait names in Field Book must match the exact names stored in the database.
+
+BreedBase supports generation of \textbf{trait files} containing properly formatted trait names, types, units, and metadata.
+
+\hypertarget{creating-trait-files-in-breedbase}{%
+\subsection{Creating Trait Files in BreedBase}\label{creating-trait-files-in-breedbase}}
+
+\href{https://scribehow.com/shared/Creating_a_Field_Book_Trait_File_in_BreedBase__AQKYEuyXRzK1H1lRFm--3Q}{\textbf{Walkthrough: Creating Trait Files in BreedBase}}
+
+\hypertarget{importing-trait-files-to-field-book}{%
+\subsection{Importing Trait Files to Field Book}\label{importing-trait-files-to-field-book}}
+
+\href{https://scribehow.com/shared/Importing_Trait_Files_into_Field_Book__LuVCpgtfQCeDtWEl7xbZVw}{\textbf{Walkthrough: Importing Trait Files}}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\hypertarget{collecting-and-exporting-phenotype-data}{%
+\section{Collecting and Exporting Phenotype Data}\label{collecting-and-exporting-phenotype-data}}
+
+This section describes the process for recording and exporting phenotype data using the Field Book application. It assumes that the required field layout and trait files have already been imported into the app.
+
+Users will be guided through entering phenotypic observations in the field and exporting collected data in a format compatible with downstream processing and upload to \textbf{BreedBase}. This standardized workflow helps ensure data integrity, traceability, and seamless integration with breeding databases.
+
+\hypertarget{collecting-phenotype-data-in-field-book}{%
+\subsection{Collecting Phenotype Data in Field Book}\label{collecting-phenotype-data-in-field-book}}
+
+Once field layout and trait files are loaded, data collection can begin. Field Book allows users to view each plot or plant entry, record trait values in structured forms, and automatically timestamp and geotag observations (if device settings allow).
+
+\href{https://scribehow.com/shared/Collecting_Data_in_Fieldbook__hIsZkb9xSnKcLW65gN60lA}{\textbf{Walkthrough: Collecting Data in Field Book}}
+
+\hypertarget{exporting-phenotype-data-from-field-book-and-importing-to-breedbase}{%
+\subsection{Exporting Phenotype Data from Field Book and Importing to BreedBase}\label{exporting-phenotype-data-from-field-book-and-importing-to-breedbase}}
+
+After data collection is complete, Field Book allows users to export data as a .csv file. This file can then be uploaded to BreedBase for storage and analysis.
+
+\href{https://scribehow.com/shared/Exporting_Phenotype_Data_in_FieldBook__ToUuuA3YTYGclEg7SDArLg}{\textbf{Walkthrough: Exporting Phenotype Data from Field Book}}
+
+Once exported, the .csv file can be imported into BreedBase through the trial's data upload interface. Proceed with uploading phenotype observations as described in the \textbf{Managing Phenotypic Data} section.
+
+It is important that:
 
 \begin{itemize}
+\tightlist
 \item
-  The app can also be downloaded directly from the Google Play store. There is no charge for the app.
+  Trait names match those defined in the database.
 \item
-  Field Book App requires two files for collecting data: Field layout file and trait file.
-\item
-  SGN databases can generate the field layout file and trait file, which can be downloaded onto your computer, then transferred to an Android tablet device.
+  Plot or plant identifiers align with the original layout.
 \end{itemize}
 
-\hypertarget{a-typical-workflow}{%
-\section{A typical workflow}\label{a-typical-workflow}}
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  Creating a \protect\hyperlink{creating-layout-files}{\emph{field layout file}} based on the design of field trial
-\item
-  Creating a \protect\hyperlink{creating-trait-files}{\emph{trait file}} from the list of traits
-\item
-  Downloading the field layout file and trait file from the database to your computer
-\item
-  Downloading the field layout file and trait file to the tablet (where the Field Book App is installed)
-\item
-  Collecting phenotypes
-\item
-  Exporting phenotypes from Field Book App to your computer
-\item
-  \protect\hyperlink{uploading-pheno-files}{\emph{Uploading the exported phenotype file}} from your computer to the database
-\end{enumerate}
+\hypertarget{using-brapi-for-data-transfer-between-field-book-and-breedbase}{%
+\section{Using BrAPI for Data Transfer Between Field Book and BreedBase}\label{using-brapi-for-data-transfer-between-field-book-and-breedbase}}
 
-\hypertarget{creating-layout-files}{%
-\section{Creating Field Layout Files for the Field Book App}\label{creating-layout-files}}
+Field Book supports integration with \textbf{BreedBase} via the \textbf{BrAPI (Breeding API)} specification. BrAPI enables direct exchange of trial metadata and phenotype observations between Field Book and BreedBase without the need for manual file uploads.
 
-There are two alternative methods for creating ``Field Layout Files''.
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  Using ``Field Book Tools'' page
-\item
-  Using ``Trial Detail'' page.
-\end{enumerate}
-
-\hypertarget{creating-field-layout-files-by-using-field-book-tools-page.}{%
-\subsection{Creating ``Field Layout Files'' by using ``Field Book Tools'' page.}\label{creating-field-layout-files-by-using-field-book-tools-page.}}
-
-To access ``Field Book Tools'' page, clicking on ``Field Book App'' in the ``Manage'' menu.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image170} \end{center}
-
-On the ``Field Book Tools'' page, clicking on ``New''
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image253} \end{center}
-
-On the ``Download Fieldbook'' window, selecting trial name and data level (plots or plants), then clicking on ``Submit'' button. A treatment can be selected, which allows you to record phenotypes based on treatment application. A list of traits can be selected, which provides a summary of an accession's global performance for those traits in the Fieldbook.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image337} \end{center}
-
-If the field book layout file was successfully created, a pop-up window will indicate that the field book layout file was saved successfully. Clicking on the file name will immediately download the file onto your computer. The file is also available to download on the ``Field Book Tools'' page, if you need to re-download it.
-
-\begin{center}\includegraphics[width=0.75\linewidth]{assets/images/image183} \end{center}
-
-To download field layout file to your computer, clicking on ``Download File'', the file can then be transferred to your tablet. If you no longer want to keep the field layout file, clicking on ``Delete Layout File''.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image257} \end{center}
-
-\hypertarget{creating-field-layout-files-by-using-trial-detail-page.}{%
-\subsection{Creating ``Field Layout Files'' by using ``Trial Detail'' page.}\label{creating-field-layout-files-by-using-trial-detail-page.}}
-
-To create ``Field Layout Files'', go to the ``Trial Detail'' page of the trial that you want to create the file. On the ``Trial Detail'' page, scrolling down to the bottom of the page to find ``Android Field Book Layout'' in the ``Files'' section, then clicking on the ``Create Field Book'' link.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image89} \end{center}
-
-Clicking on the ``Create Field Book'' link will open a new window showing the name of the trial that you selected, as well as data level (plots or plants). A treatment can be selected, which allows you to record phenotypes based on treatment application. A list of traits can be selected, which provides a summary of an accession's global performance for those traits in the Fieldbook. To proceed, clicking on ``Submit'' button.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image161} \end{center}
-
-If the field book layout file was successfully created, a pop-up window will indicate that the field book layout file was saved successfully. Clicking on the file name will immediately download the file onto your computer. The file is also available to download on the ``Field Book Tools'' page, if you need to re-download it.
-
-\begin{center}\includegraphics[width=0.75\linewidth]{assets/images/image183} \end{center}
-
-To download field layout file to your computer, clicking on ``Download File'', the file can then be transferred to your tablet. If you no longer want to keep the field layout file, clicking on ``Delete Layout File''.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image94} \end{center}
-
-\hypertarget{creating-trait-files}{%
-\section{Creating Trait Files for the Field Book App}\label{creating-trait-files}}
-
-Steps to Create a Trait File:
-
-\hypertarget{creating-a-trait-list}{%
-\subsection{Creating a Trait List}\label{creating-a-trait-list}}
-
-After you logged in, lists can be created and managed using the Search Wizard or the ``Lists'' link. For more information on how to create lists, click \protect\hyperlink{working-with-lists}{\emph{here}}.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image325} \end{center}
-
-\hypertarget{creating-a-trait-file}{%
-\subsection{Creating a Trait File}\label{creating-a-trait-file}}
-
-After you have your trait list, clicking on the ``\textbf{Field Book App}'' link found under the ``\textbf{Manage}'' menu tab. This will take you to the ``Field Book Tools'' page.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image133} \end{center}
-
-To create a new trait file, finding the heading ``Trait Files'', then clicking on the ``New'' link.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image146} \end{center}
-
-Clicking on the ``New'' link will open a dialogue box titled ``Create Trait File''. Please enter your ``Trait file name'' and select ``List of traits to include'' from drop-down list that you previously created. You can only use traits included in the list. Check the box titled ``Include Notes Trait'' if you would also like to record and upload general plot notes in the field. Click ``OK'' to submit.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image134} \end{center}
-
-If your trait file was successfully created, a new window will indicate that the trait file was saved, then clicking on ``Close''.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image174} \end{center}
-
-After the trait file was saved, you will see your file listed in the ``Field Book Tools'' page. Clicking on ``Download'' link to download the trait file to your computer.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image163} \end{center}
-
-After downloading the trait file to your computer, the file can be transferred to an Android Tablet. You need the Android Field Book App to open the file. The Android Field Book App can be downloaded at: \emph{\url{http://www.wheatgenetics.org/bioinformatics/22-android-field-book}}
-
-\hypertarget{transferring-files-from-your-computer-to-android-tablet}{%
-\section{Transferring Files from Your Computer to Android Tablet}\label{transferring-files-from-your-computer-to-android-tablet}}
-
-\hypertarget{files-on-your-computer}{%
-\subsection{Files on your computer}\label{files-on-your-computer}}
-
-After downloading, Field Layout files and Trait files can be found in the ``Downloads'' folder of your computer. Field Layout files on your computer will have a prefix ``fieldbook\_layout\_'' added to the beginning of the file name. For example: \textbf{``2014-01-28\_19:14:34\_Trial Demo\_location 6767.xls''} on the the database website will be saved as \textbf{``field\_book\_layout\_2014-01-28\_19:14:34\_Trial Demo\_location 6767.xls''} on your computer.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image142} \end{center}
-
-The files can be transferred to Android tablet by copying the files into the tablet's Internal Storage File.
-
-\hypertarget{files-on-your-android-tablet}{%
-\subsection{Files on your Android tablet}\label{files-on-your-android-tablet}}
-
-To transfer Field Layout file and Trait file to your Android tablet, connecting an Android tablet to your computer, then clicking on tablet icon on your computer. Clicking on the tablet icon will open a window showing an ``Internal Storage'' file.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image16} \end{center}
-
-After you installed the Android Field Book App, all files for the app are stored in the ``fieldBook'' folder within the ``Internal storage'' folder.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image314} \end{center}
-
-Within the ``fieldBook'' folder, there are five sub-folders:
+This walkthrough covers:
 
 \begin{itemize}
+\tightlist
 \item
-  field\_export
+  Connecting Field Book to a BrAPI-enabled BreedBase server
 \item
-  field\_import
+  Importing trial layout and traits from BreedBase to Field Book
 \item
-  plot\_data
-\item
-  resources
-\item
-  trait
+  Exporting collected phenotype data from Field Book to BreedBase
 \end{itemize}
 
-\textbf{Field Layout files must be copied into the ``field\_import'' folder.}
+\textbf{Prerequisites:}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image285} \end{center}
+\begin{itemize}
+\tightlist
+\item
+  You must have a BreedBase user account with permissions to access trial and trait data.
+\item
+  Your BreedBase instance must be configured with working BrAPI endpoints.
+\item
+  The Field Book app must be installed on an Android device with internet access.
+\end{itemize}
 
-\textbf{Trait files must be copied into the ``trait'' folder.}
+\textbf{Advantages of Using BrAPI:}
 
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image252} \end{center}
+\begin{itemize}
+\tightlist
+\item
+  Reduces manual errors from file handling.
+\item
+  Supports real-time syncing of data.
+\item
+  Enables remote team coordination and efficient workflows.
+\end{itemize}
 
-You can either drag and drop, or copy the Field Layout file and the Trait file from your computer to the folders in your Android tablet.
+\hypertarget{connecting-field-book-to-a-brapi-server}{%
+\subsection{Connecting Field Book to a BrAPI Server}\label{connecting-field-book-to-a-brapi-server}}
 
-\hypertarget{setting-up-field-book-app-for-data-collection}{%
-\section{Setting up ``Field Book App'' for data collection}\label{setting-up-field-book-app-for-data-collection}}
+\href{https://scribehow.com/shared/Enable_BrAPI_for_Field_Book_using_the_Scannable_BrAPI_Configuration__SUXsC8xKQX-rLEG-4H6BIA}{\textbf{Walkthrough: Connecting Field Book to a BreedBase BrAPI Server}}
 
-After you transferred the Field Layout file and Trait file from your computer to Android tablet, you still need to set up ``Field Book App'' on your tablet for data collection.
+\hypertarget{importing-trials-and-traits-from-breedbase}{%
+\subsection{Importing Trials and Traits from BreedBase}\label{importing-trials-and-traits-from-breedbase}}
 
-To set up the Field Book App:
+\href{https://scribehow.com/shared/Import_Field_Trials_from_BreedBase_via_BrAPI__R4munb3fQ-OO5f-WAZRnKg}{\textbf{Walkthrough: Importing Trials from BreedBase via BrAPI}}
+
+\href{https://scribehow.com/shared/Import_Traits_from_BreedBase_via_BrAPI__aqvmCO8QS_eziilPrntOoA?referrer=documents}{\textbf{Walkthrough: Importing Traits from BreedBase via BrAPI}}
+
+\hypertarget{collecting-data}{%
+\subsection{Collecting Data}\label{collecting-data}}
+
+Proceed with entering phenotype observations as described in the \textbf{Collecting Phenotype Data in Field Book} section.
+
+Ensure that:
+
+\begin{itemize}
+\tightlist
+\item
+  Trait values match expected formats (e.g., numeric, categorical).
+\item
+  Observations are saved regularly during field use.
+\end{itemize}
+
+\hypertarget{exporting-phenotype-data-to-breedbase-via-brapi}{%
+\subsection{Exporting Phenotype Data to BreedBase via BrAPI}\label{exporting-phenotype-data-to-breedbase-via-brapi}}
+
+\href{https://scribehow.com/shared/Exporting_Data_with_BrAPI__PaWGH98ESQWGrXIZk5lJTQ}{\textbf{Walkthrough: Sending Phenotype Data with BrAPI}}
+
+\hypertarget{verifying-data-in-breedbase}{%
+\subsection{Verifying Data in BreedBase}\label{verifying-data-in-breedbase}}
+
+After exporting data to BreedBase via BrAPI, it is important to verify that the export was successful directly in BreedBase.
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{To open the Field Book App in the Android Tablet, clicking on the Field Book App icon, which is a green rectangle.}
+  Log in to your BreedBase instance.
+\item
+  Navigate to the Manage Trials or Trial Detail page for the uploaded study.
+\item
+  Confirm that:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Trait data appears in the Phenotype Data tab.
+  \item
+    Data points align with expected plot/plant identifiers.
+  \item
+    Trait units and scales match those defined in the database.
+  \end{itemize}
 \end{enumerate}
 
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image175} \end{center}
+\hypertarget{troubleshooting}{%
+\subsection{Troubleshooting}\label{troubleshooting}}
 
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{1}
+\begin{itemize}
 \tightlist
 \item
-  \textbf{To import Field Layout files, clicking on the ``Fields'' section of the main menu of the Field Book App.}
-\end{enumerate}
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image12} \end{center}
-
-Clicking on the ``Fields'' tab will open a new dialogue that will let you select the file that you want to import.
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image115} \end{center}
-
-Choosing a Field File will generate a new dialogue that will ask you to choose between an Excel or CSV format. Since the data from the database is in Excel format, choose the Excel option.
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image258} \end{center}
-
-After submitting the file format, a final dialogue box will appear. Please provide information about the file that you want to import. Please ensure that ``plot\_name'' is set as the unique identifier. To finalize the process, clicking ``OK'' button.
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image342} \end{center}
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{2}
-\tightlist
+  Connection fails: Ensure you have the correct BrAPI server URL and valid credentials.
 \item
-  \textbf{To import Trait Files, clicking on the ``Traits'' tab on the main menu of the Field Book App.}
-\end{enumerate}
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image246} \end{center}
-
-Then, clicking on the three dots symbol found on the upper right corner of the Field Book screen. This will open a drop down menu with the choices ``Import'' and ``Export''. Clicking on ``Import''
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image177} \end{center}
-
-Clicking on ``import'' will open a new dialogue that displays a list of trait files that you can select to import to the Field Book App.
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image281} \end{center}
-
-The trait file is now imported into the Field Book App. The traits page will show all trait files and available traits.
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image184} \end{center}
-
-\hypertarget{exporting-files-from-field-book-app}{%
-\section{Exporting Files from Field Book App}\label{exporting-files-from-field-book-app}}
-
-Data that were collected on the Field Book App can be exported back to your tablet folder, which can then be transferred to your computer.
-
-To export files containing data from the Field Book App to your tablet, clicking on the ``Export'' link on the main menu page of the Field Book App.
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image303} \end{center}
-
-Clicking on the ``Export'' link will open a new dialogue window. To ensure that data are exported in a correct format for the database, checking the ``Database Format'' box, then clicking on ``OK'' button.
-
-\begin{center}\includegraphics[width=0.5\linewidth]{assets/images/image157} \end{center}
-
-The exported file can then be found in the ``field\_export'' sub-folder within the ``fieldBook'' folder on your tablet. Once you connect your tablet to your computer, you can directly transfer the file to your computer.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image254} \end{center}
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image158} \end{center}
-
-\hypertarget{uploading-pheno-files}{%
-\section{Uploading Phenotype Files to an SGN database}\label{uploading-pheno-files}}
-
-To upload phenotype files to the database, clicking on ``Field Book App'' in the ``Manage'' menu.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image302} \end{center}
-
-On the ``Field Book Tools'' page, clicking on ``Upload'' link in the ``Uploaded Phenotype Files'' section.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image165} \end{center}
-
-Clicking on the ``Upload'' link will open a new dialogue asking you to choose a file that you want to upload to the database website. Please ensure that ``plot\_name'' is the first column of the file to be uploaded. To make sure that the file has the correct format for uploading, click on the ``Verify'' button. After the file format has been verified, click on the ``Store'' button.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image131} \end{center}
-
-The list of uploaded phenotype files can be found on the Field Book Tools page
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image265} \end{center}
-
-The uploaded files will also be seen in the corresponding ``Trial Detail'' page.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image75} \end{center}
+  Traits do not load: Confirm that the trait exists in BreedBase.
+\item
+  Upload fails: Check for internet connectivity, correct user permissions, and trait formatting errors.
+\end{itemize}
 
 \hypertarget{managing-phenotypic-data}{%
 \chapter{Managing Phenotypic Data}\label{managing-phenotypic-data}}
@@ -2217,6 +2200,48 @@ Clicking on ``Create Phenotyping Spreadsheet'' will bring up a dialog where you 
 To ensure that the file has a correct format for uploading, click on the ``Verify'' button. This will check the contents of the file and also perform quality checks on the values in the file. These checks include checking the trait definition for categorical values, minimum and maximum values, and data type checking. It will also check if there are already values uploaded for the given observation units and traits. If there are, there is an option to overwrite the existing values with the new values in your file. If the file is valid, only then can you click ``Store'' to store the information in the database.
 
 \begin{center}\includegraphics[width=0.75\linewidth]{assets/images/phenotype_spreadsheet_upload_dialog} \end{center}
+
+\hypertarget{managing-high-dimensional-phenotyping-data}{%
+\chapter{Managing High Dimensional Phenotyping Data}\label{managing-high-dimensional-phenotyping-data}}
+
+\hypertarget{managing-transcriptomic-data}{%
+\section{Managing Transcriptomic Data}\label{managing-transcriptomic-data}}
+
+\hypertarget{uploading-transcriptomic-data}{%
+\subsection{Uploading Transcriptomic Data}\label{uploading-transcriptomic-data}}
+
+To upload transcriptomic data, go to the transcriptomics page by clicking ``Transcriptomics'' under the Manage tab.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcriptomics_menu} \end{center}
+
+Click the ``Upload Transcriptomics Data'' button to open the upload workflow dialog. On the second step ``Samples'', you will be prompted to make sure that your samples are already in the database. You can refer to the ``Managing Tissue Samples'' chapter for instructions on how to create a sampling trial. After creating a sampling trial or confirming that your samples exist, move on to the ``Protocol Info'' step. Here you can select an existing protocol, or create a new protocol. To create a protocol, click the ``Protocol Not Shown. Create a New Protocol'' button. From here you can fill in information about your new protocol and when finished, click ``Go to Next Step''.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/create_transcriptomics_protocol} \end{center}
+
+You will need to have two csv files when uploading transcriptomics data. The first is the data matrix file, which should have these headers:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/data_matrix_headers} \end{center}
+
+The names in the sample\_name column should match the sample names you created in your sampling trial file. The header marked ``transcript\_name\_columns'' should be replaced with the transcript names you want to upload, each in its own column in the header and the respective expression value below. Example:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/data_matrix_example} \end{center}
+
+The second file is the transcript details file, which should have these headers:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcript_details_headers} \end{center}
+
+Each row under the transcript\_name column should contain each transcript name from your data matrix file. For example:
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/transcript_details_example} \end{center}
+
+Once these two files are uploaded, click verify to check that they are formatted correctly and that the samples exist. If there are no errors, you can then click store to store your transcriptomics data.
+
+\hypertarget{downloading-transcriptomics-data}{%
+\subsection{Downloading Transcriptomics Data}\label{downloading-transcriptomics-data}}
+
+To download your data, click the ``Uploaded Transcriptomics Data'' dropdown menu on the Transcriptomics page. Then click the ``Your Uploaded Transcriptomic Data'' dropdown. From here you will be able to see the transcriptomics data that you have uploaded. Click the ``Download'' button next to the data that you wish to download.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/download_transcriptomics} \end{center}
 
 \hypertarget{managing-barcodes}{%
 \chapter{Managing Barcodes}\label{managing-barcodes}}
@@ -2479,8 +2504,8 @@ On the last page of the workflow, you confirm the submission.
 
 Afterwards, you can use the newly created observation variable ontology term in your phenotyping.
 
-\hypertarget{managing-image-data}{%
-\chapter{Managing Image Data}\label{managing-image-data}}
+\hypertarget{managing-drone-imagery}{%
+\chapter{Managing Drone Imagery}\label{managing-drone-imagery}}
 
 \hypertarget{image-phenotyping-dashboard}{%
 \section{Image-Phenotyping Dashboard}\label{image-phenotyping-dashboard}}
@@ -2589,8 +2614,8 @@ After completing the standard process, the job will continue in the background u
 
 Ground control points can be saved after an imaging event has undergone the standard process on orhomosaics. Ground control points can then be used across imaging events on the same field experiment in order to automate the entire standard process.
 
-\hypertarget{managing-phenotypic-image-data}{%
-\chapter{Managing Phenotypic Image Data}\label{managing-phenotypic-image-data}}
+\hypertarget{managing-images}{%
+\chapter{Managing Images}\label{managing-images}}
 
 \hypertarget{uploading-image-files}{%
 \section{Uploading Image files}\label{uploading-image-files}}
@@ -2621,6 +2646,23 @@ The image\_name column should match the file names of the associated images in t
 In the Images section on a stock details page you can add a new image associated with that stock by clicking the ``Add Image'' button. This will associate any images uploaded through this dialog with the corresponding stock.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/stock_add_image} \end{center}
+
+\hypertarget{uploading-images-from-the-field-trial-and-image-analysis-pages}{%
+\section{Uploading Images from the Field Trial and Image Analysis Pages}\label{uploading-images-from-the-field-trial-and-image-analysis-pages}}
+
+Another way to upload images is through the field trial details page. Navigate to a field trial details page and open the ``Images'' section.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/field_trial_images} \end{center}
+
+Then click the ``Add New Image'' button to open the image upload dialog, where images can be uploaded in the same formats as described previously.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/add_new_image_trial} \end{center}
+
+To upload images from the Image Analysis page, click on ``Image Analysis'' under the ``Analyze'' menu. Then click the ``Upload New Images'' button on this page.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/image_analysis_add_image} \end{center}
+
+This will open the same image upload dialog.
 
 \hypertarget{managing-vcf-data}{%
 \chapter{Managing VCF Data}\label{managing-vcf-data}}

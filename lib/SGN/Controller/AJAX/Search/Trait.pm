@@ -57,7 +57,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
 
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
-	is_variable=>1,
+	    is_variable=>1,
         ontology_db_id_list => $ontology_db_ids,
         limit => $limit,
         offset => $offset,

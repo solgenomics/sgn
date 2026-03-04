@@ -147,45 +147,20 @@ sub _search {
         }
 
         ## Formatting treatments
-        my @brapi_treatments;
+        # my @brapi_treatments;
 
-        if ($c->config->{brapi_treatments_no_management_factor}) {
-            my $treatments = $obs_unit->{treatments};
-            foreach my $treatment (@$treatments) {
-                while (my ($factor, $modality) = each %$treatment) {
-                    my $modality = $modality ? $modality : undef;
-                    push @brapi_treatments, {
-                        factor   => $factor,
-                        modality => $modality,
-                    };
-                }
-            }
-        }
-
-        ## Getting gps coordinates
-        my $sp_rs ='';
-        eval {
-            $sp_rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $plot_geo_json_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        };
-        my %geolocation_lookup;
-        while( my $r = $sp_rs->next()){
-            $geolocation_lookup{$r->stock_id} = $r->value;
-        }
-        my $geo_coordinates_string = $geolocation_lookup{$obs_unit->{obsunit_stock_id}} ?$geolocation_lookup{$obs_unit->{obsunit_stock_id}} : undef;
-        my $geo_coordinates;
-
-        if ($geo_coordinates_string){
-            $geo_coordinates = decode_json $geo_coordinates_string;
-        }
-
-        ## Getting additional info
-        my $additional_info;
-
-        my $rs = $self->bcs_schema->resultset("Stock::Stockprop")->search({ type_id => $stock_additional_info_type_id, stock_id => $obs_unit->{obsunit_stock_id} });
-        if ($rs->count() > 0){
-            my $additional_info_json = $rs->first()->value();
-            $additional_info = $additional_info_json ? decode_json($additional_info_json) : undef;
-        }
+        # if ($c->config->{brapi_treatments_no_management_factor}) {
+        #     my $treatments = $obs_unit->{treatments};
+        #     foreach my $treatment (@$treatments) {
+        #         while (my ($factor, $modality) = each %$treatment) {
+        #             my $modality = $modality ? $modality : undef;
+        #             push @brapi_treatments, {
+        #                 factor   => $factor,
+        #                 modality => $modality,
+        #             };
+        #         }
+        #     }
+        # }
 
 	my %numbers;
 
@@ -207,6 +182,7 @@ sub _search {
         my $family_stock_id;
 
         my $family_name;
+        my $additional_info = $obs_unit->{additional_info};
 
         ## Following code lines add observationUnitParent to additionalInfo, useful for BI
         if ($obs_unit->{obsunit_type_name} eq 'plant') {
@@ -278,7 +254,7 @@ sub _search {
 
         my %observationUnitPosition = (
             entryType => $entry_type,
-            geoCoordinates => $geo_coordinates,
+            geoCoordinates => $obs_unit->{plot_geo_json},
             positionCoordinateX => $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
             positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
@@ -302,20 +278,6 @@ sub _search {
         });
         my $external_references = $references->search();
         my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
-
-        ## Get plot images
-        my @plot_image_ids;
-			eval {
-	            my $image_id = CXGN::Stock->new({
-	    			schema => $self->bcs_schema,
-	    			stock_id => $obs_unit->{obsunit_stock_id},
-	    		});
-	    		@plot_image_ids = $image_id->get_image_ids();
-	    	};
-            my @ids;
-            foreach my $arrayimage (@plot_image_ids){
-                push @ids, $arrayimage->[0];
-            }
 
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
@@ -342,8 +304,8 @@ sub _search {
             seedLotName => $obs_unit->{seedlot_name} ? qq|$obs_unit->{seedlot_name}| : undef,
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
-            plotImageDbIds => \@ids,
-            treatments => \@brapi_treatments,
+            plotImageDbIds => $obs_unit->{image_ids},
+            #treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };
@@ -432,7 +394,7 @@ sub observationunits_update {
         my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
         my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
-        my $treatments = $params->{treatments} || ""; #not implemented yet
+        #my $treatments = $params->{treatments} || ""; #not implemented yet
 
         my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
         my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
@@ -842,8 +804,8 @@ sub observationunits_store {
                 nd_geolocation_id                 => $location_id,
                 # nd_experiment_id => $nd_experiment->nd_experiment_id(), #optional
                 is_genotyping                     => 0,
-                new_treatment_has_plant_entries   => 0,
-                new_treatment_has_subplot_entries => 0,
+                #new_treatment_has_plant_entries   => 0,
+                #new_treatment_has_subplot_entries => 0,
                 operator                          => $user_name,
                 trial_stock_type                  => 'accessions',
                 design_type                       => $design_type,

@@ -1,0 +1,247 @@
+
+<%args>
+$page_name => 'WikiHome'
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'CXGN.Login' ] &>
+
+<style>
+    th, td {
+  /* Adds space between the content and cell border */
+  padding: 0.6em;
+  /* Adds borders to all cells */
+  border: 1px solid #ddd
+  /* Aligns text within cells */
+  text-align: left;
+    }
+</style>
+
+<h3><a href="/wiki"><b>Wiki</b></a>&nbsp;&nbsp;&nbsp;
+  <button id="new_wiki_page_button" class="btn" >New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
+<hr>
+<b><span id="page_name" title="page name">?</span> (v<span id="page_version">?</span></b>)
+<hr>
+<div class="modal" id="new_wiki_page_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+	<h5 class="modal-title">Create New Wiki Page</h5>
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	  <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    <div class="modal-body">
+    <p>Please enter a page name in camelCase (for example: myFavoritePage). Spaces and special characters will be converted.</p>
+	<p>Page Name <input type="text" id="wiki_page_name" alt="enter page name" length="20" /></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="create_wiki_page_button" class="btn btn-primary">Create Page</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="edit_wiki_page_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+	<h5 class="modal-title">Edit Wiki Page <b><span id="edit_page_name"></span></b></h5>
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	  <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+    <p><textarea id="wiki_page_content" rows="50" cols="400" alt="ENTER WIKI PAGE IN MARKDOWN"></textarea></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="save_wiki_page_button" class="btn btn-primary">Save Page</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="wiki_page_markdown">
+</div>
+
+<script>
+
+jQuery(window).ready( function() {
+
+    var page_name = '<% $page_name %>';
+
+    view_page(page_name);
+
+    if (isLoggedIn()) {
+	if (getUserRoles().includes("curator")) {
+	    jQuery('#new_wiki_page_button').prop('disabled', false);
+	    jQuery('#edit_wiki_page_button').prop('disabled', false);
+	    jQuery('#delete_wiki_page_button').prop('disabled', false);
+	}
+	else {
+	    jQuery('#new_wiki_page_button').prop('disabled', true);
+	    jQuery('#edit_wiki_page_button').prop('disabled', true);
+	    jQuery('#delete_wiki_page_button').prop('disabled', true);
+	}
+    }
+
+    jQuery('#new_wiki_page_button').click( function() {
+	jQuery('#wiki_page_name').val('');
+	jQuery('#new_wiki_page_modal').modal("show");
+    });
+
+    jQuery('#create_wiki_page_button').click( function() {
+	var page_name = jQuery('#wiki_page_name').val();
+	jQuery('#page_name').html(page_name);
+	create_page(page_name);
+	jQuery('#new_wiki_page_modal').modal("hide");
+    });
+
+    jQuery('#save_wiki_page_button').click( function() {
+	var page_name = jQuery('#page_name').html();
+	//alert('page_name before save = ' + page_name);
+	var content = jQuery('#wiki_page_content').val();
+	//alert('Content: '+content);
+    	jQuery.ajax( {
+	    method: 'POST',
+	    data: { 'content' : content },
+	    url : '/ajax/wiki/'+page_name+'/store'
+	}).then(
+	    function(r) {
+		if (r.error) {
+		    alert(r.error);
+		}
+		else {
+		    jQuery('#edit_wiki_page_modal').modal('hide');
+		    page_new = jQuery('#page_name').html();
+		    view_page(page_name);
+		    // alert('Successfully stored page '+page_name);
+		}
+	    },
+	    function(r) { alert('ERROR!'); }
+	);
+    });
+
+    jQuery('#edit_wiki_page_button').click( function() {
+	jQuery('#wiki_page_content').val('');
+	var page_name = jQuery('#page_name').html();
+	//alert('PAGE NAME FOR PAGE EDIT = '+page_name);
+	jQuery('#edit_page_name').html(page_name);
+	jQuery('#page_name').html(page_name);
+	jQuery.ajax( {
+	    url: '/ajax/wiki/'+page_name+'/retrieve',
+	}).then(
+	    function(r) {
+		if (r.error) {
+		    alert('An error occurred retrieving the page. '+r.error);
+		}
+		else {
+		    if (r.raw) {
+			jQuery('#wiki_page_content').val(r.raw);
+		    }
+	            jQuery('#edit_wiki_page_modal').modal('show');
+		}
+	    },
+	    function(r) {
+		alert('An error occurred :-( '+r.responseText);
+	    }
+	);
+
+    });
+
+    jQuery('#delete_wiki_page_button').click( function() {
+
+	var delete_page_name = jQuery('#page_name').html();
+
+	var yes = confirm('Are you sure you would like to delete the page '+delete_page_name+'?');
+
+	if (yes) {
+	    jQuery.ajax( {
+		url: '/ajax/wiki/'+delete_page_name+'/delete',
+	    }).then(
+		function(r) {
+	            if (r.error) {
+			alert(r.error);
+			window.location.href="/wiki";
+		    }
+		    else {
+			alert('Page '+delete_page_name+' deleted!'); window.location.href="/wiki";
+		    }
+		},
+		function(r) {
+		    alert('An error occurred deleting the page '+delete_page_name);
+		    window.location.href="/wiki";
+		}
+	    );
+	}
+    })
+
+});
+
+function create_page(new_page_name) {
+//    alert('PAGE NAME in create_page: '+new_page_name);
+    jQuery('#page_name').html('');
+    jQuery('#wiki_page_content').val('');
+    jQuery('#wiki_page_markdown').html('');
+    jQuery.ajax( {
+	url : '/ajax/wiki/new?page_name='+new_page_name,
+    }).then(
+	function(r) {
+	    if (r.error) {
+		alert(r.error);
+		window.location.href="/wiki";
+	    }
+	    else {
+		if (r.error) {
+		    alert('An error occurred. '+r.error);
+		    window.location.href="/wiki";
+		}
+		else {
+		    if (r.success) {
+			//alert('Page successfully stored. id = '+r.page_name);
+			page_name = r.page_name;
+			jQuery('#page_name').html(page_name);
+			jQuery('#edit_page_name').html(page_name);
+			jQuery('#edit_wiki_page_modal').modal('show');
+		    }
+		    else {
+			alert('The page creation was not successful for unknown reasons.');
+			window.location.href="/wiki";
+		    }
+		}
+	    }
+
+	},
+	function(r) {
+	    alert('An error occurred!');
+	    window.location.href="/wiki";
+	}
+    );
+}
+
+function view_page(page_name) {
+ //   alert('PAGE NAME FOR VIEW PAGE = '+page_name);
+    jQuery('#page_name').html(page_name);
+    jQuery.ajax( {
+	url : '/ajax/wiki/'+page_name+'/view',
+    }).then(
+	function(r) {
+	    if (r.error) {
+		var yes = confirm('The page you are trying to access may not exist. Create the page?');
+		if (yes) {
+		    create_page(page_name);
+		}
+	    }
+	    else {
+		//alert(JSON.stringify(r));
+		jQuery('#wiki_page_markdown').html(r.html);
+		jQuery('#page_version').html(r.page_version);
+	    }
+	},
+	function(r) { alert('An error occurred!'+JSON.stringify(r)); }
+    );
+}
+
+
+</script>

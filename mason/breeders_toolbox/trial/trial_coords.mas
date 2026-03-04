@@ -272,7 +272,7 @@ var trial_id = <% $trial_id %>;
       //alert(replace_accession+","+replace_plot_id+ "and" +replace_plot_name );
 
       jQuery('#replace_accessions_link').find('button').trigger('click');
-      jQuery('#edit_plot_information').html('<b>Selected Plot Information: </b>');
+      //jQuery('#edit_plot_information').html('<b>Selected Plot Information: </b>');
       jQuery('#edit_plot_name').html(replace_plot_name);
       jQuery('#edit_plot_number').html(replace_plot_number);
       old_plot_id = jQuery('#edit_plot_id').html(replace_plot_id);
@@ -308,12 +308,6 @@ var trial_id = <% $trial_id %>;
 
 </script>
 
-<div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
-   <p>
-       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-       The field coordinates were deleted successfully...
-   </p>
-</div>
 
 <div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
    <div id="trait_list_dc" name="trait_list">
