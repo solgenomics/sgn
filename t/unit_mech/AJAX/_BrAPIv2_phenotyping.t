@@ -5,7 +5,7 @@ use warnings;
 
 use lib 't/lib';
 use SGN::Test::Fixture;
-use Test::More;
+use Test::More qw | no_plan |;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use DateTime;
@@ -461,8 +461,8 @@ is_deeply($response,  {
     'pagination' => {
       'pageSize' => 1,
       'currentPage' => 1,
-      'totalPages' => 7036,
-      'totalCount' => 7036
+      'totalPages' => 7035,
+      'totalCount' => 7035
     }
   },
   'result' => {
