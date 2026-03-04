@@ -70,7 +70,7 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
     phenotype.cvalue_id as trait_id,
     STRING_AGG(ics.stock_id::text, ',') AS intercrop_accession_ids
   FROM stock accession
-  LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot_of', 'subplot_of', 'plant_of', 'tissue_sample_of' ,'analysis_of'))
+  LEFT JOIN stock_relationship ON accession.stock_id = stock_relationship.object_id AND stock_relationship.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot_of', 'intercrop_plot_of', 'subplot_of', 'plant_of', 'tissue_sample_of' ,'analysis_of'))
   LEFT JOIN stock ON stock_relationship.subject_id = stock.stock_id AND stock.type_id IN (SELECT cvterm_id from cvterm where cvterm.name IN ('plot', 'subplot', 'plant', 'tissue_sample','analysis_instance'))
   LEFT JOIN stock_relationship AS icsr ON (icsr.subject_id = stock.stock_id) AND (icsr.type_id = (SELECT cvterm.cvterm_id FROM cvterm WHERE name = 'intercrop_plot_of'))
   LEFT JOIN stock AS ics ON (icsr.object_id = ics.stock_id)
@@ -86,10 +86,10 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
   LEFT JOIN nd_experiment_phenotype ON(nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id)
   LEFT JOIN phenotype ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
   WHERE accession.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'accession')
-  ORDER BY breeding_program_id, location_id, trial_id, accession_id, seedlot_id, stock.stock_id, phenotype_id, trait_id
   GROUP BY 1,2,3,4,5,6,7,8,9
+  ORDER BY breeding_program_id, location_id, trial_id, accession_id, seedlot_id, stock.stock_id, phenotype_id, trait_id
 WITH DATA;
-CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,phenotype_id,trait_id) WITH (fillfactor=100);
+CREATE UNIQUE INDEX unq_pheno_idx ON public.materialized_phenoview(stock_id,accession_id,phenotype_id,trait_id) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW materialized_phenoview OWNER TO web_usr;
 
 -- drop and recreate genoview with new column for genotype project id
@@ -220,44 +220,27 @@ ALTER VIEW trait_components OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.traits CASCADE;
 CREATE OR REPLACE VIEW public.traits AS
-SELECT 
-    cvterm.cvterm_id AS trait_id,
-    (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
-FROM 
-    cvterm
+  SELECT cvterm.cvterm_id AS trait_id,
+  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+    FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
+    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
     JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_variable 
-        ON cvterm.cvterm_id = is_variable.subject_id 
-        AND is_variable.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF' and is_relationshiptype = 1)
-WHERE 
-    cvterm.cvterm_id IN (
-        SELECT cvterm_id 
-        FROM cvprop 
-        WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'trait_ontology')
-    )
-    AND is_variable.subject_id IS NOT NULL
-
-UNION
-
-SELECT 
-    cvterm.cvterm_id AS trait_id,
-    (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
-FROM 
-    cvterm
+    LEFT JOIN cvterm_relationship is_variable ON cvterm.cvterm_id = is_variable.subject_id AND is_variable.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF' AND cv_id = (SELECT cv_id FROM cv where cv.name = 'relationship') )
+    WHERE is_variable.subject_id IS NOT NULL
+    GROUP BY 1,2
+  UNION
+  SELECT cvterm.cvterm_id AS trait_id,
+  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+  FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
+    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
     JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_subject 
-        ON cvterm.cvterm_id = is_subject.subject_id
-WHERE 
-    cvterm.cvterm_id IN (
-        SELECT cvterm_id 
-        FROM cvprop 
-        WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'composed_trait_ontology')
-    )
-    AND is_subject.subject_id IS NOT NULL
-ORDER BY 2;
-
+    LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+    WHERE is_subject.subject_id IS NOT NULL
+    GROUP BY 1,2 ORDER BY 2;
 ALTER VIEW public.traits OWNER TO web_usr;
 
 
