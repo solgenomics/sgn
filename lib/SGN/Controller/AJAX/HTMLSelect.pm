@@ -2399,18 +2399,21 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
         WHERE stock_relationship.type_id=?)
-    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name, stockprop.value
+    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name, STRING_AGG(stockprop.value, ', ')
     FROM subplot 
     JOIN plot ON plot.subplot_id=subplot.subplot_id
-    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?);"; 
+    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?)
+    GROUP BY 1,2,3,4,5,6;"; 
 
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
     $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
 
-    my $html = "<table id=\"subplots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table id=\"subplots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th></tr></thead><tbody>";
 
     while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
-        $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+        my $accession_label = $accession_name;
+        $accession_label .= " ($synonyms)" if ( $synonyms && $synonyms ne '' );
+        $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_label</a></td></tr>";
     }
 
     $html .= "</tbody></thead></table>";
