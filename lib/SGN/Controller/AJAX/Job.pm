@@ -333,6 +333,42 @@ sub retrieve_user_completed_uploads :Path('/ajax/job/completed_uploads') Args(1)
     return;
 }
 
+sub retrieve_user_in_progress_validations :Path('/ajax/job/validations_in_progress') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = shift;
+
+    my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
+    if ($sp_person_id ne $logged_user && $role ne "curator") {
+        $c->stash->{rest} = {error => "You do not have permission to see these job logs.\n"} ;
+        return;
+    }
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $jobs;
+    try {
+        $jobs = CXGN::Job->get_user_in_progress_validations(
+            $bcs_schema,
+            $people_schema,
+            $sp_person_id,
+            $role
+        );
+    } catch {
+        print STDERR $_, "\n";
+        $c->stash->{rest} = {error => "Error retrieving in-progress validations: $_"};
+        return;
+    };
+
+    $c->stash->{rest} = {
+        success => 1,
+        data => $jobs
+    };
+    return;
+}
+
 sub delete_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(1) {
     my $self = shift;
     my $c = shift;

@@ -983,7 +983,7 @@ sub get_user_in_progress_uploads {
             sp_job_id => $job_id
         });
         my $status = $job->check_status();
-        if ($job_args->{additional_args}->{is_validation} || $status eq "submitted") { #validation jobs can be finished/failed and still be considered "in-progress"
+        if (!$job_args->{additional_args}->{is_validation} && $status eq "submitted") {# validation jobs don't belong in this set. They have a separate function
             if ($user_role eq "curator") {
                 push @user_uploads, {
                     job_id => $job->sp_job_id(), 
@@ -1051,7 +1051,7 @@ sub get_user_completed_uploads {
             sp_job_id => $job_id
         });
         my $status = $job->check_status();
-        if ($job_args->{additional_args}->{final_upload} && $status ne "submitted" ) { #validation jobs can be finished/failed and still be considered "in-progress"
+        if ($job_args->{additional_args}->{final_upload} && $status ne "submitted" ) { #This includes failed, canceled, etc.
             if ($user_role eq "curator") {
                 push @user_uploads, {
                     job_id => $job->sp_job_id(), 
@@ -1074,6 +1074,73 @@ sub get_user_completed_uploads {
     }
     
     return \@user_uploads;
+}
+
+=head2 get_user_in_progress_validations(bcs_schema, people_schema, user_id, user_role)
+
+Get all running validation jobs for this user. Gets all validation jobs for curators. 
+Validation jobs are determined by the "is_validation" attribute in the additional arguments hash. 
+
+=cut
+
+sub get_user_in_progress_validations {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+    my $user_role = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.";
+    }
+
+    my @user_validations;
+
+    my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
+    my $cv_id = $cv_rs->cv_id();
+    my $cvterm_row = $bcs_schema->resultset("Cv::Cvterm")->find({name => "upload", cv_id => $cv_id});
+
+    my $upload_cvterm_id = $cvterm_row->cvterm_id();
+
+    my $validation_rs;
+    if ($user_role eq "curator") {
+        $validation_rs = $people_schema->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+    } else {
+        $validation_rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+    }
+
+    while (my $validation = $validation_rs->next()) {
+        my $job_args = JSON::Any->decode($validation->args());
+        my $job_id = $validation->sp_job_id();
+        my $job = CXGN::Job->new({
+            schema => $bcs_schema,
+            people_schema => $people_schema,
+            sp_job_id => $job_id
+        });
+        my $status = $job->check_status();
+        if ($job_args->{additional_args}->{is_validation}) { #get all validation jobs, don't care about status here
+            if ($user_role eq "curator") {
+                push @user_validations, {
+                    job_id => $job->sp_job_id(), 
+                    user_id => $job->sp_person_id(),
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            } else {
+                push @user_validations, {
+                    job_id => $job->sp_job_id(), 
+                    status => $status,
+                    create_timestamp => $job->create_timestamp(),
+                    finish_timestamp => $job->finish_timestamp() ? $job->finish_timestamp() : "",
+                    args => $job_args
+                };
+            }
+        }  
+    }
+    
+    return \@user_validations;
 }
 
 1;

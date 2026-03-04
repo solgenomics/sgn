@@ -71,7 +71,7 @@ $editable_vector_props
 
 <div class="well well-sm">
 <h3>File validation</h3>
-    <&| /page/info_section.mas, title => ' ',  id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
+    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to complete the upload after passing validation. ', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
         <table id="upload_factory_validated_files_table">
             <thead>
             </thead>
@@ -85,7 +85,7 @@ $editable_vector_props
 
 <div class="well well-sm">
 <h3>Uploads in-progress</h3>
-    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to complete the upload after passing validation. ', id => 'in_progress_uploads_table_section', collapsible => 1, collapsed => 1 &>
+    <&| /page/info_section.mas, title => ' ', id => 'in_progress_uploads_table_section', collapsible => 1, collapsed => 1 &>
         <table id="upload_factory_in_progress_uploads_table">
             <thead>
             </thead>
@@ -151,7 +151,7 @@ $editable_vector_props
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Review the submission. Click 'Submit' when you are ready to start file validation.</b>
+                    <b>Review the submission. Click 'Submit' when you are ready to start file processing.</b>
                     <br>
                     <br>
                     <div id="validate_upload_review_text"></div>
@@ -160,6 +160,23 @@ $editable_vector_props
             </div>
             <div class="modal-footer">
                 <button id="close_validate_upload_confirm_submit" type="button" class="btn btn-default" data-dismiss="modal">Close</button>&nbsp;<button class="btn btn-info" id="submit_validate_upload">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="view_report_dialog" name="view_report_dialog" tabindex="-1" role="dialog" aria-labelledby="viewReport">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="viewReport">Upload Report</h4>
+            </div>
+            <div class="modal-body">
+                <div id="report_content_div"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_report_dialog_btn" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -282,6 +299,87 @@ function load_archived_files_table() {
     });
 }
 
+function load_in_progress_validations_table() {
+    jQuery.ajax({
+        url: '/ajax/job/validations_in_progress/<% $sp_person_id %>',
+        success: function(response) {
+            if (response.error) {
+                alert(response.error);
+            } else {
+
+                if (jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable('#upload_factory_validated_files_table')) {
+                    let dt = jQuery('#upload_factory_validated_files_table').DataTable();
+                    dt.clear().destroy();
+                }
+
+                let header_row = jQuery('<tr>');
+                header_row.append(jQuery('<th>').text("Start Time"));
+                header_row.append(jQuery('<th>').text("Upload Name"));
+
+                if (response.data.length > 0 && response.data[0].hasOwnProperty('user_id')) {
+                    header_row.append(jQuery('<th>').text("Uploader"));
+                }
+
+                header_row.append(jQuery('<th>').text("Uploaded As"));
+                header_row.append(jQuery('<th>').text("Status"));
+                header_row.append(jQuery('<th>').text("Actions"));
+
+                jQuery('#upload_factory_validated_files_table').html('<thead></thead><tbody></tbody><tfoot></tfoot>');
+
+                let file_tbody = jQuery('#upload_factory_validated_files_table tbody');
+                let file_thead = jQuery('#upload_factory_validated_files_table thead');
+                let file_tfoot = jQuery('#upload_factory_validated_files_table tfoot');
+
+                file_thead.append(header_row);
+
+                if (response.data.length > 0 ) {
+
+                    jQuery("#in_progress_validations_table_section_onswitch").trigger("click");
+
+                    response.data.forEach(row => {
+                        job_dict[row.job_id] = row;
+                        let tr = jQuery("<tr>");
+                        tr.append(jQuery("<td>").html(`${row.create_timestamp}`));
+                        tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
+                        if (response.data[0].hasOwnProperty('user_id')) {
+                            tr.append(jQuery("<td>").html(`<a href='/solpeople/profile/${row.user_id}'>${row.args.additional_args?.user_name}</a>`));
+                        }
+                        tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args?.file_type]}</div>`));
+                        tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
+                        let commit_validation_btn = '';
+                        let cancel_btn = '';
+                        let view_report_btn = '';
+                        let dismiss_btn = '';
+                        if (row.status != "submitted") {
+                            dismiss_btn = `<button id='dismiss_job_${row.job_id}' class='btn btn-sm btn-danger job-dismiss-btn'>Dismiss</button>`;
+                        }
+                        if (row.status != 'submitted' && row.status != 'timed_out' && row.status != 'canceled') {
+                            view_report_btn = `<button id='job_report_${row.job_id}' class='btn btn-sm btn-primary view-report-btn'>View Report</button>`; //this could be fail status
+                            if (row.status == "finished") { //only show commit button on a success
+                                commit_validation_btn = `<button id='validation_commit_${row.job_id}' class='btn btn-sm btn-success validation-commit-btn'>Commit to Database</button>`;
+                            }
+                        }
+                        if (row.status == 'submitted') {
+                            cancel_btn = `<button id='cancel_job_${row.job_id}' class='btn btn-sm btn-danger job-cancel-btn'>Cancel</button>`;
+                        }
+                        tr.append(jQuery("<td>").html(`${view_report_btn} ${commit_validation_btn} ${dismiss_btn} ${cancel_btn}`));
+                        file_tbody.append(tr);
+                    });
+                } else {
+                    jQuery("#in_progress_validations_table_section_offswitch").trigger("click");
+                }
+
+                let uploads_in_progress = jQuery('#upload_factory_validated_files_table').DataTable({
+                    order : [[0, 'desc']]
+                });
+            }
+        },
+        error : function() {
+            alert("Something went terribly wrong, check console.");
+        }
+    });
+}
+
 function load_in_progress_uploads_table() {
     jQuery.ajax({
         url: '/ajax/job/uploads_in_progress/<% $sp_person_id %>',
@@ -320,7 +418,7 @@ function load_in_progress_uploads_table() {
                     jQuery("#in_progress_uploads_table_section_onswitch").trigger("click");
 
                     response.data.forEach(row => {
-                        in_progress_uploads[row.job_id] = row;
+                        job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
                         tr.append(jQuery("<td>").html(`${row.create_timestamp}`));
                         tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
@@ -329,18 +427,10 @@ function load_in_progress_uploads_table() {
                         }
                         tr.append(jQuery("<td>").html(`<div>${upload_type_dict[row.args.additional_args?.file_type]}</div>`));
                         tr.append(jQuery("<td>").html(`<div>${row.status}</div>`));
-                        let commit_validation_btn = '';
                         let cancel_btn = '';
-                        let view_report_btn = '';
                         let dismiss_btn = '';
                         if (row.status != "submitted") {
                             dismiss_btn = `<button id='dismiss_job_${row.job_id}' class='btn btn-sm btn-danger job-dismiss-btn'>Dismiss</button>`;
-                        }
-                        if (row.args.additional_args?.is_validation && row.status != 'submitted' && row.status != 'timed_out' && row.status != 'canceled') {
-                            view_report_btn = `<button id='job_report_${row.job_id}' class='btn btn-sm btn-primary view-report-btn'>View Report</button>`; //this could be fail status
-                            if (row.status == "finished") { //only show commit button on a success
-                                commit_validation_btn = `<button id='validation_commit_${row.job_id}' class='btn btn-sm btn-success validation-commit-btn'>Commit to Database</button>`;
-                            }
                         }
                         if (row.status == 'submitted') {
                             cancel_btn = `<button id='cancel_job_${row.job_id}' class='btn btn-sm btn-danger job-cancel-btn'>Cancel</button>`;
@@ -401,7 +491,7 @@ function load_completed_uploads_table() {
                     jQuery("#completed_uploads_table_section_onswitch").trigger("click");
 
                     response.data.forEach(row => {
-                        completed_uploads[row.job_id] = row;
+                        job_dict[row.job_id] = row;
                         let tr = jQuery("<tr>");
                         tr.append(jQuery("<td>").html(`${row.create_timestamp}`));
                         tr.append(jQuery("<td>").html(`<div id='job_${row.job_id}'>${row.args.name}</div>`));
@@ -434,6 +524,7 @@ function load_completed_uploads_table() {
 }
 
 function refresh_upload_tables() {
+    load_in_progress_validations_table()
     load_in_progress_uploads_table();
     load_completed_uploads_table();
 }
@@ -1960,8 +2051,8 @@ var upload_type_dict = {
     'soil_data' : "Soil data",
     'vectors' : "Vector constructs"
 };
-var in_progress_uploads = {};
-var completed_uploads = {};
+
+var job_dict = {};
 
 jQuery(document).ready(function(){
 
@@ -2039,7 +2130,17 @@ jQuery(document).ready(function(){
     });
 
     jQuery(document).on('click', '.view-report-btn', function() {
-
+        let job_id = jQuery(this).attr("id").replace('job_report_', '');
+        jQuery('#view_report_dialog').modal("show");
+        let warnings = '';
+        let errors = '';
+        if (job_dict[job_id].args.additional_args?.warning_messages) {
+            warnings = `${job_dict[job_id].args.additional_args.warning_messages}<br>`;
+        }
+        if (job_dict[job_id].args.additional_args?.error_messages) {
+            errors = job_dict[job_id].args.additional_args.error_messages
+        }
+        jQuery('#report_content_div').html(`${warnings}${errors}`);
     });
 
     jQuery('#check_file_format_select').html(upload_type_options());
