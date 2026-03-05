@@ -1,3 +1,4 @@
+=begin
 
 use strict;
 
@@ -13,7 +14,6 @@ use SGN::Test::Fixture;
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
 
-=begin
 
 # add a stock of type vector
 #
@@ -160,9 +160,10 @@ $t->while_logged_in_as(
 	print STDERR "Done with tests.\n";
     }
     );
-=end
-=cut
 
 done_testing();
 
 $t->driver->close();
+
+=end
+=cut
