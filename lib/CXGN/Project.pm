@@ -4968,7 +4968,7 @@ sub get_accessions {
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
-	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename, cvterm.name, srt.name, organism.species
+	my $q = "SELECT accession.stock_id, accession.uniquename, cvterm.name, STRING_AGG(DISTINCT(srt.name), ', '), organism.species
 		FROM stock as accession
         JOIN cvterm on (accession.type_id = cvterm.cvterm_id)
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
@@ -4982,6 +4982,7 @@ sub get_accessions {
 		WHERE accession.type_id IN (?, ?, ?)
 		AND stock_relationship.type_id IN (?, ?, ?, ?, ?)
 		AND project.project_id = ?
+		GROUP BY 1,2,3,5
 		ORDER BY accession.stock_id;";
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
