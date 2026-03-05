@@ -316,7 +316,7 @@ Get the full filepath and name for this file.
 
 sub get_path {
     my $self = shift;
-    return $self->dirname()."/".$self->basename();
+    return $self->archive_path()."/".$self->dirname()."/".$self->basename();
 }
 
 =head1 CLASS METHODS

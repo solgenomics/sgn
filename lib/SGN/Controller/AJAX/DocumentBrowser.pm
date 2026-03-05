@@ -86,14 +86,13 @@ sub upload_document_POST : Args(0) {
 
         my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
         $md_row->insert();
-        my $file_row = $metadata_schema->resultset("MdFiles")
-            ->create({
-                basename => basename($archived_filename_with_path),
-                dirname => dirname($archived_filename_with_path),
-                filetype => 'document_browser',
-                md5checksum => $md5->hexdigest(),
-                metadata_id => $md_row->metadata_id(),
-            });
+        my $file_row = $metadata_schema->resultset("MdFiles")->create({
+            basename => basename($archived_filename_with_path),
+            dirname => dirname($archived_filename_with_path),
+            filetype => 'document_browser',
+            md5checksum => $md5->hexdigest(),
+            metadata_id => $md_row->metadata_id(),
+        });
         $file_row->insert();
     }
 

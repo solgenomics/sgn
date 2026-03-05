@@ -102,7 +102,8 @@ $editable_vector_props
 <h3>Completed uploads</h3>
     <&| /page/info_section.mas, title => ' ', id => 'completed_uploads_table_section', collapsible => 1, collapsed => 1 &>
         <br>
-        <button class="btn btn-sm btn-primary">Dismiss all completed uploads</button>
+        <button id="dismiss_completed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all completed uploads</button> &nbsp; &nbsp;
+        <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed, canceled, and timed-out uploads</button> &nbsp; &nbsp;
         <br>
         <br>
         <table id="upload_factory_completed_uploads_table">
@@ -437,7 +438,7 @@ function load_in_progress_uploads_table() {
                         if (row.status == 'submitted') {
                             cancel_btn = `<button id='cancel_job_${row.job_id}' class='btn btn-sm btn-danger job-cancel-btn'>Cancel</button>`;
                         }
-                        tr.append(jQuery("<td>").html(`${view_report_btn} ${commit_validation_btn} ${dismiss_btn} ${cancel_btn}`));
+                        tr.append(jQuery("<td>").html(`${dismiss_btn} ${cancel_btn}`));
                         file_tbody.append(tr);
                     });
                 } else {
@@ -1979,11 +1980,33 @@ function submit_upload_job() {
                 },
                 success: function(response) {
                     if (response.error) {
-                        alert(response.error);
+                        alert(`An error occurred: ${response.error}`);
                     }
                 },
                 error: function() {
                     alert("An error occurred processing trial upload, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'phenotyping_spreadsheet':
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_verify/spreadsheet',
+                type : 'POST',
+                data : {
+                    'upload_spreadsheet_phenotype_file_format' : submit_params.additional_args.spreadsheet_format,
+                    'upload_spreadsheet_phenotype_timestamp_checkbox' : submit_params.additional_args.include_timestamps,
+                    'upload_spreadsheet_phenotype_data_level' : submit_params.additional_args.data_level,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success: function(response) {
+                    if (response.error) {
+                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                        console.log(response.error);
+                    }
+                },
+                error: function() {
+                    alert("An error occurred submitting phenotype validation, check console.");
                     return;
                 }
             });
@@ -1995,7 +2018,7 @@ function submit_upload_job() {
     refresh_upload_tables();
 }
 
-function submit_file_(options) {
+function commit_upload_job(options) {
     //TODO
 }
 
@@ -2016,6 +2039,7 @@ function save_file_type(file_id, type) {
 }
 
 var archived_files_list = [];
+
 var upload_type_dict = {
     'trials' : "Multiple Trial Upload",
     'trial_metadata' : "Trial Metadata",
@@ -2075,7 +2099,7 @@ jQuery(document).ready(function(){
     load_archived_files_table();
     refresh_upload_tables();
 
-    setInterval(refresh_upload_tables, 15000);
+    setInterval(refresh_upload_tables, 5000);
 
     jQuery('#upload_factory_new_file_btn').click(function(event){
         event.preventDefault();
@@ -2148,15 +2172,19 @@ jQuery(document).ready(function(){
     jQuery(document).on('click', '.view-report-btn', function() {
         let job_id = jQuery(this).attr("id").replace('job_report_', '');
         jQuery('#view_report_dialog').modal("show");
+        let success = '';
         let warnings = '';
         let errors = '';
+        if (job_dict[job_id].args.additional_args?.success_messages) {
+            success = `${job_dict[job_id].args.additional_args.success_messages}<br>`;
+        }
         if (job_dict[job_id].args.additional_args?.warning_messages) {
             warnings = `${job_dict[job_id].args.additional_args.warning_messages}<br>`;
         }
         if (job_dict[job_id].args.additional_args?.error_messages) {
             errors = job_dict[job_id].args.additional_args.error_messages
         }
-        jQuery('#report_content_div').html(`${warnings}${errors}`);
+        jQuery('#report_content_div').html(`${success}${warnings}${errors}`);
     });
 
     jQuery('#check_file_format_select').html(upload_type_options());

@@ -863,8 +863,9 @@ sub store {
     my $error_message;
     my $transaction_error;
     my $user_id = $self->user_id;
-    my $archived_file = $self->metadata_hash->{'archived_file'};
+    my $archived_file_id = $self->metadata_hash->{'archived_file_id'};
     my $archived_file_type = $self->metadata_hash->{'archived_file_type'};
+    my $archive_path = $self->metadata_hash->{'archive_path'};
     my $operator = $self->metadata_hash->{'operator'};
     my $upload_date = $self->metadata_hash->{'date'};
     my $success_message;
@@ -1298,8 +1299,8 @@ sub store {
         return ($error_message, $success_message);
     }
 
-    if ($archived_file) {
-        $self->save_archived_file_metadata($archived_file, $archived_file_type, \%experiment_ids);
+    if ($archived_file_id) {
+        $self->save_archived_file_metadata($archived_file_id, $archived_file_type, \%experiment_ids, $archive_path);
     }
 
     if (scalar(keys %nd_experiment_md_images) > 0) {
@@ -1480,28 +1481,24 @@ sub check_overwritten_files_status {
 
 sub save_archived_file_metadata {
     my $self = shift;
-    my $archived_file = shift;
+    my $archived_file_id = shift;
     my $archived_file_type = shift;
     my $experiment_ids = shift;
+    my $archive_path = shift;
     my $md5checksum;
 
-    if ($archived_file ne 'none'){
-        my $upload_file = CXGN::UploadFile->new();
-        my $md5 = $upload_file->get_md5($archived_file);
-        $md5checksum = $md5->hexdigest();
-    }
+    # if ($archived_file_id ne 'none'){
+    #     my $upload_file = CXGN::UploadFile->new();
+    #     my $md5 = $upload_file->get_md5("$archive_path/$archived_file");
+    #     $md5checksum = $md5->hexdigest();
+    # }
 
-    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
-    $md_row->insert();
-    my $file_row = $self->metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_file),
-            dirname => dirname($archived_file),
-            filetype => $archived_file_type,
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-    $file_row->insert();
+    # my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id,});
+    # $md_row->insert();
+    my $file_row = $self->metadata_schema->resultset("MdFiles")->find({
+        file_id => $archived_file_id
+    });
+    # $file_row->insert();
 
     foreach my $nd_experiment_id (keys %$experiment_ids) {
         ## Link the file to the experiment

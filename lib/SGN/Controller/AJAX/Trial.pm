@@ -1397,9 +1397,11 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $c->user->get_object->get_user_type()
+            user_role => $c->user->get_object->get_user_type(),
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            file_type => 'trials'
         });
-        $archived_filename_with_path = $uploader->archive();
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
             return;
@@ -1418,8 +1420,10 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $clean_file_name = $split_path[-1];
     $clean_file_name =~ s/\d+-\d+-\d+_\d+:\d+:\d+_//;
 
+    my $temp_basedir = $c->config->{tempfiles_subdir};
+
     # Build the backend script command to parse, validate, and upload the trials
-    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -i \"$archive_path/$archived_filename_with_path\" -un \"$username\"";
+    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -i \"$archived_file_id\" -t \"$temp_basedir\" -un \"$username\"";
     $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
     $cmd .= " -iw" if $ignore_warnings;
 
@@ -1437,7 +1441,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         additional_args => {
             final_upload => 1,
             file_type => "trials",
-            user_name => "$user_first_name $user_last_name"
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id
         }
     });
     if ( ($email_option_enabled && $email_address)) {
@@ -1504,12 +1509,14 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
         if ( scalar(@errors) > 0 ) {
             $c->stash->{rest} = {errors => \@errors};
+            print STDERR @errors;
             $job->additional_args->{error_messages} = \@errors;
             $job->update_status("failed");
             return;
         }
         if ( scalar(@warnings) > 0 ) {
             $c->stash->{rest} = {warnings => \@warnings};
+            print STDERR @warnings;
             $job->additional_args->{warning_messages} = \@warnings;
             $job->update_status("failed");
             return;
@@ -1518,6 +1525,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
 
     # Return success
+    $job->additional_args->{success_messages} = "Trial uploaded successfully.";
+    $job->update_status("finished");
     $c->stash->{rest} = {success => "1"};
     return;
 
