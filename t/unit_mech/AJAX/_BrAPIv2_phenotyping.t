@@ -461,8 +461,8 @@ is_deeply($response,  {
     'pagination' => {
       'pageSize' => 1,
       'currentPage' => 1,
-      'totalPages' => 7035,
-      'totalCount' => 7035
+      'totalPages' => 7036,
+      'totalCount' => 7036
     }
   },
   'result' => {
