@@ -4972,13 +4972,13 @@ sub get_accessions {
 		FROM stock as accession
         JOIN cvterm on (accession.type_id = cvterm.cvterm_id)
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
-        JOIN cvterm AS srt ON (stock_relationship.type_id = srt.cvterm_id)
+		LEFT JOIN cvterm AS srt ON (stock_relationship.type_id = srt.cvterm_id)
 		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
 		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-        JOIN organism ON (accession.organism_id = organism.organism_id)
+		LEFT JOIN organism ON (accession.organism_id = organism.organism_id)
 		WHERE accession.type_id IN (?, ?, ?)
 		AND stock_relationship.type_id IN (?, ?, ?, ?, ?)
 		AND project.project_id = ?
