@@ -43,6 +43,9 @@ use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Transformation::Transformation;
 use Sort::Naturally;
+use CXGN::Stock::Vector;
+use Time::Piece;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -2815,9 +2818,127 @@ sub get_control_transformation_ids_select : Path('/ajax/html/select/control_tran
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_tissue_types_select : Path('/ajax/html/select/tissue_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "tissue_types_select";
+    my $name = $c->req->param("name") || "tissue_types_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @tissue_types;
+
+    if ($empty && !$default) {
+        push @tissue_types, ['', 'Please select a tissue type'];
+    }
+    push @tissue_types, ['leaf', 'leaf'];
+    push @tissue_types, ['sink leaf', 'sink leaf'];
+    push @tissue_types, ['source leaf', 'source leaf'];
+    push @tissue_types, ['petiole', 'petiole'];
+    push @tissue_types, ['stem', 'stem'];
+    push @tissue_types, ['upper stem', 'upper stem'];
+    push @tissue_types, ['middle stem', 'middle stem'];
+    push @tissue_types, ['lower stem', 'lower stem'];
+    push @tissue_types, ['storage root', 'storage root'];
+    push @tissue_types, ['fibrous root', 'fibrous root'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@tissue_types,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 
+sub get_endogenous_controls_select : Path('/ajax/html/select/endogenous_controls') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "endogenous_controls_select";
+    my $name = $c->req->param("name") || "endogenous_controls_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @endogenous_controls;
+
+    if ($empty && !$default) {
+        push @endogenous_controls, ['', 'Please select an endogenous control'];
+    }
+    push @endogenous_controls, ['GAPDH', 'GAPDH'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@endogenous_controls,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 
+sub get_assay_dates_select : Path('/ajax/html/select/assay_dates') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "assay_dates_select";
+    my $name = $c->req->param("name") || "assay_dates_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $vector_stock_id = $c->req->param("vector_stock_id") || "";
+    my $tissue_type = $c->req->param("assay_tissue_type") || "";
+    my @assay_dates;
+
+    if ($empty) {
+        push @assay_dates, ['', 'Please select a date'];
+    }
+
+    my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_stock_id);
+    my $vector_assay_metadata = $vector_construct->assay_metadata;
+    if ($vector_assay_metadata) {
+        my $metadata = decode_json $vector_assay_metadata;
+        my $date_info = $metadata->{$tissue_type};
+        my @dates = keys (%$date_info);
+        my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
+        foreach my $date (@sorted_dates) {
+            push @assay_dates, [$date, $date];
+        }
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@assay_dates,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
+sub get_qPCR_normalization_methods_select : Path('/ajax/html/select/qPCR_normalization_methods') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "qPCR_normalization_methods_select";
+    my $name = $c->req->param("name") || "qPCR_normalization_methods_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @qPCR_normalization_methods;
+
+    if ($empty && !$default) {
+        push @qPCR_normalization_methods, ['', 'Please select a method'];
+    }
+    push @qPCR_normalization_methods, ['CASS_Delta_Cq', 'CASS Delta Cq'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@qPCR_normalization_methods,
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 1;
