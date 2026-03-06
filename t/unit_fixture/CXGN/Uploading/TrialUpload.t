@@ -94,6 +94,7 @@ for my $extension ("xls", "xlsx", "csv") {
 		'2' => {
 			'plot_name'    => 'plot_name1',
 			'stock_name'   => 'test_accession1',
+			'intercrop_stock_name' => [],
 			'col_number'   => '1',
 			'is_a_control' => 0,
 			'rep_number'   => '1',
@@ -108,6 +109,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'block_number' => '2',
 			'plot_name'    => 'plot_name6',
 			'stock_name'   => 'test_accession3',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'range_number' => '2',
 			'row_number'   => '2',
@@ -119,6 +121,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_number'  => '7',
 			'plot_name'    => 'plot_name7',
 			'stock_name'   => 'test_accession4',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'rep_number'   => '1',
 			'is_a_control' => 0,
@@ -133,7 +136,8 @@ for my $extension ("xls", "xlsx", "csv") {
 			'block_number' => '1',
 			'plot_name'    => 'plot_name4',
 			'col_number'   => '1',
-			'stock_name'   => 'test_accession2'
+			'stock_name'   => 'test_accession2',
+			'intercrop_stock_name' => []
 		},
 		'9' => {
 			'range_number' => '2',
@@ -141,6 +145,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_number'  => '8',
 			'plot_name'    => 'plot_name8',
 			'stock_name'   => 'test_accession4',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'rep_number'   => '2',
 			'is_a_control' => 0,
@@ -153,6 +158,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_name'    => 'plot_name2',
 			'col_number'   => '1',
 			'stock_name'   => 'test_accession1',
+			'intercrop_stock_name' => [],
 			'is_a_control' => 0,
 			'rep_number'   => '2',
 			'block_number' => '1'
@@ -163,6 +169,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_number'  => '5',
 			'plot_name'    => 'plot_name5',
 			'stock_name'   => 'test_accession3',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'is_a_control' => 0,
 			'rep_number'   => '1',
@@ -170,6 +177,7 @@ for my $extension ("xls", "xlsx", "csv") {
 		},
 		'4' => {
 			'stock_name'   => 'test_accession2',
+			'intercrop_stock_name' => [],
 			'col_number'   => '1',
 			'plot_name'    => 'plot_name3',
 			'block_number' => '1',
@@ -561,6 +569,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'col_number'                => '2',
 			'plot_name'                 => 'plot_with_seedlot_name7',
 			'stock_name'                => 'test_accession4',
+			'intercrop_stock_name'      => [],
 			'seedlot_name'              => 'test_accession4_001',
 			'plot_number'               => '7',
 			'range_number'              => '2',
@@ -578,6 +587,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'block_number'              => '1',
 			'is_a_control'              => 0,
 			'stock_name'                => 'test_accession2',
+			'intercrop_stock_name'      => [],
 			'plot_name'                 => 'plot_with_seedlot_name4',
 			'col_number'                => '1'
 		},
@@ -592,6 +602,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'block_number'              => '1',
 			'is_a_control'              => 0,
 			'stock_name'                => 'test_accession1',
+			'intercrop_stock_name'      => [],
 			'plot_name'                 => 'plot_with_seedlot_name1',
 			'col_number'                => '1'
 		},
@@ -604,6 +615,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_name'                 => 'plot_with_seedlot_name5',
 			'col_number'                => '2',
 			'stock_name'                => 'test_accession3',
+			'intercrop_stock_name'      => [],
 			'rep_number'                => '1',
 			'is_a_control'              => 0,
 			'num_seed_per_plot'         => '12',
@@ -615,6 +627,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'is_a_control'              => 0,
 			'rep_number'                => '2',
 			'stock_name'                => 'test_accession1',
+			'intercrop_stock_name'      => [],
 			'col_number'                => '1',
 			'plot_name'                 => 'plot_with_seedlot_name2',
 			'plot_number'               => '2',
@@ -634,6 +647,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'num_seed_per_plot'         => '12',
 			'is_a_control'              => 0,
 			'stock_name'                => 'test_accession2',
+			'intercrop_stock_name'      => [],
 			'plot_name'                 => 'plot_with_seedlot_name3',
 			'col_number'                => '1'
 		},
@@ -641,6 +655,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'col_number'                => '2',
 			'plot_name'                 => 'plot_with_seedlot_name6',
 			'stock_name'                => 'test_accession3',
+			'intercrop_stock_name'      => [],
 			'is_a_control'              => 0,
 			'num_seed_per_plot'         => '12',
 			'block_number'              => '2',
@@ -662,11 +677,13 @@ for my $extension ("xls", "xlsx", "csv") {
 			'is_a_control'              => 0,
 			'rep_number'                => '2',
 			'stock_name'                => 'test_accession4',
+			'intercrop_stock_name'      => [],
 			'col_number'                => '2',
 			'plot_name'                 => 'plot_with_seedlot_name8'
 		}
 	};
 
+	# FAILS
 	is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data');
 
 	my $trial_create = CXGN::Trial::TrialCreate
@@ -1287,6 +1304,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'rep_number'   => '1',
 			'is_a_control' => 0,
 			'stock_name'   => 'test_accession4',
+			'intercrop_stock_name' => [],
 			'row_number'   => '3',
 			'range_number' => '2',
 			'plot_name'    => 'trial_treatment_plot_name7'
@@ -1298,6 +1316,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'block_number' => '2',
 			'is_a_control' => 0,
 			'stock_name'   => 'test_accession3',
+			'intercrop_stock_name' => [],
 			'row_number'   => '1',
 			'range_number' => '2',
 			'plot_name'    => 'trial_treatment_plot_name5'
@@ -1311,10 +1330,12 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_name'    => 'trial_treatment_plot_name3',
 			'row_number'   => '3',
 			'stock_name'   => 'test_accession2',
+			'intercrop_stock_name' => [],
 			'is_a_control' => 0
 		},
 		'5'          => {
 			'stock_name'   => 'test_accession2',
+			'intercrop_stock_name' => [],
 			'is_a_control' => 0,
 			'row_number'   => '4',
 			'plot_name'    => 'trial_treatment_plot_name4',
@@ -1333,6 +1354,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'range_number' => '2',
 			'plot_name'    => 'trial_treatment_plot_name8',
 			'stock_name'   => 'test_accession4',
+			'intercrop_stock_name' => [],
 			'is_a_control' => 0
 		},
 		'2'          => {
@@ -1342,6 +1364,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'col_number'   => '1',
 			'is_a_control' => 0,
 			'stock_name'   => 'test_accession1',
+			'intercrop_stock_name' => [],
 			'plot_name'    => 'trial_treatment_plot_name1',
 			'range_number' => '1',
 			'row_number'   => '1'
@@ -1351,6 +1374,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'range_number' => '1',
 			'row_number'   => '2',
 			'stock_name'   => 'test_accession1',
+			'intercrop_stock_name' => [],
 			'is_a_control' => 0,
 			'plot_number'  => '2',
 			'col_number'   => '1',
@@ -1372,6 +1396,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'range_number' => '2',
 			'plot_name'    => 'trial_treatment_plot_name6',
 			'stock_name'   => 'test_accession3',
+			'intercrop_stock_name' => [],
 			'is_a_control' => 0,
 			'plot_number'  => '6',
 			'col_number'   => '2',
@@ -1478,6 +1503,7 @@ for my $extension ("xls", "xlsx", "csv") {
 		'2' => {
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_1',
 			'stock_name'   => 'test_accession1',
+			'intercrop_stock_name' => [],
 			'col_number'   => '1',
 			'is_a_control' => 0,
 			'rep_number'   => '1',
@@ -1492,6 +1518,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'block_number' => '2',
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_6',
 			'stock_name'   => 'test_accession3',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'range_number' => '2',
 			'row_number'   => '2',
@@ -1503,6 +1530,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_number'  => '7',
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_7',
 			'stock_name'   => 'test_accession4',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'rep_number'   => '1',
 			'is_a_control' => 0,
@@ -1517,7 +1545,8 @@ for my $extension ("xls", "xlsx", "csv") {
 			'block_number' => '1',
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_4',
 			'col_number'   => '1',
-			'stock_name'   => 'test_accession2'
+			'stock_name'   => 'test_accession2',
+			'intercrop_stock_name' => []
 		},
 		'9' => {
 			'range_number' => '2',
@@ -1525,6 +1554,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_number'  => '8',
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_8',
 			'stock_name'   => 'test_accession4',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'rep_number'   => '2',
 			'is_a_control' => 0,
@@ -1537,6 +1567,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_2',
 			'col_number'   => '1',
 			'stock_name'   => 'test_accession1',
+			'intercrop_stock_name' => [],
 			'is_a_control' => 0,
 			'rep_number'   => '2',
 			'block_number' => '1'
@@ -1547,6 +1578,7 @@ for my $extension ("xls", "xlsx", "csv") {
 			'plot_number'  => '5',
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_5',
 			'stock_name'   => 'test_accession3',
+			'intercrop_stock_name' => [],
 			'col_number'   => '2',
 			'is_a_control' => 0,
 			'rep_number'   => '1',
@@ -1554,6 +1586,7 @@ for my $extension ("xls", "xlsx", "csv") {
 		},
 		'4' => {
 			'stock_name'   => 'test_accession2',
+			'intercrop_stock_name' => [],
 			'col_number'   => '1',
 			'plot_name'    => 'Trial_upload_test_flexible-PLOT_3',
 			'block_number' => '1',

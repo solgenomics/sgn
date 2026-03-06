@@ -51,6 +51,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Trial;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -188,6 +189,18 @@ has 'include_dateless_items' => (
     default => sub { return 1; },
     );
 
+has 'include_intercrop_stocks' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
+has 'include_entry_numbers' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw'
@@ -221,6 +234,9 @@ sub get_phenotype_matrix {
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
+    my $include_intercrop_stocks = $self->include_intercrop_stocks;
+    my $include_entry_numbers = $self->include_entry_numbers;
+    my %trial_entry_numbers;
 
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
@@ -250,6 +266,7 @@ sub get_phenotype_matrix {
             start_date => $self->start_date(),
             end_date => $self->end_date(),
             include_dateless_items => $self->include_dateless_items(),
+            include_intercrop_stocks => $include_intercrop_stocks,
             limit=>$self->limit,
             offset=>$self->offset
         }
@@ -269,6 +286,26 @@ sub get_phenotype_matrix {
 
         if ($include_pedigree_parents){
             push @line, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
+        }
+
+        if ( $include_intercrop_stocks ) {
+            push(@line, 'intercropGermplasmDbId', 'intercropGermplasmName');
+        }
+
+        if ( $include_entry_numbers ) {
+            push(@line, 'germplasmEntryNumber');
+
+            # Get unique set of trial ids in data
+            my %trial_ids;
+            foreach (@$data) {
+                $trial_ids{$_->{'trial_id'}} = 1;
+            }
+
+            # Get the entry numbers for each trial
+            foreach my $trial_id (keys %trial_ids) {
+                my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $trial_id });
+                $trial_entry_numbers{$trial_id} = $trial->get_entry_numbers();
+            }
         }
 
         my @sorted_traits = sort keys(%$unique_traits);
@@ -323,7 +360,25 @@ sub get_phenotype_matrix {
                 push @line, ($parents->{'mother'}, $parents->{'mother_id'}, $parents->{'father'}, $parents->{'father_id'});
             }
 
-	        #print STDERR "OBS UNIT = ".Dumper($obs_unit);
+            if ( $include_intercrop_stocks ) {
+                my @ic_stock_ids;
+                my @ic_stock_names;
+                my $ic_stocks = $obs_unit->{intercrop_germplasm};
+                foreach my $ic_stock (@$ic_stocks) {
+                    push(@ic_stock_ids, $ic_stock->{stock_id});
+                    push(@ic_stock_names, $ic_stock->{stock_uniquename});
+                }
+                push(@line, join(',', @ic_stock_ids), join(',', @ic_stock_names));
+            }
+
+            if ( $include_entry_numbers ) {
+                my $trial = $obs_unit->{trial_id};
+                my $germplasm = $obs_unit->{germplasm_stock_id};
+                my $entry_number = $trial_entry_numbers{$trial}{$germplasm} || '';
+                push(@line, $entry_number);
+            }
+
+            #print STDERR "OBS UNIT = ".Dumper($obs_unit);
 	        my $observations = $obs_unit->{observations};
 
 	        #print STDERR "OBSERVATIONS BEFORE FORMAT: ".Dumper($observations);
@@ -379,6 +434,28 @@ sub get_phenotype_matrix {
         print STDERR "PhenotypeMatrix Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;
+
+        # Add intercrop stock headers, if requested
+        if ( $include_intercrop_stocks ) {
+            push(@metadata_headers, 'intercropGermplasmDbId', 'intercropGermplasmName');
+        }
+
+        # Add entry number stock headers, if requested
+        if ( $include_entry_numbers ) {
+            push(@metadata_headers, 'germplasmEntryNumber');
+
+            # Get unique set of trial ids in data
+            my %trial_ids;
+            foreach (@$data) {
+                $trial_ids{$_->{'trial_id'}} = 1;
+            }
+
+            # Get the entry numbers for each trial
+            foreach my $trial_id (keys %trial_ids) {
+                my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $trial_id });
+                $trial_entry_numbers{$trial_id} = $trial->get_entry_numbers();
+            }
+        }
 
         foreach my $d (@$data) {
             my $value = "";
@@ -446,6 +523,28 @@ sub get_phenotype_matrix {
                 $entry_type,
                 $d->{plant_number}
             ];
+
+            # add intercrop stocks, if requested
+            if ( $include_intercrop_stocks ) {
+                my @ic_stock_ids;
+                my @ic_stock_names;
+                my $ic_stocks = $d->{intercrop_stocks};
+                foreach my $ic_stock (@$ic_stocks) {
+                    push(@ic_stock_ids, $ic_stock->{id});
+                    push(@ic_stock_names, $ic_stock->{name});
+                }
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_ids));
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_names));
+            }
+
+            # Include entry numbers, if requested
+            if ( $include_entry_numbers ) {
+                my $trial = $d->{trial_id};
+                my $germplasm = $d->{accession_stock_id};
+                my $entry_number = $trial_entry_numbers{$trial}{$germplasm} || '';
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, $entry_number);
+            }
+
             $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
 
             my $cvterm = $d->{trait_name};

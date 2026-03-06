@@ -1528,6 +1528,11 @@ function _finish() {
             } else if (plot.crossName) {
                 cellVal = plot.crossName;
             }
+            if ( plot.additionalInfo.intercropGermplasm ) {
+                for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
+                    cellVal += `,${plot.additionalInfo.intercropGermplasm[i].germplasmName}`;
+                }
+            }
         } else {
             cellVal = '';
         }
