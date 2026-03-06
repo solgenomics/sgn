@@ -112,6 +112,7 @@ sub add_stockprop_POST {
         }
 
         try {
+	    print STDERR "CREATING THE STOCKPROP $prop_type $prop\n";
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
 
             my $stock = CXGN::Stock->new({
@@ -124,21 +125,26 @@ sub add_stockprop_POST {
             });
             my $added_stock_id = $stock->store();
 
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+	    print STDERR "STOCK ADDED: $added_stock_id\n";
 
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
+            #my $dbh = $c->dbc->dbh();
+            #my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. " }; #.$refresh->{'message'} };
+
         } catch {
+	    print STDERR "AN ERROR OCCURRED: $_\n";
             $c->stash->{rest} = { error => "Failed: $_" }
         };
     } else {
+	print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
 	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
 	}
     } else {
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
-    #$c->stash->{rest} = { message => 'success' };
+    $c->stash->{rest} = { message => 'success' };
 }
 
 sub add_stockprop_GET {
@@ -267,6 +273,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
+		print STDERR "TRY ASSOCIATE A LOCUS\n";
                 my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
