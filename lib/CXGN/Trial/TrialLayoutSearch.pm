@@ -152,7 +152,7 @@ sub search {
     #For performance reasons the number of joins to stock can be reduced if a trial is given.
 
     my $from_clause = " FROM stock as observationunit
-        JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id = $plot_rel_type_id
+        JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id)
         JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
         JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $cross_type_id, $family_name_type_id)
         JOIN cvterm as germplasm_type ON (germplasm_type.cvterm_id = germplasm.type_id)

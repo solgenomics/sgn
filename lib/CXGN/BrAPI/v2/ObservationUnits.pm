@@ -290,7 +290,7 @@ sub _search {
             foreach my $i (@{$obs_unit->{intercrop_stocks}}) {
                 push(@intercrop, { germplasmDbId => $i->{id}, germplasmName => $i->{name} });
             }
-            $additional_info->{intercropGermplasm} = \@intercrop;
+            $additional_info->{intercropGermplasm} = \@intercrop if scalar(@intercrop) > 0;
         }
 
         push @data_window, {

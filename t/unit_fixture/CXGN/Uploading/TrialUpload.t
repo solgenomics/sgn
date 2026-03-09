@@ -683,7 +683,6 @@ for my $extension ("xls", "xlsx", "csv") {
 		}
 	};
 
-	# FAILS
 	is_deeply($parsed_data, $parsed_data_check, 'check trial excel parse data');
 
 	my $trial_create = CXGN::Trial::TrialCreate
