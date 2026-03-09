@@ -33,6 +33,7 @@ use CXGN::BreederSearch;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Job;
 use CXGN::File;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -70,13 +71,6 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $user_first_name = $c->user()->get_object()->get_first_name();
     my $user_last_name = $c->user()->get_object()->get_last_name();
 
-    my $validation_type;
-    if ($file_type eq "spreadsheet" && ! $is_treatment) {
-        $validation_type = "phenotyping_spreadsheet";
-    } elsif ($file_type eq "spreadsheet" && $is_treatment eq "treatment") {
-        $validation_type = "treatments";
-    }
-
     my $validation_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
@@ -86,11 +80,27 @@ sub upload_phenotype_verify_POST : Args(1) {
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             is_validation => 1,
-            file_type => $validation_type,
             user_name => "$user_first_name $user_last_name",
             file_id => $phenotype_metadata->{archived_file_id}
         }
     });
+
+    my $validation_type;
+    if ($file_type eq "spreadsheet" && ! $is_treatment) {
+        $validation_type = "phenotyping_spreadsheet";
+    } elsif ($file_type eq "spreadsheet" && $is_treatment eq "treatment") {
+        $validation_type = "treatments";
+    }
+    $validation_job->additional_args->{file_type} = $validation_type;
+    if ($is_treatment eq "treatment") {
+        $validation_job->additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
+        $validation_job->additional_args->{upload_spreadsheet_treatment_data_level} = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
+        $validation_job->additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
+    } else {
+        $validation_job->additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
+        $validation_job->additional_args->{upload_spreadsheet_phenotype_data_level} = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
+        $validation_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
+    }
 
     $validation_job->update_status("submitted");
 
@@ -180,6 +190,45 @@ sub upload_phenotype_store_POST : Args(1) {
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
 
+    my @filename_path = split("/", $phenotype_metadata->{archived_file});
+    my $filename = pop(@filename_path);
+
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
+
+    my $submit_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => "$filename phenotype upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            final_upload => 1,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $phenotype_metadata->{archived_file_id}
+        }
+    });
+
+    my $submit_type;
+    if ($file_type eq "spreadsheet" && ! $is_treatment) {
+        $submit_type = "phenotyping_spreadsheet";
+    } elsif ($file_type eq "spreadsheet" && $is_treatment eq "treatment") {
+        $submit_type = "treatments";
+    }
+    $submit_job->additional_args->{file_type} = $submit_type;
+    if ($is_treatment eq "treatment") {
+        $submit_job->additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
+        $submit_job->additional_args->{upload_spreadsheet_treatment_data_level} = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
+        $submit_job->additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
+    } else {
+        $submit_job->additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
+        $submit_job->additional_args->{upload_spreadsheet_phenotype_data_level} = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
+        $submit_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
+    }
+
+    $submit_job->update_status("submitted");
+
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
         basepath=>$c->config->{basepath},
         dbhost=>$c->config->{dbhost},
@@ -240,6 +289,19 @@ sub upload_phenotype_store_POST : Args(1) {
     push @$success_status, "Metadata saved for archived file.";
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
+
+    if (scalar(@$error_status) > 0) {
+        $submit_job->additional_args->{error_messages} = join("<br>", @$error_status);
+    }
+    if (scalar(@$success_status) > 0) {
+        $submit_job->additional_args->{success_messages} = join("<br>", @$success_status);
+    }
+
+    if (!$submit_job->additional_args->{error_messages} && !$submit_job->additional_args->{warning_messages}) {
+        $submit_job->update_status("finished");
+    } else {
+        $submit_job->update_status("failed");
+    }
 
     $c->stash->{rest} = {success => $success_status, error => $error_status};
 }
@@ -409,12 +471,13 @@ sub _prep_upload {
 
     ## Validate and parse uploaded file
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, undef);
+    my $display_filename = basename($archived_filename_with_path);
     if (!$validate_file) {
-        push @error_status, "Archived file not valid: $upload_original_name.";
+        push @error_status, "Archived file not valid: $display_filename.";
         return (\@success_status, \@error_status);
     }
     if ($validate_file == 1){
-        push @success_status, "File valid: $upload_original_name.";
+        push @success_status, "File valid: $display_filename.";
     } else {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
@@ -424,6 +487,7 @@ sub _prep_upload {
 
     ## Set metadata
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    $phenotype_metadata{'archived_file_id'} = $archived_file_id;
     $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
     my $operator = $user->get_object()->get_username();
     $phenotype_metadata{'operator'} = $operator;

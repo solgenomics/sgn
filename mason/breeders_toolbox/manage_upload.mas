@@ -72,6 +72,7 @@ $editable_vector_props
 <div class="well well-sm">
 <h3>File validation</h3>
     <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to complete the upload after passing validation. ', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
+        <img id="validation-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_validated_files_table">
             <thead>
             </thead>
@@ -86,6 +87,7 @@ $editable_vector_props
 <div class="well well-sm">
 <h3>Uploads in-progress</h3>
     <&| /page/info_section.mas, title => ' ', id => 'in_progress_uploads_table_section', collapsible => 1, collapsed => 1 &>
+        <img id="uploads-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_in_progress_uploads_table">
             <thead>
             </thead>
@@ -106,6 +108,7 @@ $editable_vector_props
         <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed, canceled, and timed-out uploads</button> &nbsp; &nbsp;
         <br>
         <br>
+        <img id="completed-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_completed_uploads_table">
             <thead>
             </thead>
@@ -305,6 +308,10 @@ function load_archived_files_table() {
 function load_in_progress_validations_table() {
     jQuery.ajax({
         url: '/ajax/job/validations_in_progress/<% $sp_person_id %>',
+        beforeSend: function() {
+            jQuery('#validation-loading-spinner').show();
+            jQuery('#upload_factory_validated_files_table').hide();
+        },
         success: function(response) {
             if (response.error) {
                 alert(response.error);
@@ -372,6 +379,9 @@ function load_in_progress_validations_table() {
                     jQuery("#in_progress_validations_table_section_offswitch").trigger("click");
                 }
 
+                jQuery('#validation-loading-spinner').hide();
+                jQuery('#upload_factory_validated_files_table').show();
+
                 let uploads_in_progress = jQuery('#upload_factory_validated_files_table').DataTable({
                     order : [[0, 'desc']]
                 });
@@ -386,6 +396,10 @@ function load_in_progress_validations_table() {
 function load_in_progress_uploads_table() {
     jQuery.ajax({
         url: '/ajax/job/uploads_in_progress/<% $sp_person_id %>',
+        beforeSend: function() {
+            jQuery('#uploads-loading-spinner').show();
+            jQuery('#upload_factory_in_progress_uploads_table').hide();
+        },
         success: function(response) {
             if (response.error) {
                 alert(response.error);
@@ -445,6 +459,9 @@ function load_in_progress_uploads_table() {
                     jQuery("#in_progress_uploads_table_section_offswitch").trigger("click");
                 }
 
+                jQuery('#uploads-loading-spinner').hide();
+                jQuery('#upload_factory_in_progress_uploads_table').show();
+
                 let uploads_in_progress = jQuery('#upload_factory_in_progress_uploads_table').DataTable({
                     order : [[0, 'desc']]
                 });
@@ -459,6 +476,10 @@ function load_in_progress_uploads_table() {
 function load_completed_uploads_table() {
     jQuery.ajax({
         url: '/ajax/job/completed_uploads/<% $sp_person_id %>',
+        beforeSend: function() {
+            jQuery('#completed-loading-spinner').show();
+            jQuery('#upload_factory_completed_uploads_table').hide();
+        },
         success: function(response) {
             if (response.error) {
                 alert(response.error);
@@ -514,6 +535,9 @@ function load_completed_uploads_table() {
                 } else {
                     jQuery("#completed_uploads_table_section_offswitch").trigger("click");
                 }
+
+                jQuery('#completed-loading-spinner').hide();
+                jQuery('#upload_factory_completed_uploads_table').show();
 
                 let uploads_in_progress = jQuery('#upload_factory_completed_uploads_table').DataTable({
                     order : [[0, 'desc']]
@@ -1968,6 +1992,8 @@ function submit_upload_job() {
         jQuery(this).modal("hide");
     });
 
+    jQuery('#working_modal').modal("show");
+
     switch(submit_params.upload_type) {
         case 'trials' : 
             jQuery.ajax({
@@ -1979,11 +2005,14 @@ function submit_upload_job() {
                     'archived_file_id' : submit_params.file_id
                 },
                 success: function(response) {
+                    jQuery('#working_modal').modal("hide");
                     if (response.error) {
                         alert(`An error occurred: ${response.error}`);
                     }
+                    refresh_upload_tables();
                 },
                 error: function() {
+                    jQuery('#working_modal').modal("hide");
                     alert("An error occurred processing trial upload, check console.");
                     return;
                 }
@@ -2000,26 +2029,66 @@ function submit_upload_job() {
                     'archived_file_id' : submit_params.file_id
                 },
                 success: function(response) {
+                    jQuery('#working_modal').modal("hide");
                     if (response.error) {
                         //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
                         console.log(response.error);
                     }
+                    refresh_upload_tables();
                 },
                 error: function() {
+                    jQuery('#working_modal').modal("hide");
                     alert("An error occurred submitting phenotype validation, check console.");
                     return;
                 }
             });
             break;
-        default :   
+        default :
+            jQuery('#working_modal').modal("hide");   
             alert("Something strange happened... I got an invalid upload type: "+submit_params.upload_type);
             break;
     }
-    refresh_upload_tables();
 }
 
-function commit_upload_job(options) {
-    //TODO
+function commit_upload_job(job_id) {
+    let job = job_dict[job_id];
+    let upload_type = job.args.additional_args.file_type;
+
+    jQuery('#working_modal').modal("show");
+
+    console.dir(job.args);
+
+    switch(upload_type) {
+        case 'phenotyping_spreadsheet' :
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_store/spreadsheet',
+                type : 'POST',
+                data : {
+                    'upload_spreadsheet_phenotype_file_format' : job.args.additional_args.upload_spreadsheet_phenotype_file_format,
+                    'upload_spreadsheet_phenotype_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
+                    'upload_spreadsheet_phenotype_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
+                    'archived_file_id' : job.args.additional_args.file_id
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal("hide");  
+                    if (response.error) {
+                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    jQuery('#working_modal').modal("hide");  
+                    alert("An error occurred submitting phenotype validation, check console.");
+                    return;
+                }
+            });
+            break;
+        default : 
+            jQuery('#working_modal').modal("hide");  
+            alert("Something strange happened... I got an invalid job type: "+upload_type);
+            break;
+    }
 }
 
 function save_file_type(file_id, type) {
@@ -2099,7 +2168,7 @@ jQuery(document).ready(function(){
     load_archived_files_table();
     refresh_upload_tables();
 
-    setInterval(refresh_upload_tables, 5000);
+    setInterval(refresh_upload_tables, 60000);
 
     jQuery('#upload_factory_new_file_btn').click(function(event){
         event.preventDefault();
@@ -2166,7 +2235,8 @@ jQuery(document).ready(function(){
     });
 
     jQuery(document).on('click', '.validation-commit-btn', function() {
-
+        let job_id = jQuery(this).attr("id").replace('validation_commit_', '');
+        commit_upload_job(job_id);
     });
 
     jQuery(document).on('click', '.view-report-btn', function() {
