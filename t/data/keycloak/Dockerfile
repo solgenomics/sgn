@@ -13,6 +13,8 @@ ENV KC_HTTP_RELATIVE_PATH=/auth
 ENV KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
 ENV KC_PROXY_HEADERS=xforwarded
 
+USER 1000
+
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 CMD ["start-dev", "--import-realm"]
 
