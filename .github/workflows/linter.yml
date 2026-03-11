@@ -39,7 +39,7 @@ jobs:
           # To report GitHub Actions status checks
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HTMLHINT_CONFIG_FILE: .github/linters/.htmlhintrc
-          GITLEAKS_CONFIG: .github/linters/gitleaksconfig.toml
+          GITLEAKS_CONFIG_FILE: .github/linters/gitleaksconfig.toml
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_ANSIBLE: false
           VALIDATE_CHECKOV: false
