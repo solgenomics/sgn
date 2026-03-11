@@ -4,7 +4,7 @@ RUN mkdir -p /opt/keycloak/data/import
 COPY realm.json /opt/keycloak/data/import/realm.json
 
 ENV KC_DB=postgres
-ENV KC_DB_URL=jdbc:postgresql://keycloak_db:5432/keycloak
+ENV KC_DB_URL=jdbc:postgresql://keycloak_db/keycloak
 ENV KC_BOOTSTRAP_ADMIN_USERNAME=admin
 ENV KC_HTTP_ENABLED=true
 ENV KC_HTTP_PORT=9080
