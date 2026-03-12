@@ -4,7 +4,7 @@
 <& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'popup', 'd3.d3Min.js', 'tools.LabelDesigner', 'CXGN.BreederSearch', 'bootstrap-select_min'] &>
 <& /page/page_title.mas, title=>"Label Designer" &>
 
-<div id="label_designer_warning" class="boxbgcolor5"><center><b>Note:</b> Do not print the labels directly from the browser as the browser adds headers and footers that will distort the alignment of the labels. Instead, download the pdf file and print it from a PDF reader app.</center></div>
+<div id="label_designer_warning" class="list-group-item-warning" style="padding:3px;"><center><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:20px;"></span>&nbsp;&nbsp;<b>Note:</b> Do not print the labels directly from the browser as the browser adds headers and footers that will distort the alignment of the labels. Instead, download the pdf file and print it from a PDF reader app.</center></div>
 <br /><br />
 <&| /util/workflow.mas , id=> "label_designer_workflow"&>
 
