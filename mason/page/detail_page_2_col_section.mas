@@ -89,6 +89,9 @@ $derived_accession_relationship => undef
 $related_stock_link => undef
 $original_stock_link => undef
 $is_in_trial => undef
+$vector_related_genes => undef
+$vector_analyzed_tissue_types => undef
+$number_of_insertions => undef
 $is_a_parent => undef
 
 #Specific to genotyping protocol detail page
@@ -162,6 +165,20 @@ $name_format => undef
 $default_plant_material_id => undef
 $default_plant_material_name => undef
 
+#specific to transformation ID page
+$transformation_id => undef
+$vector_id => undef
+$vector_name => undef
+$control_id => undef
+$identifier_id => undef
+$identifier_name => undef
+$material_id => undef
+$material_name => undef
+$updated_status_type => undef
+$stock_type_page => undef
+$user_role => undef
+$has_associated_transformants => undef
+
 #Specific to activity page
 $vendor_id => undef
 $parent_project_id => undef
@@ -169,6 +186,11 @@ $activity_type => undef
 $field_headers => ()
 
 $data_type => "" # for access_denied mason
+
+#Specific to propagation page
+$propagation_type => undef
+$date => undef
+$logged_in_name => undef
 
 </%args>
 
@@ -227,66 +249,35 @@ $data_type => "" # for access_denied mason
     <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type &>
 % }
 
+% if ($info_section_id eq 'trial_analysis_tools') {
+    <& /breeders_toolbox/analysis_tools_section.mas,
+        trial_id => $trial_id,
+        trial_name => $trial_name
+    &>
+
+% if ($hidap_enabled) {
+    <& /hidap/hidap_trial_link.mas,
+        main_production_site_url => $main_production_site_url,
+        program                  => $breeding_program_name,
+        folder                   => $folder_name,
+        trial                    => $trial_name
+    &>
+% }
+% } #End trial_analysis_tools
+
+% if ($info_section_id eq 'trial_nirs_section') {
+    <& /breeders_toolbox/trial/trial_nirs_data.mas,
+        trial_id => $trial_id
+    &>
+% } #End trial nirs data
+
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
 % } #End compute_derived_traits
 % if ($info_section_id eq 'trial_upload_files'){
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
-% if ($info_section_id eq 'trial_analysis_tools'){
 
-
-			        <!-- analysis tools on saved measurements -->
-			       <& /breeders_toolbox/trial/saved_measurement_analysis.mas,
-				     trial_id => $trial_id
-				&>
-                                <!-- Phenotypic correlation analysis -->
-                                <& /solgs/tools/correlation/analysis.mas,
-                                    corr_pop_id => $trial_id,
-                                    corr_pop_name => $trial_name
-                                &>
-
-                                <& /solgs/tools/anova/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                 <!-- Population structure analysis PCA -->
-                                <& /solgs/tools/pca/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- Clustering -->
-                                <& /solgs/tools/cluster/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- kinship and inbreeding-->
-                                <& /solgs/tools/kinship/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-
-                                  <& /tools/heritability/heritability.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                <& /solgs/population/trait_acronyms.mas,
-                                  trial_id => $trial_id
-                              &>
-
-% if ($c->req->base =~ /sweetpotatobase/) {
-                                <& /tools/qualityControl/qualityControl.mas,
-                                    trial_id => $trial_id
-                                &>
-% }
-
-% if ($hidap_enabled) {
-                                <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
-% }
-% } #End trial_analysis_tools
-% if ($info_section_id eq 'trial_nirs_section'){
-                                <& /breeders_toolbox/trial/trial_nirs_data.mas, trial_id => $trial_id &>
-% } #End trial nirs data
 % if ($info_section_id eq 'trial_weather_data'){
                                 <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
 % } #End trial_weather_data
@@ -360,15 +351,25 @@ $data_type => "" # for access_denied mason
 % if ($info_section_id eq 'vector_related_accessions_section'){
                                 <& /stock/vector_related_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End vector_related_accessions_section
-% if ($info_section_id eq 'vector_obsoleted_accessions_section'){
-                                <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_obsoleted_accessions_section
-% if ($info_section_id eq 'vector_transgenic_line_details_section'){
-                                <& /stock/vector_transformant_details.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_transgenic_line_details_section
+% if ($info_section_id eq 'obsoleted_accessions_section'){
+                                <& /transformation/obsoleted_accessions.mas, vector_id => $vector_id, transformation_id => $transformation_id, program_name => $program_name &>
+% } #End obsoleted_accessions_section
+% if ($info_section_id eq 'transgenic_line_details_section'){
+                                <& /transformation/transformant_details.mas, vector_id => $vector_id, transformation_id => $transformation_id, vector_name => $vector_name, stock_type => $type_name, vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types, program_name => $program_name &>
+% } #End transgenic_line_details_section
 % if ($info_section_id eq 'related_transformation_info_section'){
-                                <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
+                                <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, vector_related_genes => $vector_related_genes, number_of_insertions => $number_of_insertions &>
 % } #End related_transformation_info_section
+% if ($info_section_id eq 'control_transgenic_lines_section'){
+                                <& /transformation/control_transformants_section.mas, control_id => $control_id &>
+% } #End control_transgenic_lines_section
+% if ($info_section_id eq 'transformation_update_status_section'){
+                                <& /transformation/transformation_update_status_section.mas, identifier_id => $identifier_id, identifier_name => $identifier_name, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page, user_role => $user_role &>
+% } #End transformation_update_status_section
+% if ($info_section_id eq 'delete_transformation_section'){
+                                <& /transformation/delete_transformation_section.mas, transformation_id => $transformation_id, has_associated_transformants => $has_associated_transformants &>
+% } #End delete_transformation_section
+
 
 
 % if ($info_section_id eq 'stock_images_section'){
@@ -686,6 +687,12 @@ $data_type => "" # for access_denied mason
                                 <& /transformation/transformation_project_deletion.mas, trial_id=>$trial_id &>
 % } #End transformation_project_deletion_section
 
+% if ($info_section_id eq 'propagation_project_details'){
+                                <& /propagation/propagation_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner, propagation_type => $propagation_type, date => $date, logged_in_name=>$logged_in_name &>
+% } #End propagation_project_details
+% if ($info_section_id eq 'propagation_group_ids_in_project_section'){
+                                <& /propagation/propagation_groups_in_project.mas, trial_id=>$trial_id &>
+% } #End propagation_group_ids_in_project_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

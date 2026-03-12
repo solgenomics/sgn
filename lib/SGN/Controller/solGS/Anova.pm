@@ -45,11 +45,12 @@ sub anova_check_design : Path('/anova/check/design/') Args(0) {
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args( $c, $args );
 
-    my $design    = $self->get_trial_design($c);
-    my $supported = $self->check_design_support($design) if $design;
+    my $design = $self->get_trial_design($c);
+    my $supported;
+    $supported = $self->check_design_support($design) if $design;
 
     if ( !$design ) {
-        $c->stash->{rest}{'Error'} = 'This trial has no design to apply ANOVA.';
+        $c->stash->{rest}{'Error'} = 'This trial has no design. ANOVA can not be applied.';
     }
     elsif ( $design && !$supported ) {
         $c->stash->{rest}{'Error'} = $design
@@ -162,9 +163,7 @@ sub create_anova_phenodata_file {
         $c->controller('solGS::AsyncJob')->run_async($c);
     }
 
-    my $pheno_file = $self->trial_phenotype_file($c);
-
-    return $pheno_file;
+    return $self->trial_phenotype_file($c);
 
 }
 
@@ -189,9 +188,8 @@ sub get_trial_design {
         }
     );
 
-    my $design = $trial->get_design_type();
+    return $trial->get_design_type();
 
-    return $design;
 
 }
 

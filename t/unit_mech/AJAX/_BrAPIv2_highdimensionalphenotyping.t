@@ -58,6 +58,7 @@ my $temp_basedir = $f->config->{tempfiles_subdir};
     };
 is($trial->create_tissue_samples(['leaf', 'root' ], 1, 1, undef, undef, $phenotype_store_config), 1, 'test create tissue samples without tissue numbers');
 
+# NIRS Endpoints
 my $matrix_file = $f->config->{basename} . "t/data/trial/nirs_data_matrix.csv";
 
 #verify test NIRS data
@@ -143,6 +144,122 @@ $protocol_id = $response->{result}{data}[0]{protocolDbId};
 $instance_id = $response->{result}{data}[0]{instanceDbId};
 
 is_deeply($response, { metadata => { datafiles => [], pagination => { currentPage => 0, pageSize => 10, totalCount => 1, totalPages => 1 }, status => [ { messageType => 'INFO', message => 'BrAPI base call found with page=0, pageSize=10' }, { message => 'Loading CXGN::BrAPI::v2::Nirs', messageType => 'INFO' }, { messageType => 'INFO', message => 'Nirs instance result constructed' } ] }, result => { data => [ { protocolDbId => $protocol_id, deviceSerialNumber => undef, columnHeaders => $col_headers, uploadTimestamp => $timestamp, instanceDbId => $instance_id } ] } });
+
+# Transcriptomics Endpoints
+my $transcriptomics_matrix_file = $f->config->{basename} . "t/data/trial/transcriptomics_data_matrix.csv";
+my $transcriptomics_metadata_file = $f->config->{basename} . "t/data/trial/transcriptomics_metadata.csv";
+
+#verify test transcriptomics data
+$response = $ua->post(
+    'http://localhost:3010/ajax/highdimensionalphenotypes/transcriptomics_upload_verify',
+    Content_Type => 'form-data',
+    Content => [
+        "upload_transcriptomics_spreadsheet_protocol_name" => "Test Protocol",
+        "upload_transcriptomics_spreadsheet_protocol_desc" => "Test Desc",
+        "upload_transcriptomics_spreadsheet_protocol_unit" => "RPKM",
+        "upload_transcriptomics_spreadsheet_protocol_genome" => "v1.0",
+        "upload_transcriptomics_spreadsheet_protocol_annotation" => "v1.0",
+        "upload_transcriptomics_spreadsheet_data_level" => "tissue_samples",
+        "sgn_session_id" => $sgn_session_id,
+        "upload_transcriptomics_spreadsheet_file_input" =>
+            [$transcriptomics_matrix_file, "transcriptomics_data_matrix"],
+        "upload_transcriptomics_transcript_metadata_spreadsheet_file_input" =>
+            [$transcriptomics_metadata_file, "transcript_metadata_file"],
+    ]
+);
+
+my $verify_message = $response->decoded_content;
+my $verify_message_hash = decode_json $verify_message;
+
+is($verify_message_hash->{success}->[0], 'File transcriptomics_data_matrix saved in archive.');
+is($verify_message_hash->{success}->[1], 'File transcript_metadata_file saved in archive.');
+is($verify_message_hash->{success}->[2], 'File valid: transcriptomics_data_matrix.');
+is($verify_message_hash->{success}->[3], 'File data successfully parsed.');
+is($verify_message_hash->{success}->[4], 'File data verified. Plot names and trait names are valid.');
+
+#Store test transcriptomics data
+$response = $ua->post(
+    'http://localhost:3010/ajax/highdimensionalphenotypes/transcriptomics_upload_store',
+    Content_Type => 'form-data',
+    Content => [
+        "upload_transcriptomics_spreadsheet_protocol_name" => "Test Protocol1",
+        "upload_transcriptomics_spreadsheet_protocol_desc" => "Test Desc",
+        "upload_transcriptomics_spreadsheet_protocol_unit" => "RPKM",
+        "upload_transcriptomics_spreadsheet_protocol_genome" => "v1.0",
+        "upload_transcriptomics_spreadsheet_protocol_annotation" => "v1.0",
+        "upload_transcriptomics_spreadsheet_data_level" => "tissue_samples",
+        "sgn_session_id" => $sgn_session_id,
+        "upload_transcriptomics_spreadsheet_file_input" =>
+            [$transcriptomics_matrix_file, "transcriptomics_data_matrix"],
+        "upload_transcriptomics_transcript_metadata_spreadsheet_file_input" =>
+            [$transcriptomics_metadata_file, "transcript_metadata_file"],
+    ]
+);
+
+my $store_message = $response->decoded_content;
+my $store_message_hash = decode_json $store_message;
+print STDERR "store message hash: " . Dumper($store_message_hash);
+
+is($store_message_hash->{success}->[0], 'File transcriptomics_data_matrix saved in archive.');
+is($store_message_hash->{success}->[1], 'File transcript_metadata_file saved in archive.');
+is($store_message_hash->{success}->[2], 'File valid: transcriptomics_data_matrix.');
+is($store_message_hash->{success}->[4], 'File data verified. Plot names and trait names are valid.');
+
+$mech->get_ok('http://localhost:3010/brapi/v2/transcriptomics/protocols');
+$response = decode_json $mech->content;
+
+is($response->{metadata}->{status}->[2]->{message}, 'Transcriptomics protocol result constructed');
+ok(scalar @{$response->{result}->{data}} >= 1, 'At least one transcriptomics protocol returned');
+
+my $transcriptomics_protocol_id = int($response->{result}->{data}->[0]->{protocolDbId});
+
+# Get transcriptomics instances
+$mech->get_ok('http://localhost:3010/brapi/v2/transcriptomics/instances');
+$response = decode_json $mech->content;
+
+is($response->{metadata}->{status}->[2]->{message}, 'transcriptomics instance result constructed');
+ok(scalar @{$response->{result}->{data}} >= 1, 'At least one transcriptomics instance returned');
+
+my $transcriptomics_instance_id = $response->{result}->{data}->[0]->{instanceDbId};
+my $col_headers = $response->{result}->{data}->[0]->{columnHeaders};
+
+ok(defined $transcriptomics_instance_id, 'Transcriptomics instanceDbId defined');
+ok(ref($col_headers) eq 'ARRAY', 'Column headers returned as array');
+
+# Get specific instance by protocol + instance
+$mech->get_ok( 'http://localhost:3010/brapi/v2/transcriptomics/instances?protocolDbId=' . $transcriptomics_protocol_id . '&instanceDbId=' . $transcriptomics_instance_id );
+
+$response = decode_json $mech->content;
+
+is($response->{result}->{data}->[0]->{protocolDbId}, $transcriptomics_protocol_id, 'Protocol matches');
+is($response->{result}->{data}->[0]->{instanceDbId}, $transcriptomics_instance_id, 'Instance matches');
+
+# Transcriptomics search endpoint
+$mech->get_ok('http://localhost:3010/brapi/v2/transcriptomics');
+$response = decode_json $mech->content;
+
+is($response->{metadata}->{status}->[2]->{message}, 'Transcriptomics result constructed');
+ok(ref($response->{result}->{data}) eq 'ARRAY', 'Transcriptomics search returns array');
+
+# Transcriptomics matrix by instance
+$mech->get_ok( 'http://localhost:3010/brapi/v2/transcriptomics/matrix?instanceDbId=' . $transcriptomics_instance_id );
+
+$response = decode_json $mech->content;
+
+is($response->{metadata}->{status}->[2]->{message}, 'Transcriptomics matrix result constructed');
+
+ok(defined $response->{result}->{protocolDbId}, 'Matrix protocolDbId defined');
+ok(defined $response->{result}->{instanceDbId}, 'Matrix instanceDbId defined');
+ok(ref($response->{result}->{columnHeaders}) eq 'ARRAY', 'Matrix column headers returned');
+ok(ref($response->{result}->{data}) eq 'ARRAY', 'Matrix data returned');
+
+# Transcriptomics matrix by protocol
+$mech->get_ok( 'http://localhost:3010/brapi/v2/transcriptomics/matrix?protocolDbId=' . $transcriptomics_protocol_id );
+
+$response = decode_json $mech->content;
+
+is($response->{metadata}->{status}->[2]->{message}, 'Transcriptomics matrix result constructed');
+ok(ref($response->{result}->{data}) eq 'ARRAY', 'Matrix by protocol returns data');
 
 $f->clean_up_db();
 

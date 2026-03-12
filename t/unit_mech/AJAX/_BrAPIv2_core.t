@@ -335,4 +335,10 @@ is_deeply($response, {'result' => {'data' => [{'startDate' => undef,'programDbId
 
 $f->clean_up_db();
 
+# set golocation name back to NA (this test renames it to "Location 2"
+#
+my $row = $f->bcs_schema()->resultset("NaturalDiversity::NdGeolocation")->find( { nd_geolocation_id => 25 } );
+$row->description("NA");
+$row->update();
+
 done_testing();

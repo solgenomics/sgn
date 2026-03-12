@@ -25,6 +25,10 @@ jQuery(document).ready(function($) {
         refreshTransformationProjectJsTree(1);
     });
 
+    jQuery("[name='refresh_propagation_project_jstree_html']").click( function() {
+        refreshPropagationProjectJsTree(1);
+    });
+
 });
 
 function refreshTrailJsTree(refreshpage) {
@@ -152,6 +156,27 @@ function refreshTransformationProjectJsTree(refreshpage){
             error: function(response) {
                 jQuery("#working_modal").modal("hide");
                 alert('An error occurred refreshing transformation project jstree html');
+            }
+        });
+    }, 500);
+}
+
+function refreshPropagationProjectJsTree(refreshpage){
+    setTimeout(() => {
+        jQuery.ajax({
+            url: '/ajax/breeders/get_trials_with_folders?type=propagation',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (refreshpage == 1){
+                    location.reload();
+                }
+            },
+            error: function(response) {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred refreshing propagation project jstree html');
             }
         });
     }, 500);

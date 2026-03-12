@@ -25,6 +25,8 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Chado::Publication;
 use CXGN::Genotype::DownloadFactory;
+use CXGN::Stock::Vector;
+use CXGN::Transformation::Transformant;
 use CXGN::Stock::RelatedStocks;
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -293,12 +295,42 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$editable_stockprops .= ",PUI,organization";
     my $editable_vectorprops = $c->get_conf('editable_vector_props');
 
+    my $vector_related_genes;
+    my $vector_analyzed_tissue_types;
+    my $number_of_insertions;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
     my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $transgenic_type_id});
     my $is_a_transgenic_line;
     if ($transgenic_stockprop_rs) {
         $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+        if ($is_a_transgenic_line) {
+            my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
+            my $vector_construct = $transformant_obj->vector_construct();
+            my $vector_id;
+            if (@$vector_construct) {
+                $vector_id = $vector_construct->[0];
+                my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
+                $vector_related_genes = $vector_construct->Gene;
+            }
+
+            my $number_of_insertions_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id;
+            my $number_of_insertions_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $number_of_insertions_type_id});
+            if ($number_of_insertions_stockprop_rs) {
+                $number_of_insertions = $number_of_insertions_stockprop_rs->value();
+            }
+        }
+    }
+
+    if ($stock_type eq 'vector_construct') {
+        my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$stock_id);
+        $vector_related_genes = $vector_construct->Gene;
+        my $vector_assay_metadata = $vector_construct->assay_metadata;
+        if ($vector_assay_metadata) {
+            my $metadata_hash = decode_json $vector_assay_metadata;
+            my @assay_tissue_types = sort keys (%$metadata_hash);
+            $vector_analyzed_tissue_types = join(",",@assay_tissue_types);
+        }
     }
 
     my $derived_accession_relationship;
@@ -391,6 +423,9 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         related_stock_link => $related_stock_link,
         original_stock_link => $original_stock_link,
         is_in_trial => $is_in_trial,
+        vector_related_genes => $vector_related_genes,
+        vector_analyzed_tissue_types => $vector_analyzed_tissue_types,
+        number_of_insertions => $number_of_insertions,
         is_a_parent => $is_a_parent,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),

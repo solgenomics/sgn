@@ -42,6 +42,7 @@ use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::Vector;
 use CXGN::Stock::AddDerivedAccession;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -117,6 +118,7 @@ sub add_stockprop_POST {
         }
 
         try {
+	    print STDERR "CREATING THE STOCKPROP $prop_type $prop\n";
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
 
             my $stock = CXGN::Stock->new({
@@ -129,17 +131,27 @@ sub add_stockprop_POST {
 					 });
             my $added_stock_id = $stock->store();
 
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+	    print STDERR "STOCK ADDED: $added_stock_id\n";
 
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
+            #my $dbh = $c->dbc->dbh();
+            #my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. " }; #.$refresh->{'message'} };
+
         } catch {
+	    print STDERR "AN ERROR OCCURRED: $_\n";
             $c->stash->{rest} = { error => "Failed: $_" }
         };
     } else {
-	$c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
+
+	print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
+	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
+	}
+    } else {
+	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
+    $c->stash->{rest} = { message => 'success' };
 
 }
 
@@ -284,6 +296,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
+		print STDERR "TRY ASSOCIATE A LOCUS\n";
                 my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
@@ -2808,7 +2821,6 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
     $c->stash->{rest}={data=>\@related_accessions};
 }
 
-
 sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_obsoleted_accessions') Args(0){
     my $self = shift;
     my $c = shift;
@@ -2869,6 +2881,7 @@ sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('dat
 }
 
 
+
 =head2 set_display_image
 
 Usage: /stock/set_display_image
@@ -2927,6 +2940,108 @@ sub set_display_image_POST : Args(0) {
 
     $c->stash->{rest} = { success => 1 };
 
+}
+
+
+=head2 plot_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub plot_autocomplete : Local : ActionClass('REST') { }
+
+sub plot_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='plot' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 plant_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub plant_autocomplete : Local : ActionClass('REST') { }
+
+sub plant_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='plant' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
+}
+
+
+=head2 tissue_sample_autocomplete
+
+ Usage:
+ Desc:
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub tissue_sample_autocomplete : Local : ActionClass('REST') { }
+
+sub tissue_sample_autocomplete_GET :Args(0) {
+    my ($self, $c) = @_;
+
+    my $term = $c->req->param('term');
+
+    $term =~ s/(^\s+|\s+)$//g;
+    $term =~ s/\s+/ /g;
+
+    my @response_list;
+    my $q = "select distinct(stock.uniquename) from stock join cvterm on(type_id=cvterm_id) where stock.uniquename ilike ? and cvterm.name='tissue_sample' ORDER BY stock.uniquename LIMIT 20";
+    my $sth = $c->dbc->dbh->prepare($q);
+    $sth->execute('%'.$term.'%');
+    while (my ($stock_name) = $sth->fetchrow_array) {
+        push @response_list, $stock_name;
+    }
+
+    #print STDERR Dumper @response_list;
+    $c->stash->{rest} = \@response_list;
 }
 
 
