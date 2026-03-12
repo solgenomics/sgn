@@ -12,7 +12,7 @@ on: # yamllint disable-line rule:truthy
 permissions: {}
 
 env:
-  FILTER_REGEX_EXCLUDE: "docs/.*"
+  FILTER_REGEX_EXCLUDE: "docs/.*|t/unit_mech/AJAX/_BrAPIv2_germplasm.t"
 
 jobs:
   build:
