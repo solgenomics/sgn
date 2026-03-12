@@ -1,6 +1,6 @@
 # Keycloak
 
-1. Build and push the docker image.
+1. Build and push the Docker image.
 
    ```bash
    docker build -t <DOCKERHUB NAME>/keycloak:26.5.1-0-breedbase-testing .
