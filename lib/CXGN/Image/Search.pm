@@ -289,7 +289,7 @@ sub search {
         } else {
             foreach (@$image_name_list) {
                 push @or_clause, "image.name ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -302,7 +302,7 @@ sub search {
         } else {
             foreach (@$original_filename_list) {
                 push @or_clause, "image.original_filename ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -315,7 +315,7 @@ sub search {
         } else {
             foreach (@$description_list) {
                 push @or_clause, "image.description ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -328,7 +328,7 @@ sub search {
         } else {
             foreach (@$tag_list) {
                 push @or_clause, "tags.name ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
         if (!$include_obsolete_tags) {
@@ -347,7 +347,7 @@ sub search {
         } else {
             foreach (@$submitter_username_list) {
                 push @or_clause, "submitter.username ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -360,7 +360,7 @@ sub search {
         } else {
             foreach (@$submitter_first_name_list) {
                 push @or_clause, "submitter.first_name ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -373,7 +373,7 @@ sub search {
         } else {
             foreach (@$submitter_last_name_list) {
                 push @or_clause, "submitter.last_name ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -397,7 +397,7 @@ sub search {
         } else {
             foreach (@$stock_name_list) {
                 push @or_clause, "stock.uniquename ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -420,7 +420,7 @@ sub search {
         } else {
             foreach (@$project_name_list) {
                 push @or_clause, "project.name ilike ?";
-		push @question_mark_values, $_;
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -433,7 +433,7 @@ sub search {
         } else {
             foreach (@$project_md_image_type_name_list) {
                 push @or_clause, "project_image_type.name ilike ?";
-		push @question_mark_values, $_;
+		        push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
