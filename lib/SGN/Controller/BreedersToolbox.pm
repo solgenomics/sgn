@@ -414,6 +414,40 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
 
     my @editable_vector_props = split ',',$c->get_conf('editable_vector_props');
 
+    # TODO: Change this to use the advanced permissions system, loop through allowed upload types and only add to list if allowed
+    my $allowed_upload_types = "<option value='null_choice'>Select...</option>".
+        "<option value='trials'>Trials (Multi-trial format)</option>".
+        "<option value='trial_metadata'>Trial Metadata</option>".
+        "<option value='genotyping_plate'>Genotyping Plates</option>".
+        "<option value='genotyping_data'>Genotyping Data</option>".
+        "<option value='locations'>Locations</option>".
+        "<option value='accessions'>Accessions</option>".
+        #"<option value='populations'>Populations</option>".
+        "<option value='seedlots'>Seedlots</option>".
+        "<option value='seedlot_inventory'>Seedlot Inventory</option>".
+        "<option value='seedlot_transaction'>Seedlot Transaction</option>".
+        "<option value='pedigrees'>Pedigrees</option>".
+        "<option value='crosses'>Crosses</option>".
+        "<option value='new_progenies'>New Progeny Names</option>".
+        "<option value='existing_progenies'>Existing Progeny Names</option>".
+        "<option value='family_names'>Cross Family Names</option>".
+        "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>".
+        "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>".
+        "<option value='datacollector_spreadsheet'>Datacollector Spreadsheet</option>".
+        "<option value='treatments'>Treatments</option>".
+        "<option value='gps_coords'>Plot GPS Coordinates</option>".
+        "<option value='spatial_layout'>Trial Spatial Layout</option>".
+        "<option value='change_accessions'>Accession Swap</option>".
+        "<option value='entry_numbers'>Entry Numbers</option>".
+        "<option value='nirs'>NIRS</option>".
+        "<option value='metabolomics'>Metabolomics</option>".
+        "<option value='transcriptomics'>Transcriptomics</option>".
+        "<option value='images'>Images</option>".
+        "<option value='soil_data'>Soil Data</option>".
+        "<option value='vectors'>Vectors</option>".
+        "<option value='subplots'>Subplots</option>".
+        "<option value='plants'>Plants</option>";
+
     $c->stash->{sp_person_id} = $sp_person_id;
     $c->stash->{editable_stock_props} = \%editable_stock_props;
     $c->stash->{editable_stock_props_definitions} = \%def_hash;
@@ -428,6 +462,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_upload.mas';
     $c->stash->{default_seedlot_material_type} = $default_seedlot_material_type;
     $c->stash->{editable_vector_props} = \@editable_vector_props;
+    $c->stash->{allowed_upload_types} = $allowed_upload_types;
 }
 
 sub manage_file_share_dump :Path("/breeders/file_share_dump") Args(0) {

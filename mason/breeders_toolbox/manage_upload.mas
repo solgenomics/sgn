@@ -12,6 +12,7 @@ $management_factor_types => ()
 $design_types => ()
 $default_seedlot_material_type => undef
 $editable_vector_props
+$allowed_upload_types => undef
 </%args>
 
 <%perl>
@@ -557,38 +558,7 @@ function refresh_upload_tables() {
 }
 
 function upload_type_options() {
-    return "<option value='null_choice'>Select...</option>"+
-        "<option value='trials'>Trials (Multi-trial format)</option>"+
-        "<option value='trial_metadata'>Trial Metadata</option>"+
-        "<option value='genotyping_plate'>Genotyping Plates</option>"+
-        "<option value='genotyping_data'>Genotyping Data</option>"+
-        "<option value='locations'>Locations</option>"+
-        "<option value='accessions'>Accessions</option>"+
-        //"<option value='populations'>Populations</option>"+
-        "<option value='seedlots'>Seedlots</option>"+
-        "<option value='seedlot_inventory'>Seedlot Inventory</option>"+
-        "<option value='seedlot_transaction'>Seedlot Transaction</option>"+
-        "<option value='pedigrees'>Pedigrees</option>"+
-        "<option value='crosses'>Crosses</option>"+
-        "<option value='new_progenies'>New Progeny Names</option>" +
-        "<option value='existing_progenies'>Existing Progeny Names</option>"+
-        "<option value='family_names'>Cross Family Names</option>" + 
-        "<option value='phenotyping_spreadsheet'>Phenotyping Spreadsheet</option>"+
-        "<option value='fieldbook_phenotypes'>Fieldbook Phenotypes</option>"+
-        "<option value='datacollector_spreadsheet'>Datacollector Spreadsheet</option>"+
-        "<option value='treatments'>Treatments</option>"+
-        "<option value='gps_coords'>Plot GPS Coordinates</option>"+
-        "<option value='spatial_layout'>Trial Spatial Layout</option>" +
-        "<option value='change_accessions'>Accession Swap</option>" +
-        "<option value='entry_numbers'>Entry Numbers</option>" +
-        "<option value='nirs'>NIRS</option>" +
-        "<option value='metabolomics'>Metabolomics</option>"+
-        "<option value='transcriptomics'>Transcriptomics</option>"+
-        "<option value='images'>Images</option>"+
-        "<option value='soil_data'>Soil Data</option>"+
-        "<option value='vectors'>Vectors</option>" + 
-        "<option value='subplots'>Subplots</option>"+
-        "<option value='plants'>Plants</option>";
+    return "<% $allowed_upload_types %>";
 }
 
 function process_file(file_data, upload_type) {
