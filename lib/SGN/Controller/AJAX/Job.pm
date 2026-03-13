@@ -412,7 +412,7 @@ sub retrieve_user_in_progress_validations :Path('/ajax/job/validations_in_progre
     return;
 }
 
-sub delete_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(1) {
+sub delete_completed_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(1) {
     my $self = shift;
     my $c = shift;
     my $sp_person_id = shift;
@@ -427,5 +427,51 @@ sub delete_upload_jobs :Path('/ajax/job/dismiss_completed_uploads') Args(1) {
         return;
     }
 
-    #TODO
+    try {
+        CXGN::Job->delete_finished_upload_jobs(
+            $bcs_schema,
+            $people_schema,
+            $sp_person_id
+        );
+    } catch {
+        print STDERR $_, "\n";
+        $c->stash->{rest} = {error => "Error dismissing finished jobs: $_"};
+        return;
+    };
+
+    $c->stash->{rest} = {success => 1};
+    return;
 }
+
+sub delete_dead_upload_jobs :Path('/ajax/job/dismiss_dead_uploads') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = shift;
+
+    my $bcs_schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+
+    my $logged_user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $role = $c->user() ? $c->user->get_object()->get_user_type() : undef;
+    if ($sp_person_id ne $logged_user && $role ne "curator") {
+        $c->stash->{rest} = {error => "You do not have permission to dismiss these finished uploads.\n"} ;
+        return;
+    }
+
+    try {
+        CXGN::Job->delete_dead_upload_jobs(
+            $bcs_schema,
+            $people_schema,
+            $sp_person_id
+        );
+    } catch {
+        print STDERR $_, "\n";
+        $c->stash->{rest} = {error => "Error dismissing failed and timed out jobs: $_"};
+        return;
+    };
+
+    $c->stash->{rest} = {success => 1};
+    return;
+}
+
+1; 

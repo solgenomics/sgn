@@ -896,7 +896,7 @@ sub delete_finished_jobs {
 
 =head2 delete_finished_upload_jobs(bcs_schema, people_schema, user_id)
 
-Deletes file upload jobs that have finished for the given user
+Deletes file upload jobs that have finished or canceled for the given user. Does not include validation jobs, which are still "in progress" even if the job itself has a finished status
 
 =cut
 
@@ -910,8 +910,66 @@ sub delete_finished_upload_jobs {
         die "Need to supply a user id.\n";
     } 
 
-    # get jobs, filter by user id, type id, status, and additional args (for what subtype of upload this is)
-    # TODO
+    eval {
+        my @job_ids;
+        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+        while(my $row = $rs->next()) {
+            push @job_ids, $row->sp_job_id();
+        }
+        foreach my $job_id (@job_ids){
+            my $job = $class->new({
+                people_schema => $people_schema,
+                schema => $bcs_schema,
+                sp_job_id => $job_id
+            });
+            if ($job->job_type() eq "upload" && $job->additional_args->{final_upload}) {
+                $job->delete();
+            }
+        }
+    };
+
+    if ($@) {
+        die "Encountered an error trying to delete jobs: $@\n";
+    }
+}
+
+=head2 delete_dead_upload_jobs(bcs_schema, people_schema, user_id)
+
+Deletes failed and timed out upload jobs for the given user
+
+=cut
+
+sub delete_dead_upload_jobs {
+    my $class = shift;
+    my $bcs_schema = shift;
+    my $people_schema = shift;
+    my $sp_person_id = shift;
+
+    if (!$sp_person_id) {
+        die "Need to supply a user id.\n";
+    } 
+
+    eval {
+        my @job_ids;
+        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+        while(my $row = $rs->next()) {
+            push @job_ids, $row->sp_job_id();
+        }
+        foreach my $job_id (@job_ids){
+            my $job = $class->new({
+                people_schema => $people_schema,
+                schema => $bcs_schema,
+                sp_job_id => $job_id
+            });
+            if ($job->job_type() eq "upload" && $job->additional_args->{final_upload}) {
+                $job->delete();
+            }
+        }
+    };
+
+    if ($@) {
+        die "Encountered an error trying to delete jobs: $@\n";
+    }
 }
 
 =head2 get_user_in_progress_uploads(bcs_schema, people_schema, user_id, user_role)

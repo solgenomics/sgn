@@ -72,7 +72,7 @@ $allowed_upload_types => undef
 
 <div class="well well-sm">
 <h3>File validation</h3>
-    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to complete the upload after passing validation. ', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
+    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to complete the upload after passing validation. Warning and error conditions will cause an upload to fail.', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
         <img id="validation-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_validated_files_table">
             <thead>
@@ -106,7 +106,7 @@ $allowed_upload_types => undef
     <&| /page/info_section.mas, title => ' ', id => 'completed_uploads_table_section', collapsible => 1, collapsed => 1 &>
         <br>
         <button id="dismiss_completed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all completed uploads</button> &nbsp; &nbsp;
-        <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed, canceled, and timed-out uploads</button> &nbsp; &nbsp;
+        <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed and timed-out uploads</button> &nbsp; &nbsp;
         <br>
         <br>
         <img id="completed-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
@@ -2216,15 +2216,59 @@ jQuery(document).ready(function(){
         let warnings = '';
         let errors = '';
         if (job_dict[job_id].args.additional_args?.success_messages) {
-            success = `${job_dict[job_id].args.additional_args.success_messages}<br>`;
+            success = `<p class="list-group-item-success" >${job_dict[job_id].args.additional_args.success_messages}</p>`;
         }
         if (job_dict[job_id].args.additional_args?.warning_messages) {
-            warnings = `${job_dict[job_id].args.additional_args.warning_messages}<br>`;
+            warnings = `<p class="list-group-item-warning" >${job_dict[job_id].args.additional_args.warning_messages}</p>`;
         }
         if (job_dict[job_id].args.additional_args?.error_messages) {
-            errors = job_dict[job_id].args.additional_args.error_messages
+            errors = `<p class="list-group-item-danger" >${job_dict[job_id].args.additional_args.error_messages}</p>`;
         }
         jQuery('#report_content_div').html(`${success}${warnings}${errors}`);
+    });
+
+    jQuery('#dismiss_completed_uploads_btn').on('click', function(){
+        jQuery.ajax({
+            url : '/ajax/job/dismiss_completed_uploads/'+"<% $sp_person_id %>",
+            beforeSend : function() {
+                jQuery('#working_modal').modal("show");
+            },
+            success : function(response) {
+                jQuery('#working_modal').modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert("Uploads dismissed.");
+                    refresh_upload_tables();
+                }
+            },
+            error : function() {
+                jQuery('#working_modal').modal("hide");
+                alert("An error occurred dismissing completed uploads, check console.");
+            }
+        });
+    });
+
+    jQuery('#dismiss_failed_uploads_btn').on('click', function(){
+        jQuery.ajax({
+            url : '/ajax/job/dismiss_dead_uploads/'+"<% $sp_person_id %>",
+            beforeSend : function() {
+                jQuery('#working_modal').modal("show");
+            },
+            success : function(response) {
+                jQuery('#working_modal').modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert("Uploads dismissed.");
+                    refresh_upload_tables();
+                }
+            },
+            error : function() {
+                jQuery('#working_modal').modal("hide");
+                alert("An error occurred dismissing failed and timed out uploads, check console.");
+            }
+        });
     });
 
     jQuery('#check_file_format_select').html(upload_type_options());
