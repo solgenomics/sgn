@@ -147,10 +147,10 @@ sub add_stockprop_POST {
 
 	print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
 	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
-	}
-    } else {
-	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
+#    } else {
+#	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/s#ubmitter account' };
+#    }
     $c->stash->{rest} = { message => 'success' };
 
 }
