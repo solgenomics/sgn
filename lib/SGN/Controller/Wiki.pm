@@ -34,7 +34,7 @@ sub view_home :Path('/wiki/') Args(0) {
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
-
+    $c->stash->{page_name} = "WikiHome";
     $c->stash->{template} = '/wiki/view.mas';
 }
 
