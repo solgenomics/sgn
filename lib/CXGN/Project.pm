@@ -2757,33 +2757,20 @@ sub total_phenotypes {
 
 sub add_additional_uploaded_file {
     my $self = shift;
-    my $user_id = shift;
-    my $archived_filename_with_path = shift;
-    my $md5checksum = shift;
+    my $file_id = shift;
     my $result = $self->get_nd_experiment_id();
     if ($result->{error}){
         return {error => $result->{error} };
     }
     my $nd_experiment_id = $result->{nd_experiment_id};
 
-    my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $file_row = $self->metadata_schema->resultset("MdFiles")
-        ->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'trial_additional_file_upload',
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-    my $file_id = $file_row->file_id();
     my $experiment_file = $self->phenome_schema->resultset("NdExperimentMdFiles")
         ->create({
             nd_experiment_id => $nd_experiment_id,
             file_id => $file_id,
         });
 
-    return {success => 1, file_id=>$file_id};
+    return {success => 1};
 }
 
 =head2 function get_additional_uploaded_files()

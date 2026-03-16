@@ -43,6 +43,7 @@ use CXGN::BreedersToolbox::Projects;
 use Sort::Key::Natural qw(natkeysort);
 use CXGN::Trial::ParseUpload;
 use CXGN::Job;
+use CXGN::File;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -2390,37 +2391,49 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
     }
 
     my $upload = $c->req->upload('trial_upload_additional_file');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $subdirectory = "trial_additional_file_upload";
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
-    my $time = DateTime->now();
-    my $timestamp = $time->ymd()."_".$time->hms();
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        $c->detach();
+    my $archived_filename_with_path;
+
+    if (!$archived_file_id) {
+        ## Store uploaded temporary file in archive
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+        my $time = DateTime->now();
+        my $timestamp = $time->ymd()."_".$time->hms();
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            file_type => 'trial_metadata',
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
-    unlink $upload_tempfile;
-    my $md5checksum = $md5->hexdigest();
 
-    my $result = $c->stash->{trial}->add_additional_uploaded_file($user_id, $archived_filename_with_path, $md5checksum);
+    my $result = $c->stash->{trial}->add_additional_uploaded_file($archived_file_id);
     if ($result->{error}){
         $c->stash->{rest} = {error=>$result->{error}};
         $c->detach();
     }
-    $c->stash->{rest} = { success => 1, file_id => $result->{file_id} };
+    $c->stash->{rest} = { success => 1, file_id => $archived_file_id };
 }
 
 sub get_trial_additional_file_uploaded : Chained('trial') PathPart('get_uploaded_additional_file') Args(0) {
