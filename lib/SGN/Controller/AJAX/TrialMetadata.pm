@@ -6418,8 +6418,6 @@ sub trial_collect_date_range :Chained('trial') :PathPart('collect_date_range') A
 	$end_date =~ s/(\d+\-\d+\-d+) (\d.*$)/$1 23:59:59.999/g;
     }
 
-
-
     # print STDERR "collect_date_range: START DATE $start_date, END DATE $end_date\n";
 
     $c->stash->{rest} = { trial_id => $trial_id,
