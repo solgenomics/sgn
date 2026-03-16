@@ -318,7 +318,7 @@ sub verify_accessions_file_POST : Args(0) {
             $new_list_name = $new_list_name . '-' . $timestamp;
         }
 
-        $new_list_id = CXGN::List::create_list($c->dbc->dbh, $new_list_name, 'Autocreated when upload accessions from file '.$upload_original_name.$timestamp, $user_id);
+        $new_list_id = CXGN::List::create_list($c->dbc->dbh, $new_list_name, 'Accessions created from the upload file '.$upload_original_name.$timestamp, $user_id);
         my $list = CXGN::List->new( { dbh => $c->dbc->dbh, list_id => $new_list_id } );
 
         $list->add_bulk(\@accession_names);
