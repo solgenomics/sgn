@@ -864,7 +864,7 @@ sub build_accession_properties_info {
     }
 
     # Build Header
-    my @accession_headers = ("accession_name", "species_name", "population_name");
+    my @accession_headers = ("accession_name", "create_date", "species_name", "population_name");
     push(@accession_headers, @stock_props);
 
     # Add Header to Rows
@@ -872,7 +872,7 @@ sub build_accession_properties_info {
     push(@accession_rows, \@accession_headers);
 
     # Start query blocks
-    my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
+    my $select = "SELECT stock.uniquename AS accession_name, stock.create_date AS create_date, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
     my $from = "FROM public.stock";
     my $joins = "LEFT JOIN public.organism USING (organism_id)";
     $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id AND stock_relationship.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship')))";
@@ -1170,7 +1170,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         if ($accession_list_id) {
             $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
             @accession_list = map { $_->[1] } @$accession_data;
-        
+
             my $t = CXGN::List::Transform->new();
             my $acc_t = $t->can_transform("accessions", "accession_ids");
             my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
@@ -1258,7 +1258,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
     my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    
+
     if ($download_format eq 'VCF') {
         $filename .= '.vcf';
     }
@@ -1351,7 +1351,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 
     my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    
+
     if ($download_format eq 'heatmap') {
         $filename .= '.pdf';
     }
@@ -1397,7 +1397,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
     mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
-    
+
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
     my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
@@ -1932,14 +1932,14 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
 
     my @download_rows = ();
     foreach my $obsolete_info (@$obsolete_metadata) {
-        my ($stock_id, $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
+        my ($stock_id, $stock_name, $create_date, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
         if ($obsolete_date =~ /Obsolete/) {
-            push @download_rows, [$stock_name, $stock_type, $obsolete_note, $obsolete_date,$full_name];
+            push @download_rows, [$stock_name, $stock_type, $create_date, $obsolete_note, $obsolete_date,$full_name];
         }
     }
-
+    
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "obsoleted_stocks_download_XXXXX", UNLINK=> 0);
 
     my $file_path = $tempfile . ".xlsx";
@@ -1948,7 +1948,7 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
     my $workbook = Excel::Writer::XLSX->new($file_path);
     my $worksheet = $workbook->add_worksheet();
 
-    my @header = ("Stock Name", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    my @header = ("Stock Name", "Stock Type", "Create Date", "Obsolete Note", "Obsolete Date", "Obsoleted by");
     $worksheet->write_row(0, 0, \@header);
 
     my $row_count = 1;
