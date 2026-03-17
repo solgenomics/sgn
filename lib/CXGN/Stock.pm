@@ -1711,7 +1711,7 @@ sub _retrieve_stockprop {
 =head2 _retrieve_stockprops
 
  Usage:
- Desc:         Retrieves stockprop as a list of [stockprop_id, value]
+ Desc:         Retrieves all stockprops as a list of [stockprop_id, type_id, value]
  Ret:
  Args:
  Side Effects:
@@ -1721,18 +1721,17 @@ sub _retrieve_stockprop {
 
 sub _retrieve_stockprops {
     my $self = shift;
-    my $type = shift;
     my @results;
 
     try {
         my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
-        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id(), type_id => $stockprop_type_id }, { order_by => {-asc => 'stockprop_id'} });
+        my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id() }, { join => 'cvterm', '+select' => 'cvterm.name', '+as' => 'cvterm_name'} , { order_by => {-asc => 'stockprop_id'} });
 
         while (my $r = $rs->next()){
-            push @results, [ $r->stockprop_id(), $r->value() ];
+            push @results, [ $r->stockprop_id(), $r->value(), $r->get_column('cvterm_name') ];
         }
     } catch {
-        #print STDERR "Cvterm $type does not exist in this database\n";
+        print STDERR "Cvterm $type does not exist in this database\n";
     };
 
     return @results;

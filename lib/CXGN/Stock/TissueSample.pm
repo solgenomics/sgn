@@ -227,7 +227,7 @@ has 'get_plate' => (
 
 =head2 Accessor get_source_plot()
 
-If the tissue sample is linked to a plot (meaning the setter source_observation_unit_stock_id was either a plot,plant,or tissue_sample) this 
+If the tissue sample is linked to a plot (meaning the setter source_observation_unit_stock_id was either a plot,plant,or tissue_sample) this
 Returns an ArrayRef of [$stock_id, $uniquename] for the plot
 
 =cut
@@ -241,7 +241,7 @@ has 'get_source_plot' => (
 
 =head2 Accessor get_source_plant()
 
-If the tissue sample is linked to a plant (meaning the setter source_observation_unit_stock_id was either a plant or tissue_sample) this 
+If the tissue sample is linked to a plant (meaning the setter source_observation_unit_stock_id was either a plant or tissue_sample) this
 Returns an ArrayRef of [$stock_id, $uniquename] for the plant
 
 =cut
@@ -256,7 +256,7 @@ has 'get_source_plant' => (
 
 =head2 Accessor get_source_tissue_sample()
 
-If the tissue sample is linked to another tissue_sample (meaning the setter source_observation_unit_stock_id was a tissue_sample) this 
+If the tissue sample is linked to another tissue_sample (meaning the setter source_observation_unit_stock_id was a tissue_sample) this
 Returns an ArrayRef of [$stock_id, $uniquename] for the source tissue_sample
 
 =cut
@@ -299,17 +299,25 @@ sub BUILD {
     my $self = shift;
     if ($self->stock_id()) {
         $self->tissue_sample_id($self->stock_id);
-        $self->notes($self->_retrieve_stockprop('notes'));
-        $self->volume($self->_retrieve_stockprop('volume'));
-        $self->concentration($self->_retrieve_stockprop('concentration'));
-        $self->tissue_type($self->_retrieve_stockprop('tissue_type'));
-        $self->extraction($self->_retrieve_stockprop('extraction'));
-        $self->is_blank($self->_retrieve_stockprop('is_blank'));
-        $self->dna_person($self->_retrieve_stockprop('dna_person'));
-        $self->row_number($self->_retrieve_stockprop('row_number'));
-        $self->col_number($self->_retrieve_stockprop('col_number'));
-        $self->well($self->_retrieve_stockprop('well'));
-        $self->acquisition_date($self->_retrieve_stockprop('acquisition date'));
+
+	my @props = $self->retrieve_stockprops();
+	foreach my $prop (@props) {
+	    my ($stockprop_id, $value, $cvterm_name, $cvterm_id) = @prop;
+	    if ($self.can($cvterm_name)) {
+		$self->$cvterm_name($value);
+	    }
+	}
+        # $self->notes($self->_retrieve_stockprop('notes'));
+        # $self->volume($self->_retrieve_stockprop('volume'));
+        # $self->concentration($self->_retrieve_stockprop('concentration'));
+        # $self->tissue_type($self->_retrieve_stockprop('tissue_type'));
+        # $self->extraction($self->_retrieve_stockprop('extraction'));
+        # $self->is_blank($self->_retrieve_stockprop('is_blank'));
+        # $self->dna_person($self->_retrieve_stockprop('dna_person'));
+        # $self->row_number($self->_retrieve_stockprop('row_number'));
+        # $self->col_number($self->_retrieve_stockprop('col_number'));
+        # $self->well($self->_retrieve_stockprop('well'));
+        # $self->acquisition_date($self->_retrieve_stockprop('acquisition date'));
     }
 }
 
@@ -432,7 +440,7 @@ sub _retrieve_plate_sample_type {
 #     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, "plant", "stock_type")->cvterm_id();
 #     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, "plot", "stock_type")->cvterm_id();
 #     my $source_unit_stock = $self->schema->resultset("Stock::Stock")->find({stock_id=>$self->source_observation_unit_stock_id});
-#     
+#
 # }
 
 =head2 store()
@@ -453,7 +461,7 @@ sub _retrieve_plate_sample_type {
 # sub store {
 #     my $self = shift;
 #     my $error;
-# 
+#
 #     my $coderef = sub {
 #         #Creating new seedlot
 #         if(!$self->stock){
@@ -467,14 +475,14 @@ sub _retrieve_plate_sample_type {
 #             #if ($error){
 #             #    die $error;
 #             #}
-# 
+#
 #         } else { #Updating tissue_sample
-# 
+#
 #             my $id = $self->SUPER::store();
 #             print STDERR "Updating tissue_sample returned ID $id.".localtime."\n";
 #             $self->tissue_sample_id($id);
 #         }
-# 
+#
 #         if ($self->acquisition_date){
 #             $self->_update_stockprop('acquisition date', $self->acquisition_date());
 #         }
@@ -509,7 +517,7 @@ sub _retrieve_plate_sample_type {
 #             $self->_update_stockprop('is_blank', $self->is_blank());
 #         }
 #     };
-# 
+#
 #     my $transaction_error;
 #     try {
 #         $self->schema->txn_do($coderef);
