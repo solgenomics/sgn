@@ -52,6 +52,8 @@ use CXGN::People::Person;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::Cross;
 use Sort::Key::Natural qw(natkeysort);
+use Time::Piece;
+
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -904,6 +906,11 @@ sub build_accession_properties_info {
     $h->execute(@params);
     while (my @results = $h->fetchrow_array()) {
         # print STDERR "RETRIEVED: ".join(",", @results)."\n";
+        my $original_date_format = $results[1];
+        my $create_date = Time::Piece->strptime($original_date_format, "%Y-%m-%d %H:%M:%S");
+        my $download_date_format = $create_date->strftime("%B %d, %Y");
+
+        splice(@results,1,1,$download_date_format);
         push(@accession_rows, \@results);
     }
 
@@ -1935,11 +1942,15 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
         my ($stock_id, $stock_name, $create_date, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
+
+        my $create_date_obj = Time::Piece->strptime($create_date, "%Y-%m-%d %H:%M:%S");
+        my $download_create_date = $create_date_obj->strftime("%B %d, %Y");
+
         if ($obsolete_date =~ /Obsolete/) {
-            push @download_rows, [$stock_name, $stock_type, $create_date, $obsolete_note, $obsolete_date,$full_name];
+            push @download_rows, [$stock_name, $download_create_date, $stock_type, $obsolete_note, $obsolete_date,$full_name];
         }
     }
-    
+
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "obsoleted_stocks_download_XXXXX", UNLINK=> 0);
 
     my $file_path = $tempfile . ".xlsx";
@@ -1948,7 +1959,7 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
     my $workbook = Excel::Writer::XLSX->new($file_path);
     my $worksheet = $workbook->add_worksheet();
 
-    my @header = ("Stock Name", "Stock Type", "Create Date", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    my @header = ("Stock Name", "Create Date", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
     $worksheet->write_row(0, 0, \@header);
 
     my $row_count = 1;
