@@ -52,3 +52,5 @@ $field_headers => ()
 
 <& /tracking_activities/edit_tracking_activity_project_details.mas, trial_name => $trial_name, breeding_program_id => $breeding_program_id, location_id => $location_id, year => $year, planting_date => $planting_date, harvest_date => $harvest_date, trial_description => $trial_description &>
 <& /order/generate_identifier_barcode_dialog.mas, identifier => "", trial_id => $trial_id &>
+<& /breeders_toolbox/folder/folder_new.mas, project_type=>'activity_record' &>
+<& /breeders_toolbox/folder/folder_set.mas, project_type=>'activity_record' &>

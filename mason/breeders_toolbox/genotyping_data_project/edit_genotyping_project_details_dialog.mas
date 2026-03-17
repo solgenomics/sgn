@@ -14,7 +14,7 @@ $has_plate => undef
 <div class="modal fade" id="edit_genotyping_project_details_dialog" tabindex="-1" role="dialog" aria-labelledby="editGenotypingProjectDetailsDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">
-            <div class="modal-header texkkt-center">
+            <div class="modal-header text-center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="editGenotypingProjectDetailsDialog">Edit Genotyping Project Details</h4>
             </div>

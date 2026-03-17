@@ -11,6 +11,8 @@ $populations_list => undef
 $loci_editor_privileges => undef
 $loci_annotations => undef
 $user_status => undef
+$allow_trait_edits => 0
+$allow_treatment_edits => 0
 </%args>
 
 
@@ -124,9 +126,9 @@ $user_status => undef
         </div>
     </&>
 
-    <&| /page/info_section.mas, title=>'solGS analyses jobs', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
+    <&| /page/info_section.mas, title=>'Job Submissions', collapsible=>0, collapsed=>0, subtitle=>'For Submitters and up' &>
         <div class="well">
-            <& /solgs/jobs/log.mas &>
+            <& /jobs/log.mas, sp_person_id => $sp_person_id &>
         </div>
     </&>
 
@@ -141,7 +143,13 @@ $user_status => undef
                     <a href="/solpeople/admin/crash_test.pl">Test website error handling</a><br />
                     <a href="/solpeople/admin/stats.pl">View user stats</a><br />
                     <a href="/user/admin/quick_create_account">Create new user account</a><br />
-                    <a href="/solpeople/admin/create_organization.pl">Create new organization</a>
+                    <a href="/solpeople/admin/create_organization.pl">Create new organization</a><br>
+%       if ($allow_trait_edits) {
+                    <a href="/traits/design">Design new traits</a><br>
+%       }
+%       if ($allow_treatment_edits) {
+                    <a href="/treatments/design">Design new treatments</a>
+%       }
                 </div>
             </&>
         </div>

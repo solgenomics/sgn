@@ -22,6 +22,9 @@ jQuery(document).ready(function ($) {
     var trial_id;
     var plants_per_plot;
     var inherits_plot_treatments;
+    var include_plant_coordinates;
+    var num_rows;
+    var num_cols;
     jQuery('#upload_trial_trial_sourced').change(function(){
         if(jQuery(this).val() == 'yes'){
             jQuery('#upload_trial_source_trial_section').show();
@@ -52,6 +55,21 @@ jQuery(document).ready(function ($) {
         plants_per_plot = jQuery("#trial_upload_plant_entries").val();
         inherits_plot_treatments = jQuery('#trial_upload_plants_per_plot_inherit_treatments').val();
 
+        num_rows = jQuery('#trial_upload_rows_per_plot').val();
+        num_cols = jQuery('#trial_upload_cols_per_plot').val();
+        if (jQuery('#trial_upload_rows_and_columns_to_plants').is(':checked')) { 
+
+            include_plant_coordinates = 1;
+
+            if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
+                alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
+                return;
+            }
+            if (num_rows * num_cols < plants_per_plot) {
+                alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
+                return;
+            }
+        }
 
         if (trial_name === '') {
             alert("Please give a trial name");
@@ -202,6 +220,7 @@ jQuery(document).ready(function ($) {
                     return;
                 }
                 if (response.success) {
+                    add_plants_per_plot();
                     refreshTrailJsTree(0);
                     jQuery("#upload_trial_error_display_second_try").hide();
                     jQuery('#trial_upload_show_repeat_upload_button').hide();
@@ -211,7 +230,6 @@ jQuery(document).ready(function ($) {
                     Workflow.skip('#upload_trial_error_display_second_try', false);
                     Workflow.focus("#trial_upload_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_upload_workflow");
-                    add_plants_per_plot();
                 }
             },
             error: function() {
@@ -303,6 +321,9 @@ jQuery(document).ready(function ($) {
                 data: {
                     'plants_per_plot' : plants_per_plot,
                     'inherits_plot_treatments' : inherits_plot_treatments,
+                    'include_plant_coordinates' : include_plant_coordinates,
+                    'rows_per_plot' : num_rows,
+                    'cols_per_plot' : num_cols
                 },
                 success: function(response) {
                     console.log(response);

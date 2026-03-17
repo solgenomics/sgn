@@ -12,13 +12,11 @@ Every user account in Breedbase has one or more associated "roles" that determin
 
 In the "Manage" menu, select the item "User Roles". This will show the current users in the database with their associated roles. If you are logged in as a curator, the table will show system roles as well as breeding program roles; if you are logged in as a submitter or user, it will show breeding program membership.
 
-If logged in as a "curator", the roles can be added or deleted. 
+If logged in as a "curator", the roles can be added or deleted.
 
- * To delete a role, click on the X in the role name. A confirm dialog will be displayed to prevent accidental deletion.
- * To add a role, click on the plus sign next to the roles. A dialog will pop up with a list of roles. Select the desired role and click "Submit".
- * The new role should be displayed next to the user immediately.
- * Role deletions and additions will be effective immediately.
+-   To delete a role, click on the X in the role name. A confirm dialog will be displayed to prevent accidental deletion.
+-   To add a role, click on the plus sign next to the roles. A dialog will pop up with a list of roles. Select the desired role and click "Submit".
+-   The new role should be displayed next to the user immediately.
+-   Role deletions and additions will be effective immediately.
 
-It is recommended that few users be given the "curator" privileges to avoid confusion over data ownership and accidental data overwriting and deletion.   
-
-\@ref(managing_user_roles)
+It is recommended that few users be given the "curator" privileges to avoid confusion over data ownership and accidental data overwriting and deletion.

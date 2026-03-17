@@ -20,8 +20,6 @@ $stock_type => undef
     </div>
 </div>
 
-<& /transformation/obsolete_stock_dialog.mas &>
-
 <style>
 .table th {
     white-space: nowrap;

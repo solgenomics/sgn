@@ -109,54 +109,54 @@ If the stocks in the design were checked and whether the check passed. Internal 
 
 has 'stocks_exist' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_has_plant_entries(), get_new_treatment_has_plant_entries()
+# =head2 set_new_treatment_has_plant_entries(), get_new_treatment_has_plant_entries()
 
-Whether this treatment has plant entries.
+# Whether this treatment has plant entries.
 
-=cut
+# =cut
 
-has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_has_plant_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_has_subplot_entries(), get_new_treatment_has_subplot_entries()
+# =head2 set_new_treatment_has_subplot_entries(), get_new_treatment_has_subplot_entries()
 
-Whether this treatment has subplot entries.
+# Whether this treatment has subplot entries.
 
-=cut
+# =cut
 
-has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_has_subplot_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_has_tissue_sample_entries(), get_new_treatment_has_tissue_sample_entries()
+# =head2 set_new_treatment_has_tissue_sample_entries(), get_new_treatment_has_tissue_sample_entries()
 
-Whether this treatment has tissue_sample entries.
+# Whether this treatment has tissue_sample entries.
 
-=cut
+# =cut
 
-has 'new_treatment_has_tissue_sample_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_has_tissue_sample_entries' => (isa => 'Maybe[Int]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_date, get_new_treatment_date()
+# =head2 set_new_treatment_date, get_new_treatment_date()
 
-A new treatment date.
+# A new treatment date.
 
-=cut
+# =cut
 
-has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_date' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_year, get_new_treatment_year()
+# =head2 set_new_treatment_year, get_new_treatment_year()
 
-A new treatment year.
+# A new treatment year.
 
-=cut
+# =cut
 
 
-has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_year' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
-=head2 set_new_treatment_type, get_new_treatment_type()
+# =head2 set_new_treatment_type, get_new_treatment_type()
 
-A new treatment type.
+# A new treatment type.
 
-=cut
+# =cut
 
-has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
+# has 'new_treatment_type' => (isa => 'Maybe[Str]', is => 'rw', required => 0, default => 0);
 
 =head2 set_operator(), get_operator()
 
@@ -230,6 +230,8 @@ has 'tissue_sample_cvterm_id'  => (isa => 'Int', is => 'rw');
 
 has 'tissue_sample_of_cvterm_id'  => (isa => 'Int', is => 'rw');
 
+has 'tissue_sample_index_number_cvterm_id' => (isa =>'Int', is => 'rw');
+
 has 'plot_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'plot_of_cvterm_id' => (isa => 'Int', is => 'rw');
@@ -280,7 +282,7 @@ has 'ncbi_taxonomy_id_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'notes_cvterm_id' => (isa => 'Int', is => 'rw');
 
-has 'treatment_nd_experiment_type_id' => (isa => 'Int', is => 'rw');
+# has 'treatment_nd_experiment_type_id' => (isa => 'Int', is => 'rw');
 
 has 'project_design_cvterm_id' => (isa => 'Int', is => 'rw');
 
@@ -290,7 +292,7 @@ has 'management_factor_date_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'management_factor_type_cvterm_id' => (isa => 'Int', is => 'rw');
 
-has 'trial_treatment_relationship_cvterm_id' => (isa => 'Int', is => 'rw');
+# has 'trial_treatment_relationship_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'has_plants_cvterm' => (isa => 'Int', is => 'rw');
 
@@ -313,10 +315,12 @@ sub BUILD {
     $self->set_accession_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'accession', 'stock_type')->cvterm_id());
 
     $self->set_analysis_result_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'analysis_result', 'stock_type')->cvterm_id());
-    
+
     $self->set_tissue_sample_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample', 'stock_type')->cvterm_id());
 
     $self->set_tissue_sample_of_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id());
+
+    $self->set_tissue_sample_index_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'tissue_sample_index_number', 'stock_property')->cvterm_id());
 
     $self->set_plot_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot', 'stock_type')->cvterm_id());
 
@@ -368,7 +372,7 @@ sub BUILD {
 
     $self->set_notes_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'notes', 'stock_property')->cvterm_id());
 
-    $self->set_treatment_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id());
+    # $self->set_treatment_nd_experiment_type_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'treatment_experiment', 'experiment_type')->cvterm_id());
 
     $self->set_project_design_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'design', 'project_property')->cvterm_id());
 
@@ -378,7 +382,7 @@ sub BUILD {
 
     $self->set_management_factor_type_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'management_factor_type', 'project_property')->cvterm_id());
 
-    $self->set_trial_treatment_relationship_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id());
+    # $self->set_trial_treatment_relationship_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id());
 
     $self->set_has_plants_cvterm(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id());
 
@@ -523,6 +527,10 @@ sub store {
             if ($design{$key}->{plant_names}) {
                 $plant_names = $design{$key}->{plant_names};
             }
+            my $tissue_sample_names;
+            if ($design{$key}->{tissue_sample_names}) {
+                $tissue_sample_names = $design{$key}->{tissue_sample_names};
+            }
             my $subplot_names;
             if ($design{$key}->{subplots_names}) {
                 $subplot_names = $design{$key}->{subplots_names};
@@ -531,7 +539,7 @@ sub store {
             if ($design{$key}->{subplots_plant_names}) {
                 $subplots_plant_names = $design{$key}->{subplots_plant_names};
             }
-            
+
             my $stock_name;
             if ($design{$key}->{stock_name}) {
                 $stock_name = $design{$key}->{stock_name};
@@ -628,7 +636,7 @@ sub store {
             }
 
             #check if stock_name exists in database by checking if stock_name is key in %stock_data. if it is not, then check if it exists as a synonym in the database.
-            
+
             if ($stock_data{$stock_name}) {
                 $stock_id_checked = $stock_data{$stock_name}[0];
                 $organism_id_checked = $stock_data{$stock_name}[1];
@@ -638,9 +646,19 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                $parent_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                my $cross_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
+                my $family_name_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
+                if ($accession_stock) {
+                    $parent_stock = $accession_stock;
+                } elsif ($cross_stock) {
+                    $parent_stock = $cross_stock;
+                } elsif ($family_name_stock) {
+                    $parent_stock = $family_name_stock;
+                }
+
                 if (!$parent_stock) {
-                    die ("Error while saving trial layout: no accession found matching $stock_name");
+                    die ("Error while saving trial layout: no accession or cross or family name found matching $stock_name");
                 }
 
                 $stock_id_checked = $parent_stock->stock_id();
@@ -717,30 +735,75 @@ sub store {
 
                 # For genotyping plate, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $self->get_plot_cvterm_id){
+                    my $parent_plot_rs;
                     my $parent_plot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$self->get_plot_of_cvterm_id,
                         'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => 'object'});
-                    if ($parent_plot_accession_rs->count > 1){
-                        die "Plot $stock_id_checked is linked to more than one accession!\n"
+
+                    my $parent_plot_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plot_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => 'object'});
+
+                    my $parent_plot_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plot_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => 'object'});
+
+                    if ($parent_plot_accession_rs->count > 0) {
+                        $parent_plot_rs = $parent_plot_accession_rs;
+                    } elsif ($parent_plot_cross_rs->count > 0) {
+                        $parent_plot_rs = $parent_plot_cross_rs;
+                    } elsif ($parent_plot_family_name_rs->count > 0) {
+                        $parent_plot_rs = $parent_plot_family_name_rs;
                     }
-                    if ($parent_plot_accession_rs->count == 1){
-                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_accession_rs->first->object_id };
+
+                    if ($parent_plot_rs->count > 1){
+                        die "Plot $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+
+                    if ($parent_plot_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_rs->first->object_id };
                     }
                 }
-                # For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
+                #   For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
                 if ($stock_type_checked == $self->get_plant_cvterm_id){
+                    my $parent_plant_rs;
                     my $parent_plant_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$self->get_plant_of_cvterm_id,
                         'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => "object"});
-                    if ($parent_plant_accession_rs->count > 1){
-                        die "Plant $stock_id_checked is linked to more than one accession!\n"
+
+                    my $parent_plant_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => "object"});
+
+                    my $parent_plant_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => "object"});
+
+                    if ($parent_plant_accession_rs->count > 0) {
+                        $parent_plant_rs = $parent_plant_accession_rs;
+                    } elsif ($parent_plant_cross_rs->count > 0) {
+                        $parent_plant_rs = $parent_plant_cross_rs;
+                    } elsif ($parent_plant_family_name_rs->count > 0) {
+                        $parent_plant_rs = $parent_plant_family_name_rs;
                     }
-                    if ($parent_plant_accession_rs->count == 1){
-                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_accession_rs->first->object_id };
+
+                    if ($parent_plant_rs->count > 1){
+                        die "Plant $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+                    if ($parent_plant_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plant_rs->first->object_id };
                     }
                     my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -756,16 +819,38 @@ sub store {
                 }
                 # For genotyping plate, if the well tissue_sample is sourced from another tissue_sample, then we store relationships between the new tissue_sample and the source tissue_sample, and the new tissue_sample and the tissue_sample's plant if it exists, and the new tissue_sample and the tissue_sample's plot if it exists, and the new tissue sample and the tissue_sample's accession if it exists.
                 if ($stock_type_checked == $self->get_tissue_sample_cvterm_id){
+                    my $parent_tissue_sample_rs;
                     my $parent_tissue_sample_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
                         'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
                         'object.type_id'=>$self->get_accession_cvterm_id
                     }, {join => "object"});
-                    if ($parent_tissue_sample_accession_rs->count > 1){
-                        die "Tissue_sample $stock_id_checked is linked to more than one accession!\n"
+
+                    my $parent_tissue_sample_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => "object"});
+
+                    my $parent_tissue_sample_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_tissue_sample_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => "object"});
+
+                    if ($parent_tissue_sample_accession_rs->count > 0) {
+                        $parent_tissue_sample_rs = $parent_tissue_sample_accession_rs;
+                    } elsif ($parent_tissue_sample_cross_rs->count > 0) {
+                        $parent_tissue_sample_rs = $parent_tissue_sample_cross_rs;
+                    } elsif ($parent_tissue_sample_family_name_rs->count > 0) {
+                        $parent_tissue_sample_rs = $parent_tissue_sample_family_name_rs;
                     }
-                    if ($parent_tissue_sample_accession_rs->count == 1){
-                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_tissue_sample_accession_rs->first->object_id };
+
+                    if ($parent_tissue_sample_rs->count > 1){
+                        die "Tissue_sample $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+                    if ($parent_tissue_sample_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_tissue_sample_rs->first->object_id };
                     }
                     my $parent_plot_of_tissue_sample_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.subject_id'=>$stock_id_checked,
@@ -807,12 +892,12 @@ sub store {
                     nd_experiment_stocks => \@plot_nd_experiment_stocks,
                 };
                 my $plot;
-                if (! defined $plant_names || scalar $plant_names eq 0) {
+                if ((! defined $plant_names || scalar $plant_names eq 0) && (! defined $tissue_sample_names || scalar $tissue_sample_names eq 0)) {
                     $plot = $stock_rs->create($plot_params);
                 } else {
                     $plot = $stock_rs->find_or_create($plot_params);
                 }
-                $new_plot_id = $plot->stock_id();
+                $new_plot_id = $plot->stock_id(); #this is why plot is created with the same name as plant, want to associate tissue sample with plant and plot
                 $new_stock_ids_hash{$plot_name} = $new_plot_id;
 
                 my %design = %{$self->get_design()};
@@ -846,13 +931,25 @@ sub store {
             if ($plant_names) {
                 my $plant_index_number = 1;
                 foreach my $plant_name (@$plant_names) {
-
+                    # TODO: EXTRACT COORDS FROM PLANT NAME
+                    my $plant_row;
+                    my $plant_col;
+                    print STDERR "\nCREATING $plant_name\n";
+                    if ($plant_name =~ m/_COORDS\{(?<ROW>\d+),(?<COL>\d+)\}/) {
+                        $plant_row = $+{ROW};
+                        $plant_col = $+{COL};
+                    }
+                    $plant_name =~ s/_COORDS\{\d+,\d+\}//;
                     my @plant_stock_props = (
                         { type_id => $self->get_plant_index_number_cvterm_id, value => $plant_index_number },
                         { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
                         { type_id => $self->get_block_cvterm_id, value => $block_number },
                         { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                     );
+                    if ($plant_row && $plant_col) {
+                        push @plant_stock_props, {type_id => $self->get_row_number_cvterm_id, value => $plant_row};
+                        push @plant_stock_props, {type_id => $self->get_col_number_cvterm_id, value => $plant_col};
+                    }
                     if ($is_a_control) {
                         push @plant_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
                     }
@@ -868,7 +965,7 @@ sub store {
                     if ($additional_info) {
                         push @plant_stock_props, { type_id => $additional_info_type_id, value => $additional_info };
                     }
-
+                   # print STDERR "stock id checked: $stock_id_checked, stock name checked: $stock_name_checked, new plot id: $new_plot_id";
                     my @plant_objects = (
                         { type_id => $self->get_plant_of_cvterm_id, subject_id => $new_plot_id }
                     );
@@ -880,7 +977,7 @@ sub store {
                     );
 
 
-                    my $plant = $stock_rs->create({
+                    my $plant = $stock_rs->find_or_create({
                         organism_id => $organism_id_checked,
                         name       => $plant_name,
                         uniquename => $plant_name,
@@ -898,6 +995,85 @@ sub store {
                 if (scalar @$plant_names > 0) {
                     my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self->get_trial_id() });
                     $study->create_projectprops({ 'project_has_plant_entries' => 1 });
+                }
+            }
+            # Create tissue samples entries
+            if ($tissue_sample_names) {
+                my @tissue_sample_subjects;
+                my $tissue_sample_index_number = 1;
+                foreach my $tissue_sample_name (@$tissue_sample_names) {
+                    my @tissue_sample_stockprops = (
+                        { type_id => $self->get_tissue_sample_index_number_cvterm_id, value => $tissue_sample_index_number },
+                        { type_id => $self->get_replicate_cvterm_id, value => $rep_number },
+                        { type_id => $self->get_block_cvterm_id, value => $block_number },
+                        { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
+                    );
+                    if ($is_a_control) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
+                    }
+                    if ($range_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_range_cvterm_id, value => $range_number };
+                    }
+                    if ($row_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_row_number_cvterm_id, value => $row_number };
+                    }
+                    if ($col_number) {
+                        push @tissue_sample_stockprops, { type_id => $self->get_col_number_cvterm_id, value => $col_number };
+                    }
+                    if ($additional_info) {
+                        push @tissue_sample_stockprops, { type_id => $additional_info_type_id, value => $additional_info };
+                    }
+
+                    #print STDERR "stock id checked: $stock_id_checked, stock name checked: $stock_name_checked";
+                    my $parent_plant_stock = $chado_schema->resultset("Stock::Stock")->find({ uniquename => $plot_name });
+                    my $parent_plant_id;
+                    if ($parent_plant_stock) {
+                        $parent_plant_id = $parent_plant_stock->stock_id;
+                    } 
+                    #print STDERR "parent plant id: $parent_plant_id";
+                    if ($parent_plant_id) {
+                        push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $parent_plant_id };
+                    }
+                    
+                    my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.object_id'=>$parent_plant_id,
+                        'me.type_id'=>$self->get_plant_of_cvterm_id,
+                        'subject.type_id'=>$self->get_plot_cvterm_id
+                    }, {join => "subject"});
+
+                    if ($parent_plot_of_plant_rs->count > 1){
+                        die "Plant $parent_plant_id is linked to more than one plot!\n"
+                    }
+
+                    if ($parent_plot_of_plant_rs->count == 1){
+                        push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $parent_plot_of_plant_rs->first->subject_id };
+                    }
+
+                    #print STDERR "parent plot id: " . $parent_plot_of_plant_rs->first->subject_id;
+
+                    push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $stock_id_checked };
+
+                    my @tissue_sample_nd_experiment_stocks = (
+                        { type_id => $self->get_nd_experiment_type_id, nd_experiment_id => $nd_experiment_id }
+                    );
+
+                    my $tissue_sample = $stock_rs->create({
+                        organism_id => $organism_id_checked,
+                        name => $tissue_sample_name,
+                        uniquename => $tissue_sample_name,
+                        type_id => $self->get_tissue_sample_cvterm_id,
+                        stockprops => \@tissue_sample_stockprops,
+                        stock_relationship_subjects => \@tissue_sample_subjects,
+                        #stock_relationship_objects => \@tissue_sample_objects,
+                        nd_experiment_stocks => \@tissue_sample_nd_experiment_stocks,
+                    });
+                    $new_stock_ids_hash{$tissue_sample_name} = $tissue_sample->stock_id();
+                    $tissue_sample_index_number++;
+                }
+
+                if (scalar @$tissue_sample_names > 0) {
+                    my $study = $chado_schema->resultset('Project::Project')->find( { project_id => $self -> get_trial_id() });
+                    $study->create_projectprops({ 'project_has_tissue_sample_entries' => 1 });
                 }
             }
             #Create subplot entry if given. Currently this is for the splitplot trial creation.
@@ -941,7 +1117,7 @@ sub store {
                         }
                     }
 
-                    my $subplot = $stock_rs->create({
+                    my $subplot = $stock_rs->find_or_create({
                         organism_id => $organism_id_checked,
                         name       => $subplot_name,
                         uniquename => $subplot_name,
@@ -958,105 +1134,105 @@ sub store {
             }
         }
 
-        if (exists($design{'treatments'})){
-            print STDERR "Saving treatments\n";
-            my %treatments_hash = %{$design{'treatments'}};
+#         if (exists($design{'treatments'})){ #TODO REFACTOR
+#             print STDERR "Saving treatments\n";
+#             my %treatments_hash = %{$design{'treatments'}};
 
-            foreach my $treatment_name (sort keys %treatments_hash) {
-                my $stock_names;
-                my $management_factor_type;
-                my $management_factor_year;
-                my $management_factor_date;
-                my $management_factor_description = '';
-#                my %info_hashes = %{$treatments_hash{$treatment_name}};
-                my $info_value = $treatments_hash{$treatment_name};
-                my $info_type = ref($info_value);
-                if ($info_type eq 'HASH'){
-                    my %info_hashes = %$info_value;
-                    $stock_names = $info_hashes{'new_treatment_stocks'};
-                    $management_factor_type = $info_hashes{'new_treatment_type'};
-                    $management_factor_year = $info_hashes{'new_treatment_year'};
-                    $management_factor_date = $info_hashes{'new_treatment_date'};
-                    $management_factor_description = $info_hashes{'new_treatment_description'} || 'No description';
-                } else {
-                    $stock_names = $treatments_hash{$treatment_name};
-                }
-#                print STDERR "STOCK NAMES =".Dumper($stock_names)."\n";
-                my @treatment_nd_experiment_stocks;
-                foreach (@$stock_names){
-                    my $stock_id;
-                    if (exists($new_stock_ids_hash{$_})){
-                        $stock_id = $new_stock_ids_hash{$_};
-                    } else {
-                        $stock_id = $chado_schema->resultset("Stock::Stock")->find({uniquename=>$_})->stock_id();
-                    }
-                    push @treatment_nd_experiment_stocks, { type_id => $self->get_treatment_nd_experiment_type_id, stock_id => $stock_id };
-                }
+#             foreach my $treatment_name (sort keys %treatments_hash) {
+#                 my $stock_names;
+#                 my $management_factor_type;
+#                 my $management_factor_year;
+#                 my $management_factor_date;
+#                 my $management_factor_description = '';
+# #                my %info_hashes = %{$treatments_hash{$treatment_name}};
+#                 my $info_value = $treatments_hash{$treatment_name};
+#                 my $info_type = ref($info_value);
+#                 if ($info_type eq 'HASH'){
+#                     my %info_hashes = %$info_value;
+#                     $stock_names = $info_hashes{'new_treatment_stocks'};
+#                     $management_factor_type = $info_hashes{'new_treatment_type'};
+#                     $management_factor_year = $info_hashes{'new_treatment_year'};
+#                     $management_factor_date = $info_hashes{'new_treatment_date'};
+#                     $management_factor_description = $info_hashes{'new_treatment_description'} || 'No description';
+#                 } else {
+#                     $stock_names = $treatments_hash{$treatment_name};
+#                 }
+# #                print STDERR "STOCK NAMES =".Dumper($stock_names)."\n";
+#                 my @treatment_nd_experiment_stocks;
+#                 foreach (@$stock_names){
+#                     my $stock_id;
+#                     if (exists($new_stock_ids_hash{$_})){
+#                         $stock_id = $new_stock_ids_hash{$_};
+#                     } else {
+#                         $stock_id = $chado_schema->resultset("Stock::Stock")->find({uniquename=>$_})->stock_id();
+#                     }
+#                     push @treatment_nd_experiment_stocks, { type_id => $self->get_treatment_nd_experiment_type_id, stock_id => $stock_id };
+#                 }
 
-                my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
-                    nd_geolocation_id => $nd_geolocation_id,
-                    type_id => $self->get_treatment_nd_experiment_type_id,
-                    nd_experiment_stocks => \@treatment_nd_experiment_stocks
-                });
+#                 my $nd_experiment = $chado_schema->resultset('NaturalDiversity::NdExperiment')->create({
+#                     nd_geolocation_id => $nd_geolocation_id,
+#                     type_id => $self->get_treatment_nd_experiment_type_id,
+#                     nd_experiment_stocks => \@treatment_nd_experiment_stocks
+#                 });
 
-                my @treatment_project_props = (
-                    { type_id => $self->get_project_design_cvterm_id, value => 'treatment' }
-                );
+#                 my @treatment_project_props = (
+#                     { type_id => $self->get_project_design_cvterm_id, value => 'treatment' }
+#                 );
 
-                if ($self->get_new_treatment_has_plant_entries){
-                    push @treatment_project_props, { type_id => $self->get_has_plants_cvterm, value => $self->get_new_treatment_has_plant_entries };
-                }
-                if ($self->get_new_treatment_has_subplot_entries){
-                    push @treatment_project_props, { type_id => $self->get_has_subplots_cvterm, value => $self->get_new_treatment_has_subplot_entries };
-                }
-                if ($self->get_new_treatment_has_tissue_sample_entries){
-                    push @treatment_project_props, { type_id => $self->get_has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
-                }
-                if (defined $management_factor_type){
-                    push @treatment_project_props, { type_id => $self->get_management_factor_type_cvterm_id, value => $management_factor_type };
-                }
-                if (defined $management_factor_year){
-                    push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $management_factor_year };
-                } else {
-                    my $t = CXGN::Trial->new({
-                        bcs_schema => $chado_schema,
-                        trial_id => $self->get_trial_id
-                    });
-                    push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $t->get_year() };
-                }
+#                 if ($self->get_new_treatment_has_plant_entries){
+#                     push @treatment_project_props, { type_id => $self->get_has_plants_cvterm, value => $self->get_new_treatment_has_plant_entries };
+#                 }
+#                 if ($self->get_new_treatment_has_subplot_entries){
+#                     push @treatment_project_props, { type_id => $self->get_has_subplots_cvterm, value => $self->get_new_treatment_has_subplot_entries };
+#                 }
+#                 if ($self->get_new_treatment_has_tissue_sample_entries){
+#                     push @treatment_project_props, { type_id => $self->get_has_tissues_cvterm, value => $self->get_new_treatment_has_tissue_sample_entries };
+#                 }
+#                 if (defined $management_factor_type){
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_type_cvterm_id, value => $management_factor_type };
+#                 }
+#                 if (defined $management_factor_year){
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $management_factor_year };
+#                 } else {
+#                     my $t = CXGN::Trial->new({
+#                         bcs_schema => $chado_schema,
+#                         trial_id => $self->get_trial_id
+#                     });
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_year_cvterm_id, value => $t->get_year() };
+#                 }
 
 
-                if (defined $management_factor_date){
-                    push @treatment_project_props, { type_id => $self->get_management_factor_date_cvterm_id, value => $management_factor_date };
-                }
+#                 if (defined $management_factor_date){
+#                     push @treatment_project_props, { type_id => $self->get_management_factor_date_cvterm_id, value => $management_factor_date };
+#                 }
 
-                my @treatment_nd_experiment_project = (
-                    { nd_experiment_id => $nd_experiment->nd_experiment_id }
-                );
+#                 my @treatment_nd_experiment_project = (
+#                     { nd_experiment_id => $nd_experiment->nd_experiment_id }
+#                 );
 
-                my @treatment_relationships = (
-                    { type_id => $self->get_trial_treatment_relationship_cvterm_id, object_project_id => $self->get_trial_id }
-                );
+#                 my @treatment_relationships = (
+#                     { type_id => $self->get_trial_treatment_relationship_cvterm_id, object_project_id => $self->get_trial_id }
+#                 );
 
-                #Create a project for each treatment_name
-                my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
-                my $treatment_project = $chado_schema->resultset('Project::Project')->create({
-                    name => $project_treatment_name,
-                    description => $management_factor_description,
-                    projectprops => \@treatment_project_props,
-                    project_relationship_subject_projects => \@treatment_relationships,
-                    nd_experiment_projects => \@treatment_nd_experiment_project
-                });
+#                 #Create a project for each treatment_name
+#                 my $project_treatment_name = $self->get_trial_name()."_".$treatment_name;
+#                 my $treatment_project = $chado_schema->resultset('Project::Project')->create({
+#                     name => $project_treatment_name,
+#                     description => $management_factor_description,
+#                     projectprops => \@treatment_project_props,
+#                     project_relationship_subject_projects => \@treatment_relationships,
+#                     nd_experiment_projects => \@treatment_nd_experiment_project
+#                 });
 
-                if ($self->get_new_treatment_date()) {
-                    my $management_factor_t = CXGN::Trial->new({
-                        bcs_schema => $chado_schema,
-                        trial_id => $treatment_project->project_id()
-                    });
-                    $management_factor_t->set_management_factor_date($self->get_new_treatment_date() );
-                }
-            }
-        }
+#                 if ($self->get_new_treatment_date()) {
+#                     my $management_factor_t = CXGN::Trial->new({
+#                         bcs_schema => $chado_schema,
+#                         trial_id => $treatment_project->project_id()
+#                     });
+#                     $management_factor_t->set_management_factor_date($self->get_new_treatment_date() );
+#                 }
+#             }
+#         }
 
         print STDERR "Design Stored ".localtime."\n";
     };

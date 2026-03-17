@@ -377,7 +377,7 @@ function edit_trial_details(){
             var new_value = changed_elements[i].value;
             if (type.match(/date/)){
                 if (new_value){
-                    new_value = moment(new_value).format('YYYY/MM/DD HH:mm:ss') || 'remove' ;
+                    new_value = moment(new_value).format('YYYY-MMMM-DD') || 'remove' ;
                 } else {
                     new_value = 'remove';
                 }
@@ -510,6 +510,7 @@ buttons: {
 
 });
 
+
 jQuery("#update_field_map_dialog_message").dialog({
 autoOpen: false,
 modal: true,
@@ -547,7 +548,10 @@ jQuery('#update_field_map_link').click(function () {
 function set_daterangepicker_default (date_element) {
   var date = date_element.val() || '';
   if (date) {
-    date = moment(date, 'YYYY-MMMM-DD').format('MM/DD/YYYY');
+    var format;
+    if ( date.includes('/') ) format = "MM/DD/YYYY";
+    if ( date.includes('-') ) format = "YYYY-MMMM-DD";
+    date = moment(date, format).format('MM/DD/YYYY');
   }
   date_element.val(date);
 }
@@ -693,7 +697,12 @@ jQuery(document).ready(function ($) {
       open_subtitute_plot_accession_dialog();
     });
 
+    jQuery('#barcode_design_option_link').click(function () {
+        $('#barcode_design_option_dialog').modal("show");
+    });
+
     jQuery('#generate_trial_barcode_link').click(function () {
+        $('#barcode_design_option_dialog').modal("hide");
         $('#generate_trial_barcode_button_dialog').modal("show");
     });
 

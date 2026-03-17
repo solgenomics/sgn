@@ -234,6 +234,10 @@ sub phenotype_file_name {
     my ($self, $c, $pop_id) = @_;
     
     $pop_id = $c->stash->{training_pop_id} || $c->{stash}->{combo_pops_id} if !$pop_id;
+
+    unless ($pop_id) {
+       die "No population ID (pop_id) provided for phenotype file name.\n";
+    }
  
     my $dir;
     if ($pop_id =~ /list/)
@@ -326,6 +330,10 @@ sub genotype_file_name {
 
     $c->controller('solGS::genotypingProtocol')->stash_protocol_id($c, $protocol_id);
     $protocol_id = $c->stash->{genotyping_protocol_id};
+
+    unless ($pop_id && $protocol_id) {
+       die "No population ID (pop_id) and/or genotype protocol id provided for genotype file name.\n";
+    }
 
     my $dir;
     if ($pop_id =~ /list/)
@@ -545,27 +553,25 @@ sub population_metadata_file {
     my $user_id;
     my $owner_id;
 
-    if ($c->stash->{list_id})
-    {
-	my $list = CXGN::List->new({ dbh => $c->dbc()->dbh(),
-				     list_id => $c->stash->{list_id}
-				   });
+    if ($c->stash->{list_id}) {
+        my $list = CXGN::List->new({ dbh => $c->dbc()->dbh(),
+                        list_id => $c->stash->{list_id}
+                    });
 
-	$owner_id = $list->owner;
+        $owner_id = $list->owner;
 
-    }
-    elsif ($c->stash->{dataset_id})
-    {
-	       $owner_id = $c->controller('solGS::Search')->model($c)->get_dataset_owner($c->stash->{dataset_id});
+    } elsif ($c->stash->{dataset_id}) {
+	    $owner_id = $c->controller('solGS::Search')->model($c)->get_dataset_owner($c->stash->{dataset_id});
     }
 
     my $person = CXGN::People::Person->new($c->dbc()->dbh(), $owner_id);
     $user_id = $person->get_username();
 
-    my $cache_data = {key       => "metadata_${user_id}_${file_id}",
-                      file      => "metadata_${user_id}_${file_id}",
-                      stash_key => 'population_metadata_file',
-		      cache_dir => $dir,
+    my $cache_data = {
+        key => "metadata_${user_id}_${file_id}",
+        file => "metadata_${user_id}_${file_id}",
+        stash_key => 'population_metadata_file',
+		cache_dir => $dir,
     };
 
     $self->cache_file($c, $cache_data);
@@ -576,10 +582,11 @@ sub population_metadata_file {
 sub phenotype_metadata_file {
     my ($self, $c) = @_;
 
-    my $cache_data = {key       => 'phenotype_metadata',
-                      file      => 'phenotype_metadata',
-                      stash_key => 'phenotype_metadata_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+    my $cache_data = {
+        key  => 'phenotype_metadata',
+        file => 'phenotype_metadata',
+        stash_key => 'phenotype_metadata_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $self->cache_file($c, $cache_data);
@@ -593,10 +600,87 @@ sub rrblup_training_gebvs_file {
     my $type = 'training';
     my $file_id = $self->gebvs_file_id($c, $type);
 
-    my $cache_data = {key       => 'rrblup_training_gebvs_' . $file_id,
-                      file      => 'rrblup_training_gebvs_' . $file_id,
-                      stash_key => 'rrblup_training_gebvs_file',
-		      cache_dir => $c->stash->{solgs_cache_dir}
+    my $cache_data = {
+        key       => 'rrblup_training_gebvs_' . $file_id,
+        file      => 'rrblup_training_gebvs_' . $file_id,
+        stash_key => 'rrblup_training_gebvs_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub rrblup_training_genetic_values_file {
+    my ($self, $c, $training_pop_id, $trait_id, $protocol_id) = @_;
+
+    my $type = 'training';
+    my $file_id = $self->gebvs_file_id($c, $type);
+
+    my $cache_data = {
+        key       => 'rrblup_training_genetic_values_' . $file_id,
+        file      => 'rrblup_training_genetic_values_' . $file_id,
+        stash_key => 'rrblup_training_genetic_values_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+sub rrblup_combined_training_gebvs_genetic_values_file {
+    my ($self, $c, $training_pop_id, $trait_id, $protocol_id) = @_;
+
+    my $type = 'training';
+    my $file_id = $self->gebvs_file_id($c, $type);
+
+    my $cache_data = {
+        key  => 'rrblup_combined_training_gebvs_genetic_values_' . $file_id,
+        file => 'rrblup_combined_training_gebvs_genetic_values_' . $file_id,
+        stash_key => 'rrblup_combined_training_gebvs_genetic_values_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+sub rrblup_selection_genetic_values_file {
+    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
+
+    my $type = 'selection';
+    $c->stash->{selection_pop_id} = $selection_pop_id if $selection_pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
+
+    my $file_id = $self->gebvs_file_id($c, $type);
+
+    my $cache_data = {
+        key  => 'rrblup_selection_genetic_values_' . $file_id,
+        file => 'rrblup_selection_genetic_values_' . $file_id,
+        stash_key => 'rrblup_selection_genetic_values_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
+
+
+sub rrblup_combined_selection_gebvs_genetic_values_file {
+    my ($self, $c, $training_pop_id, $selection_pop_id, $trait_id, $protocol_id) = @_;
+
+    my $type = 'selection';
+    $c->stash->{selection_pop_id} = $selection_pop_id if $selection_pop_id;
+    $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
+
+    my $file_id = $self->gebvs_file_id($c, $type);
+
+    my $cache_data = {
+        key  => 'rrblup_combined_selection_gebvs_genetic_values_' . $file_id,
+        file => 'rrblup_combined_selection_gebvs_genetic_values_' . $file_id,
+        stash_key => 'rrblup_combined_selection_gebvs_genetic_values_file',
+		cache_dir => $c->stash->{solgs_cache_dir}
     };
 
     $self->cache_file($c, $cache_data);
@@ -1032,34 +1116,35 @@ sub get_solgs_dirs {
 	0, 755
 	);
 
-    $c->stash(solgs_dir                 => $solgs_dir,
-              solgs_cache_dir           => $solgs_cache,
-              solgs_tempfiles_dir       => $solgs_tempfiles,
-              solgs_lists_dir           => $solgs_lists,
-	      solgs_datasets_dir        => $solgs_datasets,
-	      pca_cache_dir             => $pca_cache,
-	      pca_temp_dir              => $pca_temp,
-	      cluster_cache_dir         => $cluster_cache,
-	      cluster_temp_dir          => $cluster_temp,
-              correlation_cache_dir     => $corre_cache,
-	      correlation_temp_dir      => $corre_temp,
-	      heritability_cache_dir    => $h2_cache,
-	      heritability_temp_dir     => $h2_temp,
-	      qualityControl_cache_dir    => $qc_cache,
-	      qualityControl_temp_dir     => $qc_temp,
-	      histogram_cache_dir       => $histogram_cache,
-	      histogram_temp_dir        => $histogram_temp,
-	      analysis_log_dir          => $log_dir,
-              anova_cache_dir           => $anova_cache,
-	      anova_temp_dir            => $anova_temp,
-	      solqtl_cache_dir          => $solqtl_cache,
-              solqtl_tempfiles_dir      => $solqtl_tempfiles,
-	      cache_dir                 => $solgs_cache,
-	      selection_index_cache_dir => $sel_index_cache,
-	      selection_index_temp_dir  => $sel_index_temp,
-	      kinship_cache_dir         => $kinship_cache,
-	      kinship_temp_dir          => $kinship_temp
-        );
+    $c->stash(
+        solgs_dir                 => $solgs_dir,
+        solgs_cache_dir           => $solgs_cache,
+        solgs_tempfiles_dir       => $solgs_tempfiles,
+        solgs_lists_dir           => $solgs_lists,
+        solgs_datasets_dir        => $solgs_datasets,
+        pca_cache_dir             => $pca_cache,
+        pca_temp_dir              => $pca_temp,
+        cluster_cache_dir         => $cluster_cache,
+        cluster_temp_dir          => $cluster_temp,
+        correlation_cache_dir     => $corre_cache,
+        correlation_temp_dir      => $corre_temp,
+        heritability_cache_dir    => $h2_cache,
+        heritability_temp_dir     => $h2_temp,
+        qualityControl_cache_dir  => $qc_cache,
+        qualityControl_temp_dir   => $qc_temp,
+        histogram_cache_dir       => $histogram_cache,
+        histogram_temp_dir        => $histogram_temp,
+        analysis_log_dir          => $log_dir,
+        anova_cache_dir           => $anova_cache,
+        anova_temp_dir            => $anova_temp,
+        solqtl_cache_dir          => $solqtl_cache,
+        solqtl_tempfiles_dir      => $solqtl_tempfiles,
+        cache_dir                 => $solgs_cache,
+        selection_index_cache_dir => $sel_index_cache,
+        selection_index_temp_dir  => $sel_index_temp,
+        kinship_cache_dir         => $kinship_cache,
+        kinship_temp_dir          => $kinship_temp
+    );
 
 }
 

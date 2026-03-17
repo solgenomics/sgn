@@ -278,13 +278,14 @@ sub check_population_exists : Path('/solgs/check/population/exists/') Args(0) {
 
     my $rs = $self->model($c)->project_details_by_name($name);
 
-    my @pop_ids;
+    my $trial_id;
     while ( my $row = $rs->next ) {
-        push @pop_ids, $row->id;
-        my $id = $row->id;
+        $trial_id = $row->id;
     }
 
-    my $ret->{population_ids} = \@pop_ids;
+    print STDERR "Found population ID: $trial_id\n";
+    
+    my $ret->{trial_id} = $trial_id;
     $ret = to_json($ret);
 
     $c->res->content_type('application/json');
@@ -292,39 +293,26 @@ sub check_population_exists : Path('/solgs/check/population/exists/') Args(0) {
 
 }
 
-sub check_training_population : Path('/solgs/check/training/population/')
-  Args() {
+sub check_training_population : Path('/solgs/check/training/population/') Args() {
     my ( $self, $c ) = @_;
 
-    $c->controller('solGS::Utils')
-      ->stash_json_args( $c, $c->req->param('arguments') );
-    my @pop_ids     = $c->stash->{population_ids};
+    $c->controller('solGS::Utils')->stash_json_args( $c, $c->req->param('arguments') );
+    my $pop_id     = $c->stash->{trial_id};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my @gs_pop_ids;
-
-    foreach my $pop_id (@pop_ids) {
-        $c->stash->{pop_id}          = $pop_id;
-        $c->stash->{training_pop_id} = $pop_id;
-
-        my $is_training_pop =
-          $self->check_population_is_training_population( $c, $pop_id,
-            $protocol_id );
-
-        if ($is_training_pop) {
-            push @gs_pop_ids, $pop_id;
-        }
-    }
+    print STDERR "Checking training population: $pop_id\n";
+    my $is_training_pop = $self->check_population_is_training_population( $c, $pop_id, $protocol_id );
+    print STDERR "Is training population: $is_training_pop\n";
 
     my $training_pop_data;
-    my $ret = { is_training_population => 0 };
-    if (@gs_pop_ids) {
-        my $pr_rs = $self->model($c)->project_details( \@gs_pop_ids );
-        $self->projects_links( $c, $pr_rs );
-        $training_pop_data             = $c->stash->{projects_pages};
-        $ret->{is_training_population} = 1 if @gs_pop_ids;
-        $ret->{training_pop_data}      = $training_pop_data;
-    }
+    my $ret = { };
+    
+    my $pr_rs = $self->model($c)->project_details($pop_id);
+
+    $self->projects_links( $c, $pr_rs );
+    $training_pop_data             = $c->stash->{projects_pages};
+    $ret->{is_training_population} = $is_training_pop;
+    $ret->{training_pop_data}      = $training_pop_data;
 
     $ret = to_json($ret);
     $c->res->content_type('application/json');
@@ -832,7 +820,7 @@ sub check_saved_analysis_trial {
 sub check_population_has_phenotype {
     my ( $self, $c, $pop_id ) = @_;
 
-    my $pop_id = $c->stash->{pop_id} if !$pop_id;
+    $pop_id = $c->stash->{pop_id} if !$pop_id;
 
     $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id );
     my $pheno_file = $c->stash->{phenotype_file_name};
@@ -911,10 +899,10 @@ sub get_project_owners {
 
     my $owners = $self->model($c)->get_stock_owners($pr_id);
     my $owners_names;
-
+    my $owner_name;
     if (@$owners) {
         for ( my $i = 0 ; $i < scalar(@$owners) ; $i++ ) {
-            my $owner_name =
+            $owner_name =
                 $owners->[$i]->{'first_name'} . "\t"
               . $owners->[$i]->{'last_name'}
               if $owners->[$i];
@@ -1057,10 +1045,11 @@ sub compare_genotyping_platforms {
 
         unless ( $similarity > 0.5 ) {
             no warnings 'uninitialized';
-            my $pop_id_1 = fileparse( $pair->[0] );
-            my $pop_id_2 = fileparse( $pair->[1] );
+            my $file_pop_1 = fileparse( $pair->[0] );
+            my $file_pop_2 = fileparse( $pair->[1] );
 
-            map { s/genotype_data_|\.txt//g } $pop_id_1, $pop_id_2;
+            my $pop_id_1 = $file_pop_1 =~ s/genotype_data_|\.txt//gr;
+            my $pop_id_2 = $file_pop_2 =~ s/genotype_data_|\.txt//gr;
 
             my $list_type_pop = $c->stash->{list_prediction};
 

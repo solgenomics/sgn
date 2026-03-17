@@ -1,6 +1,7 @@
 <%args>
 $trial_id => undef
 $trial_name => undef
+$breeding_program_id => undef
 </%args>
 
 % my $cross_additional_info_string = $c->config->{cross_additional_info};
@@ -105,6 +106,7 @@ $trial_name => undef
                                         <div class="col-sm-9" >
                                             <input class="form-control" name="experiment_name" id="experiment_name" disabled value="<% $trial_name %>">
                                             <input name="experiment_id" id="experiment_id" type="hidden" value="<% $trial_id %>">
+                                            <input name="experiment_breeding_program_id" id="experiment_breeding_program_id" type="hidden" value="<% $breeding_program_id %>">                                            
                                         </div>
                                     </div>
                                 </div>

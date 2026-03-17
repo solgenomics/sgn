@@ -13,6 +13,7 @@ use List::Util qw | any |;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Tools::Run;
+use CXGN::Job;
 use CXGN::Page::UserPrefs;
 use CXGN::Tools::List qw/distinct evens/;
 use CXGN::Blast::Parse;
@@ -259,7 +260,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $plant_sex_variable_name_R = "";
 
     print STDERR "CVNAMES = ".Dumper(\@cv_names);
-    if (@cv_names & $plant_sex_variable_name) {
+    if (@cv_names && $plant_sex_variable_name) {
 	$plant_sex_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plant_sex_variable_name, $cv_names[0])->cvterm_id();
     }
 
@@ -381,32 +382,68 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     my $genotype_data_fh = $ds->retrieve_genotypes( $protocol->[0], $geno_filepath, $c->config->{cache_file_path}, $c->config->{cluster_shared_tempdir}, $c->config->{backend}, $c->config->{cluster_host},  $c->config->{'web_cluster_queue'}, $c->config->{basepath}, $forbid_cache);
 
     print STDERR "NOW SUBMITTING R JOB...\n";
+    my $cmd_str = join(" ", (
+        "Rscript ",
+            $c->config->{basepath} . "/R/GCPC.R",
+            $pheno_filepath.".clean",
+            $geno_filepath,
+            "'".$si_traits."'",
+            "'".$si_weights."'",
+            "'".$plant_sex_variable_name_R."'",
+        "'".$fixed_factors."'",
+        "'".$random_factors."'",
+    ));
+    my $cxgn_tools_run_config = {
+        backend => $c->config->{backend},
+        submit_host=>$c->config->{cluster_host},
+        temp_base => $c->config->{cluster_shared_tempdir} . "/gcpc_files",
+        queue => $c->config->{'web_cluster_queue'},
+        do_cleanup => 0,
+        # don't block and wait if the cluster looks full
+        max_cluster_jobs => 1_000_000_000,
+    };
+    my $job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema, 
+        sp_person_id => $sp_person_id,
+        job_type => 'genomic_prediction',
+        name => $ds->name().' GCPC',
+        cmd => $cmd_str,
+        cxgn_tools_run_config => $cxgn_tools_run_config,
+        finish_logfile => $c->config->{job_finish_log},
+        results_page => '/tools/gcpc'
+    });
+#     my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
+#     $job_record->update_status("submitted");
+#     $cmd->run_cluster(
+# 	"Rscript ",
+# 	$c->config->{basepath} . "/R/GCPC.R",
+# 	$pheno_filepath.".clean",
+# 	$geno_filepath,
+# 	"'".$si_traits."'",
+# 	"'".$si_weights."'",
+# 	"'".$plant_sex_variable_name_R."'",
+#   "'".$fixed_factors."'",
+#   "'".$random_factors."'",
+#   $job_record->generate_finish_timestamp_cmd()
+#   );
 
-    my $cmd = CXGN::Tools::Run->new({
-            backend => $c->config->{backend},
-            submit_host=>$c->config->{cluster_host},
-            temp_base => $c->config->{cluster_shared_tempdir} . "/gcpc_files",
-            queue => $c->config->{'web_cluster_queue'},
-            do_cleanup => 0,
-            # don't block and wait if the cluster looks full
-            max_cluster_jobs => 1_000_000_000,
-        });
+    # while ($cmd->alive) {
+	# sleep(1);
+    # }
 
-    $cmd->run_cluster(
-	"Rscript ",
-	$c->config->{basepath} . "/R/GCPC.R",
-	$pheno_filepath.".clean",
-	$geno_filepath,
-	"'".$si_traits."'",
-	"'".$si_weights."'",
-	"'".$plant_sex_variable_name_R."'",
-  "'".$fixed_factors."'",
-  "'".$random_factors."'",
-  );
+    $job->submit();
 
-    while ($cmd->alive) {
-	sleep(1);
+    while($job->alive()){
+        sleep(1);
     }
+
+    my $finished = $job->read_finish_timestamp();
+	if (!$finished) {
+		$job->update_status("failed");
+	} else {
+		$job->update_status("finished");
+	}
 
 #    my $figure_path = $c->config->{basepath} . "/static/documents/tempfiles/stability_files/";
 
@@ -447,7 +484,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         return;
     }
 
-    print STDERR "FORMATTED DATA: ".Dumper(\@data);
+    #print STDERR "FORMATTED DATA: ".Dumper(\@data);
 
     my $basename = basename($pheno_filepath.".clean.out");
     my $imagename = basename($pheno_filepath.".clean.png");

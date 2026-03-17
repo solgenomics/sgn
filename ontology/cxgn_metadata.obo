@@ -1,0 +1,18 @@
+format-version: 1.2
+data-version: 1
+date: 04:05:2025 03:00
+saved-by: Naama
+default-namespace: cxgn_metadata
+ontology: cxgn_metadata
+
+[Term]
+id: METADATA:0000001
+name: metadata
+
+[Term]
+id: METADATA:0000002
+name: image
+def: "store an image or a photo associated with a measured variable" []
+comment: \{trait_format:photo}
+is_a: METADATA:0000001 ! metadata
+

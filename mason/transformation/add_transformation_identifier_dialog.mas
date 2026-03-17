@@ -20,34 +20,40 @@ $default_plant_material_name
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Transformation ID: </label>
-                            <div class="col-sm-7">
+                            <div class="col-sm-8">
                                 <input class="form-control" type="text" id="new_transformation_identifier_name" name="new_transformation_identifier_name"  />
                             </div>
                         </div>
 % if ($default_plant_material_name) {
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Plant Material (accession name): </label>
-                            <div class="col-sm-7">
+                            <div class="col-sm-8">
                                 <input class="form-control" name="plant_material" id="plant_material" disabled value="<% $default_plant_material_name %>">
                             </div>
                         </div>
 % } else {
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Plant Material (accession name): </label>
-                                <div class="col-sm-7">
+                                <div class="col-sm-8">
                                     <input class="form-control" type="text" id="plant_material" name="plant_material"  />
                                 </div>
                         </div>
 % }
                         <div class="form-group">
                             <label class="col-sm-4 control-label" >Vector Construct: </label>
-                                <div class="col-sm-7">
+                                <div class="col-sm-8">
                                     <input class="form-control" type="text" id="vector_construct" name="vector_construct"  />
                                 </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-sm-4 control-label">Is a Control: </label>
+                            <div class="col-sm-8">
+                                <input type="checkbox" id="is_a_transformation_control_checkbox" />
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-4 control-label" >Notes: </label>
-                                <div class="col-sm-7">
+                                <div class="col-sm-8">
                                     <div class="input-group">
                                         <textarea class="form-control" id="transformation_notes" ></textarea>
                                     </div>
@@ -122,6 +128,11 @@ jQuery(document).ready(function(){
             return;
         }
 
+        let is_a_control;
+        if(jQuery('#is_a_transformation_control_checkbox').is(":checked")){
+            is_a_control = 1;
+        }
+
         var notes = jQuery("#transformation_notes").val();
 
         jQuery.ajax({
@@ -134,7 +145,8 @@ jQuery(document).ready(function(){
                 'vector_construct': vector_construct,
                 'notes': notes,
                 'transformation_project_id': transformation_project_id,
-                'program_name': program_name
+                'program_name': program_name,
+                'is_a_control': is_a_control
             },
             beforeSend: function(response){
                 jQuery('#working_modal').modal('show');
@@ -165,9 +177,10 @@ jQuery(document).ready(function(){
         if (!default_plant_material_name) {
             jQuery('#plant_material').val('');
         }
-        
+
         jQuery('#vector_construct').val('');
         jQuery('#transformation_notes').val('');
+        jQuery('#is_a_transformation_control_checkbox').prop('checked', false);
     });
 
     jQuery("#dismiss_transformation_id_saved_dialog").click(function(){
@@ -179,6 +192,8 @@ jQuery(document).ready(function(){
 
         jQuery('#vector_construct').val('');
         jQuery('#transformation_notes').val('');
+        jQuery('#is_a_transformation_control_checkbox').prop('checked', false);
+
         location.reload();
     });
 

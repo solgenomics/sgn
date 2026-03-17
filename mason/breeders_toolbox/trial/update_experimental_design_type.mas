@@ -22,7 +22,7 @@ $design_name
                     <label class="control-label">Current Experimental Design type: <% $design_name %></label><br></div>
                     <form class="form-horizontal">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Change to Experimental Design Type: </label>
+                            <label class="col-sm-6 control-label">Change to Experimental Design Type: </label>
                             <div class="col-sm-6" >
                                         <select class="form-control" id="select_design_method" name="select_design_method">
 % foreach my $type(@design_types){
@@ -35,6 +35,8 @@ $design_name
 %        $method = 'RRC';
 %    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
 %        $method = 'DRRC';
+%    } elsif ($type eq 'Un-Replicated Diagonal Design'){
+%        $method = 'URDD';
 %    } elsif ($type eq 'Alpha Lattice'){
 %        $method = 'Alpha';
 %    } elsif ($type eq 'Modified Augmented Design'){

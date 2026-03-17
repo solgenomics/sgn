@@ -5,6 +5,7 @@ $all_nirs_files => undef
 $all_deleted_nirs_files => undef
 $locations => undef
 $sampling_facilities => ()
+$sample_tissue_types => ()
 </%args>
 
 <& /tools/high_dimensional_phenotypes/upload_high_dim_spreadsheet_dialogs.mas &>
@@ -13,7 +14,7 @@ $sampling_facilities => ()
 <& /tools/nirs/nirs_analysis_train_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_predict_dialogs.mas &>
 <& /tools/nirs/nirs_analysis_plot_spectra_dialogs.mas &>
-<& /breeders_toolbox/sampling_trials/create_sampling_trials_dialogs.mas, sampling_facilities=>$sampling_facilities &>
+<& /breeders_toolbox/sampling_trials/create_sampling_trials_dialogs.mas, sampling_facilities=>$sampling_facilities, sample_tissue_types=>$sample_tissue_types &>
 
 <div class="well">
 <&| /page/info_section.mas, title=>'Uploaded NIRS Data', is_subsection=>1, collapsible=>1, collapsed=>1, subtitle=>'View and manage uploaded NIRS data files' &>

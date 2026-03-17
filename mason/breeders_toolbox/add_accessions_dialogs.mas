@@ -13,7 +13,7 @@ $editable_stock_props_definitions
     }
 </%perl>
 
-<div class="modal fade" id="add_accessions_dialog" name="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
+<div class="modal fade" id="add_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="addAccessionsDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -47,11 +47,11 @@ $editable_stock_props_definitions
                         <div class="form-group">
                             <label class="col-sm-4 control-label">Use Fuzzy Search: </label>
                             <div class="col-sm-8">
-%# if ( $user_role eq 'curator' ) {
+% if ( $user_role eq 'curator' ) {
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check"></input>
-%# } else {
-%#                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
-%# }
+% } else {
+                                <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
+% }
                                 <br/>
                                 <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. </small>
                             </div>
@@ -133,7 +133,7 @@ $editable_stock_props_definitions
                 <div class="container-fluid">
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
+                    The first row (header) must contain the <b>accession_name</b> and <b>species_name</b> columns. Additional information can be included by selecting optional column(s) (see below). :
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -143,7 +143,6 @@ $editable_stock_props_definitions
                                 <td>accession_name</td>
                                 <td>species_name</td>
                                 <td>population_name</td>
-                                <td>organization_name</td>
                                 <td>synonym</td>
 				<td>description</td>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
@@ -171,7 +170,6 @@ $editable_stock_props_definitions
                     <ul>
 		    <li>description - a free text description of the stock.</li>
                     <li>population_name (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
-                    <li>organization_name (the name(s) of the organization(s) which use this accession e.g. NARO,IITA)</li>
                     <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {

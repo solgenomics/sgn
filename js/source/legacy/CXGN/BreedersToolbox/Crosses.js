@@ -374,7 +374,8 @@ jQuery(document).ready(function($) {
 
     function upload_crosses_file() {
         const breeding_program = jQuery("#upload_crosses_breeding_program_id").val();
-        if (!breeding_program) {
+        const experiment_breeding_program = jQuery("#experiment_breeding_program_id").val();
+        if (!breeding_program && !experiment_breeding_program) {
             alert("Please select your breeding program");
             return;
         }

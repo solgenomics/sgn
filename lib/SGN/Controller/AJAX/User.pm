@@ -2,6 +2,8 @@
 package SGN::Controller::AJAX::User;
 
 use Moose;
+use JSON;
+use URI::FromHash 'uri';
 use IO::File;
 use Data::Dumper;
 use HTML::Entities;
@@ -54,6 +56,20 @@ sub logout :Path('/ajax/user/logout') Args(0) {
     my $login = CXGN::Login->new($c->dbc->dbh());
     $login->logout_user();
 
+    $c->stash->{rest} = { message => "User successfully logged out." };
+}
+
+sub logout_externally :Path('/ajax/user/logout_externally') QueryParam('redirect_uri') {
+    my $self = shift;
+    my $c = shift;
+    $c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+    $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
+    $c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
+#    my $redirect_uri = $c->request->param( 'redirect_uri' );
+    my $login = CXGN::Login->new($c->dbc->dbh());
+    $login->logout_user();
+#    $c->stash->{redirect_uri} = $redirect_uri;
+#    $c->stash->{template} = '/site/toolbar/logout_externally.mas';
     $c->stash->{rest} = { message => "User successfully logged out." };
 }
 
@@ -242,7 +258,7 @@ sub change_account_info_action :Path('/ajax/user/update') Args(0) {
 	return;
     }
 
-    my $person = CXGN::People::Login->($c->dbc->dbh(), $c->user->get_sp_person_id());
+    my $person = CXGN::People::Login->new($c->dbc->dbh(), $c->user->get_sp_person_id());
 
 #    my ($current_password, $change_username, $change_password, $change_email) = $c->req->param({qw(current_password change_username change_password change_email)});
 
@@ -680,20 +696,26 @@ ername.";}
         }
     }
 
+    my $encoded_username = encode_entities($username);
+    print STDERR "USERNAME: $username. ENCODED: $encoded_username\n";
+    $new_user_login->set_username($encoded_username);
+    $new_user_login->set_private_email(encode_entities($email_address));
+    $new_user_login->set_pending_email(encode_entities($email_address));
+    $new_user_login->set_password($password);
+
+    $new_user_login->store();
+    
+    my $new_user_person_id=$new_user_login->get_sp_person_id();
+    my $new_user = CXGN::People::Person->new($c->dbc->dbh, $new_user_person_id);
+
     eval {
-	$new_user_login->set_username(encode_entities($username));
-	$new_user_login->set_password($password);
-	$new_user_login->set_private_email(encode_entities($email_address));
-	$new_user_login->set_user_type(encode_entities($new_user_type));
-	$new_user_login->store();
-	my $new_user_person_id=$new_user_login->get_sp_person_id();
-	my $new_user_person=CXGN::People::Person->new($c->dbc->dbh, $new_user_person_id);
-	$new_user_person->set_first_name(encode_entities($first_name));
-	$new_user_person->set_last_name(encode_entities($last_name));
-	##removed. This was causing problems with creating new accounts for people,
-	##and then not finding it in the people search.
-	#$new_user_person->set_censor(1);#censor by default, since we are creating this account, not the person whose info might be displayed, and they might not want it to be displayed
-	$new_user_person->store();
+
+	$new_user->set_contact_email(encode_entities($email_address));
+	$new_user->set_user_type(encode_entities($new_user_type));
+	$new_user->set_first_name(encode_entities($first_name));
+	$new_user->set_last_name(encode_entities($last_name));
+	
+	$new_user->store();
     };
 
     if ($@) {

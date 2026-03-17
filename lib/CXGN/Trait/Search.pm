@@ -79,7 +79,7 @@ has 'trait_name_list' => (
 has 'trait_name_is_exact' => (
     isa => 'Bool|Undef',
     is => 'rw',
-    default => 0
+    default => 0,
 );
 
 has 'sort_by' => (
@@ -101,6 +101,12 @@ has 'offset' => (
     isa => 'Int|Undef',
     is => 'rw',
 );
+
+has 'flexible_word_order_search' => (
+    isa => 'Maybe[Bool]',
+    is => 'rw',
+    default => 1,
+    );
 
 sub search {
     my $self = shift;
@@ -128,7 +134,7 @@ sub search {
 
     if ($self->trait_definition_list && scalar(@{$self->trait_definition_list}) > 0){
         foreach (@{$self->trait_definition_list}){
-            my @words = split '\s', $_;
+            my @words = split "\s+", $_;
             my $match_string = join '%', @words;
             push @{$and_conditions{'me.definition'}}, {'ilike' => '%'.$match_string.'%'};
         }
@@ -139,9 +145,19 @@ sub search {
         if ($trait_name_is_exact){
             $and_conditions{'me.name'} = { -in => $self->trait_name_list };
         } else {
-            foreach (@{$self->trait_name_list}){
-                push @{$and_conditions{'me.name'}}, {'ilike' => '%'.$_.'%'};
+	    my @search_terms = ();
+	    if ($self->flexible_word_order_search()) {
+		@search_terms = map { split /\s+/, $_ } @{$self->trait_name_list};
+	    }
+	    else {
+		@search_terms = @{$self->trait_name_list};
+	    }
+	    my @name_conditions; 
+            foreach (@search_terms) {
+                push @name_conditions,  { 'me.name' => { 'ilike' => '%'.$_.'%'  }};
+		
             }
+	    $and_conditions{'-and' } = \@name_conditions;
         }
     }
 
@@ -157,9 +173,8 @@ sub search {
         $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
-    # $schema->storage->debug(1);
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
-        \%and_conditions,
+        \%and_conditions, 
         {
             join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'} ],
             where => \%where_join,

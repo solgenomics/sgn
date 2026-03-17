@@ -156,7 +156,8 @@ sub generate_tracking_identifiers_POST : Args(0) {
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh();
 
@@ -270,7 +271,7 @@ sub activity_info_save_POST : Args(0) {
         return;
     }
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh();
     my $number_of_transformants;
@@ -632,7 +633,6 @@ sub update_status : Path('/ajax/tracking_activity/update_status') : ActionClass(
 sub update_status_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh();
     my $identifier_id = $c->req->param("identifier_id");
     my $status_type = $c->req->param("status_type");
@@ -653,6 +653,7 @@ sub update_status_POST : Args(0) {
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
     my $tracking_identifier_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "tracking_identifier", 'stock_type')->cvterm_id();
     my $transformation_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "transformation", 'stock_type')->cvterm_id();
@@ -716,7 +717,6 @@ sub reverse_status : Path('/ajax/tracking_activity/reverse_status') : ActionClas
 sub reverse_status_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh();
     my $identifier_id = $c->req->param("identifier_id");
     my $updated_status_type = $c->req->param("updated_status_type");
@@ -733,6 +733,7 @@ sub reverse_status_POST : Args(0) {
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
     my $status_type_id;
     if ($updated_status_type) {

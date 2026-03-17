@@ -43,7 +43,7 @@ $trial_stock_type => undef
                     </div>
                     <div id="management_factore">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Management Factor: </label>
+                            <label class="col-sm-3 control-label">Treatment: </label>
                             <div class="col-sm-9" >
                                 <div id="create_fieldbook_treatment_<% $download_type %>">
                                 </div>
@@ -109,6 +109,32 @@ $trial_stock_type => undef
                                  <input id="create_fieldbook_use_synonyms_<% $download_type %>" type="checkbox" checked data-toggle="toggle">
                             </div>
                         </div>
+                        <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 30px; justify-content: flex-start; align-items: center">
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <label>Include Plot Order:</label>
+                                <input id="create_fieldbook_include_plot_order_<% $download_type %>" type="checkbox" data-toggle="toggle">
+                            </div>
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <label>Plot&nbsp;Order:</label>
+                                <select class="form-control" name="create_fieldbook_plot_order_<% $download_type %>" id="create_fieldbook_plot_order_<% $download_type %>">
+                                    <option value="">--Select plot order--</option>
+                                    <option value="by_col_serpentine">By Column: Serpentine</option>
+                                    <option value="by_col_zigzag">By Column: Zigzag</option>
+                                    <option value="by_row_serpentine">By Row: Serpentine</option>
+                                    <option value="by_row_zigzag">By Row: Zigzag</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 15px; align-items: center;">
+                                <label>Starting&nbsp;Plot:</label>
+                                <select class="form-control" id="create_fieldbook_plot_start_<% $download_type %>" name="create_fieldbook_plot_start_<% $download_type %>">
+                                    <option value="">--Select start plot--</option>
+                                    <option value="bottom_left">Bottom Left</option>
+                                    <option value="top_left">Top Left</option>
+                                    <option value="top_right">Top Right</option>
+                                    <option value="bottom_right">Bottom Right</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form><br/>
@@ -157,10 +183,10 @@ jQuery(document).ready(function() {
 
     if(jQuery("#html_select_trial_for_create_fieldbook_<% $download_type %>").length == 0) {
         get_select_box(
-            'trials', 
-            'select_trial_for_create_fieldbook_<% $download_type %>', 
-            { 
-                'name' : 'html_select_trial_for_create_fieldbook_<% $download_type %>', 
+            'trials',
+            'select_trial_for_create_fieldbook_<% $download_type %>',
+            {
+                'name' : 'html_select_trial_for_create_fieldbook_<% $download_type %>',
                 'id' : 'html_select_trial_for_create_fieldbook_<% $download_type %>',
                 'include_lists' : 1
             }
@@ -218,7 +244,7 @@ jQuery(document).ready(function() {
             for ( let i = 0; i < selected_trial_ids.length; i++ ) {
                 let trial_id = parseInt(selected_trial_ids[i]);
                 if ( trial_id && trial_id !== '' ) {
-                    new jQuery.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '/ajax/breeders/trial/'+trial_id+'/has_plants',
                         dataType: "json",
@@ -248,7 +274,7 @@ jQuery(document).ready(function() {
                             alert('An error occurred checking trial for plants or subplots.');
                         }
                     });
-                    new jQuery.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '/ajax/breeders/trial/'+trial_id+'/has_subplots',
                         dataType: "json",
@@ -278,7 +304,7 @@ jQuery(document).ready(function() {
                             alert('An error occurred checking trial for plants or subplots.');
                         }
                     });
-                    new jQuery.ajax({
+                    jQuery.ajax({
                         type: 'POST',
                         url: '/ajax/breeders/trial/'+trial_id+'/has_tissue_samples',
                         dataType: "json",
@@ -488,12 +514,13 @@ function show_fieldbook_treatments_<% $download_type %>(){
 
 function open_create_fieldbook_dialog_<% $download_type %>() {
     var trial_stock_type = "<% $trial_stock_type %>";
-    let trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',');
-    
+    let trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',').filter((e) => !!e && e !== '');
+    if ( !trial_ids || trial_ids.length < 1 ) return alert("Please select one or more trials first");
+
     jQuery("#working_modal").modal("show");
     for ( let i = 0; i < trial_ids.length; i++ ) {
         let trial_id = trial_ids[i];
-        new jQuery.ajax({
+        jQuery.ajax({
             type: 'POST',
             url: '/ajax/fieldbook/create',
             dataType: "json",
@@ -506,7 +533,10 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
                 'all_stats': jQuery('#create_fieldbook_all_stats_<% $download_type %>').prop('checked'),
                 'use_synonyms': jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop('checked'),
                 'trait_list':jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val(),
-                'trial_stock_type': trial_stock_type
+                'trial_stock_type': trial_stock_type,
+                'include_plot_order': jQuery('#create_fieldbook_include_plot_order_<% $download_type %>').prop('checked'),
+                'plot_order': jQuery('#create_fieldbook_plot_order_<% $download_type %>').val(),
+                'plot_start': jQuery('#create_fieldbook_plot_start_<% $download_type %>').val()
             },
             success: function (response) {
                 if (response.error){
@@ -517,7 +547,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
                     jQuery("#working_modal").modal("hide");
                     alert(response.error_string);
                 } else {
-                    _finish(response.file_id, response.file)
+                    _finish(response.file_id, response.file);
                 }
             },
             error: function () {
@@ -547,7 +577,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
 % } elsif ($download_type eq 'TrialLayout') {
 
 function show_fieldbook_treatments_<% $download_type %>(){
-    jQuery('#create_fieldbook_treatment_<% $download_type %>').html('Include All Management Factors In Download');
+    jQuery('#create_fieldbook_treatment_<% $download_type %>').html('Include All Treatments In Download');
     jQuery('#create_fieldbook_format_div_<% $download_type %>').show();
 }
 

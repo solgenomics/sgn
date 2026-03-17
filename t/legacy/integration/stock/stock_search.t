@@ -26,6 +26,7 @@ use SGN::Test::WWW::Mechanize;
 
     $mech->get_ok("/stock/search/");
     $mech->dbh_leak_ok;
+    $mech->content_contains("Stock Id");
     $mech->content_contains("Stock name");
     $mech->content_contains("Stock type");
     $mech->content_contains("Organism");
@@ -71,8 +72,9 @@ use SGN::Test::WWW::Mechanize;
 {
     my $mech = SGN::Test::WWW::Mechanize->new;
 
-    $mech->get_ok("stock/search?advanced=1&stock_name=&stock_type=0&organism=0&search_submitted=1&page=1&page_size=20&description=&person=SolCAP+project&onto=&trait=&min_limit=&max_limit=&submit=Search");
-
+    $mech->get_ok("/stock/search?advanced=1&stock_name=&stock_type=0&organism=0&search_submitted=1&page=1&page_size=20&description=&person=SolCAP+project&onto=&trait=&min_limit=&max_limit=&submit=Search");
+    $mech->dbh_leak_ok;
+    $mech->html_lint_ok('advanced stock search page html ok');
 }
 
 

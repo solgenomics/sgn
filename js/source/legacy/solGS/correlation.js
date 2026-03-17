@@ -16,24 +16,47 @@ solGS.correlation = {
   corrPopsDiv: "#corr_pops_select_div",
   corrPopsDataDiv: "#corr_pops_data_div",
 
+  getCorrPopName: function () {
+
+    var corrPopName = jQuery("#corr_pop_name").val();
+
+    if (!corrPopName) {
+      corrPopName = jQuery("#corr_selected_pop_name").val();
+    }
+    if (!corrPopName) {
+      corrPopName = jQuery("#training_pop_name").val();
+    }
+    if (!corrPopName) {
+      corrPopName = jQuery("#trial_name").val();
+    }
+    if (!corrPopName) {
+      corrPopName = jQuery("#analysis_pop_name").val();
+    }
+
+    return corrPopName;
+},
+
+
   getPhenoCorrArgs: function () {
     var corrPopId = jQuery("#corr_pop_id").val();
     var dataSetType = jQuery("#data_set_type").val();
     var dataStr = jQuery("#data_structure").val();
-
+    var corrPopName = this.getCorrPopName();
+    
     var listId;
     var datasetId;
 
     if (dataStr.match(/dataset/)) {
-      datasetId = selectId;
+      datasetId = corrPopId;
     } else if (dataStr.match(/list/)) {
-      listId = selectId;
+      listId = corrPopId;
     }
 
     var corrDivs = this.getCorrDivs(corrPopId);
 
     var args = {
       corr_pop_id: corrPopId,
+      corr_pop_name: corrPopName,
       data_set_type: dataSetType,
       data_structure: dataStr,
       dataset_id: datasetId,
@@ -101,7 +124,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     corrPopId = selectedPop.corr_pop_id;
 
     var dataType = this.getSelectedDataType(corrPopId);
-    // var corrUrl = this.generateCorrUrl(corrPopId);
 
     corrArgs = selectedPopData.selectedPop;
     corrArgs = JSON.parse(corrArgs);
@@ -109,7 +131,6 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     if (dataType.match(/Phenotype/)){
       corrArgs['correlation_type'] = 'phenotypic';
     }
-    // corrArgs["analysis_page"] = corrUrl;
   }
 
   return corrArgs;
@@ -195,9 +216,9 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     var compatibility_message = '';
     if (dataStr.match(/dataset/)) {
       popName = `<a href="/dataset/${popId}">${popName}</a>`;
-      if (tool_compatibility == null || tool_compatibility == "(not calculated)"){
+      if (tool_compatibility == null || tool_compatibility["Correlation"] == null || tool_compatibility == "(not calculated)"){
         compatibility_message = "(not calculated)";
-      } else {
+      } else {        
           if (tool_compatibility["Correlation"]['compatible'] == 0) {
           compatibility_message = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
           } else {
@@ -368,18 +389,12 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
     var corrPlotLink =
       "<a href='#'  onclick='event.preventDefault();' id='" + corrDownloadBtn + "'> plot</a>";
 
-    var popName = corrArgs.corre_pop_name;
+    var popName = corrArgs.corr_pop_name;
     if (!popName) {
-      popName = jQuery("#corr_selected_pop_name").val();
-    }
-    if (!popName) {
-      popName = jQuery("#training_pop_name").val();
-    }
-    if (!popName) {
-      popName = jQuery("#trial_name").val();
+      popName = this.getCorrPopName();
     }
 
-    var downloadLinks = `Download ${popName} correlation: ` + corrCoefLink + " | " + corrPlotLink;
+    var downloadLinks = `Download <b>${popName}</b> correlation: ` + corrCoefLink + " | " + corrPlotLink;
     return downloadLinks;
   },
 
@@ -437,39 +452,48 @@ jQuery(document).ready(function () {
     var corrArgs;
     var corrPopId;
     if (runCorrBtnId.match(/run_corr/)) {
-      corrArgs = solGS.correlation.getPhenoCorrArgs();
-      corrPopId = corrArgs.corr_pop_id;
+        corrArgs = solGS.correlation.getPhenoCorrArgs();
+        corrPopId = corrArgs.corr_pop_id;
 
-      if (!corrPopId) {
-        corrArgs = solGS.correlation.getSelectedPopCorrArgs(runCorrBtnId);
-      }
-  
-    var canvas = solGS.correlation.canvas;
-    var corrPlotDivId = solGS.correlation.corrPlotDivPrefix;
-    var corrMsgDiv = solGS.correlation.corrMsgDiv;
+        if (!corrPopId) {
+            corrArgs = solGS.correlation.getSelectedPopCorrArgs(runCorrBtnId);
+         }
 
-    runCorrBtnId = `#${runCorrBtnId}`;
-    jQuery(runCorrBtnId).hide();
-    jQuery(`${canvas} .multi-spinner-container`).show();
-    jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
+        if (!corrArgs.corr_pop_name) {
+            corrArgs["corr_pop_name"] = solGS.correlation.getCorrPopName();
+        }
+    
+        corrPopId = corrArgs.corr_pop_id;
+        var canvas = solGS.correlation.canvas;
+        var corrPlotDivId = solGS.correlation.corrPlotDivPrefix;
+        corrPlotDivId = `${corrPlotDivId}_${corrPopId}`;
 
-    solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
-      if (res.data) {
-        corrArgs["corr_table_file"] = res.corre_table_file;
-        var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
+        var corrMsgDiv = solGS.correlation.corrMsgDiv;
 
-        solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
+        runCorrBtnId = `#${runCorrBtnId}`;
+        jQuery(runCorrBtnId).hide();
+        jQuery(`${canvas} .multi-spinner-container`).show();
+        jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
-        jQuery(`${canvas} .multi-spinner-container`).hide();
-        jQuery(corrMsgDiv).empty();
-        jQuery(runCorrBtnId).show();
-      } else {
-        jQuery(`${canvas} .multi-spinner-container`).hide();
+        solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
+        if (res.data) {
+            corrArgs["corr_table_file"] = res.corre_table_file;
 
-        jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
+            
+            var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
 
-        jQuery(runCorrBtnId).show();
-      }
+            solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
+
+            jQuery(`${canvas} .multi-spinner-container`).hide();
+            jQuery(corrMsgDiv).empty();
+            jQuery(runCorrBtnId).show();
+        } else {
+            jQuery(`${canvas} .multi-spinner-container`).hide();
+
+            jQuery(corrMsgDiv).html("There is no correlation output for this dataset.").fadeOut(8400);
+
+            jQuery(runCorrBtnId).show();
+        }
     });
 
     solGS.correlation.runPhenoCorrelation(corrArgs).fail(function (res) {

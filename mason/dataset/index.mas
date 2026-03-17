@@ -226,6 +226,15 @@ sizes. Hover for details."></span>
         -->
     </div>
 
+
+
+    <& /solgs/tools/dataset_trials_analysis.mas,
+        dataset_id => $dataset_id,
+        dataset_name => $dataset_name,
+        data_structure => 'dataset',    
+    &>
+    
+
     <script>
 
     jQuery(document).ready( function() {
@@ -294,15 +303,18 @@ sizes. Hover for details."></span>
                     if (response.error) {
                         jQuery('#working_modal').modal("hide");
                         alert("An error occured calculating tool compatibility: \n" + response.error);
+                        jQuery('#predicted-tool-compatibility').css('height', '100px');
                         jQuery('#predicted-tool-compatibility').text("Error calculating tool compatibility.");
                     } else {
-                        jQuery('#predicted-tool-compatibility').css('height', '400px');
-                        jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
+                        //jQuery('#predicted-tool-compatibility').css('height', '400px');
+                        //jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
+                        alert(response.message);
                         jQuery('#working_modal').modal("hide");
                     }
                 }, 
                 error: function(response) {
                     jQuery('#working_modal').modal("hide");
+                    jQuery('#predicted-tool-compatibility').css('height', '100px');
                     alert("An error occurred calculating tool compatibility");
                     jQuery('#predicted-tool-compatibility').text("Error calculating tool compatibility.");
                 }

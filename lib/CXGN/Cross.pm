@@ -86,9 +86,6 @@ has 'parent_type' => (isa => 'Str',
     required => 0,
 );
 
-
-
-
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -371,7 +368,7 @@ sub get_cross_info_for_progeny {
     if (scalar(@cross_info)>0){
         return $cross_info[0];
     } else {
-        return undef;
+        return;
     }
 }
 
@@ -1634,6 +1631,136 @@ sub get_parents_and_numbers_of_progenies {
     }
 
     return \@data;
+}
+
+
+=head2 get_plots_used_in_crossing_experiment
+
+    Class method.
+    Returns all plot names and ids used in a specific crossing_experiment.
+    Example: my @plots = CXGN::Cross->get_plots_used_in_crossing_experiment($schema, $crossing_experiment_id)
+
+=cut
+
+sub get_plots_used_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id;
+
+    my $female_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plot_of", "stock_relationship")->cvterm_id();
+    my $male_plot_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plot_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename
+        FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship ON (nd_experiment_stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id IN (?,?)
+        JOIN stock on (stock_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plot_of_typeid, $male_plot_of_typeid, $crossing_experiment_id);
+
+    my @all_plots = ();
+    while(my($plot_id, $plot_name) = $h->fetchrow_array()){
+        push @all_plots, [$plot_id, $plot_name]
+    }
+
+    return \@all_plots;
+}
+
+
+=head2 get_plots_of_plants_used_in_crossing_experiment
+
+    Class method.
+    Returns all plot names and ids of plants used in a specific crossing_experiment.
+    Example: my @plots = CXGN::Cross->get_plots_of_plants_used_in_crossing_experiment($schema, $crossing_experiment_id)
+
+=cut
+
+sub get_plots_of_plants_used_in_crossing_experiment {
+    my $self = shift;
+    my $schema = $self->schema;
+    my $crossing_experiment_id = $self->trial_id;
+
+    my $female_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "female_plant_of", "stock_relationship")->cvterm_id();
+    my $male_plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "male_plant_of", "stock_relationship")->cvterm_id();
+    my $plant_of_typeid = SGN::Model::Cvterm->get_cvterm_row($schema, "plant_of", "stock_relationship")->cvterm_id();
+
+    my $q = "SELECT DISTINCT stock.stock_id, stock.uniquename
+        FROM nd_experiment_project
+        JOIN nd_experiment_stock ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        JOIN stock_relationship AS parent_plant_relationship ON (nd_experiment_stock.stock_id = parent_plant_relationship.object_id) AND parent_plant_relationship.type_id IN (?,?)
+        JOIN stock_relationship AS plant_plot_relationship ON (plant_plot_relationship.object_id = parent_plant_relationship.subject_id) AND plant_plot_relationship.type_id = ?
+        JOIN stock on (plant_plot_relationship.subject_id = stock.stock_id)
+        WHERE nd_experiment_project.project_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute($female_plant_of_typeid, $male_plant_of_typeid, $plant_of_typeid, $crossing_experiment_id);
+
+    my @all_plots = ();
+    while(my($plot_id, $plot_name) = $h->fetchrow_array()){
+        push @all_plots, [$plot_id, $plot_name]
+    }
+
+    return \@all_plots;
+}
+
+
+=head2 get_progeny_cross_family_info
+
+ Usage:         CXGN::Cross->get_progeny_cross_family_info($schema, $progeny_id);
+ Desc:          Class method
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_progeny_cross_family_info {
+    my $self = shift;
+    my $schema = shift;
+    my $progeny_stock_ids = shift;
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "male_parent", "stock_relationship")->cvterm_id();
+    my $offspring_of_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+    my $family_stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
+    my $cross_experiment_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_experiment', 'experiment_type')->cvterm_id();
+
+    my @progeny_array = @$progeny_stock_ids;
+    my $placeholder = join ",",("?") x @progeny_array;
+    my $where_clause = "stock.stock_id IN ($placeholder)";
+
+    my $q ="SELECT stock.stock_id, stock.uniquename, female_accession.stock_id, female_accession.uniquename, male_accession.stock_id, male_accession.uniquename,
+        female_relationship.value, cross_unique_id.stock_id, cross_unique_id.uniquename, family_name.stock_id, family_name.uniquename, stockprop.value, project.project_id, project.name
+        FROM stock
+        LEFT JOIN stock_relationship AS female_relationship ON (stock.stock_id = female_relationship.object_id) AND female_relationship.type_id = ?
+        LEFT JOIN stock AS female_accession ON (female_relationship.subject_id = female_accession.stock_id) AND female_accession.type_id = ?
+        LEFT JOIN stock_relationship AS male_relationship ON (stock.stock_id = male_relationship.object_id) AND male_relationship.type_id = ?
+        LEFT JOIN stock AS male_accession ON (male_relationship.subject_id = male_accession.stock_id) AND male_accession.type_id = ?
+        LEFT JOIN stock_relationship AS cross_relationship ON (stock.stock_id = cross_relationship.subject_id) AND cross_relationship.type_id = ?
+        LEFT JOIN stock AS cross_unique_id ON (cross_relationship.object_id = cross_unique_id.stock_id) AND cross_unique_id.type_id = ?
+        LEFT JOIN stock_relationship AS cross_family_relationship ON (cross_family_relationship.subject_id = cross_unique_id.stock_id) AND cross_family_relationship.type_id = ?
+        LEFT JOIN stock AS family_name ON (cross_family_relationship.object_id = family_name.stock_id) AND family_name.type_id = ?
+        LEFT JOIN stockprop ON (stockprop.stock_id = family_name.stock_id) AND stockprop.type_id = ?
+        LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_unique_id.stock_id) AND nd_experiment_stock.type_id = ?
+        LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
+        LEFT JOIN project ON (nd_experiment_project.project_id = project.project_id)
+        WHERE $where_clause";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $accession_type_id, $offspring_of_type_id, $cross_type_id, $cross_member_of_type_id, $family_type_id, $family_stockprop_type_id, $cross_experiment_type_id, @progeny_array);
+
+        my @progeny_cross_family_info = ();
+        while(my ($progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $project_id, $project_name) = $h->fetchrow_array()){
+            push @progeny_cross_family_info, [$progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $project_id, $project_name]
+        }
+        return \@progeny_cross_family_info;
+
 }
 
 

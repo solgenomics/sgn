@@ -1,0 +1,56 @@
+<%args>
+$stock_id
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Accessions' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class = "well well-sm">
+    <form id="download_population_seedlots_action" action="/breeders/download_population_seedlots_action" method="POST">
+        <button class="btn btn-primary" type="button" id="population_seedlots_download_button">Download Seedlot Info</button>
+        <input name="population_stock_id" id="population_stock_id" type="hidden" value="<% $stock_id %>">
+        <input type="hidden" id="population_seedlots_download_token" name="population_seedlots_download_token"/>
+    </form>
+</div>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="population_seedlots_table">
+    </table>
+</div>
+
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var population_id = "<%$stock_id%>";
+    var table = jQuery(population_seedlots_table).DataTable({
+        ajax: '/ajax/manage_accessions/population_seedlots/'+population_id,
+        'autoWidth': false,
+        destroy: true,
+        columns: [
+            { title: "Member Name", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.member_id+"/view'>"+row.member_name+"</a>"; } },
+            { title: "Member Type", "data": "member_type" },
+            { title: "Seedlot Name", "data": null, "render": function ( data, type, row ) {
+                if (row.seedlot_id === null){
+                    return 'No Seedlot'
+                } else {
+                    return "<a href='/breeders/seedlot/"+row.seedlot_id+"'>"+row.seedlot_name+"</a>"
+                }
+            }},
+            { title: "Current Count", "data": "current_count" },
+            { title: "Current Weight (g) ", "data": "current_weight_gram" },
+            { title: "Box Name", "data": "box_name" },
+            { title: "Location", "data": "location" },
+        ],
+    });
+
+    jQuery('#population_seedlots_download_button').click(function() {
+        var token = new Date().getTime(); //use the current timestamp as the token name and value
+        jQuery('#population_seedlots_download_token').val(token);
+        jQuery('#download_population_seedlots_action').submit();
+    });
+
+});
+
+</script>

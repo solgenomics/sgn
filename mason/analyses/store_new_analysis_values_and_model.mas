@@ -169,7 +169,7 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
 
 <& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => [ ] &>
 
-<div class="modal fade" id="generic_save_analysis_dialog" name="generic_save_analysis_dialog" tabindex="-1" role="dialog" aria-labelledby="genericStoreAnalysisDialog" data-backdrop="static">
+<div class="modal fade" style= "z-index: 1500" id="generic_save_analysis_dialog" name="generic_save_analysis_dialog" tabindex="-1" role="dialog" aria-labelledby="genericStoreAnalysisDialog" data-backdrop="static">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -240,13 +240,19 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Protocol: </label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="generic_save_analysis_protocol" name="generic_save_analysis_protocol" type="text" placeholder="e.g. lmer(grain_yield ~ replicate + 1|germplasmName)" disabled/>
+                                        <input class="form-control" id="generic_save_analysis_protocol" name="generic_save_analysis_protocol" type="text" placeholder="e.g. lmer(grain_yield ~ replicate + 1|germplasmName)" />
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
                                     <label class="col-sm-3 control-label">Dataset ID: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="generic_save_analysis_dataset_id" name="generic_save_analysis_dataset_id" type="number" disabled/>
+                                    </div>
+                                </div>
+                                 <div class="form-group form-group-sm">
+                                    <label class="col-sm-3 control-label">Trial ID: </label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="generic_save_analysis_trial_id" name="generic_save_analysis_trial_id" type="number" disabled/>
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm">
@@ -541,6 +547,13 @@ jQuery(document).ready(function() {
         var generic_save_analysis_model_archived_training_data_file_type = jQuery('#generic_save_analysis_model_archived_training_data_file_type').val();
         var generic_save_analysis_model_auxiliary_files = jQuery('#generic_save_analysis_model_auxiliary_files').val();
 
+        // var analysis_result_stock_names = [];
+
+        // if (generic_save_analysis_result_values_type == 'analysis_result_new_stocks') {
+        //     var stocks = Object.keys(JSON.parse(generic_save_analysis_result_values));
+        //     analysis_result_stock_names = stocks.map((stock, index) => generic_save_analysis_analysis_name + "_" + stock);
+        // }
+
         if (generic_save_analysis_analysis_to_save_boolean == 'yes') {
             if (generic_save_analysis_analysis_name == '') {
                 alert('Please give an analysis name');
@@ -650,6 +663,7 @@ jQuery(document).ready(function() {
                 'analysis_precomputed_design_optional':generic_save_analysis_precomputed_design_optional,
                 'analysis_result_values':generic_save_analysis_result_values,
                 'analysis_result_values_type':generic_save_analysis_result_values_type,
+                //'analysis_result_stock_names':analysis_result_stock_names,
                 'analysis_result_summary':generic_save_analysis_result_summary_values,
                 'analysis_result_trait_compose_info':generic_save_analysis_result_compose_trait_info,
                 'analysis_model_id':analysis_model_id,

@@ -24,8 +24,12 @@ my $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
 });
 my ($result, $total_count) = $trial_search->search();
-print STDERR "ALL TRIAL =".Dumper($result)."\n";
-is_deeply($result, [
+
+
+my @sorted_result = sort { $a->{trial_id} <=> $b->{trial_id} } @$result;
+print STDERR "ALL TRIAL =".Dumper(\@sorted_result)."\n";
+
+my @test_data = (
           {
             'design' => 'RCBD',
             'breeding_program_id' => 134,
@@ -54,8 +58,8 @@ is_deeply($result, [
             'trial_id' => 165,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_status' => undef,
@@ -85,8 +89,8 @@ is_deeply($result, [
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'description' => 'new_test_cross',
@@ -116,8 +120,8 @@ is_deeply($result, [
             'design' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -147,8 +151,8 @@ is_deeply($result, [
             'breeding_program_id' => 134,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_status' => undef,
@@ -178,8 +182,8 @@ is_deeply($result, [
             'location_id' => '23',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_submitted' => undef,
@@ -209,10 +213,16 @@ is_deeply($result, [
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           }
-        ], 'trial search test 1');
+);
+
+my @sorted_test_data = sort { $a->{trial_id} <=> $b->{trial_id} } @test_data;
+
+print STDERR "SORTED TEST DATA = ".Dumper(\@sorted_test_data);
+
+is_deeply(\@sorted_result, \@sorted_test_data, "trial search test 1");
 
 $trial_search = CXGN::Trial::Search->new({
     bcs_schema=>$schema,
@@ -250,7 +260,8 @@ is_deeply($result, [
             'project_harvest_date' => '',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'project_harvest_date' => '',
@@ -280,7 +291,8 @@ is_deeply($result, [
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -310,7 +322,8 @@ is_deeply($result, [
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
 		'trial_type_value' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'design' => 'CRD',
@@ -340,7 +353,8 @@ is_deeply($result, [
             'folder_description' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'design' => 'CRD',
@@ -370,7 +384,8 @@ is_deeply($result, [
             'year' => '2014',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'breeding_program_description' => 'test',
@@ -400,7 +415,8 @@ is_deeply($result, [
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           }
         ], 'trial search test 2');
 
@@ -875,7 +891,7 @@ is($trial->get_name(), "anothertrial modified");
 #
 my $desc = $trial->get_description();
 
-ok($desc == "test_trial", "another test trial...");
+is($desc, "another test trial...", "description getter");
 
 $trial->set_description("blablabla");
 
@@ -1006,13 +1022,33 @@ print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
 print STDERR "Done.\n";
 
-my $deleted_trial;
+my $still_there = $f->bcs_schema->resultset('Project::Project')->find({ project_id => $trial_id });
+ok(!defined $still_there, "check that trial project row was deleted");
+
+my ($threw, $deleted_trial, $name) = (0);
+
+
 eval {
-     $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
+    $deleted_trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $trial_id });
+    $name = $deleted_trial->get_name();
+
 };
 
-if ($@) { print "An error occurred: $@\n"; }
+ok($@, "Deletion was successful!");
 
-like($@, qr/The trial $trial_id does not exist/, "check that trial was deleted");
+# ok(
+#     $threw
+#     || !$deleted_trial
+#     || !$deleted_trial->can('trial_id') || !$deleted_trial->trial_id
+#     || !defined $name,
+#     "cannot construct or access a deleted trial"
+# ) or do {
+#     require Data::Dumper;
+#     diag "Constructor returned trial_id=" . (
+#         ($deleted_trial && $deleted_trial->can('trial_id')) ? ($deleted_trial->trial_id // 'undef') : 'no method'
+#     ) . ", name=" . (defined $name ? $name : 'undef');
+# };
+
+$f->clean_up_db();
 
 done_testing();

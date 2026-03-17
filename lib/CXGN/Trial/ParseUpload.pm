@@ -90,6 +90,14 @@ has 'facility_identifiers_included' => (
     default => 0,
 );
 
+has 'allowed_tissue_list' => (
+    is => 'ro',
+    isa => 'Str',
+    writer => '_set_allowed_tissue_list',
+    reader => 'get_allowed_tissue_list',
+    required => 0
+);
+
 
 sub parse {
   my $self = shift;

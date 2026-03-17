@@ -4,8 +4,12 @@ $col2_width_class => "col-sm-7"
 $col3_width_class => "col-sm-2"
 $icon_class => "glyphicon glyphicon-qrcode"
 $title => "A title."
-$button_id => "3col_id"
-$button_text => "Go"
+$label_design_btn_id => undef
+$legacy_barcode_btn_id => undef
+$go_btn_id => undef
+$label_design_btn_text => "Label Designer (Recommended)"
+$legacy_barcode_text => "Legacy Barcode Generator"
+$go_btn_text => "Go"
 </%args>
 
 
@@ -17,10 +21,21 @@ $button_text => "Go"
         <div class="<% $col2_width_class %>">
             <h4><% $title %></h4>
         </div>
+% if ($go_btn_id) {
         <div class="<% $col3_width_class %>">
-            <button id="<% $button_id %>" class="btn btn-primary btn-sm"><% $button_text %></button>
+            <button id="<% $go_btn_id %>" class="btn btn-primary btn-sm"><% $go_btn_text %></button>
+        </div>
+% }             
+    </div>
+
+% if ($label_design_btn_id && $legacy_barcode_btn_id) {
+    <div class="text-center" style="margin-top: 10px;">
+        <div class="btn-group" role="group">
+            <button id="<% $label_design_btn_id %>" class="btn btn-primary btn-sm"><% $label_design_btn_text %></button>
+            <button id="<% $legacy_barcode_btn_id %>" class="btn btn-sm" style="margin-left: 6px;"><% $legacy_barcode_text %></button>
         </div>
     </div>
+% }
 </div>
 
 

@@ -1,0 +1,59 @@
+<%args>
+$trial_id
+$trial_stock_type
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class="well well-sm">
+    <div class="panel panel-default">
+        <form id="download_summary_stock_entries" action="/breeders/download_summary_stock_entries" method="POST">
+            <div class="panel-body">
+                <button class="btn btn-primary" id="download_summary_stock_entries_button">Download Entries</button>
+                <input name ="stock_entries_trial_id" id="stock_entries_trial_id" type="hidden" value="<% $trial_id %>" />
+                <input type="hidden" id="trial_stock_entries_download_token" name="trial_stock_entries_download_token" />
+            </div>
+        </form>
+    </div>
+    <div class="panel panel-default" style="overflow:scroll">
+        <div class="panel-body">
+                <table class="table table-hover table-bordered display nowrap" id="summary_stock_entry_table">
+                    <thead>
+                        <tr>
+% if ($trial_stock_type eq 'cross') {
+                            <th>Cross Unique ID</th>
+% } elsif ($trial_stock_type eq 'family_name') {
+                            <th>Family Name</th>
+% } else {
+                            <th>Accession</th>
+% }
+                            <th>Plot</th>
+                            <th>Plant</th>
+                            <th>Tissue Sample</th>
+                        </tr>
+                    </thead>
+                </table>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function () {
+
+        jQuery('#summary_stock_entry_table').DataTable({
+            'destroy': true,
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stock_entry_summary',
+        });
+
+        jQuery('#download_summary_stock_entries_button').click(function() {
+            var token = new Date().getTime();
+            jQuery('#trial_stock_entries_download_token').val(token);
+            jQuery('#download_summary_stock_entries').submit();
+        });
+
+});
+
+
+</script>

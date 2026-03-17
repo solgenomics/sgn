@@ -43,12 +43,12 @@ __PACKAGE__->config(
 
 sub upload_phenotype_verify :  Path('/ajax/phenotype/upload_verify') : ActionClass('REST') { }
 sub upload_phenotype_verify_POST : Args(1) {
-    my ($self, $c, $file_type) = @_;
+    my ($self, $c, $file_type, $is_treatment) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -88,6 +88,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     }
     catch {
         $verified_error = $_;
+	print STDERR "ERROR DURING UPLOAD: $verified_error\n";
     };
 
     if ($verified_error) {
@@ -105,12 +106,12 @@ sub upload_phenotype_verify_POST : Args(1) {
 
 sub upload_phenotype_store :  Path('/ajax/phenotype/upload_store') : ActionClass('REST') { }
 sub upload_phenotype_store_POST : Args(1) {
-    my ($self, $c, $file_type) = @_;
+    my ($self, $c, $file_type, $is_treatment) = @_;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -196,13 +197,14 @@ sub upload_phenotype_store_POST : Args(1) {
 }
 
 sub _prep_upload {
-    my ($c, $file_type, $schema) = @_;
+    my ($c, $file_type, $is_treatment, $schema) = @_;
 	my @success_status;
 	my @error_status;
 
 	my $user = $c->user();
-	if (!$user) {
-		push @error_status, 'Must be logged in to upload phenotypes!';
+
+	if (!$user) {# only checks for login, ask whether this needs to be changed...
+		push @error_status, 'You do not have permission to upload data to this trial!';
 		return (\@success_status, \@error_status);
 	}
 
@@ -216,7 +218,20 @@ sub _prep_upload {
     my $data_level;
     my $image_zip;
     if ($file_type eq "spreadsheet") {
-        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format'); #simple or detailed or nirs or scio or associated_images
+        my $spreadsheet_format;
+        if ($is_treatment eq "treatment") {
+            $spreadsheet_format = $c->req->param("upload_spreadsheet_treatment_file_format");
+            $timestamp_included = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
+            $data_level = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
+            $upload = $c->req->upload('upload_spreadsheet_treatment_file_input');
+            $image_zip = $c->req->upload('upload_spreadsheet_treatment_associated_images_file_input');
+        } else {
+            $spreadsheet_format = $c->req->param("upload_spreadsheet_phenotype_file_format"); #simple or detailed or nirs or scio or associated_images
+            $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
+            $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
+            $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
+            $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
+        }
         # print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
         $metadata_file_type = "spreadsheet phenotype file";
 
@@ -230,10 +245,6 @@ sub _prep_upload {
             die "Spreadsheet format not supported! Only simple, detailed, nirs, scio, or associated_images\n";
         }
         $subdirectory = "spreadsheet_phenotype_upload";
-        $timestamp_included = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
-        $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
-        $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
-        $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
     }
     elsif ($file_type eq "fieldbook") {
         # print STDERR "Fieldbook \n";
@@ -360,12 +371,29 @@ sub _prep_upload {
     my %parsed_data;
     my @plots;
     my @traits;
-    if (scalar(@error_status) == 0) {
+
+    if (scalar(@error_status) == 0) { #TODO: check for treatment and propagate values to child stocks
         if ($parsed_file && !$parsed_file->{'error'}) {
             %parsed_data = %{$parsed_file->{'data'}};
             @plots = @{$parsed_file->{'units'}};
             @traits = @{$parsed_file->{'variables'}};
             push @success_status, "File data successfully parsed.";
+        }
+        if ($is_treatment eq "treatment") {
+            foreach my $plot (@plots) {
+                my $plot_obj = CXGN::Stock->new({
+                    schema => $schema,
+                    uniquename => $plot
+                });
+                my $child_stocks = $plot_obj->get_child_stocks_flat_list();
+                foreach my $child (@{$child_stocks}) {
+                    next if ($child->{type} eq "accession");
+                    push @plots, $child->{name};
+                    foreach my $trait (@traits) {
+                        $parsed_data{$child->{name}}->{$trait} = $parsed_data{$plot}->{$trait};
+                    }
+                }
+            }
         }
     }
 
