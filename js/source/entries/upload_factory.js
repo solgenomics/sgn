@@ -9,6 +9,7 @@
 var upload_type_dict = {
     'trials' : "Multiple Trial Upload",
     'trial_metadata' : "Trial Metadata",
+    'trial_additional_file' : "Trial Additional File",
     'plants_by_name' : "Plants by name",
     'plants_by_index' : "Plants by index number",
     'plants_per_plot' : "Plants by number of plants per plot",
@@ -395,6 +396,20 @@ export function process_file(file_data, upload_type, config) {
         case 'trial_metadata' :
             populate_validate_submit_data(upload_type, file_data);
             break;
+        case 'trial_additional_file' :
+            display_trial_additional_file_upload_choices();
+            jQuery('#trial_additional_file_upload_next_btn').on('click', {file_data : file_data}, populate_trial_additional_file_validate_submit_data);
+            get_select_box('breeding_programs', 'trial_additional_file_breeding_program_select_div', { 'name' : 'trial_additional_file_breeding_program_id', 'id' : 'trial_additional_file_breeding_program_id', 'empty': 1 });
+            jQuery('#trial_additional_file_breeding_program_select_div').on('change', function () {
+                let breeding_program_id = jQuery("#trial_additional_file_breeding_program_id").val();
+                if (breeding_program_id != null && breeding_program_id != '') {
+                    get_select_box('trials', 'trial_additional_file_trial_select_div', { 'name' : 'trial_additional_file_trial_id', 'id' : 'trial_additional_file_trial_id', 'breeding_program_id' : breeding_program_id, 'empty':1});
+                } else {
+                    jQuery('#trial_additional_file_trial_select_div').html('');
+                }
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
+            break;
         case 'genotyping_plate' : 
             display_genotyping_plate_upload_choices();
             jQuery('#genotype_plate_choices_next_btn_div').show();
@@ -622,6 +637,9 @@ export function display_upload_formats(upload_type, config) {
             break;
         case 'trial_metadata' :
             jQuery('#trial_metadata_upload_spreadsheet_format_modal').modal("show");
+            break;
+        case 'trial_additional_file':
+            jQuery('#trial_upload_additional_file_info_dialog').modal("show");
             break;
         case 'genotyping_plate' : 
             display_genotyping_plate_upload_choices();
@@ -1329,6 +1347,15 @@ function display_soil_data_upload_choices() {
     '<button id="soil_data_upload_next_btn" class="btn btn-primary">Next</button>');
 }
 
+function display_trial_additional_file_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+    '<div id="trial_additional_file_breeding_program_select_div"></div>'+
+    '<br>' +
+    '<div id="trial_additional_file_trial_select_div"></div>'+
+    '<br><br>' + 
+    '<button id="trial_additional_file_upload_next_btn" class="btn btn-primary">Next</button>');
+}
+
 function display_vector_upload_choices(user_role) {
     let fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked disabled></input>';
     if (user_role == "curator"){
@@ -1508,28 +1535,28 @@ function populate_seedlot_transaction_validate_submit_data(event) {
     populate_validate_submit_data(transaction_type, file_data, {});
 }
 
-function populate_cross_validate_submit_data(event) {
+function populate_trial_additional_file_validate_submit_data(event) {
     let file_data = event.data.file_data;
-    let breeding_program_select = jQuery('#upload_crosses_breeding_program_id option:selected');
+    let breeding_program_select = jQuery('#trial_additional_file_breeding_program_id option:selected');
     let breeding_program_id = breeding_program_select.val();
     let breeding_program_name = breeding_program_select.text();
-    let cross_exp_select = jQuery('#upload_crosses_crossing_experiment_id option:selected');
-    let cross_exp_id = cross_exp_select.val();
-    let cross_exp_name = cross_exp_select.text();
+    let trial_select = jQuery('#trial_additional_file_trial_id option:selected');
+    let trial_id = trial_select.val();
+    let trial_name = trial_select.text();
 
     if (!breeding_program_id) {
         alert ("Please select a breeding program.");
         return;
     }
-    if (!cross_exp_id) {
-        alert("Please select a crossing experiment.");
+    if (!trial_id) {
+        alert("Please select a trial.");
         return;
     }
-    populate_validate_submit_data('crosses', file_data, {
+    populate_validate_submit_data('trial_additional_file', file_data, {
         breeding_program_id : breeding_program_id,
         breeding_program_name : breeding_program_name,
-        crossing_experiment_id : cross_exp_id,
-        crossing_experiment_name : cross_exp_name
+        trial_id : trial_id,
+        trial_name : trial_name
     });
 }
 
@@ -1757,6 +1784,31 @@ function populate_vector_validate_submit_data(event) {
     });
 }
 
+function populate_cross_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let breeding_program_select = jQuery('#upload_crosses_breeding_program_id option:selected');
+    let breeding_program_id = breeding_program_select.val();
+    let breeding_program_name = breeding_program_select.text();
+    let cross_exp_select = jQuery('#upload_crosses_crossing_experiment_id option:selected');
+    let cross_exp_id = cross_exp_select.val();
+    let cross_exp_name = cross_exp_select.text();
+
+    if (!breeding_program_id) {
+        alert ("Please select a breeding program.");
+        return;
+    }
+    if (!cross_exp_id) {
+        alert("Please select a crossing experiment.");
+        return;
+    }
+    populate_validate_submit_data('crosses', file_data, {
+        breeding_program_id : breeding_program_id,
+        breeding_program_name : breeding_program_name,
+        crossing_experiment_id : cross_exp_id,
+        crossing_experiment_name : cross_exp_name
+    });
+}
+
 function populate_validate_submit_data(upload_type, file_data, additional_args) {
 
     display_validate_submit_modal({
@@ -1823,7 +1875,6 @@ export function submit_upload_job() {
                     'archived_file_id' : submit_params.file_id
                 },
                 success: function(response) {
-                    jQuery('#working_modal').modal("hide");
                     if (response.error) {
                         //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
                         console.log(response.error);
@@ -1831,9 +1882,26 @@ export function submit_upload_job() {
                     refresh_upload_tables();
                 },
                 error: function() {
-                    jQuery('#working_modal').modal("hide");
                     alert("An error occurred submitting phenotype validation, check console.");
                     return;
+                }
+            });
+            break;
+        case 'trial_additional_file' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_additional_file',
+                type : 'POST',
+                data : {
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred submitting file to trial. Check console.")
                 }
             });
             break;

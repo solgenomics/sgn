@@ -418,6 +418,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
     my $allowed_upload_types = "<option value='null_choice'>Select...</option>".
         "<option value='trials'>Trials (Multi-trial format)</option>".
         "<option value='trial_metadata'>Trial Metadata</option>".
+        "<option value='trial_additional_file'>Trial Additional File</option>'".
         "<option value='genotyping_plate'>Genotyping Plates</option>".
         "<option value='genotyping_data'>Genotyping Data</option>".
         "<option value='locations'>Locations</option>".

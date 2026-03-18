@@ -2369,6 +2369,9 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
 
+    my $user_first_name;
+    my $user_last_name;
+
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
@@ -2380,6 +2383,8 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload additional files to a trial!'};
@@ -2387,6 +2392,8 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         $user_role = $c->user->get_object->get_user_type();
     }
 
@@ -2395,6 +2402,25 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
     my $subdirectory = "trial_additional_file_upload";
 
     my $archived_filename_with_path;
+
+    my $trial_name = $c->stash->{trial}->get_name();
+
+    my $upload_job = CXGN::Job->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => "$trial_name additional file upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            final_upload => 1,
+            file_type => 'trial_additional_file',
+            user_name => "$user_first_name $user_last_name",
+            trial_id => $c->stash->{trial_id},
+        }
+    });
+
+    $upload_job->update_status("submitted");
 
     if (!$archived_file_id) {
         ## Store uploaded temporary file in archive
@@ -2431,8 +2457,11 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
     my $result = $c->stash->{trial}->add_additional_uploaded_file($archived_file_id);
     if ($result->{error}){
         $c->stash->{rest} = {error=>$result->{error}};
+        $upload_job->additional_args->{error_messages} = $result->{error};
+        $upload_job->update_status("failed");
         $c->detach();
     }
+    $upload_job->update_status("finished");
     $c->stash->{rest} = { success => 1, file_id => $archived_file_id };
 }
 

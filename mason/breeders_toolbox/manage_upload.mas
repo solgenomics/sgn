@@ -231,6 +231,8 @@ $allowed_upload_types => undef
 
 <& /file_formats/treatment_upload.mas &>
 
+<& /file_formats/trial_additional_file.mas &>
+
 <script>
 
 function upload_type_options() {
