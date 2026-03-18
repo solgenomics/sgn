@@ -908,7 +908,7 @@ sub build_accession_properties_info {
         # print STDERR "RETRIEVED: ".join(",", @results)."\n";
         my $original_date_format = $results[1];
         my $create_date = Time::Piece->strptime($original_date_format, "%Y-%m-%d %H:%M:%S");
-        my $download_date_format = $create_date->strftime("%B %d, %Y");
+        my $download_date_format = $create_date->strftime("%Y-%B-%d");
 
         splice(@results,1,1,$download_date_format);
         push(@accession_rows, \@results);
@@ -1944,7 +1944,7 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
 
         my $create_date_obj = Time::Piece->strptime($create_date, "%Y-%m-%d %H:%M:%S");
-        my $download_create_date = $create_date_obj->strftime("%B %d, %Y");
+        my $download_create_date = $create_date_obj->strftime("%Y-%B-%d");
 
         if ($obsolete_date =~ /Obsolete/) {
             push @download_rows, [$stock_name, $download_create_date, $stock_type, $obsolete_note, $obsolete_date,$full_name];
