@@ -1724,14 +1724,14 @@ sub _retrieve_stockprops {
     my @results;
 
     try {
-        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
+#        my $stockprop_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, $type, 'stock_property')->cvterm_id();
         my $rs = $self->schema()->resultset("Stock::Stockprop")->search({ stock_id => $self->stock_id() }, { join => 'cvterm', '+select' => 'cvterm.name', '+as' => 'cvterm_name'} , { order_by => {-asc => 'stockprop_id'} });
 
         while (my $r = $rs->next()){
             push @results, [ $r->stockprop_id(), $r->value(), $r->get_column('cvterm_name') ];
         }
     } catch {
-        print STDERR "Cvterm $type does not exist in this database\n";
+        print STDERR "An error occurred ($@)\n";
     };
 
     return @results;

@@ -302,7 +302,7 @@ sub BUILD {
 
 	my @props = $self->retrieve_stockprops();
 	foreach my $prop (@props) {
-	    my ($stockprop_id, $value, $cvterm_name, $cvterm_id) = @prop;
+	    my ($stockprop_id, $value, $cvterm_name, $cvterm_id) = @props;
 	    if ($self.can($cvterm_name)) {
 		$self->$cvterm_name($value);
 	    }
