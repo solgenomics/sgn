@@ -76,6 +76,11 @@ has 'trait_name_list' => (
     is => 'rw',
 );
 
+has 'trait_synonym_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is =>'rw',
+);
+
 has 'trait_name_is_exact' => (
     isa => 'Bool|Undef',
     is => 'rw',
@@ -129,7 +134,9 @@ sub search {
     }
 
     if ($self->accession_list && scalar(@{$self->accession_list}) > 0){
-        $and_conditions{'dbxref.accession'} = { -in => $self->accession_list };
+        foreach my $term (@{$self->accession_list}) {
+            push @{$and_conditions{'dbxref.accession'}}, {'ilike' => '%' . $term . '%'};
+        }
     }
 
     if ($self->trait_definition_list && scalar(@{$self->trait_definition_list}) > 0){
@@ -137,6 +144,14 @@ sub search {
             my @words = split "\s+", $_;
             my $match_string = join '%', @words;
             push @{$and_conditions{'me.definition'}}, {'ilike' => '%'.$match_string.'%'};
+        }
+    }
+
+    if ($self->trait_synonym_list && scalar(@{$self->trait_synonym_list}) > 0){
+        foreach (@{$self->trait_synonym_list}){
+            my @words = split "\s+", $_;
+            my $match_string = join '%', @words;
+            push @{$and_conditions{'cvtermsynonyms.synonym'}}, {'ilike' => '%' . $match_string . '%'};
         }
     }
 
@@ -176,11 +191,11 @@ sub search {
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
         \%and_conditions, 
         {
-            join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'} ],
+            join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'}, 'cvtermsynonyms' ],
             where => \%where_join,
             order_by => { '-asc' => $order_by },
-            '+select' => ['db.name', 'dbxref.accession', 'type.name'],
-            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name'],
+            '+select' => ['db.name', 'dbxref.accession', 'type.name', 'cvtermsynonyms.synonym'],
+            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name', 'synonym'],
             distinct => 1
         }
     );
@@ -202,7 +217,8 @@ sub search {
             trait_definition => $t->definition,
             db_name => $t->get_column('db_name'),
             accession=> $t->get_column('db_accession'),
-            cvterm_relationship_name=> $t->get_column('cvterm_relationship_name')
+            cvterm_relationship_name=> $t->get_column('cvterm_relationship_name'),
+            trait_synonym => $t->get_column('synonym')
         };
     }
 
