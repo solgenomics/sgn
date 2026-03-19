@@ -2436,7 +2436,7 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
             timestamp => $timestamp,
             user_id => $user_id,
             user_role => $user_role,
-            file_type => 'trial_metadata',
+            file_type => 'trial_additional_file',
             metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
         });
         ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
@@ -2453,6 +2453,9 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         });
         $archived_filename_with_path = $archived_file->get_path();
     }
+
+    $upload_job->name(basename($archived_filename_with_path)." ".$upload_job->name());
+    $upload_job->store();
 
     my $result = $c->stash->{trial}->add_additional_uploaded_file($archived_file_id);
     if ($result->{error}){

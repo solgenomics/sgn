@@ -2762,13 +2762,13 @@ sub add_additional_uploaded_file {
     if ($result->{error}){
         return {error => $result->{error} };
     }
+
     my $nd_experiment_id = $result->{nd_experiment_id};
 
-    my $experiment_file = $self->phenome_schema->resultset("NdExperimentMdFiles")
-        ->create({
-            nd_experiment_id => $nd_experiment_id,
-            file_id => $file_id,
-        });
+    my $experiment_file = $self->phenome_schema->resultset("NdExperimentMdFiles")->create({
+        nd_experiment_id => $nd_experiment_id,
+        file_id => $file_id,
+    });
 
     return {success => 1};
 }
@@ -2789,7 +2789,13 @@ sub get_additional_uploaded_files {
     my $trial_id = $self->get_trial_id();
     my @file_array;
     my %file_info;
-    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM project JOIN nd_experiment_project USING(project_id) JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) LEFT JOIN metadata.md_files using(file_id) LEFT JOIN metadata.md_metadata as m using(metadata_id) LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file_upload' ORDER BY file_id ASC";
+    my $q = "SELECT file_id, m.create_date, p.sp_person_id, p.username, basename, dirname, filetype FROM project 
+        JOIN nd_experiment_project USING(project_id) 
+        JOIN phenome.nd_experiment_md_files ON (nd_experiment_project.nd_experiment_id=nd_experiment_md_files.nd_experiment_id) 
+        LEFT JOIN metadata.md_files using(file_id) 
+        LEFT JOIN metadata.md_metadata as m using(metadata_id) 
+        LEFT JOIN sgn_people.sp_person as p ON (p.sp_person_id=m.create_person_id) 
+        WHERE project_id=? and m.obsolete = 0 and metadata.md_files.filetype='trial_additional_file' ORDER BY file_id ASC";
     my $h = $self->bcs_schema->storage()->dbh()->prepare($q);
     $h->execute($trial_id);
 
