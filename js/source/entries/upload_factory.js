@@ -31,10 +31,10 @@ var upload_type_dict = {
     'accessions' : "Accessions",
     'seedlots' : "Seedlots",
     'seedlot_inventory' : "Seedlot inventory",
-    'exist_to_exist' : "Transact existing seedlots to existing seedlots",
-    'exist_to_new' : "Transact existing seedlots to new seedlots",
-    'exist_to_plots' : "Transact existing seedlots to plots",
-    'exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
+    'seedlots_exist_to_exist' : "Transact existing seedlots to existing seedlots",
+    'seedlots_exist_to_new' : "Transact existing seedlots to new seedlots",
+    'seedlots_exist_to_plots' : "Transact existing seedlots to plots",
+    'seedlots_exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
     'pedigrees' : "Pedigrees",
     'crosses' : "Crosses",
     'gps_polygon' : "GPS coordinate polygons",
@@ -864,16 +864,16 @@ function display_seedlot_upload_formats() {
 function display_seedlot_transaction_upload_formats() {
     let seedlot_transaction_type = jQuery('#upload_seedlot_transaction_type_select').val();
     switch (seedlot_transaction_type) {
-        case 'exist_to_exist' :
+        case 'seedlots_exist_to_exist' :
             jQuery('#seedlots_to_seedlots_info_dialog').modal("show");
             break;
-        case 'exist_to_new' : 
+        case 'seedlots_exist_to_new' : 
             jQuery('#seedlots_to_new_seedlots_info_dialog').modal("show");
             break;
-        case 'exist_to_plots' : 
+        case 'seedlots_exist_to_plots' : 
             jQuery('#seedlots_to_plots_info_dialog').modal("show");
             break;
-        case 'exist_to_unspecified' : 
+        case 'seedlots_exist_to_unspecified' : 
             jQuery('#seedlots_to_unspecified_names_info_dialog').modal("show");
             break;
         default :
@@ -1053,10 +1053,10 @@ function display_seedlot_transaction_choices() {
     jQuery('#upload_type_choices_div').html(
         '<select class="form-control" id="upload_seedlot_transaction_type_select">' + 
             '<option value="null_choice">Select a transaction type...</option>' + 
-            '<option value="exist_to_exist">Existing seedlot to existing seedlot</option>' + 
-            '<option value="exist_to_new">Existing seedlot to new seedlot</option>' + 
-            '<option value="exist_to_plots">Existing seedlot to plot</option>' + 
-            '<option value="exist_to_unspecified">Existing seedlot to unspecified seeds/plots</option>' + 
+            '<option value="seedlots_exist_to_exist">Existing seedlot to existing seedlot</option>' + 
+            '<option value="seedlots_exist_to_new">Existing seedlot to new seedlot</option>' + 
+            '<option value="seedlots_exist_to_plots">Existing seedlot to plot</option>' + 
+            '<option value="seedlots_exist_to_unspecified">Existing seedlot to unspecified seeds/plots</option>' + 
         '</select><br>' + 
         '<div id="seedlot_transaction_next_btn_div" hidden><button id="seedlot_transaction_next_btn" class="btn btn-primary">Next</button></div>'
     );
