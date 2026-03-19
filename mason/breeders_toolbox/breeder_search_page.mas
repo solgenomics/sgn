@@ -420,7 +420,7 @@ $dataset_id => undef
               <td colspan="2">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" />
+                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" checked />
                     Include accession entry numbers
                   </label>
                 </div>
@@ -435,33 +435,40 @@ $dataset_id => undef
                   </label>
                 </div>
               </td>
-	      <td style="border-top: none; padding-top: 0">
-		Repetitive measurements: <br />
-
-		<select class="wizard-download-repetitive-measurements-type" >
+              <td colspan="2" style="border-top: none; padding-top: 0">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-phenotypes-intercrop" type="checkbox" checked />
+                    Include intercrop accessions
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                Repetitive measurements: <br />
+                <select class="wizard-download-repetitive-measurements-type form-control" >
                   <option value="first">First value</option>
                   <option value="last">Last value</option>
                   <option value="average" selected>Averaged value</option>
                   <option value="sum">Sum values</option>
                   <option value="all_values_single_line">All Values Single Line</option>
                   <option value="all_values_multiple_line">All Values Multiple Line</option>
-		</select>
-	      </td>
-	      <td style="border-top: none; padding-top: 0">
-		&nbsp;
-	      </td>
+                </select>
+              </td>
             </tr>
-	    <tr>
-		<td>
-		    From:  <input type="text" class="wizard-download-start-date" id="phenotype_start_date" title="phenotype_start_date"  />
-		</td>
-		<td>
-		    To: <input type="text" class="wizard-download-end-date" id="phenotype_end_date" title="phenotype_end_date" />	
-		</td>
-		<td>
-		    <input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
-		</td>
-		</tr>	
+            <tr>
+              <td style="border-top: none; padding-top: 0">
+                From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
+              </td>
+              <td style="border-top: none; padding-top: 0">
+                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />	
+              </td>
+              <td style="border-top: none; padding-top: 0">
+                <input type="checkbox" id="include_dateless_items" checked="1" />
+                Include items without a date
+              </td>
+            </tr>
             <tr>
               <td>
                 <span>Trait Name Contains</span>
