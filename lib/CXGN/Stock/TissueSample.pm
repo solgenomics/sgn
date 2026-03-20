@@ -300,7 +300,7 @@ sub BUILD {
     if ($self->stock_id()) {
         $self->tissue_sample_id($self->stock_id);
 
-	my @props = $self->retrieve_stockprops();
+	my @props = $self->_retrieve_stockprops();
 	foreach my $prop (@props) {
 	    my ($stockprop_id, $value, $cvterm_name, $cvterm_id) = @props;
 	    if ($self.can($cvterm_name)) {
