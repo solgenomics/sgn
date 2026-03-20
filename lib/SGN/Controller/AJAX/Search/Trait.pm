@@ -50,6 +50,16 @@ sub search : Path('/ajax/search/traits') Args(0) {
         push @$subset_traits, $params->{trait_any_name};
     }
 
+    my $trait_ids;
+    if ($params->{trait_id}){
+        push @$trait_ids, $params->{trait_id};
+    }
+
+    my $trait_synonyms;
+    if ($params->{trait_synonym}){
+        push @$trait_synonyms, $params->{trait_synonym};
+    }
+
     my $definitions;
     if ($params->{trait_definition}){
         push @$definitions, $params->{trait_definition};
@@ -62,6 +72,8 @@ sub search : Path('/ajax/search/traits') Args(0) {
         limit => $limit,
         offset => $offset,
         trait_name_list => $subset_traits,
+        accession_list => $trait_ids,
+        trait_synonym_list => $trait_synonyms,
         trait_definition_list => $definitions
     });
     my ($data, $records_total) = $trait_search->search();
