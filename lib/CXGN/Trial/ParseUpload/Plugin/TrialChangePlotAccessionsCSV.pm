@@ -122,21 +122,17 @@ sub _validate_with_plugin {
         my @new_plot_names = keys %seen_new_plot_names;
         my $new_plot_name_validator = CXGN::List::Validate->new();
         my @valid_new_plot_names = @{$new_plot_name_validator->validate($schema,'plots',\@new_plot_names)->{'missing'}};
+
         if (scalar(@valid_new_plot_names) != scalar(@new_plot_names)) {
-            for (@new_plot_names) {
-                my $validation = 0;
-                my $current_name = $_;
-                for (@valid_new_plot_names) {
-                    if ($current_name == $_) {
-                        $validation = 1;
-                    }
-                }
-                if (!$validation) {
-                    push @not_valid_names, $current_name;
-                }
-            }
-        }
+	    my %valid_new_plots; map { $valid_new_plots{uc($_)} -> 1 } @valid_new_plot_names;
+            foreach my $current_name (@new_plot_names) {
+		if ($valid_new_plots{uc($current_name)}) {
+		    push @not_valid_names, $current_name;
+		}
+	    }
+	}
     }
+
 
     if (@not_valid_names) {
         push @error_messages, "The following new plot names already exist in the database:<br>".join(", ", @not_valid_names)."<br>";
