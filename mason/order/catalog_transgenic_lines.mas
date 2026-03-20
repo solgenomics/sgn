@@ -1,0 +1,37 @@
+<&| /page/info_section.mas, title => 'Catalog Items', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <div class = "panel-body">
+                <div style="overflow:scroll">
+                    <table id = "catalog_transgenic_lines_table" class="table table-hover table-striped">
+                    </table>
+                </div>
+            </div>
+        </div>
+        <td>
+            <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
+        </td>
+    </div>
+</&>
+
+
+<script>
+
+jQuery(document).ready( function() {
+    jQuery('#catalog_transgenic_lines_table').DataTable( {
+        'autoWidth': false,
+        'order': false,
+        'search':'applied',
+        'ajax': '/ajax/catalog/items',
+        columns: [
+            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.item_id+"/view'>"+row.item_name+"</a>"; } },
+            { title: "Vector Construct", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.vector_id+"/view'>"+row.vector_name+"</a>"; } },
+            { title: "Plant Material", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.plant_id+"/view'>"+row.plant_name+"</a>"; } },
+            { title: "Species", "data": "species" },
+        ],
+    });
+
+});
+
+
+</script>

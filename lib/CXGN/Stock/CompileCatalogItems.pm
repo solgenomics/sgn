@@ -62,21 +62,22 @@ sub compile_catalog_items {
         my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
         my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'female_parent', 'stock_relationship')->cvterm_id();
 
-        my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename
+        my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, organism.species
             FROM stock AS transformant
             JOIN stockprop ON (transformant.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
             JOIN stock_relationship AS plant_relationship ON (transformant.stock_id = plant_relationship.object_id) AND plant_relationship.type_id = ?
             JOIN stock AS plant ON (plant.stock_id = plant_relationship.subject_id) AND plant.type_id = ?
             JOIN stock_relationship AS vector_relationship ON (transformant.stock_id = vector_relationship.object_id) AND vector_relationship.type_id = ?
             JOIN stock AS vector ON (vector.stock_id = vector_relationship.subject_id) AND vector.type_id = ?
+            JOIN organism ON (transformant.organism_id = organism.organism_id)
             WHERE transformant.type_id = ? AND stockprop.value = ?";
 
         my $h = $schema->storage->dbh()->prepare($q);
 
         $h->execute($stock_property_type_id, $female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id, $accession_type_id, $catalog_stock_property_value);
 
-        while (my ($transformant_id,  $transformant_name, $plant_id, $plant_name, $vector_id, $vector_name) = $h->fetchrow_array()){
-            push @catalog_items, [$transformant_id,  $transformant_name, $plant_id, $plant_name, $vector_id, $vector_name];
+        while (my ($transformant_id,  $transformant_name, $plant_id, $plant_name, $vector_id, $vector_name, $species) = $h->fetchrow_array()){
+            push @catalog_items, [$transformant_id,  $transformant_name, $plant_id, $plant_name, $vector_id, $vector_name, $species];
         }
 
     }

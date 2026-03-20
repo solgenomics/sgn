@@ -331,7 +331,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $catalog_stock_property_value = $c->config->{catalog_stock_property_value};
     my @catalog_items;
 
-    if ($catalog_stock_type) {
+    if ($catalog_stock_property eq 'transgenic') {
         my $catalog_obj = CXGN::Stock::CompileCatalogItems->new({schema => $schema, dbh => $dbh, catalog_stock_type => $catalog_stock_type, catalog_stock_property => $catalog_stock_property, catalog_stock_property_value => $catalog_stock_property_value});
         my $results = $catalog_obj->compile_catalog_items();
         my @sorted_items = natkeysort {($_->[1])} @$results;
@@ -339,18 +339,20 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
         foreach my $item (@sorted_items) {
             my $item_id = $item->[0];
             my $item_name = $item->[1];
+            my $plant_id = $item->[2];
+            my $plant_name = $item->[3];
+            my $vector_id = $item->[4];
+            my $vector_name = $item->[5];
+            my $species = $item->[6];
+
             push @catalog_items, {
                 item_id => $item_id,
                 item_name => $item_name,
-                item_type => '',
-                species => '',
-                variety => '',
-                material_type => '',
-                category => '',
-                material_source => '',
-                additional_info => '',
-                breeding_program => '',
-                availability => ''
+                plant_id => $plant_id,
+                plant_name => $plant_name,
+                vector_id => $vector_id,
+                vector_name => $vector_name,
+                species => $species,
             };
         }
     } else {

@@ -6,6 +6,8 @@ $additional_order_info => undef
 $ordering_type => undef
 $order_properties => undef
 $order_properties_dialog => undef
+$catalog_stock_type => undef
+$catalog_stock_property => undef
 
 </%args>
 
@@ -14,7 +16,12 @@ $order_properties_dialog => undef
 
 <& /page/page_title.mas, title => "Catalog" &>
 
-% if ($check_vendor_role == 1) {
+% if ($catalog_stock_property eq 'transgenic') {
+    <& /order/catalog_transgenic_lines.mas &>
+% }
+
+
+% if (($check_vendor_role == 1) && (!$catalog_stock_type)) {
     <&| /page/info_section.mas, title => 'Manage Catalog', collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">
             <div class = "panel panel-default">
@@ -29,6 +36,7 @@ $order_properties_dialog => undef
     </&>
 % }
 
+% if (($check_vendor_role == 1) && (!$catalog_stock_type)) {
 <&| /page/info_section.mas, title => 'Catalog Items', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -53,6 +61,7 @@ $order_properties_dialog => undef
         </td>
     </div>
 </&>
+% }
 
 <div class="modal fade" id="cart_item_dialog" name="cart_item_dialog" tabindex="-1" role="dialog" aria-labelledby="cartItemDialog">
     <div class="modal-dialog modal-lg" role="document">
