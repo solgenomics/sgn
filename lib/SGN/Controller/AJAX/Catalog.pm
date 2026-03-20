@@ -333,10 +333,28 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
 
     if ($catalog_stock_property eq 'transgenic') {
         my $catalog_obj = CXGN::Stock::CompileCatalogItems->new({schema => $schema, dbh => $dbh, catalog_stock_type => $catalog_stock_type, catalog_stock_property => $catalog_stock_property, catalog_stock_property_value => $catalog_stock_property_value});
-        my $results = $catalog_obj->compile_catalog_items();
-        my @sorted_items = natkeysort {($_->[1])} @$results;
+        my $results_specified_items = $catalog_obj->compile_specified_catalog_items();
+        print STDERR "SPECIFIED ITEMS =".Dumper($results_specified_items)."\n";
+        my @sorted_specified_items = natkeysort {($_->[1])} @$results_specified_items;
+        foreach my $item (@sorted_specified_items) {
+            my $item_id = $item->[0];
+            my $item_name = $item->[1];
+            my $species = $item->[2];
 
-        foreach my $item (@sorted_items) {
+            push @catalog_items, {
+                item_id => $item_id,
+                item_name => $item_name,
+                plant_id => '',
+                plant_name => '',
+                vector_id => '',
+                vector_name => '',
+                species => '',
+            };
+        }
+
+        my $results_based_on_type = $catalog_obj->compile_catalog_items_based_on_type();
+        my @sorted_items_based_on_type = natkeysort {($_->[1])} @$results_based_on_type;
+        foreach my $item (@sorted_items_based_on_type) {
             my $item_id = $item->[0];
             my $item_name = $item->[1];
             my $plant_id = $item->[2];

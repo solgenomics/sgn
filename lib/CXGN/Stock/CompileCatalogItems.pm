@@ -46,7 +46,7 @@ has 'catalog_stock_property_value' => (
 );
 
 
-sub compile_catalog_items {
+sub compile_catalog_items_based_on_type {
     my $self = shift;
     my $schema = $self->schema();
     my $catalog_stock_type = $self->catalog_stock_type();
@@ -82,9 +82,35 @@ sub compile_catalog_items {
 
     }
 
-    print STDERR "CATALOG ITEMS =".Dumper(\@catalog_items)."\n";
     return \@catalog_items;
 }
+
+
+sub compile_specified_catalog_items {
+    my $self = shift;
+    my $schema = $self->schema();
+    my @catalog_items = ();
+
+    my $catalog_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'catalog', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock
+        JOIN stockprop ON (stockprop.stock_id = stock.stock_id)
+        JOIN organism ON (stock.organism_id = organism.organism_id)
+        WHERE stockprop.type_id = ?";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($catalog_type_id);
+
+    while (my ($stock_id,  $stock_name, $species) = $h->fetchrow_array()){
+        push @catalog_items, [$stock_id,  $stock_name, $species]
+    }
+
+    print STDERR "CATALOG ITEMS 1 =".Dumper(\@catalog_items)."\n";
+    return \@catalog_items;
+}
+
 
 
 ###
