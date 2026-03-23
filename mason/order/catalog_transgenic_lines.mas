@@ -3,7 +3,16 @@
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
-                    <table id = "catalog_transgenic_lines_table" class="table table-hover table-striped">
+                    <table id="catalog_transgenic_lines_table" width="100%" class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>Accession</th>
+                                <th>Vector Construct</th>
+                                <th>Plant Material</th>
+                                <th>Species</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
                     </table>
                 </div>
             </div>
@@ -23,12 +32,6 @@ jQuery(document).ready( function() {
         'order': false,
         'search':'applied',
         'ajax': '/ajax/catalog/items',
-        columns: [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.item_id+"/view'>"+row.item_name+"</a>"; } },
-            { title: "Vector Construct", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.vector_id+"/view'>"+row.vector_name+"</a>"; } },
-            { title: "Plant Material", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.plant_id+"/view'>"+row.plant_name+"</a>"; } },
-            { title: "Species", "data": "species" },
-        ],
     });
 
 });

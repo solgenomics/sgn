@@ -70,7 +70,7 @@ sub compile_catalog_items_based_on_type {
             JOIN stock_relationship AS vector_relationship ON (transformant.stock_id = vector_relationship.object_id) AND vector_relationship.type_id = ?
             JOIN stock AS vector ON (vector.stock_id = vector_relationship.subject_id) AND vector.type_id = ?
             JOIN organism ON (transformant.organism_id = organism.organism_id)
-            WHERE transformant.type_id = ? AND stockprop.value = ?";
+            WHERE transformant.type_id = ? AND stockprop.value = ? AND transformant.is_obsolete = 'F' ";
 
         my $h = $schema->storage->dbh()->prepare($q);
 
@@ -97,7 +97,7 @@ sub compile_specified_catalog_items {
         FROM stock
         JOIN stockprop ON (stockprop.stock_id = stock.stock_id)
         JOIN organism ON (stock.organism_id = organism.organism_id)
-        WHERE stockprop.type_id = ? ";
+        WHERE stockprop.type_id = ? AND stock.is_obsolete = 'F'";
 
     my $h = $schema->storage->dbh()->prepare($q);
 
