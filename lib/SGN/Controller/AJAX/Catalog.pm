@@ -334,7 +334,6 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     if ($catalog_stock_property eq 'transgenic') {
         my $catalog_obj = CXGN::Stock::CompileCatalogItems->new({schema => $schema, dbh => $dbh, catalog_stock_type => $catalog_stock_type, catalog_stock_property => $catalog_stock_property, catalog_stock_property_value => $catalog_stock_property_value});
         my $results_specified_items = $catalog_obj->compile_specified_catalog_items();
-        print STDERR "SPECIFIED ITEMS =".Dumper($results_specified_items)."\n";
         my @sorted_specified_items = natkeysort {($_->[1])} @$results_specified_items;
         foreach my $item (@sorted_specified_items) {
             my $item_id = $item->[0];
@@ -348,7 +347,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
                 plant_name => '',
                 vector_id => '',
                 vector_name => '',
-                species => '',
+                species => $species,
             };
         }
 
