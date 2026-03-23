@@ -1,3 +1,8 @@
+<%args>
+$order_properties => undef
+$order_properties_dialog => undef
+</%args>
+
 <td>
     <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
 </td>
@@ -25,10 +30,37 @@
     </div>
 </&>
 
+<div class="modal fade" id="request_form_dialog" name="request_form_dialog" tabindex="-1" role="dialog" aria-labelledby="requestFormDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="requestFormDialog">Request Form</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="request_form_div">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_request_form_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="submit_request_form_button" type="button" class="btn btn-primary" >Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 
 jQuery(document).ready( function() {
+
+    var order_properties = "<% $order_properties %>";
+    var property_keys = order_properties.split(",");
+    var order_properties_dialog = "<% $order_properties_dialog %>";
+    var property_dialog_keys = order_properties_dialog.split(",");
+
     jQuery('#catalog_transgenic_lines_table').DataTable( {
         'autoWidth': false,
         'order': false,
@@ -48,11 +80,40 @@ jQuery(document).ready( function() {
             alert('Please select what you would like to request');
         } else {
             alert(selected);
+            requestForm(order_properties_dialog);
         }
+
     });
 
-
 });
+
+function requestForm(order_properties_dialog ){
+    var properties = order_properties_dialog.split(",");
+    var html = '';
+    var item_name = 'Test';
+
+    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Item Name: </label><div class="col-sm-8" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br>';
+    for(var i=0; i<properties.length; i++){
+        var each_property_info = properties[i].split(":");
+        if (each_property_info.length == 1 && (properties[i].includes("Date"))) {
+            html = html + '<label class="col-sm-4 control-label">'+ properties[i] +'</label><div class="col-sm-8" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder="YYYY-MM-DD"></div><br><br>';
+        } else if (each_property_info.length == 1) {
+            html = html + '<label class="col-sm-4 control-label">'+ properties[i] +'</label><div class="col-sm-8" ><input class="form-control" id= '+ i +' name= '+ i +' placeholder=""></div><br><br>';
+        } else {
+            html = html + '<label class="col-sm-4 control-label">'+ each_property_info[0] +'</label><div class="col-sm-8" ><select class="form-control" id= '+ i +' name= '+ i +'> ';
+            for (var j=1; j<each_property_info.length; j++) {
+                html = html + "<option value='"+each_property_info[j]+"'>" + each_property_info[j] + "</option>";
+            }
+            html = html + "</select></div><br><br>";
+        }
+    }
+    html = html + '</div></div></form>';
+
+    jQuery('#request_form_div').html(html);
+    jQuery('#request_form_dialog').modal('show');
+
+}
+
 
 
 </script>

@@ -17,7 +17,7 @@ $catalog_stock_property => undef
 <& /page/page_title.mas, title => "Catalog" &>
 
 % if ($catalog_stock_property eq 'transgenic') {
-    <& /order/catalog_transgenic_lines.mas &>
+    <& /order/catalog_transgenic_lines.mas, order_properties_dialog => $order_properties_dialog, order_properties => $order_properties &>
 % }
 
 % if (($check_vendor_role == 1) && (!$catalog_stock_type)) {
