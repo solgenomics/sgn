@@ -1,3 +1,7 @@
+<td>
+    <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
+</td>
+
 <&| /page/info_section.mas, title => 'Catalog Items', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -17,9 +21,7 @@
                 </div>
             </div>
         </div>
-        <td>
-            <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
-        </td>
+        <center><button class="btn btn-primary" style="margin:3px" id="order_form_link">Request Form</button></center>
     </div>
 </&>
 
@@ -33,6 +35,19 @@ jQuery(document).ready( function() {
         'search':'applied',
         'ajax': '/ajax/catalog/items',
     });
+
+    jQuery('#order_form_link').click(function(){
+        selected = [];
+        jQuery('input[name="catalog_item_select"]:checked').each(function() {
+            selected.push(jQuery(this).val());
+        });
+        if (selected.length == 0){
+            alert('Please select what you would like to request');
+        } else {
+            alert(selected);
+        }
+    });
+
 
 });
 

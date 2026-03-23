@@ -339,7 +339,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
             my $item_id = $item->[0];
             my $item_name = $item->[1];
             my $species = $item->[2];
-            push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>}, '', '', $species, "<input type='checkbox' name='catalog_check_box' value=$item_name>"]
+            push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>}, '', '', $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
 
         }
 
@@ -354,7 +354,7 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
             my $vector_name = $item->[5];
             my $species = $item->[6];
 
-            push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>},  qq{<a href="/stock/$vector_id/view">$vector_name</a>},  qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $species, "<input type='checkbox' name='catalog_check_box' value=$item_name>"]
+            push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>},  qq{<a href="/stock/$vector_id/view">$vector_name</a>},  qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
 
         }
     } else {
