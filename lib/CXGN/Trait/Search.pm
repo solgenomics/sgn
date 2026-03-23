@@ -148,11 +148,17 @@ sub search {
     }
 
     if ($self->trait_synonym_list && scalar(@{$self->trait_synonym_list}) > 0){
+        my @synonym_conditions;
+
         foreach (@{$self->trait_synonym_list}){
             my @words = split "\s+", $_;
             my $match_string = join '%', @words;
-            push @{$and_conditions{'cvtermsynonyms.synonym'}}, {'ilike' => '%' . $match_string . '%'};
+
+            push @synonym_conditions, {
+                'cvtermsynonyms.synonym' => { 'ilike' => '%' . $match_string . '%' }
+            };
         }
+        $and_conditions{'-or'} = \@synonym_conditions;
     }
 
     if ($self->trait_name_list && scalar(@{$self->trait_name_list}) > 0){
@@ -188,14 +194,20 @@ sub search {
         $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
+    my @joins = ({'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'});
+
+    if ($self->trait_synonym_list && @{$self->trait_synonym_list}) {
+        push @joins, 'cvtermsynonyms';
+    }
+
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
         \%and_conditions, 
         {
             join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'}, 'cvtermsynonyms' ],
             where => \%where_join,
             order_by => { '-asc' => $order_by },
-            '+select' => ['db.name', 'dbxref.accession', 'type.name', 'cvtermsynonyms.synonym'],
-            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name', 'synonym'],
+            '+select' => ['db.name', 'dbxref.accession', 'type.name'],
+            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name'],
             distinct => 1
         }
     );
@@ -217,8 +229,7 @@ sub search {
             trait_definition => $t->definition,
             db_name => $t->get_column('db_name'),
             accession=> $t->get_column('db_accession'),
-            cvterm_relationship_name=> $t->get_column('cvterm_relationship_name'),
-            trait_synonym => $t->get_column('synonym')
+            cvterm_relationship_name=> $t->get_column('cvterm_relationship_name')
         };
     }
 
