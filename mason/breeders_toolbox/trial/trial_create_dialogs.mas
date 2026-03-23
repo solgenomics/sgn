@@ -296,7 +296,7 @@ rect.bordered {
                                 <div class="form-group">
                                     <label class="col-sm-3 control-label">Description: </label>
                                     <div class="col-sm-9">
-                                        <textarea class="form-control" id="add_project_description" name="add_project_description" maxlength="250"></textarea>
+                                        <textarea class="form-control" id="add_project_description" name="add_project_description"></textarea>
                                     </div>
                                 </div>
                                 <hr>
