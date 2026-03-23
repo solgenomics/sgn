@@ -20,7 +20,6 @@ $catalog_stock_property => undef
     <& /order/catalog_transgenic_lines.mas &>
 % }
 
-
 % if (($check_vendor_role == 1) && (!$catalog_stock_type)) {
     <&| /page/info_section.mas, title => 'Manage Catalog', collapsible=>1, collapsed=>0 &>
         <div class = "well well-sm">

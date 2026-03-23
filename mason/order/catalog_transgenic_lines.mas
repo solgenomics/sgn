@@ -33,6 +33,9 @@ jQuery(document).ready( function() {
         'autoWidth': false,
         'order': false,
         'search':'applied',
+        'paging': false,
+        'scrollY': '500px',
+        'scrollX' : true,
         'ajax': '/ajax/catalog/items',
     });
 
