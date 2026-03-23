@@ -27,14 +27,14 @@ Returns output like CXGN::Dataset, but uses a disk-cache for the response data
 
 =back
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $ds = CXGN::Dataset->new( { people_schema => $p, schema => $s } );
  $ds->accessions([ 'a', 'b', 'c' ]);
  my $trials = $ds->retrieve_trials();
  my $sp_dataset_id = $ds->store();
  #...
- my $restored_ds = CXGN::Dataset( {  people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id } );
+ my $restored_ds = CXGN::Dataset->new({  people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id } );
  my $years = $restored_ds->retrieve_years();
  #...
 
@@ -52,8 +52,8 @@ package CXGN::Dataset;
 
 use Moose;
 use Moose::Util::TypeConstraints;
-use Data::Dumper;
-use JSON;
+#use Data::Dumper;
+use JSON::XS;
 use CXGN::BreederSearch;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
@@ -361,15 +361,15 @@ sub BUILD {
     my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
     die "Dataset with id $dataset_id does not exist\n" unless $row;
 
-    my $dataset = eval { decode_json($row->dataset) };
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
     die "Invalid JSON for dataset_id $dataset_id: $@" if $@;
 
-        $self->data($dataset);
-        $self->name($row->name());
-        $self->description($row->description());
-        $self->sp_person_id($row->sp_person_id());
+    $self->data($dataset);
+    $self->name($row->name());
+    $self->description($row->description());
+    $self->sp_person_id($row->sp_person_id());
 
-	if ($dataset->{categories}) {
+    if ($dataset->{categories}) {
 	    my $categories = $dataset->{categories};
             $self->accessions($categories->{accessions} || []);
             $self->plots($categories->{plots});
@@ -383,24 +383,24 @@ sub BUILD {
             $self->locations($categories->{locations});
             $self->trial_designs($categories->{trial_designs});
             $self->trial_types($categories->{trial_types});
-	} else {
+    } else {
 	    print STDERR "dataset categories not defined\n";
-	}
+    }
 
-        $self->category_order($dataset->{category_order});
-        $self->tool_compatibility($dataset->{tool_compatibility});
-        $self->is_live($dataset->{is_live});
-        $self->is_public($dataset->{is_public}); 
-        if (exists $args->{outliers}) {
-	    $self->outliers($args->{outliers});
-        } else {
-	    $self->outliers($dataset->{outliers});
-        }
-	if (exists $args->{outlier_cutoffs}) {
-            $self->outlier_cutoffs($args->{outlier_cutoffs});
-        } else {
-            $self->outlier_cutoffs($dataset->{outlier_cutoffs});
-        }
+    $self->category_order($dataset->{category_order});
+    $self->tool_compatibility($dataset->{tool_compatibility});
+    $self->is_live($dataset->{is_live});
+    $self->is_public($dataset->{is_public}); 
+    if (exists $args->{outliers}) {
+        $self->outliers($args->{outliers});
+    } else {
+        $self->outliers($dataset->{outliers});
+    }
+    if (exists $args->{outlier_cutoffs}) {
+        $self->outlier_cutoffs($args->{outlier_cutoffs});
+    } else {
+        $self->outlier_cutoffs($dataset->{outlier_cutoffs});
+    }
 }
 
 
