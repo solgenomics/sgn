@@ -41,6 +41,9 @@ $trial_id
                         <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
                         <br><b>Optional column:</b><br>
                         <b>new_plot_name:</b> new name for plot.<br>
+                        <div class="list-group-item-warning" >
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You will may need to reprint labels after the changes are applied.</i></p>
+                        </div>
                     </div>
 
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_design_change_accessions_form" name="trial_design_change_accessions_form">

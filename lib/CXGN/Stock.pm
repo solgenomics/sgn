@@ -2181,7 +2181,7 @@ sub get_child_stocks {
 =head2 get_child_stocks_flat_list
 
 Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are ommitted.
-Listref elements are hashrefs with structure {stock_id, name, type}. This stock is dropped in the list,
+Listref elements are hashrefs with structure {stock_id, name, type}. Self is dropped in the list,
 unlike in get_child_stocks where it remains at the top of the hierarchy.
 
 =cut
