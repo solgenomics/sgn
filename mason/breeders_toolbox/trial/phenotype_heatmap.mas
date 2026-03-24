@@ -613,7 +613,7 @@ $trial_stock_type => undef
 
                       <div class="form-group">
                         <div class="col-sm-12 list-group-item-warning" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You will may need to reprint labels after the changes are applied.</i></p>
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
                         </div>
                       </div>
 

@@ -453,7 +453,7 @@ sub replace_plot_accession_fieldMap {
         }
     }
 
-    $self->_regenerate_trial_layout_cache();
+    # $self->_regenerate_trial_layout_cache();
 
     return $error;
 

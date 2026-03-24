@@ -16,8 +16,8 @@ $trial_id
                 <div class="container-fluid">
 
                     <div class="well well-sm">
-                        <b>Upload a CSV file (.csv)</b>
-                        <br/><br/>
+                        <& /help/file_upload_type.mas, type => "Accession exchanges", optional_column => 0 &>
+                        <br/>
 
                         <div class="panel panel-default">
                             <div class="panel-body">
@@ -42,7 +42,7 @@ $trial_id
                         <br><b>Optional column:</b><br>
                         <b>new_plot_name:</b> new name for plot.<br>
                         <div class="list-group-item-warning" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You will may need to reprint labels after the changes are applied.</i></p>
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
                         </div>
                     </div>
 
