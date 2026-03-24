@@ -35,7 +35,7 @@ $order_properties_dialog => undef
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="requestFormDialog">Request Form</h4>
+                <center><h4 class="modal-title" id="requestFormDialog">Request Form</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -105,7 +105,7 @@ function requestForm(order_properties_dialog){
     var html = '';
     var item_name = 'Test';
 
-    html = html + '<form class="form-horizontal"><div class="form-group"><label class="col-sm-4 control-label">Item Name: </label><div class="col-sm-8" ><input class="form-control" id="item_name" name="item_name" value="'+item_name+'" disabled></div><br><br>';
+    html = html + '<form class="form-horizontal">';
     for(var i=0; i<properties.length; i++){
         var each_property_info = properties[i].split(":");
         if (each_property_info.length == 1 && (properties[i].includes("Date"))) {
@@ -120,9 +120,15 @@ function requestForm(order_properties_dialog){
             html = html + "</select></div><br><br>";
         }
     }
+    html = html + '<label class="col-sm-4 control-label">Send Request Form to</label><div class="col-sm-8" ><div id="vendor_list_div" name="vendor_list_div" ></div></div><br><br>';
+
     html = html + '</div></div></form>';
 
     jQuery('#request_form_div').html(html);
+
+    get_select_box('vendors', 'vendor_list_div', {'name' : 'selected_vendor_id', 'id' : 'selected_vendor_id', 'empty': 1 });
+
+
 }
 
 
