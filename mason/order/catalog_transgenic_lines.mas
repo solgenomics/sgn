@@ -39,8 +39,10 @@ $order_properties_dialog => undef
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <div id="request_form_div">
-                    </div>
+                    <center>
+                        <div id="item_form_div"></div>
+                    </center>
+                    <div id="request_form_div"></div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -60,6 +62,7 @@ jQuery(document).ready( function() {
     var property_keys = order_properties.split(",");
     var order_properties_dialog = "<% $order_properties_dialog %>";
     var property_dialog_keys = order_properties_dialog.split(",");
+    var selected_items = [];
 
     jQuery('#catalog_transgenic_lines_table').DataTable( {
         'autoWidth': false,
@@ -72,22 +75,32 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#order_form_link').click(function(){
-        selected = [];
         jQuery('input[name="catalog_item_select"]:checked').each(function() {
-            selected.push(jQuery(this).val());
+            selected_items.push(jQuery(this).val());
         });
-        if (selected.length == 0){
+        if (selected_items.length == 0){
             alert('Please select what you would like to request');
         } else {
-            alert(selected);
+            itemForm(selected_items);
             requestForm(order_properties_dialog);
+            jQuery('#request_form_dialog').modal('show');
         }
-
     });
 
 });
 
-function requestForm(order_properties_dialog ){
+function itemForm (selected_items) {
+    var html = '<div class="well well-lg"><table class="table table-bordered" style="width: 70%;" id="item_info_table"><thead><tr><th>Accession Name</th><th>Number of Plants</th></tr></thead><tbody>';
+    for(var i=0; i<selected_items.length; i++){
+        html = html + '<tr><td>' + selected_items[i] + '</td><td><input class="form-control" item_name="' + selected_items[i] + '" name ="number_of_plants" id="number_of_plants_'+ i +'" value="" placeholder=""/></td></tr>';
+    };
+    html = html + '</tbody></table></div>';
+
+    jQuery('#item_form_div').html(html);
+};
+
+
+function requestForm(order_properties_dialog){
     var properties = order_properties_dialog.split(",");
     var html = '';
     var item_name = 'Test';
@@ -110,8 +123,6 @@ function requestForm(order_properties_dialog ){
     html = html + '</div></div></form>';
 
     jQuery('#request_form_div').html(html);
-    jQuery('#request_form_dialog').modal('show');
-
 }
 
 
