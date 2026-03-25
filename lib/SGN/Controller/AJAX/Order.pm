@@ -256,7 +256,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
-    my $catalog_stock_type = $c->config->{catalog_stock_type};
+    my $conf_stock_type = $c->config->{catalog_stock_type};
     my $user_id;
 
     if (!$c->user){
@@ -282,19 +282,38 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
             my $item_name;
             my @all_item_details = ();
             my $all_details_string;
-            my $empty_string = '';
+            my $empty_string = ' ';
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
+                if ($conf_stock_type) {
+                    my $item_info = $each_item->{'item_info'};
+                    my $order_details = $each_item->{'order_details'};
+                    foreach my $stock_name (sort keys %$item_info) {
+                        my $quantity = $item_info->{$stock_name};
+                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+                    }
+                    push @request_details, $empty_string;
+                    foreach my $field (@properties) {
+                        my $each_detail = $order_details->{$field};
+                        my $detail_string = $field. ":"." ".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+
+                    my $details_string = join("<br>", @request_details);
+                    push @all_item_details, $details_string;
+
+                } else {
+                    $item_name = (keys %$each_item)[0];
+                    push @request_details, "<b>"."Item Name"."</b>". ":"."".$item_name;
+                    foreach my $field (@properties) {
+                        my $each_detail = $each_item->{$item_name}->{$field};
+                        my $detail_string = $field. ":"."".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+                    push @request_details, $empty_string;
+                    my $details_string = join("<br>", @request_details);
+                    push @all_item_details, $details_string;
                 }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
-                push @all_item_details, $details_string;
             }
             $all_details_string = join("<br>", @all_item_details);
             push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
@@ -310,6 +329,7 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $conf_stock_type = $c->config->{catalog_stock_type};
     my $user_id;
 
     if (!$c->user){
@@ -333,20 +353,39 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
             my $clone_list = $order->{'clone_list'};
             my $item_name;
             my @all_item_details = ();
-            my $empty_string = '';
+            my $empty_string = ' ';
             my $all_details_string;
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
+                if ($conf_stock_type) {
+                    my $item_info = $each_item->{'item_info'};
+                    my $order_details = $each_item->{'order_details'};
+                    foreach my $stock_name (sort keys %$item_info) {
+                        my $quantity = $item_info->{$stock_name};
+                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+                    }
+                    push @request_details, $empty_string;
+                    foreach my $field (@properties) {
+                        my $each_detail = $order_details->{$field};
+                        my $detail_string = $field. ":"." ".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+
+                    my $details_string = join("<br>", @request_details);
+                    push @all_item_details, $details_string;
+
+                } else {
+                    $item_name = (keys %$each_item)[0];
+                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+                    foreach my $field (@properties) {
+                        my $each_detail = $each_item->{$item_name}->{$field};
+                        my $detail_string = $field. ":"."".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+                    push @request_details, $empty_string;
+                    my $details_string = join("<br>", @request_details);
+                    push @all_item_details, $details_string;
                 }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
-                push @all_item_details, $details_string;
             }
             $all_details_string = join("<br>", @all_item_details);
 
@@ -365,6 +404,7 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $conf_stock_type = $c->config->{catalog_stock_type};
     my $user_id;
 
     if (!$c->user){
@@ -389,21 +429,41 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
             my $item_name;
             my @all_item_details = ();
             my $all_details_string;
-            my $empty_string = '';
+            my $empty_string = ' ';
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
-                }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
+                if ($conf_stock_type) {
+                    my $item_info = $each_item->{'item_info'};
+                    my $order_details = $each_item->{'order_details'};
+                    foreach my $stock_name (sort keys %$item_info) {
+                        my $quantity = $item_info->{$stock_name};
+                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+                    }
+                    push @request_details, $empty_string;
+                    foreach my $field (@properties) {
+                        my $each_detail = $order_details->{$field};
+                        my $detail_string = $field. ":"." ".$each_detail;
+                        push @request_details, $detail_string;
+                    }
 
-                push @all_item_details, $details_string;
+                    my $details_string = join("<br>", @request_details);
+                    push @all_item_details, $details_string;
+
+                } else {
+                    $item_name = (keys %$each_item)[0];
+                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+                    foreach my $field (@properties) {
+                        my $each_detail = $each_item->{$item_name}->{$field};
+                        my $detail_string = $field. ":"."".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+                    push @request_details, $empty_string;
+                    my $details_string = join("<br>", @request_details);
+
+                    push @all_item_details, $details_string;
+                }
             }
+
             $all_details_string = join("<br>", @all_item_details);
 
             $vendor_order->{'order_details'} = $all_details_string;
@@ -422,6 +482,7 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $conf_stock_type = $c->config->{catalog_stock_type};
     my $user_id;
 
     if (!$c->user){
@@ -445,20 +506,39 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
             my $clone_list = $vendor_order->{'clone_list'};
             my $item_name;
             my @all_item_details = ();
-            my $empty_string = '';
+            my $empty_string = ' ';
             my $all_details_string;
             foreach my $each_item (@$clone_list) {
                 my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
+                if ($conf_stock_type) {
+                    my $item_info = $each_item->{'item_info'};
+                    my $order_details = $each_item->{'order_details'};
+                    foreach my $stock_name (sort keys %$item_info) {
+                        my $quantity = $item_info->{$stock_name};
+                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+                    }
+                    push @request_details, $empty_string;
+                    foreach my $field (@properties) {
+                        my $each_detail = $order_details->{$field};
+                        my $detail_string = $field. ":"." ".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+
+                    my $details_string = join("<br>", @request_details);
+                    push @all_item_details, $details_string;
+
+                } else {
+                    $item_name = (keys %$each_item)[0];
+                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+                    foreach my $field (@properties) {
+                        my $each_detail = $each_item->{$item_name}->{$field};
+                        my $detail_string = $field. ":"."".$each_detail;
+                        push @request_details, $detail_string;
+                    }
+                    push @request_details, $empty_string;
+                    my $details_string = join("<br>", @request_details);
+                    push @all_item_details, $details_string;
                 }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
-                push @all_item_details, $details_string;
             }
             $all_details_string = join("<br>", @all_item_details);
             $vendor_order->{'order_details'} = $all_details_string;
