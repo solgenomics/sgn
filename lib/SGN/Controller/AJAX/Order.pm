@@ -657,6 +657,28 @@ END_HEREDOC
 }
 
 
+sub request_form_submission : Path('/ajax/order/request_form_submission') : ActionClass('REST'){ }
+
+sub request_form_submission_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $request_date = $time->ymd();
+    my $item_info = decode_json ($c->req->param('item_info'));
+    my $order_details = decode_json ($c->req->param('order_details'));
+    my $vendor_id = $c->req->param('vendor_id');
+    my %details;
+    print STDERR "ITEM INFO =".Dumper($item_info)."\n";
+    print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
+    print STDERR "VENDOR ID =".Dumper($vendor_id)."\n";
+
+    $c->stash->{rest}->{success} .= 'Your request has been submitted successfully and the vendor has been notified.';
+
+}
+
+
 sub get_order_tracking_ids :Path('/ajax/order/order_tracking_ids') Args(0) {
     my $self = shift;
     my $c = shift;
