@@ -256,6 +256,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $catalog_stock_type = $c->config->{catalog_stock_type};
     my $user_id;
 
     if (!$c->user){
@@ -581,8 +582,8 @@ sub single_step_submission_POST : Args(0) {
 
     $details{$item_name} = $order_details;
     if (!$c->user()) {
-        print STDERR "User not logged in... not adding a catalog item.\n";
-        $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
+        print STDERR "User not logged in... not adding order.\n";
+        $c->stash->{rest} = {error_string => "You must be logged in to submit an order." };
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -670,9 +671,72 @@ sub request_form_submission_POST : Args(0) {
     my $order_details = decode_json ($c->req->param('order_details'));
     my $vendor_id = $c->req->param('vendor_id');
     my %details;
+    my @item_list;
+    $details{'item_info'} = $item_info;
+    $details{'order_details'} = $order_details;
+    push @item_list, \%details;
+
     print STDERR "ITEM INFO =".Dumper($item_info)."\n";
     print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
     print STDERR "VENDOR ID =".Dumper($vendor_id)."\n";
+    print STDERR "DETAILS =".Dumper(\%details)."\n";
+
+    if (!$c->user()) {
+        print STDERR "User not logged in.\n";
+        $c->stash->{rest} = {error_string => "You must be logged in to submit request form." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $user_role = $c->user->get_object->get_user_type();
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+    my @history = ();
+    my $history_info = {};
+
+    my $new_order = CXGN::Stock::Order->new( { bcs_schema => $schema, people_schema => $people_schema, dbh => $dbh});
+    $new_order->order_from_id($user_id);
+    $new_order->order_to_id($vendor_id);
+    $new_order->order_status("submitted");
+    $new_order->create_date($timestamp);
+    my $order_id = $new_order->store();
+    if (!$order_id){
+        $c->stash->{rest} = {error_string => "Error saving your order",};
+        return;
+    }
+
+    $history_info ->{'submitted'} = $timestamp;
+    push @history, $history_info;
+
+    my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
+    $order_prop->clone_list(\@item_list);
+    $order_prop->parent_id($order_id);
+    $order_prop->history(\@history);
+    my $order_prop_id = $order_prop->store_sp_orderprop();
+
+    if (!$order_prop_id){
+        $c->stash->{rest} = {error_string => "Error saving your request",};
+        return;
+    }
+
+    my $contact_person = CXGN::People::Person -> new($dbh, $vendor_id);
+    my $contact_email = $contact_person->get_contact_email();
+
+    my $host = $c->config->{main_production_site_url};
+    my $project_name = $c->config->{project_name};
+    my $subject="Ordering Notification from $project_name";
+    my $body=<<END_HEREDOC;
+
+You have an order submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    CXGN::Contact::send_email($subject,$body,$contact_email);
 
     $c->stash->{rest}->{success} .= 'Your request has been submitted successfully and the vendor has been notified.';
 
