@@ -1943,6 +1943,8 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
     my $user_id;
     my $user_name;
     my $user_role;
+    my $user_first_name;
+    my $user_last_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -1956,6 +1958,8 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload this plant info!'};
@@ -1963,37 +1967,72 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         $user_role = $c->user->get_object->get_user_type();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_with_number_of_plants_file');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_with_num_plants_inherit_treatments');
     my $plants_per_plot = $c->req->param('upload_plants_with_num_plants_per_plot_number');
 
     my $subdirectory = "trial_plants_upload";
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $archived_filename_with_path;
+    my $trial_name = $c->stash->{trial}->get_name();
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        $c->detach();
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            file_type => 'plants_per_plot',
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
-    unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." $trial_name plants with number upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            file_type => 'plants_per_plot',
+            user_name => "$user_first_name $user_last_name",
+            trial_id => $c->stash->{trial_id},
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialPlantsWithNumberOfPlantsXLS');
     my $parsed_data = $parser->parse();
@@ -2004,6 +2043,8 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $upload_job->additional_args->{error_messages} = "Could not get parsing errors";
+            $upload_job->update_status("failed");
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
@@ -2014,6 +2055,8 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}};
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         $c->detach();
     }
 
@@ -2027,11 +2070,11 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
     }
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -2058,8 +2101,11 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
     };
 
     if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)){
+        $upload_job->update_status("finished");
         $c->stash->{rest} = { success => 1 };
     } else {
+        $upload_job->additional_args->{error_messages} = "An error occurred uploading plants.";
+        $upload_job->update_status("failed");
         $c->stash->{rest} = { error => "An error occurred uploading plants." };
     }
 
@@ -2077,6 +2123,8 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
     my $user_id;
     my $user_name;
     my $user_role;
+    my $user_first_name;
+    my $user_last_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -2090,6 +2138,8 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload this plant info!'};
@@ -2097,37 +2147,72 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         $user_role = $c->user->get_object->get_user_type();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_plants_subplot_with_number_of_plants_file');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $inherits_plot_treatments = 1; #$c->req->param('upload_plants_subplot_with_num_plants_inherit_treatments');
     my $plants_per_subplot = $c->req->param('upload_plants_subplot_with_num_plants_per_subplot_number');
 
     my $subdirectory = "trial_plants_upload";
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $archived_filename_with_path;
+    my $trial_name = $c->stash->{trial}->get_name();
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        $c->detach();
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            file_type => 'plants_per_subplot',
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
-    unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." $trial_name subplot plants with number upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            file_type => 'plants_per_subplot',
+            user_name => "$user_first_name $user_last_name",
+            trial_id => $c->stash->{trial_id},
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialPlantsSubplotWithNumberOfPlantsXLS');
     my $parsed_data = $parser->parse();
@@ -2138,6 +2223,8 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $upload_job->additional_args->{error_messages} = "Could not get parsing errors";
+            $upload_job->update_status("failed");
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
@@ -2148,6 +2235,8 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_subplots => $parse_errors->{'missing_subplots'}};
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         $c->detach();
     }
 
@@ -2161,11 +2250,11 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
     }
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -2192,8 +2281,11 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
     };
 
     if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $upload_job->update_status("finished");
         $c->stash->{rest} = { success => 1 };
     } else {
+        $upload_job->additional_args->{error_messages} = "An error occurred uploading plants to subplots.";
+        $upload_job->update_status("failed");
         $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
     }
 
@@ -2211,6 +2303,8 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
     my $user_id;
     my $user_name;
     my $user_role;
+    my $user_first_name;
+    my $user_last_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -2224,6 +2318,8 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload this subplot info!'};
@@ -2231,37 +2327,72 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         $user_role = $c->user->get_object->get_user_type();
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $upload = $c->req->upload('trial_upload_subplots_with_number_of_subplots_file');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $inherits_plot_treatments = 1; #$c->req->param('upload_subplots_with_num_subplots_inherit_treatments');
     my $subplots_per_plot = $c->req->param('upload_subplots_with_num_subplots_per_plot_number');
 
     my $subdirectory = "trial_subplots_upload";
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $archived_filename_with_path;
+    my $trial_name = $c->stash->{trial}->get_name();
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        $c->detach();
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            file_type => 'subplots_per_plot',
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
-    unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." $trial_name subplots with number upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            file_type => 'subplots_per_plot',
+            user_name => "$user_first_name $user_last_name",
+            trial_id => $c->stash->{trial_id},
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialSubplotsWithNumberOfSubplotsXLS');
     my $parsed_data = $parser->parse();
@@ -2272,6 +2403,8 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $upload_job->additional_args->{error_messages} = "Could not get parsing errors";
+            $upload_job->update_status("failed");
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
@@ -2282,6 +2415,8 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}};
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         $c->detach();
     }
 
@@ -2292,11 +2427,11 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_names}}, $_->{subplot_name};
         push @{$plot_subplot_hash{$_->{plot_stock_id}}->{subplot_index_numbers}}, $_->{subplot_index_number};
     }
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -2323,8 +2458,11 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
     };
 
     if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+        $upload_job->update_status("finished");
         $c->stash->{rest} = { success => 1 };
     } else {
+        $upload_job->additional_args->{error_messages} = "An error occurred uploading subplots.";
+        $upload_job->update_status("failed");
         $c->stash->{rest} = { error => "An error occurred uploading subplots." };
     }
 
@@ -2342,6 +2480,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     my $user_id;
     my $user_name;
     my $user_role;
+    my $user_first_name;
+    my $user_last_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -2355,6 +2495,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
@@ -2362,6 +2504,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         $user_role = $c->user->get_object->get_user_type();
     }
 
@@ -2380,32 +2524,66 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     }
 
     my $upload = $c->req->upload('trial_upload_plot_gps_file');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $coord_type = $c->req->param('upload_gps_coordinate_type');
+    my $gps_file_type = $coord_type eq 'polygon' ? 'gps_polygon' : 'gps_point';
     my $subdirectory = "trial_plot_gps_upload";
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $archived_filename_with_path;
+    my $trial_name = $c->stash->{trial}->get_name();
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        $c->detach();
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            file_type => $gps_file_type,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
-    unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." $trial_name plot GPS upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            file_type => $gps_file_type,
+            user_name => "$user_first_name $user_last_name",
+            trial_id => $c->stash->{trial_id},
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('TrialPlotGPSCoordinatesXLS');
-    my $coord_type = $c->req->param('upload_gps_coordinate_type');
     my $parsed_data = $parser->parse({ coord_type => $coord_type });
     #print STDERR Dumper $parsed_data;
 
@@ -2414,6 +2592,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $upload_job->additional_args->{error_messages} = "Could not get parsing errors";
+            $upload_job->update_status("failed");
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
@@ -2424,6 +2604,8 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_plots => $parse_errors->{'missing_plots'}};
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         $c->detach();
     }
 
@@ -2490,8 +2672,12 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
     if ($@) {
         $c->stash->{rest} = { error => $@ };
         print STDERR "An error condition occurred, was not able to upload trial plot GPS coordinates. ($@).\n";
+        $upload_job->additional_args->{error_messages} = "$@";
+        $upload_job->update_status("failed");
         $c->detach();
     }
+
+    $upload_job->update_status("finished");
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -2513,31 +2699,66 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         return;
     }
 
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
 
     my $upload = $c->req->upload('trial_design_change_accessions_file');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $subdirectory = "trial_change_plot_accessions_upload";
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $archived_filename_with_path;
+    my $trial_name = $c->stash->{trial}->get_name();
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $c->user->get_object->get_sp_person_id(),
-        user_role => ($c->user->get_roles)[0]
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        $c->detach();
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $c->user->get_object->get_sp_person_id(),
+            user_role => ($c->user->get_roles)[0],
+            file_type => 'change_accessions',
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
     }
-    unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $sp_person_id,
+        name => basename($archived_filename_with_path)." $trial_name change plot accessions upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            file_type => 'change_accessions',
+            user_name => "$user_first_name $user_last_name",
+            trial_id => $trial_id,
+            file_id => $archived_file_id
+        }
+    });
+
+    $upload_job->update_status("submitted");
+
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id);
     $parser->load_plugin('TrialChangePlotAccessionsCSV');
     my $parsed_data = $parser->parse();
@@ -2548,6 +2769,8 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $upload_job->additional_args->{error_messages} = "Could not get parsing errors";
+            $upload_job->update_status("failed");
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
@@ -2557,6 +2780,8 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
             }
         }
         $c->stash->{rest} = {error => $return_error};
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         return;
     }
 
@@ -2627,8 +2852,12 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     if ($@) {
         $c->stash->{rest} = { error => $@ };
         print STDERR "An error condition occurred, was not able to change plot accessions. ($@).\n";
+        $upload_job->additional_args->{error_messages} = "$@";
+        $upload_job->update_status("failed");
         $c->detach();
     }
+
+    $upload_job->update_status("finished");
 
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
