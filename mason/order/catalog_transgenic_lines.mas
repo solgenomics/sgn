@@ -93,10 +93,16 @@ jQuery(document).ready( function() {
         'ajax': '/ajax/catalog/items',
     });
 
-    jQuery('#order_form_link').click(function(){
-        jQuery('input[name="catalog_item_select"]:checked').each(function() {
-            selected_items.push(jQuery(this).val());
+    jQuery(function() {
+        jQuery('input:checkbox[name="catalog_item_select"]').on('change', function() {
+            let item_name = jQuery(this).val();
+            let item_index = selected_items.indexOf(item_name);
+            jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
         });
+
+    });
+
+    jQuery('#order_form_link').click(function(){
         if (selected_items.length == 0){
             alert('Please select what you would like to request');
         } else {
