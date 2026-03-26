@@ -70,6 +70,16 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         push @$subset_treatments, $params->{treatment_any_name};
     }
 
+    my $treatment_ids;
+    if ($params->{treatment_id}){
+        push @$treatment_ids, $params->{treatment_id};
+    }
+
+    my $treatment_synonyms;
+    if ($params->{treatment_synonym}){
+        push @$treatment_synonyms, $params->{treatment_synonym};
+    }
+
     my $definitions;
     if ($params->{treatment_definition}){
         push @$definitions, $params->{treatment_definition};
@@ -82,6 +92,8 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         limit => $limit,
         offset => $offset,
         trait_name_list => $subset_treatments,
+        accession_list => $treatment_ids,
+        trait_synonym_list => $treatment_synonyms,
         trait_definition_list => $definitions
     });
     my ($data, $records_total) = $trait_search->search();
