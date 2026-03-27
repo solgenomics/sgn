@@ -271,52 +271,62 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
-    my $all_orders_ref = $orders->get_orders_from_person_id();
+    my $clone_list_format_type;
+    if ($conf_stock_type) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
 
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
+    my $all_orders_ref = $orders->get_orders_from_person_id();
     my @current_orders;
     my @all_orders = @$all_orders_ref;
     foreach my $order (@all_orders) {
         if (($order->{'order_status'}) ne 'completed') {
-            my $clone_list = $order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $all_details_string;
-            my $empty_string = ' ';
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                if ($conf_stock_type) {
-                    my $item_info = $each_item->{'item_info'};
-                    my $order_details = $each_item->{'order_details'};
-                    foreach my $stock_name (sort keys %$item_info) {
-                        my $quantity = $item_info->{$stock_name};
-                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
-                    }
-                    push @request_details, $empty_string;
-                    foreach my $field (@properties) {
-                        my $each_detail = $order_details->{$field};
-                        my $detail_string = $field. ":"." ".$each_detail;
-                        push @request_details, $detail_string;
-                    }
+#            my @all_item_details = ();
+#            my $all_details_string;
+#            my $clone_list = $order->{'clone_list'};
+            my $formatted_clone_list = $order->{'formatted_clone_list'};
 
-                    my $details_string = join("<br>", @request_details);
-                    push @all_item_details, $details_string;
+#            push @all_item_details, $formatted_clone_list;
+#            my $item_name;
+#            my $empty_string = ' ';
+#            foreach my $each_item (@$clone_list) {
+#                my @request_details = ();
+#                if ($conf_stock_type) {
+#                    my $item_info = $each_item->{'item_info'};
+#                    my $order_details = $each_item->{'order_details'};
+#                    foreach my $stock_name (sort keys %$item_info) {
+#                        my $quantity = $item_info->{$stock_name};
+#                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+#                    }
+#                    push @request_details, $empty_string;
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $order_details->{$field};
+#                        my $detail_string = $field. ":"." ".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
 
-                } else {
-                    $item_name = (keys %$each_item)[0];
-                    push @request_details, "<b>"."Item Name"."</b>". ":"."".$item_name;
-                    foreach my $field (@properties) {
-                        my $each_detail = $each_item->{$item_name}->{$field};
-                        my $detail_string = $field. ":"."".$each_detail;
-                        push @request_details, $detail_string;
-                    }
-                    push @request_details, $empty_string;
-                    my $details_string = join("<br>", @request_details);
-                    push @all_item_details, $details_string;
-                }
-            }
-            $all_details_string = join("<br>", @all_item_details);
-            push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
+#                    my $details_string = join("<br>", @request_details);
+#                    push @all_item_details, $details_string;
+
+#                } else {
+#                    $item_name = (keys %$each_item)[0];
+#                    push @request_details, "<b>"."Item Name"."</b>". ":"."".$item_name;
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $each_item->{$item_name}->{$field};
+#                        my $detail_string = $field. ":"."".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
+#                    push @request_details, $empty_string;
+#                    my $details_string = join("<br>", @request_details);
+#                    push @all_item_details, $details_string;
+#                }
+#            }
+#            $all_details_string = join("<br>", @all_item_details);
+
+            push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $formatted_clone_list, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
     }
 
@@ -343,53 +353,62 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
+
+    my $clone_list_format_type;
+    if ($conf_stock_type) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
+
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
     my $all_orders_ref = $orders->get_orders_from_person_id();
     my @completed_orders;
     my @all_orders = @$all_orders_ref;
 
     foreach my $order (@all_orders) {
         if (($order->{'order_status'}) eq 'completed') {
-            my $clone_list = $order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $empty_string = ' ';
-            my $all_details_string;
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                if ($conf_stock_type) {
-                    my $item_info = $each_item->{'item_info'};
-                    my $order_details = $each_item->{'order_details'};
-                    foreach my $stock_name (sort keys %$item_info) {
-                        my $quantity = $item_info->{$stock_name};
-                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
-                    }
-                    push @request_details, $empty_string;
-                    foreach my $field (@properties) {
-                        my $each_detail = $order_details->{$field};
-                        my $detail_string = $field. ":"." ".$each_detail;
-                        push @request_details, $detail_string;
-                    }
+            my $formatted_clone_list = $order->{'formatted_clone_list'};
 
-                    my $details_string = join("<br>", @request_details);
-                    push @all_item_details, $details_string;
+#            my $clone_list = $order->{'clone_list'};
+#            my $item_name;
+#            my @all_item_details = ();
+#            my $empty_string = ' ';
+#            my $all_details_string;
+#            foreach my $each_item (@$clone_list) {
+#                my @request_details = ();
+#                if ($conf_stock_type) {
+#                    my $item_info = $each_item->{'item_info'};
+#                    my $order_details = $each_item->{'order_details'};
+#                    foreach my $stock_name (sort keys %$item_info) {
+#                        my $quantity = $item_info->{$stock_name};
+#                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+#                    }
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $order_details->{$field};
+#                        my $detail_string = $field. ":"." ".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
 
-                } else {
-                    $item_name = (keys %$each_item)[0];
-                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                    foreach my $field (@properties) {
-                        my $each_detail = $each_item->{$item_name}->{$field};
-                        my $detail_string = $field. ":"."".$each_detail;
-                        push @request_details, $detail_string;
-                    }
-                    push @request_details, $empty_string;
-                    my $details_string = join("<br>", @request_details);
-                    push @all_item_details, $details_string;
-                }
-            }
-            $all_details_string = join("<br>", @all_item_details);
+#                    my $details_string = join("<br>", @request_details);
+#                    push @all_item_details, $details_string;
 
-            push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
+#                } else {
+#                    $item_name = (keys %$each_item)[0];
+#                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $each_item->{$item_name}->{$field};
+#                        my $detail_string = $field. ":"."".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
+#                    push @request_details, $empty_string;
+#                    my $details_string = join("<br>", @request_details);
+#                    push @all_item_details, $details_string;
+#                }
+#            }
+#            $all_details_string = join("<br>", @all_item_details);
+
+            push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $formatted_clone_list, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
     }
 
@@ -418,55 +437,66 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+
+    my $clone_list_format_type;
+    if ($conf_stock_type) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
+
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
     my @vendor_current_orders;
     my @all_vendor_orders = @$vendor_orders_ref;
     foreach my $vendor_order (@all_vendor_orders) {
         if (($vendor_order->{'order_status'}) ne 'completed') {
-            my $clone_list = $vendor_order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $all_details_string;
-            my $empty_string = ' ';
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                if ($conf_stock_type) {
-                    my $item_info = $each_item->{'item_info'};
-                    my $order_details = $each_item->{'order_details'};
-                    foreach my $stock_name (sort keys %$item_info) {
-                        my $quantity = $item_info->{$stock_name};
-                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
-                    }
-                    push @request_details, $empty_string;
-                    foreach my $field (@properties) {
-                        my $each_detail = $order_details->{$field};
-                        my $detail_string = $field. ":"." ".$each_detail;
-                        push @request_details, $detail_string;
-                    }
+            my $formatted_clone_list = $vendor_order->{'formatted_clone_list'};
+#            my $clone_list = $vendor_order->{'clone_list'};
+#            my $item_name;
+#            my @all_item_details = ();
+#            my $all_details_string;
+#            my $empty_string = ' ';
+#            foreach my $each_item (@$clone_list) {
+#                my @request_details = ();
+#                if ($conf_stock_type) {
+#                    my $item_info = $each_item->{'item_info'};
+#                    my $order_details = $each_item->{'order_details'};
+#                    foreach my $stock_name (sort keys %$item_info) {
+#                        my $quantity = $item_info->{$stock_name};
+#                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+#                    }
+#                    push @request_details, $empty_string;
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $order_details->{$field};
+#                        my $detail_string = $field. ":"." ".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
 
-                    my $details_string = join("<br>", @request_details);
-                    push @all_item_details, $details_string;
+#                    my $details_string = join("<br>", @request_details);
+#                    push @all_item_details, $details_string;
 
-                } else {
-                    $item_name = (keys %$each_item)[0];
-                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                    foreach my $field (@properties) {
-                        my $each_detail = $each_item->{$item_name}->{$field};
-                        my $detail_string = $field. ":"."".$each_detail;
-                        push @request_details, $detail_string;
-                    }
-                    push @request_details, $empty_string;
-                    my $details_string = join("<br>", @request_details);
+#                } else {
+#                    $item_name = (keys %$each_item)[0];
+#                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $each_item->{$item_name}->{$field};
+#                        my $detail_string = $field. ":"."".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
+#                    push @request_details, $empty_string;
+#                    my $details_string = join("<br>", @request_details);
 
-                    push @all_item_details, $details_string;
-                }
-            }
+#                    push @all_item_details, $details_string;
+#                }
+#            }
 
-            $all_details_string = join("<br>", @all_item_details);
+#            $all_details_string = join("<br>", @all_item_details);
 
-            $vendor_order->{'order_details'} = $all_details_string;
+#            $vendor_order->{'order_details'} = $all_details_string;
+            $vendor_order->{'order_details'} = $formatted_clone_list;
+
             push @vendor_current_orders, $vendor_order
         }
     }
@@ -496,52 +526,63 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+
+    my $clone_list_format_type;
+    if ($conf_stock_type) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
+
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
     my @vendor_completed_orders;
     my @all_vendor_orders = @$vendor_orders_ref;
     foreach my $vendor_order (@all_vendor_orders) {
         if (($vendor_order->{'order_status'}) eq 'completed') {
-            my $clone_list = $vendor_order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $empty_string = ' ';
-            my $all_details_string;
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                if ($conf_stock_type) {
-                    my $item_info = $each_item->{'item_info'};
-                    my $order_details = $each_item->{'order_details'};
-                    foreach my $stock_name (sort keys %$item_info) {
-                        my $quantity = $item_info->{$stock_name};
-                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
-                    }
-                    push @request_details, $empty_string;
-                    foreach my $field (@properties) {
-                        my $each_detail = $order_details->{$field};
-                        my $detail_string = $field. ":"." ".$each_detail;
-                        push @request_details, $detail_string;
-                    }
+            my $formatted_clone_list = $vendor_order->{'formatted_clone_list'};
 
-                    my $details_string = join("<br>", @request_details);
-                    push @all_item_details, $details_string;
+#            my $clone_list = $vendor_order->{'clone_list'};
+#            my $item_name;
+#            my @all_item_details = ();
+#            my $empty_string = ' ';
+#            my $all_details_string;
+#            foreach my $each_item (@$clone_list) {
+#                my @request_details = ();
+#                if ($conf_stock_type) {
+#                    my $item_info = $each_item->{'item_info'};
+#                    my $order_details = $each_item->{'order_details'};
+#                    foreach my $stock_name (sort keys %$item_info) {
+#                        my $quantity = $item_info->{$stock_name};
+#                        push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+#                    }
+#                    push @request_details, $empty_string;
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $order_details->{$field};
+#                        my $detail_string = $field. ":"." ".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
 
-                } else {
-                    $item_name = (keys %$each_item)[0];
-                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                    foreach my $field (@properties) {
-                        my $each_detail = $each_item->{$item_name}->{$field};
-                        my $detail_string = $field. ":"."".$each_detail;
-                        push @request_details, $detail_string;
-                    }
-                    push @request_details, $empty_string;
-                    my $details_string = join("<br>", @request_details);
-                    push @all_item_details, $details_string;
-                }
-            }
-            $all_details_string = join("<br>", @all_item_details);
-            $vendor_order->{'order_details'} = $all_details_string;
+#                    my $details_string = join("<br>", @request_details);
+#                    push @all_item_details, $details_string;
+
+#                } else {
+#                    $item_name = (keys %$each_item)[0];
+#                    push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
+#                    foreach my $field (@properties) {
+#                        my $each_detail = $each_item->{$item_name}->{$field};
+#                        my $detail_string = $field. ":"."".$each_detail;
+#                        push @request_details, $detail_string;
+#                    }
+#                    push @request_details, $empty_string;
+#                    my $details_string = join("<br>", @request_details);
+#                    push @all_item_details, $details_string;
+#                }
+#            }
+#            $all_details_string = join("<br>", @all_item_details);
+#            $vendor_order->{'order_details'} = $all_details_string;
+            $vendor_order->{'order_details'} = $formatted_clone_list;
 
             push @vendor_completed_orders, $vendor_order
         }

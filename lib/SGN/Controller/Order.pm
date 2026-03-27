@@ -43,6 +43,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
     my $ordering_type = $c->config->{ordering_type};
+    my $conf_stock_type = $c->config->{catalog_stock_type};
 
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -55,9 +56,16 @@ sub order_details :Path('/order/details/view') : Args(1) {
     }
 
     my $order_number = shift;
-    my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, sp_order_id => $order_number});
-    my $order_result = $order_obj->get_order_details();
 
+    my $clone_list_format_type;
+    if ($conf_stock_type) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
+
+    my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, sp_order_id => $order_number, clone_list_format_type => $clone_list_format_type, properties => \@properties});
+    my $order_result = $order_obj->get_order_details();
     my $all_items = $order_result->[3];
     my $item_name;
     my $value_string;

@@ -31,6 +31,10 @@ has 'batches' => ( isa => 'Ref', is => 'rw', default => sub { return []; } );
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema', is => 'rw');
 
+has 'clone_list_format_type' => ( isa => 'Str', is => 'rw');
+
+has 'properties' => ( is => 'rw', isa => 'ArrayRef' );
+
 
 sub BUILD {
     my $self = shift;
@@ -81,6 +85,8 @@ sub get_orders_from_person_id {
     my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $person_id = $self->order_from_id();
+    my $clone_list_format_type = $self->clone_list_format_type();
+    my $properties = $self->properties();
     my $dbh = $self->dbh();
 
     my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
@@ -107,10 +113,13 @@ sub get_orders_from_person_id {
             $all_items = $item_hash->{'clone_list'};
         }
 
+        my $formatted_clone_list = _format_clone_list($all_items, $clone_list_format_type, $properties);
+
         push @orders, {
             order_id => $order_id,
             create_date => $create_date,
             clone_list => $all_items,
+            formatted_clone_list => $formatted_clone_list,
             order_status => $order_status,
             completion_date => $completion_date,
             order_to_name => $order_to_name,
@@ -127,6 +136,8 @@ sub get_orders_to_person_id {
     my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $person_id = $self->order_to_id();
+    my $clone_list_format_type = $self->clone_list_format_type();
+    my $properties = $self->properties();
     my $dbh = $self->dbh();
     my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
 
@@ -152,11 +163,14 @@ sub get_orders_to_person_id {
             $all_items = $item_hash->{'clone_list'};
         }
 
+        my $formatted_clone_list = _format_clone_list($all_items, $clone_list_format_type, $properties);
+
         push @orders, {
             order_id => $order_id,
             order_from_name => $order_from_name,
             create_date => $create_date,
-            clone_list => $all_items,
+#            clone_list => $all_items,
+            formatted_clone_list => $formatted_clone_list,
             order_status => $order_status,
             completion_date => $completion_date,
             contact_person_comments => $comments
@@ -172,6 +186,8 @@ sub get_order_details {
     my $schema = $self->bcs_schema();
     my $people_schema = $self->people_schema();
     my $dbh = $self->dbh();
+    my $clone_list_format_type = $self->clone_list_format_type();
+    my $properties = $self->properties();
     my $order_id = $self->sp_order_id();
     my @order_details;
     my $order_batch_json_cvterm_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'order_batch_json', 'sp_order_property')->cvterm_id();
@@ -195,8 +211,9 @@ sub get_order_details {
     my $item_json = $orderprop_rs->value();
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
-
-    push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments, $order_to_id;
+    my $formatted_clone_list = _format_clone_list($all_items, $clone_list_format_type, $properties);
+    print STDERR "FORMATTED CLONE LIST =".Dumper($formatted_clone_list)."\n";
+    push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments, $order_to_id, $formatted_clone_list;
 
     return \@order_details;
 
@@ -348,6 +365,54 @@ sub get_orders_to_person_id_progress {
 
     return \@activity_info;
 }
+
+
+sub _format_clone_list {
+    my $all_items = shift;
+    my $clone_list_format_type = shift;
+    my $properties = shift;
+    my $formatted_clone_list;
+
+    my $item_name;
+    my @all_item_details = ();
+    my $empty_string = ' ';
+    foreach my $each_item (@$all_items) {
+        my @request_details = ();
+        if ($clone_list_format_type eq 'grouped_items') {
+            my $item_info = $each_item->{'item_info'};
+            my $order_details = $each_item->{'order_details'};
+            foreach my $stock_name (sort keys %$item_info) {
+                my $quantity = $item_info->{$stock_name};
+                push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+            }
+            push @request_details, $empty_string;
+            foreach my $field (@$properties) {
+                my $each_detail = $order_details->{$field};
+                my $detail_string = $field. ":"." ".$each_detail;
+                push @request_details, $detail_string;
+            }
+
+            my $details_string = join("<br>", @request_details);
+            push @all_item_details, $details_string;
+
+        } elsif ($clone_list_format_type eq 'individual_item') {
+            $item_name = (keys %$each_item)[0];
+            push @request_details, "<b>"."Item Name"."</b>". ":"."".$item_name;
+            foreach my $field (@$properties) {
+                my $each_detail = $each_item->{$item_name}->{$field};
+                my $detail_string = $field. ":"."".$each_detail;
+                push @request_details, $detail_string;
+            }
+            push @request_details, $empty_string;
+            my $details_string = join("<br>", @request_details);
+            push @all_item_details, $details_string;
+        }
+    }
+    $formatted_clone_list = join("<br>", @all_item_details);
+
+    return $formatted_clone_list;
+}
+
 
 
 
