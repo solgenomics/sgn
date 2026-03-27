@@ -42,8 +42,11 @@ $check_vendor_role =>undef
 % if ($ordering_type eq 'single_step' && $order_status ne 'completed') {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button>
 %}
-% if ($ordering_type eq 'single_step' && $order_status eq 'completed') {
+% if (($ordering_type eq 'single_step') && ($order_status eq 'completed') && ($check_vendor_role != 1)) {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="re_order_link">Re-Order</button><button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link">Re-Open</button>
+%}
+% if (($ordering_type eq 'single_step') && ($order_status eq 'completed') && ($check_vendor_role == 1)) {
+    <button class="btn btn-sm btn-primary" style="margin:3px" id="requester_re_open_link">Re-Open</button>
 %}
 %if ($ordering_type ne 'single_step' && $order_status eq 'completed') {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="re_open_link">Re-Open</button>
