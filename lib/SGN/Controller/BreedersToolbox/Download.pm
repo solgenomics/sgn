@@ -558,18 +558,45 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
     }
 
-    my $outliers;
-    if (defined $dataset_id) {
+    my $dataset_outliers;
+    my $dataset_accession_ids;
+    my $dataset_trait_ids;
+    my $dataset_trial_ids;
+    if (defined $dataset_id && $dataset_id ne '') {
         my $people_schema = $c->dbic_schema("CXGN::People::Schema");
         my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
         my $dataset = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => int($dataset_id), exclude_dataset_outliers => 1);
-        $outliers = $dataset->outliers();
+	die "Dataset not created" unless $dataset;
+
+	$dataset_outliers = $dataset->outliers();
+	$dataset_accession_ids = $dataset->retrieve_accessions();
+	$dataset_trait_ids     = $dataset->retrieve_traits();
+	$dataset_trial_ids = $dataset->retrieve_trials();
     }
 
+    # Build lookup sets from dataset results (keyed by name, column [1])
+    my %dataset_accessions = map { $_->[1] => 1 } @{ $dataset_accession_ids // [] };
+    my %dataset_traits     = map { $_->[1] => 1 } @{ $dataset_trait_ids     // [] };
+    my %dataset_trials     = map { $_->[1] => 1 } @{ $dataset_trial_ids     // [] };
 
-    my @accession_list = map { $_->[1] } @$accession_data;
-    my @trial_list = map { $_->[1] } @$trial_data;
-    my @trait_list = map { $_->[1] } @$trait_data;
+    my @accession_list;
+    if ($accession_list_id) {
+        @accession_list = map { $_->[1] } @$accession_data;
+    } else {
+	@accession_list = keys %dataset_accessions;
+    }
+    my @trial_list;
+    if ($trial_list_id) {
+        @trial_list = map { $_->[1] } @$trial_data;
+    } else {
+	@trial_list = keys %dataset_trials;
+    }
+    my @trait_list;
+    if ($trait_list_id) {
+        @trait_list = map { $_->[1] } @$trait_data;
+    } else {
+	@trait_list = keys %dataset_traits;
+    }
 
     my $tf = CXGN::List::Transform->new();
 
@@ -598,7 +625,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     # if we work with dataset then @trait_ids we have directly from http request but we need reference/pointer to it
     # if we work with lists than we need to use result of transform method from class Transform - reference type to list
-    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform},
+    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform};
 
     my @data;
     if ($datalevel eq 'metadata'){
@@ -619,7 +646,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-            dataset_excluded_outliers=>$outliers,
+            dataset_excluded_outliers=>$dataset_outliers,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
