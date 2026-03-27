@@ -382,6 +382,19 @@ jQuery(document).ready(function ($) {
     jQuery('#email_option_to_recieve_accession_upload_status').on('change', toggleEmailField);
     toggleEmailField();
 
+    function toggleAccessionListName() {
+        var checkbox = jQuery('#create_accession_list');
+        var nameInput = jQuery('#create_accession_list_name');
+        if ( checkbox.prop('checked')) {
+            nameInput.show();
+        }
+        else {
+            nameInput.hide();
+        }
+    }
+    jQuery('#create_accession_list').on('change', toggleAccessionListName);
+    toggleAccessionListName();
+
     function add_accessions(full_info, species_names) {
         var email_address = jQuery('#email_address_upload').val();
         var email_option_enabled = jQuery('#email_option_to_recieve_accession_upload_status').prop('checked') ? 1 : 0;
@@ -395,6 +408,10 @@ jQuery(document).ready(function ($) {
                 return;
             }
         }
+        else {
+            disable_ui();
+        }
+
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
