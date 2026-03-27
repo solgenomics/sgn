@@ -44,6 +44,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my @properties = split ',',$order_properties;
     my $ordering_type = $c->config->{ordering_type};
     my $conf_stock_type = $c->config->{catalog_stock_type};
+    my $tracking_order_activity = $c->config->{tracking_order_activity};
 
     if (! $c->user()) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -103,6 +104,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     $c->stash->{order_properties} = $order_properties;
     $c->stash->{order_values} = $value_string;
     $c->stash->{ordering_type} = $ordering_type;
+    $c->stash->{tracking_order_activity} = $tracking_order_activity;    
     $c->stash->{template} = '/order/order_details.mas';
 
 
