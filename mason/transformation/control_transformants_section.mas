@@ -2,22 +2,10 @@
 $control_id
 </%args>
 
-
-<&| /page/info_section.mas, title => 'Control Transgenic Lines (Accessions)', collapsible=>1, collapsed=>1 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <div style="overflow:scroll">
-                    <table class="table table-hover table-bordered" id="control_transformants_table">
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</&>
-
-<& /transformation/obsolete_stock_dialog.mas &>
-
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="control_transformants_table">
+    </table>
+</div>
 
 <script>
 
