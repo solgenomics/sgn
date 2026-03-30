@@ -910,7 +910,7 @@ function display_plant_upload_choices() {
                         '<option value="plants_per_plot">Number of plants per plot</option>'+
                         '<option value="subplot_plants_by_name">Subplot plants by name</option>'+
                         '<option value="subplot_plants_by_index">Subplot plants by index number</option>'+
-                        '<option value="plants_per_subplot">Plants per subplot</option>'+
+                        '<option value="plants_per_subplot">Number of plants per subplot</option>'+
                     '</select>' + 
                     '<br>' + 
                     '<div id="plants_per_plot_div" hidden>Maximum number of plants per plot/subplot: '+'<input style="width:25%" id="plant_upload_plants_per_plot" class="form-control" type="number"/></div>' + 
@@ -1979,9 +1979,18 @@ export function submit_upload_job() {
             break;
         case 'plants_by_name' : 
             jQuery.ajax({
-                url : '',
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plants',
                 data : {
-                    'upload_plants_per_plot_number' : submit_params.additional_args.num_plants_per_plot
+                    'upload_plants_per_plot_number' : submit_params.additional_args.plants_per_plot,
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading plants. Check console.");
                 }
             });
             break;
