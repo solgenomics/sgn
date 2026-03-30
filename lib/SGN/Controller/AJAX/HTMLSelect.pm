@@ -43,6 +43,9 @@ use Array::Utils qw(:all);
 use CXGN::Genotype::GenotypingProject;
 use CXGN::Transformation::Transformation;
 use Sort::Naturally;
+use CXGN::Stock::Vector;
+use Time::Piece;
+
 
 BEGIN { extends 'Catalyst::Controller::REST' };
 
@@ -142,6 +145,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
     my $folder_for_genotyping_projects = 1 ? $c->req->param("folder_for_genotyping_projects") eq 'true' : 0;
     my $folder_for_tracking_activities = 1 ? $c->req->param("folder_for_tracking_activities") eq 'true' : 0;
     my $folder_for_transformations = 1 ? $c->req->param("folder_for_transformations") eq 'true' : 0;
+    my $folder_for_propagations = 1 ? $c->req->param("folder_for_propagations") eq 'true' : 0;
 
     my $id = $c->req->param("id") || "folder_select";
     my $name = $c->req->param("name") || "folder_select";
@@ -158,6 +162,7 @@ sub get_trial_folder_select : Path('/ajax/html/select/folders') Args(0) {
         folder_for_genotyping_projects => $folder_for_genotyping_projects,
         folder_for_tracking_activities => $folder_for_tracking_activities,
         folder_for_transformations => $folder_for_transformations,
+        folder_for_propagations => $folder_for_propagations,
     });
 
     if (scalar(@folders)>0){
@@ -266,6 +271,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $get_genotyping_projects = $c->req->param("get_genotyping_projects");
     my $get_tracking_activities_projects = $c->req->param("get_tracking_activities_projects");
     my $get_transformation_projects = $c->req->param("get_transformation_projects");
+    my $get_propagation_projects = $c->req->param("get_propagation_projects");
     my $include_analyses = $c->req->param("include_analyses");
     my $excluded_plates_in_project_id = $c->req->param("excluded_plates_in_project_id");
 
@@ -297,7 +303,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
 
     my @projects;
     foreach my $project (@$projects) {
-        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activities_projects) = $p->get_trials_by_breeding_program($project->[0]);
+        my ($field_trials, $cross_trials, $genotyping_trials, $genotyping_projects, $field_management_factor_projects, $drone_run_projects, $drone_run_band_projects, $analyses_projects, $sampling_trial_projects, $transformation_projects, $tracking_activities_projects, $propagation_projects) = $p->get_trials_by_breeding_program($project->[0]);
         if ($get_field_trials){
             if ($field_trials && scalar(@$field_trials)>0){
                 my @trials = sort { $a->[1] cmp $b->[1] } @$field_trials;
@@ -347,6 +353,12 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
         if ($get_transformation_projects){
             if ($transformation_projects && scalar(@$transformation_projects)>0){
                 my @g_projects = sort { $a->[1] cmp $b->[1] } @$transformation_projects;
+                push @projects, @g_projects;
+            }
+        }
+        if ($get_propagation_projects){
+            if ($propagation_projects && scalar(@$propagation_projects)>0){
+                my @g_projects = sort { $a->[1] cmp $b->[1] } @$propagation_projects;
                 push @projects, @g_projects;
             }
         }
@@ -916,7 +928,7 @@ sub get_high_dimensional_phenotypes_protocols : Path('/ajax/html/select/high_dim
 
         $h = $schema->storage->dbh()->prepare($spectra_query);
         $h->execute($trial_id);
-        
+
     } else {
         my $q = "SELECT nd_protocol.nd_protocol_id, nd_protocol.name, nd_protocol.description, nd_protocol.create_date, nd_protocolprop.value
         FROM nd_protocol
@@ -2842,9 +2854,127 @@ sub get_control_transformation_ids_select : Path('/ajax/html/select/control_tran
     $c->stash->{rest} = { select => $html };
 }
 
+sub get_tissue_types_select : Path('/ajax/html/select/tissue_types') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "tissue_types_select";
+    my $name = $c->req->param("name") || "tissue_types_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @tissue_types;
+
+    if ($empty && !$default) {
+        push @tissue_types, ['', 'Please select a tissue type'];
+    }
+    push @tissue_types, ['leaf', 'leaf'];
+    push @tissue_types, ['sink leaf', 'sink leaf'];
+    push @tissue_types, ['source leaf', 'source leaf'];
+    push @tissue_types, ['petiole', 'petiole'];
+    push @tissue_types, ['stem', 'stem'];
+    push @tissue_types, ['upper stem', 'upper stem'];
+    push @tissue_types, ['middle stem', 'middle stem'];
+    push @tissue_types, ['lower stem', 'lower stem'];
+    push @tissue_types, ['storage root', 'storage root'];
+    push @tissue_types, ['fibrous root', 'fibrous root'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@tissue_types,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 
+sub get_endogenous_controls_select : Path('/ajax/html/select/endogenous_controls') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "endogenous_controls_select";
+    my $name = $c->req->param("name") || "endogenous_controls_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @endogenous_controls;
+
+    if ($empty && !$default) {
+        push @endogenous_controls, ['', 'Please select an endogenous control'];
+    }
+    push @endogenous_controls, ['GAPDH', 'GAPDH'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@endogenous_controls,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 
+sub get_assay_dates_select : Path('/ajax/html/select/assay_dates') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "assay_dates_select";
+    my $name = $c->req->param("name") || "assay_dates_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $vector_stock_id = $c->req->param("vector_stock_id") || "";
+    my $tissue_type = $c->req->param("assay_tissue_type") || "";
+    my @assay_dates;
+
+    if ($empty) {
+        push @assay_dates, ['', 'Please select a date'];
+    }
+
+    my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_stock_id);
+    my $vector_assay_metadata = $vector_construct->assay_metadata;
+    if ($vector_assay_metadata) {
+        my $metadata = decode_json $vector_assay_metadata;
+        my $date_info = $metadata->{$tissue_type};
+        my @dates = keys (%$date_info);
+        my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
+        foreach my $date (@sorted_dates) {
+            push @assay_dates, [$date, $date];
+        }
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@assay_dates,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
+sub get_qPCR_normalization_methods_select : Path('/ajax/html/select/qPCR_normalization_methods') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "qPCR_normalization_methods_select";
+    my $name = $c->req->param("name") || "qPCR_normalization_methods_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my @qPCR_normalization_methods;
+
+    if ($empty && !$default) {
+        push @qPCR_normalization_methods, ['', 'Please select a method'];
+    }
+    push @qPCR_normalization_methods, ['CASS_Delta_Cq', 'CASS Delta Cq'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@qPCR_normalization_methods,
+    );
+    $c->stash->{rest} = { select => $html };
+}
 
 1;

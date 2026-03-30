@@ -432,7 +432,14 @@ jQuery(document).ready(function () {
             kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
 
             var links = solGS.kinship.addDowloandLinks(res);
-            solGS.heatmap.plot(res.data, canvas, kinshipPlotDivId, links);
+            var heatmapArgs = {
+              output_data: res.data,
+              canvas: canvas,
+              plot_div_id: kinshipPlotDivId,
+              download_links: links,
+            };
+
+            solGS.heatmap.plot(heatmapArgs);
 
             jQuery(`${canvas} .multi-spinner-container`).hide();
             jQuery(kinshipMsgDiv).empty();
@@ -488,7 +495,14 @@ jQuery(document).ready(function () {
                           kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
 
                           var links = solGS.kinship.addDowloandLinks(res);
-                          solGS.heatmap.plot(res.data, canvas, kinshipPlotDivId, links);
+                          var heatmapArgs = {
+                            output_data: res.data,
+                            canvas: canvas,
+                            plot_div_id: kinshipPlotDivId,
+                            download_links: links,
+                          };
+
+                          solGS.heatmap.plot(heatmapArgs);
 
                           jQuery(`${canvas} .multi-spinner-container`).hide();
                           jQuery(kinshipMsgDiv).empty();
@@ -558,7 +572,14 @@ jQuery(document).ready(function () {
           kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
 
           var links = solGS.kinship.addDowloandLinks(res);
-          solGS.heatmap.plot(res.data, canvas, kinshipPlotDivId, links);
+          var heatMapArgs = {
+            output_data: res.data,
+            canvas: canvas,
+            plot_div_id: kinshipPlotDivId,
+            download_links: links,
+          };
+          
+          solGS.heatmap.plot(heatMapArgs);
 
           jQuery(`${canvas} .multi-spinner-container`).hide();
           jQuery(kinshipMsgDiv).empty();

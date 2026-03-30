@@ -341,13 +341,6 @@ $trial_stock_type => undef
 </div> -->
 
 
-<div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
-   <p>
-       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-       The field coordinates were deleted successfully...
-   </p>
-</div>
-
 <div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
    <div id="trait_list_dc" name="trait_list">
        <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm field map deletion... <br />

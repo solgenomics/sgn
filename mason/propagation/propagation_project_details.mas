@@ -1,0 +1,186 @@
+<%args>
+$trial_id
+$trial_name
+$breeding_program_name
+$breeding_program_id
+$location_name
+$country_name
+$year
+$trial_description
+$folder_name
+$folder_id
+$identifier_prefix
+$trial_owner
+$propagation_type
+$logged_in_name
+$date
+</%args>
+
+<div class="row">
+    <div class="col-sm-12">
+        <table class="table table-hover table-bordered" >
+            <tr>
+                <td><b>Propagation Project Name</b></td>
+                <td>
+                    <div id="trial_name">
+% if ($trial_name) {
+%     print "$trial_name";
+% } else {
+%     print "<span class='text-danger'>[No Propagation Project Name]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Propagation Type</b></td>
+                <td>
+                    <div id="propagation_type">
+% if ($propagation_type) {
+%     print "$propagation_type";
+% } else {
+%     print "<span class='text-danger'>[No Propagation Type]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Breeding Program </b></td>
+                <td>
+                    <span id="breeding_program">
+% if ($breeding_program_name) {
+                 <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
+% }
+% else {
+%     print "<span class='text-danger'>[No Breeding Program]</span>";
+% }
+                    </span>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Location</b></td>
+                <td>
+                    <div id="trial_location">
+% if ($location_name) {
+%     print "$location_name ( $country_name )";
+% } else {
+%     print "<span class='text-danger'>[No Location]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Year</b></td>
+                <td>
+                    <div id="trial_year">
+% if ($year) {
+%    print "$year";
+% } else {
+%     print "<span class='text-danger'>[No Year]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+
+            <tr><td><b>Description</b></td>
+                <td>
+% if ($trial_description) {
+%     print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
+% } else {
+%     print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
+% }
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Folder</b></td>
+                <td>
+                    <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
+                    <br/><br/>
+                    <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td><b>Created by</b></td>
+                <td>
+                    <div id="trial_owner">
+% if ($trial_owner) {
+%     print "$trial_owner";
+% } else {
+%     print "<span class='text-danger'>[N/A]</span>";
+% }
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+</br>
+<button class="btn btn-sm btn-default" style="margin:3px" id="add_new_propagation_group_id_link">Add New Propagation Group ID</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_group_ids_link">Upload New Propagation Group IDs</button>
+<br>
+<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_ids_link">Upload New Propagation IDs</button><button class="btn btn-sm btn-primary" style="margin:3px" id="upload_propagation_id_status_link">Upload Propagation ID Status</button>
+
+<& /propagation/add_propagation_group_id_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, date => $date, logged_in_name => $logged_in_name&>
+<& /propagation/upload_propagation_group_ids_dialog.mas, trial_id => $trial_id, trial_name => $trial_name&>
+<& /propagation/upload_propagation_ids_dialog.mas, trial_id => $trial_id, trial_name => $trial_name&>
+<& /propagation/upload_propagation_id_status_dialog.mas&>
+
+<script>
+
+jQuery(document).ready(function($) {
+    jQuery('#add_new_propagation_group_id_link').click(function() {
+
+        jQuery("#propagation_accession_name").autocomplete({
+            source: '/ajax/stock/only_accession_autocomplete',
+            appendTo : propagation_group_id_dialog
+        });
+
+        jQuery("#propagation_material_source_type").change(function() {
+            let source_type = jQuery('#propagation_material_source_type').val();
+            if (source_type === 'Seedlot') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/seedlot_name_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
+            if (source_type === 'Plot') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/plot_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
+            if (source_type === 'Plant') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/plant_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
+            if (source_type === 'Tissue Sample') {
+                jQuery("#propagation_source_name").autocomplete({
+                    source: '/ajax/stock/tissue_sample_autocomplete',
+                    appendTo : propagation_group_id_dialog
+                });
+            }
+
+        });
+
+        jQuery("#rootstock_accession_name").autocomplete({
+            source: '/ajax/stock/only_accession_autocomplete',
+            appendTo : propagation_group_id_dialog
+        });
+
+        jQuery("#add_propagation_group_id_dialog").modal("show");
+
+    });
+
+});
+
+</script>

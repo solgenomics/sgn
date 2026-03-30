@@ -223,12 +223,13 @@ sub _validate_with_plugin {
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id;
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id;
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
     my @seen_source_observation_unit_names = keys %seen_source_names;
     $rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
         'uniquename' => { -in => \@seen_source_observation_unit_names },
-        'type_id' => [$tissue_sample_cvterm_id, $plant_cvterm_id, $plot_cvterm_id, $accession_cvterm_id]
+        'type_id' => [$tissue_sample_cvterm_id, $plant_cvterm_id, $plot_cvterm_id, $subplot_cvterm_id, $accession_cvterm_id]
     });
     my %found_source_observation_unit_names;
     while (my $r=$rs->next){

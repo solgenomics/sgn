@@ -15,7 +15,7 @@ Code structure copied from CXGN::Stock::Accession, with inheritance from CXGN::S
 =head1 AUTHOR
 
 
-=head1 ACCESSORS & METHODS 
+=head1 ACCESSORS & METHODS
 
 =cut
 
@@ -126,6 +126,14 @@ has 'other_editable_stock_props' => (
     is => 'rw'
 );
 
+has 'assay_metadata' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    lazy     => 1,
+    builder  => '_retrieve_assay_metadata',
+);
+
+
 sub BUILD {
     my $self = shift;
 
@@ -186,6 +194,12 @@ sub _retrieve_BacterialResistantMarker {
     my $self = shift;
     $self->BacterialResistantMarker($self->_retrieve_stockprop('BacterialResistantMarker'));
 }
+
+sub _retrieve_assay_metadata {
+    my $self = shift;
+    $self->assay_metadata($self->_retrieve_stockprop('assay_metadata'));
+}
+
 
 =head2 store()
 
@@ -278,4 +292,3 @@ no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
-
