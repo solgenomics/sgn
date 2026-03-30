@@ -48,7 +48,7 @@ $trial_id
 
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_design_change_accessions_form" name="trial_design_change_accessions_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File (.csv): </label>
+                            <label class="col-sm-3 control-label">Upload File: </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="trial_design_change_accessions_file" id="trial_design_change_accessions_file" encoding="multipart/form-data" />
                             </div>
