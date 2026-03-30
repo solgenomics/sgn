@@ -1954,7 +1954,7 @@ export function submit_upload_job() {
                     refresh_upload_tables();
                 },
                 error : function() {
-                    alert("An error occurred submitting file to trial. Check console.")
+                    alert("An error occurred submitting file to trial. Check console.");
                 }
             });
             break;
@@ -1963,7 +1963,17 @@ export function submit_upload_job() {
                 url : '/ajax/trial/upload_trial_metadata_file',
                 type: 'POST',
                 data : {
-                    'trial_metadata_upload_ignore_warnings' : ignore_warnings
+                    'trial_metadata_upload_ignore_warnings' : ignore_warnings,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading trial metadata. Check console.");
                 }
             });
             break;
