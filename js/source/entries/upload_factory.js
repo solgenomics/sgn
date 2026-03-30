@@ -1982,6 +1982,7 @@ export function submit_upload_job() {
                 url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plants',
                 data : {
                     'upload_plants_per_plot_number' : submit_params.additional_args.plants_per_plot,
+                    'archived_file_id' : submit_params.file_id
                 },
                 success : function(response) {
                     if (response.error) {
@@ -1995,20 +1996,148 @@ export function submit_upload_job() {
             });
             break;
         case 'plants_by_index' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plants_with_plant_index_number',
+                data : {
+                    'upload_plants_with_index_number_per_plot_number' : submit_params.additional_args.plants_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading plants. Check console.");
+                }
+            });
             break;
         case 'plants_per_plot' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plants_with_number_of_plants',
+                data : {
+                    'upload_plants_with_num_plants_per_plot_number' : submit_params.additional_args.plants_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading plants. Check console.");
+                }
+            });
             break;
         case 'subplot_plants_by_name' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plants_subplot',
+                data : {
+                    'upload_plants_per_subplot_number' : submit_params.additional_args.plants_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading plants. Check console.");
+                }
+            });
             break;
         case 'subplot_plants_by_index' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plants_subplot_with_plant_index_number',
+                data : {
+                    'upload_plants_subplot_with_index_number_per_subplot_number' : submit_params.additional_args.plants_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading plants. Check console.");
+                }
+            });
             break;
         case 'plants_per_subplot' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plants_subplot_with_number_of_plants',
+                data : {
+                    'upload_plants_subplot_with_num_plants_per_subplot_number' : submit_params.additional_args.plants_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading plants. Check console.");
+                }
+            });
             break;
         case 'subplots_by_name' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_subplots',
+                data : {
+                    'upload_subplots_per_plot_number' : submit_params.additional_args.subplots_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading subplots. Check console.");
+                }
+            });
             break;
         case 'subplots_by_index' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_subplots_with_subplot_index_number',
+                data : {
+                    'upload_subplots_with_index_number_per_plot_number' : submit_params.additional_args.subplots_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading subplots. Check console.");
+                }
+            });
             break;
         case 'subplots_per_plot' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_subplots_with_number_of_subplots',
+                data : {
+                    'upload_subplots_with_num_subplots_per_plot_number' : submit_params.additional_args.subplots_per_plot,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading subplots. Check console.");
+                }
+            });
             break;
         case 'genotyping_plate_excel' :
             break;
