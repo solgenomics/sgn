@@ -154,6 +154,14 @@ tr.shown td.details-control {
                 <button class="btn btn-primary" id="image_analysis_submit" disabled>Submit for Analysis</button>
                 </center>
                 <hr>
+
+                <div id="analysis_image_result">
+                    <a id="analysis_image_link" href="#" target="_blank">
+                        <img id="analysis_image" src="" style="max-width:800px; width:100%; height:auto; display:block; margin:0 auto;"/>
+                    </a>
+                </div>
+                <br/>
+
                 <div id="image_analysis_result" style="display: none;">
                     <table class="display" style="width:100%" id="image_analysis_result_table">
                         <thead>
@@ -466,17 +474,23 @@ jQuery(document).ready(function(){
                     data: { 'result': JSON.stringify(results) },
                     success: function(response) {
                         // console.log("Grouped Results are:");
-                        // console.log(response);
+                        //console.log(response);
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
                         .attr("aria-valuenow", current_progress)
                         .text(Math.round(current_progress) + "%");
                         jQuery('#progress_msg').text('Building results table.');
+
+                        if (response.results.analyzed_image_overlay) {
+                            jQuery('#analysis_image').attr('src', response.results.analyzed_image_overlay);
+                            jQuery('#analysis_image_link').attr('href', response.results.analyzed_image_overlay);
+                            jQuery('#analysis_image_result').show()
+                        }
                         jQuery('#image_analysis_result').show();
 
                         var table = jQuery('#image_analysis_result_table').DataTable( {
                             "destroy" : true,
-                            "data": response.results,
+                            "data": response.results.table_data,
                             "dom": 'Bfrtip',
                             "buttons":  [
                                 'copy', 'excel', 'csv', 'pdf'

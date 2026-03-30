@@ -130,6 +130,7 @@ sub image_analysis_submit_POST : Args(0) {
     );
     my $it = 0;
 
+    my $image_link;
     foreach (@image_files) {
         my $dir = $c->tempfiles_subdir('/'.$image_type_name);
         my $archive_temp_image = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => $image_type_name.'/imageXXXX');
@@ -153,7 +154,6 @@ sub image_analysis_submit_POST : Args(0) {
                 print STDERR "is multi trait: $is_multi_trait";
 
                 my $rc;
-                my $image_link;
                 if ($is_multi_trait) {
                     $image_link = $message_hashref->{derived_images}[0]{url};
                 } else{
@@ -266,6 +266,7 @@ sub image_analysis_submit_POST : Args(0) {
 
             $res{'analyzed_image_id'} = $image_id;
             $res{'image_link'} = $image->get_image_url("original");
+            $res{'analyzed_image_overlay'} = $image_link;
         }
 
         $result->[$it]->{result} = \%res;
@@ -516,10 +517,11 @@ sub image_analysis_group_POST : Args(0) {
                 };
             }
         }
+        
     }
-    
+    my $image_overlay = $results_ref->{result}{analyzed_image_overlay};
     print STDERR "table data is ".Dumper(@table_data);
-    $c->stash->{rest} = { success => 1, results => \@table_data };
+    $c->stash->{rest} = { success => 1, results => { table_data => \@table_data, analyzed_image_overlay => $image_overlay}};
 }
 
 sub format_multi_trait_data {
