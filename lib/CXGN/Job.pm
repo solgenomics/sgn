@@ -221,11 +221,11 @@ has 'cmd' => (isa => 'Maybe[Str]', is => 'rw');
 
 =head2 logfile()
 
-The logfile used to store and retrieve finish timestamps. Required for object creation. 
+The logfile used to store and retrieve finish timestamps.
 
 =cut
 
-has 'finish_logfile' => (isa => 'Str', is => 'rw', predicate => 'has_finish_logfile', required => 1);
+has 'finish_logfile' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_finish_logfile', required => 0);
 
 =head2 name()
 
@@ -253,11 +253,6 @@ sub BUILD {
 
     my $bcs_schema = $args->{schema};
     my $people_schema = $args->{people_schema};
-    my $logfile = $args->{finish_logfile};
-
-    if (!$logfile) {
-        die "finish_logfile is required for job creation.\n";
-    }
 
     if (!$self->has_sp_job_id()) { # New job, no ID yet.
         my $cv_rs = $bcs_schema->resultset("Cv::Cv")->find( { name => "job_type" } );
@@ -270,6 +265,9 @@ sub BUILD {
                 name => $self->job_type(),
                 cv_id => $cv_id
             });
+        }
+        if (!$self->has_finish_logfile()) {
+            die "Need a finish logfile to create new jobs.";
         }
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
         if (!$self->has_cxgn_tools_run_config()) {
@@ -297,6 +295,8 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
+        my $logfile = $job_args->{finish_logfile};
+        $self->finish_logfile($logfile);
     }
 }
 
@@ -726,7 +726,7 @@ sub alive {
 
 =head1 CLASS METHODS
 
-=head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id)
+=head2 get_user_submitted_jobs(bcs_schema, people_schema, user_id, user_role)
 
 Returns a listref of sp_job_ids submitted by the given user id
 
