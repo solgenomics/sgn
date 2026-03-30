@@ -41,18 +41,9 @@ sub _validate_with_plugin {
         push @error_messages, join (". ", @$parsed_errors);
     }
 
-    my @old_plot_names;
-    my @accessions;
-    my @new_plot_names;
-
-    foreach my $row (@$parsed_data) {
-        my $row_num = $row->{'_row'};
-        push @old_plot_names, $row->{'plot_name'};
-        push @accessions, $row->{'accession_name'};
-        if ($row->{'new_plot_name'}) {
-            push @new_plot_names, $row->{'new_plot_name'};
-        }
-    }
+    my @old_plot_names = @{$parsed_values->{'plot_name'}};
+    my @accessions = @{$parsed_values->{'accession_name'}};
+    my @new_plot_names = @{$parsed_values->{'new_plot_name'}};
 
     my $validator = CXGN::List::Validate->new();
 
