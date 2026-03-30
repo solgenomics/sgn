@@ -85,20 +85,20 @@ sub _validate_with_plugin {
     }
 
     if (scalar(@new_plot_names) > 0) {
-        $validate = $validator->validate($schema, 'plots', \@new_plot_names);
+        $validate = $validator->validate($schema, 'new_stocks', \@new_plot_names);
         my %valid_new_names = map { $_ => 1 } @{$validate->{'missing'}};
         foreach my $new_name (@new_plot_names) {
             if (!exists($valid_new_names{$new_name})) { # if the new name was NOT found in the missing list, then it must already be in the database. That's bad!
                 push @error_messages, "New plot name $new_name already exists in the database. ";
             }
         }
-        $validate = $validator->validate($schema, 'obsoleted_stocks', \@new_plot_names);
-        %valid_new_names = map { $_ => 1 } @{$validate->{'missing'}};
-        foreach my $new_name (@new_plot_names) {
-            if (!exists($valid_new_names{$new_name})) { # if the new name was NOT found in the missing list, then it must already be an obsoleted stock in the DB. That's bad!
-                push @error_messages, "New plot name $new_name already exists in the database. ";
-            }
-        }
+        # $validate = $validator->validate($schema, 'obsoleted_stocks', \@new_plot_names);
+        # %valid_new_names = map { $_ => 1 } @{$validate->{'missing'}};
+        # foreach my $new_name (@new_plot_names) {
+        #     if (!exists($valid_new_names{$new_name})) { # if the new name was NOT found in the missing list, then it must already be an obsoleted stock in the DB. That's bad!
+        #         push @error_messages, "New plot name $new_name already exists in the database. ";
+        #     }
+        # }
     }
 
     if (scalar(@error_messages) > 0) {
