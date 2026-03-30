@@ -43,7 +43,6 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
 
     my $stockprops_values = $params->{editable_stockprop_values} ? decode_json $params->{editable_stockprop_values} : {};
 
-
     #This defines the stockprops that will be returned in the results.
     my $stockprop_columns_view = $params->{extra_stockprop_columns_view} ? decode_json $params->{extra_stockprop_columns_view} : {};
     my $stockprop_columns_view_array = $params->{stockprop_extra_columns_view_array} ? decode_json $params->{stockprop_extra_columns_view_array} : [];
@@ -53,7 +52,7 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         people_schema=>$people_schema,
         phenome_schema=>$phenome_schema,
         match_type=>$params->{any_name_matchtype},
-        match_name=>$params->{any_name}, 
+        match_name=>$params->{any_name},
         operator=>$params->{operator},
         stockprops_values=>$stockprops_values,
         stockprop_columns_view=>$stockprop_columns_view,
@@ -61,7 +60,7 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
         limit=>$limit,
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
-        display_pedigree=>0
+        display_pedigree=>0,
     });
     my ($result, $records_total) = $stock_search->search();
 
@@ -78,7 +77,7 @@ sub stock_search :Path('/ajax/search/vectors') Args(0) {
             my $type = $_->{stock_type};
             my $organism = $_->{species};
             my $synonym_string = $_->{synonyms} ? join ',', @{$_->{synonyms}} : undef;
-            my @owners = @{$_->{owners}};
+            my @owners = ref ($_->{owners}) ?  @{$_->{owners}} : ();
             my @owners_html;
             foreach (@owners){
                 push @owners_html ,'<a href="/solpeople/personal-info.pl?sp_person_id='.$_->[0].'">'.$_->[2].' '.$_->[3].'</a>';

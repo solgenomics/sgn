@@ -35,6 +35,12 @@ sub onto_browser : Path('/tools/onto') :Args(0) {
 
 }
 
+sub compose :Path('/tools/compose') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    $c->forward('compose_trait');
+}
+
 sub compose_trait : Path('/tools/compose_trait') :Args(0) {
     my $self = shift;
     my $c = shift;
