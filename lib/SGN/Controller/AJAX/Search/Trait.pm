@@ -22,11 +22,39 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
-    #print STDERR Dumper $params;
 
-    my $ontology_db_ids;
+    my $ontology_db_ids = [];
     if ($params->{'ontology_db_id[]'}){
         $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
+    }
+
+    my $observation_variables = CXGN::BrAPI::v2::ObservationVariables->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id),
+        phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id),
+        people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+        page_size => 1000000,
+        page => 0,
+        status => [],
+        context => $c
+    });
+
+    my $name_spaces_str = $c->config->{onto_root_namespaces};
+    my @name_spaces_pairs = split(", ",$name_spaces_str);
+    my @name_spaces = map { s/ .*//r } @name_spaces_pairs;
+
+    my $result = $observation_variables->observation_variable_ontologies({
+        cvprop_type_names => ['trait_ontology', 'composed_trait_ontology'],
+        name_spaces => \@name_spaces
+    });
+
+    my @ontos;
+    if (scalar(@{$ontology_db_ids}) == 0) {
+        foreach my $o (@{$result->{result}->{data}}) {
+            push @ontos, $o->{ontologyDbId};
+        }
+    } else {
+        @ontos = @{$ontology_db_ids};
     }
 
     my $rows = $params->{length};
@@ -58,7 +86,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
 	    is_variable=>1,
-        ontology_db_id_list => $ontology_db_ids,
+        ontology_db_id_list => \@ontos,
         limit => $limit,
         offset => $offset,
         trait_name_list => $subset_traits,
