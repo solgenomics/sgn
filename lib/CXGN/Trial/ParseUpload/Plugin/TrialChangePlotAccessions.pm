@@ -58,7 +58,7 @@ sub _validate_with_plugin {
 
     my $validate = $validator->validate($schema, 'plots', \@old_plot_names);
     if (scalar(@{$validate->{'missing'}}) > 0) {
-        push @error_messages, "The following plots were not found in the database: ".$validate->{'missing'};
+        push @error_messages, "The following plots were not found in the database: ".join(";",@{$validate->{'missing'}});
     }
 
     my $trial = CXGN::Trial->new({
@@ -86,19 +86,9 @@ sub _validate_with_plugin {
 
     if (scalar(@new_plot_names) > 0) {
         $validate = $validator->validate($schema, 'new_stocks', \@new_plot_names);
-        my %valid_new_names = map { $_ => 1 } @{$validate->{'missing'}};
-        foreach my $new_name (@new_plot_names) {
-            if (!exists($valid_new_names{$new_name})) { # if the new name was NOT found in the missing list, then it must already be in the database. That's bad!
-                push @error_messages, "New plot name $new_name already exists in the database. ";
-            }
+        foreach my $new_name (@{$validate->{invalid}}) { #new name is invalid if any stock, obsolete or not, is found in the db
+            push @error_messages, "New plot name $new_name already exists as a stock in the database. ";
         }
-        # $validate = $validator->validate($schema, 'obsoleted_stocks', \@new_plot_names);
-        # %valid_new_names = map { $_ => 1 } @{$validate->{'missing'}};
-        # foreach my $new_name (@new_plot_names) {
-        #     if (!exists($valid_new_names{$new_name})) { # if the new name was NOT found in the missing list, then it must already be an obsoleted stock in the DB. That's bad!
-        #         push @error_messages, "New plot name $new_name already exists in the database. ";
-        #     }
-        # }
     }
 
     if (scalar(@error_messages) > 0) {

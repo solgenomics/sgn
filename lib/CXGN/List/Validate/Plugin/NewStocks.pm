@@ -10,7 +10,7 @@ sub name {
     return "new_stocks";
 }
 
-#Checks whether the proposed new stock names are already in the database. If they are, they are added to the invalid list.
+#A new stock is invalid if its name is found in any stock, obsolete or not. 
 sub validate {
     my $self = shift;
     my $schema = shift;
