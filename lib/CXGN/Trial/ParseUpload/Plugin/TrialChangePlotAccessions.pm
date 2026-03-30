@@ -24,7 +24,12 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new(
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
-        optional_columns => \@OPTIONAL_COLUMNS
+        optional_columns => \@OPTIONAL_COLUMNS,
+        column_aliases => {
+            'plot_name' => ['plot name'],
+            'new_plot_name' => ['new plot name'],
+            'accession_name' => ['accession name', 'accession']
+        }
     );
 
     my $parsed = $parser->parse();
@@ -42,12 +47,6 @@ sub _validate_with_plugin {
 
     foreach my $row (@$parsed_data) {
         my $row_num = $row->{'_row'};
-        if (!$row->{'plot_name'}) {
-            push @error_messages, "Row $row_num is missing the plot name. ";
-        }
-        if (!$row->{'accession_name'}) {
-            push @error_messages, "Row $row_num is missing an accession name. ";
-        }
         push @old_plot_names, $row->{'plot_name'};
         push @accessions, $row->{'accession_name'};
         if ($row->{'new_plot_name'}) {
@@ -62,6 +61,18 @@ sub _validate_with_plugin {
         push @error_messages, "The following plots were not found in the database: ".$validate->{'missing'};
     }
 
+    my $trial = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id
+    });
+
+    my %trial_plots = map {$_->[1] => 1} @{$trial->get_observation_units_direct('plot')};
+    foreach my $old_plot_name (@old_plot_names) {
+        if (!exists($trial_plots{$old_plot_name})) {
+            push @error_messages, "Plot $old_plot_name does not exist in this trial.";
+        }
+    }
+ 
     my $transform = CXGN::List::Transform->new();
     $validate = $transform->transform($schema, 'stocks_2_stock_ids', \@accessions);
     if (scalar(@{$validate->{'missing'}}) > 0) {
@@ -81,6 +92,13 @@ sub _validate_with_plugin {
                 push @error_messages, "New plot name $new_name already exists in the database. ";
             }
         }
+        $validate = $validator->validate($schema, 'obsoleted_stocks', \@new_plot_names);
+        %valid_new_names = map { $_ => 1 } @{$validate->{'missing'}};
+        foreach my $new_name (@new_plot_names) {
+            if (!exists($valid_new_names{$new_name})) { # if the new name was NOT found in the missing list, then it must already be an obsoleted stock in the DB. That's bad!
+                push @error_messages, "New plot name $new_name already exists in the database. ";
+            }
+        }
     }
 
     if (scalar(@error_messages) > 0) {
@@ -89,6 +107,10 @@ sub _validate_with_plugin {
         });
         return 0;
     }
+
+    $self->_set_parsed_data({
+        parsed => $parsed_data
+    });
 
     return 1; #returns true if validation passed
 
@@ -103,14 +125,7 @@ sub _parse_with_plugin {
 
     my $parsed_entries = {};
 
-    my $parser = CXGN::File::Parse->new(
-        file => $filename,
-        required_columns => \@REQUIRED_COLUMNS,
-        optional_columns => \@OPTIONAL_COLUMNS
-    );
-
-    my $parsed = $parser->parse();
-    my $parsed_data = $parsed->{'data'};
+    my $parsed_data = $self->_parsed_data()->{parsed};
 
     foreach my $row (@$parsed_data) {
         $parsed_entries->{$row->{'plot_name'}} = {
