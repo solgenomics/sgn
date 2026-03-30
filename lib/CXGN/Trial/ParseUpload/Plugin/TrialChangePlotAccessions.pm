@@ -43,8 +43,10 @@ sub _validate_with_plugin {
 
     my @old_plot_names = @{$parsed_values->{'plot_name'}};
     my @accessions = @{$parsed_values->{'accession_name'}};
-    my @new_plot_names = @{$parsed_values->{'new_plot_name'}};
-
+    my @new_plot_names;
+    if ($parsed_values->{'new_plot_name'}) {
+        @new_plot_names = @{$parsed_values->{'new_plot_name'}};
+    }
     my $validator = CXGN::List::Validate->new();
 
     my $validate = $validator->validate($schema, 'plots', \@old_plot_names);
