@@ -1977,6 +1977,104 @@ export function submit_upload_job() {
                 }
             });
             break;
+        case 'plants_by_name' : 
+            jQuery.ajax({
+                url : '',
+                data : {
+                    'upload_plants_per_plot_number' : submit_params.additional_args.num_plants_per_plot
+                }
+            });
+            break;
+        case 'plants_by_index' :
+            break;
+        case 'plants_per_plot' :
+            break;
+        case 'subplot_plants_by_name' :
+            break;
+        case 'subplot_plants_by_index' :
+            break;
+        case 'plants_per_subplot' :
+            break;
+        case 'subplots_by_name' :
+            break;
+        case 'subplots_by_index' :
+            break;
+        case 'subplots_per_plot' :
+            break;
+        case 'genotyping_plate_excel' :
+            break;
+        case 'genotyping_plate_default_android' :
+            break;
+        case 'genotyping_plate_custom_android' :
+            break;
+        case 'genotype_data_vcf' :
+            break;
+        case 'genotype_data_tassel' :
+            break;
+        case 'genotype_data_intertek' :
+            break;
+        case 'genotype_data_kasp' :
+            break;
+        case 'genotype_data_ssr' :
+            break;
+        case 'locations' :
+            break;
+        case 'accessions' :
+            break;
+        case 'seedlots' :
+            break;
+        case 'seedlot_inventory' :
+            break;
+        case 'seedlots_exist_to_exist' :
+            break;
+        case 'seedlots_exist_to_new' :
+            break;
+        case 'seedlots_exist_to_plots' :
+            break;
+        case 'seedlots_exist_to_unspecified' :
+            break;
+        case 'pedigrees' :
+            break;
+        case 'crosses' :
+            break;
+        case 'gps_polygon' :
+            break;
+        case 'gps_point' :
+            break;
+        case 'spatial_layout' :
+            break;
+        case 'change_accessions' :
+            break;
+        case 'entry_numbers' :
+            break;
+        case 'new_progenies' :
+            break;
+        case 'existing_progenies' :
+            break;
+        case 'family_names' :
+            break;
+        case 'fieldbook_phenotypes' :
+            break;
+        case 'datacollector_spreadsheet' :
+            break;
+        case 'nirs' :
+            break;
+        case 'metabolomics' :
+            break;
+        case 'transcriptomics' :
+            break;
+        case 'images' :
+            break;
+        case 'images_barcodes' :
+            break;
+        case 'images_phenotypes' :
+            break;
+        case 'soil_data' :
+            break;
+        case 'vectors' :
+            break;
+        case 'treatments' :
+            break;
         default :
             jQuery('#working_modal').modal("hide");   
             alert("Something strange happened... I got an invalid upload type: "+submit_params.upload_type);

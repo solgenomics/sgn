@@ -1550,10 +1550,7 @@ sub upload_trial_metadata_file_POST : Args(0) {
     my $dbuser                     = $c->config->{dbuser};
     my $time                       = DateTime->now();
     my $timestamp                  = $time->ymd()."_".$time->hms();
-    # my $upload_original_name       = $upload->filename();
-    # my $upload_tempfile            = $upload->tempname;
     my $subdirectory               = "trial_metadata";
-    # my $archive_filename           = $timestamp . "_" . $upload_original_name;
 
     # Check if user is logged in and has curator or submitter privileges
     if (!$c->user()) {
@@ -1574,13 +1571,6 @@ sub upload_trial_metadata_file_POST : Args(0) {
         $c->stash->{rest} = {errors =>  "You must be a curator or submitter to update a trial." };
         return;
     }
-
-    # # Check filename for spaces and/or slashes
-    # if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
-    #     print STDERR "File name must not have spaces or slashes.\n";
-    #     $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
-    #     return;
-    # }
 
     my $archived_filename_with_path;
     my $upload_original_name;
