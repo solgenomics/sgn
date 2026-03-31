@@ -536,6 +536,15 @@ export function process_file(file_data, upload_type, config) {
             break;
         case 'gps_coords' : 
             display_gps_upload_choices();
+            get_select_box('breeding_programs', 'gps_breeding_program_select_div', { 'name' : 'gps_breeding_program_id', 'id' : 'gps_breeding_program_id', 'empty': 1 });
+            jQuery('#gps_breeding_program_select_div').on('change', function () {
+                let breeding_program_id = jQuery("#gps_breeding_program_id").val();
+                if (breeding_program_id != null && breeding_program_id != '') {
+                    get_select_box('trials', 'gps_trial_select_div', { 'name' : 'gps_trial_id', 'id' : 'gps_trial_id', 'breeding_program_id' : breeding_program_id, 'empty':1});
+                } else {
+                    jQuery('#gps_trial_select_div').html('');
+                }
+            });
             jQuery('#gps_upload_next_btn').on('click', {file_data : file_data}, populate_gps_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
@@ -608,6 +617,15 @@ export function process_file(file_data, upload_type, config) {
             break;
         case 'subplots' : 
             display_subplot_upload_choices();
+            get_select_box('breeding_programs', 'subplot_breeding_program_select_div', { 'name' : 'subplot_breeding_program_id', 'id' : 'subplot_breeding_program_id', 'empty': 1 });
+            jQuery('#subplot_breeding_program_select_div').on('change', function () {
+                let breeding_program_id = jQuery("#subplot_breeding_program_id").val();
+                if (breeding_program_id != null && breeding_program_id != '') {
+                    get_select_box('trials', 'subplot_trial_select_div', { 'name' : 'subplot_trial_id', 'id' : 'subplot_trial_id', 'breeding_program_id' : breeding_program_id, 'empty':1});
+                } else {
+                    jQuery('#subplot_trial_select_div').html('');
+                }
+            });
             jQuery('#subplots_per_plot_div').show();
             jQuery('#subplot_choices_next_btn_div').show();
             jQuery('#subplot_upload_choices_next_btn').on('click', {file_data : file_data}, populate_subplot_validate_submit_data);
@@ -615,6 +633,15 @@ export function process_file(file_data, upload_type, config) {
             break;
         case 'plants' : 
             display_plant_upload_choices();
+            get_select_box('breeding_programs', 'plant_breeding_program_select_div', { 'name' : 'plant_breeding_program_id', 'id' : 'plant_breeding_program_id', 'empty': 1 });
+            jQuery('#plant_breeding_program_select_div').on('change', function () {
+                let breeding_program_id = jQuery("#plant_breeding_program_id").val();
+                if (breeding_program_id != null && breeding_program_id != '') {
+                    get_select_box('trials', 'plant_trial_select_div', { 'name' : 'plant_trial_id', 'id' : 'plant_trial_id', 'breeding_program_id' : breeding_program_id, 'empty':1});
+                } else {
+                    jQuery('#plant_trial_select_div').html('');
+                }
+            });
             jQuery('#plants_per_plot_div').show();
             jQuery('#plant_choices_next_btn_div').show();
             jQuery('#plant_upload_choices_next_btn').on('click', {file_data : file_data}, populate_plant_validate_submit_data);
@@ -915,6 +942,10 @@ function display_plant_upload_choices() {
                     '<br>' + 
                     '<div id="plants_per_plot_div" hidden>Maximum number of plants per plot/subplot: '+'<input style="width:25%" id="plant_upload_plants_per_plot" class="form-control" type="number"/></div>' + 
                     '<br>' + 
+                    '<div id="plant_breeding_program_select_div"></div>'+
+                    '<br>' +
+                    '<div id="plant_trial_select_div"></div>'+
+                    '<br><br>' + 
                     '<div id="plant_choices_next_btn_div" hidden><button class="btn btn-primary" id="plant_upload_choices_next_btn">Next</button></div>');
 }
 
@@ -928,6 +959,10 @@ function display_subplot_upload_choices() {
                     '<br>' + 
                     '<div id="subplots_per_plot_div" hidden>Maximum number of subplots per plot: '+'<input style="width:25%" id="subplot_upload_subplots_per_plot" class="form-control" type="number"/></div>' + 
                     '<br>' + 
+                    '<div id="subplot_breeding_program_select_div"></div>'+
+                    '<br>' +
+                    '<div id="subplot_trial_select_div"></div>'+
+                    '<br><br>' + 
                     '<div id="subplot_choices_next_btn_div" hidden><button class="btn btn-primary" id="subplot_upload_choices_next_btn">Next</button></div>');
 }
 
@@ -1075,6 +1110,10 @@ function display_cross_upload_choices() {
 function display_gps_upload_choices() {
     jQuery('#upload_type_choices_div').html(
         '<div class="form-group">' + 
+            '<div id="gps_breeding_program_select_div"></div>'+
+            '<br>' +
+            '<div id="gps_trial_select_div"></div>'+
+            '<br><br>' + 
             '<label class="col-sm-3 control-label">Coordinates Type: </label>' + 
             '<div class="col-sm-9">' + 
                 '<select class="form-control" id="upload_gps_coordinate_type" name="upload_gps_coordinate_type">' + 
@@ -1386,6 +1425,14 @@ function populate_plant_validate_submit_data(event) {
     let file_data = event.data.file_data;
     let plant_upload_type = jQuery('#plant_upload_type_choice_select').val();
     let num_plants_per_plot = jQuery('#plant_upload_plants_per_plot').val();
+    let trial_select = jQuery('#plant_trial_id option:selected');
+    let trial_id = trial_select.val();
+    let trial_name = trial_select.text();
+
+    if (!trial_id) {
+        alert("Please select a trial.");
+        return;
+    }
     if (plant_upload_type == "null_choice") {
         alert("Select a plant upload type");
         return;
@@ -1396,7 +1443,9 @@ function populate_plant_validate_submit_data(event) {
     }
     populate_validate_submit_data(plant_upload_type, file_data, {
         plants_per_plot : num_plants_per_plot,
-        plants_per_subplot : num_plants_per_plot
+        plants_per_subplot : num_plants_per_plot,
+        trial_id : trial_id,
+        trial_name : trial_name
     });
 }
 
@@ -1404,6 +1453,14 @@ function populate_subplot_validate_submit_data(event) {
     let file_data = event.data.file_data;
     let subplot_upload_type = jQuery('#subplot_upload_type_choice_select').val();
     let num_subplots_per_plot = jQuery('#subplot_upload_subplots_per_plot').val();
+    let trial_select = jQuery('#gps_trial_id option:selected');
+    let trial_id = trial_select.val();
+    let trial_name = trial_select.text();
+
+    if (!trial_id) {
+        alert("Please select a trial.");
+        return;
+    }
     if (subplot_upload_type == "null_choice") {
         alert("Select a subplot upload type");
         return;
@@ -1413,7 +1470,9 @@ function populate_subplot_validate_submit_data(event) {
         return;
     }
     populate_validate_submit_data(subplot_upload_type, file_data, {
-        subplots_per_plot : num_subplots_per_plot
+        subplots_per_plot : num_subplots_per_plot,
+        trial_id : trial_id,
+        trial_name : trial_name
     });
 }
 
@@ -1563,10 +1622,25 @@ function populate_trial_additional_file_validate_submit_data(event) {
 function populate_gps_validate_submit_data(event) { 
     let file_data = event.data.file_data;
     let coord_type = jQuery('#upload_gps_coordinate_type').val();
+    let trial_select = jQuery('#gps_trial_id option:selected');
+    let trial_id = trial_select.val();
+    let trial_name = trial_select.text();
+
+    if (!trial_id) {
+        alert("Please select a trial.");
+        return;
+    }
+
     if (coord_type == "polygon") { 
-        populate_validate_submit_data("gps_polygon", file_data);
+        populate_validate_submit_data("gps_polygon", file_data, {
+            trial_id : trial_id,
+            trial_name : trial_name
+        });
     } else {
-        populate_validate_submit_data("gps_point", file_data);
+        populate_validate_submit_data("gps_point", file_data, {
+            trial_id : trial_id,
+            trial_name : trial_name
+        });
     }
 }
 
@@ -1906,7 +1980,7 @@ export function submit_upload_job() {
                 },
                 success: function(response) {
                     if (response.error) {
-                        alert(`An error occurred: ${response.error}`);
+                        console.log(response.error);
                     }
                     refresh_upload_tables();
                 },
@@ -2176,8 +2250,40 @@ export function submit_upload_job() {
         case 'crosses' :
             break;
         case 'gps_polygon' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plot_gps',
+                data : {
+                    'upload_gps_coordinate_type' : 'gps_polygon',
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading gps coordinates. Check console.");
+                }
+            });
             break;
         case 'gps_point' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/upload_plot_gps',
+                data : {
+                    'upload_gps_coordinate_type' : 'gps_point',
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading gps coordinates. Check console.");
+                }
+            });
             break;
         case 'spatial_layout' :
             break;
