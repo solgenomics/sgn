@@ -646,6 +646,24 @@ sub retrieve_plot_info {
         }
     }
 
+    # Add intercropped accessions to the layout
+    my $intercrop_rs = $plot->search_related('stock_relationship_subjects')->search({
+        'me.type_id' => $self->cvterm_id('intercrop_plot_of'),
+        'object.type_id' => { -in => $self->get_source_primary_stock_type_ids() }
+    }, { 'join' => 'object' });
+    my @intercrop_accessions;
+    while (my $r = $intercrop_rs->next()) {
+        my $o = $r->object;
+        push @intercrop_accessions, {
+            accession_name => $o->uniquename,
+            accession_id => $o->stock_id
+        };
+    }
+    if ( scalar(@intercrop_accessions) > 0 ) {
+        $design_info{"intercrop_accessions"} = \@intercrop_accessions;
+    }
+
+
     if ($self->get_verify_layout){
 	if (!$accession_name || !$accession_id || !$plot_name || !$plot_id){
 	    push @{$verify_errors{errors}->{layout_errors}}, "Plot: $plot_name does not have an accession!";
