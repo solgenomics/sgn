@@ -2288,8 +2288,39 @@ export function submit_upload_job() {
         case 'spatial_layout' :
             break;
         case 'change_accessions' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/change_plot_accessions_using_file',
+                data : {
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading gps coordinates. Check console.");
+                }
+            });
             break;
         case 'entry_numbers' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial_entry_numbers/upload',
+                data : {
+                    ignore_warnings : ignore_warnings,
+                    archived_file_id : submit_params.file_id,
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading entry numbers. Check console.");
+                }
+            });
             break;
         case 'new_progenies' :
             break;
