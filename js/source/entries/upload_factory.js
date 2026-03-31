@@ -2326,7 +2326,7 @@ export function submit_upload_job() {
         case 'spatial_layout' :
             break;
         case 'change_accessions' :
-            let override = ignore_warnings ? "check" : "";
+            let override = ignore_warnings ? "" : "check";
             jQuery.ajax({
                 url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/change_plot_accessions_using_file/'+override,
                 data : {
