@@ -43,7 +43,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
     my $ordering_type = $c->config->{ordering_type};
-    my $conf_stock_type = $c->config->{catalog_stock_type};
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $tracking_order_activity = $c->config->{tracking_order_activity};
 
     if (! $c->user()) {
@@ -59,7 +59,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my $order_number = shift;
 
     my $clone_list_format_type;
-    if ($conf_stock_type) {
+    if ($conf_catalog_criteria) {
         $clone_list_format_type = 'grouped_items';
     } else {
         $clone_list_format_type = 'individual_item'
@@ -68,6 +68,7 @@ sub order_details :Path('/order/details/view') : Args(1) {
     my $order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, sp_order_id => $order_number, clone_list_format_type => $clone_list_format_type, properties => \@properties});
     my $order_result = $order_obj->get_order_details();
     my $all_items = $order_result->[3];
+    my $formatted_clone_list = $order_result->[8];
     my $item_name;
     my $value_string;
     my $empty_string = '';
@@ -97,14 +98,14 @@ sub order_details :Path('/order/details/view') : Args(1) {
     $c->stash->{order_id} = $order_result->[0];
     $c->stash->{order_from} = $order_result->[1];
     $c->stash->{create_date} = $order_result->[2];
-    $c->stash->{item_list} = $all_details_string;
+    $c->stash->{item_list} = $formatted_clone_list;
     $c->stash->{order_to} = $order_result->[4];
     $c->stash->{order_status} = $order_result->[5];
     $c->stash->{comments} = $order_result->[6];
     $c->stash->{order_properties} = $order_properties;
     $c->stash->{order_values} = $value_string;
     $c->stash->{ordering_type} = $ordering_type;
-    $c->stash->{tracking_order_activity} = $tracking_order_activity;    
+    $c->stash->{tracking_order_activity} = $tracking_order_activity;
     $c->stash->{template} = '/order/order_details.mas';
 
 

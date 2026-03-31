@@ -212,7 +212,6 @@ sub get_order_details {
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
     my $formatted_clone_list = _format_clone_list($all_items, $clone_list_format_type, $properties);
-    print STDERR "FORMATTED CLONE LIST =".Dumper($formatted_clone_list)."\n";
     push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments, $order_to_id, $formatted_clone_list;
 
     return \@order_details;
@@ -383,12 +382,13 @@ sub _format_clone_list {
             my $order_details = $each_item->{'order_details'};
             foreach my $stock_name (sort keys %$item_info) {
                 my $quantity = $item_info->{$stock_name};
-                push @request_details, $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+                my $formatted_item = $stock_name.$empty_string.":".$empty_string. "quantity".$empty_string. $quantity;
+                push @request_details, "<b>".$formatted_item."</b>";
             }
             push @request_details, $empty_string;
             foreach my $field (@$properties) {
                 my $each_detail = $order_details->{$field};
-                my $detail_string = $field. ":"." ".$each_detail;
+                my $detail_string = "<b>".$field."</b>".":"." ".$each_detail;
                 push @request_details, $detail_string;
             }
 
