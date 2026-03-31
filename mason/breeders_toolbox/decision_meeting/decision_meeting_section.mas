@@ -19,7 +19,6 @@
                 <th>Date</th>
                 <th>Location</th>
                 <th>Attendees</th>
-                <th>Notes</th>
                 <th>Download</th>
               </tr>
             </thead>

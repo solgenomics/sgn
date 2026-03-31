@@ -5,6 +5,8 @@
     function dbg(){ if (window.DM_DEBUG) { var a=[].slice.call(arguments); a.unshift('[DecisionMeeting]'); console.log.apply(console,a);} }
     console.info('%cDecisionMeeting JS file loaded','color:#0a7;font-weight:bold');
 
+    window.DM_MEETING_CACHE = window.DM_MEETING_CACHE || {};
+
     /* ===== Root detection ===== */
     var $root =
       $('#decision_meeting_main').length ? $('#decision_meeting_main') :
@@ -94,6 +96,19 @@
         .dm-bp-header-select { max-width: 220px; margin-top:6px; }
         .dm-topbar-search { width:260px; display:inline-block; }
         .dm-meeting-check { transform: scale(1.1); }
+
+        .dm-meeting-check[disabled] {
+          cursor: not-allowed;
+          opacity: 0.45;
+        }
+
+        .dm-meeting-select-disabled {
+          color: #999;
+          font-size: 12px;
+          font-style: italic;
+          display: inline-block;
+          white-space: nowrap;
+        }
 
         .dm-new-stage-cell {
           font-weight: 600;
@@ -295,6 +310,11 @@
 
       var meetingId = $checked.data('meeting-id');
       if (!meetingId) return '';
+
+      var cached = window.DM_MEETING_CACHE && window.DM_MEETING_CACHE[String(meetingId)];
+      if (cached && cached.attendees_text) {
+        return $.trim(cached.attendees_text || '');
+      }
 
       var attendeesText = '';
 
@@ -1502,8 +1522,9 @@
       var $checked = $('.dm-meeting-check:checked').first();
       if (!$checked.length) return '';
       var meetingId = $checked.data('meeting-id');
-      var $note = $('.dm-meeting-notes[data-meeting-id="' + String(meetingId) + '"]').first();
-      return $.trim(($note.attr('data-notes') || $note.text() || ''));
+      if (!meetingId) return '';
+      var cached = window.DM_MEETING_CACHE && window.DM_MEETING_CACHE[String(meetingId)];
+      return $.trim((cached && cached.notes) || '');
     }
 
     function getDecisionRowsForSave(){
@@ -2382,27 +2403,51 @@
       .replace(/'/g,'&#39;');
   }
 
-  function meetingCheckboxHtml(id, name, date){
+  function parseJSON(s){ try { return JSON.parse(s||'{}')||{}; } catch(e){ return {}; } }
+
+  function isMeetingSaved(meetingJson){
+    var j = meetingJson || {};
+    if (j.saved === true) return true;
+    if (j.is_saved === true) return true;
+    if (j.meeting_saved === true) return true;
+    if (j.decisions_saved === true) return true;
+    if (String(j.status || '').toLowerCase() === 'saved') return true;
+    if (String(j.save_status || '').toLowerCase() === 'saved') return true;
+    if (j.saved_at) return true;
+    if (j.date_saved) return true;
+    return false;
+  }
+
+  function getMeetingProgramsText(j){
+    return Array.isArray(j.breeding_programs)
+      ? j.breeding_programs.join(', ')
+      : (j.breeding_programs || j.breeding_program || '');
+  }
+
+  function getMeetingAttendeesText(j){
+    return Array.isArray(j.attendees_list)
+      ? j.attendees_list.join(', ')
+      : (j.attendees || '');
+  }
+
+  function getMeetingNotesText(j){
+    return j.notes || j.meeting_notes || j.data || '';
+  }
+
+  function meetingCheckboxHtml(id, name, date, saved){
+    if (saved) {
+      return '<span class="dm-meeting-select-disabled" title="This meeting has already been saved.">Saved</span>';
+    }
     return '<input type="checkbox" class="dm-meeting-check" ' +
            'data-meeting-id="' + escAttr(id) + '" ' +
            'data-meeting-name="' + escAttr(name) + '" ' +
            'data-meeting-date="' + escAttr(date) + '">';
   }
 
-  function meetingNotesHtml(id, notes){
-    var text = notes == null ? '' : String(notes);
-    var display = text ? escHtml(text) : '<span style="color:#888;">Click to add notes</span>';
-    return '<span class="dm-meeting-notes" ' +
-           'data-meeting-id="' + escAttr(id) + '" ' +
-           'data-notes="' + escAttr(text) + '" ' +
-           'style="cursor:pointer; display:inline-block; min-width:120px;">' +
-           display +
-           '</span>';
-  }
-
-  function meetingDownloadBtnHtml(id){
+  function meetingDownloadBtnHtml(id, saved){
     return '<button type="button" class="btn btn-sm btn-default dm-meeting-download-btn" ' +
-           'data-meeting-id="' + escAttr(id) + '">' +
+           'data-meeting-id="' + escAttr(id) + '" ' +
+           'data-meeting-saved="' + (saved ? '1' : '0') + '">' +
            'Download</button>';
   }
 
@@ -2450,7 +2495,6 @@
         { title:'Date',      className:'text-nowrap' },
         { title:'Location',  className:'text-left'   },
         { title:'Attendees', className:'text-left'   },
-        { title:'Notes',     className:'text-left', orderable:false },
         { title:'Download',  className:'text-center', orderable:false, searchable:false }
       ],
       drawCallback: function () {
@@ -2463,8 +2507,6 @@
     return meetingDT;
   }
 
-  function parseJSON(s){ try { return JSON.parse(s||'{}')||{}; } catch(e){ return {}; } }
-
   function rowsToArrays(rows){
     return (rows||[]).map(function(r){
       var j = parseJSON(r.meeting_json);
@@ -2472,23 +2514,31 @@
       var name  = j.meeting_name || r.project_name || '';
       var date  = j.date  || '';
       var loc   = j.location_name || j.location || '';
-      var progs = Array.isArray(j.breeding_programs)
-                    ? j.breeding_programs.join(', ')
-                    : (j.breeding_programs || '');
-      var atts  = Array.isArray(j.attendees_list)
-                    ? j.attendees_list.join(', ')
-                    : (j.attendees || '');
-      var notes = j.notes || j.data || '';
+      var progs = getMeetingProgramsText(j);
+      var atts  = getMeetingAttendeesText(j);
+      var notes = getMeetingNotesText(j);
+      var saved = isMeetingSaved(j);
+
+      window.DM_MEETING_CACHE[String(id)] = {
+        id: id,
+        meeting_name: name,
+        meeting_date: date,
+        location: loc,
+        programs_text: progs,
+        attendees_text: atts,
+        notes: notes,
+        saved: saved,
+        meeting_json: j
+      };
 
       return [
-        meetingCheckboxHtml(id, name, date),
+        meetingCheckboxHtml(id, name, date, saved),
         linkify(name, id),
         escHtml(progs),
         escHtml(date),
         escHtml(loc),
         escHtml(atts),
-        meetingNotesHtml(id, notes),
-        meetingDownloadBtnHtml(id)
+        meetingDownloadBtnHtml(id, saved)
       ];
     });
   }
@@ -2506,6 +2556,7 @@
       if (!r.ok) throw new Error('HTTP '+r.status+' '+r.statusText);
       var j = await r.json();
       var rows = j.rows || [];
+      window.DM_MEETING_CACHE = {};
       var data = rowsToArrays(rows);
       meetingDT.clear();
       if (data.length) meetingDT.rows.add(data);
@@ -2519,6 +2570,19 @@
       setTimeout(adjustMeetingDT, 0);
     }
   }
+
+  async function downloadMeetingReport(meetingId){
+    try {
+      var base = (window.DM_API_BASE || '/ajax/decisionmeeting');
+      var url = base + '/meeting_report_html?meeting_id=' + encodeURIComponent(meetingId);
+
+      window.open(url, '_blank');
+    } catch (err) {
+      console.error('[DecisionMeeting] download failed for meeting ' + meetingId, err);
+      alert('Could not open meeting report.');
+    }
+  }
+
 
   document.addEventListener('meeting:created', function(){
     setTimeout(loadMeetingTracker, 200);
@@ -2552,51 +2616,27 @@
     });
 
   $(document)
-    .off('click.dmMeetingNotes', '.dm-meeting-notes')
-    .on('click.dmMeetingNotes', '.dm-meeting-notes', function(){
-      var $span = $(this);
-      if ($span.find('input').length) return;
+    .off('click.dmMeetingDownload', '.dm-meeting-download-btn')
+    .on('click.dmMeetingDownload', '.dm-meeting-download-btn', async function(){
+      var $btn = $(this);
+      var meetingId = $btn.data('meeting-id');
+      var original = $btn.text();
 
-      var current = $span.attr('data-notes') || '';
-      var meetingId = $span.data('meeting-id');
-
-      var $input = $('<input type="text" class="form-control input-sm dm-meeting-notes-input">');
-      $input.val(current);
-
-      $span.empty().append($input);
-      $input.focus().select();
-
-      function finish(save){
-        var val = save ? $.trim($input.val() || '') : current;
-        $span.attr('data-notes', val);
-        $span.html(val ? escHtml(val) : '<span style="color:#888;">Click to add notes</span>');
-
-        if (save) {
-          console.log('[DecisionMeeting] notes edited for meeting', meetingId, val);
-        }
+      if (!meetingId) {
+        alert('Meeting ID not found.');
+        return;
       }
 
-      $input.on('keydown', function(e){
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          finish(true);
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          finish(false);
-        }
-      });
+      $btn.prop('disabled', true).text('Preparing...');
 
-      $input.on('blur', function(){
-        finish(true);
-      });
-    });
-
-  $(document)
-    .off('click.dmMeetingDownload', '.dm-meeting-download-btn')
-    .on('click.dmMeetingDownload', '.dm-meeting-download-btn', function(){
-      var meetingId = $(this).data('meeting-id');
-      console.log('[DecisionMeeting] download clicked for meeting', meetingId);
-      alert('Download clicked for meeting ID: ' + meetingId);
+      try {
+        await downloadMeetingReport(meetingId);
+      } catch (e) {
+        console.error('[DecisionMeeting] download failed for meeting', meetingId, e);
+        alert('Could not open the meeting report.');
+      } finally {
+        $btn.prop('disabled', false).text(original);
+      }
     });
 
   $(function(){

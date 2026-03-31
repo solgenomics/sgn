@@ -1196,6 +1196,11 @@ sub save_all_decisions_POST {
         return $self->status_bad_request($c, message => 'Missing meeting_id in payload');
     }
 
+    # mark as saved
+    $payload->{saved}         = JSON::true;
+    $payload->{saved_at}      = scalar localtime();
+    $payload->{saved_status}  = 'successfully';
+
     my $json_text;
     eval {
         require JSON;
@@ -1227,11 +1232,290 @@ sub save_all_decisions_POST {
     $c->stash(
         current_view => 'JSON',
         json_data    => {
-            success    => JSON::true,
-            meeting_id => $meeting_id,
-            message    => 'Decisions saved successfully'
+            success       => JSON::true,
+            meeting_id    => $meeting_id,
+            saved_status  => 'successfully',
+            message       => 'Decisions saved successfully'
         }
     );
+}
+
+sub meetings : Path('meetings') : Args(0) : ActionClass('REST') {}
+sub meetings_GET {
+    my ($self, $c) = @_;
+    my $dbh = $c->dbc->dbh;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $design_type_row = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
+    my $mtg_json_type_row = SGN::Model::Cvterm->get_cvterm_row($schema, 'meeting_json', 'project_property');
+
+    my $design_type_id   = $design_type_row   ? $design_type_row->cvterm_id : undef;
+    my $mtg_json_type_id = $mtg_json_type_row ? $mtg_json_type_row->cvterm_id : undef;
+
+    if (!$design_type_id || !$mtg_json_type_id) {
+        $c->stash->{rest} = { rows => [] };
+        $c->detach($c->view('JSON'));
+        return;
+    }
+
+    my $sth_a = $dbh->prepare(qq{
+        SELECT p.project_id, p.name AS project_name
+          FROM project p
+          JOIN projectprop pp
+            ON pp.project_id = p.project_id
+           AND pp.type_id = ?
+           AND pp.value   = 'Meeting'
+    });
+    $sth_a->execute($design_type_id);
+
+    my @projects;
+    my @ids;
+    while (my $r = $sth_a->fetchrow_hashref) {
+        push @projects, $r;
+        push @ids, $r->{project_id};
+    }
+
+    if (!@ids) {
+        $c->stash->{rest} = { rows => [] };
+        $c->detach($c->view('JSON'));
+        return;
+    }
+
+    my $ph = join(',', ('?') x @ids);
+    my $sql_b = qq{
+        SELECT projectprop_id, project_id, value::text AS meeting_json
+          FROM projectprop
+         WHERE type_id = ?
+           AND project_id IN ($ph)
+         ORDER BY projectprop_id DESC
+    };
+    my $sth_b = $dbh->prepare($sql_b);
+    $sth_b->execute($mtg_json_type_id, @ids);
+
+    my %json_for;
+    while (my $r = $sth_b->fetchrow_hashref) {
+        next if exists $json_for{ $r->{project_id} };
+        $json_for{ $r->{project_id} } = $r->{meeting_json};
+    }
+
+    my @rows;
+    for my $p (@projects) {
+        my $pid = $p->{project_id};
+        my $mj  = $json_for{$pid};
+        next unless defined $mj;
+
+        my $decoded = {};
+        eval { $decoded = decode_json($mj) if $mj; };
+        $decoded ||= {};
+
+        my $is_saved = 0;
+        if (
+            exists $decoded->{saved_status}
+            && defined $decoded->{saved_status}
+            && $decoded->{saved_status} eq 'successfully'
+        ) {
+            $is_saved = 1;
+        }
+
+        $decoded->{saved} = $is_saved ? JSON::true : JSON::false;
+
+        push @rows, {
+            project_id    => $pid,
+            project_name  => $p->{project_name},
+            meeting_json  => encode_json($decoded),
+            meeting_saved => $is_saved ? JSON::true : JSON::false,
+        };
+    }
+
+    $c->stash->{rest} = { rows => \@rows };
+    $c->detach($c->view('JSON'));
+}
+
+sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args(0) {
+    my ($self, $c) = @_;
+
+    return $self->status_forbidden($c, message => 'Login required')
+        unless $c->user;
+
+    my $meeting_id = $c->req->param('meeting_id');
+    return $self->status_bad_request($c, message => 'Missing meeting_id')
+        unless $meeting_id;
+
+    my $dbh = $c->dbc->dbh;
+
+    my $sth = $dbh->prepare(q{
+        SELECT p.project_id, p.name, pp.value
+        FROM project p
+        LEFT JOIN projectprop pp
+            ON pp.project_id = p.project_id
+           AND pp.type_id = (
+               SELECT cvterm_id
+               FROM cvterm
+               WHERE name = 'meeting_json'
+               LIMIT 1
+           )
+        WHERE p.project_id = ?
+        LIMIT 1
+    });
+    $sth->execute($meeting_id);
+
+    my ($project_id, $project_name, $json_value) = $sth->fetchrow_array;
+
+    unless ($project_id) {
+        $c->res->status(404);
+        $c->res->content_type('text/plain; charset=utf-8');
+        $c->res->body("Meeting not found");
+        return;
+    }
+
+    my $data = {};
+    if ($json_value) {
+        eval { $data = decode_json($json_value); };
+        if ($@) {
+            $data = {};
+        }
+    }
+
+    my $meeting_notes = $data->{meeting_notes} // '';
+    my $accessions    = $data->{accessions} || [];
+
+    my $rows_html = '';
+    foreach my $acc (@$accessions) {
+        my $name      = $acc->{accession} // '';
+        my $bp        = $acc->{breeding_program} // '';
+        my $previous  = $acc->{previous_stage} // '';
+        my $decision  = $acc->{decision} // '';
+        my $new_stage = $acc->{new_stage} // '';
+        my $notes     = $acc->{notes} // '';
+        my $comment   = $acc->{save_comment} // '';
+
+        for ($name, $bp, $previous, $decision, $new_stage, $notes, $comment) {
+            $_ = '' unless defined $_;
+            s/&/&amp;/g;
+            s/</&lt;/g;
+            s/>/&gt;/g;
+            s/"/&quot;/g;
+        }
+
+        $rows_html .= qq{
+            <tr>
+              <td>$name</td>
+              <td>$bp</td>
+              <td>$previous</td>
+              <td>$decision</td>
+              <td>$new_stage</td>
+              <td>$notes</td>
+              <td>$comment</td>
+            </tr>
+        };
+    }
+
+    my $safe_project_name = $project_name // '';
+    $safe_project_name =~ s/&/&amp;/g;
+    $safe_project_name =~ s/</&lt;/g;
+    $safe_project_name =~ s/>/&gt;/g;
+    $safe_project_name =~ s/"/&quot;/g;
+
+    $meeting_notes =~ s/&/&amp;/g;
+    $meeting_notes =~ s/</&lt;/g;
+    $meeting_notes =~ s/>/&gt;/g;
+    $meeting_notes =~ s/"/&quot;/g;
+    $meeting_notes =~ s/\n/<br>/g;
+
+    my $html = qq{
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Meeting Report - $safe_project_name</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      color: #222;
+    }
+    h1 {
+      margin-bottom: 5px;
+    }
+    .meta {
+      margin-bottom: 20px;
+      color: #555;
+    }
+    .notes {
+      margin: 20px 0;
+      padding: 12px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f2f2;
+    }
+    \@media print {
+      .no-print {
+        display: none;
+      }
+      body {
+        margin: 10mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom:20px;">
+    <button onclick="window.print()">Print / Save as PDF</button>
+  </div>
+
+  <h1>Meeting Report</h1>
+  <div class="meta">
+    <strong>Meeting:</strong> $safe_project_name<br>
+    <strong>Meeting ID:</strong> $meeting_id
+  </div>
+
+  <h2>Meeting Notes</h2>
+  <div class="notes">$meeting_notes</div>
+
+  <h2>Decisions</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Accession</th>
+        <th>Breeding Program</th>
+        <th>Previous Stage</th>
+        <th>Decision</th>
+        <th>New Stage</th>
+        <th>Current Notes</th>
+        <th>Comment Before Save</th>
+      </tr>
+    </thead>
+    <tbody>
+      $rows_html
+    </tbody>
+  </table>
+
+  <script>
+    // optional auto-print
+    // window.onload = function(){ window.print(); };
+  </script>
+</body>
+</html>
+    };
+
+    $c->res->content_type('text/html; charset=utf-8');
+    $c->res->body($html);
 }
 
 sub create : Path('create') Args(0) {
