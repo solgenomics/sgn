@@ -110,7 +110,10 @@ jQuery(document).ready( function() {
 
     jQuery('#order_form_link').click(function(){
         jQuery('input[name="catalog_item_select"]:checked').each(function() {
-            selected_items.push(jQuery(this).val());
+            let item_name = jQuery(this).val();
+            if(!selected_items.includes(item_name)) {
+                selected_items.push(jQuery(this).val());            
+            }
         });
         if (selected_items.length == 0){
             alert('Please select what you would like to request');
