@@ -552,7 +552,18 @@ export function process_file(file_data, upload_type, config) {
             populate_validate_submit_data(upload_type, file_data);
             break;
         case 'change_accessions' : 
-            populate_validate_submit_data(upload_type, file_data);
+            display_accession_change_upload_choices();
+            get_select_box('breeding_programs', 'change_accessions_breeding_program_select_div', { 'name' : 'change_accessions_breeding_program_id', 'id' : 'change_accessions_breeding_program_id', 'empty': 1 });
+            jQuery('#change_accessions_breeding_program_select_div').on('change', function () {
+                let breeding_program_id = jQuery("#change_accessions_breeding_program_id").val();
+                if (breeding_program_id != null && breeding_program_id != '') {
+                    get_select_box('trials', 'change_accessions_trial_select_div', { 'name' : 'change_accessions_trial_id', 'id' : 'change_accessions_trial_id', 'breeding_program_id' : breeding_program_id, 'empty':1});
+                } else {
+                    jQuery('#change_accessions_trial_select_div').html('');
+                }
+            });
+            jQuery('#change_accessions_upload_next_btn').on('click', {file_data : file_data}, populate_accession_change_validate_submit_data);
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'entry_numbers' : 
             populate_validate_submit_data(upload_type, file_data);
@@ -947,6 +958,16 @@ function display_plant_upload_choices() {
                     '<div id="plant_trial_select_div"></div>'+
                     '<br><br>' + 
                     '<div id="plant_choices_next_btn_div" hidden><button class="btn btn-primary" id="plant_upload_choices_next_btn">Next</button></div>');
+}
+
+function display_accession_change_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+        '<div id="change_accessions_breeding_program_select_div"></div>' + 
+        '<br>' + 
+        '<div id="change_accessions_trial_select_div"></div>' + 
+        '<br>' + 
+        '<button class="btn btn-primary" id="change_accessions_upload_next_btn">Next</button>'
+    );
 }
 
 function display_subplot_upload_choices() {
@@ -1546,6 +1567,23 @@ function populate_accession_validate_submit_data(event) {
     populate_validate_submit_data('accessions', file_data, {
         use_fuzzy_search : fuzzy_search,
         append_synonyms : append_synonyms
+    });
+}
+
+function populate_accession_change_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let trial_select = jQuery('#change_accessions_trial_id option:selected');
+    let trial_id = trial_select.val();
+    let trial_name = trial_select.text();
+
+    if (!trial_id) {
+        alert("Please select a trial.");
+        return;
+    }
+
+    populate_validate_submit_data("change_accessions", file_data, {
+        trial_id : trial_id,
+        trial_name : trial_name
     });
 }
 
@@ -2288,8 +2326,9 @@ export function submit_upload_job() {
         case 'spatial_layout' :
             break;
         case 'change_accessions' :
+            let override = ignore_warnings ? "check" : "";
             jQuery.ajax({
-                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/change_plot_accessions_using_file',
+                url : '/ajax/breeders/trial/'+submit_params.additional_args.trial_id+'/change_plot_accessions_using_file/'+override,
                 data : {
                     'archived_file_id' : submit_params.file_id
                 },
