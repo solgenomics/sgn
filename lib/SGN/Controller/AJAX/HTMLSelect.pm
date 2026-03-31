@@ -2288,7 +2288,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
 
     my $plots_q = "
     WITH plot AS 
-        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+        (SELECT subject_id AS plot_id, myplot.uniquename AS plot_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name FROM stock_relationship 
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
         WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)), 
@@ -2312,7 +2312,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
     $h->execute($plot_of_id, \@plots, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
 
-    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates (row,column)</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table style=\"width:100%\" id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates (row,column)</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
         my $coordinates = "NA";
@@ -2322,7 +2322,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
-    $html .= "</tbody></thead></table>";
+    $html .= "</tbody></table>";
 
     $c->stash->{rest} = { select => $html };
 }
@@ -2370,7 +2370,7 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
 
     my $subplots_q = "
     WITH subplot AS 
-        (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+        (SELECT subject_id AS subplot_id, mysubplot.uniquename AS subplot_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name FROM stock_relationship 
             JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
         WHERE stock_relationship.type_id=? AND mysubplot.stock_id = ANY(?)),
@@ -2386,13 +2386,13 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
     $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
 
-    my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table style=\"width:100%\" id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
         $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
-    $html .= "</tbody></thead></table>";
+    $html .= "</tbody></table>";
 
     $c->stash->{rest} = { select => $html };
 }
@@ -2455,7 +2455,7 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     
     if ($trial->has_subplot_entries()) {
         $subplot_q = ", subplot AS
-        (SELECT object_id AS subplot_id, mysubplot.name as subplot_name, subject_id as plant_id FROM stock_relationship
+        (SELECT object_id AS subplot_id, mysubplot.uniquename as subplot_name, subject_id as plant_id FROM stock_relationship
         JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id 
         WHERE stock_relationship.type_id=$plant_of_subplot_id)";
         $subplot_join = "JOIN subplot ON subplot.plant_id=plant.plant_id";
@@ -2466,12 +2466,12 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     my @plants = map {$_->[0]} @{$trial->get_plants()};
 
     my $plants_q = "WITH plant AS 
-        (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
+        (SELECT subject_id AS plant_id, myplant.uniquename AS plant_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name FROM stock_relationship 
             JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id 
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
         WHERE stock_relationship.type_id=? AND myplant.stock_id = ANY(?)), 
     plot AS 
-        (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
+        (SELECT subject_id AS plot_id, myplot.uniquename as plot_name, object_id as plant_id FROM stock_relationship
             JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
             WHERE stock_relationship.type_id=?),
     stockprops AS (
@@ -2495,7 +2495,7 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     my $h = $schema->storage()->dbh()->prepare($plants_q);
     $h->execute($plant_of_id, \@plants, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id);
 
-    my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table style=\"width:100%\" id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $synonyms, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
@@ -2509,7 +2509,7 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         $html .= "<tr><td><input id=\"select_plant_$plant_name\" type=\"checkbox\" class=\"exp_design_plant_select\"></td><td><a href=\"/stock/$plant_id/view\">$plant_name</a></td>$subplot_data<td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
-    $html .= "</tbody></thead></table>";
+    $html .= "</tbody></table>";
 
     $c->stash->{rest} = { select => $html};
 }

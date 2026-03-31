@@ -482,6 +482,7 @@ sub replace_plot_name_fieldMap {
     	$stock_rs->update(
         {
             uniquename => $new_plot_name,
+            name => $new_plot_name
         });
     }
 
