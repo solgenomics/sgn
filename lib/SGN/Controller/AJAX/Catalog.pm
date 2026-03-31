@@ -326,9 +326,13 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $c = shift;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbh = $c->dbc->dbh;
-    my $catalog_stock_type = $c->config->{catalog_stock_type};
-    my $catalog_stock_property = $c->config->{catalog_stock_property};
-    my $catalog_stock_property_value = $c->config->{catalog_stock_property_value};
+
+    my $catalog_criteria = $c->config->{catalog_criteria};
+    my @catalog_info = split(/:/,$catalog_criteria);
+    my $catalog_stock_type = $catalog_info[0];
+    my $catalog_stock_property = $catalog_info[1];
+    my $catalog_stock_property_value = $catalog_info[2];
+
     my @catalog_items;
 
     if ($catalog_stock_property eq 'transgenic') {

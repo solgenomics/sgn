@@ -256,7 +256,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
-    my $conf_stock_type = $c->config->{catalog_stock_type};
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -272,7 +272,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $clone_list_format_type;
-    if ($conf_stock_type) {
+    if ($conf_catalog_criteria) {
         $clone_list_format_type = 'grouped_items';
     } else {
         $clone_list_format_type = 'individual_item'
@@ -339,7 +339,7 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
-    my $conf_stock_type = $c->config->{catalog_stock_type};
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -355,7 +355,7 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $clone_list_format_type;
-    if ($conf_stock_type) {
+    if ($conf_catalog_criteria) {
         $clone_list_format_type = 'grouped_items';
     } else {
         $clone_list_format_type = 'individual_item'
@@ -423,7 +423,7 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
-    my $conf_stock_type = $c->config->{catalog_stock_type};
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -439,7 +439,7 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $clone_list_format_type;
-    if ($conf_stock_type) {
+    if ($conf_catalog_criteria) {
         $clone_list_format_type = 'grouped_items';
     } else {
         $clone_list_format_type = 'individual_item'
@@ -512,7 +512,7 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
-    my $conf_stock_type = $c->config->{catalog_stock_type};
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -528,7 +528,7 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
     my $clone_list_format_type;
-    if ($conf_stock_type) {
+    if ($conf_catalog_criteria) {
         $clone_list_format_type = 'grouped_items';
     } else {
         $clone_list_format_type = 'individual_item'

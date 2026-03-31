@@ -38,10 +38,12 @@ sub stock_catalog :Path('/catalog/view') :Args(0) {
     $c->stash->{order_properties} = $order_properties;
     $c->stash->{order_properties_dialog} = $order_properties_dialog;
 
-    my $catalog_stock_type = $c->config->{catalog_stock_type};
-    my $catalog_stock_property = $c->config->{catalog_stock_property};
-    $c->stash->{catalog_stock_type} = $catalog_stock_type;
-    $c->stash->{catalog_stock_property} = $catalog_stock_property;
+    my $catalog_criteria = $c->config->{catalog_criteria};
+    my @catalog_info = split(/:/,$catalog_criteria);
+    print STDERR "CATALOG INFO =".Dumper(\@catalog_info)."\n";
+    $c->stash->{catalog_stock_type} = $catalog_info[0];
+    $c->stash->{catalog_stock_property} = $catalog_info[1];
+    $c->stash->{catalog_stock_property_value} = $catalog_info[2];
 
     $c->stash->{template} = '/order/catalog.mas';
 
