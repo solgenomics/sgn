@@ -289,7 +289,7 @@ for my $extension ("csv", "xls", "xlsx") {
                     }
                 ],
         };
-        foreach my $dk (keys %$design) {
+        foreach my $dk (keys %$design_intercrop_accessions_check) {
             is_deeply($design->{$dk}->{'intercrop_accessions'}, $design_intercrop_accessions_check->{$dk}, "Check trial layout design intercrop accessions for key $dk");
         }
 
