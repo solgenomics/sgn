@@ -20,6 +20,8 @@ $project_id
 $activity_type
 $stock_type_page
 $source_info => undef
+$can_obsolete => undef
+$vector_id => undef
 
 </%args>
 
@@ -157,7 +159,7 @@ $source_info => undef
 </div>
 
 % if ($material_type eq 'transformation') {
-    <& /transformation/transformants_section.mas, transformation_id => $material_id &>
+    <& /transformation/transformants_section.mas, transformation_id => $material_id, program_name => $program_name, can_obsolete => $can_obsolete, vector_id => $vector_id &>
     <& /transformation/obsoleted_transformants_section.mas, transformation_id => $material_id &>
 % }
 

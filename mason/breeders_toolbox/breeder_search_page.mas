@@ -212,8 +212,8 @@ $dataset_id => undef
             <table class="table">
                 <tr>
                     <td colspan="12">
-                        <span class="glyphicon glyphicon-info-sign" title="You can use either chromosome or markers (markerset) to filter genotyping data. You cannot use both criteria at the same time."></span>
-                        <span>Filter by Chromosome or Markerset</span>
+                        <span class="glyphicon glyphicon-info-sign" title="You can use either chromosome or marker alleles to filter genotyping data. You cannot use both criteria at the same time."></span>
+                        <span>Filter by Chromosome or Marker Alleles</span>
                     </td>
                 </tr>
                 <tr>
@@ -232,12 +232,12 @@ $dataset_id => undef
                 </tr>
                 <tr>
                     <td colspan="6">
-                        <span>Marker / Markerset Filter</span>
+                        <span>Marker Allele Filter</span>
                         <select class="wizard-download-genotypes-marker-set-list-id form-control input-sm" id="wizard-download-genotypes-marker-set-list-id"></select>
                     </td>
                     <td colspan="6">
                         <br/>
-                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">Manage Markersets</button>
+                        <button class="btn btn-sm btn-default" onClick="window.open('/breeders/markers', '_blank');">Manage Marker Alleles</button>
                     </td>
                 </tr>
                 <tr>
@@ -253,7 +253,7 @@ $dataset_id => undef
                 </tr>
                 <tr>
                     <td colspan="8">
-                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, or markerset. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
+                        <span class="glyphicon glyphicon-info-sign" title="Select accessions, and optionally a genotyping protocol. If no genotyping protocol is selected, the default genotyping protocol is used in your system. If you want to filter genotypes, use the chromosome, start position, end position, or marker alleles. Can compute genotypes from parents if the parents of the accessions you selected have genotypes by checking the checkbox. Genotypes can be downloaded in VCF and Dosage Matrix Formats."></span>
                         <span>Download Genotypes</span><br/>
                         <button class="wizard-download-genotypes btn btn-sm btn-primary">
                             <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
@@ -420,7 +420,7 @@ $dataset_id => undef
               <td colspan="2">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" />
+                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" checked />
                     Include accession entry numbers
                   </label>
                 </div>
@@ -435,33 +435,40 @@ $dataset_id => undef
                   </label>
                 </div>
               </td>
-	      <td style="border-top: none; padding-top: 0">
-		Repetitive measurements: <br />
-
-		<select class="wizard-download-repetitive-measurements-type" >
+              <td colspan="2" style="border-top: none; padding-top: 0">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-phenotypes-intercrop" type="checkbox" checked />
+                    Include intercrop accessions
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                Repetitive measurements: <br />
+                <select class="wizard-download-repetitive-measurements-type form-control" >
                   <option value="first">First value</option>
                   <option value="last">Last value</option>
                   <option value="average" selected>Averaged value</option>
                   <option value="sum">Sum values</option>
                   <option value="all_values_single_line">All Values Single Line</option>
                   <option value="all_values_multiple_line">All Values Multiple Line</option>
-		</select>
-	      </td>
-	      <td style="border-top: none; padding-top: 0">
-		&nbsp;
-	      </td>
+                </select>
+              </td>
             </tr>
-	    <tr>
-		<td>
-		    From:  <input type="text" class="wizard-download-start-date" id="phenotype_start_date" title="phenotype_start_date"  />
-		</td>
-		<td>
-		    To: <input type="text" class="wizard-download-end-date" id="phenotype_end_date" title="phenotype_end_date" />	
-		</td>
-		<td>
-		    <input type="checkbox" id="include_dateless_items" checked="1" > include items without a date</input>
-		</td>
-		</tr>	
+            <tr>
+              <td style="border-top: none; padding-top: 0">
+                From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
+              </td>
+              <td style="border-top: none; padding-top: 0">
+                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />	
+              </td>
+              <td style="border-top: none; padding-top: 0">
+                <input type="checkbox" id="include_dateless_items" checked="1" />
+                Include items without a date
+              </td>
+            </tr>
             <tr>
               <td>
                 <span>Trait Name Contains</span>

@@ -2688,7 +2688,6 @@
 		}
 	  
 		// Final plots
-		data.plots = [...plots_polygons, ...plots_points]; // omit missing
 		return data;
 	  }
 	  
@@ -2833,11 +2832,9 @@
 
 			let params = {};
 			this.plots.features.forEach((plot)=>{
-				if (plot._originalType === "Polygon") {
-					params[plot.properties.observationUnitDbId] = {
+				params[plot.properties.observationUnitDbId] = {
 					observationUnitPosition: {geoCoordinates: plot, observationLevel:{levelName: this.opts.brapi_levelName }}
-					};
-				}
+				};
 			});
 
 			return new Promise((resolve, reject)=> {

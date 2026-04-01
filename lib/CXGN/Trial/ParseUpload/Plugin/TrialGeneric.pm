@@ -5,12 +5,14 @@ use List::MoreUtils qw(uniq);
 use CXGN::File::Parse;
 use SGN::Model::Cvterm;
 use CXGN::List::Validate;
+use CXGN::List::Transform;
 use CXGN::Stock::Seedlot;
 use CXGN::Trial;
+use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|stock_name plot_number block_number|;
 # stock_name can also be accession_name, cross_unique_id, or family_name
-my @OPTIONAL_COLUMNS = qw|plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|intercrop_stock_name plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 sub _validate_with_plugin {
@@ -32,14 +34,32 @@ sub _validate_with_plugin {
         required_columns => \@REQUIRED_COLUMNS,
         optional_columns => \@OPTIONAL_COLUMNS,
         column_aliases => {
-            'stock_name' => [ 'accession_name', 'cross_unique_id', 'family_name' ]
-        }
+            'stock_name' => [ 'accession_name', 'cross_unique_id', 'family_name' ],
+            'intercrop_stock_name' => [ 'intercrop_accession_name', 'intercrop_cross_unique_id', 'intercrop_family_name' ]
+        },
+        column_arrays => [ 'intercrop_stock_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};
     my $parsed_data = $parsed->{'data'};
     my $parsed_values = $parsed->{'values'};
     my $treatments = $parsed->{'additional_columns'};
+
+    my $trait_validator = CXGN::List::Validate->new();
+    
+    my $validate = $trait_validator->validate($schema, "traits", $treatments);
+
+    foreach my $treatment (@{$treatments}) {
+        if ($treatment !~ m/_TREATMENT:/) {
+            push @error_messages, "Column $treatment is not formatted like a treatment. Use only full, valid treatment names.\n";
+        }
+    }
+
+    if (@{$validate->{missing}}>0) { 
+        foreach my $missing (@{$validate->{missing}}) {
+            push @error_messages, "Treatment $missing does not exist in the database.\n";
+        }
+    }
 
     # Return file parsing errors
     if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
@@ -66,6 +86,7 @@ sub _validate_with_plugin {
         my $data = $_;
         my $row = $data->{'_row'};
         my $stock_name = $data->{'stock_name'};
+        my $intercrop_stock_name = $data->{'intercrop_stock_name'};
         my $plot_number = $data->{'plot_number'};
         my $block_number = $data->{'block_number'};
         my $plot_name = $data->{'plot_name'} || _create_plot_name($trial_name, $plot_number);
@@ -82,6 +103,32 @@ sub _validate_with_plugin {
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
+
+        foreach my $treatment (@{$treatments}) {
+            my $lt = CXGN::List::Transform->new();
+
+            my $transform = $lt->transform($schema, 'traits_2_trait_ids', [$treatment]);
+            my @treatment_id_list = @{$transform->{transform}};
+            my $treatment_id = $treatment_id_list[0];
+
+            my $treatment_obj = CXGN::Trait->new({
+                bcs_schema => $schema, 
+                cvterm_id => $treatment_id
+            });
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
+                push @error_messages, "Row $row: value for $treatment is lower than the allowed minimum for that treatment.";
+            }
+            if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->maximum()) && defined($data->{$treatment}) && $data->{$treatment} > $treatment_obj->maximum()) {
+                push @error_messages, "Row $row: value for $treatment is higher than the allowed maximum for that treatment.";
+            }
+            if ($treatment_obj->format() eq "qualitative" && defined($treatment_obj->categories()) && defined($data->{$treatment})) {
+                my $qual_value = $data->{$treatment};
+                my $categories = $treatment_obj->categories();
+                if ( $categories !~ m/$qual_value/) {
+                    push @error_messages, "Row $row: value for $treatment is not in the valid categories for that treatment.";
+                }
+            }
+        }
 
 
         # Plot Number: must be a positive number
@@ -155,14 +202,6 @@ sub _validate_with_plugin {
             push @error_messages, "Row $row: entry_number <strong>$entry_number</strong> must be a positive integer.";
         }
 
-        # Treatment Values: must be either blank, 0, or 1
-        foreach my $treatment (@$treatments) {
-            my $treatment_value = $data->{$treatment};
-            if ( $treatment_value && $treatment_value ne '' && $treatment_value ne '0' && $treatment_value ne '1' ) {
-                push @error_messages, "Row $row: Treatment value for treatment <strong>$treatment</strong> should be either 1 (applied) or empty (not applied).";
-            }
-        }
-
 
         # Map to check for duplicated plot numbers
         if ( $plot_number ) {
@@ -230,8 +269,10 @@ sub _validate_with_plugin {
 
     # Stock Names: must exist in the database
     my @entry_names = @{$parsed_values->{'stock_name'}};
+    my @intercrop_names = $parsed_values->{'intercrop_stock_name'} ? @{$parsed_values->{'intercrop_stock_name'}} : ();
+    my @merged_names = uniq(@entry_names, @intercrop_names);
     my $entry_name_validator = CXGN::List::Validate->new();
-    my @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses_or_familynames',\@entry_names)->{'missing'}};
+    my @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses_or_familynames',\@merged_names)->{'missing'}};
     if (scalar(@entry_names_missing) > 0) {
         $errors{'missing_stocks'} = \@entry_names_missing;
         push @error_messages, "The following entry names are not in the database as uniquenames or synonyms: ".join(',',@entry_names_missing);
@@ -342,9 +383,11 @@ sub _parse_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'stock_name'}};
+    my @intercrop_accessions = $values->{'intercrop_stock_name'} ? @{$values->{'intercrop_stock_name'}} : ();
+    my @merged_accessions = uniq(@accessions, @intercrop_accessions);
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },
-        'stockprops.value' => { -in => \@accessions},
+        'stockprops.value' => { -in => \@merged_accessions },
         'me.type_id' => $accession_cvterm_id,
         'stockprops.type_id' => $synonym_cvterm_id
     },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
@@ -358,10 +401,12 @@ sub _parse_with_plugin {
     # Build trial design
     my %design;
     my %seen_entry_numbers;
+    my $treatment_design;
     foreach (@$data) {
         my $r = $_;
         my $row = $r->{'_row'};
         my $stock_name = $r->{'stock_name'};
+        my $intercrop_stock_name = $r->{'intercrop_stock_name'};
         my $plot_number = $r->{'plot_number'};
         my $block_number = $r->{'block_number'};
         my $plot_name = $r->{'plot_name'} || _create_plot_name($trial_name, $plot_number);
@@ -379,19 +424,23 @@ sub _parse_with_plugin {
         my $weight_gram_seed_per_plot = $r->{'weight_gram_seed_per_plot'} || 0;
         my $entry_number = $r->{'entry_number'};
 
-        foreach my $treatment_name (@$treatments) {
-            my $treatment_value = $r->{$treatment_name};
-            if ($treatment_value) {
-                push @{$design{treatments}->{$treatment_name}{new_treatment_stocks}}, $plot_name;
-            }
-        }
-
         if ($stock_synonyms_lookup{$stock_name}) {
             my @stock_names = keys %{$stock_synonyms_lookup{$stock_name}};
             if (scalar(@stock_names)>1) {
                 print STDERR "There is more than one uniquename for this synonym $stock_name. this should not happen!\n";
             }
             $stock_name = $stock_names[0];
+        }
+        my @checked_intercrop_names;
+        foreach my $intercrop_name (@$intercrop_stock_name) {
+            if ($stock_synonyms_lookup{$intercrop_name}) {
+                my @accession_names = keys %{$stock_synonyms_lookup{$intercrop_name}};
+                if (scalar(@accession_names)>1) {
+                    print STDERR "There is more than one uniquename for this synonym $intercrop_name. this should not happen!\n";
+                }
+                $intercrop_name = $accession_names[0];
+            }
+            push @checked_intercrop_names, $intercrop_name;
         }
 
         if ($entry_number) {
@@ -400,6 +449,7 @@ sub _parse_with_plugin {
 
         $design{$row}->{plot_name} = $plot_name;
         $design{$row}->{stock_name} = $stock_name;
+        $design{$row}->{intercrop_stock_name} = \@checked_intercrop_names;
         $design{$row}->{plot_number} = $plot_number;
         $design{$row}->{block_number} = $block_number;
         if ($is_a_control) {
@@ -424,12 +474,19 @@ sub _parse_with_plugin {
             $design{$row}->{num_seed_per_plot} = $num_seed_per_plot;
             $design{$row}->{weight_gram_seed_per_plot} = $weight_gram_seed_per_plot;
         }
+        foreach my $treatment (@{$treatments}) {
+            if (defined($r->{$treatment})) {
+                $treatment_design->{$plot_name}->{$treatment} = $r->{$treatment};
+            }
+        }
     }
 
     my %parsed_data = (
         design => \%design,
-        entry_numbers => \%seen_entry_numbers
+        entry_numbers => \%seen_entry_numbers,
+        treatment_design => $treatment_design
     );
+
     $self->_set_parsed_data(\%parsed_data);
 
     return 1;

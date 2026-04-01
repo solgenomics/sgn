@@ -9,12 +9,15 @@ BEGIN { extends 'Catalyst::Controller' }
 
 sub submission_feedback : Path('/solgs/submission/feedback/') Args() {
     my ( $self, $c ) = @_;
-
-    my $job_type = $c->req->param('job');
-    my $msg = $self->message_content($c, $job_type);
-
-    $c->stash->{message} = $msg;
-    $c->stash->{template} = "/generic_message.mas";
+    
+    if ($c->user) {
+        my $job_type = $c->req->param('job');
+        my $msg = $self->message_content($c, $job_type);
+        $c->stash->{message} = $msg;
+        $c->stash->{template} = "/generic_message.mas";
+    } else {
+        $c->controller('solGS::Utils')->require_login($c);
+    }
 
 }
 

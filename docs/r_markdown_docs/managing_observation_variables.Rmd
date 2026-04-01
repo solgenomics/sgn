@@ -2,53 +2,46 @@
 
 ## Managing Observation Variables with Traits, Methods, and Scales
 
+Though the information in this section pertains to traits, it also applies to experimental treatments. In general, anything that can be done with a trait can be done with a treatment.
+
 Observation variables are the identifiers used when collecting phenotypic data. An observation variable is composed of a trait, a method, and a scale. The trait describes the attribute being measured e.g. 'Plant Height'. The method defines the protocol in which the trait was observed e.g. 'Using a one meter long measuring stick'. The scale defines the units or dimensions for which the measurement was taken e.g. 'Meters'.
 
-Generally, observation variables are defined in ontologies that are predefined. We often use ontologies from cropontology.org. In this case, you will not be able to define your own observation variables directly; instead, you will need to contact us and we will add the observation variable for you.
+Generally, variables are defined in ontologies that are predefined. We often use ontologies from cropontology.org. In this case, you will not be able to define your own variables directly; instead, you will need to contact us and we will add the variable for you. We will discuss manual trait or treatment creation later in this section.
 
-For databases where the user has greater control, we have an interface to allow addition of observation variables, along with traits, methods, and scales. To begin, go to the Search->Traits page.
-
-If the database you are on allows you to directly add observation variables, you will see the following button at the bottom of the page.
+Before setting out to introduce new traits, visit the trait search page under the *Search* tab to make sure it isn't already present. Once a set of traits, methods, units, scales, and other terms have been added to the database, they can be composed into an observation variable from the *Analyze* tab under *Compose a new trait*.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_observation_variables_start_button.png')
+knitr::include_graphics('assets/images/compose_a_new_trait_tab.png')
 ```
 
-When you click the button, the following workflow will appear. You should be logged in or else it will not allow addition of the observation variable.
-The workflow begins with an introduction.
+A base trait term can be combined with an object/plant part, collection method, measurement unit, and time terms to combine into a new observation variable. The types of combinations available to be made determine which of these can be combined. The types of composed traits available to be made is determined in your server configuration - contact a server administrator with questions.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_observation_variables_workflow_intro.png')
+knitr::include_graphics('assets/images/compose_a_new_trait_page.png')
 ```
 
-On the next workflow step, you select the ontology that you want to insert the new observation variable into. You must also give a name and a definition for the new observation variable.
+To proceed, select one or more term from each box. At the bottom of the page, you will see existing composed traits that match your selections as well as the new composed traits that can be made. Select one or more of the possible new composed traits and click 'Submit' to create them.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_observation_variables_workflow_observation_variable.png')
+knitr::include_graphics('assets/images/compose_a_new_trait_selections.png')
 ```
 
-On the next workflow step, you select the trait ontology to use. Once you select a trait ontology, a select containing all the terms in the selected ontology will appear. You can either select a trait or if it does not exist in the select, you can create a new one by giving a name and a definition for the new trait.
+Afterwards, you can use the newly created observation variable ontology term in your phenotyping. The same interface can also be used for treatments, but on the *Compose a new treatment* page.
+
+For databases where the user has greater control, we have an interface to allow curators to add new traits or treatments. 
+
+If the database you are on allows you to directly add observation variables (contact a server administrator to change this), you will see links in the tools section of the user profile page.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_observation_variables_workflow_trait.png')
+knitr::include_graphics('assets/images/trait_designer_links.png')
 ```
 
-On the next workflow step, you select the method ontology to use. Once you select a method ontology, a select containing all the terms in the selected ontology will appear. You can either select a method or if it does not exist in the select, you can create a new one by giving a name and a definition for the new method.
+On the trait design page, you will see a form prompting you for the trait name, definition, and optional data like the default value, minimum, maximum, or categories. At the bottom of the page, the ontology browser is duplicated for your convenience.
 
 ```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_observation_variables_workflow_method.png')
+knitr::include_graphics('assets/images/trait_design_page.png')
 ```
 
-On the next workflow step, you select the scale ontology to use. Once you select a scale ontology, a select containing all the terms in the selected ontology will appear. You can either select a scale or if it does not exist in the select, you can create a new one by giving a name and a definition for the new scale. You can also define a format, minimum, maximum, categories, and default value for the new scale.
+The final input box allows you to choose the parent term for the new term. The trait format dropdown allows you to specify numeric traits, categorical traits, or a new ontology. New ontologies allow you to organize your traits into hierarchies. For example, an 'Agronomic trait' sub-ontology could be made to include all agronomic trait measurements in the same group. Note that once a new term has been designated as numeric or categorical, it cannot have more child terms - it is the end of the hierarchy.
 
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_observation_variables_workflow_scale.png')
-```
-
-On the last page of the workflow, you confirm the submission.
-
-```{r echo=FALSE, out.width='95%', fig.align='center'}
-knitr::include_graphics('assets/images/manage_observation_variables_workflow_submit.png')
-```
-
-Afterwards, you can use the newly created observation variable ontology term in your phenotyping.
+Once a new trait has been submitted, the page will refresh and the trait will be available for use in the composition tool.

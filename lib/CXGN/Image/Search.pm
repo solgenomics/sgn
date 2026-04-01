@@ -263,7 +263,8 @@ sub search {
     my $include_obsolete_image_tags = $self->include_obsolete_image_tags;
 
     my @where_clause;
-    my @or_clause;
+    my @and_clause;
+    my @image_descriptors_or_clause;
 
 
     my @question_mark_values;
@@ -288,8 +289,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$image_name_list) {
-                push @or_clause, "image.name ilike ?";
-		push @question_mark_values, $_;
+                push @image_descriptors_or_clause, "image.name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -301,8 +302,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$original_filename_list) {
-                push @or_clause, "image.original_filename ilike ?";
-		push @question_mark_values, $_;
+                push @image_descriptors_or_clause, "image.original_filename ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -314,8 +315,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$description_list) {
-                push @or_clause, "image.description ilike ?";
-		push @question_mark_values, $_;
+                push @image_descriptors_or_clause, "image.description ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -327,8 +328,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$tag_list) {
-                push @or_clause, "tags.name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "tags.name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
         if (!$include_obsolete_tags) {
@@ -346,8 +347,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_username_list) {
-                push @or_clause, "submitter.username ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "submitter.username ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -359,8 +360,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_first_name_list) {
-                push @or_clause, "submitter.first_name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "submitter.first_name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -372,8 +373,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$submitter_last_name_list) {
-                push @or_clause, "submitter.last_name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "submitter.last_name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -396,8 +397,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$stock_name_list) {
-                push @or_clause, "stock.uniquename ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "stock.uniquename ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -419,8 +420,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$project_name_list) {
-                push @or_clause, "project.name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "project.name ilike ?";
+		push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -432,8 +433,8 @@ sub search {
 	    push @question_mark_values, $name_sql;
         } else {
             foreach (@$project_md_image_type_name_list) {
-                push @or_clause, "project_image_type.name ilike ?";
-		push @question_mark_values, $_;
+                push @and_clause, "project_image_type.name ilike ?";
+		        push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
@@ -441,10 +442,16 @@ sub search {
         push @where_clause, "image.obsolete = 'f'";
     }
 
-    if (scalar(@or_clause)>0) {
-        my $w = " ( ".(join (" OR ", @or_clause) )." ) ";
+    if (scalar(@image_descriptors_or_clause)>0) {
+        my $w = " ( ".(join (" OR ", @image_descriptors_or_clause) )." ) ";
         push @where_clause, $w;
     }
+
+    if (scalar(@and_clause)>0) {
+        my $w = " ( ".(join (" AND ", @and_clause) )." ) ";
+        push @where_clause, $w;
+    }
+
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';

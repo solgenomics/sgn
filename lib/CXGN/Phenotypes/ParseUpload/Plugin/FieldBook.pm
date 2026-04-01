@@ -35,11 +35,44 @@ sub validate {
     my $nd_protocol_id = shift; #not relevant for this plugin
     my $nd_protocol_filename = shift; #not relevant for this plugin
     my %parse_result;
+
     my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
 
-    ## Check that the file can be read
-    my @file_lines = read_file($filename);
+    my ($extension) = $filename =~/(\.[^.]+)$/;
+    my $parser;
+    my $excel_obj;
+    my $worksheet;
+    my @file_lines;
+   
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    
+        $excel_obj = $parser->parse($filename);
+        if (!$excel_obj) {
+            $parse_result{'error'} = $parser->error();
+            return \%parse_result;
+        }
+        $worksheet = ( $excel_obj->worksheets() )[0];
+        my ( $row_min, $row_max ) = $worksheet->row_range();
+        my ( $col_min, $col_max ) = $worksheet->col_range();
+
+        for my $row ($row_min .. $row_max) {
+            my @cells;
+            for my $col ($col_min .. $col_max ) {
+                my $cell = $worksheet->get_cell($row, $col);
+                push @cells, $cell ? $cell->value() : '';
+            }
+            push @file_lines, join(",", map {
+                my $v = $_ // '';
+                $v =~ s/"/""/g;
+                qq("$v");
+            } @cells);
+        }
+    } else {
+        ## Check that the file can be read
+        @file_lines = read_file($filename);
+    }
 
     # fix DOS-style line-endings!!!
     #
@@ -136,7 +169,41 @@ sub parse {
     my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
 
-    @file_lines = read_file($filename);
+    my ($extension) = $filename =~/(\.[^.]+)$/;
+    my $parser;
+    my $excel_obj;
+    my $worksheet;
+    my @file_lines;
+
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+
+        $excel_obj = $parser->parse($filename);
+        if (!$excel_obj) {
+            $parse_result{'error'} = $parser->error();
+            return \%parse_result;
+        }
+
+        $worksheet = ( $excel_obj->worksheets() )[0];
+        my ( $row_min, $row_max ) = $worksheet->row_range();
+        my ( $col_min, $col_max ) = $worksheet->col_range();
+
+        for my $row ($row_min .. $row_max) {
+            my @cells;
+            for my $col ($col_min .. $col_max ) {
+                my $cell = $worksheet->get_cell($row, $col);
+                push @cells, $cell ? $cell->value() : '';
+            }
+            push @file_lines, join(",", map {
+                my $v = $_ // '';
+                $v =~ s/"/""/g;
+                qq("$v");
+            } @cells);
+        }
+    } else {
+        ## Check that the file can be read
+        @file_lines = read_file($filename);
+    }
 
     # fix DOS-style line-endings!!!
     #
@@ -151,8 +218,8 @@ sub parse {
     # Define possible unit headers for each data level
     my %unit_headers = (
         plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
-        plants   => [qw(plant_name ObservationUnitName)],
-        subplots => [qw(subplot_name ObservationUnitName)],
+        plants   => [qw(plant_id plant_name ObservationUnitDbId ObservationUnitName)],
+        subplots => [qw(subplot_id subplot_name ObservationUnitDbId ObservationUnitName)],
     );
 
     my $header_column_number = 0;
@@ -184,6 +251,8 @@ sub parse {
         return \%parse_result;
     }
 
+
+
     for my $index (0..$#file_lines) {
         my $line = $file_lines[$index];
         my $line_number = $index + 2;
@@ -204,6 +273,16 @@ sub parse {
             $parse_result{'error'} = "Error parsing line $line_number: timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
             print STDERR "line $line_number has timestamp: $timestamp\n";
             return \%parse_result;
+        }
+
+
+        if ($unit_col =~ /id/i) { # convert ids to names
+            my $row = $schema->resultset("Stock::Stock")->find({ stock_id => $unit_value });
+            if ($row) {
+                $unit_value = $row->uniquename();
+            } else {
+                $parse_result{'error'} = "Error: stock id $unit_value does not exist in the database."
+            }
         }
 
         $units_seen{$unit_value} = 1;

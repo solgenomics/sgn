@@ -1,7 +1,7 @@
 use lib 't/lib';
 use strict;
 
-use Test::More 'tests' => 178;
+use Test::More 'tests' => 171;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -25,7 +25,8 @@ $t->while_logged_in_as("curator", sub {
         sleep(1);
 
         # SCREEN 2 /File formating/
-        $t->find_element_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)");
+        $t->find_element_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)")->click();
+        sleep(1);
         $t->find_element_ok('next_step_file_formatting_button', 'id', 'go to next screen - Intro')->click();
         sleep(1);
 
@@ -124,34 +125,33 @@ $t->while_logged_in_as("curator", sub {
         $t->find_element_ok("delete_field_map_hm_link", "id", "click on delete previous coordinate")->click();
         sleep(1);
 
-        $t->find_element_ok("delete_field_coords_ok_button", "id", "click on delete previous coordinate - confirm")->click();
-        sleep(15);
+        $t->accept_alert_ok("click on delete previous coordinate - confirm");
+        sleep(25);
 
-        $t->find_element_ok("dismiss_delete_field_map_dialog", "id", "click on confirmation of delete")->click();
-        sleep(10);
+        $t->accept_alert_ok("click on confirmation of delete");
+        sleep(15);
 
         #Upload Trial Coordinates
-        my $heatmap_onswitch = $t->find_element_ok("pheno_heatmap_onswitch", "id", "click to open pheno heatmap panel");
-        $heatmap_onswitch->click();
-        sleep(3);
+        if ($file eq "T100_trial_layout.xls") { #the coords upload file only works on the first trial, no need to test that feature again
+            my $heatmap_onswitch = $t->find_element_ok("pheno_heatmap_onswitch", "id", "click to open pheno heatmap panel");
+            $heatmap_onswitch->click();
+            sleep(8);
 
-        $t->find_element_ok("heatmap_upload_trial_coords_link", "id", "click on upload_trial_coords_link ")->click();
+            $t->find_element_ok("heatmap_upload_trial_coords_link", "id", "click on upload_trial_coords_link ")->click();
 
-        my $upload_input = $t->find_element_ok("trial_coordinates_uploaded_file", "id", "find file input");
+            my $upload_input = $t->find_element_ok("trial_coordinates_uploaded_file", "id", "find file input");
 
-        my $filename = $f->config->{basepath} . "/t/data/trial/T100_trial_coords.csv";
-        $t->driver()->upload_file($filename);
-        $upload_input->send_keys($filename);
-        sleep(1);
+            my $filename = $f->config->{basepath} . "/t/data/trial/T100_trial_coords.tsv";
+            $t->driver()->upload_file($filename);
+            $upload_input->send_keys($filename);
+            sleep(1);
 
-        $t->find_element_ok("upload_trial_coords_ok_button", "id", "submit upload trial coords file ")->click();
-        sleep(15);
+            $t->find_element_ok("upload_trial_coords_ok_button", "id", "submit upload trial coords file ")->click();
+            sleep(15);
 
-        $t->find_element_ok("trial_coord_upload_success_dialog_message_cancel", "id", "close success msg")->click();
-        sleep(1);
-
-        $t->find_element_ok("upload_trial_coords_cancel_button", "id", "close upload modal")->click();
-        sleep(5);
+            $t->find_element_ok("trial_coord_upload_success_dialog_message_cancel", "id", "close success msg")->click();
+            sleep(10); #wait for page to refresh
+        }
 
         my $trial_details = $t->find_element_ok(
             'trial_details_content',
@@ -206,16 +206,16 @@ $t->while_logged_in_as("curator", sub {
         $t->find_element_ok("trial_plots_onswitch", "id", "view trial plots")->click();
         sleep(5);
 
-        $t->find_element_ok("plot_select_all", "id", "select plots")->click();
+        $t->find_element_ok("select_all_plots_btn", "id", "select plots")->click();
         sleep(1);
 
-        $t->find_element_ok("plot_data_new_list_name", "id", "find add list input");
+        $t->find_element_ok("plot_select_new_list_name", "id", "find add list input");
 
-        my $add_list_input = $t->find_element_ok("plot_data_new_list_name", "id", "find add list input test");
+        my $add_list_input = $t->find_element_ok("plot_select_new_list_name", "id", "find add list input test");
 
         $add_list_input->send_keys("plots_list");
 
-        $t->find_element_ok("plot_data_add_to_new_list", "id", "find add list button")->click();
+        $t->find_element_ok("plot_select_add_to_new_list_btn", "id", "find add list button")->click();
         sleep(1);
         $t->accept_alert_ok();
         sleep(1);

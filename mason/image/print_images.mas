@@ -97,7 +97,7 @@ if ($image_objects)  { # don't display anything for empty list of images
     
     my $set_button = "<button class='btn btn-sm btn-default' onclick='setDisplayImage($image_id, $stock_id)'>Set</button";
     my $fhtml =
-      qq|<tr><td><input type="checkbox" name="print_images_checkbox" data-html_text='$multi_open_colorbox'></td><td>|
+      qq|<tr><td><input type="checkbox" name="print_images_checkbox" data-image='$image_img' data-page='$image_page' data-name='$image_name' data-html-text='$multi_open_colorbox'></td><td>|
         . $colorbox
           . $image_name
             . "</td><td>"
@@ -117,17 +117,43 @@ if ($image_objects)  { # don't display anything for empty list of images
 
   $image_html .= "<script>
   jQuery(document).ready(function() {
-      jQuery('a.stock_image_group').colorbox();
-      jQuery(document).on('click', '#print_images_multi_image_view', function(){
-          var colorbox_html = '';
-          jQuery(\"input:checkbox[name='print_images_checkbox']:checked\").each(function(){
-              var html = jQuery(this).data('html_text');
-              colorbox_html = colorbox_html + html + '<br/>';
-          });
-          if (colorbox_html != ''){
-              jQuery.colorbox({html:colorbox_html});
-          }
-      });
+    jQuery('a.stock_image_group').colorbox({photo: true, onComplete: resizeColorboxToTitle});
+
+    jQuery(document).on('click', '#print_images_multi_image_view', function () {
+        jQuery('.print_images_tmp').remove();
+        var images = [];
+        
+        jQuery(\"input:checkbox[name='print_images_checkbox']:checked\").each(function () {
+            var name = jQuery(this).data('name');
+            var page = jQuery(this).data('page');
+            images.push({
+                href: jQuery(this).data('image'),
+                page: page,
+                title: '<a href=\"' + page + '\" target=\"_blank\">Go to image page (' + name + ')</a>',
+            });
+        });
+        if (!images.length) return;
+        var group = 'print_images_group';
+        jQuery.each(images, function (i, img) {
+            jQuery('<a>', {
+                href: img.href,
+                title: img.title,
+                class: 'print_images_tmp',
+                rel: group,
+                css: { display: 'none' }
+            }).appendTo('body');
+        });
+        jQuery('a.print_images_tmp').colorbox({
+            rel: group,
+            photo: true,
+            onComplete: resizeColorboxToTitle,
+            onClosed: function () {
+                jQuery('#cboxTitle').empty();
+                jQuery('.print_images_tmp').remove();
+            }
+        });
+        jQuery('a.print_images_tmp').first().click();
+    });
   }); </script>\n";
 
 }
@@ -207,6 +233,12 @@ if (@more_is) {    #html_optional_show if there are more than 3 figures
         location.reload();
       });
 
+    }
+
+    function resizeColorboxToTitle() {
+      var titleWidth = jQuery('#cboxTitle').outerWidth(true);
+      var paddedWidth = titleWidth + 500;
+      jQuery.colorbox.resize({width: paddedWidth + 'px'});
     }
 </script>
 

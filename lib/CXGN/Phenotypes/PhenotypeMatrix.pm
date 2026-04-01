@@ -51,6 +51,7 @@ use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Phenotypes::SearchFactory;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Trial;
 
 has 'bcs_schema' => (
     isa => 'Bio::Chado::Schema',
@@ -188,6 +189,18 @@ has 'include_dateless_items' => (
     default => sub { return 1; },
     );
 
+has 'include_intercrop_stocks' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
+has 'include_entry_numbers' => (
+    isa => 'Bool|Undef',
+    is => 'rw',
+    default => 0
+);
+
 has 'limit' => (
     isa => 'Int|Undef',
     is => 'rw'
@@ -221,6 +234,9 @@ sub get_phenotype_matrix {
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_timestamp = $self->include_timestamp;
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
+    my $include_intercrop_stocks = $self->include_intercrop_stocks;
+    my $include_entry_numbers = $self->include_entry_numbers;
+    my %trial_entry_numbers;
 
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
@@ -247,9 +263,10 @@ sub get_phenotype_matrix {
             trait_contains=>$self->trait_contains,
             phenotype_min_value=>$self->phenotype_min_value,
             phenotype_max_value=>$self->phenotype_max_value,
-	        start_date => $self->start_date(),
-	        end_date => $self->end_date(),
-	        include_dateless_items => $self->include_dateless_items(),
+            start_date => $self->start_date(),
+            end_date => $self->end_date(),
+            include_dateless_items => $self->include_dateless_items(),
+            include_intercrop_stocks => $include_intercrop_stocks,
             limit=>$self->limit,
             offset=>$self->offset
         }
@@ -269,6 +286,26 @@ sub get_phenotype_matrix {
 
         if ($include_pedigree_parents){
             push @line, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
+        }
+
+        if ( $include_intercrop_stocks ) {
+            push(@line, 'intercropGermplasmDbId', 'intercropGermplasmName');
+        }
+
+        if ( $include_entry_numbers ) {
+            push(@line, 'germplasmEntryNumber');
+
+            # Get unique set of trial ids in data
+            my %trial_ids;
+            foreach (@$data) {
+                $trial_ids{$_->{'trial_id'}} = 1;
+            }
+
+            # Get the entry numbers for each trial
+            foreach my $trial_id (keys %trial_ids) {
+                my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $trial_id });
+                $trial_entry_numbers{$trial_id} = $trial->get_entry_numbers();
+            }
         }
 
         my @sorted_traits = sort keys(%$unique_traits);
@@ -323,7 +360,25 @@ sub get_phenotype_matrix {
                 push @line, ($parents->{'mother'}, $parents->{'mother_id'}, $parents->{'father'}, $parents->{'father_id'});
             }
 
-	        #print STDERR "OBS UNIT = ".Dumper($obs_unit);
+            if ( $include_intercrop_stocks ) {
+                my @ic_stock_ids;
+                my @ic_stock_names;
+                my $ic_stocks = $obs_unit->{intercrop_germplasm};
+                foreach my $ic_stock (@$ic_stocks) {
+                    push(@ic_stock_ids, $ic_stock->{stock_id});
+                    push(@ic_stock_names, $ic_stock->{stock_uniquename});
+                }
+                push(@line, join(',', @ic_stock_ids), join(',', @ic_stock_names));
+            }
+
+            if ( $include_entry_numbers ) {
+                my $trial = $obs_unit->{trial_id};
+                my $germplasm = $obs_unit->{germplasm_stock_id};
+                my $entry_number = $trial_entry_numbers{$trial}{$germplasm} || '';
+                push(@line, $entry_number);
+            }
+
+            #print STDERR "OBS UNIT = ".Dumper($obs_unit);
 	        my $observations = $obs_unit->{observations};
 
 	        #print STDERR "OBSERVATIONS BEFORE FORMAT: ".Dumper($observations);
@@ -368,7 +423,7 @@ sub get_phenotype_matrix {
         }
     }
     else {  ### NATIVE ??!!
-	
+
         $data = $phenotypes_search->search();
         #print STDERR "the download data structure =". Dumper($data)."\n";
 
@@ -380,32 +435,120 @@ sub get_phenotype_matrix {
         my @unique_obsunit_list = ();
         my %seen_obsunits;
 
-	    foreach my $d (@$data) {
-	        my $value = "";
+        # Add intercrop stock headers, if requested
+        if ( $include_intercrop_stocks ) {
+            push(@metadata_headers, 'intercropGermplasmDbId', 'intercropGermplasmName');
+        }
 
-		my $timestamp = $d->{timestamp};
-		if ($timestamp) { $timestamp =~ s/^\s+|\s+$//g; }
-		
-	        if ($include_timestamp && $timestamp) {
-	    	    $value = "$d->{phenotype_value},$d->{timestamp}";
-		    # print STDERR "value with phenotypes and timestamp: $value\n";
-	        }
-	        else {
-	    	    $value = $d->{phenotype_value};
-		    # print STDERR "value only with phenotypes: $value\n";
-	        }
-	        push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
-	    }
-	
+        # Add entry number stock headers, if requested
+        if ( $include_entry_numbers ) {
+            push(@metadata_headers, 'germplasmEntryNumber');
+
+            # Get unique set of trial ids in data
+            my %trial_ids;
+            foreach (@$data) {
+                $trial_ids{$_->{'trial_id'}} = 1;
+            }
+
+            # Get the entry numbers for each trial
+            foreach my $trial_id (keys %trial_ids) {
+                my $trial = CXGN::Trial->new({ bcs_schema => $self->bcs_schema, trial_id => $trial_id });
+                $trial_entry_numbers{$trial_id} = $trial->get_entry_numbers();
+            }
+        }
+
         foreach my $d (@$data) {
+            my $value = "";
+
+            my $timestamp = $d->{timestamp};
+            if ($timestamp) { $timestamp =~ s/^\s+|\s+$//g; }
+
+            if ($include_timestamp && $timestamp) {
+                $value = "$d->{phenotype_value},$d->{timestamp}";
+            # print STDERR "value with phenotypes and timestamp: $value\n";
+            }
+            else {
+                $value = $d->{phenotype_value};
+            # print STDERR "value only with phenotypes: $value\n";
+            }
+            push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
+        }
+
+        foreach my $d (@$data) {
+            my $obsunit_id = $d->{obsunit_stock_id};
+            if (!exists($seen_obsunits{$obsunit_id})) {
+                push @unique_obsunit_list, $obsunit_id;
+                $seen_obsunits{$obsunit_id} = 1;
+            }
+
+            my $synonyms = $d->{synonyms};
+            my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
+            my $entry_type = $d->{is_a_control} ? 'check' : 'test';
+
+            my $trial_name = $d->{trial_name};
+            my $trial_desc = $d->{trial_description};
+
+            $trial_name =~ s/\s+$//g;
+            $trial_desc =~ s/\s+$//g;
+
+            $obsunit_data{$obsunit_id}->{metadata} = [
+                $d->{year},
+                $d->{breeding_program_id},
+                $d->{breeding_program_name},
+                $d->{breeding_program_description},
+                $d->{trial_id},
+                $trial_name,
+                $trial_desc,
+                $d->{design},
+                $d->{plot_width},
+                $d->{plot_length},
+                $d->{field_size},
+                $d->{field_trial_is_planned_to_be_genotyped},
+                $d->{field_trial_is_planned_to_cross},
+                $d->{planting_date},
+                $d->{harvest_date},
+                $d->{location_id},
+                $d->{location_name},
+                $d->{accession_stock_id},
+                $d->{accession_uniquename},
+                $synonym_string,
+                $d->{obsunit_type_name},
+                $d->{obsunit_stock_id},
+                $d->{obsunit_uniquename},
+                $d->{rep},
+                $d->{block},
+                $d->{plot_number},
+                $d->{row_number},
+                $d->{col_number},
+                $entry_type,
+                $d->{plant_number}
+            ];
+
+            # add intercrop stocks, if requested
+            if ( $include_intercrop_stocks ) {
+                my @ic_stock_ids;
+                my @ic_stock_names;
+                my $ic_stocks = $d->{intercrop_stocks};
+                foreach my $ic_stock (@$ic_stocks) {
+                    push(@ic_stock_ids, $ic_stock->{id});
+                    push(@ic_stock_names, $ic_stock->{name});
+                }
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_ids));
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, join(',', @ic_stock_names));
+            }
+
+            # Include entry numbers, if requested
+            if ( $include_entry_numbers ) {
+                my $trial = $d->{trial_id};
+                my $germplasm = $d->{accession_stock_id};
+                my $entry_number = $trial_entry_numbers{$trial}{$germplasm} || '';
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, $entry_number);
+            }
+
+            $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
+
             my $cvterm = $d->{trait_name};
             if ($cvterm){
-                my $obsunit_id = $d->{obsunit_stock_id};
-                if (!exists($seen_obsunits{$obsunit_id})) {
-                    push @unique_obsunit_list, $obsunit_id;
-                    $seen_obsunits{$obsunit_id} = 1;
-                }
-
                 my $timestamp_value = $d->{timestamp};
                 my $value = $d->{phenotype_value};
                 #my $cvterm = $trait."|".$cvterm_accession;
@@ -415,7 +558,7 @@ sub get_phenotype_matrix {
                 #     $obsunit_data{$obsunit_id}->{$cvterm} = $value;
                 # }
 
-		        if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
+                if (ref($obsunit_data{$obsunit_id}->{$cvterm}) eq "ARRAY") {
                     # print STDERR "the the obsunit_data : " . Dumper($obsunit_data{$obsunit_id}->{$cvterm});
                     my @sorted_measurements = @{$obsunit_data{$obsunit_id}->{$cvterm}};
                     #sort the measurements by timestamp
@@ -425,32 +568,32 @@ sub get_phenotype_matrix {
                         ($timestamp_a || '') cmp ($timestamp_b || '')
                     } @sorted_measurements;
 
-		            if ($self->repetitive_measurements() eq "first") {
+                    if ($self->repetitive_measurements() eq "first") {
                         # $obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
                         $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[0];		
-		            }
+                    }
 
-		            if ($self->repetitive_measurements() eq "last") {
-		        	    # $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                    if ($self->repetitive_measurements() eq "last") {
+                        # $obsunit_data{$obsunit_id}->{$cvterm} = pop(@{$obsunit_data{$obsunit_id}->{$cvterm}});
                         $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[-1];
-		            }
+                    }
 
-		            if ($self->repetitive_measurements() eq "average") {
-		        	    my $count = 0;
-		        	    my $sum = 0;
-		        	    foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
+                    if ($self->repetitive_measurements() eq "average") {
+                        my $count = 0;
+                        my $sum = 0;
+                        foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
                             # print STDERR "the value of v  in the average = $v\n";
-					my ($value, $timestamp);
-					if (defined($v)) { 
-					    ($value, $timestamp) = split(',', $v);
-					}
+                            my ($value, $timestamp);
+                            if (defined($v)) {
+                                ($value, $timestamp) = split(',', $v);
+                            }
                             #if timestamp is undefined, $v is the last measurement
                             $value = $v unless defined $timestamp;
-		        	        if (defined($value)) {   
-		        	    	    $sum += $value;
-		        	    	    $count++;
-		        	        }
-		        	    }
+                            if (defined($value)) {
+                                $sum += $value;
+                                $count++;
+                            }
+                        }
                         if($count >0) {
                             my $averaged_values = $sum/$count;
                             #  the timestamp for the average values, will be the latest (or the last measurement, timestamp). Therefore, am retreving the timestamp of the last measurement !!
@@ -465,20 +608,20 @@ sub get_phenotype_matrix {
                                 $obsunit_data{$obsunit_id}->{$cvterm} = $averaged_values;
                             }
                         }
-		        	    else {
-		        	        $obsunit_data{$obsunit_id}->{$cvterm} = undef;
-		        	    }
+                        else {
+                            $obsunit_data{$obsunit_id}->{$cvterm} = undef;
+                        }
 
-		            }
+                    }
 
                     if ($self->repetitive_measurements() eq "sum") {
                         my $sum_all_values = 0;
                         foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
                             # print STDERR "the value of v in the sum = $v\n";
-			    my ($value, $timestamp);
-			    if (defined($v)) { 
-				($value, $timestamp) = split(',', $v);
-			    }
+                            my ($value, $timestamp);
+                            if (defined($v)) {
+                                ($value, $timestamp) = split(',', $v);
+                            }
                             if (defined($value)) {
                                 $sum_all_values += $value;
                             }
@@ -486,14 +629,14 @@ sub get_phenotype_matrix {
                         # It's same as in the average above, retrieve the last_measurement timestamp !!
                         my $last_measurement = $sorted_measurements[-1];
 
-			my ($last_value, $last_timestamp) = (undef, undef);
+                        my ($last_value, $last_timestamp) = (undef, undef);
 
-			if ($last_measurement) {
-			    ($last_value, $last_timestamp) = split(',', $last_measurement);
-			}
-			
+                        if ($last_measurement) {
+                            ($last_value, $last_timestamp) = split(',', $last_measurement);
+                        }
+
                         #$last_value = $last_measurement unless defined $last_timestamp;
-			
+
                         # Store the sum of all values, with the last_measurement timestamp !!
                         # Conditionally include the timestamp
                         if ($include_timestamp && defined $last_timestamp) {
@@ -503,57 +646,12 @@ sub get_phenotype_matrix {
                         }
                     }
 
-		    if ($self->repetitive_measurements() eq "all_values_single_line") {
-			no warnings;
-		        	    $obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
+                    if ($self->repetitive_measurements() eq "all_values_single_line") {
+                        no warnings;
+                        $obsunit_data{$obsunit_id}->{$cvterm} = join("|",@{$obsunit_data{$obsunit_id}->{$cvterm}});
                         # print STDERR "ALL VALUES SINGLE LINE = ".Dumper $obsunit_data{$obsunit_id}->{$cvterm};
-		            }
-		        }
-
-                $obsunit_data{$obsunit_id}->{'notes'} = $d->{notes};
-
-                my $synonyms = $d->{synonyms};
-                my $synonym_string = $synonyms ? join ("," , @$synonyms) : '';
-                my $entry_type = $d->{is_a_control} ? 'check' : 'test';
-
-                my $trial_name = $d->{trial_name};
-                my $trial_desc = $d->{trial_description};
-
-                $trial_name =~ s/\s+$//g;
-                $trial_desc =~ s/\s+$//g;
-
-                $obsunit_data{$obsunit_id}->{metadata} = [
-                    $d->{year},
-                    $d->{breeding_program_id},
-                    $d->{breeding_program_name},
-                    $d->{breeding_program_description},
-                    $d->{trial_id},
-                    $trial_name,
-                    $trial_desc,
-                    $d->{design},
-                    $d->{plot_width},
-                    $d->{plot_length},
-                    $d->{field_size},
-                    $d->{field_trial_is_planned_to_be_genotyped},
-                    $d->{field_trial_is_planned_to_cross},
-                    $d->{planting_date},
-                    $d->{harvest_date},
-                    $d->{location_id},
-                    $d->{location_name},
-                    $d->{accession_stock_id},
-                    $d->{accession_uniquename},
-                    $synonym_string,
-                    $d->{obsunit_type_name},
-                    $d->{obsunit_stock_id},
-                    $d->{obsunit_uniquename},
-                    $d->{rep},
-                    $d->{block},
-                    $d->{plot_number},
-                    $d->{row_number},
-                    $d->{col_number},
-                    $entry_type,
-                    $d->{plant_number}
-                ];
+                    }
+                }
                 $traits{$cvterm}++;
             }
         }
@@ -587,6 +685,7 @@ sub get_phenotype_matrix {
         foreach my $p (@unique_obsunit_list) {
             my @metadata = @{$obsunit_data{$p}->{metadata}};
             my $notes = $obsunit_data{$p}->{'notes'};
+            my @line = @metadata;
 
             if ($self->repetitive_measurements() eq "all_values_multiple_line") { ##this block is only for when repetitive_measurement option is "all_values_multiple_line" !!!
                 # check how many values for each trait are recorded !!!
@@ -603,8 +702,6 @@ sub get_phenotype_matrix {
 
                 ## store the values in separate row 
                 for (my $multi_line = 0; $multi_line < $max_measurements; $multi_line++) {
-                    my @line = @metadata;
-
                     foreach my $trait (@sorted_traits) {
                         my $trait_values = $obsunit_data{$p}->{$trait};
 
@@ -636,8 +733,6 @@ sub get_phenotype_matrix {
                     push @info, \@line;
                 }
             }else{#this block is for all other repetitive options including - first, last, average, sum, and all values_in_single_line !!
-                my @line = @{$obsunit_data{$p}->{metadata}};
-
                 foreach my $trait (@sorted_traits) {
                     push @line, $obsunit_data{$p}->{$trait};
                 }

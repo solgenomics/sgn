@@ -247,17 +247,32 @@ sub get_sample_data {
     my %sample_info;
 
     my $plate_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $plate_id, experiment_type => 'genotyping_layout'});
-    my $sample_names = $plate_layout->get_plot_names();
+    my $sample_names = $plate_layout->get_plot_names() || [];
     my $number_of_samples = scalar(@{$sample_names});
     $sample_info{'number_of_samples'} = $number_of_samples;
 
+    # If there are no sample names, we can return early
+    if ( !$number_of_samples ) {
+        $sample_info{sample_list} = [];
+	$sample_info{number_of_samples_with_data} = 0;
+	$sample_info{samples_with_data} = [];
+	return \%sample_info;
+    }
     my @sample_id_list;
     foreach my $sample(@$sample_names) {
         my $sample_id = $schema->resultset("Stock::Stock")->find({ name => $sample })->stock_id();
         push @sample_id_list, $sample_id;
     }
-    $sample_info{'sample_list'} = \@sample_id_list;
 
+    # If no IDs resolved, there can be no data
+    if (!@sample_id_list) {
+	$sample_info{sample_list} = [];
+        $sample_info{number_of_samples_with_data} = 0;
+	$sample_info{samples_with_data} = [];
+	return \%sample_info;
+    }
+
+    $sample_info{'sample_list'} = \@sample_id_list;
     my $where_clause;
     my $query = join ("," , @sample_id_list);
     $where_clause = "nd_experiment_stock.stock_id in ($query)";
@@ -268,7 +283,7 @@ sub get_sample_data {
         WHERE $where_clause";
 
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
+    $h->execute() or die "Query failed: " . $h->errstr;
 
     my @samples_with_data = ();
     while(my ($stock_id) = $h->fetchrow_array()){

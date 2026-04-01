@@ -17,6 +17,11 @@
         <center>
             <label>Type:</label><br>
             <select id="d3-add-type-input" class="form-control"></select>&nbsp&nbsp
+            <br>
+            <div style="text-align:left;">
+                <label class='radio'><input type="radio" name="alignmentradio" id="align_left" value="left">Left-align text elements</label>
+                <label class='radio'><input type="radio" name="alignmentradio" id="align_middle" value="middle" checked>Center-align text elements</label>
+            </div>
         </center>
     </div>
     <div class="col-md-3" id="d3-add-field-div">

@@ -215,6 +215,8 @@ has 'location_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'year_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_pedigree_parents' => (isa => 'Bool', is => 'ro', default => 0);
+has 'include_intercrop_stocks' => (isa => 'Bool|Undef', is => 'ro', default => 0);
+has 'include_entry_numbers' => (isa => 'Bool|Undef', is => 'ro', default => 0);
 has 'exclude_phenotype_outlier' => (isa => 'Bool', is => 'ro', default => 0);
 has 'has_header' => (isa => 'Bool', is => 'ro', default => 1);
 has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
@@ -235,8 +237,8 @@ has 'field_crossing_data_order' => (isa => 'ArrayRef[Str]|Undef', is => 'rw', re
 has 'prop_id' => (isa => 'Int | Undef', is => 'rw', required => 0);
 has 'people_schema' => ( isa => 'Ref', is => 'rw');
 has 'dbh' => (is  => 'rw');
-has 'start_date' => ( isa => 'Str', is => 'rw');
-has 'end_date' => (isa => 'Str', is => 'rw');
+has 'start_date' => ( isa => 'Maybe[Str]', is => 'rw');
+has 'end_date' => (isa => 'Maybe[Str]', is => 'rw');
 
 
 sub BUILD {

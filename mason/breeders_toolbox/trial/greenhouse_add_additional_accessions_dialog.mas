@@ -1,0 +1,241 @@
+<%args>
+$trial_id
+$trial_stock_type
+</%args>
+
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+
+<style>
+@media (min-width: 768px) {
+    .modal-xl {
+        width: 90%;
+        max-width:1200px;
+    }
+}
+</style>
+
+% my $title = '';
+% my $list_label = '';
+% my $table_header = '';
+% if ($trial_stock_type eq 'cross') {
+%    $title = 'Add Additional Crosses or Plants in This Greenhouse Trial';
+%    $list_label = 'Cross List:';
+%    $table_header = 'Cross Name';
+% } elsif ($trial_stock_type eq 'family_name') {
+%    $title = 'Add Additional Families or Plants in This Greenhouse Trial';
+%    $list_label = 'Family Name List:';
+%    $table_header = 'Family Name';
+% } else {
+%    $title = 'Add Additional Accessions or Plants in This Greenhouse Trial';
+%    $list_label = 'Accession List:';
+%    $table_header = 'Accession Name';
+% }
+
+<div class="modal fade" id="add_additional_stocks_using_list_dialog" name="add_additional_stocks_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addAdditionalStocksUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_additional_stocks_dismiss_button_1" name="add_additional_stocks_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAdditionalStocksUsingListDialog"><%$title%></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">Addition Type: </label>
+                                    <div class="col-sm-7">
+                                        <select class="form-control" id="addition_type">
+                                            <option value="">Select a type</option>
+                                            <option value="new_accessions">add additional accessions</option>
+                                            <option value="additional_plants">add additional plants for accessions already in the greenhouse</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-4"><%$list_label%></label>
+                                    <div class="col-sm-7" >
+                                        <div class="input-group">
+                                            <select class="form-control" id="additional_stock_list_select"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">Default Number of Plants: </label>
+                                    <div class="col-sm-7" >
+                                        <input class="form-control" type="text" id="default_number_plants_per_stock" placeholder="1" value="1" />
+                                    </div>
+                                </div>
+                                <div id ="additional_stocks_form_div">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </br>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" id="add_additional_stocks_submit" name="add_additional_stocks_submit">Add</button>
+                        <button id="add_additional_stocks_dismiss_button_2" name="add_additional_stocks_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_additional_stocks_message" name="add_additional_stocks_message" tabindex="-1" role="dialog" aria-labelledby="addAdditionalStocksMessage">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addAdditionalStocksMessage"><%$title%></h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The additional stocks were added successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" name="add_additional_stocks_close_button" id="add_additional_stocks_close_button" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#trial_detail_page_add_additional_stocks').click(function(){
+        jQuery('#add_additional_stocks_using_list_dialog').modal('show');
+    });
+
+    const trial_id = "<% $trial_id %>";
+    var lo = new CXGN.List();
+
+    const trial_stock_type = "<% $trial_stock_type %>";
+    let list_type = '';
+    let validate_type = '';
+    if (trial_stock_type == 'cross') {
+        list_type = 'crosses';
+        validate_type = 'crosses';
+    } else if (trial_stock_type == 'family_name') {
+        list_type = 'family_names';
+        validate_type = 'family_names'
+    } else {
+        list_type = 'accessions';
+        validate_type = 'uniquenames';
+    }
+
+    jQuery('#additional_stock_list_select').html(lo.listSelect('additional_stock_list_select', [list_type], 'Select a list', undefined, undefined));
+
+    let stock_list_id = '';
+    let default_number_plants = '';
+    jQuery("#additional_stock_list_select").change(function() {
+        default_number_plants = jQuery('#default_number_plants_per_stock').val();
+        stock_list_id = jQuery('#additional_stock_list_select').val();
+        if (stock_list_id){
+            let stock_validation = 1;
+            stock_validation = lo.legacy_validate(stock_list_id, validate_type, true);
+            if (stock_validation != 1) {
+                alert("The list did not pass validation. Names in the list must be in the database");
+                return;
+            } else {
+                additional_stocks_form(stock_list_id, default_number_plants);
+            }
+        }
+    })
+
+    jQuery(document).on('keyup', '#default_number_plants_per_stock', function() {
+        if (stock_list_id) {
+            default_number_plants = jQuery('#default_number_plants_per_stock').val();
+            additional_stocks_form(stock_list_id, default_number_plants);
+            jQuery('#additional_accessions_footer').show();
+        }
+    });
+
+    function additional_stocks_form (stock_list_id, default_number_plants) {
+        var stock_list = lo.getList(stock_list_id);
+        var html = '<table class="table table-bordered" id="additional_stocks_table"><thead><tr><th><%$table_header%></th><th>Number of Plants</th></tr></thead><tbody>';
+        for(var i=0; i<stock_list.length; i++){
+            html = html + '<tr><td>' + stock_list[i] + '</td><td><input class="form-control" stock_name="' + stock_list[i] + '" name ="stock_plant_number" id="stock_plant_number_'+ i +'" placeholder="'+default_number_plants+'" value="'+default_number_plants+'"/></td></tr>';
+        };
+        html = html + '</tbody></table>';
+
+        jQuery('#additional_stocks_form_div').html(html);
+    };
+
+    jQuery('#add_additional_stocks_submit').click(function(e){
+        e.preventDefault();
+        let stock_names = [];
+        let number_of_plants = [];
+
+        const addition_type = jQuery('#addition_type').val();
+        if (!addition_type) {
+            alert("Please select an addition type");
+            return;
+        }
+
+        if (!stock_list_id) {
+            alert("Please select a list");
+            return;
+        }
+
+        jQuery('input[name="stock_plant_number"]').each(function() {
+            value = this.value;
+            var stock_name = jQuery(this).attr('stock_name');
+            stock_names.push(stock_name);
+            number_of_plants.push(value);
+        });
+
+        jQuery.ajax({
+            url : '/ajax/breeders/trial/'+ <% $trial_id %> + '/add_additional_stocks_for_greenhouse/',
+            method: 'POST',
+            data: {
+                'stock_names': JSON.stringify(stock_names),
+                'number_of_plants': JSON.stringify(number_of_plants),
+                'addition_type': addition_type,
+            },
+            dataType:'json',
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+            },
+            success: function(response) {
+                jQuery("#working_modal").modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    jQuery("#add_additional_stocks_message").modal("show");
+                    jQuery('#add_additional_stocks_using_list_dialog').modal("hide");
+                }
+            },
+            error: function() {
+                jQuery("#working_modal").modal("hide");
+                alert('An error occurred storing additional accessions for greenhouse trial.');
+                jQuery('#add_additional_stocks_using_list_dialog').modal("hide");
+            },
+        });
+
+    });
+
+    jQuery("[name='add_additional_stocks_dismiss_button']").click(function() {
+        jQuery('#add_additional_stocks_using_list_dialog').modal('hide');
+        jQuery('#additional_stock_list_select').val("");
+        jQuery('#addition_type').val("");
+        jQuery('#default_number_plants_per_stock').val('1');
+        document.getElementById('additional_stocks_form_div').innerHTML = "";
+    });
+
+    jQuery("#add_additional_stocks_close_button").click(function(){
+        jQuery('#addition_type').val("");        
+        location.reload();
+    });
+
+});
+
+</script>

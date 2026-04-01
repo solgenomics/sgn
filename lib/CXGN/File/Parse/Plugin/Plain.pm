@@ -5,6 +5,7 @@ use strict;
 use Data::Dumper;
 use CXGN::File::Parse;
 use Text::CSV;
+use List::MoreUtils qw|uniq|;
 
 sub type {
   return "plain";
@@ -126,7 +127,7 @@ sub parse {
         }
       }
       else {
-        $row_info{$h} = undef;
+        $row_info{$h} = $row_info{$h} || undef;
       }
     }
     $skips_in_a_row = $skip_row ? $skips_in_a_row+1 : 0;

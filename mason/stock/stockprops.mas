@@ -80,7 +80,7 @@ my $prop_select = simple_selectbox_html(
 	    </div>
 	    <div class ="form-group">
               <div class="col-sm-6" >
-                <input name="<% $div_name %>_prop" id="<% $div_name %>_prop" class="form-control" type="text" />
+                <textarea name="<% $div_name %>_prop" id="<% $div_name %>_prop" class="form-control" type="text"></textarea>
               </div>
             </div>
 
@@ -95,8 +95,6 @@ my $prop_select = simple_selectbox_html(
     </div>
   </div>
 </div>
-
-
 
 <script defer="defer" >
 
@@ -122,10 +120,9 @@ function <% $div_name %>_getProps() {
     data: { stock_id: <% $stock_id %> },
     success: function(response) { <% $div_name %>_renderProps(response);  },
     error: function(response) { alert('an error occurred'); } 
-    });
+  });
  
- }
-
+}
 
 function <% $div_name %>_renderProps(props) {
    var subset = eval(<% $subset_json %>);

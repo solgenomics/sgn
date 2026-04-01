@@ -17,23 +17,11 @@
           Please upgrade your browser<br>
           <img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" width="25">
           <img src="/documents/img/Firefox_logo_2019.png" width="25">
-          <img src="https://km.support.apple.com/kb/image.jsp?productid=PL165" width="25">
-          <img src="/documents/img/o-logo.jpg" width="25">
-          <img src="https://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" width="25">
+          <img src="/documents/img/Safari_logo.jpeg" width="25">
         </a>
         </center>
       </p>
         Sorry!, some features may not work in outdated browsers
-      
-        <!-- <a href="http://www.google.com/chrome" target="_blank"><img src="https://lh3.ggpht.com/O0aW5qsyCkR2i7Bu-jUU1b5BWA_NygJ6ui4MgaAvL7gfqvVWqkOBscDaq4pn-vkwByUx=w300" width="25">&nbsp; Google Chrome</a><br/>
-        <br/>
-        <a href="http://www.firefox.com/" target="_blank"><img src="/documents/img/Firefox_logo_2019.png" width="25">&nbsp; Mozilla Firefox</a><br/>
-        <br/>
-        <a href="http://www.apple.com/safari/" target="_blank"><img src="http://km.support.apple.com/kb/image.jsp?productid=PL165" width="25">&nbsp; Safari</a><br/>
-        <br/>
-        <a href="http://www.opera.com/" target="_blank"><img src="http://www-static.opera.com/static-heap/b4/b43d0a4442ae0b771bf45f3ed519e5f4272b63d2/o-logo.jpg" width="25">&nbsp; Opera</a><br/>
-        <br/>
-        <a href="http://windows.microsoft.com/ie" target="_blank"><img src="http://c.s-microsoft.com/en-us/CMSImages/ie_symbol_clr_56x56.png?version=73aa5bf1-0743-11e7-8f71-718675c983bf" width="25">&nbsp; MS Internet Explorer</a><br/> -->
     </div>
     
     <div class="modal-footer">
@@ -45,15 +33,43 @@
 </div>
 
 <script>
+  (function () {
+    function supportsRequiredFeatures() {
+      // Basic DOM / events
+      if (!window.addEventListener) return false;
+      if (!document.querySelector) return false;
 
-  var str = navigator.userAgent;
-  var ie = /MSIE/.test(str);
-  // alert(navigator.userAgent);
+      // ES6-ish essentials for many apps
+      if (!window.Promise) return false;
+      if (!window.Map) return false;
+      if (!window.Set) return false;
 
-  jQuery(document).ready(function ($) {
-    if(ie) {
-      $('#nav_dialog').modal("show");
+      // Network + URL handling commonly used
+      if (!window.fetch) return false;          // common modern API
+      if (!window.URL || !window.URLSearchParams) return false;
+
+      return true;
     }
-  });
 
+    function showOldBrowserModal() {
+      // If Bootstrap modal isn't available, fall back to alert
+      if (window.jQuery && jQuery.fn && typeof jQuery.fn.modal === "function") {
+        jQuery(function ($) {
+          $("#nav_dialog").modal("show");
+        });
+      } else {
+        alert("Old browser version detected. Please upgrade your browser.");
+      }
+    }
+
+    // Run after DOM is ready enough to find #nav_dialog
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!supportsRequiredFeatures()) showOldBrowserModal();
+      });
+    } else {
+      if (!supportsRequiredFeatures()) showOldBrowserModal();
+    }
+  })();
 </script>
+

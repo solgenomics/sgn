@@ -27,7 +27,9 @@ use DateTime;
 use List::MoreUtils qw /any /;
 use Sort::Key::Natural qw(natkeysort);
 use CXGN::Stock;
-
+use CXGN::Transformation::ParseUpload;
+use CXGN::Transformation::StoreTransgeneExpressionData;
+use Time::Piece;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -705,16 +707,23 @@ sub get_transformants :Path('/ajax/transformation/transformants') :Args(1) {
     foreach my $r (@sorted_names){
         my ($stock_id, $stock_name) =@$r;
         my $is_in_trial;
-        my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id );
-        my @trial_list = $check_trial->get_trials();
+        my $is_a_parent;
+        my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $stock_id );
+        my @trial_list = $stock_obj->get_trials();
         if (scalar(@trial_list) > 0) {
             $is_in_trial = 1;
+        }
+
+        my $progeny_count = $stock_obj->check_progenies();
+        if ($progeny_count > 0) {
+            $is_a_parent = 1;
         }
 
         push @transformants, {
             transformant_id => $stock_id,
             transformant_name => $stock_name,
             is_in_trial => $is_in_trial,
+            is_a_parent => $is_a_parent
         };
     }
 
@@ -1115,19 +1124,34 @@ sub get_tranformant_experiment_info :Path('/ajax/transformation/transformant_exp
     my $stock_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
+    my $vector_id;
+    my $vector_name;
+    my $plant_id;
+    my $plant_name;
+    my $transformation_id;
+    my $transformation_name;
+    my $vector_link;
+    my $plant_link;
+    my $transformation_link;
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
-    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
-    my $plant_id = $experiment_info->[0]->[0];
-    my $plant_name = $experiment_info->[0]->[1];
-    my $plant_link = qq{<a href="/stock/$plant_id/view">$plant_name</a>};
-    my $vector_id = $experiment_info->[0]->[2];
-    my $vector_name = $experiment_info->[0]->[3];
-    my $vector_link = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
-    my $transformation_id = $experiment_info->[0]->[4];
-    my $transformation_name = $experiment_info->[0]->[5];
-    my $transformation_link;
-    if ($transformation_id) {
+    my $vector_construct = $transformant_obj->vector_construct();
+    my $plant_material = $transformant_obj->plant_material();
+    my $transformation_identifier = $transformant_obj->transformation_identifier();
+
+    if (@$vector_construct) {
+        $vector_id = $vector_construct->[0];
+        $vector_name = $vector_construct->[1];
+        $vector_link = qq{<a href="/stock/$vector_id/view">$vector_name</a>};
+    }
+    if (@$plant_material) {
+        $plant_id = $plant_material->[0];
+        $plant_name = $plant_material->[1];
+        $plant_link = qq{<a href="/stock/$plant_id/view">$plant_name</a>};
+    }
+    if (@$transformation_identifier) {
+        $transformation_id = $transformation_identifier->[0];
+        $transformation_name = $transformation_identifier->[1];
         $transformation_link = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
     }
 
@@ -1156,8 +1180,11 @@ sub get_related_transformants :Path('/ajax/transformation/related_transformants'
     my $dbh = $c->dbc->dbh;
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
-    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
-    my $transformation_id = $experiment_info->[0]->[4];
+    my $transformation_identifier = $transformant_obj->transformation_identifier();
+    my $transformation_id;
+    if (@$transformation_identifier) {
+        $transformation_id = $transformation_identifier->[0];
+    }
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_id});
     my $result = $transformation_obj->transformants();
@@ -1187,8 +1214,11 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
     my $dbh = $c->dbc->dbh;
 
     my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
-    my $experiment_info = $transformant_obj->get_transformant_experiment_info();
-    my $transformation_id = $experiment_info->[0]->[4];
+    my $transformation_identifier = $transformant_obj->transformation_identifier();
+    my $transformation_id;
+    if (@$transformation_identifier) {
+        $transformation_id = $transformation_identifier->[0];
+    }
 
     my @control_transformants;
     if ($transformation_id) {
@@ -1212,6 +1242,21 @@ sub get_control_transformants :Path('/ajax/transformation/control_transformants'
     }
 
     $c->stash->{rest} = { data => \@control_transformants };
+
+}
+
+
+sub get_transformant_qPCR_data :Path('/ajax/transformation/transformant_qPCR_data') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformant_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
+    my $qPCR_data = $transformant_obj->get_transformant_qPCR_data();
+
+    $c->stash->{rest} = { data => $qPCR_data };
 
 }
 
@@ -1399,6 +1444,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                             transformation_stock_id => $transformation_stock_id,
                             transformant_names => \@transformants,
                             owner_id => $user_id,
+                            additional_transformant_info => $transformant_name_info,
                         });
 
                         my $response = $add_transformants->add_transformant();
@@ -1412,6 +1458,7 @@ sub upload_transgenic_historical_data_POST : Args(0) {
                             schema => $schema,
                             transformation_stock_id => $transformation_stock_id,
                             transformant_names => \@transformants,
+                            additional_transformant_info => $transformant_name_info,
                         });
 
                         my $response = $add_transformants->link_info();
@@ -1449,28 +1496,48 @@ sub upload_transgenic_historical_data_POST : Args(0) {
 
 }
 
-
-sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_accession_dialog') :Args(1) {
+sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_accessions_dialog') :Args(0) {
     my $self = shift;
     my $c = shift;
-    my $transformation_stock_id = shift;
+    my $vector_id = $c->req->param('vector_id');
+    my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $dbh = $c->dbc->dbh;
 
-    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
-    my $result = $transformation_obj->transformants();
-    my @sorted_names = natkeysort {($_->[1])} @$result;
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @transgenic_lines = ();
+
+    foreach my $r (@$result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data_string) = @$r;
+        if ($filter_by_transformation_id) {
+            if ($filter_by_transformation_id == $transformation_id) {
+                push @transgenic_lines, [$transformant_id, $transformant_name];
+            }
+        } else {
+            push @transgenic_lines, [$transformant_id, $transformant_name];
+        }
+    }
+    my @sorted_names = natkeysort {($_->[1])} @transgenic_lines;
 
     my @transformants;
     foreach my $r (@sorted_names){
         my $is_in_trial;
-        my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $r->[0] );
-        my @trial_list = $check_trial->get_trials();
+        my $is_a_parent;
+        my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $r->[0] );
+        my @trial_list = $stock_obj->get_trials();
         if (scalar(@trial_list) > 0) {
             $is_in_trial = 1;
         }
+
+        my $progeny_count = $stock_obj->check_progenies();
+        if ($progeny_count > 0) {
+            $is_a_parent = 1;
+        }
         if ($is_in_trial) {
             push @transformants, ['Used in a trial, cannot obsolete', $r->[1]];
+        } elsif ($is_a_parent) {
+            push @transformants, ['Used as a parent, cannot obsolete', $r->[1]];
         } else {
             push @transformants, ["<input type='checkbox' name='checked_stocks' value='$r->[1]'>", $r->[1]];
         }
@@ -1481,7 +1548,398 @@ sub set_obsolete_accessions_dialog :Path('/ajax/transformation/set_obsolete_acce
 }
 
 
+sub get_transgenic_line_details :Path('/ajax/transformation/transgenic_line_details') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformation_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
 
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id});
+    my $result = $transformation_obj->get_transformant_details();
+    my @sorted_names = natkeysort {($_->[1])} @$result;
+
+    my @transformant_details;
+    foreach my $r (@sorted_names){
+        my ($stock_id, $stock_name, $number_of_insertions) =@$r;
+
+        push @transformant_details, {
+            transformant_id => $stock_id,
+            transformant_name => $stock_name,
+            number_of_insertions => $number_of_insertions,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@transformant_details };
+
+}
+
+
+sub upload_qPCR_data : Path('/ajax/transformation/upload_qPCR_data') : ActionClass('REST'){ }
+
+sub upload_qPCR_data_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $vector_id = $c->req->param('qPCR_data_vector_id');
+    my $vector_construct_name = $c->req->param('qPCR_data_vector_name');
+
+    my $tissue_type = $c->req->param('qPCR_tissue_type');
+    my $endogenous_control = $c->req->param('qPCR_endogenous_control');
+    my $normalization_method = $c->req->param('qPCR_normalization_method');
+    my $notes = $c->req->param('qPCR_notes');
+    my $assay_date = $c->req->param('assay_date');
+    my $upload;
+    my $plugin_type;
+    my $CT_upload = $c->req->upload('Cq_qPCR_data_file');
+    my $normalized_upload = $c->req->upload('normalized_qPCR_data_file');
+
+    if ($CT_upload) {
+        $upload = $CT_upload;
+        $plugin_type = 'CTqPCRData';
+    } elsif ($normalized_upload) {
+        $upload = $normalized_upload;
+        $plugin_type = 'NormalizedqPCRData';
+    }
+
+    my $parser;
+    my $parsed_data;
+    my $upload_original_name = $upload->filename();
+
+    my $upload_tempfile = $upload->tempname;
+    my $subdirectory = "qPCR_data_upload";
+    my $archived_filename_with_path;
+    my $md5;
+    my $validate_file;
+    my $parsed_file;
+    my $parse_errors;
+    my %parsed_data;
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $upload_date = $time->ymd();
+    my $user_role;
+    my $user_id;
+    my $user_name;
+    my $owner_name;
+    my $session_id = $c->req->param("sgn_session_id");
+    my @error_messages;
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to upload relative expression data!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to upload relative expression data!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_name = $c->user()->get_object()->get_username();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can upload relative expression data'};
+        $c->detach();
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+
+        ## Store uploaded temporary file in arhive
+    $archived_filename_with_path = $uploader->archive();
+    $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+        return;
+    }
+    unlink $upload_tempfile;
+
+    my $gene_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'Gene', 'stock_property')->cvterm_id;
+    my $gene_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $vector_id, type_id => $gene_type_id});
+    my $gene_info;
+    if ($gene_stockprop_rs) {
+        $gene_info = $gene_stockprop_rs->value();
+    }
+
+    my @vector_construct_genes = ();
+    if ($gene_info) {
+        my @gene_names = ();
+        @gene_names = split(',',$gene_info);
+        foreach my $name (@gene_names) {
+            $name =~ s/^\s+|\s+$//g;
+            push @vector_construct_genes, $name;
+        }
+    }
+
+    $parser = CXGN::Transformation::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, vector_construct_genes=>\@vector_construct_genes, endogenous_control => $endogenous_control, vector_stock_id => $vector_id);
+
+    $parser->load_plugin($plugin_type);
+    $parsed_data = $parser->parse();
+#    print STDERR "PARSED DATA =". Dumper($parsed_data)."\n";
+    if (!$parsed_data){
+        my $return_error = '';
+        my $parse_errors;
+        if (!$parser->has_parse_errors() ){
+            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+        } else {
+            $parse_errors = $parser->get_parse_errors();
+            #print STDERR Dumper $parse_errors;
+            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
+                $return_error .= $error_string."<br>";
+            }
+        }
+        $c->stash->{rest} = {error_string => $return_error};
+        $c->detach();
+    }
+
+    if ($parsed_data){
+        foreach my $transformant_name (keys %$parsed_data) {
+            my $parsed_CT_expression_data = {};
+            my $CT_expression_data = {};
+            my $relative_expression_data = {};
+            my $error;
+            if ($CT_upload) {
+                $parsed_CT_expression_data = $parsed_data->{$transformant_name};
+                foreach my $rep (keys %$parsed_CT_expression_data) {
+                    my $target_genes = $parsed_CT_expression_data->{$rep}->{'target'};
+                    my $endogenous_control_CT_value = $parsed_CT_expression_data->{$rep}->{'endogenous_control'}->{$endogenous_control};
+                    foreach my $gene (keys %$target_genes) {
+                        my $target_CT_value = $parsed_CT_expression_data->{$rep}->{'target'}->{$gene};
+                        $CT_expression_data->{$gene}->{$rep}->{'target'}->{$gene} = $target_CT_value;
+                        $CT_expression_data->{$gene}->{$rep}->{'endogenous_control'}->{$endogenous_control} = $endogenous_control_CT_value;
+                    }
+                }
+
+            } elsif ($normalized_upload) {
+                $relative_expression_data = $parsed_data->{$transformant_name};
+            }
+
+            my $expression_data = CXGN::Transformation::StoreTransgeneExpressionData->new({
+                chado_schema => $schema,
+                transformant_name => $transformant_name,
+                vector_construct_name => $vector_construct_name,
+                tissue_type => $tissue_type,
+                CT_expression_data => $CT_expression_data,
+                relative_expression_data => $relative_expression_data,
+                endogenous_control => $endogenous_control,
+                normalization_method => $normalization_method,
+                assay_date => $assay_date,
+                notes => $notes,
+                operator_id => $user_id,
+            });
+
+            my $return = $expression_data->store_qPCR_data();
+            if (!$return){
+                $error = "The error storing qPCR data for: $transformant_name";
+            }
+            if ($return->{error}){
+                $error = $return->{error};
+            }
+            if ($error) {
+                $c->stash->{rest} = { error => $error};
+                return;
+            }
+        }
+    };
+
+    $c->stash->{rest} = {success => "1"};
+}
+
+sub get_vector_transgenic_line_details :Path('/ajax/transformation/vector_transgenic_line_details') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+
+    my $vector_id = $c->req->param('vector_id');
+    my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
+    my $selected_tissue_type = $c->req->param('selected_tissue_type');
+    my $selected_assay_date = $c->req->param('selected_assay_date');
+
+    my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
+    my $vector_related_genes = $vector_construct->Gene;
+    my @genes_array = split ',',$vector_related_genes;
+    my @gene_names = ();
+    foreach my $name (@genes_array) {
+        $name =~ s/^\s+|\s+$//g;
+        push @gene_names, $name;
+    }
+
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_id});
+    my $result = $related_stocks->get_vector_related_accessions();
+    my @sorted_result = natkeysort {($_->[1])} @$result;
+    my @transgenic_lines;
+
+    if (!$selected_assay_date) {
+        my $vector_assay_metadata = $vector_construct->assay_metadata;
+        if ($vector_assay_metadata) {
+            my $metadata = decode_json $vector_assay_metadata;
+            my $date_info = $metadata->{$selected_tissue_type};
+            my @dates = keys (%$date_info);
+            my @sorted_dates = sort {Time::Piece->strptime($b, '%Y-%m-%d') <=> Time::Piece->strptime($a, '%Y-%m-%d')} @dates;
+            $selected_assay_date = $sorted_dates[0];
+        }
+    }
+
+    my @expression_array;
+    foreach my $r (@sorted_result){
+        my @expression_values = ();
+        my @row = ();
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data_string) = @$r;
+        if ($filter_by_transformation_id) {
+            if ($filter_by_transformation_id == $transformation_id) {
+                @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
+                if ($expression_data_string) {
+                    my $expression_info = decode_json $expression_data_string;
+                    foreach my $gene (@gene_names) {
+                        my $gene_relative_expression_value = '';
+                        my $number_of_replicates = '';
+                        my $standard_deviation = '';
+                        my $value_string = '';
+                        my @display_info = ();
+                        my $gene_relative_expression_value = $expression_info->{$selected_tissue_type}->{$selected_assay_date}->{$gene}->{'relative_expression_values'};
+
+                        if ($gene_relative_expression_value) {
+                            push @display_info, $gene_relative_expression_value->{'relative_expression'};
+
+                            if (($gene_relative_expression_value->{'relative_expression'}) ne 'ND') {
+                                $number_of_replicates = $gene_relative_expression_value->{'number_of_replicates'};
+                                if ($number_of_replicates == 1) {
+                                    push @display_info, $number_of_replicates." replicate";
+                                } else {
+                                    push @display_info, $number_of_replicates." replicates";
+                                }
+                                $standard_deviation = $gene_relative_expression_value->{'stdevp'};
+                                push @display_info, "stdevp: ". $standard_deviation;
+                            }
+
+                            $value_string = join("<br>", @display_info);
+                            push @expression_values, $value_string;
+                        } else {
+                            push @expression_values, $value_string;
+                        }
+                    }
+
+                    push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
+
+                } else {
+                    foreach my $gene (@gene_names) {
+                        my $empty_value = '';
+                        push @row, $empty_value;
+                    }
+                    push @row, ('', '', qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
+                }
+                push @transgenic_lines, \@row;
+            }
+        } else {
+            @row = (qq{<a href = "/stock/$transformant_id/view">$transformant_name</a>}, $number_of_insertions);
+            if ($expression_data_string) {
+                my $expression_info = decode_json $expression_data_string;
+                foreach my $gene (@gene_names) {
+                    my $gene_relative_expression_value = '';
+                    my $number_of_replicates = '';
+                    my $standard_deviation = '';
+                    my $value_string = '';
+                    my @display_info = ();
+                    my $gene_relative_expression_value = $expression_info->{$selected_tissue_type}->{$selected_assay_date}->{$gene}->{'relative_expression_values'};
+
+                    if ($gene_relative_expression_value) {
+                        push @display_info, $gene_relative_expression_value->{'relative_expression'};
+
+                        if (($gene_relative_expression_value->{'relative_expression'}) ne 'ND') {
+                            $number_of_replicates = $gene_relative_expression_value->{'number_of_replicates'};
+                            if ($number_of_replicates == 1) {
+                                push @display_info, $number_of_replicates." replicate";
+                            } else {
+                                push @display_info, $number_of_replicates." replicates";
+                            }
+                            $standard_deviation = $gene_relative_expression_value->{'stdevp'};
+                            push @display_info, "stdevp: ". $standard_deviation;
+                        }
+
+                        $value_string = join("<br>", @display_info);
+                        push @expression_values, $value_string;
+                    } else {
+                        push @expression_values, $value_string;
+                    }
+                }
+
+                push @row, (@expression_values, $selected_tissue_type, $selected_assay_date, qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
+
+            } else {
+                foreach my $gene (@gene_names) {
+                    my $empty_value = '';
+                    push @row, $empty_value;
+                }
+                push @row, ('', '', qq{<a href="/transformation/$transformation_id">$transformation_name</a>}, $transformant_name);
+            }
+            push @transgenic_lines, \@row;
+        }
+    }
+
+    $c->stash->{rest}={data=>\@transgenic_lines};
+}
+
+sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted_accessions') :Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $vector_id = $c->req->param('vector_id');
+    my $filter_by_transformation_id = $c->req->param('filter_by_transformation_id');
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+    my $dbh = $c->dbc->dbh;
+
+    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$vector_id});
+    my $result = $related_stocks->get_vector_obsoleted_accessions();
+    my @sorted_result = natkeysort {($_->[1])} @$result;
+    my @obsoleted_accessions;
+
+    foreach my $r (@sorted_result){
+        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
+        my $transformation_info;
+        if ($transformation_id) {
+            $transformation_info = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
+        } else {
+            $transformation_info = 'NA';
+        }
+        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
+        my $full_name = $person->get_first_name()." ".$person->get_last_name();
+
+        if ($obsolete_date =~ /Obsolete/) {
+            if ($filter_by_transformation_id) {
+                if ($filter_by_transformation_id == $transformation_id) {
+                    push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
+                }
+            } else {
+                push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
+            }
+        }
+    }
+
+    $c->stash->{rest}={data=>\@obsoleted_accessions};
+}
 
 ###
 1;#

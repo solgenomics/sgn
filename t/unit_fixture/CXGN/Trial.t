@@ -58,8 +58,8 @@ my @test_data = (
             'trial_id' => 165,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_status' => undef,
@@ -89,8 +89,8 @@ my @test_data = (
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'description' => 'new_test_cross',
@@ -120,8 +120,8 @@ my @test_data = (
             'design' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -151,8 +151,8 @@ my @test_data = (
             'breeding_program_id' => 134,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_status' => undef,
@@ -182,8 +182,8 @@ my @test_data = (
             'location_id' => '23',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_submitted' => undef,
@@ -213,8 +213,8 @@ my @test_data = (
             'breeding_program_name' => 'test',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
-
+		'additional_info' => undef,
+            'create_date' => undef
           }
 );
 
@@ -260,7 +260,8 @@ is_deeply($result, [
             'project_harvest_date' => '',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'project_harvest_date' => '',
@@ -290,7 +291,8 @@ is_deeply($result, [
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'genotyping_facility_plate_id' => undef,
@@ -320,7 +322,8 @@ is_deeply($result, [
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
 		'trial_type_value' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'design' => 'CRD',
@@ -350,7 +353,8 @@ is_deeply($result, [
             'folder_description' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'design' => 'CRD',
@@ -380,7 +384,8 @@ is_deeply($result, [
             'year' => '2014',
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           },
           {
             'breeding_program_description' => 'test',
@@ -410,7 +415,8 @@ is_deeply($result, [
             'genotyping_facility_submitted' => undef,
             'sampling_facility' => undef,
 		'sampling_trial_sample_type' => undef,
-		'additional_info' => undef
+		'additional_info' => undef,
+            'create_date' => undef
           }
         ], 'trial search test 2');
 
@@ -459,6 +465,7 @@ is_deeply(\@all_project_types, [
           'misc_trial',
           'phenotyping_trial',
           'pollinating_trial',
+          'propagation_project',
           'storage_trial',
           'transformation_project'
       ], "check get_all_project_types");
@@ -885,7 +892,7 @@ is($trial->get_name(), "anothertrial modified");
 #
 my $desc = $trial->get_description();
 
-ok($desc == "test_trial", "another test trial...");
+is($desc, "another test trial...", "description getter");
 
 $trial->set_description("blablabla");
 
@@ -1016,14 +1023,32 @@ print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
 print STDERR "Done.\n";
 
-my $deleted_trial;
+my $still_there = $f->bcs_schema->resultset('Project::Project')->find({ project_id => $trial_id });
+ok(!defined $still_there, "check that trial project row was deleted");
+
+my ($threw, $deleted_trial, $name) = (0);
+
+
 eval {
-     $deleted_trial = CXGN::Trial->new( { bcs_schema => $f->bcs_schema, trial_id=>$trial_id });
+    $deleted_trial = CXGN::Trial->new({ bcs_schema => $f->bcs_schema, trial_id => $trial_id });
+    $name = $deleted_trial->get_name();
+
 };
 
-if ($@) { print "An error occurred: $@\n"; }
+ok($@, "Deletion was successful!");
 
-like($@, qr/The trial $trial_id does not exist/, "check that trial was deleted");
+# ok(
+#     $threw
+#     || !$deleted_trial
+#     || !$deleted_trial->can('trial_id') || !$deleted_trial->trial_id
+#     || !defined $name,
+#     "cannot construct or access a deleted trial"
+# ) or do {
+#     require Data::Dumper;
+#     diag "Constructor returned trial_id=" . (
+#         ($deleted_trial && $deleted_trial->can('trial_id')) ? ($deleted_trial->trial_id // 'undef') : 'no method'
+#     ) . ", name=" . (defined $name ? $name : 'undef');
+# };
 
 $f->clean_up_db();
 

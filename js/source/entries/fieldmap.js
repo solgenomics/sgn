@@ -209,21 +209,23 @@ export function init() {
         filter_heatmap(observations) {
             this.heatmap_object = {};
             for (let observation of observations) {
-                let trait_name = observation.observationVariableName;
-                if (!this.heatmap_object[trait_name]) {
-                    this.heatmap_object[trait_name] = {
-                        [observation.observationUnitDbId]: {
+                if ( ! isNaN(observation.value)) {
+                    let trait_name = observation.observationVariableName;
+                    if (!this.heatmap_object[trait_name]) {
+                        this.heatmap_object[trait_name] = {
+                            [observation.observationUnitDbId]: {
+                                val: observation.value,
+                                plot_name: observation.observationUnitName,
+                                id: observation.observationDbId,
+                            },
+                        };
+                    } else {
+                        this.heatmap_object[trait_name][observation.observationUnitDbId] = {
                             val: observation.value,
                             plot_name: observation.observationUnitName,
                             id: observation.observationDbId,
-                        },
-                    };
-                } else {
-                    this.heatmap_object[trait_name][observation.observationUnitDbId] = {
-                        val: observation.value,
-                        plot_name: observation.observationUnitName,
-                        id: observation.observationDbId,
-                    };
+                        };
+                    }
                 }
             }
         }
@@ -689,20 +691,22 @@ export function init() {
                         btnClick(image_ids);
                     });
                     jQuery("#hm_edit_plot_information").html(
-                        "<b>Selected Plot Information: </b>"
+                        //"<b>Selected Plot Information: </b>"
                     );
                     jQuery("#hm_plot_name").html(replace_plot_name);
                     jQuery("#hm_plot_number").html(replace_plot_number);
                     var old_plot_id = jQuery("#hm_plot_id").html(replace_plot_id);
                     var old_plot_accession = jQuery("#hm_plot_accession").html(
-                        replace_accession
+                        plot.additionalInfo?.intercropGermplasm ? 
+                            [replace_accession, ...plot.additionalInfo.intercropGermplasm.map((e) => e.germplasmName)].join(', ') : 
+                            replace_accession
                     );
 
                     jQuery("#hm_plot_details_modal").modal("show");
                     jQuery('#hm_plot_structure_container').hide();
 
                     new jQuery.ajax({
-                        url: '/stock/get_plot_contents/'+replace_plot_id,
+                        url: '/stock/get_child_stocks/'+replace_plot_id,
                         success: function (response) {
                             jQuery("#working_modal").modal("hide");
                             if (response.error) {
@@ -836,18 +840,19 @@ export function init() {
                                 let display_layout = false;
                                 let structure;
                                 for (let key in plot_structure["has"]) {
-                                    if (plot_structure["has"][key]["type"] == "subplot") {
+                                    console.log(key);
+                                    if (plot_structure["has"][key]["type"] === "subplot") {
                                         for (let subkey in plot_structure["has"][key]["has"]) {
                                             if (plot_structure["has"][key]["has"][subkey]["type"] == "plant") {
                                                 structure = "plot:subplot:plant";
-                                                if (plot_structure["has"][key]["has"][subkey]["attributes"]?.["row_number"]["value"] > 0) {
+                                                if (plot_structure["has"][key]["has"][subkey]["attributes"]?.["row_number"]?.["value"] > 0) {
                                                     display_layout = true;
                                                 }
                                             }
                                         }
-                                    } else if (plot_structure["has"][key]["type"] == "plant") {
+                                    } else if (plot_structure["has"][key]["type"] === "plant") {
                                         structure = "plot:plant";
-                                        if (plot_structure["has"][key]["attributes"]?.["row_number"]["value"] > 0) {
+                                        if (plot_structure["has"][key]["attributes"]?.["row_number"]?.["value"] > 0) {
                                             display_layout = true;
                                         }
                                     } else {
@@ -857,7 +862,7 @@ export function init() {
 
                                 let hm_plot_structure_data_container = document.getElementById("hm_plot_structure_data_container");
 
-                                delete plot_structure["id"];
+                                delete plot_structure["stock_id"];
                                 delete plot_structure["type"];
                                 delete plot_structure["name"];
 
@@ -1064,11 +1069,17 @@ export function init() {
                             <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
                             <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />`;
                         if (plot.germplasmName) {
-                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}`;
+                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}<br />`;
                         } else if (plot.crossName) {
-                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}`;
+                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}<br />`;
                         } else if (plot.additionalInfo.familyName) {
-                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}`;
+                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}<br />`;
+                        }
+
+                        if ( plot.additionalInfo?.intercropGermplasm ) {
+                            for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
+                                html += `<strong>Accession Name:</strong> ${plot.additionalInfo.intercropGermplasm[i].germplasmName}<br />`;
+                            }
                         }
 
                         if ( local_this.heatmap_selected ) {

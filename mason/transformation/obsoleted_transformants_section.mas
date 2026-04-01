@@ -2,7 +2,7 @@
 $transformation_id
 </%args>
 
-<&| /page/info_section.mas, title => 'Obsoleted Transformants (Accessions)', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title => 'Obsoleted Transgenic Lines (Accessions)', collapsible=>1, collapsed=>1 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
             <div class = "panel-body">

@@ -93,10 +93,12 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $date = $time->ymd();
 
     my $source_info_string;
+    my $vector_id;
     if ($material_type eq 'transformation') {
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$material_id});
         my $info = $transformation_obj->get_transformation_info();
         my $plant_material_name = $info->[0]->[1];
+        $vector_id = $info->[0]->[2];
         my $vector_name = $info->[0]->[3];
         my $transformation_project_name = $associated_projects->[0]->[5];
         my $source_info_hash = {};
@@ -106,6 +108,15 @@ sub activity_details :Path('/activity/details') : Args(1) {
         $source_info_hash->{'vectorConstruct'} = $vector_name;
         $source_info_hash->{'plantMaterial'} = $plant_material_name;
         $source_info_string = encode_json $source_info_hash;
+    }
+
+    my $can_obsolete;
+    my @user_roles = $c->user->roles();
+    my %has_roles = ();
+    map { $has_roles{$_} = 1; } @user_roles;
+
+    if ((exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator})) {
+        $can_obsolete = 1;
     }
 
     $c->stash->{identifier_id} = $identifier_id;
@@ -125,7 +136,9 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{activity_type} = $activity_type;
     $c->stash->{program_name} = $program_name;
     $c->stash->{source_info} = $source_info_string;
-    $c->stash->{stock_type_page} = 'tracking_id';    
+    $c->stash->{stock_type_page} = 'tracking_id';
+    $c->stash->{can_obsolete} = $can_obsolete;
+    $c->stash->{vector_id} = $vector_id;
     $c->stash->{template} = '/tracking_activities/activity_info_details.mas';
 
 }
@@ -159,6 +172,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $activity_type;
     my $program_name;
     my $source_info_string;
+    my $can_obsolete;
 
     if ($identifier_name) {
         my $identifier_rs = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name});
@@ -213,6 +227,15 @@ sub record_activity :Path('/activity/record') :Args(0) {
         for my $i (0 .. $#type_select_options) {
             push @options, [$type_select_options[$i], $activity_headers[$i]];
         }
+
+        my @user_roles = $c->user->roles();
+        my %has_roles = ();
+        map { $has_roles{$_} = 1; } @user_roles;
+
+        if ((exists($has_roles{$program_name}) && exists($has_roles{submitter})) || exists($has_roles{curator})) {
+            $can_obsolete = 1;
+        }
+
     }
 
     my $time = DateTime->now();
@@ -231,6 +254,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     $c->stash->{activity_type} = $activity_type;
     $c->stash->{program_name} = $program_name;
     $c->stash->{source_info} = $source_info_string;
+    $c->stash->{can_obsolete} = $can_obsolete;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

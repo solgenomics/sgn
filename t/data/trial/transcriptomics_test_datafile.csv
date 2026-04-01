@@ -1,0 +1,5 @@
+gene_id,chromosome ,pos_left,pos_right,functional_annotation,notes
+ZeamMp004,Mt,8752,9915,orf387,
+ZeamMp005,Mt,11111,13315,orf734,
+ZeamMp024,Mt,161140,164661,rps3,
+ZeamMp032,Mt,76132,84976,nad4,

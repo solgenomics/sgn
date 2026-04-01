@@ -51,6 +51,18 @@ jQuery(document).ready(function ($) {
         create_trial_validate_form();
     });
 
+    jQuery('#add_plant_entries').on('change', function() {
+        let plants_per_plot = jQuery(this).val();
+        jQuery('#greenhouse_default_num_plants_per_accession_val').val(plants_per_plot);
+        greenhouse_show_num_plants_section()
+    });
+
+    jQuery('#greenhouse_default_num_plants_per_accession_val').on('change', function() {
+        let plants_per_plot = jQuery(this).val();
+        jQuery('#add_plant_entries').val(plants_per_plot);
+        greenhouse_show_num_plants_section()
+    });
+
     function create_trial_validate_form(){
         var trial_name = $("#new_trial_name").val();
         var breeding_program = $("#select_breeding_program").val();
@@ -493,12 +505,24 @@ jQuery(document).ready(function ($) {
         var html = '';
         for (var i=0; i<new_count; i++){
             var display_count = i + 5;
-            html = html + '<div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Subplot '+display_count+ 'Treatment Name: </label><div class="col-sm-5" ><input class="form-control" id="create_trial_with_treatment_name_input'+display_count+'" name="create_trial_with_treatment_name_input'+display_count+'" type="text" placeholder="Optional Treatment '+display_count+'"/></div></div>';
+            html = html + '<div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Treatment '+display_count+ ': </label><div class="col-sm-5" ><input class="form-control  treatment-name-input-box" id="create_trial_with_treatment_name_input'+display_count+'" name="create_trial_with_treatment_name_input'+display_count+'" type="text" placeholder="Optional Treatment '+display_count+'"/><input class="form-control treatment-value-input-box" id="create_trial_with_treatment_value_input'+display_count+'" name="create_trial_with_treatment_value_input'+display_count+'" type="text" placeholder="treatment value"/></div></div>';
         }
         html = html + '<input type="hidden" id="create_trial_with_treatment_additional_count" value='+return_count+'><div class="form-group form-group-sm" ><label class="col-sm-7 control-label">Add Another Treatment: </label><div class="col-sm-5" ><button class="btn btn-info btn-sm" id="create_trial_with_treatment_additional_treatment_buton">+ Treatment</button></div></div>';
         jQuery('#create_trial_with_treatment_additional_treatment').html(html);
+        apply_treatment_autocomplete();
         return false;
     });
+
+    apply_treatment_autocomplete();
+
+    function apply_treatment_autocomplete() {
+        jQuery('.treatment-name-input-box').each( function() {
+            jQuery(this).autocomplete({
+                source : '/ajax/cvterm/autocompleteslim' + "?db_name=_TREATMENT",
+                appendTo : '#add_project_dialog'
+            });
+        });
+    }
 
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
@@ -618,7 +642,7 @@ jQuery(document).ready(function ($) {
             replicated_stock_list = JSON.stringify(list.getList(replicated_stock_list_id));
         }
 
-        var treatments = []
+        var treatments = {};
         if (design_type == 'splitplot'){
             var count = jQuery('#create_trial_with_treatment_additional_count').val();
             if (count == 0) {
@@ -626,17 +650,31 @@ jQuery(document).ready(function ($) {
             }
             var int_count = parseInt(count);
             for(var i=1; i<=int_count; i++){
-                var treatment_value = jQuery('#create_trial_with_treatment_name_input'+i).val();
-                if(treatment_value != ''){
-                    treatments.push(treatment_value);
+                var treatment_name = jQuery('#create_trial_with_treatment_name_input'+i).val();
+                var treatment_value = jQuery('#create_trial_with_treatment_value_input'+i).val();
+                if(treatment_name != '' && treatment_value != ''){
+                    if (treatment_name in treatments) {
+                        treatments[treatment_name].push(treatment_value);
+                    } else {
+                        treatments[treatment_name] = [];
+                        treatments[treatment_name].push(treatment_value);
+                    }
                 }
             }
             var num_plants_per_treatment = $('#num_plants_per_treatment').val();
             num_plants_per_plot = 0;
-            if (num_plants_per_treatment){
-                num_plants_per_plot = num_plants_per_treatment*treatments.length;
+            var aggregator = 1;
+            for (treatment in treatments) {
+                var num_levels = Object.keys(treatments[treatment]).length
+                aggregator = aggregator * num_levels;
             }
-            num_subplots_per_plot = treatments.length;
+            num_subplots_per_plot = aggregator;
+            if (num_plants_per_treatment){
+                num_plants_per_plot = num_plants_per_treatment*num_subplots_per_plot;
+            } else {
+                alert("You must supply the number of plants per treatment.");
+                return;
+            }
         }
 
         var greenhouse_num_plants = [];
@@ -651,6 +689,13 @@ jQuery(document).ready(function ($) {
             //console.log(greenhouse_num_plants);
         }
 
+        var num_rows_per_plot = $('#trial_create_rows_per_plot').val();
+        var num_cols_per_plot = $('#trial_create_cols_per_plot').val();
+        if ($('#trial_create_rows_and_columns_to_plants').prop('checked') && ($('#add_plant_entries').val() > num_rows_per_plot * num_cols_per_plot || num_rows_per_plot * num_cols_per_plot < Math.max(... greenhouse_num_plants.map(Number))) || num_rows_per_plot * num_cols_per_plot < num_plants_per_treatment) {
+            alert("You specified in-plot coordinates, but the number of plants per plot is greater than the number of positions available in each plot. Please decrease the number of plants per plot or increase the number of available positions. If this is a greenhouse trial, make sure no accession is specified to have more plants than the number of allowed spaces. If this is a splitplot design, please make sure that the number of plants per plot specified in section (2) matches the number of plants per treatment.");
+            return;
+        }
+
         var use_same_layout;
         if ($('#use_same_layout').is(':checked')) {
            use_same_layout = $('#use_same_layout').val();
@@ -659,7 +704,7 @@ jQuery(document).ready(function ($) {
            use_same_layout = "";
         }
 
-	var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
+	    var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
 
         $.ajax({
             type: 'POST',
@@ -695,7 +740,7 @@ jQuery(document).ready(function ($) {
                 'fieldmap_col_number': fieldmap_col_number,
                 'fieldmap_row_number': fieldmap_row_number,
                 'plot_layout_format': plot_layout_format,
-                'treatments':treatments,
+                'treatments': JSON.stringify(treatments),
                 'num_plants_per_plot':num_plants_per_plot,
                 'row_in_design_number': row_in_design_number,
                 'col_in_design_number': col_in_design_number,
@@ -714,7 +759,9 @@ jQuery(document).ready(function ($) {
                 'plot_width': plot_width,
                 'plot_length': plot_length,
                 'use_same_layout' : use_same_layout,
-		'plot_numbering_scheme' : plot_numbering_scheme
+		        'plot_numbering_scheme' : plot_numbering_scheme,
+                'num_cols_per_plot' : num_cols_per_plot,
+                'num_rows_per_plot' : num_rows_per_plot
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
@@ -1020,7 +1067,7 @@ jQuery(document).ready(function ($) {
         } else if (design_method == "greenhouse") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database.</p></div>');
         } else if (design_method == "splitplot") {
-            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Split plot designs are useful for applying treatments to subplots of a plot. If you give three treatments, there will be three subplots with the treatment(s) distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.</p></div>');
+            jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Split plot designs are useful for applying treatments to subplots of a plot. If you give two treatments with two levels each, there will be four subplots with the four treatment combinations distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.</p></div>');
         } else if (design_method == "p-rep") {
             jQuery('#create_trial_design_description_div').html('<br/><div class="well"><p>Has some treatments that are unreplicated and relies on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.</p></div>');
         } else if (design_method == "Westcott") {
@@ -2204,6 +2251,7 @@ jQuery(document).ready(function ($) {
     }
 
     function save_experimental_design(design_json) {
+        
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
         var year = jQuery('#add_project_year').val();
@@ -2339,7 +2387,9 @@ jQuery(document).ready(function ($) {
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
                     Workflow.check_complete("#trial_design_workflow");
-                    add_plants_per_plot();
+                    if (design_type != "greenhouse" && design_type != "splitplot") {
+                        add_plants_per_plot();
+                    }
                 }
             },
             error: function () {

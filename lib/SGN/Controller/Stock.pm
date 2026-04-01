@@ -25,6 +25,9 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::Chado::Publication;
 use CXGN::Genotype::DownloadFactory;
+use CXGN::Stock::Vector;
+use CXGN::Transformation::Transformant;
+use CXGN::Stock::RelatedStocks;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -267,19 +270,90 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 	$editable_stockprops .= ",PUI,organization";
     my $editable_vectorprops = $c->get_conf('editable_vector_props');
 
+    my $vector_related_genes;
+    my $vector_analyzed_tissue_types;
+    my $number_of_insertions;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $transgenic_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id;
     my $transgenic_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $transgenic_type_id});
     my $is_a_transgenic_line;
     if ($transgenic_stockprop_rs) {
         $is_a_transgenic_line = $transgenic_stockprop_rs->value();
+        if ($is_a_transgenic_line) {
+            my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$stock_id});
+            my $vector_construct = $transformant_obj->vector_construct();
+            my $vector_id;
+            if (@$vector_construct) {
+                $vector_id = $vector_construct->[0];
+                my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
+                $vector_related_genes = $vector_construct->Gene;
+            }
+
+            my $number_of_insertions_type_id  =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id;
+            my $number_of_insertions_stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $stock_id, type_id => $number_of_insertions_type_id});
+            if ($number_of_insertions_stockprop_rs) {
+                $number_of_insertions = $number_of_insertions_stockprop_rs->value();
+            }
+        }
+    }
+
+    if ($stock_type eq 'vector_construct') {
+        my $vector_construct = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$stock_id);
+        $vector_related_genes = $vector_construct->Gene;
+        my $vector_assay_metadata = $vector_construct->assay_metadata;
+        if ($vector_assay_metadata) {
+            my $metadata_hash = decode_json $vector_assay_metadata;
+            my @assay_tissue_types = sort keys (%$metadata_hash);
+            $vector_analyzed_tissue_types = join(",",@assay_tissue_types);
+        }
+    }
+
+    my $derived_accession_relationship;
+    my $related_stock_link;
+    my $original_stock_link;
+    my $derived_accession_relationship_obj = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $stock_id});
+    my $derived_accession_relationship_info = $derived_accession_relationship_obj->get_derived_accession_relationship();
+    if (@$derived_accession_relationship_info) {
+        my $derived_from_stock_id = $derived_accession_relationship_info->[0]->[0];
+        my $derived_from_stock_name = $derived_accession_relationship_info->[0]->[1];
+        my $derived_from_stock_type = $derived_accession_relationship_info->[0]->[2];
+        my $derived_accession_stock_id = $derived_accession_relationship_info->[0]->[3];
+        my $derived_accession_name = $derived_accession_relationship_info->[0]->[4];
+        if ($stock_id == $derived_accession_stock_id) {
+            if (($derived_from_stock_type eq 'plant') || ($derived_from_stock_type eq 'tissue_sample')) {
+                my $original_stock = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id => $derived_from_stock_id});
+                my $original_stock_info = $original_stock->get_original_derived_from_stock();
+                my $original_stock_id = $original_stock_info->{'original_stock_id'};
+                my $original_stock_name = $original_stock_info->{'original_stock_name'};
+                my $original_stock_type = $original_stock_info->{'original_stock_type'};
+                if ($original_stock_type eq 'cross') {
+                    $original_stock_link = qq{<a href = "/cross/$original_stock_id">$original_stock_name</a>}."(cross)";
+                } elsif ($original_stock_type eq 'family_name') {
+                    $original_stock_link = qq{<a href = "/family/$original_stock_id/">$original_stock_name</a>}."(family name)";
+                } else {
+                    $original_stock_link = qq{<a href="/stock/$original_stock_id/view">$original_stock_name</a>}."(accession)";
+                }
+            }
+            my $type = "(".$derived_from_stock_type.")";
+            $derived_accession_relationship = 'is_a_derived_accession';
+            $related_stock_link = qq{<a href="/stock/$derived_from_stock_id/view">$derived_from_stock_name</a>}.$type;
+        } elsif ($stock_id == $derived_from_stock_id) {
+            $derived_accession_relationship = 'has_a_derived_accession';
+            $related_stock_link = qq{<a href="/stock/$derived_accession_stock_id/view">$derived_accession_name</a>};
+        }
     }
 
     my $is_in_trial;
-    my $check_trial = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
-    my @trial_list = $check_trial->get_trials();
+    my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
+    my @trial_list = $stock_obj->get_trials();
     if (scalar(@trial_list) > 0) {
         $is_in_trial = 1;
+    }
+
+    my $is_a_parent;
+    my $progeny_count = $stock_obj->check_progenies();
+    if ($progeny_count > 0){
+        $is_a_parent = 1;
     }
 
 	print STDERR "Checkpoint 4: Elapsed ".(time() - $time)."\n";
@@ -320,7 +394,14 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		editable_vector_props   => $editable_vectorprops,
         is_obsolete   => $obsolete,
         is_a_transgenic_line => $is_a_transgenic_line,
+        derived_accession_relationship => $derived_accession_relationship,
+        related_stock_link => $related_stock_link,
+        original_stock_link => $original_stock_link,
         is_in_trial => $is_in_trial,
+        vector_related_genes => $vector_related_genes,
+        vector_analyzed_tissue_types => $vector_analyzed_tissue_types,
+        number_of_insertions => $number_of_insertions,
+        is_a_parent => $is_a_parent,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),

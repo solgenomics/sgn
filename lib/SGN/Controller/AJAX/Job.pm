@@ -70,14 +70,56 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
     }
 
     foreach my $job_id (@{$jobs}) {
-        my $job = CXGN::Job->new({
-            schema => $bcs_schema,
-            people_schema => $people_schema,
-            sp_job_id => $job_id
-        });
-        my $actions_html = "<span id=\"$job_id\" style=\"display: none;\"></span><button id=\"dismiss_job_$job_id\" onclick=\"jsMod['job'].dismiss_job($job_id);\" class=\"btn btn-small btn-danger\">Dismiss</button>";
-        my $status = $job->check_status();
-        my $results_page = "";
+        my $job;
+        my $actions_html;
+        my $status;
+        my $results_page;
+        my $create_timestamp;
+        my $finish_timestamp;
+        my $owner;
+        my $row;
+        eval {
+            $job = CXGN::Job->new({
+                schema => $bcs_schema,
+                people_schema => $people_schema,
+                sp_job_id => $job_id,
+                finish_logfile => $c->config->{job_finish_log}
+            });
+        };
+        if ($@) {
+            print STDERR "$@\n";
+            if ($role eq "curator") {
+                $row = {
+                    id => $job_id,
+                    user => "NA - server error",
+                    name => "NA - server error",
+                    type => "NA - server error",
+                    status => "NA - server error",
+                    create_timestamp => "NA - server error",
+                    finish_timestamp => "NA - server error",
+                    results_page => "NA - server error",
+                    actions => "NA - server error"
+                };
+            } else {
+                $row = {
+                    id => $job_id,
+                    name => "NA - server error",
+                    type => "NA - server error",
+                    status => "NA - server error",
+                    create_timestamp => "NA - server error",
+                    finish_timestamp => "NA - server error",
+                    results_page => "NA - server error",
+                    actions => "NA - server error"
+                };
+            }
+
+            push @{$data->{data}}, $row;
+            next;
+        }
+        
+        $actions_html = "<span id=\"$job_id\" style=\"display: none;\"></span><button id=\"dismiss_job_$job_id\" onclick=\"jsMod['job'].dismiss_job($job_id);\" class=\"btn btn-small btn-danger\">Dismiss</button>";
+        $status = $job->check_status();
+        $results_page = "";
         # if ($status eq "finished" && $job->retrieve_argument('type') =~ /analysis/) {
         #     $actions_html .= "<button id=\"save_job_$job_id\" class=\"btn btn-small btn-success\">Save Results</button>";
         # } 
@@ -95,12 +137,11 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
                 $results_page = '';
             }
         }
-        my $create_timestamp = $job->create_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
-        my $finish_timestamp = $job->finish_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
-        my $row;
+        $create_timestamp = $job->create_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
+        $finish_timestamp = $job->finish_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
         if ($role eq "curator") {
             my $dbh = $bcs_schema->storage->dbh();
-            my $owner = CXGN::People::Person->new(
+            $owner = CXGN::People::Person->new(
                 $dbh,
                 $job->sp_person_id()
             );
@@ -147,7 +188,8 @@ sub delete :Path('/ajax/job/delete') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id
+            sp_job_id => $sp_job_id,
+            finish_logfile => $c->config->{job_finish_log}
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
@@ -172,7 +214,8 @@ sub cancel :Path('/ajax/job/cancel') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id
+            sp_job_id => $sp_job_id,
+            finish_logfile => $c->config->{job_finish_log}
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {

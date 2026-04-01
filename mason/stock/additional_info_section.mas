@@ -11,7 +11,32 @@ $new_locus_link => ''
 $locus_add_uri
 $allele_div
 $is_owner
+$derived_accession_relationship
+$related_stock_link
+$original_stock_link
 </%args>
+
+% use Data::Dumper;
+% print STDERR "SOURCE DBS: ".Dumper($source_dbs);
+% if ($derived_accession_relationship) {
+    <div class="panel panel-default">
+        <div class="panel-body panel-body-sm">
+% if ($derived_accession_relationship eq 'is_a_derived_accession') {
+        <b>Derived from: </b>
+        </br>
+        <b>Direct Source: </b><% $related_stock_link %>
+        </br>
+% if ($original_stock_link) {
+        <b>Original Source: </b><% $original_stock_link %>
+% }
+% } elsif ($derived_accession_relationship eq 'has_a_derived_accession') {
+        <b>Derived Accession: </b>
+        <br/>
+        <% $related_stock_link %>
+% }
+        </div>
+    </div>
+% }
 
 <div class="panel panel-default">
     <div class="panel-body panel-body-sm">
@@ -61,7 +86,7 @@ $is_owner
         <ul>
 % foreach my $db_url (keys %$source_dbs) {
             <li>
-                <a href="<% $db_url %>" ><% $source_dbs->{$db_url} %></a>
+                <a href="<% $db_url %>" ><% $db_url %></a>
             </li>
 % }
         </ul>
