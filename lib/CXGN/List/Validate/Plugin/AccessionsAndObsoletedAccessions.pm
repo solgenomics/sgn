@@ -1,4 +1,4 @@
-package CXGN::List::Validate::Plugin::NotObsoletedAndObsoletedAccessions;
+package CXGN::List::Validate::Plugin::AccessionsAndObsoletedAccessions;
 
 use Moose;
 
