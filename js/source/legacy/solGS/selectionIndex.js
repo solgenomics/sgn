@@ -389,9 +389,6 @@ jQuery(document).on("click", "#calculate_si", function () {
                   axis_mode: 'four'
                 };
 
-                console.log(`output: ${JSON.stringify(res.output_data)}`);
-                console.log(`input: ${JSON.stringify(res.input_data)}`);
-
                 solGS.heatmap.plot(heatmapArgs);
                 
                 var popName = jQuery("#si_selected_pop_name").val();
