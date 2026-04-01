@@ -195,7 +195,7 @@ jQuery(document).ready(function () {
                     corrArgs["corr_table_file"] = res.corre_table_file;
                     var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
                     var heatmapArgs = {
-                      output_data: res.data,
+                      heatmap_input_data: res.data,
                       canvas: canvas,
                       plot_div_id: corrPlotDivId,
                       download_links: corrDownload,
