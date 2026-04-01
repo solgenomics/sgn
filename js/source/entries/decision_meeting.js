@@ -1148,7 +1148,7 @@
       });
     }
 
-    async function getAvailableStages(currentStage){
+    async function getAvailableStages() {
       var out = [];
 
       try {
@@ -1166,10 +1166,6 @@
         console.log('[DecisionMeeting] normalized stages:', out);
       } catch (e) {
         console.error('[DecisionMeeting] Could not load stages from controller:', e);
-      }
-
-      if (currentStage && out.indexOf(currentStage) === -1) {
-        out.unshift(currentStage);
       }
 
       return out;
@@ -1207,6 +1203,7 @@
       var currentStage = opts.currentStage || '';
       var meetingDate = opts.meetingDate || '';
       var stages = Array.isArray(opts.stages) ? opts.stages : [];
+      var selectedStage = opts.selectedStage || '';
 
       return new Promise(function(resolve){
         var dlg = document.getElementById('dm_stage_dialog');
@@ -1223,7 +1220,7 @@
 
         stages.forEach(function(stg, idx){
           var id = 'dm_stage_opt_' + idx;
-          var checked = (stg === currentStage) ? ' checked' : '';
+          var checked = (selectedStage && stg === selectedStage) ? ' checked' : '';
           var row = ''
             + '<div style="margin-bottom:6px;">'
             + '  <label for="' + id + '" style="display:flex;align-items:center;gap:8px;font-weight:400;cursor:pointer;">'
@@ -1357,61 +1354,8 @@
     function escapeRegExp(s){ return String(s||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
     function buildCrossProductRows(){
-      var accs = STATE.accessions;
-      var programs = STATE.programs;
-      var byKey = new Map();
-      STATE.baseRows.forEach(function(r){
-        var k = keyFor(r.accession || '', r.breeding_program || '');
-        byKey.set(k, r);
-      });
-
-      var out = [];
-      if (accs.length && programs.length){
-        for (var i=0;i<accs.length;i++){
-          var a = accs[i];
-          for (var j=0;j<programs.length;j++){
-            var p = programs[j];
-            var k = keyFor(a, p);
-            if (byKey.has(k)) {
-              out.push(Object.assign({}, byKey.get(k)));
-            } else {
-              out.push({
-                accession: a,
-                breeding_program: p,
-                stage: '',
-                year: '',
-                decision: normDecision(STATE.decisionsMap.get(k) || ''),
-                new_stage: '',
-                female_parent:'',
-                male_parent:'',
-                notes:''
-              });
-            }
-          }
-        }
-      } else {
-        if (accs.length && !programs.length){
-          accs.forEach(function(a){
-            var k = keyFor(a, '');
-            out.push(byKey.get(k) || {
-              accession:a,
-              breeding_program:'',
-              stage:'',
-              year:'',
-              decision:'',
-              new_stage:'',
-              female_parent:'',
-              male_parent:'',
-              notes:''
-            });
-          });
-        } else {
-          out = STATE.baseRows.slice();
-        }
-      }
-
-      STATE.rows = out;
-      renderRows(out);
+      STATE.rows = (STATE.baseRows || []).slice();
+      renderRows(STATE.rows);
     }
 
     function ensureBpHeaderFilter(){
@@ -1470,19 +1414,29 @@
       STATE.accessions = [];
       STATE.decisionsMap.clear();
 
+      var meetingCtx = getSelectedMeetingContext();
+      var meetingId = meetingCtx && meetingCtx.meeting_id ? meetingCtx.meeting_id : '';
+
       var loaded = false;
       try{
-        var getRes = await ajaxJSON('/decisions', { list_id });
-        if (getRes && Array.isArray(getRes.rows) && getRes.rows.length){
+        var params = { list_id: list_id };
+        if (meetingId) params.meeting_id = meetingId;
+
+        var getRes = await ajaxJSON('/decisions', params);
+
+        if (getRes && Array.isArray(getRes.rows)) {
           STATE.baseRows = normalizeRows(getRes.rows);
           loaded = true;
         }
-      }catch(e2){ dbg('GET /decisions not available or empty. Falling back…', e2); }
+      }catch(e2){
+        dbg('GET /decisions failed', e2);
+      }
 
       if (!loaded){
         try{
           var acc = await ajaxJSON('/accessions', { list_id });
           var names = (acc && acc.accessions || []).map(function(a){ return (a && a.name)||''; }).filter(Boolean);
+
           STATE.baseRows = names.map(function(nm){
             return {
               accession:nm,
@@ -1502,11 +1456,13 @@
         }
       }
 
-      STATE.accessions = uniq(STATE.baseRows.map(function(r){ return r.accession || ''; }).filter(Boolean));
-      var progsInRows = uniq(STATE.baseRows.map(function(r){ return r.breeding_program || ''; }).filter(Boolean));
-      var mergedPrograms = STATE.programs.slice();
-      progsInRows.forEach(function(p){ if (p && mergedPrograms.indexOf(p) === -1) mergedPrograms.push(p); });
-      STATE.programs = mergedPrograms;
+      STATE.accessions = uniq(
+        STATE.baseRows.map(function(r){ return r.accession || ''; }).filter(Boolean)
+      );
+
+      STATE.programs = uniq(
+        STATE.baseRows.map(function(r){ return r.breeding_program || ''; }).filter(Boolean)
+      );
 
       STATE.baseRows.forEach(function(r){
         var k = keyFor(r.accession, r.breeding_program);
@@ -1837,24 +1793,71 @@
         }
 
         var selectedStage = '';
-
         if (v === 'advance' || v === 'jump') {
-          var stages = await getAvailableStages(stageText);
+          $.ajax({
+            url: (window.DM_API_BASE || '/ajax/decisionmeeting') + '/compute_new_stage',
+            method: 'POST',
+            dataType: 'json',
+            data: {
+              current_stage: stageText,
+              decision: v,
+              year: meetingYearFull,
+              meeting_date: meetingDate,
+              stock_id: stockId,
+              selected_stage: ''
+            },
+            success: async function(resp){
+              var allowedStages = Array.isArray(resp && resp.allowed_stages) ? resp.allowed_stages : [];
 
-          selectedStage = await openStageDialog({
-            accession: acc,
-            currentStage: stageText,
-            meetingDate: meetingDate,
-            stages: stages
+              if (!allowedStages.length) {
+                alert((resp && resp.warning) || 'No valid target stages available for this accession.');
+                updateNewStageValue('', v);
+                return;
+              }
+
+              var chosenStage = await openStageDialog({
+                accession: acc,
+                currentStage: stageText,
+                meetingDate: meetingDate,
+                stages: allowedStages,
+                selectedStage: (resp && resp.selected_stage) || ''
+              });
+
+              if (!chosenStage) {
+                $('.dm-decision-select[data-acc="' + acc.replace(/"/g, '&quot;') + '"][data-bp="' + bp.replace(/"/g, '&quot;') + '"]').val('');
+                STATE.decisionsMap.set(keyFor(acc, bp), '');
+                updateNewStageValue(previousNewStage, '');
+                return;
+              }
+
+              $.ajax({
+                url: (window.DM_API_BASE || '/ajax/decisionmeeting') + '/compute_new_stage',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                  current_stage: stageText,
+                  decision: v,
+                  year: meetingYearFull,
+                  meeting_date: meetingDate,
+                  stock_id: stockId,
+                  selected_stage: chosenStage
+                },
+                success: function(resp2){
+                  var newStage = (resp2 && resp2.new_stage) || '';
+                  updateNewStageValue(newStage, v);
+                },
+                error: function(xhr2){
+                  console.error('[DecisionMeeting] compute_new_stage failed:', xhr2 && xhr2.responseText);
+                  updateNewStageValue('', v);
+                }
+              });
+            },
+            error: function(xhr){
+              console.error('[DecisionMeeting] compute_new_stage failed:', xhr && xhr.responseText);
+              updateNewStageValue('', v);
+            }
           });
-
-          if (!selectedStage) {
-            this.value = '';
-            applyDecisionColor(this);
-            STATE.decisionsMap.set(keyFor(acc, bp), '');
-            updateNewStageValue(previousNewStage, '');
-            return;
-          }
+          return;
         }
 
         $.ajax({
@@ -2331,10 +2334,29 @@
         }
       })
       .fail(function (xhr) {
-        if (xhr.status === 403)       showErr('You must be logged in to create a meeting.');
-        else if (xhr.status === 404)  showErr('Create endpoint not found at ' + API_BASE + '/create');
-        else if (xhr.status === 400)  showErr('Invalid input. Please check the required fields.');
-        else                          showErr('Error ' + xhr.status + ': ' + (xhr.responseJSON?.message || xhr.statusText || 'request failed'));
+        const serverMsg =
+          (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.detail)) ||
+          xhr.responseText ||
+          '';
+
+        if (xhr.status === 403) {
+          if (/login required/i.test(serverMsg)) {
+            showErr('You must be logged in to create a meeting.');
+          } else if (serverMsg) {
+            showErr(serverMsg);
+          } else {
+            showErr('You are not allowed to create meetings.');
+          }
+        }
+        else if (xhr.status === 404) {
+          showErr('Create endpoint not found at ' + API_BASE + '/create');
+        }
+        else if (xhr.status === 400) {
+          showErr(serverMsg || 'Invalid input. Please check the required fields.');
+        }
+        else {
+          showErr('Error ' + xhr.status + ': ' + (serverMsg || xhr.statusText || 'request failed'));
+        }
       })
       .always(function(){
         creating = false;
@@ -2572,14 +2594,31 @@
   }
 
   async function downloadMeetingReport(meetingId){
+    var base = (window.DM_API_BASE || '/ajax/decisionmeeting');
+    var url = base + '/meeting_report_html?meeting_id=' + encodeURIComponent(meetingId);
+
     try {
-      var base = (window.DM_API_BASE || '/ajax/decisionmeeting');
-      var url = base + '/meeting_report_html?meeting_id=' + encodeURIComponent(meetingId);
+      var resp = await fetch(url, {
+        headers: { 'Accept': 'text/html,application/json' }
+      });
+
+      var ct = resp.headers.get('content-type') || '';
+
+      if (!resp.ok) {
+        if (ct.indexOf('application/json') !== -1) {
+          var errJson = await resp.json();
+          throw new Error(errJson.message || errJson.error || ('HTTP ' + resp.status));
+        } else {
+          var txt = await resp.text().catch(function(){ return ''; });
+          throw new Error(txt || ('HTTP ' + resp.status));
+        }
+      }
 
       window.open(url, '_blank');
     } catch (err) {
       console.error('[DecisionMeeting] download failed for meeting ' + meetingId, err);
-      alert('Could not open meeting report.');
+      alert(err && err.message ? err.message : 'Could not open meeting report.');
+      throw err;
     }
   }
 
