@@ -14,8 +14,6 @@ Parameters:
 
 CXGN::Chado::Cvterm object
 
-
-
 =back
 
 =head1 AUTHOR
@@ -156,7 +154,7 @@ my $edit_privs = $curator ;
             alert("Cvterm deleted.");
             window.location.reload();
           }
-        }, 
+        },
         error : function (error) {
           jQuery('#working_modal').modal("hide");
           alert("An error occurred deleting cvterm.");
@@ -204,14 +202,14 @@ my $edit_privs = $curator ;
 </div>
 
 <&| /page/info_section.mas, title=>"Cvterm details" &>
-<table>
+<table style="border-spacing:10px">
 % if ( $allow_edits ) {
 <tr><td><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit]</td><td><a href="javascript:deleteCvterm()" id="delete_cvterm_link" style="color:red;">[Delete]</a></td></tr>
 % }
-<tr><td>Term id</td><td><b><% $accession %></b></td></tr>
-<tr><td>Term name</td><td><b><% $cvterm_name %></b></td></tr>
-<tr><td>Term definition</td><td><b><% $definition %></b></td></tr>
-<tr><td>Comment</td><td><b><% $comment %></b></td></tr>
+<tr><td>Term id</td><td width="10px">&nbsp;</td><td><b><% $accession %></b></td></tr>
+<tr><td>Term name</td><td>&nbsp;</td><td><b><% $cvterm_name %></b></td></tr>
+<tr><td>Term definition</td><td>&nbsp;</td><td><b><% $definition %></b></td></tr>
+<tr><td>Comment</td><td>&nbsp;</td><td><b><% $comment %></b></td></tr>
 </table>
 
 % if ($is_obsolete) {
@@ -239,7 +237,7 @@ my $edit_privs = $curator ;
 
 % my $props_subtitle = $allow_edits ? "[<a id=\"cvterm_add_props\" href=\"javascript:cvtermprops_addPropDialog()\">Add...</a>]" : "";
 
-% if ($is_variable) { 
+% if ($is_variable) {
 <&| /page/info_section.mas, title => "Variable Properties" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /chado/cvtermprops.mas,
        cv_name    => 'trait_property',
@@ -268,13 +266,13 @@ LOAD...
 </&>
 <script>
 
-  if (isLoggedIn()) { 
+  if (isLoggedIn()) {
     addToListMenu('paste_to_list', 'cvterm_id', { listType: 'traits' } );
   }
-  else { 
+  else {
     jQuery('#paste_to_list').html("&nbsp;Please log in to use lists.");
   }
-  
+
 </script>
 
 <br />
@@ -305,8 +303,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-  
-    jQuery('#loci_data').DataTable( { 
+
+    jQuery('#loci_data').DataTable( {
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_loci',
      });
 
@@ -330,7 +328,7 @@ LOAD...
             alert("Changes saved.");
             window.location.reload();
           }
-        }, 
+        },
         error : function () {
           jQuery('#working_modal').modal("hide");
           alert("An error occurred editing cvterm details.");
@@ -369,8 +367,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-  
-    jQuery('#annotated_stocks_data').DataTable( { 
+
+    jQuery('#annotated_stocks_data').DataTable( {
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/annotated_stocks',
      });
   });
@@ -389,7 +387,7 @@ LOAD...
         collapsible => 1,
    &>
      <& /page/columnar_table.mas,
-        headings     => ["Analyze QTL in population", "Population description"], 
+        headings     => ["Analyze QTL in population", "Population description"],
         data         => \@qtl_data,
         __alt_freq   => 2,
         __align      =>'l',
@@ -421,8 +419,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-  
-    jQuery('#phen_stocks_data').DataTable( { 
+
+    jQuery('#phen_stocks_data').DataTable( {
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/phenotyped_stocks',
      });
   });
@@ -465,8 +463,8 @@ LOAD...
 <script>
 
   jQuery(document).ready(function () {
-  
-    jQuery('#trial_data').DataTable( { 
+
+    jQuery('#trial_data').DataTable( {
       'ajax': '/cvterm/'+ <% $cvterm_id %> + '/datatables/direct_trials',
        }
      );
@@ -476,7 +474,7 @@ LOAD...
 
 </&>
 
-<&| /page/info_section.mas, 
+<&| /page/info_section.mas,
     title => "Images and figures",
     subtitle      => $image_subtitle,
     collapsible   => 1,
