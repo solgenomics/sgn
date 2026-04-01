@@ -26,6 +26,58 @@ $latest_trial_activity => undef
 
 </%args>
 
+<%init>
+my ($dap, $dah);
+
+sub _normalize_to_ymd {
+    my ($s) = @_;
+    return undef unless defined $s;
+    $s =~ s/^\s+|\s+$//g;
+
+    # "YYYY-MonthName-DD" -> "YYYY-mm-dd"  (e.g., 2025-November-14)
+    if ($s =~ /^(\d{4})[-\/](\p{L}+)[-\/](\d{1,2})$/) {
+        my ($y, $mon, $d) = ($1, lc($2), $3);
+        $mon =~ s/[^a-z]//g;
+
+        my %m = (
+            jan=>1, january=>1, feb=>2, february=>2, mar=>3, march=>3,
+            apr=>4, april=>4, may=>5, jun=>6, june=>6, jul=>7, july=>7,
+            aug=>8, august=>8, sep=>9, sept=>9, september=>9,
+            oct=>10, october=>10, nov=>11, november=>11, dec=>12, december=>12
+        );
+
+        my $mnum = $m{$mon} || $m{substr($mon,0,3)};
+        return $mnum ? sprintf("%04d-%02d-%02d", $y, $mnum, $d) : undef;
+    }
+
+    # "YYYY-m-d" or "YYYY/mm/dd" -> "YYYY-mm-dd"
+    if ($s =~ /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/) {
+        return sprintf("%04d-%02d-%02d", $1, $2, $3);
+    }
+
+    return undef;
+}
+
+sub _days_since {
+    my ($date_str) = @_;
+    return undef unless $date_str;
+
+    my $ymd = _normalize_to_ymd($date_str);
+    return undef unless $ymd;
+
+    eval {
+        require Time::Piece;
+        my $tp = Time::Piece->strptime($ymd, '%Y-%m-%d');
+        my $today = Time::Piece::localtime();
+        my $diff_days = int( ($today - $tp) / (24*60*60) );
+        return ($diff_days >= 0) ? $diff_days : undef;
+    } || undef;
+}
+
+$dap = _days_since($planting_date);
+$dah = _days_since($harvest_date);
+</%init>
+
 
 <div class="row">
     <div class="col-sm-8">
@@ -130,6 +182,9 @@ $latest_trial_activity => undef
                     <div id="planting_date">
 % if ($planting_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
+% if (defined $dap) {
+&nbsp;<span>| DAP: <% $dap %> </span>
+% }
 % } else {
 %  print "<span class='text-danger'>[No Planting Date]</span>";
 % }
@@ -152,6 +207,9 @@ $latest_trial_activity => undef
                     <div id="harvest_date">
 % if ($harvest_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
+% if (defined $dah) {
+&nbsp;<span> | DAH: <% $dah %> </span>
+% }
 % } else {
 %  print "<span class='text-danger'>[No Harvest Date]</span>";
 % }
