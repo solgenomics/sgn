@@ -3,8 +3,6 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 </%args>
 
 <!-- Create Meeting Modal -->
-<!-- 1) The button that OPENS the modal -->
-<button id="create_meeting_dialog" class="btn btn-primary">Create Meeting</button>
 
 <!-- 2) The modal -->
 <div id="createMeetingModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">

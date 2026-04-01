@@ -39,9 +39,9 @@
   </&>
 
   <&| /page/info_section.mas,
-       title=>'Data Summary',
+       title=>'Data Summary and Graphics',
        is_subsection=>1, collapsible=>1, collapsed=>0,
-       subtitle=>"View Approvers' Record"
+       subtitle=>""
     &>
     <div class="panel panel-default">
       <div class="panel-body">

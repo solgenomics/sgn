@@ -2,9 +2,6 @@
   'use strict';
   jQuery(function ($) {
 
-    function dbg(){ if (window.DM_DEBUG) { var a=[].slice.call(arguments); a.unshift('[DecisionMeeting]'); console.log.apply(console,a);} }
-    console.info('%cDecisionMeeting JS file loaded','color:#0a7;font-weight:bold');
-
     window.DM_MEETING_CACHE = window.DM_MEETING_CACHE || {};
 
     /* ===== Root detection ===== */
@@ -13,8 +10,6 @@
       $('#decision_table').length       ? $('#decision_table').closest('.panel, .box, .card, .well, body') :
       $('#meeting_table').length        ? $('#meeting_table').closest('.panel, .box, .card, .well, body') :
       $();
-
-    if (!$root.length) console.error('[DecisionMeeting] No suitable container found (missing #decision_meeting_main and tables).');
 
     var hasDT = $.fn && $.fn.DataTable;
 
@@ -71,7 +66,10 @@
       }, 80);
     });
 
-    function findSectionBody($sec){ var $b=$sec.find('.panel-body, .detail-section-body, .box-body, .card-body, .well').first(); return $b.length?$b:$sec; }
+    function findSectionBody($sec){
+      var $b = $sec.find('.panel-body, .detail-section-body, .box-body, .card-body, .well').first();
+      return $b.length ? $b : $sec;
+    }
 
     /* ----------------------- Client state ---------------------- */
     var STATE = {
@@ -409,16 +407,16 @@
         '/ajax/decision'
       ].filter(Boolean);
 
-      for (var i=0;i<candidates.length;i++){
+      for (var i = 0; i < candidates.length; i++) {
         var base = candidates[i];
-        try{
-          var r = await fetch(base + '/ping', { headers:{'Accept':'application/json'} });
-          var ct = r.headers.get('content-type')||'';
+        try {
+          var r = await fetch(base + '/ping', { headers:{ 'Accept':'application/json' } });
+          var ct = r.headers.get('content-type') || '';
           if (!r.ok) continue;
           if (!ct.includes('application/json')) continue;
           var j = await r.json();
           if (j && (j.ok || j.lists || j.datasets)) return base;
-        }catch(e){}
+        } catch (e) {}
       }
       return null;
     }
@@ -427,11 +425,17 @@
       var base = window.DM_API_BASE || '';
       var q = params ? ('?' + new URLSearchParams(params)) : '';
       var url = base + path + q;
-      dbg('GET', url);
-      return fetch(url, { headers:{'Accept':'application/json'} }).then(async function(r){
-        var ct = r.headers.get('content-type')||'';
-        if (!r.ok){ var txt = await r.text().catch(()=> ''); throw new Error('HTTP '+r.status+' '+r.statusText+' on '+url+'\n'+txt.slice(0,200)); }
-        if (!ct.includes('application/json')){ var txt2 = await r.text().catch(()=> ''); throw new Error('Non-JSON response for '+url+': '+txt2.slice(0,120)+'…'); }
+
+      return fetch(url, { headers:{ 'Accept':'application/json' } }).then(async function(r){
+        var ct = r.headers.get('content-type') || '';
+        if (!r.ok) {
+          var txt = await r.text().catch(function(){ return ''; });
+          throw new Error('HTTP ' + r.status + ' ' + r.statusText + ' on ' + url + '\n' + txt.slice(0, 200));
+        }
+        if (!ct.includes('application/json')) {
+          var txt2 = await r.text().catch(function(){ return ''; });
+          throw new Error('Non-JSON response for ' + url + ': ' + txt2.slice(0, 120) + '…');
+        }
         return r.json();
       });
     }
@@ -465,7 +469,6 @@
       var $table = $('#summary_table');
 
       if (!$table.length) {
-        console.warn('[DecisionMeeting] #summary_table not found');
         return $();
       }
 
@@ -570,8 +573,6 @@
         var $sel = ensureDatasetControl();
 
         if (!$sel.length) {
-          console.warn('[DecisionMeeting] dataset select not found');
-          console.log('[DecisionMeeting] datasets returned by backend:', (resp && resp.datasets) || []);
           return;
         }
 
@@ -585,19 +586,10 @@
             $sel.append('<option value="' + escapeHtml(id) + '">' + escapeHtml(name) + '</option>');
           }
         });
-
-        console.log(
-          '[DecisionMeeting] datasets loaded:',
-          ((resp && resp.datasets) || []).length
-        );
-      }).catch(function(e){
-        console.error('[DecisionMeeting] failed to load datasets', e);
-      });
+      }).catch(function(){});
     }
 
     function loadDatasetSummary(datasetId){
-      console.log('[DecisionMeeting] loadDatasetSummary called with:', datasetId);
-
       var $table = $('#summary_table');
       var $tbody = ensureSummaryTbody();
       if (!$tbody.length) return;
@@ -624,14 +616,10 @@
 
       return ajaxJSON('/dataset_summary', { dataset_id: datasetId })
         .then(function(resp){
-          console.log('[DecisionMeeting] dataset_summary response:', resp);
-
           var rows = (resp && resp.summary) || [];
           renderSummaryTable(rows);
         })
-        .catch(function(e){
-          console.error('[DecisionMeeting] failed to load dataset summary', e);
-
+        .catch(function(){
           if (hasDT && $table.length && $.fn.DataTable.isDataTable($table[0])) {
             $table.DataTable().clear().draw();
           } else {
@@ -641,358 +629,353 @@
           }
         });
     }
+
     /* ===========================
-     Plot UI + dataset plot data
-     =========================== */
+       Plot UI + dataset plot data
+       =========================== */
 
-  var DM_PLOT_CACHE = {};
+    var DM_PLOT_CACHE = {};
 
-  function getCurrentDatasetId(){
-    var $sel = ensureDatasetControl();
-    return $sel.length ? ($sel.val() || '') : '';
-  }
-
-  function ensurePlotlyLoaded(){
-    return new Promise(function(resolve, reject){
-      if (window.Plotly) {
-        resolve(window.Plotly);
-        return;
-      }
-
-      var existing = document.getElementById('dm-plotly-loader');
-      if (existing) {
-        existing.addEventListener('load', function(){ resolve(window.Plotly); });
-        existing.addEventListener('error', reject);
-        return;
-      }
-
-      var s = document.createElement('script');
-      s.id = 'dm-plotly-loader';
-      s.src = 'https://cdn.plot.ly/plotly-2.35.2.min.js';
-      s.onload = function(){ resolve(window.Plotly); };
-      s.onerror = function(){ reject(new Error('Could not load Plotly')); };
-      document.head.appendChild(s);
-    });
-  }
-
-  function ensurePlotPanels(){
-    if ($('#dm-plots-wrap').length) return;
-
-    var $anchor = $('#summary_table_wrapper');
-
-    if (!$anchor.length) {
-      $anchor = $('#summary_table').closest('.dataTables_wrapper');
+    function getCurrentDatasetId(){
+      var $sel = ensureDatasetControl();
+      return $sel.length ? ($sel.val() || '') : '';
     }
 
-    if (!$anchor.length) {
-      $anchor = $('#summary_table').closest('.table-responsive, .panel, .box, .card, .well, div').first();
-    }
-
-    if (!$anchor.length) {
-      $anchor = $root.length ? $root : $('body');
-    }
-
-    var html = ''
-      + '<div id="dm-plots-wrap" style="margin-top:20px;">'
-
-      + '  <div class="panel panel-default">'
-      + '    <div class="panel-heading"><strong>Boxplot</strong></div>'
-      + '    <div class="panel-body">'
-      + '      <div class="row" style="margin-bottom:12px;">'
-      + '        <div class="col-sm-4">'
-      + '          <label for="dm_box_trait_sel">Trait</label>'
-      + '          <select id="dm_box_trait_sel" class="form-control input-sm">'
-      + '            <option value="">(select trait)</option>'
-      + '          </select>'
-      + '        </div>'
-      + '        <div class="col-sm-8">'
-      + '          <label for="dm_box_highlight_sel">Highlight accession(s)</label>'
-      + '          <select id="dm_box_highlight_sel" class="form-control input-sm" multiple size="5"></select>'
-      + '        </div>'
-      + '      </div>'
-      + '      <div id="dm_boxplot" style="width:100%;min-height:500px;"></div>'
-      + '    </div>'
-      + '  </div>'
-
-      + '  <div class="panel panel-default" style="margin-top:20px;">'
-      + '    <div class="panel-heading"><strong>Barplot</strong></div>'
-      + '    <div class="panel-body">'
-      + '      <div class="row" style="margin-bottom:12px;">'
-      + '        <div class="col-sm-4">'
-      + '          <label for="dm_bar_trait_sel">Trait</label>'
-      + '          <select id="dm_bar_trait_sel" class="form-control input-sm">'
-      + '            <option value="">(select trait)</option>'
-      + '          </select>'
-      + '        </div>'
-      + '        <div class="col-sm-8">'
-      + '          <label for="dm_bar_highlight_sel">Highlight accession(s)</label>'
-      + '          <select id="dm_bar_highlight_sel" class="form-control input-sm" multiple size="5"></select>'
-      + '        </div>'
-      + '      </div>'
-      + '      <div id="dm_barplot" style="width:100%;min-height:500px;"></div>'
-      + '    </div>'
-      + '  </div>'
-
-      + '</div>';
-
-    $anchor.after(html);
-  }
-
-  function clearPlots(){
-    ensurePlotPanels();
-    $('#dm_boxplot').html('<div class="text-muted">Select a dataset and trait.</div>');
-    $('#dm_barplot').html('<div class="text-muted">Select a dataset and trait.</div>');
-  }
-
-  function populateSelect($sel, items, placeholder){
-    if (!$sel || !$sel.length) return;
-    var isMultiple = $sel.prop('multiple');
-
-    $sel.empty();
-
-    if (!isMultiple) {
-      $sel.append('<option value="">' + escapeHtml(placeholder || '(select)') + '</option>');
-    }
-
-    (items || []).forEach(function(item){
-      $sel.append('<option value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</option>');
-    });
-  }
-
-  function getSelectedMultiValues(sel){
-    var v = $(sel).val();
-    return Array.isArray(v) ? v : (v ? [v] : []);
-  }
-
-  function getPlotCacheKey(datasetId, trait){
-    return String(datasetId || '') + '||' + String(trait || '');
-  }
-
-  function fetchDatasetPlotData(datasetId, trait){
-    var key = getPlotCacheKey(datasetId, trait);
-
-    if (DM_PLOT_CACHE[key]) {
-      return Promise.resolve(DM_PLOT_CACHE[key]);
-    }
-
-    return ajaxJSON('/dataset_plot_data', {
-      dataset_id: datasetId,
-      trait: trait
-    }).then(function(resp){
-      DM_PLOT_CACHE[key] = resp || {};
-      return DM_PLOT_CACHE[key];
-    });
-  }
-
-  function refreshPlotSelectors(datasetId){
-    ensurePlotPanels();
-
-    if (!datasetId) {
-      populateSelect($('#dm_box_trait_sel'), [], '(select trait)');
-      populateSelect($('#dm_bar_trait_sel'), [], '(select trait)');
-      populateSelect($('#dm_box_highlight_sel'), []);
-      populateSelect($('#dm_bar_highlight_sel'), []);
-      clearPlots();
-      return Promise.resolve();
-    }
-
-    return ajaxJSON('/dataset_traits', { dataset_id: datasetId })
-      .then(function(resp){
-        var traits = (resp && resp.traits) || [];
-        var accessions = (resp && resp.accessions) || [];
-
-        populateSelect($('#dm_box_trait_sel'), traits, '(select trait)');
-        populateSelect($('#dm_bar_trait_sel'), traits, '(select trait)');
-        populateSelect($('#dm_box_highlight_sel'), accessions);
-        populateSelect($('#dm_bar_highlight_sel'), accessions);
-
-        if (traits.length) {
-          $('#dm_box_trait_sel').val(traits[0]);
-          $('#dm_bar_trait_sel').val(traits[0]);
+    function ensurePlotlyLoaded(){
+      return new Promise(function(resolve, reject){
+        if (window.Plotly) {
+          resolve(window.Plotly);
+          return;
         }
 
-        return renderAllPlots();
-      })
-      .catch(function(e){
-        console.error('[DecisionMeeting] failed to load dataset traits/accessions', e);
-        clearPlots();
+        var existing = document.getElementById('dm-plotly-loader');
+        if (existing) {
+          existing.addEventListener('load', function(){ resolve(window.Plotly); });
+          existing.addEventListener('error', reject);
+          return;
+        }
+
+        var s = document.createElement('script');
+        s.id = 'dm-plotly-loader';
+        s.src = 'https://cdn.plot.ly/plotly-2.35.2.min.js';
+        s.onload = function(){ resolve(window.Plotly); };
+        s.onerror = function(){ reject(new Error('Could not load Plotly')); };
+        document.head.appendChild(s);
       });
-  }
+    }
 
-  function renderBoxplot(datasetId, trait, highlighted){
-    ensurePlotPanels();
+    function ensurePlotPanels(){
+      if ($('#dm-plots-wrap').length) return;
 
-    if (!datasetId || !trait) {
+      var $anchor = $('#summary_table_wrapper');
+
+      if (!$anchor.length) {
+        $anchor = $('#summary_table').closest('.dataTables_wrapper');
+      }
+
+      if (!$anchor.length) {
+        $anchor = $('#summary_table').closest('.table-responsive, .panel, .box, .card, .well, div').first();
+      }
+
+      if (!$anchor.length) {
+        $anchor = $root.length ? $root : $('body');
+      }
+
+      var html = ''
+        + '<div id="dm-plots-wrap" style="margin-top:20px;">'
+        + '  <div class="panel panel-default">'
+        + '    <div class="panel-heading"><strong>Boxplot</strong></div>'
+        + '    <div class="panel-body">'
+        + '      <div class="row" style="margin-bottom:12px;">'
+        + '        <div class="col-sm-4">'
+        + '          <label for="dm_box_trait_sel">Trait</label>'
+        + '          <select id="dm_box_trait_sel" class="form-control input-sm">'
+        + '            <option value="">(select trait)</option>'
+        + '          </select>'
+        + '        </div>'
+        + '        <div class="col-sm-8">'
+        + '          <label for="dm_box_highlight_sel">Highlight accession(s)</label>'
+        + '          <select id="dm_box_highlight_sel" class="form-control input-sm" multiple size="5"></select>'
+        + '        </div>'
+        + '      </div>'
+        + '      <div id="dm_boxplot" style="width:100%;min-height:500px;"></div>'
+        + '    </div>'
+        + '  </div>'
+        + '  <div class="panel panel-default" style="margin-top:20px;">'
+        + '    <div class="panel-heading"><strong>Barplot</strong></div>'
+        + '    <div class="panel-body">'
+        + '      <div class="row" style="margin-bottom:12px;">'
+        + '        <div class="col-sm-4">'
+        + '          <label for="dm_bar_trait_sel">Trait</label>'
+        + '          <select id="dm_bar_trait_sel" class="form-control input-sm">'
+        + '            <option value="">(select trait)</option>'
+        + '          </select>'
+        + '        </div>'
+        + '        <div class="col-sm-8">'
+        + '          <label for="dm_bar_highlight_sel">Highlight accession(s)</label>'
+        + '          <select id="dm_bar_highlight_sel" class="form-control input-sm" multiple size="5"></select>'
+        + '        </div>'
+        + '      </div>'
+        + '      <div id="dm_barplot" style="width:100%;min-height:500px;"></div>'
+        + '    </div>'
+        + '  </div>'
+        + '</div>';
+
+      $anchor.after(html);
+    }
+
+    function clearPlots(){
+      ensurePlotPanels();
       $('#dm_boxplot').html('<div class="text-muted">Select a dataset and trait.</div>');
-      return Promise.resolve();
-    }
-
-    return ensurePlotlyLoaded()
-      .then(function(Plotly){
-        return fetchDatasetPlotData(datasetId, trait).then(function(resp){
-          var rows = (resp && resp.rows) || [];
-          if (!rows.length) {
-            $('#dm_boxplot').html('<div class="text-muted">No plot data found.</div>');
-            return;
-          }
-
-          var grouped = {};
-          rows.forEach(function(r){
-            var acc = r.accession || '';
-            var val = Number(r.value);
-            if (!acc || isNaN(val)) return;
-            if (!grouped[acc]) grouped[acc] = [];
-            grouped[acc].push(val);
-          });
-
-          var accessions = Object.keys(grouped).sort();
-
-          var traces = accessions.map(function(acc){
-            var isHi = highlighted.indexOf(acc) !== -1;
-            return {
-              type: 'box',
-              name: acc,
-              y: grouped[acc],
-              boxpoints: 'outliers',
-              jitter: 0.25,
-              pointpos: 0,
-              marker: {
-                size: isHi ? 7 : 5,
-                color: isHi ? '#d9480f' : '#4c78a8'
-              },
-              line: {
-                width: isHi ? 3 : 1
-              },
-              fillcolor: isHi ? 'rgba(217,72,15,0.25)' : 'rgba(76,120,168,0.18)'
-            };
-          });
-
-          var layout = {
-            title: trait,
-            xaxis: {
-              title: 'Accession',
-              automargin: true
-            },
-            yaxis: {
-              title: 'Value',
-              automargin: true
-            },
-            showlegend: false,
-            margin: { t: 50, r: 20, b: 120, l: 70 }
-          };
-
-          return Plotly.newPlot('dm_boxplot', traces, layout, {responsive: true});
-        });
-      })
-      .catch(function(e){
-        console.error('[DecisionMeeting] boxplot render failed', e);
-        $('#dm_boxplot').html('<div class="text-danger">Failed to render boxplot.</div>');
-      });
-  }
-
-  function renderBarplot(datasetId, trait, highlighted){
-    ensurePlotPanels();
-
-    if (!datasetId || !trait) {
       $('#dm_barplot').html('<div class="text-muted">Select a dataset and trait.</div>');
-      return Promise.resolve();
     }
 
-    return ensurePlotlyLoaded()
-      .then(function(Plotly){
-        return fetchDatasetPlotData(datasetId, trait).then(function(resp){
-          var summary = (resp && resp.accession_summary) || [];
-          if (!summary.length) {
-            $('#dm_barplot').html('<div class="text-muted">No plot data found.</div>');
-            return;
+    function populateSelect($sel, items, placeholder){
+      if (!$sel || !$sel.length) return;
+      var isMultiple = $sel.prop('multiple');
+
+      $sel.empty();
+
+      if (!isMultiple) {
+        $sel.append('<option value="">' + escapeHtml(placeholder || '(select)') + '</option>');
+      }
+
+      (items || []).forEach(function(item){
+        $sel.append('<option value="' + escapeHtml(item) + '">' + escapeHtml(item) + '</option>');
+      });
+    }
+
+    function getSelectedMultiValues(sel){
+      var v = $(sel).val();
+      return Array.isArray(v) ? v : (v ? [v] : []);
+    }
+
+    function getPlotCacheKey(datasetId, trait){
+      return String(datasetId || '') + '||' + String(trait || '');
+    }
+
+    function fetchDatasetPlotData(datasetId, trait){
+      var key = getPlotCacheKey(datasetId, trait);
+
+      if (DM_PLOT_CACHE[key]) {
+        return Promise.resolve(DM_PLOT_CACHE[key]);
+      }
+
+      return ajaxJSON('/dataset_plot_data', {
+        dataset_id: datasetId,
+        trait: trait
+      }).then(function(resp){
+        DM_PLOT_CACHE[key] = resp || {};
+        return DM_PLOT_CACHE[key];
+      });
+    }
+    function refreshPlotSelectors(datasetId){
+      ensurePlotPanels();
+
+      if (!datasetId) {
+        populateSelect($('#dm_box_trait_sel'), [], '(select trait)');
+        populateSelect($('#dm_bar_trait_sel'), [], '(select trait)');
+        populateSelect($('#dm_box_highlight_sel'), []);
+        populateSelect($('#dm_bar_highlight_sel'), []);
+        clearPlots();
+        return Promise.resolve();
+      }
+
+      return ajaxJSON('/dataset_traits', { dataset_id: datasetId })
+        .then(function(resp){
+          var traits = (resp && resp.traits) || [];
+          var accessions = (resp && resp.accessions) || [];
+
+          populateSelect($('#dm_box_trait_sel'), traits, '(select trait)');
+          populateSelect($('#dm_bar_trait_sel'), traits, '(select trait)');
+          populateSelect($('#dm_box_highlight_sel'), accessions);
+          populateSelect($('#dm_bar_highlight_sel'), accessions);
+
+          if (traits.length) {
+            $('#dm_box_trait_sel').val(traits[0]);
+            $('#dm_bar_trait_sel').val(traits[0]);
           }
 
-          summary = summary.slice().sort(function(a, b){
-            return Number(b.mean) - Number(a.mean);
-          });
-
-          var x = summary.map(function(r){ return r.accession; });
-          var y = summary.map(function(r){ return Number(r.mean); });
-          var err = summary.map(function(r){ return Number(r.std); });
-          var colors = summary.map(function(r){
-            return highlighted.indexOf(r.accession) !== -1 ? '#d9480f' : '#4c78a8';
-          });
-
-          var trace = {
-            type: 'bar',
-            x: x,
-            y: y,
-            marker: { color: colors },
-            error_y: {
-              type: 'data',
-              array: err,
-              visible: true
-            },
-            customdata: summary.map(function(r){
-              return [r.n, r.min, r.max, r.std];
-            }),
-            hovertemplate:
-              '<b>%{x}</b><br>' +
-              'Mean: %{y:.3f}<br>' +
-              'N: %{customdata[0]}<br>' +
-              'Min: %{customdata[1]}<br>' +
-              'Max: %{customdata[2]}<br>' +
-              'Std: %{customdata[3]}<extra></extra>'
-          };
-
-          var layout = {
-            title: trait + ' (mean by accession)',
-            xaxis: {
-              title: 'Accession',
-              automargin: true
-            },
-            yaxis: {
-              title: 'Mean value',
-              automargin: true
-            },
-            showlegend: false,
-            margin: { t: 50, r: 20, b: 120, l: 70 }
-          };
-
-          return Plotly.newPlot('dm_barplot', [trace], layout, {responsive: true});
+          return renderAllPlots();
+        })
+        .catch(function(){
+          clearPlots();
         });
-      })
-      .catch(function(e){
-        console.error('[DecisionMeeting] barplot render failed', e);
-        $('#dm_barplot').html('<div class="text-danger">Failed to render barplot.</div>');
-      });
-  }
+    }
 
-  function renderAllPlots(){
-    var datasetId = getCurrentDatasetId();
-    var boxTrait = $('#dm_box_trait_sel').val() || '';
-    var barTrait = $('#dm_bar_trait_sel').val() || '';
-    var boxHi = getSelectedMultiValues('#dm_box_highlight_sel');
-    var barHi = getSelectedMultiValues('#dm_bar_highlight_sel');
+    function renderBoxplot(datasetId, trait, highlighted){
+      ensurePlotPanels();
 
-    return Promise.all([
-      renderBoxplot(datasetId, boxTrait, boxHi),
-      renderBarplot(datasetId, barTrait, barHi)
-    ]);
-  }
+      if (!datasetId || !trait) {
+        $('#dm_boxplot').html('<div class="text-muted">Select a dataset and trait.</div>');
+        return Promise.resolve();
+      }
+
+      return ensurePlotlyLoaded()
+        .then(function(Plotly){
+          return fetchDatasetPlotData(datasetId, trait).then(function(resp){
+            var rows = (resp && resp.rows) || [];
+            if (!rows.length) {
+              $('#dm_boxplot').html('<div class="text-muted">No plot data found.</div>');
+              return;
+            }
+
+            var grouped = {};
+            rows.forEach(function(r){
+              var acc = r.accession || '';
+              var val = Number(r.value);
+              if (!acc || isNaN(val)) return;
+              if (!grouped[acc]) grouped[acc] = [];
+              grouped[acc].push(val);
+            });
+
+            var accessions = Object.keys(grouped).sort();
+
+            var traces = accessions.map(function(acc){
+              var isHi = highlighted.indexOf(acc) !== -1;
+              return {
+                type: 'box',
+                name: acc,
+                y: grouped[acc],
+                boxpoints: 'outliers',
+                jitter: 0.25,
+                pointpos: 0,
+                marker: {
+                  size: isHi ? 7 : 5,
+                  color: isHi ? '#d9480f' : '#4c78a8'
+                },
+                line: {
+                  width: isHi ? 3 : 1
+                },
+                fillcolor: isHi ? 'rgba(217,72,15,0.25)' : 'rgba(76,120,168,0.18)'
+              };
+            });
+
+            var layout = {
+              title: trait,
+              xaxis: {
+                title: 'Accession',
+                automargin: true
+              },
+              yaxis: {
+                title: 'Value',
+                automargin: true
+              },
+              showlegend: false,
+              margin: { t: 50, r: 20, b: 120, l: 70 }
+            };
+
+            return Plotly.newPlot('dm_boxplot', traces, layout, { responsive: true });
+          });
+        })
+        .catch(function(){
+          $('#dm_boxplot').html('<div class="text-danger">Failed to render boxplot.</div>');
+        });
+    }
+
+    function renderBarplot(datasetId, trait, highlighted){
+      ensurePlotPanels();
+
+      if (!datasetId || !trait) {
+        $('#dm_barplot').html('<div class="text-muted">Select a dataset and trait.</div>');
+        return Promise.resolve();
+      }
+
+      return ensurePlotlyLoaded()
+        .then(function(Plotly){
+          return fetchDatasetPlotData(datasetId, trait).then(function(resp){
+            var summary = (resp && resp.accession_summary) || [];
+            if (!summary.length) {
+              $('#dm_barplot').html('<div class="text-muted">No plot data found.</div>');
+              return;
+            }
+
+            summary = summary.slice().sort(function(a, b){
+              return Number(b.mean) - Number(a.mean);
+            });
+
+            var x = summary.map(function(r){ return r.accession; });
+            var y = summary.map(function(r){ return Number(r.mean); });
+            var err = summary.map(function(r){ return Number(r.std); });
+            var colors = summary.map(function(r){
+              return highlighted.indexOf(r.accession) !== -1 ? '#d9480f' : '#4c78a8';
+            });
+
+            var trace = {
+              type: 'bar',
+              x: x,
+              y: y,
+              marker: { color: colors },
+              error_y: {
+                type: 'data',
+                array: err,
+                visible: true
+              },
+              customdata: summary.map(function(r){
+                return [r.n, r.min, r.max, r.std];
+              }),
+              hovertemplate:
+                '<b>%{x}</b><br>' +
+                'Mean: %{y:.3f}<br>' +
+                'N: %{customdata[0]}<br>' +
+                'Min: %{customdata[1]}<br>' +
+                'Max: %{customdata[2]}<br>' +
+                'Std: %{customdata[3]}<extra></extra>'
+            };
+
+            var layout = {
+              title: trait + ' (mean by accession)',
+              xaxis: {
+                title: 'Accession',
+                automargin: true
+              },
+              yaxis: {
+                title: 'Mean value',
+                automargin: true
+              },
+              showlegend: false,
+              margin: { t: 50, r: 20, b: 120, l: 70 }
+            };
+
+            return Plotly.newPlot('dm_barplot', [trace], layout, { responsive: true });
+          });
+        })
+        .catch(function(){
+          $('#dm_barplot').html('<div class="text-danger">Failed to render barplot.</div>');
+        });
+    }
+
+    function renderAllPlots(){
+      var datasetId = getCurrentDatasetId();
+      var boxTrait = $('#dm_box_trait_sel').val() || '';
+      var barTrait = $('#dm_bar_trait_sel').val() || '';
+      var boxHi = getSelectedMultiValues('#dm_box_highlight_sel');
+      var barHi = getSelectedMultiValues('#dm_bar_highlight_sel');
+
+      return Promise.all([
+        renderBoxplot(datasetId, boxTrait, boxHi),
+        renderBarplot(datasetId, barTrait, barHi)
+      ]);
+    }
 
     function loadLists(){
       return ajaxJSON('/lists', { type:'accessions' }).then(function(resp){
         var $sel = $('#dm_list_sel');
         if (!$sel.length) return;
         $sel.empty().append('<option value="">(choose a list)</option>');
-        (resp && resp.lists || []).forEach(function(li){
-          $sel.append('<option value="'+(li.list_id||'')+'">'+(li.name||('List '+li.list_id))+'</option>');
+        ((resp && resp.lists) || []).forEach(function(li){
+          $sel.append('<option value="' + (li.list_id || '') + '">' + (li.name || ('List ' + li.list_id)) + '</option>');
         });
       });
     }
 
     async function loadBreedingPrograms(){
       var endpoints = ['/programs'];
-      for (var i=0;i<endpoints.length;i++){
-        try{
+      for (var i = 0; i < endpoints.length; i++) {
+        try {
           var j = await ajaxJSON(endpoints[i]);
           if (!j) continue;
+
           var arr = [];
           if (Array.isArray(j)) { arr = j; }
           else if (Array.isArray(j.programs)) { arr = j.programs; }
@@ -1000,31 +983,38 @@
           else if (Array.isArray(j.rows)) { arr = j.rows; }
 
           var norm = arr.map(function(x){
-            var name = x.name || x.program_name || x.label || x.value || String(x||'');
-            return name;
+            return x.name || x.program_name || x.label || x.value || String(x || '');
           }).filter(Boolean);
 
           if (norm.length) {
-            var seen = new Set(), out = [];
-            norm.forEach(function(n){ if (!seen.has(n)) { seen.add(n); out.push(n); } });
+            var seen = new Set();
+            var out = [];
+            norm.forEach(function(n){
+              if (!seen.has(n)) {
+                seen.add(n);
+                out.push(n);
+              }
+            });
             return out;
           }
-        }catch(e){}
+        } catch (e) {}
       }
       return [];
     }
 
-    function keyFor(acc, bp){ return String(acc||'') + '||' + String(bp||''); }
+    function keyFor(acc, bp){ return String(acc || '') + '||' + String(bp || ''); }
+
     function normDecision(v){
-      var x = String(v||'').trim().toLowerCase();
+      var x = String(v || '').trim().toLowerCase();
       if (x === 'drop') return 'drop';
       if (x === 'hold') return 'hold';
       if (x === 'advance') return 'advance';
       if (x === 'jump') return 'jump';
       return '';
     }
+
     function colorClass(val){
-      switch (val){
+      switch (val) {
         case 'drop':    return 'dm-dec-drop';
         case 'hold':    return 'dm-dec-hold';
         case 'advance': return 'dm-dec-advance';
@@ -1032,22 +1022,24 @@
         default:        return 'dm-dec-none';
       }
     }
+
     function decisionSelectHTML(current, acc, bp){
       var cur = normDecision(current);
       return '' +
-        '<select class="dm-decision-select form-control input-sm '+colorClass(cur)+'" ' +
-                'data-acc="'+String(acc||'').replace(/"/g,'&quot;')+'" ' +
-                'data-bp="'+String(bp||'').replace(/"/g,'&quot;')+'">' +
+        '<select class="dm-decision-select form-control input-sm ' + colorClass(cur) + '" ' +
+                'data-acc="' + String(acc || '').replace(/"/g, '&quot;') + '" ' +
+                'data-bp="' + String(bp || '').replace(/"/g, '&quot;') + '">' +
           '<option value="">(select)</option>' +
-          '<option value="drop"'+    (cur==='drop'    ? ' selected':'')+'>Drop</option>' +
-          '<option value="hold"'+    (cur==='hold'    ? ' selected':'')+'>Hold</option>' +
-          '<option value="advance"'+ (cur==='advance' ? ' selected':'')+'>Advance</option>' +
-          '<option value="jump"'+    (cur==='jump'    ? ' selected':'')+'>Jump</option>' +
+          '<option value="drop"' +    (cur === 'drop'    ? ' selected' : '') + '>Drop</option>' +
+          '<option value="hold"' +    (cur === 'hold'    ? ' selected' : '') + '>Hold</option>' +
+          '<option value="advance"' + (cur === 'advance' ? ' selected' : '') + '>Advance</option>' +
+          '<option value="jump"' +    (cur === 'jump'    ? ' selected' : '') + '>Jump</option>' +
         '</select>';
     }
+
     function applyDecisionColor(sel){
       var v = normDecision(sel.value);
-      sel.classList.remove('dm-dec-none','dm-dec-drop','dm-dec-hold','dm-dec-advance','dm-dec-jump');
+      sel.classList.remove('dm-dec-none', 'dm-dec-drop', 'dm-dec-hold', 'dm-dec-advance', 'dm-dec-jump');
       sel.classList.add(colorClass(v));
     }
 
@@ -1061,50 +1053,6 @@
         meeting_id: $checked.data('meeting-id'),
         meeting_name: $checked.data('meeting-name'),
         meeting_date: $checked.data('meeting-date')
-      };
-    }
-
-    function getMeetingYear2DigitsFromSelectedMeeting(){
-      var ctx = getSelectedMeetingContext();
-      if (!ctx || !ctx.meeting_date) return '';
-      var m = String(ctx.meeting_date).match(/^(\d{4})-/);
-      if (m) return String(m[1]).slice(-2);
-      var d = new Date(ctx.meeting_date);
-      if (!isNaN(d.getTime())) return String(d.getFullYear()).slice(-2);
-      return '';
-    }
-
-    function splitAccessionParts(acc){
-      var s = String(acc || '').trim();
-      var m = s.match(/^(.*)-(\d{2})-([A-Za-z0-9_]+)$/);
-      if (m) {
-        return {
-          prefix: m[1],
-          year2: m[2],
-          stage: m[3]
-        };
-      }
-      return {
-        prefix: s,
-        year2: '',
-        stage: ''
-      };
-    }
-
-    function splitAccessionParts(acc){
-      var s = String(acc || '').trim();
-      var m = s.match(/^(.*)-(\d{2})-([A-Za-z0-9_]+)$/);
-      if (m) {
-        return {
-          prefix: m[1],
-          year2: m[2],
-          stage: m[3]
-        };
-      }
-      return {
-        prefix: s,
-        year2: '',
-        stage: ''
       };
     }
 
@@ -1162,11 +1110,7 @@
         }
 
         out = normalizeStageList(raw);
-        console.log('[DecisionMeeting] /stages raw response:', resp);
-        console.log('[DecisionMeeting] normalized stages:', out);
-      } catch (e) {
-        console.error('[DecisionMeeting] Could not load stages from controller:', e);
-      }
+      } catch (e) {}
 
       return out;
     }
@@ -1290,10 +1234,13 @@
       return dt;
     })();
 
-    function clearDecisionRows(){ if (!decisionDT) return; decisionDT.clear().draw(); }
+    function clearDecisionRows(){
+      if (!decisionDT) return;
+      decisionDT.clear().draw();
+    }
 
     function rowsToDataArrays(rows){
-      return (rows||[]).map(function(r){
+      return (rows || []).map(function(r){
         var acc      = r.accession || '';
         var bp       = r.breeding_program || '';
         var stage    = r.stage || '';
@@ -1310,7 +1257,7 @@
     }
 
     function normalizeRows(rawRows){
-      return (rawRows||[]).map(function(r){
+      return (rawRows || []).map(function(r){
         return {
           stock_id:         (r.stock_id || ''),
           accession:        (r.accession || ''),
@@ -1332,26 +1279,33 @@
       var data = rowsToDataArrays(rows);
       if (data.length) decisionDT.rows.add(data).draw(false);
       if (STATE.currentBpFilter) {
-        if (decisionDT) decisionDT.column(1).search('^' + escapeRegExp(STATE.currentBpFilter) + '$', true, false).draw();
+        decisionDT.column(1).search('^' + escapeRegExp(STATE.currentBpFilter) + '$', true, false).draw();
       }
       setTimeout(function(){ adjustVisibleDataTables(); ensureSaveAllUI(); }, 0);
     }
 
     function uniq(arr){
-      var s = new Set(), out=[];
-      (arr||[]).forEach(function(x){
-        var v = (x==null?'':String(x));
-        if (!s.has(v)){ s.add(v); out.push(v); }
+      var s = new Set();
+      var out = [];
+      (arr || []).forEach(function(x){
+        var v = (x == null ? '' : String(x));
+        if (!s.has(v)) {
+          s.add(v);
+          out.push(v);
+        }
       });
       return out;
     }
 
     function escapeHtml(s){
-      return String(s||'').replace(/[&<>"']/g, function(c){
+      return String(s || '').replace(/[&<>"']/g, function(c){
         return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] || c;
       });
     }
-    function escapeRegExp(s){ return String(s||'').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    function escapeRegExp(s){
+      return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
 
     function buildCrossProductRows(){
       STATE.rows = (STATE.baseRows || []).slice();
@@ -1364,6 +1318,7 @@
       var $th = $tbl.find('thead th').eq(1);
       if (!$th.length) return;
       if ($th.find('#dm_bp_header_filter').length) return;
+
       var labelText = ($th.text() || 'Breeding Program').trim().split('\n')[0] || 'Breeding Program';
       $th.html(
         '<div style="display:flex;flex-direction:column;">' +
@@ -1373,9 +1328,11 @@
           '</select>' +
         '</div>'
       );
+
       if (decisionDT) {
         try { decisionDT.columns.adjust(); } catch (e) {}
       }
+
       populateBpHeaderFilterOptions(STATE.programs);
       setTimeout(adjustVisibleDataTables, 0);
 
@@ -1395,18 +1352,25 @@
     function populateBpHeaderFilterOptions(programs){
       var $sel = $('#dm_bp_header_filter');
       if (!$sel.length) return;
+
       var cur = $sel.val() || STATE.currentBpFilter || '';
       $sel.find('option:not([value=""])').remove();
+
       var seen = new Set();
-      (programs||[]).forEach(function(p){
+      (programs || []).forEach(function(p){
         if (!p) return;
         if (seen.has(p)) return;
         seen.add(p);
-        $sel.append('<option value="'+escapeHtml(p)+'">'+escapeHtml(p)+'</option>');
+        $sel.append('<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>');
       });
-      if (cur && seen.has(cur)) $sel.val(cur); else { $sel.val(''); STATE.currentBpFilter=''; }
-    }
 
+      if (cur && seen.has(cur)) {
+        $sel.val(cur);
+      } else {
+        $sel.val('');
+        STATE.currentBpFilter = '';
+      }
+    }
     async function loadDecisionsForList(list_id){
       STATE.list_id = list_id || '';
       STATE.rows = [];
@@ -1418,7 +1382,7 @@
       var meetingId = meetingCtx && meetingCtx.meeting_id ? meetingCtx.meeting_id : '';
 
       var loaded = false;
-      try{
+      try {
         var params = { list_id: list_id };
         if (meetingId) params.meeting_id = meetingId;
 
@@ -1428,14 +1392,12 @@
           STATE.baseRows = normalizeRows(getRes.rows);
           loaded = true;
         }
-      }catch(e2){
-        dbg('GET /decisions failed', e2);
-      }
+      } catch (e) {}
 
-      if (!loaded){
-        try{
-          var acc = await ajaxJSON('/accessions', { list_id });
-          var names = (acc && acc.accessions || []).map(function(a){ return (a && a.name)||''; }).filter(Boolean);
+      if (!loaded) {
+        try {
+          var acc = await ajaxJSON('/accessions', { list_id: list_id });
+          var names = ((acc && acc.accessions) || []).map(function(a){ return (a && a.name) || ''; }).filter(Boolean);
 
           STATE.baseRows = names.map(function(nm){
             return {
@@ -1451,9 +1413,7 @@
             };
           });
           loaded = true;
-        }catch(e3){
-          console.error('[DecisionMeeting] Could not load decisions or accessions for list', list_id, e3);
-        }
+        } catch (e) {}
       }
 
       STATE.accessions = uniq(
@@ -1615,9 +1575,7 @@
         if (dlg) dlg.close('saved');
 
         alert((data && (data.message || data.detail)) || 'All decisions were saved successfully.');
-        console.log('[DecisionMeeting] save_all_decisions response:', data);
       } catch (e) {
-        console.error('[DecisionMeeting] save_all_decisions failed:', e);
         alert('Failed to save all decisions: ' + (e && e.message ? e.message : e));
       } finally {
         $btn.prop('disabled', false).text(originalText);
@@ -1631,15 +1589,24 @@
         if (id && !getSelectedMeetingContext()) {
           alert('Please select one meeting first.');
           $(this).val('');
-          STATE.list_id=''; STATE.rows=[]; STATE.baseRows=[]; STATE.accessions=[]; STATE.decisionsMap.clear();
+          STATE.list_id = '';
+          STATE.rows = [];
+          STATE.baseRows = [];
+          STATE.accessions = [];
+          STATE.decisionsMap.clear();
           clearDecisionRows();
           setTimeout(adjustVisibleDataTables, 0);
           return;
         }
 
-        if (id) await loadDecisionsForList(id);
-        else {
-          STATE.list_id=''; STATE.rows=[]; STATE.baseRows=[]; STATE.accessions=[]; STATE.decisionsMap.clear();
+        if (id) {
+          await loadDecisionsForList(id);
+        } else {
+          STATE.list_id = '';
+          STATE.rows = [];
+          STATE.baseRows = [];
+          STATE.accessions = [];
+          STATE.decisionsMap.clear();
           clearDecisionRows();
           setTimeout(adjustVisibleDataTables, 0);
         }
@@ -1650,10 +1617,15 @@
         var $bp = $('#dm_bp_header_filter');
         if ($bp.length) $bp.val('');
         STATE.currentBpFilter = '';
-        if (decisionDT){ decisionDT.search('').columns().search('').draw(); }
-        STATE.list_id=''; STATE.rows=[]; STATE.baseRows=[]; STATE.accessions=[]; STATE.decisionsMap.clear();
+        if (decisionDT) {
+          decisionDT.search('').columns().search('').draw();
+        }
+        STATE.list_id = '';
+        STATE.rows = [];
+        STATE.baseRows = [];
+        STATE.accessions = [];
+        STATE.decisionsMap.clear();
         clearDecisionRows();
-        dbg('Cleared selection and table');
         setTimeout(adjustVisibleDataTables, 0);
       });
 
@@ -1673,8 +1645,6 @@
         .off('change.dmDataset', '#dm_dataset_sel, #dataset_id, #dataset, select[name="dataset_id"], #dataset_select select')
         .on('change.dmDataset', '#dm_dataset_sel, #dataset_id, #dataset, select[name="dataset_id"], #dataset_select select', function(){
           var datasetId = $(this).val() || '';
-          console.log('[DecisionMeeting] dataset changed:', datasetId);
-
           loadDatasetSummary(datasetId);
           refreshPlotSelectors(datasetId);
         });
@@ -1737,17 +1707,6 @@
             }
           }
         }
-
-        console.log('[DecisionMeeting] change decision', {
-          accession: acc,
-          breeding_program: bp,
-          decision: v,
-          stageText: stageText,
-          previousNewStage: previousNewStage,
-          meetingDate: meetingDate,
-          meetingYearFull: meetingYearFull,
-          stock_id: stockId
-        });
 
         STATE.decisionsMap.set(keyFor(acc, bp), v);
 
@@ -1846,14 +1805,12 @@
                   var newStage = (resp2 && resp2.new_stage) || '';
                   updateNewStageValue(newStage, v);
                 },
-                error: function(xhr2){
-                  console.error('[DecisionMeeting] compute_new_stage failed:', xhr2 && xhr2.responseText);
+                error: function(){
                   updateNewStageValue('', v);
                 }
               });
             },
-            error: function(xhr){
-              console.error('[DecisionMeeting] compute_new_stage failed:', xhr && xhr.responseText);
+            error: function(){
               updateNewStageValue('', v);
             }
           });
@@ -1876,8 +1833,7 @@
             var newStage = (resp && resp.new_stage) || '';
             updateNewStageValue(newStage, v);
           },
-          error: function(xhr){
-            console.error('[DecisionMeeting] compute_new_stage failed:', xhr && xhr.responseText);
+          error: function(){
             updateNewStageValue('', v);
           }
         });
@@ -1887,13 +1843,11 @@
 
     (async function boot(){
       var base = await detectApiBase();
-      if (!base){
-        console.error('[DecisionMeeting] Could not detect backend base. Check controller namespace/routes.');
+      if (!base) {
         return;
       }
 
       window.DM_API_BASE = base;
-      console.log('[DecisionMeeting] Using API base:', base);
 
       await loadLists();
       await loadDatasets();
@@ -1905,29 +1859,30 @@
         loadDatasetSummary($datasetSel.val());
       }
 
-      dbg('Programs loaded:', STATE.programs);
       ensureBpHeaderFilter();
       populateBpHeaderFilterOptions(STATE.programs);
-      dbg('Lists loaded & header filter ready');
       setTimeout(adjustVisibleDataTables, 0);
     })();
 
     window.addDecisionRow = function(row){
-      var r = normalizeRows([row||{}])[0];
+      var r = normalizeRows([row || {}])[0];
       STATE.decisionsMap.set(keyFor(r.accession, r.breeding_program), normDecision(r.decision));
       if (STATE.accessions.indexOf(r.accession) === -1) STATE.accessions.push(r.accession);
       if (STATE.programs.indexOf(r.breeding_program) === -1 && r.breeding_program) {
         STATE.programs.push(r.breeding_program);
         populateBpHeaderFilterOptions(STATE.programs);
       }
+
       var replaced = false;
-      for (var i=0;i<STATE.baseRows.length;i++){
+      for (var i = 0; i < STATE.baseRows.length; i++) {
         var br = STATE.baseRows[i];
         if (br.accession === r.accession && br.breeding_program === r.breeding_program) {
           STATE.baseRows[i] = r;
-          replaced = true; break;
+          replaced = true;
+          break;
         }
       }
+
       if (!replaced) STATE.baseRows.push(r);
       buildCrossProductRows();
       setTimeout(adjustVisibleDataTables, 0);
@@ -1939,7 +1894,7 @@
 (function($){
   'use strict';
   if (window.__DM_CREATE_WIRED__) {
-    console.warn('[DM] script already wired — re-wiring handlers anyway');
+    return;
   }
   window.__DM_CREATE_WIRED__ = true;
 
@@ -1949,10 +1904,16 @@
     || '/ajax/decisionmeeting');
 
   function parseAttendees(text){
-    return (text||'').split(/\n|,/g).map(s=>s.trim()).filter(Boolean);
+    return (text || '').split(/\n|,/g).map(function(s){ return s.trim(); }).filter(Boolean);
   }
-  function showErr(msg){ $('#create-meeting-error').text(msg||'Unexpected error').show(); }
-  function hideErr(){ $('#create-meeting-error').hide().text(''); }
+
+  function showErr(msg){
+    $('#create-meeting-error').text(msg || 'Unexpected error').show();
+  }
+
+  function hideErr(){
+    $('#create-meeting-error').hide().text('');
+  }
 
   function ensureMultiProgramControl() {
     const $sel = $('#mtg_program');
@@ -1997,7 +1958,7 @@
         return;
       } catch(e) {}
     }
-    const n = Math.min(10, Math.max(5, (items && items.length) ? items.length : parseInt($sel.attr('size')||6, 10)));
+    const n = Math.min(10, Math.max(5, (items && items.length) ? items.length : parseInt($sel.attr('size') || 6, 10)));
     $sel.attr('size', n);
   }
 
@@ -2008,46 +1969,43 @@
       : (progVals ? [progVals] : []);
 
     return {
-      meeting_name:       $.trim($('#mtg_name').val()||''),
+      meeting_name:       $.trim($('#mtg_name').val() || ''),
       breeding_program:   programs.join(','),
       breeding_programs:  programs,
-      location:           $.trim($('#mtg_location').val()||''),
-      year:               String($('#mtg_year').val()||''),
+      location:           $.trim($('#mtg_location').val() || ''),
+      year:               String($('#mtg_year').val() || ''),
       date:               $('#mtg_date').val() || '',
-      data:               $.trim($('#mtg_data').val()||''),
+      data:               $.trim($('#mtg_data').val() || ''),
       attendees:          parseAttendees($('#mtg_attendees').val()).join(',')
     };
   }
 
   function validate(p){
     if (!p.meeting_name) return 'Please enter the Meeting name.';
-    if (!p.location)     return 'Please enter the Location.';
+    if (!p.location) return 'Please enter the Location.';
     if (!p.year || isNaN(Number(p.year))) return 'Please enter a valid Year.';
-    if (!p.date)         return 'Please choose a Date.';
+    if (!p.date) return 'Please choose a Date.';
     if (!p.breeding_programs || p.breeding_programs.length === 0) return 'Please select at least one Breeding Program.';
     return '';
   }
 
   function dm_loadLocations() {
     const $sel = $('#mtg_location');
-    if (!$sel.length) { console.warn('[DecisionMeeting] #mtg_location not found'); return; }
-    if (!API_BASE) { console.warn('[DecisionMeeting] API_BASE missing'); return; }
+    if (!$sel.length) return;
+    if (!API_BASE) return;
     $sel.find('option:not([value=""])').remove();
     $.ajax({ url: API_BASE + '/locations', dataType: 'json' })
       .done(function(items){
         if (!items || !items.length) {
-          console.warn('[DecisionMeeting] locations: empty response');
           return;
         }
         (items || []).forEach(function(l){
           const id = l.location_id ?? '';
           const nm = l.name ?? String(id);
-          if (id !== '') $sel.append('<option value="'+id+'">'+nm+'</option>');
+          if (id !== '') $sel.append('<option value="' + id + '">' + nm + '</option>');
         });
       })
-      .fail(function(xhr){
-        console.error('[DecisionMeeting] Failed to load locations', xhr && xhr.status, xhr && xhr.responseText);
-      });
+      .fail(function(){});
   }
 
   const PEOPLE_PAGE_SIZE = 10;
@@ -2067,14 +2025,17 @@
   function personKey(p){
     return [
       (p.first_name || '').toLowerCase(),
-      (p.last_name  || '').toLowerCase(),
+      (p.last_name || '').toLowerCase(),
       (p.contact_email || '').toLowerCase()
     ].join('|');
   }
 
   function dm_syncSelectAllState(){
     const $rows = $('#people_table tbody tr');
-    if (!$rows.length) { $('#people_select_all').prop('checked', false); return; }
+    if (!$rows.length) {
+      $('#people_select_all').prop('checked', false);
+      return;
+    }
     const $checks = $rows.find('input.person-check, input.attendee-check');
     const allChecked = $checks.length > 0 && $checks.filter(':checked').length === $checks.length;
     $('#people_select_all').prop('checked', allChecked);
@@ -2088,7 +2049,7 @@
     const span = 2;
     const start = Math.max(1, cur - span);
     const end = Math.min(totalPages, cur + span);
-    for (let i=start; i<=end; i++){
+    for (let i = start; i <= end; i++) {
       html += `<li class="page-item${i===cur?' active':''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
     }
     html += `<li class="page-item${cur===totalPages?' disabled':''}"><a class="page-link" href="#" data-page="${cur+1}" aria-label="Next">&raquo;</a></li>`;
@@ -2099,16 +2060,19 @@
   function renderPeople(){
     const $tbody = $('#people_table tbody');
     if (!$tbody.length) return;
+
     const total = PEOPLE_FILTERED.length;
     const totalPages = Math.max(1, Math.ceil(total / PEOPLE_PAGE_SIZE));
     if (PEOPLE_PAGE < 1) PEOPLE_PAGE = 1;
     if (PEOPLE_PAGE > totalPages) PEOPLE_PAGE = totalPages;
-    if (!total){
+
+    if (!total) {
       $tbody.html('<tr><td colspan="4">No people found.</td></tr>');
       $('#people_pager').remove();
       dm_syncSelectAllState();
       return;
     }
+
     const start = (PEOPLE_PAGE - 1) * PEOPLE_PAGE_SIZE;
     const slice = PEOPLE_FILTERED.slice(start, start + PEOPLE_PAGE_SIZE);
     const rows = slice.map(function(p, i){
@@ -2129,6 +2093,7 @@
         + '</tr>'
       );
     }).join('');
+
     $tbody.html(rows);
     const pagerHtml = buildPager(total, PEOPLE_PAGE, PEOPLE_PAGE_SIZE);
     if ($('#people_pager').length) {
@@ -2144,9 +2109,9 @@
     if (!q) {
       PEOPLE_FILTERED = PEOPLE_ALL.slice();
     } else {
-      PEOPLE_FILTERED = PEOPLE_ALL.filter(p => {
+      PEOPLE_FILTERED = PEOPLE_ALL.filter(function(p){
         return (p.first_name || '').toLowerCase().includes(q)
-            || (p.last_name  || '').toLowerCase().includes(q)
+            || (p.last_name || '').toLowerCase().includes(q)
             || (p.contact_email || '').toLowerCase().includes(q);
       });
     }
@@ -2156,10 +2121,12 @@
 
   function dm_loadPeople() {
     const $tbody = $('#people_table tbody');
-    if (!$tbody.length) { console.warn('[DecisionMeeting] #people_table tbody not found'); return; }
-    if (typeof API_BASE === 'undefined' || !API_BASE) { console.warn('[DecisionMeeting] API_BASE missing'); return; }
+    if (!$tbody.length) return;
+    if (typeof API_BASE === 'undefined' || !API_BASE) return;
+
     const term = $.trim($('#people_search').val() || '');
     $tbody.html('<tr><td colspan="4">Loading…</td></tr>');
+
     $.ajax({
       url: API_BASE + '/people',
       dataType: 'json',
@@ -2170,8 +2137,7 @@
       PEOPLE_ALL = items.map(normPerson);
       applyPeopleSearch();
     })
-    .fail(function(xhr){
-      console.error('[DecisionMeeting] Failed to load people', xhr && xhr.responseText);
+    .fail(function(){
       $tbody.html('<tr><td colspan="4">Failed to load.</td></tr>');
     });
   }
@@ -2200,7 +2166,7 @@
       const on   = $cb.is(':checked');
       const $row = $cb.closest('tr');
       if (on) PEOPLE_SELECTED.add(key);
-      else    PEOPLE_SELECTED.delete(key);
+      else PEOPLE_SELECTED.delete(key);
       $row.toggleClass('selected', on);
       dm_syncSelectAllState();
     });
@@ -2222,18 +2188,21 @@
     $('#people_table tbody input.person-check:checked, #people_table tbody input.attendee-check:checked').each(function(){
       const $cb   = $(this);
       const first = String($cb.data('first') || '').trim();
-      const last  = String($cb.data('last')  || '').trim();
+      const last  = String($cb.data('last') || '').trim();
       let name    = [first, last].filter(Boolean).join(' ').trim();
       if (!name) {
         const $tr   = $cb.closest('tr');
         const tds   = $tr.children('td');
-        const alt   = [tds.eq(1).text(), tds.eq(2).text()].map(s => (s||'').trim()).filter(Boolean).join(' ');
+        const alt   = [tds.eq(1).text(), tds.eq(2).text()].map(function(s){ return (s || '').trim(); }).filter(Boolean).join(' ');
         name = alt || String($cb.data('email') || '').trim();
       }
       if (name) out.push(name);
     });
     const seen = new Set();
-    return out.filter(n => (n = n.trim()) && !seen.has(n) && seen.add(n));
+    return out.filter(function(n){
+      n = n.trim();
+      return n && !seen.has(n) && seen.add(n);
+    });
   }
 
   $(document)
@@ -2255,7 +2224,7 @@
           (items || []).forEach(function(p){
             const id = (p.program_id ?? p.name ?? '');
             const nm = (p.name ?? String(p.program_id));
-            $sel.append('<option value="'+id+'">'+nm+'</option>');
+            $sel.append('<option value="' + id + '">' + nm + '</option>');
           });
           upgradeMultiProgramUI(items);
           $sel.trigger('change');
@@ -2269,9 +2238,7 @@
       const $modal = $('#createMeetingModal');
       if ($modal.length) {
         $modal.modal('show');
-        setTimeout(()=> $('#mtg_name').trigger('focus'), 150);
-      } else {
-        console.warn('[DM] Missing #createMeetingModal in DOM.');
+        setTimeout(function(){ $('#mtg_name').trigger('focus'); }, 150);
       }
       dm_enableRowSelection(['#people_table']);
     });
@@ -2308,17 +2275,23 @@
       e.preventDefault();
       if (creating) return;
       hideErr();
+
       const p = buildPayload();
       const selNames = dm_collectSelectedNames();
       if (selNames.length) {
         p.attendees = selNames.join(',');
         p.attendees_list = selNames;
       }
-      console.debug('[DM] create payload attendees:', p.attendees, p.attendees_list);
+
       const v = validate(p);
-      if (v) { showErr(v); return; }
+      if (v) {
+        showErr(v);
+        return;
+      }
+
       creating = true;
       const $footerBtns = $('#createMeetingModal .modal-footer .btn').prop('disabled', true).addClass('disabled');
+
       $.ajax({
         url: API_BASE + '/create',
         type: 'POST',
@@ -2364,15 +2337,6 @@
       });
     });
 
-  $(function(){
-    console.log('[DecisionMeeting] Using API base:', API_BASE);
-    console.log('[DM] wiring ready. API_BASE=', API_BASE,
-      ' openBtn=', !!($('#create_meeting_dialog').length || $('[data-dm="open-create-meeting"]').length),
-      ' form=', !!$('#create-meeting-form').length,
-      ' saveBtn=', !!($('#create_meeting_submit').length || $('#create_meeting_save').length)
-    );
-  });
-
 })(jQuery);
 
 (function($){
@@ -2404,8 +2368,8 @@
     var tmpl = window.DM_MEETING_URL_TMPL;
     if (!tmpl || !id) return name || '';
     var href = String(tmpl).replace('{id}', String(id));
-    var safe = String(name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return '<a href="'+href+'">'+safe+'</a>';
+    var safe = String(name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return '<a href="' + href + '">' + safe + '</a>';
   }
 
   function escAttr(v){
@@ -2425,7 +2389,10 @@
       .replace(/'/g,'&#39;');
   }
 
-  function parseJSON(s){ try { return JSON.parse(s||'{}')||{}; } catch(e){ return {}; } }
+  function parseJSON(s){
+    try { return JSON.parse(s || '{}') || {}; }
+    catch (e) { return {}; }
+  }
 
   function isMeetingSaved(meetingJson){
     var j = meetingJson || {};
@@ -2530,11 +2497,11 @@
   }
 
   function rowsToArrays(rows){
-    return (rows||[]).map(function(r){
+    return (rows || []).map(function(r){
       var j = parseJSON(r.meeting_json);
       var id    = r.project_id;
       var name  = j.meeting_name || r.project_name || '';
-      var date  = j.date  || '';
+      var date  = j.date || '';
       var loc   = j.location_name || j.location || '';
       var progs = getMeetingProgramsText(j);
       var atts  = getMeetingAttendeesText(j);
@@ -2573,9 +2540,10 @@
     ensureDT();
     if (!meetingDT) return;
     $tbl.addClass('dm-loading');
-    try{
-      var r = await fetch(url, { headers:{'Accept':'application/json'} });
-      if (!r.ok) throw new Error('HTTP '+r.status+' '+r.statusText);
+
+    try {
+      var r = await fetch(url, { headers:{ 'Accept':'application/json' } });
+      if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
       var j = await r.json();
       var rows = j.rows || [];
       window.DM_MEETING_CACHE = {};
@@ -2584,8 +2552,7 @@
       if (data.length) meetingDT.rows.add(data);
       meetingDT.draw(false);
       setTimeout(adjustMeetingDT, 0);
-    } catch(err){
-      console.error('[DecisionMeeting] loadMeetingTracker failed:', err);
+    } catch (err) {
       meetingDT.clear().draw();
     } finally {
       $tbl.removeClass('dm-loading');
@@ -2616,12 +2583,10 @@
 
       window.open(url, '_blank');
     } catch (err) {
-      console.error('[DecisionMeeting] download failed for meeting ' + meetingId, err);
       alert(err && err.message ? err.message : 'Could not open meeting report.');
       throw err;
     }
   }
-
 
   document.addEventListener('meeting:created', function(){
     setTimeout(loadMeetingTracker, 200);
@@ -2671,7 +2636,6 @@
       try {
         await downloadMeetingReport(meetingId);
       } catch (e) {
-        console.error('[DecisionMeeting] download failed for meeting', meetingId, e);
         alert('Could not open the meeting report.');
       } finally {
         $btn.prop('disabled', false).text(original);

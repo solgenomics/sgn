@@ -17,8 +17,6 @@ use File::Spec qw(catfile);
 use File::Basename qw(basename);
 use Scalar::Util qw(looks_like_number);
 
-
-
 BEGIN { extends 'Catalyst::Controller::REST' }
 
 __PACKAGE__->config(
@@ -28,26 +26,15 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON', 'text/html' => 'JSON' },
 );
 
-
-
-
-# --- sanity check endpoint: GET /ajax/decision_meeting/ping
 sub ping : Path('ping') : Args(0) : ActionClass('REST') {}
 sub ping_GET {
-  my ($self, $c) = @_;
-  $c->log->debug('ping_GET() hit');
-  print STDERR "### DecisionMeeting ping_GET triggered ###\n";
-  $self->status_ok($c, entity => { ok => 1, user => ($c->user ? 1 : 0) });
+    my ($self, $c) = @_;
+    $self->status_ok($c, entity => { ok => 1, user => ($c->user ? 1 : 0) });
 }
 
-# --- GET /ajax/decision_meeting/lists?type=accessions
-# GET /ajax/decision_meeting/lists?type=accessions
 sub lists : Path('lists') : Args(0) : ActionClass('REST') {}
 sub lists_GET {
     my ($self, $c) = @_;
-
-    $c->log->debug('lists_GET() hit');
-    print STDERR "### lists_GET triggered ###\n";
 
     return $self->status_forbidden($c, message => 'Login required')
       unless $c->user;
@@ -62,12 +49,15 @@ sub lists_GET {
 
     unless ($cvterm_id) {
         $c->log->warn("lists_GET: cvterm not found for type '$type_name'");
-        return $self->status_ok($c, entity => { lists => [], type_name => $type_name, type_id => undef });
+        return $self->status_ok($c, entity => {
+            lists     => [],
+            type_name => $type_name,
+            type_id   => undef
+        });
     }
 
     my $people = $c->dbic_schema('CXGN::People::Schema');
 
-    # If your List table has an 'obsolete' flag, keep it in the filter:
     my $rs = $people->resultset('List')->search(
         { owner => $owner_id, type_id => $cvterm_id },
         { order_by => 'name' }
@@ -75,36 +65,42 @@ sub lists_GET {
 
     my @lists = map {
         +{
-          list_id  => int($_->list_id),
-          name     => $_->name,
-          type_id  => $cvterm_id,
-          type_name=> $type_name,
+            list_id   => int($_->list_id),
+            name      => $_->name,
+            type_id   => $cvterm_id,
+            type_name => $type_name,
         }
     } $rs->all;
 
-    $self->status_ok($c, entity => { lists => \@lists, type_name => $type_name, type_id => $cvterm_id });
+    $self->status_ok($c, entity => {
+        lists     => \@lists,
+        type_name => $type_name,
+        type_id   => $cvterm_id
+    });
 }
 
-# --- ADD: REST endpoint to list breeding programs ---------------------------
 sub programs : Path('programs') : ActionClass('REST') { }
 sub programs_GET {
     my ($self, $c) = @_;
 
-    return $self->status_forbidden($c, message => 'Login required') unless $c->user;
+    return $self->status_forbidden($c, message => 'Login required')
+        unless $c->user;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $ps     = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
-    my $programs = $ps->get_breeding_programs();  # typically [ [id, name, desc, ...], ... ]
+    my $schema   = $c->dbic_schema('Bio::Chado::Schema');
+    my $ps       = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+    my $programs = $ps->get_breeding_programs();
 
     my @items;
     foreach my $p (@{ $programs || [] }) {
         if (ref $p eq 'ARRAY') {
             my ($id, $name) = ($p->[0], $p->[1]);
-            push @items, { program_id => $id, name => $name } if defined $id && defined $name;
-        } elsif (ref $p eq 'HASH') {
+            push @items, { program_id => $id, name => $name }
+                if defined $id && defined $name;
+        }
+        elsif (ref $p eq 'HASH') {
             push @items, {
                 program_id => $p->{program_id} // $p->{project_id} // $p->{id},
-                name       => $p->{name}       // $p->{project_name},
+                name       => $p->{name} // $p->{project_name},
             };
         }
     }
@@ -112,23 +108,22 @@ sub programs_GET {
     return $self->status_ok($c, entity => \@items);
 }
 
-# --- ADD: locations REST endpoint -------------------------------------------
 sub locations : Path('locations') : ActionClass('REST') { }
 sub locations_GET {
     my ($self, $c) = @_;
 
-    return $self->status_forbidden($c, message => 'Login required') unless $c->user;
+    return $self->status_forbidden($c, message => 'Login required')
+        unless $c->user;
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my $ps     = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
-
-    # Returns AoA: [ [id, description, lat, long, alt, plot_count], ... ]
-    my $locs = $ps->get_locations() || [];
+    my $locs   = $ps->get_locations() || [];
 
     my @items;
     foreach my $r (@$locs) {
         my ($id, $desc, $lat, $lon, $alt, $count) = @$r;
         next unless defined $id;
+
         push @items, {
             location_id => $id,
             name        => defined $desc && $desc ne '' ? $desc : "Location $id",
@@ -142,21 +137,19 @@ sub locations_GET {
     return $self->status_ok($c, entity => \@items);
 }
 
-# --- GET /ajax/decisionmeeting/decisions?list_id=NN
 sub decisions : Path('decisions') : Args(0) : ActionClass('REST') { }
 sub decisions_GET {
     my ($self, $c) = @_;
 
-    $c->log->debug('decisions_GET() hit');
-    print STDERR "### decisions_GET triggered ###\n";
+    return $self->status_forbidden($c, message => 'Login required')
+        unless $c->user;
 
-    return $self->status_forbidden($c, message => 'Login required') unless $c->user;
-
-    my $list_id    = $c->req->param('list_id');
-    my $meeting_id = $c->req->param('meeting_id');
+    my $list_id          = $c->req->param('list_id');
+    my $meeting_id       = $c->req->param('meeting_id');
     my $selected_program = $c->req->param('breeding_program') // '';
 
-    return $self->status_bad_request($c, message => 'Missing list_id') unless $list_id;
+    return $self->status_bad_request($c, message => 'Missing list_id')
+        unless $list_id;
 
     my $dbh    = $c->dbc->dbh;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
@@ -171,7 +164,8 @@ sub decisions_GET {
     my $els  = $list->elements || [];
     my @accessions = grep { defined $_ && $_ ne '' } @$els;
 
-    return $self->status_ok($c, entity => { rows => [] }) unless @accessions;
+    return $self->status_ok($c, entity => { rows => [] })
+        unless @accessions;
 
     my $ps       = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
     my $programs = $ps->get_breeding_programs() || [];
@@ -200,7 +194,6 @@ sub decisions_GET {
         push @program_names, $nm;
     }
 
-    # If program not sent directly, infer it from meeting_json
     if (!$selected_program && $meeting_id) {
         my $sth = $dbh->prepare(q{
             SELECT pp.value
@@ -245,8 +238,6 @@ sub decisions_GET {
         $selected_program = $program_id_to_name{$selected_program};
     }
 
-    print STDERR "### selected_program = [$selected_program]\n";
-
     my @programs_to_use = $selected_program ? ($selected_program) : @program_names;
 
     my %pedigree_by_acc;
@@ -278,7 +269,8 @@ sub decisions_GET {
                         ON m_rel.subject_id = mother.stock_id
                 };
                 push @bind, $female_type_id;
-            } else {
+            }
+            else {
                 $sql .= qq{ LEFT JOIN stock mother ON 1=0 };
             }
 
@@ -291,7 +283,8 @@ sub decisions_GET {
                         ON f_rel.subject_id = father.stock_id
                 };
                 push @bind, $male_type_id;
-            } else {
+            }
+            else {
                 $sql .= qq{ LEFT JOIN stock father ON 1=0 };
             }
 
@@ -321,8 +314,12 @@ sub decisions_GET {
             { rows => 1 }
         )->first;
 
-        my $female_parent = exists $pedigree_by_acc{$acc} ? ($pedigree_by_acc{$acc}{female_parent} || '') : '';
-        my $male_parent   = exists $pedigree_by_acc{$acc} ? ($pedigree_by_acc{$acc}{male_parent}   || '') : '';
+        my $female_parent = exists $pedigree_by_acc{$acc}
+            ? ($pedigree_by_acc{$acc}{female_parent} || '')
+            : '';
+        my $male_parent = exists $pedigree_by_acc{$acc}
+            ? ($pedigree_by_acc{$acc}{male_parent} || '')
+            : '';
 
         my $notes_value = '';
         my $year_value  = '';
@@ -406,23 +403,19 @@ sub _normalize_stage_token {
     my @ordered_stages = $self->_config_list($breeding_stages);
     my %valid = map { $_ => 1 } @ordered_stages;
 
-    # 1) exact match
     return $raw if $valid{$raw};
 
-    # 2) existing extractor
     my $token = $self->_extract_stage_token($raw);
     $token = defined $token ? "$token" : '';
     $token =~ s/^\s+|\s+$//g;
     return $token if $token ne '' && $valid{$token};
 
-    # 3) last hyphen-separated token, e.g. ON-25-Y4 -> Y4
     if ($raw =~ /-([^-]+)$/) {
         my $last = $1;
         $last =~ s/^\s+|\s+$//g;
         return $last if $valid{$last};
     }
 
-    # 4) search any configured stage inside the string, prefer longest first
     foreach my $stg (sort { length($b) <=> length($a) } @ordered_stages) {
         if ($raw =~ /\Q$stg\E/) {
             return $stg;
@@ -435,8 +428,6 @@ sub _normalize_stage_token {
 sub stages_GET : Path('/ajax/decisionmeeting/stages') Args(0) {
     my ($self, $c) = @_;
 
-    print STDERR "### stages_GET called ###\n";
-
     unless ($c->user) {
         $c->res->status(403);
         $c->res->content_type('application/json');
@@ -445,30 +436,13 @@ sub stages_GET : Path('/ajax/decisionmeeting/stages') Args(0) {
     }
 
     my $conf_stages = $c->config->{breeding_stages};
-
-    print STDERR "### breeding_stages exists? "
-        . (exists $c->config->{breeding_stages} ? 'YES' : 'NO') . "\n";
-
-    print STDERR "### breeding_stages ref type: ["
-        . (ref($conf_stages) || 'SCALAR') . "]\n";
-
     my $raw = '';
 
     if (ref($conf_stages) eq 'ARRAY') {
-        print STDERR "### breeding_stages array items ###\n";
-        for my $i (0 .. $#$conf_stages) {
-            print STDERR "###   [$i] = [" . (defined $conf_stages->[$i] ? $conf_stages->[$i] : 'UNDEF') . "]\n";
-        }
-
         $raw = defined $conf_stages->[0] ? $conf_stages->[0] : '';
-        print STDERR "### using only array[0]: [$raw]\n";
     }
     elsif (defined $conf_stages) {
         $raw = $conf_stages;
-        print STDERR "### using scalar value: [$raw]\n";
-    }
-    else {
-        print STDERR "### breeding_stages is UNDEF ###\n";
     }
 
     $raw =~ s/^\s+|\s+$//g;
@@ -477,12 +451,9 @@ sub stages_GET : Path('/ajax/decisionmeeting/stages') Args(0) {
                  map  {
                      my $x = $_;
                      $x =~ s/^\s+|\s+$//g;
-                     print STDERR "### parsed stage token: [$x]\n";
                      $x;
                  }
                  split(/\s*,\s*/, $raw);
-
-    print STDERR "### final stages parsed: [" . join(', ', @stages) . "]\n";
 
     $c->res->status(200);
     $c->res->content_type('application/json');
@@ -510,7 +481,6 @@ sub compute_new_stage_GET {
     my $breeding_stages = '';
 
     if (ref($raw_stages_conf) eq 'ARRAY') {
-        # use only first config entry, same rule you wanted before
         $breeding_stages = defined($raw_stages_conf->[0]) ? $raw_stages_conf->[0] : '';
     }
     else {
@@ -519,20 +489,9 @@ sub compute_new_stage_GET {
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
-    print STDERR "### compute_new_stage_GET called ###\n";
-    print STDERR "### current_stage   = [" . ($current_stage // '') . "]\n";
-    print STDERR "### decision        = [" . ($decision // '') . "]\n";
-    print STDERR "### year            = [" . ($year // '') . "]\n";
-    print STDERR "### stock_id        = [" . ($stock_id // '') . "]\n";
-    print STDERR "### selected_stage  = [" . ($selected_stage // '') . "]\n";
-    print STDERR "### decision_format = [" . ($decision_format // '') . "]\n";
-    print STDERR "### breeding_stages raw = [" . ($breeding_stages // '') . "]\n";
-
     my @ordered_stages = grep { defined($_) && $_ ne '' }
                          map  { my $x = $_; $x =~ s/^\s+|\s+$//g; $x }
                          split(/\s*,\s*/, $breeding_stages);
-
-    print STDERR "### ordered_stages = [" . join(', ', @ordered_stages) . "]\n";
 
     my %pos;
     @pos{@ordered_stages} = (0 .. $#ordered_stages);
@@ -555,22 +514,20 @@ sub compute_new_stage_GET {
         }
     }
 
-    print STDERR "### extracted current_stage_token = [" . ($current_stage_token // '') . "]\n";
-
     my @allowed_stages;
     if ($current_stage_token ne '' && exists $pos{$current_stage_token}) {
         my $idx = $pos{$current_stage_token};
 
         if ($decision eq 'advance') {
-            @allowed_stages = @ordered_stages[($idx + 1) .. $#ordered_stages] if $idx < $#ordered_stages;
+            @allowed_stages = @ordered_stages[($idx + 1) .. $#ordered_stages]
+                if $idx < $#ordered_stages;
         }
         elsif ($decision eq 'jump') {
             my $start = $idx + 2;
-            @allowed_stages = @ordered_stages[$start .. $#ordered_stages] if $start <= $#ordered_stages;
+            @allowed_stages = @ordered_stages[$start .. $#ordered_stages]
+                if $start <= $#ordered_stages;
         }
     }
-
-    print STDERR "### allowed_stages = [" . join(', ', @allowed_stages) . "]\n";
 
     my $stage_only = '';
     my $state = $self->_get_stockprop_value(
@@ -579,8 +536,6 @@ sub compute_new_stage_GET {
         prop_name => 'state',
     );
 
-    print STDERR "### state from stockprop = [" . ($state // '') . "]\n";
-
     my $state_for_format = $state;
 
     if ($decision eq 'advance' || $decision eq 'jump') {
@@ -588,30 +543,25 @@ sub compute_new_stage_GET {
 
         if ($selected_stage && $allowed_lookup{$selected_stage}) {
             $stage_only = $selected_stage;
-            print STDERR "### selected_stage accepted = [" . ($stage_only // '') . "]\n";
         }
         else {
             $stage_only = '';
-            print STDERR "### selected_stage rejected or empty for decision [$decision]\n";
         }
     }
     elsif ($decision eq 'hold') {
         $stage_only = $current_stage_token || '';
-        print STDERR "### HOLD: keeping current stage = [" . ($stage_only // '') . "]\n";
     }
     elsif ($decision eq 'drop') {
         $stage_only = $current_stage_token || '';
         $state_for_format = 'DROP';
-        print STDERR "### DROP: keeping current stage = [" . ($stage_only // '') . "]\n";
-        print STDERR "### DROP: overriding state_for_format = [" . ($state_for_format // '') . "]\n";
     }
     else {
         return $self->status_ok($c, entity => {
-            new_stage       => '',
-            selected_stage  => '',
-            allowed_stages  => [],
-            state           => '',
-            stock_id        => $stock_id,
+            new_stage      => '',
+            selected_stage => '',
+            allowed_stages => [],
+            state          => '',
+            stock_id       => $stock_id,
         });
     }
 
@@ -657,8 +607,6 @@ sub compute_new_stage_GET {
         );
     }
 
-    print STDERR "### final new_stage = [" . ($new_stage // '') . "]\n";
-
     return $self->status_ok($c, entity => {
         new_stage       => $new_stage,
         selected_stage  => $stage_only,
@@ -682,12 +630,9 @@ sub _format_decision_stage {
     my $stage           = $args{stage} // '';
     my $state           = $args{state} // '';
 
-    # remove example/comment after #
     my ($format_only) = split /\#/, $decision_format, 2;
     $format_only //= '';
     $format_only =~ s/^\s+|\s+$//g;
-
-    print STDERR "### _format_decision_stage format_only = [$format_only]\n";
 
     my @parts;
     my @tokens = grep { $_ ne '' } map {
@@ -701,8 +646,6 @@ sub _format_decision_stage {
         $field    //= '';
         $modifier //= '';
 
-        print STDERR "### token field=[$field] modifier=[$modifier]\n";
-
         if ($field eq 'state') {
             push @parts, $state if defined $state && $state ne '';
         }
@@ -712,23 +655,15 @@ sub _format_decision_stage {
                 $y = substr($y, -2);
             }
             elsif ($modifier eq 'YYYY' || $modifier eq 'yyyy' || $modifier eq '') {
-                # keep full year
             }
             push @parts, $y if $y ne '';
         }
         elsif ($field eq 'stage') {
             push @parts, $stage if defined $stage && $stage ne '';
         }
-        else {
-            # unknown token: ignore, but print for debugging
-            print STDERR "### WARNING unknown decision_format token [$field]\n";
-        }
     }
 
     my $final = join('-', @parts);
-
-    print STDERR "### _format_decision_stage final = [$final]\n";
-
     return $final;
 }
 
@@ -742,10 +677,7 @@ sub _get_stockprop_value {
     return '' unless $schema && $stock_id && $prop_name;
 
     my $cvterm_row = SGN::Model::Cvterm->get_cvterm_row($schema, $prop_name, 'stock_property');
-    unless ($cvterm_row) {
-        print STDERR "### WARNING cvterm not found for stockprop [$prop_name] in cv [stock_property]\n";
-        return '';
-    }
+    return '' unless $cvterm_row;
 
     my $type_id = $cvterm_row->cvterm_id;
 
@@ -761,15 +693,12 @@ sub _get_stockprop_value {
     )->single;
 
     my $value = $stockprop ? $stockprop->value : '';
-
     return $value // '';
 }
 
 sub datasets : Path('datasets') : Args(0) : ActionClass('REST') {}
 sub datasets_GET {
     my ($self, $c) = @_;
-
-    print STDERR "### datasets_GET triggered ###\n";
 
     return $self->status_forbidden($c, message => 'Login required')
         unless $c->user;
@@ -792,21 +721,16 @@ sub datasets_GET {
                 dataset_id => int($dataset_id),
                 name       => ($name || "Dataset $dataset_id"),
             };
-
-            print STDERR "### dataset_id=$dataset_id name=[" . ($name || '') . "]\n";
         }
     };
 
     if ($@) {
-        print STDERR "### datasets_GET ERROR: $@\n";
         return $self->status_ok($c, entity => {
             error    => "Failed to load datasets",
             details  => "$@",
             datasets => []
         });
     }
-
-    print STDERR "### total datasets returned: " . scalar(@datasets) . "\n";
 
     return $self->status_ok($c, entity => {
         datasets => \@datasets
@@ -882,9 +806,6 @@ sub dataset_summary_GET {
     $header =~ s/\r$//;
     my @cols = split(/\t/, $header, -1);
 
-    print STDERR "### phenotype header columns ###\n";
-    print STDERR join(" | ", @cols) . "\n";
-
     my $germplasm_idx = -1;
     for my $i (0 .. $#cols) {
         if (defined $cols[$i] && $cols[$i] eq 'germplasmName') {
@@ -907,17 +828,10 @@ sub dataset_summary_GET {
         next unless defined $col;
 
         $col =~ s/^\s+|\s+$//g;
-
-        # Keep only real trait columns like:
-        # dry yield|CO_334:0000014
-        # fresh root yield|CO_334:0000013
         next unless $col =~ /:/;
 
         push @trait_cols, [$i, $col];
     }
-
-    print STDERR "### trait columns selected for summary ###\n";
-    print STDERR join(" | ", map { $_->[1] } @trait_cols) . "\n";
 
     my %grouped_values;
 
@@ -987,48 +901,49 @@ sub dataset_summary_GET {
     });
 }
 
-
-# --- GET /ajax/decision_meeting/accessions?dataset_id=NN | list_id=NN
 sub accessions : Path('accessions') : Args(0) : ActionClass('REST') {}
 sub accessions_GET {
-  my ($self, $c) = @_;
-  $c->log->debug('accessions_GET() hit');
-  print STDERR "### accessions_GET triggered ###\n";
+    my ($self, $c) = @_;
 
-  return $self->status_forbidden($c, message => 'Login required') unless $c->user;
+    return $self->status_forbidden($c, message => 'Login required')
+        unless $c->user;
 
-  my $dataset_id    = $c->req->param('dataset_id');
-  my $list_id       = $c->req->param('list_id');
+    my $dataset_id    = $c->req->param('dataset_id');
+    my $list_id       = $c->req->param('list_id');
 
-  my $people_schema = $c->dbic_schema("CXGN::People::Schema");
-  my $schema        = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
-  my $dbh           = $c->dbc->dbh;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $schema        = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
+    my $dbh           = $c->dbc->dbh;
 
-  my @names;
+    my @names;
 
-  if ($dataset_id) {
-    my $ds = CXGN::Dataset->new(
-      people_schema => $people_schema,
-      schema        => $schema,
-      sp_dataset_id => $dataset_id
-    );
-    eval { $ds->retrieve_accessions() };
-    if ($ds->can('accessions') && ref($ds->accessions) eq 'ARRAY') {
-      @names = @{$ds->accessions};
-    } elsif (my $ret = eval { $ds->retrieve_accessions() }) {
-      @names = @{ $ret->{data} || [] } if ref($ret) eq 'HASH';
-    } elsif ($ds->can('accession_list') && ref($ds->accession_list) eq 'ARRAY') {
-      @names = @{$ds->accession_list};
+    if ($dataset_id) {
+        my $ds = CXGN::Dataset->new(
+            people_schema => $people_schema,
+            schema        => $schema,
+            sp_dataset_id => $dataset_id
+        );
+        eval { $ds->retrieve_accessions() };
+        if ($ds->can('accessions') && ref($ds->accessions) eq 'ARRAY') {
+            @names = @{$ds->accessions};
+        }
+        elsif (my $ret = eval { $ds->retrieve_accessions() }) {
+            @names = @{ $ret->{data} || [] } if ref($ret) eq 'HASH';
+        }
+        elsif ($ds->can('accession_list') && ref($ds->accession_list) eq 'ARRAY') {
+            @names = @{$ds->accession_list};
+        }
     }
-  }
-  elsif ($list_id) {
-    my $list = CXGN::List->new({ dbh => $dbh, list_id => $list_id });
-    my $els  = $list->elements;
-    @names   = @$els if $els && ref($els) eq 'ARRAY';
-  }
+    elsif ($list_id) {
+        my $list = CXGN::List->new({ dbh => $dbh, list_id => $list_id });
+        my $els  = $list->elements;
+        @names   = @$els if $els && ref($els) eq 'ARRAY';
+    }
 
-  my @accs = map { +{ accession_id => undef, name => "$_" } } grep { defined && $_ ne '' } @names;
-  $self->status_ok($c, entity => { accessions => \@accs });
+    my @accs = map { +{ accession_id => undef, name => "$_" } }
+               grep { defined && $_ ne '' } @names;
+
+    $self->status_ok($c, entity => { accessions => \@accs });
 }
 
 sub _dm_trim {
@@ -1361,9 +1276,6 @@ sub save_all_decisions_POST {
         return $self->status_bad_request($c, message => 'Missing meeting_id in payload');
     }
 
-    #---------------------------------------
-    # check if user role is allowed to save
-    #---------------------------------------
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my @user_roles = $c->user()->roles;
@@ -1385,10 +1297,6 @@ sub save_all_decisions_POST {
             $x;
         }
         split(/\s*,\s*/, $decision_role_conf);
-
-    print STDERR "### decision_role raw = [$decision_role_conf]\n";
-    print STDERR "### allowed_roles = [" . join(', ', @allowed_roles) . "]\n";
-    print STDERR "### user_roles = [" . join(', ', @user_roles) . "]\n";
 
     my %allowed = map { $_ => 1 } @allowed_roles;
     my $can_save = 0;
@@ -1423,7 +1331,6 @@ sub save_all_decisions_POST {
     my $dbh = $c->dbc->dbh;
 
     eval {
-        # save meeting json
         my $sth = $dbh->prepare(q{
             UPDATE projectprop
             SET value = ?
@@ -1436,7 +1343,6 @@ sub save_all_decisions_POST {
         });
         $sth->execute($json_text, $meeting_id);
 
-        # read config term for program/stage mapping
         my $raw_conf = $c->config->{saved_program_stage};
         my $saved_program_stage = '';
 
@@ -1446,8 +1352,6 @@ sub save_all_decisions_POST {
         else {
             $saved_program_stage = $raw_conf // '';
         }
-
-        print STDERR "### saved_program_stage raw = [$saved_program_stage]\n";
 
         my $accessions = $payload->{accessions} || [];
 
@@ -1481,8 +1385,6 @@ sub save_all_decisions_POST {
                 }
             }
 
-            print STDERR "### stock_id=[$stock_id] breeding_program=[$breeding_program] matched_prop=[$stage_prop_name] new_stage=[$new_stage]\n";
-
             next unless $stage_prop_name;
 
             my $cvterm_row = SGN::Model::Cvterm->get_cvterm_row(
@@ -1511,7 +1413,6 @@ sub save_all_decisions_POST {
             if ($stockprop) {
                 $stockprop->value($new_stage);
                 $stockprop->update();
-                print STDERR "### updated stockprop stock_id=[$stock_id] prop=[$stage_prop_name] value=[$new_stage]\n";
             }
             else {
                 $schema->resultset('Stock::Stockprop')->create({
@@ -1520,7 +1421,6 @@ sub save_all_decisions_POST {
                     value    => $new_stage,
                     rank     => 0,
                 });
-                print STDERR "### created stockprop stock_id=[$stock_id] prop=[$stage_prop_name] value=[$new_stage]\n";
             }
         }
     };
@@ -1538,6 +1438,7 @@ sub save_all_decisions_POST {
         }
     );
 }
+
 sub meetings : Path('meetings') : Args(0) : ActionClass('REST') {}
 sub meetings_GET {
     my ($self, $c) = @_;
@@ -1742,7 +1643,7 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
         $c->res->status(409);
         $c->res->content_type('application/json; charset=utf-8');
         $c->res->body(encode_json({
-            error => 'Report not available yet',
+            error   => 'Report not available yet',
             message => 'This meeting report cannot be downloaded because decisions have not been saved yet.'
         }));
         return;
@@ -1895,8 +1796,6 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
   </table>
 
   <script>
-    // optional auto-print
-    // window.onload = function(){ window.print(); };
   </script>
 </body>
 </html>
@@ -1907,284 +1806,273 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
 }
 
 sub create : Path('create') Args(0) {
-  my ($self, $c) = @_;
-  return $self->status_forbidden($c, message => 'Login required') unless $c->user;
+    my ($self, $c) = @_;
+    return $self->status_forbidden($c, message => 'Login required')
+        unless $c->user;
 
-  my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-  my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-  my @user_roles = $c->user()->roles;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my @user_roles = $c->user()->roles;
 
-  my $raw_decision_role = $c->config->{decision_role};
-  my $decision_role_conf = '';
+    my $raw_decision_role = $c->config->{decision_role};
+    my $decision_role_conf = '';
 
-  if (ref($raw_decision_role) eq 'ARRAY') {
-      $decision_role_conf = defined($raw_decision_role->[0]) ? $raw_decision_role->[0] : '';
-  }
-  else {
-      $decision_role_conf = $raw_decision_role // '';
-  }
+    if (ref($raw_decision_role) eq 'ARRAY') {
+        $decision_role_conf = defined($raw_decision_role->[0]) ? $raw_decision_role->[0] : '';
+    }
+    else {
+        $decision_role_conf = $raw_decision_role // '';
+    }
 
-  my @allowed_roles = grep { $_ ne '' }
-      map {
-          my $x = $_ // '';
-          $x =~ s/^\s+|\s+$//g;
-          $x;
-      }
-      split(/\s*,\s*/, $decision_role_conf);
+    my @allowed_roles = grep { $_ ne '' }
+        map {
+            my $x = $_ // '';
+            $x =~ s/^\s+|\s+$//g;
+            $x;
+        }
+        split(/\s*,\s*/, $decision_role_conf);
 
-  print STDERR "### decision_role raw = [$decision_role_conf]\n";
-  print STDERR "### allowed_roles = [" . join(', ', @allowed_roles) . "]\n";
-  print STDERR "### user_roles = [" . join(', ', @user_roles) . "]\n";
+    my %allowed = map { $_ => 1 } @allowed_roles;
+    my $can_create_meeting = 0;
 
-  my %allowed = map { $_ => 1 } @allowed_roles;
-  my $can_create_meeting = 0;
+    foreach my $role (@user_roles) {
+        if ($allowed{$role}) {
+            $can_create_meeting = 1;
+            last;
+        }
+    }
 
-  foreach my $role (@user_roles) {
-      if ($allowed{$role}) {
-          $can_create_meeting = 1;
-          last;
-      }
-  }
+    unless ($can_create_meeting) {
+        return $self->status_forbidden(
+            $c,
+            message => 'You are not allowed to create meetings'
+        );
+    }
 
-  unless ($can_create_meeting) {
-      return $self->status_forbidden(
-          $c,
-          message => 'You are not allowed to create meetings'
-      );
-  }
+    my $p = $c->req->params;
 
-  my $p = $c->req->params;
-  $c->log->debug('[DM] create hit. Params=' . join(', ', map {"$_=$p->{$_}"} sort keys %$p));
+    my $dbh      = $c->dbc->dbh();
+    my $person   = $c->user->get_object;
+    my $owner_id = $person->get_sp_person_id;
+    my $operator = $person->get_username;
 
-  my $dbh      = $c->dbc->dbh();
-  my $person   = $c->user->get_object;
-  my $owner_id = $person->get_sp_person_id;
-  my $operator = $person->get_username;
+    my $trial_name_in = $p->{meeting_name}     // '';
+    my $program_in    = $p->{breeding_program} // '';
+    my $location_in   = $p->{location}         // '';
+    my $trial_year    = $p->{year}             // '';
+    my $planting_date = $p->{date}             // undef;
+    my $description   = $p->{data}             // '';
+    my $meeting_status= $p->{meeting_status}   // '';
 
-  # Raw inputs
-  my $trial_name_in = $p->{meeting_name}     // '';
-  my $program_in    = $p->{breeding_program} // '';
-  my $location_in   = $p->{location}         // '';
-  my $trial_year    = $p->{year}             // '';
-  my $planting_date = $p->{date}             // undef;
-  my $description   = $p->{data}             // '';
-  my $meeting_status= $p->{meeting_status}   // '';
+    return $self->status_bad_request($c, message => "Missing meeting_name")
+        unless $trial_name_in;
+    return $self->status_bad_request($c, message => "Missing breeding_program")
+        unless ($program_in || ref($p->{breeding_programs}) eq 'ARRAY');
+    return $self->status_bad_request($c, message => "Missing location")
+        unless $location_in;
 
-  return $self->status_bad_request($c, message => "Missing meeting_name")      unless $trial_name_in;
-  return $self->status_bad_request($c, message => "Missing breeding_program")  unless ($program_in || ref($p->{breeding_programs}) eq 'ARRAY');
-  return $self->status_bad_request($c, message => "Missing location")          unless $location_in;
+    my @program_in_list =
+        ref($p->{breeding_programs}) eq 'ARRAY'
+            ? grep { defined($_) && $_ ne '' } @{$p->{breeding_programs}}
+            : (grep { length($_) } map { s/^\s+|\s+$//gr } split(/\s*,\s*/, ($program_in // '')));
 
-  my @program_in_list =
-      ref($p->{breeding_programs}) eq 'ARRAY'
-        ? grep { defined($_) && $_ ne '' } @{$p->{breeding_programs}}
-        : (grep { length($_) } map { s/^\s+|\s+$//gr } split(/\s*,\s*/, ($program_in // '')));
+    my $program_choice = $program_in_list[0] // '';
+    return $self->status_bad_request($c, message => "Missing breeding_program")
+        unless $program_choice;
 
-  my $program_choice = $program_in_list[0] // '';
-  return $self->status_bad_request($c, message => "Missing breeding_program") unless $program_choice;
+    my $program_name  = _resolve_program_name($schema, $program_choice)
+        or return $self->status_bad_request($c, message => "Breeding program not found: '$program_choice'");
+    my $location_name = _resolve_location_name($schema, $location_in)
+        or return $self->status_bad_request($c, message => "Location not found: '$location_in'");
 
-  my $program_name  = _resolve_program_name($schema, $program_choice)
-      or return $self->status_bad_request($c, message => "Breeding program not found: '$program_choice'");
-  my $location_name = _resolve_location_name($schema, $location_in)
-      or return $self->status_bad_request($c, message => "Location not found: '$location_in'");
+    my @program_name_list = grep { defined($_) && $_ ne '' }
+                            map  { scalar _resolve_program_name($schema, $_) } @program_in_list;
 
-  my @program_name_list = grep { defined($_) && $_ ne '' }
-                          map  { scalar _resolve_program_name($schema, $_) } @program_in_list;
+    my $trial_name = $trial_name_in;
 
-  my $trial_name = $trial_name_in;
+    my $design_cv   = 'experiment_meeting';
+    my $design_term = 'meeting_project';
 
-  my $design_cv   = 'experiment_meeting';
-  my $design_term = 'meeting_project';
+    my $design_cvterm_row = SGN::Model::Cvterm->get_cvterm_row($schema, $design_term, $design_cv);
+    die "Cvterm not found: term='$design_term' cv='$design_cv'\n"
+        unless $design_cvterm_row;
 
-  print STDERR "Looking for cvterm: cv='$design_cv', term='$design_term'\n";
+    my $design_cvterm_id = $design_cvterm_row->cvterm_id;
 
-  my $design_cvterm_row = SGN::Model::Cvterm->get_cvterm_row($schema, $design_term, $design_cv);
+    my @att_raw;
 
-  die "Cvterm not found: term='$design_term' cv='$design_cv'\n"
-      unless $design_cvterm_row;
+    if (ref($p->{attendees_list}) eq 'ARRAY') {
+        push @att_raw, @{$p->{attendees_list}};
+    }
 
-  my $design_cvterm_id = $design_cvterm_row->cvterm_id;
-  print STDERR "Found cvterm_id=$design_cvterm_id\n";
+    if (ref($p->{attendees}) eq 'ARRAY') {
+        for my $chunk (@{$p->{attendees}}) {
+            next unless defined $chunk;
+            push @att_raw, split(/\n|,/, $chunk);
+        }
+    }
+    elsif (defined $p->{attendees} && $p->{attendees} ne '') {
+        push @att_raw, split(/\n|,/, $p->{attendees});
+    }
 
-  my @att_raw;
+    if (!@att_raw) {
+        my $bd = eval { $c->req->body_data } || {};
+        if (ref($bd->{attendees}) eq 'ARRAY') {
+            push @att_raw, @{$bd->{attendees}};
+        }
+        elsif (defined $bd->{attendees} && $bd->{attendees} ne '') {
+            push @att_raw, split(/\n|,/, $bd->{attendees});
+        }
+    }
 
-  if (ref($p->{attendees_list}) eq 'ARRAY') {
-      push @att_raw, @{$p->{attendees_list}};
-  }
+    my @att_clean = grep { length($_) } map { s/^\s+|\s+$//gr } @att_raw;
+    my %seen;
+    my $attendees = [ grep { my $k = lc($_); !$seen{$k}++ } @att_clean ];
 
-  if (ref($p->{attendees}) eq 'ARRAY') {
-      for my $chunk (@{$p->{attendees}}) {
-          next unless defined $chunk;
-          push @att_raw, split(/\n|,/, $chunk);
-      }
-  } elsif (defined $p->{attendees} && $p->{attendees} ne '') {
-      push @att_raw, split(/\n|,/, $p->{attendees});
-  }
+    my $design_hash = {};
 
-  if (!@att_raw) {
-      my $bd = eval { $c->req->body_data } || {};
-      if (ref($bd->{attendees}) eq 'ARRAY') {
-          push @att_raw, @{$bd->{attendees}};
-      } elsif (defined $bd->{attendees} && $bd->{attendees} ne '') {
-          push @att_raw, split(/\n|,/, $bd->{attendees});
-      }
-  }
+    my $tc = CXGN::Trial::TrialCreate->new({
+        chado_schema      => $schema,
+        dbh               => $dbh,
+        owner_id          => $owner_id,
+        operator          => $operator,
+        design_type       => 'Meeting',
+        design            => $design_hash,
+        program           => $program_name,
+        trial_year        => $trial_year,
+        planting_date     => $planting_date,
+        trial_location    => $location_name,
+        trial_name        => $trial_name,
+        trial_description => $description,
+        project_type      => 'meeting_project',
+    });
 
-  my @att_clean = grep { length($_) } map { s/^\s+|\s+$//gr } @att_raw;
-  my %seen;
-  my $attendees = [ grep { my $k = lc($_); !$seen{$k}++ } @att_clean ];
+    my ($project_id, $nd_experiment_id);
+    my $err;
+    try {
+        $tc->save_trial();
 
-  my $attendees_json = encode_json($attendees);
+        $project_id       = eval { $tc->get_trial_id }         || eval { $tc->get_project_id } || undef;
+        $nd_experiment_id = eval { $tc->get_nd_experiment_id } || undef;
 
-  print("here are atendees $attendees_json \n and breeding_program $program_name \n");
+        my $proj_row = $project_id
+            ? $schema->resultset('Project::Project')->find({ project_id => $project_id })
+            : $schema->resultset('Project::Project')->find({ name => $trial_name });
 
-  my $design_hash = {};
+        die "Project not found after save_trial" unless $proj_row;
 
-  my $tc = CXGN::Trial::TrialCreate->new({
-      chado_schema        => $schema,
-      dbh                 => $dbh,
-      owner_id            => $owner_id,
-      operator            => $operator,
-      design_type         => 'Meeting',
-      design              => $design_hash,
-      program             => $program_name,
-      trial_year          => $trial_year,
-      planting_date       => $planting_date,
-      trial_location      => $location_name,
-      trial_name          => $trial_name,
-      trial_description   => $description,
-      project_type        => 'meeting_project',
-  });
+        $project_id = $proj_row->project_id;
 
-  my ($project_id, $nd_experiment_id);
-  my $err;
-  try {
-      $tc->save_trial();
+        my $meeting_payload = {
+            attendees               => $attendees,
+            meeting_status          => ($meeting_status || undef),
+            breeding_programs       => \@program_in_list,
+            breeding_program_names  => \@program_name_list,
+            breeding_program_choice => $program_choice,
+            breeding_program_name   => $program_name,
+            year                    => ($trial_year || undef),
+            date                    => ($planting_date || undef),
+            location                => $location_name,
+            location_raw            => $location_in,
+        };
+        my $val = encode_json($meeting_payload);
 
-      $project_id       = eval { $tc->get_trial_id }         || eval { $tc->get_project_id } || undef;
-      $nd_experiment_id = eval { $tc->get_nd_experiment_id } || undef;
+        my $pp_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'meeting_json', 'project_property')
+            or die "cvterm meeting_json not found in cv project_property";
+        my $type_id = $pp_type->cvterm_id;
 
-      my $proj_row = $project_id
-        ? $schema->resultset('Project::Project')->find({ project_id => $project_id })
-        : $schema->resultset('Project::Project')->find({ name => $trial_name });
+        my $existing = $proj_row->search_related('projectprops', { type_id => $type_id })->first;
+        if ($existing) {
+            $existing->update({ value => $val });
+        }
+        else {
+            $proj_row->create_related('projectprops', { type_id => $type_id, value => $val });
+        }
 
-      die "Project not found after save_trial" unless $proj_row;
+    } catch {
+        $err = "$_";
+        $c->log->error("DecisionMeeting save trial error: $err");
+    };
 
-      $project_id = $proj_row->project_id;
+    if ($err) {
+        $c->res->content_type('application/json');
+        $c->res->body(encode_json({
+            ok   => \0,
+            msg  => "Error creating meeting trial: $err",
+            echo => {
+                meeting_name      => $trial_name_in,
+                breeding_programs => \@program_in_list,
+                breeding_program  => $program_choice,
+                location          => $location_in,
+                year              => $trial_year,
+                date              => $planting_date,
+                attendees         => $attendees,
+            },
+        }));
+        return;
+    }
 
-      my $meeting_payload = {
-        attendees               => $attendees,
-        meeting_status          => ($meeting_status || undef),
-        breeding_programs       => \@program_in_list,
-        breeding_program_names  => \@program_name_list,
-        breeding_program_choice => $program_choice,
-        breeding_program_name   => $program_name,
-        year                    => ($trial_year || undef),
-        date                    => ($planting_date || undef),
-        location                => $location_name,
-        location_raw            => $location_in,
-      };
-      my $val = encode_json($meeting_payload);
-
-      my $pp_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'meeting_json', 'project_property')
-        or die "cvterm meeting_json not found in cv project_property";
-      my $type_id = $pp_type->cvterm_id;
-
-      my $existing = $proj_row->search_related('projectprops', { type_id => $type_id })->first;
-      if ($existing) {
-        $existing->update({ value => $val });
-      } else {
-        $proj_row->create_related('projectprops', { type_id => $type_id, value => $val });
-      }
-
-      $c->log->debug("[DM] meeting_json saved (type_id=$type_id) for project_id=$project_id");
-
-  } catch {
-      $err = "$_";
-      $c->log->error("DecisionMeeting save trial error: $err");
-  };
-
-  if ($err) {
     $c->res->content_type('application/json');
     $c->res->body(encode_json({
-        ok   => \0,
-        msg  => "Error creating meeting trial: $err",
-        echo => {
-          meeting_name      => $trial_name_in,
-          breeding_programs => \@program_in_list,
-          breeding_program  => $program_choice,
-          location          => $location_in,
-          year              => $trial_year,
-          date              => $planting_date,
-          attendees         => $attendees,
+        ok               => \1,
+        msg              => "Meeting saved as trial '$trial_name' (type=meeting_project).",
+        project_id       => $project_id,
+        nd_experiment_id => $nd_experiment_id,
+        design_cvterm_id => $design_cvterm_id,
+        echo             => {
+            meeting_name      => $trial_name_in,
+            breeding_programs => \@program_in_list,
+            breeding_program  => $program_name,
+            location          => $location_name,
+            year              => $trial_year,
+            date              => $planting_date,
+            attendees         => $attendees,
         },
     }));
-    return;
-  }
-
-  $c->res->content_type('application/json');
-  $c->res->body(encode_json({
-      ok                => \1,
-      msg               => "Meeting saved as trial '$trial_name' (type=meeting_project).",
-      project_id        => $project_id,
-      nd_experiment_id  => $nd_experiment_id,
-      design_cvterm_id  => $design_cvterm_id,
-      echo              => {
-        meeting_name      => $trial_name_in,
-        breeding_programs => \@program_in_list,
-        breeding_program  => $program_name,
-        location          => $location_name,
-        year              => $trial_year,
-        date              => $planting_date,
-        attendees         => $attendees,
-      },
-  }));
 }
 
-
-# --------- helpers ---------
-
 sub _trim {
-  my ($self, $v) = @_;
-  return '' unless defined $v;
-  $v =~ s/^\s+//;
-  $v =~ s/\s+$//;
-  return $v;
+    my ($self, $v) = @_;
+    return '' unless defined $v;
+    $v =~ s/^\s+//;
+    $v =~ s/\s+$//;
+    return $v;
 }
 
 sub _config_list {
-  my ($self, $raw) = @_;
-  return () unless defined $raw && $raw ne '';
-  return grep { $_ ne '' } map { $self->_trim($_) } split /,/, $raw;
+    my ($self, $raw) = @_;
+    return () unless defined $raw && $raw ne '';
+    return grep { $_ ne '' } map { $self->_trim($_) } split /,/, $raw;
 }
 
 sub _extract_stage_token {
-  my ($self, $stage_value) = @_;
-  return '' unless defined $stage_value && $stage_value ne '';
-  my @parts = grep { defined $_ && $_ ne '' } split /-/, $stage_value;
-  return '' unless @parts;
-  return $parts[-1];
+    my ($self, $stage_value) = @_;
+    return '' unless defined $stage_value && $stage_value ne '';
+    my @parts = grep { defined $_ && $_ ne '' } split /-/, $stage_value;
+    return '' unless @parts;
+    return $parts[-1];
 }
 
 sub _extract_yy {
-  my ($self, $year_value) = @_;
-  return '' unless defined $year_value && $year_value ne '';
+    my ($self, $year_value) = @_;
+    return '' unless defined $year_value && $year_value ne '';
 
-  my $v = $self->_trim($year_value);
+    my $v = $self->_trim($year_value);
 
-  if ($v =~ /^\d{2}$/) {
-    return $v;
-  }
-  if ($v =~ /^\d{4}$/) {
-    return substr($v, -2);
-  }
-  if ($v =~ /(19\d{2}|20\d{2})/) {
-    return substr($1, -2);
-  }
-  if ($v =~ /(?:^|\D)(\d{2})(?:\D|$)/) {
-    return $1;
-  }
+    if ($v =~ /^\d{2}$/) {
+        return $v;
+    }
+    if ($v =~ /^\d{4}$/) {
+        return substr($v, -2);
+    }
+    if ($v =~ /(19\d{2}|20\d{2})/) {
+        return substr($1, -2);
+    }
+    if ($v =~ /(?:^|\D)(\d{2})(?:\D|$)/) {
+        return $1;
+    }
 
-  return '';
+    return '';
 }
 
 sub _compute_new_stage {
@@ -2194,18 +2082,12 @@ sub _compute_new_stage {
     my $decision_value      = lc($args{decision_value} // '');
     my $breeding_stages     = $args{breeding_stages};
 
-    print STDERR "### _compute_new_stage called ###\n";
-    print STDERR "### current_stage_value = [$current_stage_value]\n";
-    print STDERR "### decision_value      = [$decision_value]\n";
-
     return '' unless $decision_value;
 
     my $current_token = $self->_extract_stage_token($current_stage_value);
-    print STDERR "### current_token = [" . ($current_token // '') . "]\n";
     return '' unless $current_token;
 
     my @ordered_stages = $self->_config_list($breeding_stages);
-    print STDERR "### ordered_stages = [" . join(', ', @ordered_stages) . "]\n";
     return '' unless @ordered_stages;
 
     my %pos;
@@ -2235,53 +2117,48 @@ sub _compute_new_stage {
         return '';
     }
 
-    print STDERR "### _compute_new_stage returning token only = [$next_token]\n";
     return $next_token;
 }
 
 sub _resolve_program_name {
-  my ($schema, $in) = @_;
-  return $in unless defined $in && $in =~ /^\d+$/; # already a name
-  my $row = $schema->resultset('Project::Project')->find({ project_id => $in });
-  return $row ? $row->name : undef;
+    my ($schema, $in) = @_;
+    return $in unless defined $in && $in =~ /^\d+$/;
+    my $row = $schema->resultset('Project::Project')->find({ project_id => $in });
+    return $row ? $row->name : undef;
 }
 
 sub _resolve_location_name {
-  my ($schema, $in) = @_;
-  return $in unless defined $in && $in =~ /^\d+$/; # already a name
-  # NdGeolocation row; many Breedbase installs keep location "name" in description
-  my $row = $schema->resultset('NaturalDiversity::NdGeolocation')->find({ nd_geolocation_id => $in })
-        || $schema->resultset('NdGeolocation')->find({ nd_geolocation_id => $in }); # fallback namespace
-  return unless $row;
-  return $row->can('description') ? ($row->description // '') : ($row->can('name') ? $row->name : '');
+    my ($schema, $in) = @_;
+    return $in unless defined $in && $in =~ /^\d+$/;
+    my $row = $schema->resultset('NaturalDiversity::NdGeolocation')->find({ nd_geolocation_id => $in })
+          || $schema->resultset('NdGeolocation')->find({ nd_geolocation_id => $in });
+    return unless $row;
+    return $row->can('description') ? ($row->description // '') : ($row->can('name') ? $row->name : '');
 }
 
-
-# --- GET /ajax/decision_meeting/people
 sub people : Path('people') : Args(0) : ActionClass('REST') { }
 sub people_GET {
-  my ($self, $c) = @_;
+    my ($self, $c) = @_;
 
-  my $dbh = $c->dbc->dbh;
-  my $sth = $dbh->prepare(q{
-    SELECT first_name, last_name, contact_email
-    FROM sgn_people.sp_person
-    ORDER BY last_name, first_name
-  });
-  $sth->execute();
+    my $dbh = $c->dbc->dbh;
+    my $sth = $dbh->prepare(q{
+        SELECT first_name, last_name, contact_email
+        FROM sgn_people.sp_person
+        ORDER BY last_name, first_name
+    });
+    $sth->execute();
 
-  my @rows;
-  while (my ($first_name, $last_name, $contact_email) = $sth->fetchrow_array) {
-    push @rows, {
-      first_name    => $first_name    // '',
-      last_name     => $last_name     // '',
-      contact_email => $contact_email // '',
-    };
-  }
-  $sth->finish;
+    my @rows;
+    while (my ($first_name, $last_name, $contact_email) = $sth->fetchrow_array) {
+        push @rows, {
+            first_name    => $first_name    // '',
+            last_name     => $last_name     // '',
+            contact_email => $contact_email // '',
+        };
+    }
+    $sth->finish;
 
-  return $self->status_ok($c, entity => \@rows);
+    return $self->status_ok($c, entity => \@rows);
 }
-
 
 1;
