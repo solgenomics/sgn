@@ -294,6 +294,7 @@ sub image_analysis_group_POST : Args(0) {
     my @sorted_result = sort {$$a{"stock_id"} <=> $$b{"stock_id"} } @{$result};
     # my $old_uniquename = $sorted_result[0]->{'stock_uniquename'};
     $grouped_results{$sorted_result[0]->{'stock_uniquename'}}{$sorted_result[0]->{'result'}->{'trait'}} = [];
+    my $is_multi_trait = !exists($results_ref->{result}{trait});
 
     for (my $i = 0; $i <= $#sorted_result; $i++) {
         $results_ref = $sorted_result[$i];
@@ -320,7 +321,7 @@ sub image_analysis_group_POST : Args(0) {
         elsif (exists($results_ref->{result}->{subanalyses}) && ref($results_ref->{result}->{subanalyses}) eq "HASH")  { # multiple results are returned, for several sub-images
 	    print STDERR "MULTIPLE RESULTS DETECTED!\n";
         my $project_id;
-        my $is_multi_trait = !exists($results_ref->{result}{trait});
+
 	    foreach my $sample (keys %{$results_ref->{result}->{subanalyses}}) {
 
             my $sample_data = $results_ref->{result}->{subanalyses}{$sample};
@@ -385,7 +386,8 @@ sub image_analysis_group_POST : Args(0) {
                 push @samples, $rel->subject->uniquename;
             }
 
-            my $trait_id = $results_ref->{'result'}->{'trait_id'};
+            my $trait_id;
+            $trait_id = $results_ref->{'result'}->{'trait_id'};
             my @trait_samples = grep { $_ =~ /$trait_id/ } @samples;
 
             my $max_num = 0;
@@ -411,15 +413,14 @@ sub image_analysis_group_POST : Args(0) {
                 my $test_trait_id = 70739; 
 
                 foreach my $trait_name (keys %{$sample_data}) {
-                    #use trait name (trim the id if needed) to trait search for id that is associated
-
-                    #my ($trait_name_without_accession, $db_accession) = split(/\|/, $trait);
-                    #my ($db, $accession) = split(/:/, $db_accession);
-                    #my ($trait_details, $record_number) = CXGN::Trait::Search->new({
-                    #    bcs_schema=>$schema,
-                    #    ontology_db_name_list => [$db],
-                    #    accession_list => [$accession]
-                    #})->search();
+                    my ($trimmed_trait_name) = split (/\|/, $trait_name);
+                    #my $test_trait_name = 'apical branching';
+                    my $cvterm = $schema->resultset('Cv::Cvterm')->find({
+                        name => $trimmed_trait_name
+                    });
+                    if ($cvterm) {
+                        $trait_id = $cvterm->cvterm_id;
+                    }
 
                     my $val = $sample_data->{$trait_name}{trait_value};
                     push @{$grouped_results{$uniquename}{$trait_name}}, {
@@ -438,7 +439,7 @@ sub image_analysis_group_POST : Args(0) {
                         value         => $val + 0,
                         status => 'create',
                     };
-                    $test_trait_id++;
+                    #$test_trait_id++;
                 };
             } else {
                 # print STDERR "stock type: $stock_type_name accession id: $accession_id";
@@ -519,9 +520,10 @@ sub image_analysis_group_POST : Args(0) {
         }
         
     }
+    
     my $image_overlay = $results_ref->{result}{analyzed_image_overlay};
     print STDERR "table data is ".Dumper(@table_data);
-    $c->stash->{rest} = { success => 1, results => { table_data => \@table_data, analyzed_image_overlay => $image_overlay}};
+    $c->stash->{rest} = { success => 1, results => { table_data => \@table_data, analyzed_image_overlay => $image_overlay, multi_trait_analysis => $is_multi_trait}};
 }
 
 sub format_multi_trait_data {

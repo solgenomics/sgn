@@ -367,6 +367,7 @@ jQuery(document).ready(function(){
 
     const selected_image_ids = [];
     let submit_results;
+    let is_multi_trait;
 
     jQuery('#image_analysis_submit').click(function(){
         jQuery('input[name="image_analysis_select"]').each(function() {
@@ -481,6 +482,7 @@ jQuery(document).ready(function(){
                         .text(Math.round(current_progress) + "%");
                         jQuery('#progress_msg').text('Building results table.');
 
+                        is_multi_trait = response.results.multi_trait_analysis;
                         if (response.results.analyzed_image_overlay) {
                             jQuery('#analysis_image').attr('src', response.results.analyzed_image_overlay);
                             jQuery('#analysis_image_link').attr('href', response.results.analyzed_image_overlay);
@@ -643,6 +645,7 @@ jQuery(document).ready(function(){
             let studyDbId = table_data[0].studyDbId;
             let germplasmName = plantData[0].observationUnitName;
             let accessionId = table_data[0].germplasmDbId;
+            let sampleName;
 
             table_data.forEach(row => {
                 row.details.forEach((detail, i) => {
@@ -650,9 +653,14 @@ jQuery(document).ready(function(){
 
                     if (!samples[key]) {
                         let sampleNumber = parseInt(detail.sample_num) + 1 + i;
+                        if (is_multi_trait == 1) {
+                            sampleName = germplasmName + '_' + 'sample' + sampleNumber;
+                        } else {
+                            sampleName = detail.trait_id + '_' + germplasmName + '_' + 'sample' + sampleNumber;
+                        }
 
                         samples[key] = {
-                            sampleName: detail.trait_id + '_' + germplasmName + '_' + 'sample' + sampleNumber,
+                            sampleName: sampleName,
                             trait_values: {},
                             analyzed_link: detail.analyzed_link,
                             studyDbId: row.studyDbId,
@@ -704,7 +712,7 @@ jQuery(document).ready(function(){
                     observationUnitPosition: {
                         observationLevel: {
                             levelName: "tissue_sample",
-                            levelCode: "tissue_sample_" + index,
+                            levelCode: "tissue_sample_" + (index + 1),
                             levelOrder: 4
                         },
                         observationLevelRelationships: [
