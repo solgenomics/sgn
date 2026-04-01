@@ -486,6 +486,8 @@ jQuery(document).ready(function () {
         let  list_type = '';
         if (is_obsolete == 'true') {
             list_type = 'obsoleted_stocks';
+        } else if (is_obsolete == 'include_obsolete') {
+            list_type = 'accessions_and_obsoleted_accessions';
         } else {
             list_type = jQuery('#stock_type_select option:selected').text()+'s' || 'null';
         }

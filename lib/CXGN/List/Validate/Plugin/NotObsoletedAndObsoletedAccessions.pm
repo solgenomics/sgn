@@ -3,7 +3,7 @@ package CXGN::List::Validate::Plugin::NotObsoletedAndObsoletedAccessions;
 use Moose;
 
 sub name {
-    return "not_obsoleted_and_obsoleted_accessions";
+    return "accessions_and_obsoleted_accessions";
 }
 
 sub validate {
