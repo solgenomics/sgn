@@ -609,6 +609,13 @@ export function process_file(file_data, upload_type, config) {
                     images_select.append(opt);
                 }
             });
+            let pheno_select = jQuery('#upload_images_select_pheno');
+            archived_files_list.forEach(item => {
+                if (item.filename.includes(".xlsx") || item.filename.includes(".xls")) {
+                    const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
+                    pheno_select.append(opt);
+                }
+            });
             jQuery('#upload_images_type').on('change', display_images_additional_upload_choices);
             jQuery('#image_upload_next_btn').on('click', {file_data : file_data}, populate_image_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
@@ -1357,6 +1364,14 @@ function display_images_upload_choices() {
                 '</select>'+
            ' </div>'+
         '</div>'+
+        '<div id ="upload_images_select_pheno_spreadsheet_div" class="form-group" hidden>' +
+            '<label class="col-sm-6 control-label">Select phenotyping spreadsheet: </label>'+
+            '<div class="col-sm-6" >'+
+                '<select class="form-control" id="upload_images_select_pheno" name="upload_images_select_pheno" single>'+
+                    '<option value>Select...</option>'+
+                '</select>'+
+           ' </div>'+
+        '</div>' +
         '<br>' + 
         '<button id="image_upload_next_btn" class="btn btn-primary">Next</button>'
     );
@@ -1364,9 +1379,14 @@ function display_images_upload_choices() {
 
 function display_images_additional_upload_choices() {
     let image_upload_type = jQuery('#upload_images_type').val();
-    if (!image_upload_type || image_upload_type == "images_phenotypes") {
+    if (!image_upload_type) {
+        jQuery('#upload_images_select_more_div').hide();
+        jQuery('#upload_images_select_pheno_spreadsheet_div').hide();
+    } else if (image_upload_type == "images_phenotypes") {
+        jQuery('#upload_images_select_pheno_spreadsheet_div').show();
         jQuery('#upload_images_select_more_div').hide();
     } else {
+        jQuery('#upload_images_select_pheno_spreadsheet_div').hide();
         jQuery('#upload_images_select_more_div').show();
     }
 }
@@ -1833,15 +1853,20 @@ function populate_image_validate_submit_data(event) {
     let image_upload_type = jQuery('#upload_images_type').val();
 
     let selected_files = [];
-    jQuery('#upload_images_select_more option:selected').each(function(){
-        selected_files.push({id : jQuery(this).val(), name : jQuery(this).text()});
-    });
+    if (image_upload_type == "images_phenotypes") {
+        jQuery('#upload_images_select_pheno option:selected').each(function(){
+            selected_files.push({id : jQuery(this).val(), name : jQuery(this).text()});
+        });
+    } else {
+        jQuery('#upload_images_select_more option:selected').each(function(){
+            selected_files.push({id : jQuery(this).val(), name : jQuery(this).text()});
+        });
+    }
+    
 
     if (!image_upload_type) {
         alert("Select an image upload type.");
         return;
-    } else if (image_upload_type == "images_phenotypes") {
-        populate_validate_submit_data("images_phenotypes", file_data);
     } else {
         populate_validate_submit_data(image_upload_type, file_data, {
             additional_files : selected_files
@@ -2370,6 +2395,26 @@ export function submit_upload_job() {
         case 'fieldbook_phenotypes' :
             break;
         case 'datacollector_spreadsheet' :
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_verify/datacollector',
+                type : 'POST',
+                data : {
+                    'upload_datacollector_phenotype_timestamp_checkbox' : submit_params.additional_args.include_timestamps,
+                    'archived_file_id' : submit_params.file_id,
+                    'ignore_warnings' : ignore_warnings
+                },
+                success: function(response) {
+                    if (response.error) {
+                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting phenotype validation, check console.");
+                    return;
+                }
+            });
             break;
         case 'nirs' :
             break;
@@ -2382,12 +2427,35 @@ export function submit_upload_job() {
         case 'images_barcodes' :
             break;
         case 'images_phenotypes' :
+            
             break;
         case 'soil_data' :
             break;
         case 'vectors' :
             break;
         case 'treatments' :
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_verify/spreadsheet/treatment',
+                type : 'POST',
+                data : {
+                    'upload_spreadsheet_treatment_file_format' : submit_params.additional_args.spreadsheet_format,
+                    'upload_spreadsheet_treatment_timestamp_checkbox' : submit_params.additional_args.include_timestamps,
+                    'upload_spreadsheet_treatment_data_level' : submit_params.additional_args.data_level,
+                    'archived_file_id' : submit_params.file_id,
+                    'ignore_warnings' : ignore_warnings
+                },
+                success: function(response) {
+                    if (response.error) {
+                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting treatment validation, check console.");
+                    return;
+                }
+            });
             break;
         default :
             jQuery('#working_modal').modal("hide");   
@@ -2419,6 +2487,31 @@ export function commit_upload_job(job_id) {
                     'upload_spreadsheet_phenotype_file_format' : job.args.additional_args.upload_spreadsheet_phenotype_file_format,
                     'upload_spreadsheet_phenotype_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
                     'upload_spreadsheet_phenotype_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
+                    'archived_file_id' : job.args.additional_args.file_id
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal("hide");  
+                    if (response.error) {
+                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    jQuery('#working_modal').modal("hide");  
+                    alert("An error occurred submitting phenotype validation, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'treatments' : 
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_store/spreadsheet/treatment',
+                type : 'POST',
+                data : {
+                    'upload_spreadsheet_treatment_file_format' : job.args.additional_args.upload_spreadsheet_phenotype_file_format,
+                    'upload_spreadsheet_treatment_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
+                    'upload_spreadsheet_treatment_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
                     'archived_file_id' : job.args.additional_args.file_id
                 },
                 success: function(response) {

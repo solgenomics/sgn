@@ -70,7 +70,8 @@ sub upload_document_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_type
+            user_role => $user_type,
+            metadata_schema => $metadata_schema
         });
         my $archived_filename_with_path = $uploader->archive();
         if (!$archived_filename_with_path){
@@ -86,14 +87,6 @@ sub upload_document_POST : Args(0) {
 
         my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
         $md_row->insert();
-        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'document_browser',
-            md5checksum => $md5->hexdigest(),
-            metadata_id => $md_row->metadata_id(),
-        });
-        $file_row->insert();
     }
 
     $c->stash->{rest} = {success => 'Successfully saved file!'};

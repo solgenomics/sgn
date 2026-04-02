@@ -90,16 +90,20 @@ sub upload_phenotype_verify_POST : Args(1) {
         $validation_type = "phenotyping_spreadsheet";
     } elsif ($file_type eq "spreadsheet" && $is_treatment eq "treatment") {
         $validation_type = "treatments";
+    } elsif ($file_type eq "datacollector") {
+        $validation_type = "datacollector_spreadsheet"
     }
     $validation_job->additional_args->{file_type} = $validation_type;
     if ($is_treatment eq "treatment") {
         $validation_job->additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
         $validation_job->additional_args->{upload_spreadsheet_treatment_data_level} = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
         $validation_job->additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
-    } else {
+    } elsif ($validation_type eq "phenotyping_spreadsheet") {
         $validation_job->additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $validation_job->additional_args->{upload_spreadsheet_phenotype_data_level} = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $validation_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
+    } elsif ($validation_type eq "datacollector_spreadsheet") {
+         $validation_job->additional_args->{upload_datacollector_phenotype_timestamp_checkbox} = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
     }
 
     $validation_job->update_status("submitted");
@@ -215,16 +219,20 @@ sub upload_phenotype_store_POST : Args(1) {
         $submit_type = "phenotyping_spreadsheet";
     } elsif ($file_type eq "spreadsheet" && $is_treatment eq "treatment") {
         $submit_type = "treatments";
+    } elsif ($file_type eq "datacollector") {
+        $submit_type = "datacollector_spreadsheet"
     }
     $submit_job->additional_args->{file_type} = $submit_type;
     if ($is_treatment eq "treatment") {
         $submit_job->additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
         $submit_job->additional_args->{upload_spreadsheet_treatment_data_level} = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
         $submit_job->additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
-    } else {
+    } elsif ($submit_type eq "phenotyping_spreadsheet") {
         $submit_job->additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $submit_job->additional_args->{upload_spreadsheet_phenotype_data_level} = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $submit_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
+    } elsif ($submit_type eq "datacollector_spreadsheet") {
+        $submit_job->additional_args->{upload_datacollector_phenotype_timestamp_checkbox} = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
     }
 
     $submit_job->update_status("submitted");
@@ -379,6 +387,7 @@ sub _prep_upload {
         $metadata_file_type = "data collector phenotype file";
         $timestamp_included = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
+        $archived_file_id = $c->req->param('archived_file_id') || undef;
     }
 
     my $user_type = $user->get_object->get_user_type();
