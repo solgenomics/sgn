@@ -751,7 +751,8 @@ sub dataset_summary_GET {
     $c->tempfiles_subdir("decisionmeeting");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE => "decisionmeeting/dm_XXXXX");
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema        = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath      = $c->config->{basepath} . "/" . $tempfile;
 
@@ -911,7 +912,8 @@ sub accessions_GET {
     my $dataset_id    = $c->req->param('dataset_id');
     my $list_id       = $c->req->param('list_id');
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema        = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $dbh           = $c->dbc->dbh;
 
@@ -968,7 +970,8 @@ sub _dm_build_dataset_phenofile {
     $c->tempfiles_subdir("decisionmeeting");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE => "decisionmeeting/dm_XXXXX");
 
-    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
+    my $sp_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema        = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
     my $temppath      = $c->config->{basepath} . "/" . $tempfile;
 
