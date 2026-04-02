@@ -10,7 +10,6 @@
   $stock_types     => undef
   $breeding_programs => undef
   $editable_stock_props => undef
-  $submitter_obsolete_privilege => undef
 </%args>
 
 <%perl>
