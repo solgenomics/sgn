@@ -410,7 +410,7 @@ sub image_analysis_group_POST : Args(0) {
             if ($is_multi_trait) {
                 print STDERR "RESULT IS MULTI TRAIT";
                 my @trait_rows;
-                my $test_trait_id = 70739; 
+                #my $test_trait_id = 70739; 
 
                 foreach my $trait_name (keys %{$sample_data}) {
                     my ($trimmed_trait_name) = split (/\|/, $trait_name);
@@ -432,7 +432,7 @@ sub image_analysis_group_POST : Args(0) {
                         analyzed_link => $results_ref->{result}->{image_link},
                         object_name    => $sample,
                         trait_name    => $trait_name,
-                        trait_id      => $test_trait_id,
+                        trait_id      => $trait_id,
                         stock_type => $stock_type_name,
                         sample_num => $max_num,
                         image_analyzed => $image_analyzed,
