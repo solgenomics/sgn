@@ -152,22 +152,30 @@ $design_types => ()
       });
     }
 
-    function loadTrialTree() {
+    function loadTrialTree(forceRefresh) {
+      var url = '/ajax/breeders/get_trials_with_folders_cached?type=trial';
+
+      if (forceRefresh) {
+        url += '&refresh=1&_=' + new Date().getTime();
+      }
+
       $.ajax({
-        url: '/ajax/breeders/get_trials_with_folders_cached?type=trial',
+        url: url,
+        cache: false,
         success: function(response) {
           buildTrialTree(response.html || '');
         },
-        error: function() {
+        error: function(xhr) {
+          console.log('Trial tree load failed:', xhr.status, xhr.responseText);
           alert("An error occurred while loading the trial data.");
         }
       });
     }
 
-    loadTrialTree();
+    loadTrialTree(false);
 
-    $('#refresh_jstree_html_trialtree_button').click(function() {
-      loadTrialTree();
+    $('#refresh_jstree_html_trialtree_button').off('click').on('click', function() {
+      loadTrialTree(true);
     });
 
     $('#trial_tree_search').off('keyup').on('keyup', function() {

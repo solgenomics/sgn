@@ -77,6 +77,8 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     my $self = shift;
     my $c = shift;
     my $tree_type = $c->req->param('type') || 'trial';
+    my $force_refresh = $c->req->param('refresh') ? 1 : 0;
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
@@ -86,18 +88,19 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
         print "Couldn't create $dir: $@";
     }
 
-    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
+    my $filename = $dir . "/entire_jstree_html_$tree_type.txt";
     my $html = '';
 
-    if (open(my $fh, '<:encoding(UTF-8)', $filename)) {
+    if (!$force_refresh && open(my $fh, '<:encoding(UTF-8)', $filename)) {
         local $/;
         $html = <$fh>;
         close($fh);
-    } else {
+    }
+    elsif (!$force_refresh) {
         warn "cannot open file $filename $!";
     }
 
-    if (!$html) {
+    if ($force_refresh || !$html) {
         $html = _write_cached_folder_tree($schema, $tree_type, $filename);
     }
 
@@ -134,30 +137,30 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     $c->stash->{rest} = { html => $html };
 }
 
-
-
 sub _write_cached_folder_tree {
     my $schema = shift;
     my $tree_type = shift;
     my $filename = shift;
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
 
+    my $p = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
     my $projects = $p->get_breeding_programs();
 
     my $html = "";
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
+    my $folder_obj = CXGN::Trial::Folder->new({ bcs_schema => $schema, folder_id => @$projects[0]->[0] });
 
     print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
     foreach my $project (@$projects) {
-        my %project = ( "id" => $project->[0], "name" => $project->[1]);
+        my %project = ("id" => $project->[0], "name" => $project->[1]);
         $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
     }
     print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
 
-    my $OUTFILE;
-    open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
+    my $tmpfile = $filename . ".tmp";
+    open(my $OUTFILE, '>:encoding(UTF-8)', $tmpfile) or die "Error opening $tmpfile: $!";
+    print {$OUTFILE} $html or croak "Cannot write to $tmpfile: $!";
+    close($OUTFILE) or croak "Cannot close $tmpfile: $!";
+
+    rename($tmpfile, $filename) or die "Cannot rename $tmpfile to $filename: $!";
 
     return $html;
 }
