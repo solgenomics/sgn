@@ -552,6 +552,7 @@ sub BUILD {
     $self->stock($stock);
     $self->stock_id($stock->stock_id);
     $self->create_date($stock->create_date);
+    $self->is_obsolete($stock->is_obsolete);
 
     unless ($self->is_saving) {
         $self->organism_id($stock->organism_id);
