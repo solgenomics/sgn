@@ -39,29 +39,46 @@ sub get_trials : Path('/ajax/breeders/get_trials') Args(0) {
     $c->stash->{rest} = \%data;
 }
 
-sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Args(0) {
-    my $self = shift;
-    my $c = shift;
-    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial' or 'genotyping_trial', 'cross'
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+sub _get_trial_designs_by_ids {
+    my ($schema, $trial_ids_ref) = @_;
 
-    my $dir = catdir($c->config->{static_content_path}, "folder");
-    eval { make_path($dir) };
-    if ($@) {
-        print STDERR "Couldn't create $dir: $@";
+    my %design_by_trial_id;
+    return \%design_by_trial_id unless $trial_ids_ref && @$trial_ids_ref;
+
+    my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
+    return \%design_by_trial_id unless $design_cvterm;
+
+    my $design_cvterm_id = $design_cvterm->cvterm_id();
+
+    my $projects_rs = $schema->resultset('Project::Project')->search(
+        { 'me.project_id' => { -in => $trial_ids_ref } },
+        { prefetch => 'projectprops' }
+    );
+
+    while (my $project = $projects_rs->next) {
+        my $project_id = $project->project_id;
+        my $design = '';
+
+        my @props = $project->projectprops;
+        foreach my $pp (@props) {
+            if ($pp->type_id == $design_cvterm_id) {
+                $design = $pp->value // '';
+                last;
+            }
+        }
+
+        $design_by_trial_id{$project_id} = $design;
     }
-    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
 
-    _write_cached_folder_tree($schema, $tree_type, $filename);
-
-    $c->stash->{rest} = { status => 1 };
+    return \%design_by_trial_id;
 }
 
 sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial','genotyping_trial', 'cross', 'genotyping_project', 'activity'
+    my $tree_type = $c->req->param('type') || 'trial';
+    my $force_refresh = $c->req->param('refresh') ? 1 : 0;
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
@@ -70,20 +87,53 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     if ($@) {
         print "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
+
+    my $filename = $dir . "/entire_jstree_html_$tree_type.txt";
     my $html = '';
-    open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename $!";
-    {
+
+    if (!$force_refresh && open(my $fh, '<:encoding(UTF-8)', $filename)) {
         local $/;
         $html = <$fh>;
+        close($fh);
     }
-    close($fh);
+    elsif (!$force_refresh) {
+        warn "cannot open file $filename $!";
+    }
 
-    if (!$html) {
+    if ($force_refresh || !$html) {
         $html = _write_cached_folder_tree($schema, $tree_type, $filename);
     }
 
-    #print STDERR $html;
+    if ($tree_type eq 'trial' && $html) {
+        my %trial_ids;
+        while ($html =~ m{/breeders/trial/(\d+)}g) {
+            $trial_ids{$1} = 1;
+        }
+
+        if (%trial_ids) {
+            my @trial_ids = sort { $a <=> $b } keys %trial_ids;
+            my $design_by_trial_id = _get_trial_designs_by_ids($schema, \@trial_ids);
+
+            $html =~ s{(<li\b[^>]*data-jstree='{"type":"trial"}'[^>]*\bid="(\d+)"[^>]*)(>)}{
+                my $start_tag = $1;
+                my $trial_id  = $2;
+                my $end_tag   = $3;
+                my $design    = $design_by_trial_id->{$trial_id} // '';
+
+                $design =~ s/&/&amp;/g;
+                $design =~ s/"/&quot;/g;
+                $design =~ s/</&lt;/g;
+                $design =~ s/>/&gt;/g;
+
+                if ($start_tag =~ /\bdata-design=/) {
+                    $start_tag . $end_tag;
+                } else {
+                    $start_tag . qq{ data-design="$design"} . $end_tag;
+                }
+            }gex;
+        }
+    }
+
     $c->stash->{rest} = { html => $html };
 }
 
@@ -91,24 +141,26 @@ sub _write_cached_folder_tree {
     my $schema = shift;
     my $tree_type = shift;
     my $filename = shift;
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
 
+    my $p = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
     my $projects = $p->get_breeding_programs();
 
     my $html = "";
-    my $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => @$projects[0]->[0] });
+    my $folder_obj = CXGN::Trial::Folder->new({ bcs_schema => $schema, folder_id => @$projects[0]->[0] });
 
     print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
     foreach my $project (@$projects) {
-        my %project = ( "id" => $project->[0], "name" => $project->[1]);
+        my %project = ("id" => $project->[0], "name" => $project->[1]);
         $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
     }
     print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
 
-    my $OUTFILE;
-    open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
+    my $tmpfile = $filename . ".tmp";
+    open(my $OUTFILE, '>:encoding(UTF-8)', $tmpfile) or die "Error opening $tmpfile: $!";
+    print {$OUTFILE} $html or croak "Cannot write to $tmpfile: $!";
+    close($OUTFILE) or croak "Cannot close $tmpfile: $!";
+
+    rename($tmpfile, $filename) or die "Cannot rename $tmpfile to $filename: $!";
 
     return $html;
 }

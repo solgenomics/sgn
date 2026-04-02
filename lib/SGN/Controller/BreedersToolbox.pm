@@ -196,6 +196,17 @@ sub manage_tissue_samples : Path("/breeders/samples") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_samples.mas';
 }
 
+sub index :Path('/breeders/meeting') :Args(0) {
+  my $self = shift;
+  my $c = shift;
+  if (! $c->user) {
+    $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+    return;
+  }
+  $c->stash->{template} = '/breeders_toolbox/decision_meeting.mas';
+  
+}
+
 
 sub manage_locations : Path("/breeders/locations") Args(0) {
     my $self = shift;

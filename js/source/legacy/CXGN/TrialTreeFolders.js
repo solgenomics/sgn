@@ -34,7 +34,8 @@ jQuery(document).ready(function($) {
 function refreshTrailJsTree(refreshpage) {
     setTimeout(() => {
         jQuery.ajax({
-            url: '/ajax/breeders/get_trials_with_folders?type=trial',
+            url: '/ajax/breeders/get_trials_with_folders_cached?type=trial&refresh=1&_=' + new Date().getTime(),
+            cache: false,
             beforeSend: function() {
                 jQuery("#working_modal").modal("show");
             },
