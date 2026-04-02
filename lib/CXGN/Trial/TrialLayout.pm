@@ -122,6 +122,7 @@ If there are errors, $trial_errors is a HashRef like:
 # use CXGN::Chado::Stock;
 # use JSON;
 
+use strict;
 use CXGN::Trial::TrialLayoutFactory;
 
 
