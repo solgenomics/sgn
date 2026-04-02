@@ -697,7 +697,9 @@ export function init() {
                     jQuery("#hm_plot_number").html(replace_plot_number);
                     var old_plot_id = jQuery("#hm_plot_id").html(replace_plot_id);
                     var old_plot_accession = jQuery("#hm_plot_accession").html(
-                        replace_accession
+                        plot.additionalInfo?.intercropGermplasm ? 
+                            [replace_accession, ...plot.additionalInfo.intercropGermplasm.map((e) => e.germplasmName)].join(', ') : 
+                            replace_accession
                     );
 
                     jQuery("#hm_plot_details_modal").modal("show");
@@ -1067,11 +1069,17 @@ export function init() {
                             <strong>Block Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[1].levelCode}<br />
                             <strong>Rep Number:</strong> ${plot.observationUnitPosition.observationLevelRelationships[0].levelCode}<br />`;
                         if (plot.germplasmName) {
-                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}`;
+                            html += `<strong>Accession Name:</strong> ${plot.germplasmName}<br />`;
                         } else if (plot.crossName) {
-                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}`;
+                            html += `<strong>Cross Unique ID:</strong> ${plot.crossName}<br />`;
                         } else if (plot.additionalInfo.familyName) {
-                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}`;
+                            html += `<strong>Family Name:</strong> ${plot.additionalInfo.familyName}<br />`;
+                        }
+
+                        if ( plot.additionalInfo?.intercropGermplasm ) {
+                            for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
+                                html += `<strong>Accession Name:</strong> ${plot.additionalInfo.intercropGermplasm[i].germplasmName}<br />`;
+                            }
                         }
 
                         if ( local_this.heatmap_selected ) {

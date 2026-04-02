@@ -53,7 +53,7 @@ $trial_description
                             <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
                                 <div class="col-sm-8">
                                     <div class="input-group">
-                                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
+                                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5" ><% $trial_description %></textarea>
                                     </div>
                                 </div>
                         </div>
