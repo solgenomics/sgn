@@ -2393,6 +2393,27 @@ export function submit_upload_job() {
         case 'family_names' :
             break;
         case 'fieldbook_phenotypes' :
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_verify/fieldbook',
+                type : 'POST',
+                data : {
+                    'upload_fieldbook_phenotype_data_level' : submit_params.additional_args.data_level,
+                    'upload_fieldbook_phenotype_images_zipfile' : submit_params.additional_args.images_zipfile_id,
+                    'archived_file_id' : submit_params.file_id,
+                    'ignore_warnings' : ignore_warnings
+                },
+                success: function(response) {
+                    if (response.error) {
+                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting fieldbook validation, check console.");
+                    return;
+                }
+            });
             break;
         case 'datacollector_spreadsheet' :
             jQuery.ajax({
@@ -2411,7 +2432,7 @@ export function submit_upload_job() {
                     refresh_upload_tables();
                 },
                 error: function() {
-                    alert("An error occurred submitting phenotype validation, check console.");
+                    alert("An error occurred submitting datacollector validation, check console.");
                     return;
                 }
             });

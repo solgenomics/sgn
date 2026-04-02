@@ -335,7 +335,7 @@ sub _prep_upload {
     my $metadata_file_type;
     my $data_level;
     my $image_zip;
-    my $archived_file_id;
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $upload_file_type;
     if ($file_type eq "spreadsheet") {
         my $spreadsheet_format;
@@ -345,7 +345,6 @@ sub _prep_upload {
             $data_level = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
             $upload = $c->req->upload('upload_spreadsheet_treatment_file_input');
             $image_zip = $c->req->upload('upload_spreadsheet_treatment_associated_images_file_input');
-            $archived_file_id = $c->req->param('archived_file_id') || undef;
             $upload_file_type = "treatments";
         } else {
             $spreadsheet_format = $c->req->param("upload_spreadsheet_phenotype_file_format"); #simple or detailed or nirs or scio or associated_images
@@ -353,7 +352,6 @@ sub _prep_upload {
             $data_level = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
             $upload = $c->req->upload('upload_spreadsheet_phenotype_file_input');
             $image_zip = $c->req->upload('upload_spreadsheet_phenotype_associated_images_file_input');
-            $archived_file_id = $c->req->param('archived_file_id') || undef;
             $upload_file_type = "phenotyping_spreadsheet";
         }
         # print STDERR "File type is Spreadsheet and format is $spreadsheet_format\n";
@@ -387,7 +385,6 @@ sub _prep_upload {
         $metadata_file_type = "data collector phenotype file";
         $timestamp_included = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
         $upload = $c->req->upload('upload_datacollector_phenotype_file_input');
-        $archived_file_id = $c->req->param('archived_file_id') || undef;
     }
 
     my $user_type = $user->get_object->get_user_type();
