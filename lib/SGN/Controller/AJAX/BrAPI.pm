@@ -4579,7 +4579,7 @@ sub events_search_GET {
 sub events_search_process {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Events');
@@ -5787,7 +5787,7 @@ sub transcriptomics : Chained('brapi') PathPart('transcriptomics') Args(0) : Act
 sub transcriptomics_GET {
     my $self = shift;
     my $c = shift;
-    my $auth = _authenticate_user($c);
+    my $auth = _authenticate_user($c, "phenotyping", "read");
     my $clean_inputs = $c->stash->{clean_inputs};
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
@@ -5801,7 +5801,7 @@ sub transcriptomics_matrix  : Chained('brapi') PathPart('transcriptomics/matrix'
 sub transcriptomics_matrix_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
@@ -5817,7 +5817,7 @@ sub transcriptomics_protocol : Chained('brapi') PathPart('transcriptomics/protoc
 sub transcriptomics_protocol_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
@@ -5833,7 +5833,7 @@ sub transcriptomics_instances : Chained('brapi') PathPart('transcriptomics/insta
 sub transcriptomics_instances_GET {
 	my $self = shift;
 	my $c = shift;
-	my ($auth) = _authenticate_user($c);
+	my ($auth) = _authenticate_user($c, "phenotyping", "read");
 	my $clean_inputs = $c->stash->{clean_inputs};
 	my $brapi = $self->brapi_module;
 	my $brapi_module = $brapi->brapi_wrapper('Transcriptomics');
