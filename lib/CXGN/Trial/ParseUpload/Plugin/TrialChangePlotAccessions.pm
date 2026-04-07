@@ -28,7 +28,7 @@ sub _validate_with_plugin {
         column_aliases => {
             'plot_name' => ['plot name'],
             'new_plot_name' => ['new plot name'],
-            'accession_name' => ['accession name', 'accession']
+            'accession_name' => ['accession name', 'accession', 'cross_unique_id', 'cross unique id', 'family_name', 'family name']
         }
     );
 
@@ -65,7 +65,7 @@ sub _validate_with_plugin {
             push @error_messages, "Plot $old_plot_name does not exist in this trial.";
         }
     }
- 
+
     my $transform = CXGN::List::Transform->new();
     $validate = $transform->transform($schema, 'stocks_2_stock_ids', \@accessions);
     if (scalar(@{$validate->{'missing'}}) > 0) {
@@ -117,7 +117,7 @@ sub _parse_with_plugin {
             'new_accession_name' => $row->{'accession_name'},
             'new_accession_id' => $parsed_accession_ids->{$row->{'accession_name'}}
         };
-    } 
+    }
 
     $self->_set_parsed_data($parsed_entries);
     return 1;
