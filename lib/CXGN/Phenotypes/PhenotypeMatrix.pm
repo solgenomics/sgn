@@ -240,7 +240,7 @@ sub get_phenotype_matrix {
 
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
-   
+
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         $self->search_type,
         {
@@ -277,7 +277,7 @@ sub get_phenotype_matrix {
     my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
 
     if ($self->search_type eq 'MaterializedViewTable'){
-        ($data, $unique_traits) = $phenotypes_search->search();        
+        ($data, $unique_traits) = $phenotypes_search->search();
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -334,7 +334,7 @@ sub get_phenotype_matrix {
         push @info, \@line;
 
 	    #print STDERR "DATA = ".Dumper($data);
-	
+
         foreach my $obs_unit (@$data){
             my $entry_type = $obs_unit->{obsunit_is_a_control} ? 'check' : 'test';
             my $synonyms = $obs_unit->{germplasm_synonyms};
@@ -385,29 +385,29 @@ sub get_phenotype_matrix {
 
             #	    if (scalar(@$observations) > 0) {
 
-	    
+
 	        my %phenotype_ids;
 	        my %trait_observations = ();
-	        if (@$observations > 0) { 
+	        if (@$observations > 0) {
 		    %trait_observations = $self->format_observations($observations);
 	        }
-    
+
 	    #print STDERR "FORMATTED OBSERVATIONS =".Dumper(\%trait_observations)."\n";
-    
+
 	        if ($include_phenotype_primary_key) {
 		    foreach my $observation (@$observations) {
 		        $phenotype_ids{$observation->{trait_name}} = $observation->{phenotype_id};
 		    }
 	        }
 	        foreach my $trait (@sorted_traits) {
-            
+
 		        push @line, $trait_observations{$trait};
 
 		        if ($include_phenotype_primary_key) {
 		            push @line, $phenotype_ids{$trait};
 		        }
 	        }
-		    
+
             push @line, $obs_unit->{notes};
 
             # add treatment values to each obsunit line
@@ -570,7 +570,7 @@ sub get_phenotype_matrix {
 
                     if ($self->repetitive_measurements() eq "first") {
                         # $obsunit_data{$obsunit_id}->{$cvterm} = shift(@{$obsunit_data{$obsunit_id}->{$cvterm}});
-                        $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[0];		
+                        $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[0];
                     }
 
                     if ($self->repetitive_measurements() eq "last") {
@@ -599,7 +599,7 @@ sub get_phenotype_matrix {
                             #  the timestamp for the average values, will be the latest (or the last measurement, timestamp). Therefore, am retreving the timestamp of the last measurement !!
                             my $last_measurement = $sorted_measurements[-1];
                             # since, the values are stored with the timestamp, need to split them to get the timestamp of the last_measurment !!
-                            my ($last_value, $last_timestamp) = split(',', $last_measurement); 
+                            my ($last_value, $last_timestamp) = split(',', $last_measurement);
                             $last_value = $last_measurement unless defined $last_timestamp;
                             # conditionally include, if the timestamp !!
                             if ($include_timestamp && defined $last_timestamp) {
@@ -685,7 +685,7 @@ sub get_phenotype_matrix {
         foreach my $p (@unique_obsunit_list) {
             my @metadata = @{$obsunit_data{$p}->{metadata}};
             my $notes = $obsunit_data{$p}->{'notes'};
-            my @line = @metadata;
+#            my @line = @metadata;
 
             if ($self->repetitive_measurements() eq "all_values_multiple_line") { ##this block is only for when repetitive_measurement option is "all_values_multiple_line" !!!
                 # check how many values for each trait are recorded !!!
@@ -700,18 +700,24 @@ sub get_phenotype_matrix {
                     }
                 }
 
-                ## store the values in separate row 
+                ## store the values in separate row
+
                 for (my $multi_line = 0; $multi_line < $max_measurements; $multi_line++) {
+		    my @line = @metadata; # start a new clean row
+		    print STDERR "MAX MEASUREMENTS: $max_measurements. MULTI LINE = $multi_line\n";
                     foreach my $trait (@sorted_traits) {
                         my $trait_values = $obsunit_data{$p}->{$trait};
 
                         if (ref($trait_values) eq 'ARRAY') {
+			    print STDERR "PARSING THROUGH ARRAY AT POSITION $multi_line (".join(",",@$trait_values)."\n";
                             # Get the ith value if it exists, else undef
                             my $value = $trait_values->[$multi_line];
+			    print STDERR " VALUE = $value\n";
                             push @line, $value;
                         } else {
                             # Single value
-                            push @line, $multi_line == 0 ? $trait_values : undef;
+			    print STDERR "ADDING SINGLE VALUE ($trait_values)\n";
+			    push @line, $multi_line == 0 ? $trait_values : undef;
                         }
                     }
 
@@ -719,6 +725,7 @@ sub get_phenotype_matrix {
 
                     # Add treatment values only once
                     if ($multi_line == 0) {
+			print STDERR "ADDING TREATMENT...\n";
                         my %unit_treatments = $treatment_details->{$p} ? %{$treatment_details->{$p}} : ();
                         foreach my $name (@$treatment_names) {
                             push @line, $unit_treatments{$name};
@@ -729,11 +736,14 @@ sub get_phenotype_matrix {
                             push @line, undef;
                         }
                     }
-
+		    print STDERR "LINE NOW: ".join(',', @line);
                     push @info, \@line;
                 }
-            }else{#this block is for all other repetitive options including - first, last, average, sum, and all values_in_single_line !!
+            } else {  #this block is for all other repetitive options including - first, last, average, sum, and all values_in_single_line !!
+		print STDERR "NOT REPETITIVE OPTION!\n";
+
                 foreach my $trait (@sorted_traits) {
+		    print STDERR "NOT REPETITIVE OPTIONS!\n";
                     push @line, $obsunit_data{$p}->{$trait};
                 }
                 push @line,  $obsunit_data{$p}->{'notes'};
@@ -751,7 +761,7 @@ sub get_phenotype_matrix {
         }
     }
 
-    #print STDERR Dumper \@info;
+    print STDERR "INFO: ".Dumper \@info;
     print STDERR "PhenotypeMatrix Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }
@@ -764,7 +774,7 @@ sub format_observations {
 	    print STDERR "No observations in this obs_unit... Skipping.\n";
 	    return [];
     }
-    
+
     my %trait_observations;
     my $include_timestamp = $self->include_timestamp;
     my $dataset_excluded_outliers_ref = $self->dataset_excluded_outliers;
@@ -814,7 +824,7 @@ sub format_observations {
 
 	    ### FOR debugging only:
 	    #$trait_observations{$observation->{trait_name}}.=$observation->{squash_method};
-    
+
 	    # dataset outliers will be empty fields if are in @$dataset_excluded_outliers_ref list of pheno_id outliers
 	    if(grep {$_ == $observation->{'phenotype_id'}} @$dataset_excluded_outliers_ref) {
 	        $trait_observations{$observation->{trait_name}} = ''; # empty field for outlier NA
@@ -832,7 +842,7 @@ sub detect_multiple_measurements {
     my %duplicate_measurements;
 
 #    print STDERR "CHECKING MULTIPLE MEASUREMENTS...\n";
-    
+
     if (! $trait_observations) { return []; }
     foreach my $o (@$trait_observations) {
 	    my $trait_id = $o->{trait_id};
@@ -842,7 +852,7 @@ sub detect_multiple_measurements {
     foreach my $trait_id (keys %duplicate_measurements) {
 	    if (scalar(@{$duplicate_measurements{$trait_id}})>1) {
 	        #print STDERR "De-duplicating measurements... ".Dumper($duplicate_measurements{$trait_id});
-    
+
 	        my $trait_observations = $self->process_duplicate_measurements($duplicate_measurements{$trait_id});
 	        $duplicate_measurements{$trait_id} =  [ $trait_observations ];
 
@@ -853,13 +863,13 @@ sub detect_multiple_measurements {
     #print STDERR "DUPLICATE MEASUREMENTS: ".Dumper(\%duplicate_measurements);
 
     my @processed_observations;
-    foreach my $trait_id (keys %duplicate_measurements) { 
+    foreach my $trait_id (keys %duplicate_measurements) {
 	    push @processed_observations, @{$duplicate_measurements{$trait_id}}[0];
     }
 
     #print STDERR "PROCESSED observations = ".Dumper(\@processed_observations);
-    
-    return \@processed_observations; 
+
+    return \@processed_observations;
 }
 
 sub process_duplicate_measurements {
@@ -867,7 +877,7 @@ sub process_duplicate_measurements {
     my $trait_observations = shift;
 
     #print STDERR "PROCESSING DUPLICATES WITH ".Dumper($trait_observations);
-    
+
     if ($self->repetitive_measurements() eq "first") {
 	    print STDERR "Retrieving first value...\n";
 	    $trait_observations =  $trait_observations->[0];
@@ -921,14 +931,14 @@ sub average_observations {
     my $observations_ref = shift || [];
 
     if (! @$observations_ref) { return; }
-    
+
     #print STDERR "Averaging Observations: ".Dumper($observations_ref);
-    
+
     my $sum = undef;
     my $count = 0;
     my @values;
     foreach my $v (@$observations_ref) {
-	    if (! $v->{outlier} && defined($v->{value}) ) { 
+	    if (! $v->{outlier} && defined($v->{value}) ) {
 	        $sum += $v->{value};
 	        $count++;
 	        push @values, $v->{value};
@@ -937,12 +947,12 @@ sub average_observations {
 
     my $avg;
     my $stddev;
-    
+
     if (defined($sum) && ($count > 0) ) {   # make sure to return undef for measurements that are all undef
 	    $avg = $sum / $count;
 
 	    my $sqr_diff;
-    
+
 	    foreach my $v (@$observations_ref) {
 	        my $diff = $v->{value} - $avg;
 	        $sqr_diff += $diff * $diff;
@@ -950,7 +960,7 @@ sub average_observations {
 	    }
 	    $stddev = sqrt($sqr_diff/$count);
     }
-    
+
     my $averaged_observation = $observations_ref->[0];
     $averaged_observation->{value} = $avg;
     $averaged_observation->{stddev} = $stddev;
@@ -958,7 +968,7 @@ sub average_observations {
     #print STDERR "Averaged Observation: ".Dumper( $averaged_observation );
 
     return $averaged_observation;
-		      
+
 }
 
 sub sum_observations {
@@ -972,7 +982,7 @@ sub sum_observations {
     my $sum = 0;
     my @values;
     foreach my $v (@$observations_ref) {
-        if (! $v->{outlier} && defined($v->{value}) ) { 
+        if (! $v->{outlier} && defined($v->{value}) ) {
             $sum += $v->{value};
             push @values, $v->{value};
         }
@@ -999,6 +1009,6 @@ sub retrieve_trait_repeat_types {
 
     return \%property_by_cvterm_id;
 }
-	    
-	
+
+
 1;
