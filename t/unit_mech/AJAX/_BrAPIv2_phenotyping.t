@@ -5,7 +5,7 @@ use warnings;
 
 use lib 't/lib';
 use SGN::Test::Fixture;
-use Test::More;
+use Test::More qw | no_plan |;
 use Test::WWW::Mechanize;
 use LWP::UserAgent;
 use DateTime;

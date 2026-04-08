@@ -194,8 +194,14 @@ jQuery(document).ready(function () {
                 if (res.data) {
                     corrArgs["corr_table_file"] = res.corre_table_file;
                     var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
+                    var heatmapArgs = {
+                      output_data: res.data,
+                      canvas: canvas,
+                      plot_div_id: corrPlotDivId,
+                      download_links: corrDownload,
+                    };
 
-                    solGS.heatmap.plot(res.data, canvas, corrPlotDivId, corrDownload);
+                    solGS.heatmap.plot(heatmapArgs);
 
                     jQuery(`${canvas} .multi-spinner-container`).hide();
                     jQuery(corrMsgDiv).empty();

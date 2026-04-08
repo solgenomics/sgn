@@ -52,7 +52,7 @@ sub retrieve {
     my @output;
     my $trial_stock_type = $self->trial_stock_type();
 
-    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year','synonyms','tier','plot_geo_json');
+    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
 
     my @header;
     foreach (@possible_cols){
@@ -76,6 +76,7 @@ sub retrieve {
     my $trial_name = $trial->get_name ? $trial->get_name : '';
     my $location_name = $trial->get_location ? $trial->get_location->[1] : '';
     my $trial_year = $trial->get_year ? $trial->get_year : '';
+    my $trial_planting_date = $trial->get_planting_date ? $trial->get_planting_date : '';
     my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     my @overall_trait_names = sort keys %$overall_performance_hash;
@@ -125,6 +126,8 @@ sub retrieve {
                     push @$line, $trial_name;
                 } elsif ($c eq 'year'){
                     push @$line, $trial_year;
+                } elsif ($c eq 'planting_date') {
+                    push @$line, $trial_planting_date;
                 } elsif ($c eq 'tier'){
                     my $row = $design_info->{"row_number"} ? $design_info->{"row_number"} : '';
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';

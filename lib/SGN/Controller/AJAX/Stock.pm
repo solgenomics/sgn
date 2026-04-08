@@ -42,6 +42,7 @@ use DateTime;
 use SGN::Model::Cvterm;
 use CXGN::People::Person;
 use CXGN::Stock::StockLookup;
+use CXGN::Stock::Vector;
 use CXGN::Stock::AddDerivedAccession;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -111,6 +112,7 @@ sub add_stockprop_POST {
         }
 
         try {
+	    print STDERR "CREATING THE STOCKPROP $prop_type $prop\n";
             $stock->create_stockprops( { $prop_type => $prop }, { autocreate => 1 } );
 
             my $stock = CXGN::Stock->new({
@@ -123,21 +125,26 @@ sub add_stockprop_POST {
             });
             my $added_stock_id = $stock->store();
 
-            my $dbh = $c->dbc->dbh();
-            my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+	    print STDERR "STOCK ADDED: $added_stock_id\n";
 
-            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. ".$refresh->{'message'} };
+            #my $dbh = $c->dbc->dbh();
+            #my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+#            my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+
+            $c->stash->{rest} = { message => "$message Stock_id $stock_id and type_id $prop_type have been associated with value $prop. " }; #.$refresh->{'message'} };
+
         } catch {
+	    print STDERR "AN ERROR OCCURRED: $_\n";
             $c->stash->{rest} = { error => "Failed: $_" }
         };
     } else {
+	print STDERR "CANNOT ASSOCIATE $prop_type $prop with $stock_id\n";
 	    $c->stash->{rest} = { error => "Cannot associate prop $prop_type: $prop with stock $stock_id " };
 	}
     } else {
 	$c->stash->{rest} = { error => 'user does not have a curator/sequencer/submitter account' };
     }
-    #$c->stash->{rest} = { message => 'success' };
+    $c->stash->{rest} = { message => 'success' };
 }
 
 sub add_stockprop_GET {
@@ -266,6 +273,7 @@ sub associate_locus_GET :Args(0) {
         # rightly) be counted as a server error
         if ($stock && $allele_id) {
             try {
+		print STDERR "TRY ASSOCIATE A LOCUS\n";
                 my $cxgn_stock = CXGN::Stock->new(schema => $schema, stock_id => $stock_id);
                 $cxgn_stock->associate_allele($allele_id, $c->user->get_object->get_sp_person_id);
 
@@ -2651,61 +2659,6 @@ sub get_vector_related_accessions:Chained('/stock/get_stock') PathPart('datatabl
     }
 
     $c->stash->{rest}={data=>\@related_accessions};
-}
-
-
-sub get_vector_obsoleted_accessions:Chained('/stock/get_stock') PathPart('datatables/vector_obsoleted_accessions') Args(0){
-    my $self = shift;
-    my $c = shift;
-    my $stock_id = $c->stash->{stock_row}->stock_id();
-
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $dbh = $c->dbc->dbh;
-
-    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $related_stocks->get_vector_obsoleted_accessions();
-    my @obsoleted_accessions;
-
-    foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $obsolete_note, $obsolete_date, $sp_person_id) = @$r;
-        my $transformation_info;
-        if ($transformation_id) {
-            $transformation_info = qq{<a href="/transformation/$transformation_id">$transformation_name</a>};
-        } else {
-            $transformation_info = 'NA';
-        }
-        my $person= CXGN::People::Person->new($dbh, $sp_person_id);
-        my $full_name = $person->get_first_name()." ".$person->get_last_name();
-
-        push @obsoleted_accessions, [qq{<a href="/stock/$transformant_id/view">$transformant_name</a>}, $obsolete_note, $obsolete_date, $full_name, $transformation_info, $transformant_name];
-    }
-
-    $c->stash->{rest}={data=>\@obsoleted_accessions};
-}
-
-
-sub get_vector_transgenic_line_details:Chained('/stock/get_stock') PathPart('datatables/vector_transgenic_line_details') Args(0){
-    my $self = shift;
-    my $c = shift;
-    my $stock_id = $c->stash->{stock_row}->stock_id();
-
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $related_stocks = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_id =>$stock_id});
-    my $result = $related_stocks->get_vector_related_accessions();
-    my @transgenic_lines;
-
-    foreach my $r (@$result){
-        my ($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = @$r;
-        push @transgenic_lines, {
-            transformant_id => $transformant_id,
-            transformant_name => $transformant_name,
-            number_of_insertions => $number_of_insertions
-        };
-    }
-
-    $c->stash->{rest}={data=>\@transgenic_lines};
 }
 
 

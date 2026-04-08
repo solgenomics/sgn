@@ -2,6 +2,7 @@
 $transformation_id
 $program_name
 $can_obsolete
+$vector_id
 </%args>
 
 
@@ -31,7 +32,7 @@ $can_obsolete
 </&>
 
 <& /transformation/obsolete_stock_dialog.mas &>
-<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name &>
+<& /transformation/obsolete_accessions_dialog.mas, transformation_id => $transformation_id, program_name => $program_name, vector_id => $vector_id &>
 
 
 <script>
