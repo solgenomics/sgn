@@ -278,7 +278,7 @@ jQuery(document).ready(function(){
             if (response.error){
                 alert("File upload failed, check console");
             } else {
-                jsMod["upload_factory"].load_archived_files_table();
+                jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>');
             }
         }
     });

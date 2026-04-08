@@ -949,6 +949,7 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'plants_by_name',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -1129,6 +1130,7 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'subplot_plants_by_name',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -1308,6 +1310,7 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'subplots_by_name',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -1485,6 +1488,7 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'plants_by_index',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -1666,6 +1670,7 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'subplot_plants_by_index',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -1847,6 +1852,7 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'subplots_by_index',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -2025,6 +2031,7 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'plants_per_plot',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -2205,6 +2212,7 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'plants_per_subplot',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -2385,6 +2393,7 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'subplots_per_plot',
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -2574,6 +2583,7 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => $gps_file_type,
             user_name => "$user_first_name $user_last_name",
             trial_id => $c->stash->{trial_id},
@@ -2751,6 +2761,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'change_accessions',
             user_name => "$user_first_name $user_last_name",
             trial_id => $trial_id,
@@ -4329,6 +4340,7 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         submit_page =>  $c->request->headers->referer,
         results_page =>  $c->request->headers->referer,
         additional_args => {
+            final_upload => 1,
             file_type => 'spatial_layout',
             user_name => "$user_first_name $user_last_name",
             trial_id => $trial_id,
@@ -6243,6 +6255,7 @@ sub upload_entry_number_template_POST : Args(0) {
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            final_upload => 1,
             file_type => 'entry_numbers',
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_id

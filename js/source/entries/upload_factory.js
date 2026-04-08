@@ -69,7 +69,7 @@ export function load_archived_files_table(user_id) {
         url: '/ajax/tools/documents/user_archive/',
         type : 'POST',
         data : {
-            user_id: user_id
+            'user_id': user_id
         },
         success: function(response) {
             if (response.error) {
