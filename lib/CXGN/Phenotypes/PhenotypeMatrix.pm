@@ -742,6 +742,8 @@ sub get_phenotype_matrix {
             } else {  #this block is for all other repetitive options including - first, last, average, sum, and all values_in_single_line !!
 		print STDERR "NOT REPETITIVE OPTION!\n";
 
+		my @line = @metadata;
+
                 foreach my $trait (@sorted_traits) {
 		    print STDERR "NOT REPETITIVE OPTIONS!\n";
                     push @line, $obsunit_data{$p}->{$trait};
