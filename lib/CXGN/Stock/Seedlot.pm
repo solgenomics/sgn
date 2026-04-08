@@ -715,6 +715,89 @@ sub verify_seedlot_plot_compatibility {
     return \%return;
 }
 
+
+# class method
+=head2 Class method: verify_seedlot_family_plot_compatibility()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_family_plot_compatibility($schema, [[$seedlot_name, $plot_name]]);
+ Desc:         Class method that verifies if a given list of pairs of seedlot_name and family plot_name derived from a cross member of the family.
+ Ret:          success or error
+ Args:         $schema, $stock_names, $seedlot_names
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_seedlot_family_plot_compatibility {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift; #arrayref of [ [seedlot_name, plot_name] ]
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot", "stock_type")->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+
+    foreach (@pairs){
+        my $seedlot_name = $_->[0];
+        my $plot_name = $_->[1];
+        my $seedlot_origin_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject');
+        my $origin_rs = $seedlot_origin_rs->first;
+        my $seedlot_origin_stock_id = $origin_rs->stock_id;
+
+        my $plot_original_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$plot_name, 'me.type_id'=>$plot_cvterm_id})->search_related('stock_relationship_subjects', {'stock_relationship_subjects.type_id'=>$plot_of_cvterm_id})->search_related('object');
+        my $rs = $plot_original_rs->first;
+        my $original_stock_id = $rs->stock_id;
+        my $original_stock_type = $rs->type_id;
+        if ($original_stock_type == $family_name_cvterm_id) {
+            my @members = ();
+            my $members_of_family = $schema->resultset("Stock::StockRelationship")->search({ type_id=>$cross_member_of_cvterm_id, object_id=>$original_stock_id });
+
+            while (my $each_member = $members_of_family->next() ) {
+                push @members, $each_member->subject_id;
+            }
+            if (!grep {$_ eq $seedlot_origin_stock_id} @members) {
+                $error .= "The seedlot: $seedlot_name is not linked to the same family as the plot: $plot_name . ";
+            }
+        } else {
+            my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$plot_name, 'me.type_id'=>$plot_cvterm_id})->search_related('stock_relationship_subjects', {'stock_relationship_subjects.type_id'=>$plot_of_cvterm_id})->search_related('object')->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$collection_of_cvterm_id})->search_related('object', {'object_2.uniquename'=>$seedlot_name, 'object_2.type_id'=>$seedlot_cvterm_id});
+            if (!$seedlot_rs->first){
+                $error .= "The seedlot: $seedlot_name is not linked to the same accession as the plot: $plot_name . ";
+            }
+        }
+    }
+
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
 # class method
 =head2 Class method: verify_seedlot_accessions_crosses()
 

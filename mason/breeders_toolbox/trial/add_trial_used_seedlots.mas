@@ -1,5 +1,6 @@
 <%args>
 $trial_id
+$trial_stock_type
 </%args>
 
 <div class="modal fade" id="trial_upload_used_seedlot_dialog" name="trial_upload_used_seedlot_dialog" tabindex="-1" role="dialog" aria-labelledby="upload_trial_used_seedlot_dialog">
@@ -98,6 +99,8 @@ $trial_id
 
 jQuery(document).ready(function(){
 
+    var trial_stock_type = "<$trial_stock_type>";
+
     jQuery('#trial_upload_seedlot_button').click( function(){
         jQuery('#trial_upload_used_seedlot_dialog').modal('show');
     });
@@ -107,7 +110,7 @@ jQuery(document).ready(function(){
     });
     function trial_upload_used_seedlot_submit() {
         var uploadFile = jQuery("#trial_upload_used_seedlot_file").val();
-        jQuery('#trial_upload_used_seedlot_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots");
+        jQuery('#trial_upload_used_seedlot_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots?trial_stock_type=<% $trial_stock_type %>");
         if (uploadFile === '') {
             alert("Please select a file");
             return;
