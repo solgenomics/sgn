@@ -103,7 +103,7 @@ sub structure_kinship_response {
 
     $res->{kinship_pop_name} = $pop_name;
     $res->{kinship_file_id}  = $file_id;
-    $res->{data}             = read_file($json_file);
+    $res->{kinship_output_data} = read_file($json_file);
 
     $self->prep_download_kinship_files($c);
     $res->{kinship_table_file}    = $c->stash->{download_kinship_table};
