@@ -549,7 +549,18 @@ export function process_file(file_data, upload_type, config) {
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'spatial_layout' : 
-            populate_validate_submit_data(upload_type, file_data);
+            display_spatial_layout_upload_choices();
+            jQuery('#spatial_layout_next_btn').on('click', {file_data : file_data}, populate_spatial_layout_validate_submit_data);
+            get_select_box('breeding_programs', 'spatial_layout_breeding_program_select_div', { 'name' : 'spatial_layout_breeding_program_id', 'id' : 'spatial_layout_breeding_program_id', 'empty': 1 });
+            jQuery('#spatial_layout_breeding_program_select_div').on('change', function () {
+                let breeding_program_id = jQuery("#spatial_layout_breeding_program_id").val();
+                if (breeding_program_id != null && breeding_program_id != '') {
+                    get_select_box('trials', 'spatial_layout_trial_select_div', { 'name' : 'spatial_layout_trial_id', 'id' : 'spatial_layout_trial_id', 'breeding_program_id' : breeding_program_id, 'empty':1});
+                } else {
+                    jQuery('#spatial_layout_trial_select_div').html('');
+                }
+            });
+            jQuery('#upload_type_choice_dialog').modal("show");
             break;
         case 'change_accessions' : 
             display_accession_change_upload_choices();
@@ -1436,6 +1447,15 @@ function display_trial_additional_file_upload_choices() {
     '<button id="trial_additional_file_upload_next_btn" class="btn btn-primary">Next</button>');
 }
 
+function display_spatial_layout_upload_choices() {
+    jQuery('#upload_type_choices_div').html(
+    '<div id="spatial_layout_breeding_program_select_div"></div>'+
+    '<br>' +
+    '<div id="spatial_layout_trial_select_div"></div>'+
+    '<br><br>' + 
+    '<button id="spatial_layout_next_btn" class="btn btn-primary">Next</button>');
+}
+
 function display_vector_upload_choices(user_role) {
     let fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_vectors" name="fuzzy_check_upload_vectors" checked disabled></input>';
     if (user_role == "curator"){
@@ -1460,6 +1480,31 @@ function display_vector_upload_choices(user_role) {
         '<br><br>' + 
         '<button id="vector_upload_next_btn" class="btn btn-primary">Next</button>'
     );
+}
+
+function populate_spatial_layout_validate_submit_data(event) {
+    let file_data = event.data.file_data;
+    let breeding_program_select = jQuery('#spatial_layout_breeding_program_id option:selected');
+    let breeding_program_id = breeding_program_select.val();
+    let breeding_program_name = breeding_program_select.text();
+    let trial_select = jQuery('#spatial_layout_trial_id option:selected');
+    let trial_id = trial_select.val();
+    let trial_name = trial_select.text();
+
+    if (!breeding_program_id) {
+        alert ("Please select a breeding program.");
+        return;
+    }
+    if (!trial_id) {
+        alert("Please select a trial.");
+        return;
+    }
+    populate_validate_submit_data('spatial_layout', file_data, {
+        breeding_program_id : breeding_program_id,
+        breeding_program_name : breeding_program_name,
+        trial_id : trial_id,
+        trial_name : trial_name
+    });
 }
 
 function populate_plant_validate_submit_data(event) {
@@ -2349,6 +2394,22 @@ export function submit_upload_job() {
             });
             break;
         case 'spatial_layout' :
+            jQuery.ajax({
+                url : '/ajax/breeders/trial/coordsupload',
+                data : {
+                    'archived_file_id' : submit_params.file_id,
+                    'trial_coordinates_upload_trial_id' : submit_params.additional_args.trial_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading gps coordinates. Check console.");
+                }
+            });
             break;
         case 'change_accessions' :
             let override = ignore_warnings ? "" : "check";
@@ -2404,7 +2465,6 @@ export function submit_upload_job() {
                 },
                 success: function(response) {
                     if (response.error) {
-                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -2426,7 +2486,6 @@ export function submit_upload_job() {
                 },
                 success: function(response) {
                     if (response.error) {
-                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
                         console.log(response.error);
                     }
                     refresh_upload_tables();
