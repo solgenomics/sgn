@@ -646,5 +646,76 @@ sub get_marker_metadata {
     return \%alleles;
 }
 
+#
+# Delete Marker Metadata
+# Delete all or a specified set of marker metadata from this protocol
+# This will remove:
+#    - the associated alleles
+#    - any associated locus dbxrefs
+#    - the entries in the locus_geno_markers junction table
+#    - the locus entries
+# When not given an array of locus ids, all of the marker metadata will be removed
+# @param locus_ids = (optional) array ref of locus ids of specific markers to remove metadata from
+# @return = a hasref with removed locus ids
+#
+sub delete_marker_metadata {
+    my $self = shift;
+    my $locus_ids = shift;
+    my $schema = $self->bcs_schema();
+    my $phenome_schema = $self->phenome_schema();
+    my $dbh = $phenome_schema->storage->dbh();
+    my $protocol_id = $self->nd_protocol_id;
+
+    # Get locus IDs to remove
+    my @remove_locus_ids;
+    my $q = "SELECT locus_id FROM phenome.locus_geno_marker WHERE nd_protocol_id = ?";
+    if ( defined $locus_ids && scalar($locus_ids) > 0 ) {
+        $q .= " AND locus_id IN (" . join ',',('?') x @$locus_ids . ")";
+    }
+    my $sth = $dbh->prepare($q);
+    if ( defined $locus_ids && scalar($locus_ids) > 0 ) {
+        $sth->execute($protocol_id, @$locus_ids);
+    }
+    else {
+        $sth->execute($protocol_id);
+    }
+    while (my ($locus_id) = $sth->fetchrow_array()) {
+        push @remove_locus_ids, $locus_id;
+    }
+
+    # Remove the requested loci...
+    if ( scalar @remove_locus_ids > 0 ) {
+        my $lph = join ',',('?') x @remove_locus_ids;
+
+        # Get the loci to remove
+        my $locus_rs = $phenome_schema->resultset('Locus')->search({ 'me.locus_id' => { -in => \@remove_locus_ids } });
+
+        # Remove the alleles
+        my $allele_rs = $locus_rs->search_related('alleles');
+        $allele_rs->delete_all();
+
+        # Remove references
+        my $ref_rs = $phenome_schema->resultset('LocusDbxref')->search({ 'locus_id' => { -in => \@remove_locus_ids } });
+        my @locus_dbxref_ids;
+        while ( my $r = $ref_rs->next() ) {
+            push @locus_dbxref_ids, $r->locus_dbxref_id();
+        }
+        if ( scalar @locus_dbxref_ids > 0 ) {
+            my $refev_rs = $phenome_schema->resultset('LocusDbxrefEvidence')->search({ 'locus_dbxref_id' => { -in => \@locus_dbxref_ids } });
+            $refev_rs->delete_all();
+            $ref_rs->delete_all();
+        }
+
+        # Remove from junction table
+        $q = "DELETE FROM phenome.locus_geno_marker WHERE locus_id IN ($lph)";
+        $sth = $dbh->prepare($q);
+        $sth->execute(@remove_locus_ids);
+
+        # Remove the loci
+        $locus_rs->delete_all();
+    }
+
+    return { removed => \@remove_locus_ids }
+}
 
 1;

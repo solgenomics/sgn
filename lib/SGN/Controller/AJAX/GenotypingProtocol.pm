@@ -392,6 +392,42 @@ sub genotyping_protocol_get_marker_metadata_GET : Args(1) {
     return;
 }
 
+sub genotyping_protocol_delete_marker_metadata : Path('/ajax/genotyping_protocol/delete_marker_metadata') : ActionClass('REST') { }
+
+sub genotyping_protocol_delete_marker_metadata_DELETE : Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $protocol_id = shift;
+    my $locus_id = $c->req->param("locus_id");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+
+    # Must be logged in
+    if (!$c->user()) {
+        print STDERR "User not logged in... not deleting marker metadata.\n";
+        $c->stash->{rest} = {error => "You need to be logged in to delete marker metadata." };
+        return;
+    }
+
+    # Must be a curator
+    my $user_role = $c->user->get_object->get_user_type();
+    if ($user_role ne 'curator') {
+        $c->stash->{rest} = { error => "You must be a curator to delete marker metadata." };
+        return;
+    }
+
+    # Delete the marker metadata
+    my $protocol = CXGN::Genotype::Protocol->new({
+        bcs_schema => $schema,
+        phenome_schema => $phenome_schema,
+        nd_protocol_id => $protocol_id
+    });
+    my $resp = $protocol->delete_marker_metadata($locus_id ? [int($locus_id)] : undef);
+
+    $c->stash->{rest} = $resp || {};
+    return;
+}
+
 sub locus_marker_autocomplete : Path('/ajax/genotyping_protocol/locus_marker_autocomplete') : ActionClass('REST') { }
 
 sub locus_marker_autocomplete_GET :Args(0) {

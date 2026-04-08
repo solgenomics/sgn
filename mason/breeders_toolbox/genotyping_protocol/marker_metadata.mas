@@ -1,6 +1,13 @@
 <%args>
-    $protocol_id
+    $protocol_id => undef
 </%args>
+
+<%perl>
+    my $curator = 0;
+    if ( $c->user() && $c->user()->check_roles("curator") ) {
+        $curator = 1;
+    }
+</%perl>
 
 <& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables','jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
 
@@ -20,22 +27,32 @@
     </p>
 </div>
 
+<div id="marker_metadata_delete" style="margin-top: 15px; display:none">
+    <button class="btn btn-danger" <% $curator ? '' : 'disabled' %> onclick="deleteMetadata()"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete All Marker Metadata</button>
+</div>
+
 <script type="text/javascript">
     jQuery(window).ready(() => {
+        loadMetadata();
+    });
+
+    function loadMetadata() {
         jQuery.ajax({
             url: '/ajax/genotyping_protocol/get_marker_metadata/<% $protocol_id %>',
             method: 'GET',
             success: displayMetadata,
             error: displayError
         });
-    });
+    }
 
     function displayMetadata(response) {
 
         // Metadata found, generate table...
         if ( response && Object.keys(response).length > 0 ) {
             jQuery("#marker_metadata_upload").hide();
+            jQuery("#marker_metadata_delete").show();
             new jQuery("#marker_metadata_table").DataTable({
+                destroy: true,
                 dom: 'Bfrtip',
                 buttons: [
                     'pageLength',
@@ -60,9 +77,12 @@
                         return html;
                     }},
                     { title: "Description", data: "locus_description" },
-                    { title: "Alleles", render: (data, type, row) => { return row.alleles.map((x) => x.allele_name).join(type === 'export' ? ', ' : '<br />') } }
+                    { title: "Alleles", render: (data, type, row) => { return row.alleles.map((x) => x.allele_name).join(type === 'export' ? ', ' : '<br />') } },
+                    { title: "Edit", render: (data, type, row) => { 
+                        return `<button class="btn btn-sm btn-danger" onclick="deleteMetadata(${row.locus_id})" <% $curator ? '' : 'disabled' %>><span class="glyphicon glyphicon-trash"></span></button>`;
+                    } }
                 ]
-            })
+            });
         }
 
         // No Metadata found, show upload information...
@@ -70,6 +90,7 @@
             let html = "<p style='font-style: italic; padding-bottom: 10px'>There are no metadata or allele values set for the markers in this protocol.</p>";
             jQuery("#marker_metadata_table_container").html(html);
             jQuery("#marker_metadata_upload").show();
+            jQuery("#marker_metadata_delete").hide();
         }
 
         jQuery("#marker_metadata_loading").hide();
@@ -85,4 +106,26 @@
         jQuery("#marker_metadata_table_container").show();
         jQuery("#marker_metadata_upload").hide();
     }
+
+    function deleteMetadata(locus_id) {
+        if ( confirm(`Are you sure you want to delete ${locus_id ? "this marker's metadata" : "all of the marker metadata for this protocol"}?  This cannot be undone!`) ) {
+            jQuery.ajax({
+                url: `/ajax/genotyping_protocol/delete_marker_metadata/<% $protocol_id %>?${locus_id ? "locus_id=" + locus_id : ""}`,
+                method: 'DELETE',
+                success: (resp) => {
+                    if ( resp?.error ) {
+                        alert("Could not delete marker meatadata: " + resp.error);
+                    }
+                    else {
+                        loadMetadata();
+                    }
+                },
+                error: (err) => {
+                    console.log(err);
+                    alert("Could not delete marker metadata: " + err?.statusText);
+                }
+            });
+        }
+    }
+
 </script>
