@@ -157,7 +157,7 @@ tr.shown td.details-control {
 
                 <div id="analysis_image_result">
                     <a id="analysis_image_link" href="#" target="_blank">
-                        <img id="analysis_image" src="" style="max-width:800px; width:100%; height:auto; display:block; margin:0 auto;"/>
+                        <img id="analysis_image" src="" style="max-width:500px; width:100%; height:auto; display:block; margin:0 auto;"/>
                     </a>
                 </div>
                 <br/>

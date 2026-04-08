@@ -413,14 +413,22 @@ sub image_analysis_group_POST : Args(0) {
                 #my $test_trait_id = 70739; 
 
                 foreach my $trait_name (keys %{$sample_data}) {
-                    my ($trimmed_trait_name) = split (/\|/, $trait_name);
-                    #my $test_trait_name = 'apical branching';
-                    my $cvterm = $schema->resultset('Cv::Cvterm')->find({
-                        name => $trimmed_trait_name
-                    });
-                    if ($cvterm) {
-                        $trait_id = $cvterm->cvterm_id;
+                    if (exists $results_ref->{result}->{subanalyses}{$sample}{$trait_name}{trait_id}) {
+                        $trait_id = $results_ref->{result}->{subanalyses}{$sample}{$trait_name}{trait_id};
+                    } else {
+                        my ($trimmed_trait_name) = split (/\|/, $trait_name);
+                        print STDERR "trimmed trait name: $trimmed_trait_name";
+                        #my $test_trait_name = 'apical branching';
+                        my $cvterm = $schema->resultset('Cv::Cvterm')->find({
+                            name => $trimmed_trait_name
+                        });
+                        print STDERR "cvterm test: $cvterm";
+                        if ($cvterm) {
+                            $trait_id = $cvterm->cvterm_id;
+                        }
                     }
+
+                    print STDERR "final trait_id test: $trait_id";
 
                     my $val = $sample_data->{$trait_name}{trait_value};
                     push @{$grouped_results{$uniquename}{$trait_name}}, {
