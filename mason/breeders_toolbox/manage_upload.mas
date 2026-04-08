@@ -161,6 +161,7 @@ $allowed_upload_types => undef
                     <br>
                     <label class="control-label">Ignore warnings when possible: </label>
                     <input id="upload_submit_ignore_warnings" name="upload_submit_ignore_warnings" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                    <i class="list-group-item-warning">For phenotype uploads, this may cause existing values to be overwritten or deleted.</i>
                     <br>
                     <br>
                     <div id="validate_upload_review_text"></div>

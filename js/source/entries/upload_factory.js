@@ -2433,7 +2433,7 @@ export function submit_upload_job() {
             jQuery.ajax({
                 url : '/ajax/breeders/trial_entry_numbers/upload',
                 data : {
-                    ignore_warnings : ignore_warnings,
+                    ignore_warnings : ignore_warnings ? "true" : "false",
                     archived_file_id : submit_params.file_id,
                 },
                 success : function(response) {
@@ -2459,7 +2459,7 @@ export function submit_upload_job() {
                 type : 'POST',
                 data : {
                     'upload_fieldbook_phenotype_data_level' : submit_params.additional_args.data_level,
-                    'upload_fieldbook_phenotype_images_zipfile' : submit_params.additional_args.images_zipfile_id,
+                    'archived_image_zipfile_id' : submit_params.additional_args.images_zipfile_id,
                     'archived_file_id' : submit_params.file_id,
                     'ignore_warnings' : ignore_warnings
                 },
@@ -2570,15 +2570,13 @@ export function commit_upload_job(job_id) {
                     'archived_file_id' : job.args.additional_args.file_id
                 },
                 success: function(response) {
-                    jQuery('#working_modal').modal("hide");  
                     if (response.error) {
                         //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
                         console.log(response.error);
                     }
                     refresh_upload_tables();
                 },
-                error: function() {
-                    jQuery('#working_modal').modal("hide");  
+                error: function() { 
                     alert("An error occurred submitting phenotype validation, check console.");
                     return;
                 }
@@ -2589,13 +2587,12 @@ export function commit_upload_job(job_id) {
                 url: '/ajax/phenotype/upload_store/spreadsheet/treatment',
                 type : 'POST',
                 data : {
-                    'upload_spreadsheet_treatment_file_format' : job.args.additional_args.upload_spreadsheet_phenotype_file_format,
-                    'upload_spreadsheet_treatment_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
-                    'upload_spreadsheet_treatment_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
+                    'upload_spreadsheet_treatment_file_format' : job.args.additional_args.upload_spreadsheet_treatment_file_format,
+                    'upload_spreadsheet_treatment_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_treatment_timestamp_checkbox,
+                    'upload_spreadsheet_treatment_data_level' : job.args.additional_args.upload_spreadsheet_treatment_data_level,
                     'archived_file_id' : job.args.additional_args.file_id
                 },
                 success: function(response) {
-                    jQuery('#working_modal').modal("hide");  
                     if (response.error) {
                         //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
                         console.log(response.error);
@@ -2603,17 +2600,27 @@ export function commit_upload_job(job_id) {
                     refresh_upload_tables();
                 },
                 error: function() {
-                    jQuery('#working_modal').modal("hide");  
                     alert("An error occurred submitting phenotype validation, check console.");
                     return;
                 }
             });
             break;
+        case 'datacollector_spreadsheet' : 
+            break;
+        case 'fieldbook_phenotypes' : 
+            break;
+        
         default : 
             jQuery('#working_modal').modal("hide");  
             alert("Something strange happened... I got an invalid job type: "+upload_type);
             break;
     }
+
+    jQuery('#working_modal').modal("hide"); 
+
+    setTimeout(function() {
+        refresh_upload_tables();
+    }, 1500);
 }
 
 export function save_file_type(file_id, type) {

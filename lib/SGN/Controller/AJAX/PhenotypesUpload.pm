@@ -71,6 +71,8 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $user_first_name = $c->user()->get_object()->get_first_name();
     my $user_last_name = $c->user()->get_object()->get_last_name();
 
+    my $ignore_warnings = $c->req->param('ignore_warnings');
+
     my $validation_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
@@ -80,6 +82,7 @@ sub upload_phenotype_verify_POST : Args(1) {
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             is_validation => 1,
+            ignore_warnings => $ignore_warnings,
             user_name => "$user_first_name $user_last_name",
             file_id => $phenotype_metadata->{archived_file_id}
         }
@@ -200,6 +203,8 @@ sub upload_phenotype_store_POST : Args(1) {
     my $user_first_name = $c->user()->get_object()->get_first_name();
     my $user_last_name = $c->user()->get_object()->get_last_name();
 
+    my $ignore_warnings = $c->req->param('ignore_warnings');
+
     my $submit_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
@@ -209,6 +214,7 @@ sub upload_phenotype_store_POST : Args(1) {
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             final_upload => 1,
+            ignore_warnings => $ignore_warnings,
             user_name => "$user_first_name $user_last_name",
             file_id => $phenotype_metadata->{archived_file_id}
         }
@@ -335,6 +341,7 @@ sub _prep_upload {
     my $metadata_file_type;
     my $data_level;
     my $image_zip;
+    my $image_zipfile_id = $c->req->param('archived_image_zipfile_id') || undef;
     my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $upload_file_type;
     if ($file_type eq "spreadsheet") {
@@ -451,7 +458,7 @@ sub _prep_upload {
 
     my $archived_image_zipfile_with_path;
 
-    if ($image_zip) {
+    if ($image_zip && !$image_zipfile_id) {
         $upload_original_name = $image_zip->filename();
         my $upload_tempfile = $image_zip->tempname;
         my $uploader = CXGN::UploadFile->new({
@@ -473,6 +480,13 @@ sub _prep_upload {
         }
         unlink $upload_tempfile;
         #print STDERR "Archived Zipfile: $archived_image_zipfile_with_path\n";
+    } elsif ($image_zipfile_id) {
+        my $archived_image_zipfile = CXGN::File->new({
+            file_id => $image_zipfile_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_image_zipfile_with_path = $archived_image_zipfile->get_path();
     }
 
     ## Validate and parse uploaded file

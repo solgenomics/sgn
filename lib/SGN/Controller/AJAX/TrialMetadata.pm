@@ -2761,6 +2761,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            ignore_warnings => $override ? 1 : undef,
             final_upload => 1,
             file_type => 'change_accessions',
             user_name => "$user_first_name $user_last_name",
@@ -2810,10 +2811,14 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     if ($c->user()->check_roles("curator") and $return_error) {
         if ($override eq "check") {
             $c->stash->{rest} = { warning => "curator warning" };
+            $upload_job->additional_args->{warning_messages} = $return_error;
+            $upload_job->update_status("failed");
             return;
         }
     } elsif ($return_error){
         $c->stash->{rest} = { error => $return_error };
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         return;
     }
 
@@ -6255,6 +6260,7 @@ sub upload_entry_number_template_POST : Args(0) {
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
+            ignore_warnings => $ignore_warnings eq "true" ? 1 : 0,
             final_upload => 1,
             file_type => 'entry_numbers',
             user_name => "$user_first_name $user_last_name",
