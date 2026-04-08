@@ -704,19 +704,18 @@ sub get_phenotype_matrix {
 
                 for (my $multi_line = 0; $multi_line < $max_measurements; $multi_line++) {
 		    my @line = @metadata; # start a new clean row
-		    print STDERR "MAX MEASUREMENTS: $max_measurements. MULTI LINE = $multi_line\n";
+
                     foreach my $trait (@sorted_traits) {
                         my $trait_values = $obsunit_data{$p}->{$trait};
 
                         if (ref($trait_values) eq 'ARRAY') {
-			    print STDERR "PARSING THROUGH ARRAY AT POSITION $multi_line (".join(",",@$trait_values)."\n";
+
                             # Get the ith value if it exists, else undef
                             my $value = $trait_values->[$multi_line];
-			    print STDERR " VALUE = $value\n";
+
                             push @line, $value;
                         } else {
                             # Single value
-			    print STDERR "ADDING SINGLE VALUE ($trait_values)\n";
 			    push @line, $multi_line == 0 ? $trait_values : undef;
                         }
                     }
@@ -736,16 +735,13 @@ sub get_phenotype_matrix {
                             push @line, undef;
                         }
                     }
-		    print STDERR "LINE NOW: ".join(',', @line);
                     push @info, \@line;
                 }
             } else {  #this block is for all other repetitive options including - first, last, average, sum, and all values_in_single_line !!
-		print STDERR "NOT REPETITIVE OPTION!\n";
 
 		my @line = @metadata;
 
                 foreach my $trait (@sorted_traits) {
-		    print STDERR "NOT REPETITIVE OPTIONS!\n";
                     push @line, $obsunit_data{$p}->{$trait};
                 }
                 push @line,  $obsunit_data{$p}->{'notes'};
@@ -763,7 +759,6 @@ sub get_phenotype_matrix {
         }
     }
 
-    print STDERR "INFO: ".Dumper \@info;
     print STDERR "PhenotypeMatrix Construct Pheno Matrix End:".localtime."\n";
     return @info;
 }
