@@ -470,9 +470,10 @@ sub set_description {
 
 #
 # Add metadata and alleles the markers in this protocol
-# @param param_data = a hashref of marker metadata,
-#   where the key is the marker/locus name
-#   and the value is a hashref of marker details (marker, alias, description, categories, references, alleles)
+# @param parsed_data = parsed data from the marker metadata upload plugin, a hashref of:
+#   markers = marker metadata, where the key is the marker/locus name and the value is a hashref of marker details (marker, alias, description, categories, references, alleles)
+#   existing_locus_ids = ids of phenome.locus that exist and should be removed before storing the new marker metadata
+#   existing_allele_ids = ids of phenome.allele that exist and should be removed before storing the new marker metadata
 #
 sub set_marker_metadata {
     my $self = shift;
@@ -484,6 +485,21 @@ sub set_marker_metadata {
     my $protocol_id = $self->nd_protocol_id;
     my $sp_person_id = $self->sp_person_id;
 
+    my $parsed_markers = $parsed_data->{markers};
+    my $existing_locus_ids = $parsed_data->{existing_locus_ids};
+    my $existing_allele_ids = $parsed_data->{existing_allele_ids};
+
+    # Delete existing alleles
+    if ( $existing_allele_ids && scalar @$existing_allele_ids > 0 ) {
+        my $allele_rs = $phenome_schema->resultset('Allele')->search({ 'me.allele_id' => { -in => $existing_allele_ids } });
+        $allele_rs->delete_all();
+    }
+
+    # Delete existing loci
+    if ( $existing_locus_ids && scalar @$existing_locus_ids > 0 ) {
+        $self->delete_marker_metadata($existing_locus_ids);
+    }
+
     my $is_a_rel_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a', 'relationship')->cvterm_id();
 
     # Get the organism to use for the loci
@@ -492,8 +508,10 @@ sub set_marker_metadata {
     $sths->execute();
     my ($common_name_id) = $sths->fetchrow_array();
 
-    foreach my $name (keys %$parsed_data) {
-        my $ml = $parsed_data->{$name};
+
+    # Parse the markers
+    foreach my $name (keys %$parsed_markers) {
+        my $ml = $parsed_markers->{$name};
         my $marker = $ml->{'marker'};
         my $alias = $ml->{'alias'};
         my $locus_description = $ml->{'description'};
@@ -670,7 +688,8 @@ sub delete_marker_metadata {
     my @remove_locus_ids;
     my $q = "SELECT locus_id FROM phenome.locus_geno_marker WHERE nd_protocol_id = ?";
     if ( defined $locus_ids && scalar($locus_ids) > 0 ) {
-        $q .= " AND locus_id IN (" . join ',',('?') x @$locus_ids . ")";
+        my $ph = join ',', map { "?" } @$locus_ids;
+        $q .= " AND locus_id IN ($ph)";
     }
     my $sth = $dbh->prepare($q);
     if ( defined $locus_ids && scalar($locus_ids) > 0 ) {
@@ -685,7 +704,7 @@ sub delete_marker_metadata {
 
     # Remove the requested loci...
     if ( scalar @remove_locus_ids > 0 ) {
-        my $lph = join ',',('?') x @remove_locus_ids;
+        my $lph = join ',', map { "?" } @remove_locus_ids;
 
         # Get the loci to remove
         my $locus_rs = $phenome_schema->resultset('Locus')->search({ 'me.locus_id' => { -in => \@remove_locus_ids } });

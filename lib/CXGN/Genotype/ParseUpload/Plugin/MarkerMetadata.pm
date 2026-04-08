@@ -17,7 +17,9 @@ sub _validate_with_plugin {
     my $dbh = $schema->storage->dbh();
     my $onto = CXGN::Onto->new({ schema => $schema });
     my %errors;
+    my %warnings;
     my @error_messages;
+    my @warning_messages;
 
     ## Parse the upload file
     my $parser = CXGN::File::Parse->new(
@@ -63,31 +65,83 @@ sub _validate_with_plugin {
         }
     }
 
-    # Make sure the markers don't already exist in the phenome.locus table
-    my @locus_names = (@markers, @aliases);
-    my $phs = join ',', map { "?" } @locus_names;
-    my $q = "SELECT locus_name FROM phenome.locus WHERE locus_name IN ($phs)";
+    # Get names of markers and aliases from the upload file
+    my @file_locus_names = (@markers, @aliases);
+    my $phs = join ',', map { "?" } @file_locus_names;
+
+    # Return a warning for locus names that already exist and are associated with this protocol
+    my $q = "SELECT locus_name, locus_id FROM phenome.locus WHERE locus_name IN ($phs) AND locus_id IN (SELECT locus_id FROM phenome.locus_geno_marker WHERE nd_protocol_id = ?)";
     my $h = $dbh->prepare($q);
-    $h->execute(@locus_names);
-    my @existing_loci;
-    while (my ($locus_name) = $h->fetchrow_array()) {
-        push @existing_loci, $locus_name;
+    $h->execute(@file_locus_names, $protocol_id);
+    my @existing_protocol_locus_names;
+    my @existing_protocol_locus_ids;
+    while (my ($locus_name, $locus_id) = $h->fetchrow_array()) {
+        push @existing_protocol_locus_names, $locus_name;
+        push @existing_protocol_locus_ids, $locus_id;
     }
-    if ( scalar @existing_loci > 0 ) {
-        push @error_messages, "The following markers already exist in the Locus table: " . join(', ', sort @existing_loci);
+    if ( scalar @existing_protocol_locus_names > 0 ) {
+        push @warning_messages, "The following markers already exist in the Locus table and are associated with this protocol: " . join(', ', sort @existing_protocol_locus_names) . ".  You can replace the existing metadata with the information in your file by selecting the 'ignore warnings' option.";
+    }
+    $parsed->{existing_locus_names} = \@existing_protocol_locus_names;
+    $parsed->{existing_locus_ids} = \@existing_protocol_locus_ids;
+
+    # Make sure the markers don't already exist in the phenome.locus table
+    $q = "SELECT locus_name FROM phenome.locus WHERE locus_name IN ($phs)";
+    if ( scalar @existing_protocol_locus_names > 0 ) {
+        $phs = join ',', map { "?" } @existing_protocol_locus_names;
+        $q .= " AND locus_name NOT IN ($phs)";
+    }
+    $h = $dbh->prepare($q);
+    if ( scalar @existing_protocol_locus_names > 0 ) {
+        $h->execute(@file_locus_names, @existing_protocol_locus_names);
+    }
+    else {
+        $h->execute(@file_locus_names);
+    }
+    my @existing_global_locus_names;
+    while (my ($locus_name) = $h->fetchrow_array()) {
+        push @existing_global_locus_names, $locus_name;
+    }
+    if ( scalar @existing_global_locus_names > 0 ) {
+        push @error_messages, "The following markers already exist in the Locus table outside of this protocol: " . join(', ', sort @existing_global_locus_names) . ". These locus names cannot be used.";
     }
 
-    # Make sure the allele values don't already exist in the phenome.allele table
+    # Return a warning for allele names that already exist and are associated with this protocol
     $phs = join ',', map { "?" } @alleles;
-    $q = "SELECT allele_name FROM phenome.allele WHERE allele_name in ($phs)";
+    $q = "SELECT allele_symbol, allele_id FROM phenome.allele WHERE allele_symbol IN ($phs) AND locus_id IN (SELECT locus_id FROM phenome.locus_geno_marker WHERE nd_protocol_id = ?)";
     $h = $dbh->prepare($q);
-    $h->execute(@alleles);
-    my @existing_alleles;
-    while ( my ($allele_name) = $h->fetchrow_array()) {
-        push @existing_alleles, $allele_name;
+    $h->execute(@alleles, $protocol_id);
+    my @existing_protocol_allele_names;
+    my @existing_protocol_allele_ids;
+    while (my ($allele_name, $allele_id) = $h->fetchrow_array()) {
+        push @existing_protocol_allele_names, $allele_name;
+        push @existing_protocol_allele_ids, $allele_id;
     }
-    if ( scalar @existing_alleles > 0 ) {
-        push @error_messages, "The following alleles already exist in the Allele table: " . join(', ', sort @existing_alleles);
+    if ( scalar @existing_protocol_allele_names > 0 ) {
+        push @warning_messages, "The following alleles already exist in the Allele table and are associated with this protocol: " . join(', ', sort @existing_protocol_allele_names) . ".  You can replace the existing metadata with the information in your file by selecting the 'ignore warnings' option.";
+    }
+    $parsed->{existing_allele_names} = \@existing_protocol_allele_names;
+    $parsed->{existing_allele_ids} = \@existing_protocol_allele_ids;
+
+    # Make sure the allele values don't already exist in the phenome.allele table
+    $q = "SELECT allele_symbol FROM phenome.allele WHERE allele_symbol in ($phs)";
+    if ( scalar @existing_protocol_allele_names > 0 ) {
+            $phs = join ',', map { "?" } @existing_protocol_allele_names;
+            $q .= " AND allele_symbol NOT IN ($phs)";
+    }
+    $h = $dbh->prepare($q);
+    if ( scalar @existing_protocol_allele_names > 0 ) {
+        $h->execute(@alleles, @existing_protocol_allele_names);
+    }
+    else {
+        $h->execute(@alleles);
+    }
+    my @existing_global_allele_names;
+    while ( my ($allele_name) = $h->fetchrow_array()) {
+        push @existing_global_allele_names, $allele_name;
+    }
+    if ( scalar @existing_global_allele_names > 0 ) {
+        push @error_messages, "The following alleles already exist in the Allele table outside of this protocol: " . join(', ', sort @existing_global_allele_names) . ". These names cannot be used.";
     }
 
     # Parse each row to get unique marker and allele counts
@@ -206,6 +260,12 @@ sub _validate_with_plugin {
         return;
     }
 
+    # set warning messages
+    if (scalar(@warning_messages) >= 1) {
+        $warnings{'warning_messages'} = \@warning_messages;
+        $self->_set_parse_warnings(\%warnings);
+    }
+
     # Cache parsed allele data
     $self->parsed_allele_data($parsed);
 
@@ -287,7 +347,13 @@ sub _parse_with_plugin {
     }
 
     # Set parsed data
-    $self->_set_parsed_data(\%marker_metadata);
+    $self->_set_parsed_data({
+        markers => \%marker_metadata,
+        existing_locus_names => $parsed->{existing_locus_names},
+        existing_locus_ids => $parsed->{existing_locus_ids},
+        existing_allele_names => $parsed->{existing_allele_names},
+        existing_allele_ids => $parsed->{existing_allele_ids}
+    });
 }
 
 1;

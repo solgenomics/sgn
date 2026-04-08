@@ -1121,8 +1121,16 @@ $facilities
                             <br /><br />
 
                             <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_mla_form" name="upload_mla_form">
-                                <label for="upload_mla_file" style="display: inline-block;">Marker Metadata Alleles File:</label>
-                                <input type="file" name="upload_mla_file" id="upload_mla_file" encoding="multipart/form-data" />
+                                <div style="display: flex; flex-wrap: wrap; gap: 25px; align-items: flex-end">
+                                    <div>
+                                        <label for="upload_mla_file" style="display: inline-block;">Marker Metadata Alleles File:</label>
+                                        <input type="file" name="upload_mla_file" id="upload_mla_file" encoding="multipart/form-data" />
+                                    </div>
+                                    <div>
+                                        <input id="upload_entry_numbers_ignore_warnings_cb" name="ignore_warnings" type="checkbox" value="checked">
+                                        <label for="upload_entry_numbers_ignore_warnings_cb">Ignore Warnings</label><br>
+                                    </div>
+                                </div>
                             </form>
 
                             <br /><br />
@@ -1503,8 +1511,8 @@ jQuery(document).ready(function(){
                     jQuery('#upload_mla_success').show();
                 }
                 else {
-                    const errors = (response.error_string || "An unknown error occurred.  Please try again later or contact us for more help.").replaceAll('\n', '<br />');
-                    jQuery('#upload_mla_errors').html(`<strong>Marker Metadata NOT stored due to the following errors:</strong><br /><br />${errors}`);
+                    const errors = (response.error_string || response.warning_string || "An unknown error occurred.  Please try again later or contact us for more help.").replaceAll('\n', '<br />');
+                    jQuery('#upload_mla_errors').html(`<strong>Marker Metadata NOT stored:</strong><br /><br />${errors}`);
                     jQuery('#upload_mla_errors').show();
                 }
             },

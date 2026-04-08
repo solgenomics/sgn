@@ -293,6 +293,7 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
+    my $ignore_warnings = $c->req->param('ignore_warnings');
     my $upload = $c->req->upload('upload_mla_file');
     my $upload_original_name = $upload->filename();
     my $upload_tempfile = $upload->tempname;
@@ -341,21 +342,29 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
     });
     $parser->load_plugin('MarkerMetadata');
     my $parsed_data = $parser->parse();
-    my $parse_errors = $parser->get_parse_errors();
+
+    if ( $parser->has_parse_errors() ) {
+        my $errors = $parser->get_parse_errors();
+        my $return = '';
+        foreach my $s (@{$errors->{'error_messages'}}){
+            $return .= $s."\n\n";
+        }
+        $c->stash->{rest} = {error_string => $return};
+        return;
+    }
+
+    if ( $parser->has_parse_warnings() && !$ignore_warnings ) {
+        my $warnings = $parser->get_parse_warnings();
+        my $return = '';
+        foreach my $s (@{$warnings->{'warning_messages'}}){
+            $return .= $s."\n\n";
+        }
+        $c->stash->{rest} = {warning_string => $return};
+        return;
+    }
 
     if (!$parsed_data) {
-        my $return_error = '';
-        my $parse_errors;
-        if (!$parser->has_parse_errors() ){
-            $c->stash->{rest} = {error_string => "Could not get parsing errors"};
-            return;
-        } else {
-            $parse_errors = $parser->get_parse_errors();
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error .= $error_string."\n";
-            }
-        }
-        $c->stash->{rest} = {error_string => $return_error};
+        $c->stash->{rest} = {error_string => 'The parser did not return any data!'};
         return;
     }
 
