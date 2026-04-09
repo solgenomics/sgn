@@ -83,6 +83,7 @@ sub verify_accession_list_POST : Args(0) {
     my $accession_list_json = $c->req->param('accession_list');
     my $organism_list_json = $c->req->param('organism_list');
     my @accession_list = @{_parse_list_from_json($c, $accession_list_json)};
+    print STDERR "accession list test:" . Dumper @accession_list;
     my @organism_list = $organism_list_json ? @{_parse_list_from_json($c, $organism_list_json)} : [];
 
     my $do_fuzzy_search = $c->req->param('do_fuzzy_search');
@@ -90,9 +91,11 @@ sub verify_accession_list_POST : Args(0) {
     #    $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
     #    $c->detach();
     #}
+    print STDERR "do_fuzzy_search test: $do_fuzzy_search";
 
-    if ($do_fuzzy_search) {
+    if ($do_fuzzy_search eq 'true') {
         $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
+        print STDERR "fuzzy search being done";
     }
     else {
         $self->do_exact_search($c, \@accession_list, \@organism_list);
@@ -200,7 +203,7 @@ sub do_exact_search {
         found_organisms => []
     };
 
-    #print STDERR Dumper($rest);
+    print STDERR "exact search response:" . Dumper($rest);
     $c->stash->{rest} = $rest;
 }
 
