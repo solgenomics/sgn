@@ -8,13 +8,17 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+#
+# DEPRECATED: This plugin has been replaced by the TrialUsedSeedlotsGeneric plugin
+#
+
+
 sub _validate_with_plugin {
     my $self = shift;
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $trial_stock_type = $self->get_trial_stock_type();
-    print STDERR "TRIAL STOCK TYPE 1=".Dumper($trial_stock_type)."\n";
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -176,7 +180,7 @@ sub _validate_with_plugin {
 
     my $validate_seedlot_plot_compatibility;
     if ($trial_stock_type eq 'family_name') {
-        $validate_seedlot_plot_compatibility = CXGN::Stock::Seedlot->verify_seedlot_family_plot_compatibility($schema, \@pairs);        
+        $validate_seedlot_plot_compatibility = CXGN::Stock::Seedlot->verify_seedlot_family_plot_compatibility($schema, \@pairs);
     } else {
         $validate_seedlot_plot_compatibility = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@pairs);
     }
