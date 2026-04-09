@@ -51,6 +51,7 @@ sub validate_design {
     my $chado_schema = $self->get_bcs_schema;
     my $design_type = $self->get_design_type;
     my %design = %{$self->get_design};
+    my $allow_obsoleted_accessions = $self->get_allow_obsoleted_accessions;
     my $error = '';
 
     if (defined $design_type){
@@ -169,10 +170,19 @@ sub validate_design {
 
     my %found_data;
     foreach my $a (@accession_names) {
-        my $rs = $chado_schema->resultset('Stock::Stock')->search({
-            'is_obsolete' => { '!=' => 't' },
-            'type_id' => { -in => \@source_stock_types },
-            'uniquename' => { ilike => $a } });
+        my $rs;
+        if ($allow_obsoleted_accessions) {
+            $rs = $chado_schema->resultset('Stock::Stock')->search({
+                'type_id' => { -in => \@source_stock_types },
+                'uniquename' => { ilike => $a }
+            });            
+        } else {
+            $rs = $chado_schema->resultset('Stock::Stock')->search({
+                'is_obsolete' => { '!=' => 't' },
+                'type_id' => { -in => \@source_stock_types },
+                'uniquename' => { ilike => $a }
+            });
+        }
 
         while (my $s = $rs->next()) {
             print STDERR "FOUND ".$s->uniquename()."\n";
