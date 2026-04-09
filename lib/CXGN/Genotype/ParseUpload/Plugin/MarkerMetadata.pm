@@ -38,6 +38,7 @@ sub _validate_with_plugin {
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
     my $parsed_data = $parsed->{data};
+
     my @markers = @{$parsed->{values}->{'Marker'}};
     my @aliases = @{$parsed->{values}->{'Alias'}};
     my @alleles = @{$parsed->{values}->{'Allele'}};
@@ -327,7 +328,7 @@ sub _parse_with_plugin {
         # add references (hash of db id and entity name)
         my @references;
         foreach my $ref (@$reference_values) {
-            my ($db_name, $entity_name) = split('=', $ref);
+            my ($db_name, $entity_name) = split(':', $ref);
             $db_name =~ s/^\s+|\s+$//g;
             $entity_name =~ s/^\s+|\s+$//g;
             my $db_id = $existing_dbs->{lc $db_name};
