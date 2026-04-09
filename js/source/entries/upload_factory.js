@@ -2567,7 +2567,10 @@ export function commit_upload_job(job_id) {
                     'upload_spreadsheet_phenotype_file_format' : job.args.additional_args.upload_spreadsheet_phenotype_file_format,
                     'upload_spreadsheet_phenotype_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
                     'upload_spreadsheet_phenotype_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
-                    'archived_file_id' : job.args.additional_args.file_id
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings,
+                    'phenotype_upload_overwrite_values' : job.args.additional_args.overwrite_values,
+                    'phenotype_upload_remove_values' : job.args.additional_args.remove_values
                 },
                 success: function(response) {
                     if (response.error) {
@@ -2590,7 +2593,8 @@ export function commit_upload_job(job_id) {
                     'upload_spreadsheet_treatment_file_format' : job.args.additional_args.upload_spreadsheet_treatment_file_format,
                     'upload_spreadsheet_treatment_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_treatment_timestamp_checkbox,
                     'upload_spreadsheet_treatment_data_level' : job.args.additional_args.upload_spreadsheet_treatment_data_level,
-                    'archived_file_id' : job.args.additional_args.file_id
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings
                 },
                 success: function(response) {
                     if (response.error) {
@@ -2606,10 +2610,48 @@ export function commit_upload_job(job_id) {
             });
             break;
         case 'datacollector_spreadsheet' : 
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_verify/datacollector',
+                type : 'POST',
+                data : {
+                    'upload_datacollector_phenotype_timestamp_checkbox' : job.args.additional_args.upload_datacollector_phenotype_timestamp_checkbox,
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                },
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting datacollector validation, check console.");
+                    return;
+                }
+            });
             break;
         case 'fieldbook_phenotypes' : 
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_verify/fieldbook',
+                type : 'POST',
+                data : {
+                    'upload_fieldbook_phenotype_data_level' : job.args.additional_args.upload_fieldbook_phenotype_data_level,
+                    'archived_image_zipfile_id' : job.args.additional_args.images_zipfile_id,
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                },
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting fieldbook validation, check console.");
+                    return;
+                }
+            });
             break;
-        
         default : 
             jQuery('#working_modal').modal("hide");  
             alert("Something strange happened... I got an invalid job type: "+upload_type);

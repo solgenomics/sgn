@@ -51,10 +51,19 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $ignore_warnings, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
+    }
+
+    my $overwrite = 0;
+    if ($overwrite_values) {
+        $overwrite = 1;
+    }
+    my $remove = 0;
+    if ($remove_values) {
+        $remove = 1;
     }
 
     my $timestamp = 0;
@@ -71,8 +80,6 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $user_first_name = $c->user()->get_object()->get_first_name();
     my $user_last_name = $c->user()->get_object()->get_last_name();
 
-    my $ignore_warnings = $c->req->param('ignore_warnings');
-
     my $validation_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
@@ -83,6 +90,8 @@ sub upload_phenotype_verify_POST : Args(1) {
         additional_args => {
             is_validation => 1,
             ignore_warnings => $ignore_warnings,
+            overwrite_values => $overwrite,
+            remove_values => $remove,
             user_name => "$user_first_name $user_last_name",
             file_id => $phenotype_metadata->{archived_file_id}
         }
@@ -95,6 +104,8 @@ sub upload_phenotype_verify_POST : Args(1) {
         $validation_type = "treatments";
     } elsif ($file_type eq "datacollector") {
         $validation_type = "datacollector_spreadsheet"
+    } elsif ($file_type eq "fieldbook") {
+        $validation_type eq "fieldbook_phenotypes";
     }
     $validation_job->additional_args->{file_type} = $validation_type;
     if ($is_treatment eq "treatment") {
@@ -105,8 +116,16 @@ sub upload_phenotype_verify_POST : Args(1) {
         $validation_job->additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $validation_job->additional_args->{upload_spreadsheet_phenotype_data_level} = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $validation_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
+        if ($c->req->param('archived_image_zipfile_id')) {
+            $validation_job->additional_args->{image_zipfile_id} = $c->req->param('archived_image_zipfile_id');
+        }
     } elsif ($validation_type eq "datacollector_spreadsheet") {
          $validation_job->additional_args->{upload_datacollector_phenotype_timestamp_checkbox} = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
+    } elsif ($validation_type eq "fieldbook_phenotypes") {
+        $validation_job->additional_args->{upload_fieldbook_phenotype_data_level} = $c->req->param('upload_fieldbook_phenotype_data_level');
+        if ($c->req->param('archived_image_zipfile_id')) {
+            $validation_job->additional_args->{image_zipfile_id} = $c->req->param('archived_image_zipfile_id');
+        }
     }
 
     $validation_job->update_status("submitted");
@@ -150,7 +169,7 @@ sub upload_phenotype_verify_POST : Args(1) {
     }
     push @$success_status, "File data verified. Plot names and trait names are valid.";
 
-    if (scalar(@warning_status) > 0) {
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
         $validation_job->additional_args->{warning_messages} = join("<br>", @warning_status);
     }
     if (scalar(@$error_status) > 0) {
@@ -176,7 +195,7 @@ sub upload_phenotype_store_POST : Args(1) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
 
-    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
+    my ($success_status, $error_status, $parsed_data, $plots, $traits, $phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $ignore_warnings, $image_zip, $user_id, $validate_type) = _prep_upload($c, $file_type, $is_treatment, $schema);
     if (scalar(@$error_status)>0) {
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
@@ -215,6 +234,8 @@ sub upload_phenotype_store_POST : Args(1) {
         additional_args => {
             final_upload => 1,
             ignore_warnings => $ignore_warnings,
+            overwrite_values => $overwrite,
+            remove_values => $remove,
             user_name => "$user_first_name $user_last_name",
             file_id => $phenotype_metadata->{archived_file_id}
         }
@@ -401,6 +422,12 @@ sub _prep_upload {
     }
 
     my $overwrite_values = $c->req->param('phenotype_upload_overwrite_values');
+    my $remove_values = $overwrite_values && $c->req->param('phenotype_upload_remove_values');
+    my $ignore_warnings = $c->req->param('ignore_warnings');
+    if ($ignore_warnings) {
+        $overwrite_values = 1;
+        $remove_values = 1;
+    }
     if ($overwrite_values) {
         #print STDERR $user_type."\n";
         if ($user_type ne 'curator') {
@@ -408,7 +435,6 @@ sub _prep_upload {
             return (\@success_status, \@error_status);
         }
     }
-    my $remove_values = $overwrite_values && $c->req->param('phenotype_upload_remove_values');
     if ( $remove_values ) {
         if ($user_type ne 'curator') {
             push @error_status, 'Must be a curator to remove values! Please contact us!';
@@ -550,7 +576,7 @@ sub _prep_upload {
         }
     }
 
-    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $archived_image_zipfile_with_path, $user_id, $validate_type);
+    return (\@success_status, \@error_status, \%parsed_data, \@plots, \@traits, \%phenotype_metadata, $timestamp_included, $overwrite_values, $remove_values, $ignore_warnings, $archived_image_zipfile_with_path, $user_id, $validate_type);
 }
 
 sub update_plot_phenotype :  Path('/ajax/phenotype/plot_phenotype_upload') : ActionClass('REST') { }
