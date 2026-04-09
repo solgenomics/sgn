@@ -329,7 +329,7 @@ sub prep_download_kinship_files {
     my $tmp_dir      = catfile( $c->config->{tempfiles_subdir}, 'kinship' );
     my $base_tmp_dir = catfile( $c->config->{basepath},         $tmp_dir );
 
-    mkpath( [$base_tmp_dir], 0, 0o755 );
+    mkpath( [$base_tmp_dir], 0, '0o755' );
 
     $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
     my $kinship_txt_file = $c->stash->{relationship_matrix_adjusted_table_file};
