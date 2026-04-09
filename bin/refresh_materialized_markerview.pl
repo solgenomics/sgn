@@ -28,15 +28,16 @@ use strict;
 use warnings;
 use Getopt::Std;
 use DBI;
+use Try::Tiny;
 
 our ($opt_H, $opt_D, $opt_U, $opt_P);
 getopts('H:D:U:P:');
 
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
-my $dbh = DBI->connect($dsn, $opt_U, $opt_P);
+my $dbh = DBI->connect($dsn, $opt_U, $opt_P, { RaiseError => 1, AutoCommit=>1 });
 
-eval {
+try {
     print STDERR "Refreshing materialized_markerview . . . " . localtime() . "\n";
 
     my $q = "SELECT public.create_materialized_markerview(true);";
@@ -44,11 +45,10 @@ eval {
     $h->execute();
     
     print STDERR "materialized_markerview refreshed! " . localtime() . "\n";
-};
-
-if ($@) {
-  $dbh->rollback();
-  print STDERR $@;
-} else {
-  print STDERR "Done, exiting refresh_matviews.pl \n";
 }
+catch {
+    print STDERR "Refresh failed: $_";
+};
+$dbh->disconnect();
+
+print STDERR "Done, exiting refresh_materialized_markerview.pl \n";

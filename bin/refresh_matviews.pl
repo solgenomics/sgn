@@ -51,6 +51,7 @@ unless ($mode =~ m/^(fullview|stockprop|phenotypes|all_but_genoview)$/ ) { die "
 print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$dbname.";host=".$dbhost.";port=5432";
 my $dbh = DBI->connect($dsn, $username, $password, { RaiseError => 1, AutoCommit=>0 });
+my $auto_dbh = DBI->connect($dsn, $username, $password, { RaiseError => 1, AutoCommit=>1 });
 
 my $cur_refreshing_q =  "UPDATE public.matviews SET currently_refreshing=?";
 if ($mode eq 'stockprop'){
@@ -65,6 +66,7 @@ if ($mode eq 'all_but_genoview') {
     
 #set TRUE before the transaction begins
 my $state = 'TRUE';
+my $refresh_failed = 0;
 print STDERR "*Setting currently_refreshing = TRUE\n";
 my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
 $cur_refreshing_h->execute($state);
@@ -87,53 +89,67 @@ try {
        @mv_names = ("materialized_stockprop", "materialized_phenoview", "materialized_phenotype_jsonb_table");
     }
 
-    my $status = refresh_mvs($dbh, \@mv_names, $concurrent);
+    my $status = refresh_mvs($dbh, $auto_dbh, \@mv_names, $concurrent);
 
-    #rollback if running in test mode
-    if ($test) { die ; }
+    if ($test) { die "TEST MODE\n"; }
 }
 catch {
-    warn "Refresh failed: @_";
-    if ($test ) { print STDERR "TEST MODE\n" ; }
-    $dbh->rollback()
+    $refresh_failed = 1;
+    warn "Refresh failed: $_";
+    if ($test) { print STDERR "TEST MODE - rolling back.\n"; }
+    $dbh->rollback();
 }
 finally {
-    if (@_) {
-        print "The try block died. Rolling back.\n";
+    if ($refresh_failed) {
+	print STDERR "Refresh did not complete. Changes rolled back.\n";
     } else {
         print STDERR "COMMITTING\n";
         $dbh->commit();
     }
     #always set the refreshing status to FALSE at the end
-    $state = 'FALSE';
     my $done_h = $dbh->prepare($cur_refreshing_q);
     print STDERR "*Setting currently_refreshing = FALSE \n";
-    $done_h->execute($state);
+    $done_h->execute('FALSE');
     $dbh->commit();
 };
 
 sub refresh_mvs {
     my $dbh = shift;
+    my $auto_dbh = shift;
     my $mv_names_ref = shift;
-    $concurrent = shift;
+    my $concurrent = shift;
+    my $end_h;
     my $start_q = "UPDATE matviews SET refresh_start = statement_timestamp() where mv_name = ?";
     my $end_q =   "UPDATE matviews SET  last_refresh = statement_timestamp() where mv_name = ? ";
     my $refresh_q = "REFRESH MATERIALIZED VIEW ";
+    my $refresh_h;
     if ($concurrent) { $refresh_q .= " CONCURRENTLY "; }
     my $status;
 
+    # increase work_mem to avoid out of space error while refreshing
+    # $auto_dbh->prepare("SET work_mem = '256MB'")->execute();
     foreach my $name ( @$mv_names_ref ) {
         print STDERR "**Refreshing view $name ". localtime() . " \n";
-        my $start_h = $dbh->prepare($start_q);
-        $start_h->execute($name);
         print STDERR "**QUERY = " . $refresh_q . $name . "\n";
-        my $refresh_h = $dbh->prepare($refresh_q . $name) ;
-        $status = $refresh_h->execute();
-
+	if ($concurrent) {
+	    my $start_h = $dbh->prepare($start_q);
+            $start_h->execute($name);
+	    $dbh->commit();
+	    $refresh_h = $auto_dbh->prepare($refresh_q . $name);
+	    $status = $refresh_h->execute();
+	    $end_h = $dbh->prepare($end_q);
+	    $end_h->execute($name);
+	    $dbh->commit();
+        } else {
+	    my $start_h = $dbh->prepare($start_q);
+            $start_h->execute($name);
+	    $refresh_h = $auto_dbh->prepare($refresh_q . $name) ;
+	    $status = $refresh_h->execute();
+	    $end_h = $dbh->prepare($end_q);
+	    $end_h->execute($name);
+	    $dbh->commit();
+	}
         print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
-
-        my $end_h = $dbh->prepare($end_q);
-        $end_h->execute($name);
     }
     return $status;
 }
