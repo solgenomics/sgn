@@ -64,19 +64,20 @@ if ($mode eq 'all_but_genoview') {
 }
     
 #set TRUE before the transaction begins
-my $state = 'TRUE';
 my $refresh_failed = 0;
 my $lock_acquired = 0;
-print STDERR "*Setting currently_refreshing = TRUE\n";
-my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
-$cur_refreshing_h->execute($state);
-$dbh->commit();
+my $status;
 
 try {
     my ($got_lock) = $dbh->selectrow_array("SELECT pg_try_advisory_lock(67895)");
     print STDERR "Another instance is already running\n" unless $got_lock;
     die "Another instance is already running\n" unless $got_lock;
     $lock_acquired = 1;
+
+    print STDERR "*Setting currently_refreshing = TRUE\n";
+    my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
+    $cur_refreshing_h->execute('TRUE');
+    $dbh->commit();
 
     print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
     my @mv_names = ();
@@ -93,10 +94,13 @@ try {
     if ($mode eq 'all_but_genoview') {
        @mv_names = ("materialized_stockprop", "materialized_phenoview", "materialized_phenotype_jsonb_table");
     }
-
-    my $status = refresh_mvs($dbh, $auto_dbh, \@mv_names, $concurrent);
-
-    if ($test) { die "TEST MODE\n"; }
+    if ($test) {
+	$status = test_mvs($dbh, \@mv_names);
+	print STDERR "TEST MODE - rolling back refresh work.\n";
+        $dbh->rollback();
+    } else {
+        $status = refresh_mvs($dbh, $auto_dbh, \@mv_names, $concurrent);
+    }
 }
 catch {
     $refresh_failed = 1;
@@ -105,18 +109,17 @@ catch {
     $dbh->rollback();
 }
 finally {
-    $dbh->selectrow_array("SELECT pg_advisory_unlock(67895)") if $lock_acquired;
-    if ($lock_acquired) {  # only reset flag if we actually started
+    if ($lock_acquired) {
         my $done_h = $dbh->prepare($cur_refreshing_q);
         print STDERR "*Setting currently_refreshing = FALSE\n";
         $done_h->execute('FALSE');
         $dbh->commit();
+        $dbh->selectrow_array("SELECT pg_advisory_unlock(67895)");
     }
     if ($refresh_failed) {
-	print STDERR "Refresh did not complete. Changes rolled back.\n";
+	print STDERR "Refresh did not complete cleanly.\n";
     } else {
         print STDERR "COMMITTING\n";
-        $dbh->commit();
     }
 };
 
@@ -160,3 +163,28 @@ sub refresh_mvs {
     }
     return $status;
 }
+
+sub test_mvs {
+    my $dbh = shift;
+    my $mv_names_ref = shift;
+    my $end_h;
+    my $start_q = "UPDATE matviews SET refresh_start = statement_timestamp() where mv_name = ?";
+    my $end_q =   "UPDATE matviews SET  last_refresh = statement_timestamp() where mv_name = ? ";
+    my $refresh_q = "REFRESH MATERIALIZED VIEW ";
+    my $refresh_h;
+    my $status;
+
+    foreach my $name ( @$mv_names_ref ) {
+        print STDERR "**Refreshing view $name ". localtime() . " \n";
+        print STDERR "**QUERY = " . $refresh_q . $name . "\n";
+        my $start_h = $dbh->prepare($start_q);
+        $start_h->execute($name);
+        $refresh_h = $dbh->prepare($refresh_q . $name) ;
+        $status = $refresh_h->execute();
+        $end_h = $dbh->prepare($end_q);
+        $end_h->execute($name);
+        print STDERR "Materialized view $name refreshed! Status: $status " . localtime() . "\n\n";
+    }
+    return $status;
+}
+
