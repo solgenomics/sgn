@@ -113,6 +113,7 @@
                             html += `<li>`;
                             if ( r.url ) html += `<a href="${r.url}" target="_blank">`;
                             html += `${r.db_name}:${r.dbxref_accession}`
+                            if ( r.cvterm_name ) html += ` (${r.cvterm_name})`;
                             if ( r.url ) html += `</a>`;
                             html += `</li>`;
                         });

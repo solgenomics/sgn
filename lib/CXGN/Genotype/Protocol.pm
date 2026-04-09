@@ -599,13 +599,15 @@ sub set_marker_metadata {
 
         # Add each allele value for the locus
         foreach my $av (@$allele_values) {
-            my $av_symbol = $av;
-            $locus_obj->create_related('alleles', {
-                allele_name => $av,
-                allele_symbol => $av_symbol,
-                sp_person_id => $sp_person_id,
-                is_default => 0
-            });
+            if ( defined $av && $av ne '' ) {
+                my $av_symbol = $av;
+                $locus_obj->create_related('alleles', {
+                    allele_name => $av,
+                    allele_symbol => $av_symbol,
+                    sp_person_id => $sp_person_id,
+                    is_default => 0
+                });
+            }
         }
 
         # Add the Locus / Marker link
@@ -627,13 +629,14 @@ sub get_marker_metadata {
     my $dbh = $schema->storage->dbh();
     my $protocol_id = $self->nd_protocol_id;
 
-    my $q = "SELECT nd_protocol_id, locus.locus_id, locus.locus_name, marker_name, locus.description, allele.allele_id, allele_name, db.name, db.urlprefix, db.url, dbxref.accession ";
+    my $q = "SELECT nd_protocol_id, locus.locus_id, locus.locus_name, marker_name, locus.description, allele.allele_id, allele_name, db.name, db.urlprefix, db.url, dbxref.accession, cvterm.cvterm_id, cvterm.name ";
     $q .= "FROM phenome.locus_geno_marker ";
     $q .= "LEFT JOIN phenome.locus ON (locus_geno_marker.locus_id = locus.locus_id) ";
     $q .= "LEFT JOIN phenome.allele ON (allele.locus_id = locus.locus_id) ";
     $q .= "LEFT JOIN phenome.locus_dbxref ON (locus.locus_id = locus_dbxref.locus_id) ";
     $q .= "LEFT JOIN public.dbxref ON (locus_dbxref.dbxref_id = dbxref.dbxref_id) ";
     $q .= "LEFT JOIN public.db ON (dbxref.db_id = db.db_id) ";
+    $q .= "LEFT JOIN public.cvterm ON (dbxref.dbxref_id = cvterm.dbxref_id) ";
     $q .= "WHERE nd_protocol_id = ? ";
     $q .= "AND marker_name = ?" if $marker_name;
 
@@ -648,7 +651,7 @@ sub get_marker_metadata {
     my %metadata;
     my %seen_alleles;
     my %seen_references;
-    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name, $db_name, $db_urlprefix, $db_url, $dbxref_accession) = $sth->fetchrow_array()) {
+    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name, $db_name, $db_urlprefix, $db_url, $dbxref_accession, $cvterm_id, $cvterm_name) = $sth->fetchrow_array()) {
         if ( ! exists($metadata{$locus_name}) ) {
             $metadata{$locus_name} = {
                 nd_protocol_id => $nd_protocol_id,
@@ -672,11 +675,19 @@ sub get_marker_metadata {
         if ( defined $db_name && defined $dbxref_accession ) {
             my $refkey = "$db_name:$dbxref_accession";
             if ( !exists $seen_references{$locus_name}->{$refkey} ) {
-                my $url = defined $db_urlprefix && defined $db_url ? "$db_urlprefix$db_url$dbxref_accession" : undef;
+                my $url;
+                if ( defined $db_urlprefix && defined $db_url ) {
+                    $url = $db_urlprefix. $db_url . $dbxref_accession;
+                }
+                elsif ( defined $cvterm_id ) {
+                    $url = "/cvterm/$cvterm_id/view";
+                }
                 push @{$metadata{$locus_name}->{'references'}}, { 
                     db_name => $db_name,
                     dbxref_accession => $dbxref_accession,
-                    url => $url
+                    url => $url,
+                    cvterm_id => $cvterm_id,
+                    cvterm_name => $cvterm_name
                 };
                 $seen_references{$locus_name}->{$refkey} = 1;
             }
