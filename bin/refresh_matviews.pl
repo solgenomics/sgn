@@ -45,7 +45,6 @@ GetOptions(
     'dbhost|H=s' => \$dbhost,
 );
 
-
 unless ($mode =~ m/^(fullview|stockprop|phenotypes|all_but_genoview)$/ ) { die "Option -m must be fullview, stockprop, phenotypes, or all_but_genoview. -m  = $mode\n"; }
 
 print STDERR "Connecting to database...\n";
@@ -67,12 +66,17 @@ if ($mode eq 'all_but_genoview') {
 #set TRUE before the transaction begins
 my $state = 'TRUE';
 my $refresh_failed = 0;
+my $lock_acquired = 0;
 print STDERR "*Setting currently_refreshing = TRUE\n";
 my $cur_refreshing_h = $dbh->prepare($cur_refreshing_q);
 $cur_refreshing_h->execute($state);
 $dbh->commit();
 
 try {
+    my ($got_lock) = $dbh->selectrow_array("SELECT pg_try_advisory_lock(67895)");
+    die "Another instance is already running\n" unless $got_lock;
+    $lock_acquired = 1;
+
     print STDERR "Refreshing materialized views . . ." . localtime() . "\n";
     my @mv_names = ();
 
@@ -100,17 +104,19 @@ catch {
     $dbh->rollback();
 }
 finally {
+    $dbh->selectrow_array("SELECT pg_advisory_unlock(12345)") if $lock_acquired;
+    if ($lock_acquired) {  # only reset flag if we actually started
+        my $done_h = $dbh->prepare($cur_refreshing_q);
+        print STDERR "*Setting currently_refreshing = FALSE\n";
+        $done_h->execute('FALSE');
+        $dbh->commit();
+    }
     if ($refresh_failed) {
 	print STDERR "Refresh did not complete. Changes rolled back.\n";
     } else {
         print STDERR "COMMITTING\n";
         $dbh->commit();
     }
-    #always set the refreshing status to FALSE at the end
-    my $done_h = $dbh->prepare($cur_refreshing_q);
-    print STDERR "*Setting currently_refreshing = FALSE \n";
-    $done_h->execute('FALSE');
-    $dbh->commit();
 };
 
 sub refresh_mvs {

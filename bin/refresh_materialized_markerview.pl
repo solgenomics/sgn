@@ -37,7 +37,14 @@ print STDERR "Connecting to database...\n";
 my $dsn = 'dbi:Pg:database='.$opt_D.";host=".$opt_H.";port=5432";
 my $dbh = DBI->connect($dsn, $opt_U, $opt_P, { RaiseError => 1, AutoCommit=>1 });
 
+my $lock_acquired = 0;
+
 try {
+    # Prevent concurrent runs
+    my ($got_lock) = $dbh->selectrow_array("SELECT pg_try_advisory_lock(12345)");
+    die "Another instance is already running\n" unless $got_lock;
+    $lock_acquired = 1;
+    
     print STDERR "Refreshing materialized_markerview . . . " . localtime() . "\n";
 
     my $q = "SELECT public.create_materialized_markerview(true);";
@@ -48,7 +55,10 @@ try {
 }
 catch {
     print STDERR "Refresh failed: $_";
+}
+finally {
+    $dbh->selectrow_array("SELECT pg_advisory_unlock(12345)") if $lock_acquired;
+    $dbh->disconnect();
 };
-$dbh->disconnect();
 
 print STDERR "Done, exiting refresh_materialized_markerview.pl \n";
