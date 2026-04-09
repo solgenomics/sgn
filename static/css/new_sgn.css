@@ -553,7 +553,7 @@ span.toolbar_help {
   width: 100%;
   border-bottom-style: solid;
   border-width: 1px;
-  border-color: #ccc;}
+  border-color: #ccc;
 }
 
 /* empty infosections don't have such a big bottom margin */
