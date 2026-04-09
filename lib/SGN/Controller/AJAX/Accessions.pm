@@ -200,6 +200,7 @@ sub do_exact_search {
         found_organisms => []
     };
 
+    #print STDERR Dumper($rest);
     $c->stash->{rest} = $rest;
 }
 
