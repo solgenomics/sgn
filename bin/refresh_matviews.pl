@@ -74,6 +74,7 @@ $dbh->commit();
 
 try {
     my ($got_lock) = $dbh->selectrow_array("SELECT pg_try_advisory_lock(67895)");
+    print STDERR "Another instance is already running\n" unless $got_lock;
     die "Another instance is already running\n" unless $got_lock;
     $lock_acquired = 1;
 
@@ -104,7 +105,7 @@ catch {
     $dbh->rollback();
 }
 finally {
-    $dbh->selectrow_array("SELECT pg_advisory_unlock(12345)") if $lock_acquired;
+    $dbh->selectrow_array("SELECT pg_advisory_unlock(67895)") if $lock_acquired;
     if ($lock_acquired) {  # only reset flag if we actually started
         my $done_h = $dbh->prepare($cur_refreshing_q);
         print STDERR "*Setting currently_refreshing = FALSE\n";
