@@ -72,7 +72,7 @@ $project_id => undef
 
 <br/>
 
-<div style="position: sticky; top: 55px; background: white; z-index: 1000;">
+<div class="trial-header">
   <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 </div>
 
@@ -274,6 +274,16 @@ icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_s
 <script defer="defer">
 
 jQuery(document).ready(function () {
+
+  const header = document.querySelector('.trial-header');
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 20) {
+      header.classList.add('is-stuck');
+    } else {
+      header.classList.remove('is-stuck');
+    }
+  });
 
   var slider = document.getElementById('nseg_ratio_select');
   var nseg_val = document.getElementById('nseg_ratio_readout');
