@@ -224,7 +224,7 @@ sub _validate_with_plugin {
     # Extract the db names from the references
     my %db_names;
     foreach my $reference (@references) {
-        my ($db_name, $entity_name) = split('=', $reference);
+        my ($db_name, $entity_name) = split(':', $reference);
         $db_name =~ s/^\s+|\s+$//g;
         $db_names{lc $db_name} = $db_name;
     }

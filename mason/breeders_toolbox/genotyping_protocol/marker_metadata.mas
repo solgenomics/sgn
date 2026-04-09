@@ -31,9 +31,37 @@
     <button class="btn btn-danger" <% $curator ? '' : 'disabled' %> onclick="deleteMetadata()"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete All Marker Metadata</button>
 </div>
 
+<div class="modal fade" id="edit_marker_metadata_dialog" name="edit_marker_metadata_dialog" tabindex="-1" role="dialog" aria-labelledby="EditMarkerMetadataDialog">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="EditMarkerMetadataDialog">Edit Marker Metadata</h4>
+            </div>
+            <div class="modal-body">
+
+                <p><strong>Marker Name:</strong><input class="form-control" id="edit_marker_metadata_marker" name="Marker" /></p>
+                <p><strong>Alias:</strong><input class="form-control" id="edit_marker_metadata_alias" name="Alias" /></p>
+                <p><strong>Description:</strong><textarea class="form-control" id="edit_marker_metadata_description" name="Description" rows="3"></textarea></p>
+                <p><strong>Alleles (one per line):</strong><textarea class="form-control" id="edit_marker_metadata_alleles" name="Alleles" rows="5"></textarea></p>
+                <p><strong>References (one per line):</strong><textarea class="form-control" id="edit_marker_metadata_references" name="References" rows="5"></textarea></p>
+                <span>The references include the associated trait categories and external database references.  The format of each reference is <code>{database name}:{entity name}</code></span>
+                <input type="hidden" id="edit_marker_metadata_locus_id" />
+            </div>
+            <div class="modal-footer">
+                <button id="close_delete_model_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" name="edit_marker_metadata_dialog_submit" id="edit_marker_metadata_dialog_submit">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="text/javascript">
+    var MARKER_METADATA = {};
+
     jQuery(window).ready(() => {
         loadMetadata();
+        jQuery("#edit_marker_metadata_dialog_submit").on('click', submitMetadata);
     });
 
     function loadMetadata() {
@@ -46,6 +74,7 @@
     }
 
     function displayMetadata(response) {
+        MARKER_METADATA = response;
 
         // Metadata found, generate table...
         if ( response && Object.keys(response).length > 0 ) {
@@ -78,9 +107,23 @@
                     }},
                     { title: "Description", data: "locus_description" },
                     { title: "Alleles", render: (data, type, row) => { return row.alleles.map((x) => x.allele_name).join(type === 'export' ? ', ' : '<br />') } },
+                    { title: "References", render: (data, type, row) => {
+                        var html = "<ul style='padding-left: 15px;'>";
+                        row.references.forEach((r) => {
+                            html += `<li>`;
+                            if ( r.url ) html += `<a href="${r.url}" target="_blank">`;
+                            html += `${r.db_name}:${r.dbxref_accession}`
+                            if ( r.url ) html += `</a>`;
+                            html += `</li>`;
+                        });
+                        html += "</ul>";
+                        return html;
+                    }},
                     { title: "Edit", render: (data, type, row) => { 
-                        return `<button class="btn btn-sm btn-danger" onclick="deleteMetadata(${row.locus_id})" <% $curator ? '' : 'disabled' %>><span class="glyphicon glyphicon-trash"></span></button>`;
-                    } }
+                        var html = `<button class="btn btn-sm btn-info" style="margin: 5px" onclick="editMetadata('${row.locus_name}')" <% $curator ? '' : 'disabled' %>><span class="glyphicon glyphicon-pencil"></span></button>`;
+                        html += `<button class="btn btn-sm btn-danger" style="margin: 5px" onclick="deleteMetadata(${row.locus_id})" <% $curator ? '' : 'disabled' %>><span class="glyphicon glyphicon-trash"></span></button>`;
+                        return html;
+                    }}
                 ]
             });
         }
@@ -105,6 +148,59 @@
         jQuery("#marker_metadata_loading").hide();
         jQuery("#marker_metadata_table_container").show();
         jQuery("#marker_metadata_upload").hide();
+    }
+
+    function editMetadata(marker_name) {
+        const md = MARKER_METADATA[marker_name];
+
+        jQuery("#edit_marker_metadata_marker").val(md.marker_name);
+        jQuery("#edit_marker_metadata_alias").val(md.marker_name !== md.locus_name ? md.locus_name : '');
+        jQuery("#edit_marker_metadata_description").val(md.locus_description);
+        jQuery("#edit_marker_metadata_alleles").val(md.alleles.map(e => e.allele_name).join("\n"));
+        jQuery("#edit_marker_metadata_references").val(md.references.map(e => `${e.db_name}:${e.dbxref_accession}`).join("\n"));
+        jQuery("#edit_marker_metadata_locus_id").val(md.locus_id);
+
+        jQuery('#edit_marker_metadata_dialog').modal('show');
+    }
+
+    function submitMetadata() {
+        const marker = jQuery("#edit_marker_metadata_marker").val();
+        const alias = jQuery("#edit_marker_metadata_alias").val();
+        const description = jQuery("#edit_marker_metadata_description").val();
+        const alleles = jQuery("#edit_marker_metadata_alleles").val().split("\n");
+        const references = jQuery("#edit_marker_metadata_references").val().split("\n");
+        const locus_id = jQuery("#edit_marker_metadata_locus_id").val();
+
+        jQuery.ajax({
+            url: '/ajax/genotyping_protocol/update_marker_metadata/<% $protocol_id %>',
+            method: 'POST',
+            data: {
+                locus_id,
+                marker,
+                alias,
+                description,
+                alleles,
+                references
+            },
+            dataType: 'json',
+            beforeSend: () => {
+                jQuery("#working_modal").modal("show");
+            },
+            success: (response) => {
+                jQuery("#working_modal").modal("hide");
+                if ( response?.error ) {
+                    alert("Could not update marker metadata: " + response.error);
+                }
+                else {
+                    jQuery('#edit_marker_metadata_dialog').modal('hide');
+                    loadMetadata();
+                }
+            },
+            error: () => {
+                jQuery("#working_modal").modal("hide");
+                alert("Could not update marker metadata");
+            }
+        });
     }
 
     function deleteMetadata(locus_id) {
