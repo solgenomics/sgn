@@ -7,6 +7,9 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 use CXGN::Stock::Seedlot;
+use Scalar::Util qw(looks_like_number);
+use CXGN::Trial;
+
 
 sub _validate_with_plugin {
     my $self = shift;
@@ -14,6 +17,7 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $trial_stock_type = $self->get_trial_stock_type();
+    my $trial_id = $self->get_trial_id();
 
     my @error_messages;
     my %errors;
@@ -64,10 +68,26 @@ sub _validate_with_plugin {
         if (!defined $amount && !defined $weight) {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount per plot.";
         }
+        if ( $amount && $amount ne '' && !($amount =~ /^\d+?$/) ) {
+            push @error_messages, " On row $row_num: num_seed_per_plot <strong>$amount</strong> must be a positive integer.";
+        }
+        if ( $weight && $weight ne '' && !(looks_like_number($weight) && $weight > 0)) {
+            push @error_messages, "On row $row_num: weight_gram_seed_per_plot <strong>$</strong> must be a positive number.";
+        }
     }
 
     my $seen_seedlot_names = $parsed_values->{'seedlot_name'};
     my $seen_plot_names = $parsed_values->{'plot_name'};
+
+    my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
+
+    my @trial_plots = @{$trial->get_observation_units_direct('plot')};
+    my %plots = %{$trial_plots[1]};
+    foreach my $plot_name (@$seen_plot_names) {
+        if (!exists($plots{$plot_name})) {
+            push @error_messages, "Plot $plot_name does not exist in this trial.";
+        }
+    }
 
     my $seedlot_validator = CXGN::List::Validate->new();
     my @seedlots_missing = @{$seedlot_validator->validate($schema,'seedlots',$seen_seedlot_names)->{'missing'}};

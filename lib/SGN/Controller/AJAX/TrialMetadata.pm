@@ -755,6 +755,7 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
     my $trial_stock_type = $c->req->param('trial_stock_type');
+    my $trial_id = $c->stash->{trial_id};
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -802,8 +803,8 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_stock_type => $trial_stock_type);
-    $parser->load_plugin('TrialUsedSeedlotsXLS');
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id, trial_stock_type => $trial_stock_type);
+    $parser->load_plugin('TrialUsedSeedlotsGeneric');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
