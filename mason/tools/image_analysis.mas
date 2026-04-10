@@ -246,6 +246,27 @@ tr.shown td.details-control {
         </div>
       </div>
     </div>
+
+    <div id="plantCreationWarning" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <p>The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.</p>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" id="save_results_continue">Continue</button>
+        </div>
+
+        </div>
+    </div>
+    </div>
 </&>
 
 <script>
@@ -447,9 +468,10 @@ jQuery(document).ready(function(){
             submit_results = first;
             // console.log("stock type:", first.stock_type_name);
 
-            if (first.stock_type_name === "plot") {
-                alert("The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.")
-            }
+            //if (first.stock_type_name === "plot") {
+            //    jQuery('#my_dialog_modal').modal('show');
+                //alert("The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.")
+            //}
 
             let metricsData = Object.entries(first.result.analysis_info)
                 .filter(([key, value]) => key != null && value != null)
@@ -562,7 +584,18 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#image_analysis_save_results').click(function(){
+        console.log("submit results", submit_results);
+        if (submit_results.stock_type_name === "plot") {
+            jQuery('#plantCreationWarning').modal('show');
+        }
+    });
 
+    jQuery('#save_results_continue').click(function() {
+        jQuery('#plantCreationWarning').modal('hide');
+        saveResults();
+    });
+
+    function saveResults() {
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
         console.log("table data:", table_data);
         let dt = new DataTransfer();
@@ -872,7 +905,7 @@ jQuery(document).ready(function(){
         });
         }
         
-    });
+    }
 
 });
 

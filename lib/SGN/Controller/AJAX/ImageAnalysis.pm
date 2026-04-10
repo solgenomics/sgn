@@ -390,9 +390,6 @@ sub image_analysis_group_POST : Args(0) {
             $sample_num =~ /_(\d+)$/;
             $sample_num = int($sample_num);
 
-            print STDERR "Sample test: $sample";
-            print STDERR "sample num test: $sample_num";
-
             my $trait_id;
             $trait_id = $results_ref->{'result'}->{'trait_id'};
             my @trait_samples = grep { $_ =~ /$trait_id/ } @samples;
