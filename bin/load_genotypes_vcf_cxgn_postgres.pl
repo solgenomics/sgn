@@ -130,6 +130,10 @@ my $add_accessions = 0;
 if ($opt_a){
     $add_accessions = 1;
 }
+my $add_markers = 0;
+if ($opt_m){
+    $add_markers = 1;
+}
 my $include_igd_numbers = 0;
 if ($opt_z){
     $include_igd_numbers = 1;
@@ -351,6 +355,7 @@ if (scalar(keys %$genotype_info) > 0) {
     }
 
     my @protocol_match_errors;
+    my @mismatch_markers;
     if ($protocol_id) {
         my $new_marker_data = $protocol->{markers};
         my $stored_protocol = CXGN::Genotype::Protocol->new({
@@ -358,30 +363,47 @@ if (scalar(keys %$genotype_info) > 0) {
             nd_protocol_id => $protocol_id
         });
         my $stored_markers = $stored_protocol->markers();
+	my %stored_marker_names = map { $_ => 1 } keys %{$stored_markers};
 
-        my @all_stored_markers = keys %$stored_markers;
-        my %compare_marker_names = map {$_ => 1} @all_stored_markers;
-        my @mismatch_marker_names;
-        while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-            while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
-                if (exists($compare_marker_names{$marker_name})) {
-                    while (my ($key, $value) = each %$new_marker_details) {
-                        if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                            push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
-                        }
+        for my $chrom (keys %{$new_marker_data}) {
+            my $markers_on_chrom = $new_marker_data->{$chrom};
+
+            for my $marker_name (keys %{$markers_on_chrom}) {
+                my $new_marker_details = $markers_on_chrom->{$marker_name};
+
+                unless ($stored_marker_names{$marker_name}) {
+                    push @mismatch_markers, [$chrom, $marker_name];
+                    next;
+                }
+
+                my $stored_details = $stored_markers->{$marker_name};
+
+                for my $key (keys %{$new_marker_details}) {
+                    my $new_value    = defined $new_marker_details->{$key}
+                        ? $new_marker_details->{$key}
+                        : '';
+                    my $stored_value = defined $stored_details->{$key}
+                        ? $stored_details->{$key}
+                        : '';
+
+                    if ($new_value ne $stored_value) {
+                        push @protocol_match_errors,
+                            "Marker $marker_name in your file has $new_value for $key, "
+                          . "but in the previously stored protocol shows $stored_value";
                     }
-                } else {
-                    push @mismatch_marker_names, $marker_name;
                 }
             }
-        }
+	}
 
-        if (scalar(@mismatch_marker_names) > 0){
-            foreach my $error ( sort @mismatch_marker_names) {
-                print STDERR "$error\n";
+	if (@mismatch_markers) {
+            if ($add_markers) {
+		print STDERR "Adding new markers\n";
+                $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
+	    } else {
+		my $marker_name_error = join '<br>', map { $_->[0] . ': ' . $_->[1] } @mismatch_markers;
+                print STDERR "These marker names in your file are not in the selected protocol. $marker_name_error";
+                die; 
 	    }
-	    print STDERR "These marker names in your file are not in the selected protocol.\n";
-            die; 
         }
 
         if (scalar(@protocol_match_errors) > 0){
