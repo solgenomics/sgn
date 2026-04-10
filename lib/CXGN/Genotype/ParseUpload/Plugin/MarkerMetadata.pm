@@ -186,7 +186,6 @@ sub _validate_with_plugin {
 
     # Check the trait categories against the ontology terms
     else {
-        my $ontology_root = $self->{marker_metadata_trait_ontology_root};
 
         # Get cvterm of root term
         my ($db_name, $accession) = split ":", $self->{marker_metadata_trait_ontology_root};
