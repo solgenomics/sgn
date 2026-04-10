@@ -386,6 +386,13 @@ sub image_analysis_group_POST : Args(0) {
                 push @samples, $rel->subject->uniquename;
             }
 
+            my $sample_num = $sample;
+            $sample_num =~ /_(\d+)$/;
+            $sample_num = int($sample_num);
+
+            print STDERR "Sample test: $sample";
+            print STDERR "sample num test: $sample_num";
+
             my $trait_id;
             $trait_id = $results_ref->{'result'}->{'trait_id'};
             my @trait_samples = grep { $_ =~ /$trait_id/ } @samples;
@@ -442,7 +449,7 @@ sub image_analysis_group_POST : Args(0) {
                         trait_name    => $trait_name,
                         trait_id      => $trait_id,
                         stock_type => $stock_type_name,
-                        sample_num => $max_num,
+                        sample_num => $sample_num,
                         image_analyzed => $image_analyzed,
                         value         => $val + 0,
                         status => 'create',

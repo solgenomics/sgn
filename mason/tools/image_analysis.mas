@@ -652,7 +652,7 @@ jQuery(document).ready(function(){
                     const key = detail.object_name || detail.image_name;
 
                     if (!samples[key]) {
-                        let sampleNumber = parseInt(detail.sample_num) + 1 + i;
+                        let sampleNumber = parseInt(detail.sample_num) + i;
                         if (is_multi_trait == 1) {
                             sampleName = germplasmName + '_' + 'sample' + sampleNumber;
                         } else {
