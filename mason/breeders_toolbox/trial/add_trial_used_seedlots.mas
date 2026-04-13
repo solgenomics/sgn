@@ -24,7 +24,7 @@ $trial_stock_type
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_upload_used_seedlot_form" name="trial_upload_used_seedlot_form">
 
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Upload File (.xls or .xlsx): </label>
+                            <label class="col-sm-4 control-label">Upload File:</label>
                             <div class="col-sm-8" >
                                 <input type="file" name="trial_upload_used_seedlot_file" id="trial_upload_used_seedlot_file" encoding="multipart/form-data" />
                             </div>
@@ -52,7 +52,6 @@ $trial_stock_type
                 <div class="container-fluid">
                     <b>This is for recording which seedlots were planted in which plots in this trial.</b>
                     <br/>
-                    <b>Seedlots may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br />
                     <b>Header:</b>
                     <br>
@@ -87,6 +86,7 @@ $trial_stock_type
                     <li>description (any additional information)</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlot_info_trial_upload_used_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
