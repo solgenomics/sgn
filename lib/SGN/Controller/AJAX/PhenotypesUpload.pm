@@ -589,7 +589,7 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
 
     my $epoch = str2time($new_timestamp);
     my $dt = DateTime->from_epoch(epoch => $epoch);
-    $new_timestamp = $dt->strftime('%Y-%m-%d %H:%M:%S');
+    $new_timestamp = $dt->strftime('%Y-%m-%d %H:%M:%S%z');
 
     my $phenotype = CXGN::Phenotype->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
