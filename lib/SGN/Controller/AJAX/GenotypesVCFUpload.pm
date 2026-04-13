@@ -204,7 +204,7 @@ sub upload_genotype_verify_POST : Args(0) {
             open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
             open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
             my @outline;
-            my $lastcol;
+            my $lastcol = -1;
             while (<$F>) {
 		$_ =~ s/\r//g;
                 if ($_ =~ m/^\##/) {
@@ -380,8 +380,10 @@ sub upload_genotype_verify_POST : Args(0) {
     }
 
     my $archived_filename_with_path;
+    my $organism_id;
+    my $parser;
     my $md5;
-    if ($upload_vcf) {
+    if ($parser_plugin) {
         my $uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
             subdirectory => $subdirectory,
@@ -400,41 +402,38 @@ sub upload_genotype_verify_POST : Args(0) {
             push @success_status, "File $upload_original_name saved in archive.";
         }
         unlink $upload_tempfile;
-    } else {
-	print STDERR "archive_path not set\n";
-    }
 
-    #if protocol_id provided, a new one will not be created
-    if ($protocol_id){
-        my $protocol = CXGN::Genotype::Protocol->new({
-            bcs_schema => $schema,
-            nd_protocol_id => $protocol_id
-        });
-        $organism_species = $protocol->species_name;
-        $obs_type = $protocol->sample_observation_unit_type_name;
-        if ($obs_type eq 'accession') {
-	    $include_lab_numbers = 0;
+	#if protocol_id provided, a new one will not be created
+	if ($protocol_id) {
+            my $protocol = CXGN::Genotype::Protocol->new({
+                bcs_schema => $schema,
+                nd_protocol_id => $protocol_id
+            });
+            $organism_species = $protocol->species_name;
+            $obs_type = $protocol->sample_observation_unit_type_name;
+            if ($obs_type eq 'accession') {
+	        $include_lab_numbers = 0;
+            }
+	}
+
+        my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
+        my @found_organisms;
+        my $h = $schema->storage->dbh()->prepare($organism_q);
+        $h->execute($organism_species);
+        while (my ($organism_id) = $h->fetchrow_array()){
+            push @found_organisms, $organism_id;
         }
-    }
+        if (scalar(@found_organisms) == 0){
+            $c->stash->{rest} = { error => "The organism species you provided is not in the database! os =$organism_species pi = $protocol_id  Please contact us." };
+            $c->detach();
+        }
+        if (scalar(@found_organisms) > 1){
+            $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
+            $c->detach();
+        }
+        $organism_id = $found_organisms[0];
 
-    my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
-    my @found_organisms;
-    my $h = $schema->storage->dbh()->prepare($organism_q);
-    $h->execute($organism_species);
-    while (my ($organism_id) = $h->fetchrow_array()){
-        push @found_organisms, $organism_id;
-    }
-    if (scalar(@found_organisms) == 0){
-        $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
-        $c->detach();
-    }
-    if (scalar(@found_organisms) > 1){
-        $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
-        $c->detach();
-    }
-    my $organism_id = $found_organisms[0];
-
-    my $parser = CXGN::Genotype::ParseUpload->new({
+        $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         filename_marker_info => $archived_marker_info_file,
@@ -444,8 +443,11 @@ sub upload_genotype_verify_POST : Args(0) {
 	create_missing_markers => $add_markers,
         igd_numbers_included => $include_igd_numbers,
         lab_numbers_included => $include_lab_numbers
-    });
-    $parser->load_plugin($parser_plugin);
+        });
+        $parser->load_plugin($parser_plugin);
+    } else {
+        print STDERR "parse plugin\n";
+    }
 
     my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
     my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
@@ -803,7 +805,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
     } else {
         print STDERR "Parser plugin $parser_plugin not recognized!\n";
-        $c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
+	#$c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
         $c->detach();
     }
 
