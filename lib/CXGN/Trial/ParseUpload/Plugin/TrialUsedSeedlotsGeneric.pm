@@ -82,7 +82,7 @@ sub _validate_with_plugin {
     my $trial = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $trial_id });
 
     my @trial_plots = @{$trial->get_observation_units_direct('plot')};
-    my %plots = %{$trial_plots[1]};
+    my %plots = map {$_->[1]=>1} @trial_plots;
     foreach my $plot_name (@$seen_plot_names) {
         if (!exists($plots{$plot_name})) {
             push @error_messages, "Plot $plot_name does not exist in this trial.";
@@ -96,8 +96,8 @@ sub _validate_with_plugin {
     }
 
     my $plot_validator = CXGN::List::Validate->new();
-    my @plot_missing = @{$plot_validator->validate($schema,'plots',$seen_plot_names)->{'missing'}};
-    if (scalar(@plot_missing) > 0) {
+    my @plots_missing = @{$plot_validator->validate($schema,'plots',$seen_plot_names)->{'missing'}};
+    if (scalar(@plots_missing) > 0) {
         push @error_messages, "The following plots are not in the database as uniquenames: ".join(',',@plots_missing);
     }
 
@@ -158,8 +158,8 @@ sub _parse_with_plugin {
         my $row_num;
         my $seedlot_name;
         my $plot_name;
-        my $amount = 'NA';
-        my $weight = 'NA';
+        my $amount;
+        my $weight;
         my $description;
 
         $row_num = $row->{_row};
@@ -167,9 +167,16 @@ sub _parse_with_plugin {
         $plot_name = $row->{'plot_name'};
         $weight = $row->{'weight_gram_seed_per_plot'};
         $amount = $row->{'num_seed_per_plot'};
+        if (!defined $weight) {
+            $weight = 'NA';
+        }
+        if (!defined $amount) {
+            $amount = 'NA';
+        }
+
         $description = $row->{'description'};
 
-        $parsed_entries{$row} = {
+        $parsed_result{$row} = {
             seedlot_name => $seedlot_name,
             seedlot_stock_id => $seedlot_lookup{$seedlot_name},
             plot_stock_id => $plot_lookup{$plot_name},
