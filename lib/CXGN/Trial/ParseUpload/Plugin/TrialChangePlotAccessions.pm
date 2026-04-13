@@ -50,11 +50,6 @@ sub _validate_with_plugin {
     }
     my $validator = CXGN::List::Validate->new();
 
-#    my $validate = $validator->validate($schema, 'plots', \@old_plot_names);
-#    if (scalar(@{$validate->{'missing'}}) > 0) {
-#        push @error_messages, "The following plots were not found in the database: ".join(";",@{$validate->{'missing'}});
-#    }
-
     my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
         trial_id => $trial_id
@@ -79,7 +74,7 @@ sub _validate_with_plugin {
         my $seedlots = $related_seedlots->get_plots_related_seedlots();
         if (scalar @$seedlots > 0) {
             foreach my $seedlot (@$seedlots) {
-                push @error_messages, "Plot: $seedlot->[4] is associated with seedlot: $seedlot->[2]. Cannot change";
+                push @error_messages, "Plot: $seedlot->[4] is associated with seedlot: $seedlot->[2]. Please delete seedlot transaction linked to the plot first.";
             }
         }
     }
