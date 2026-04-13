@@ -95,6 +95,29 @@ $trial_stock_type
     </div>
 </div>
 
+<div class="modal fade" id="upload_trial_used_seedlot_saved_dialog_message" name="upload_trial_used_seedlot_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="uploadTrialUsedSeedlotSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTrialUsedSeedlotSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        File uploaded successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_upload_trial_used_seedlot_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
 
 jQuery(document).ready(function(){
@@ -116,6 +139,7 @@ jQuery(document).ready(function(){
             return;
         }
         jQuery("#trial_upload_used_seedlot_form").submit();
+        jQuery("#trial_upload_used_seedlot_dialog").modal("hide");
     }
 
     jQuery('#trial_upload_used_seedlot_form').iframePostForm({
@@ -137,7 +161,7 @@ jQuery(document).ready(function(){
                 return;
             }
             if (response.success) {
-                alert("File uploaded successfully");
+                jQuery('#upload_trial_used_seedlot_saved_dialog_message').modal("show");
             }
         }
     });
