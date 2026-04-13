@@ -306,6 +306,9 @@ has 'family_name_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'facility_identifier_cvterm_id' => (isa => 'Int', is => 'rw');
 
+#Whether obsoleted accessions are allowed to include in this trial (set by using 'allow_obsoleted_accessions' conf key)
+has 'allow_obsoleted_accessions' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
+
 sub BUILD {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema();
@@ -410,8 +413,7 @@ sub store {
     my %design = %{$self->get_design};
     my $trial_id = $self->get_trial_id;
     my $nd_geolocation_id = $self->get_nd_geolocation_id;
-
-
+    my $allow_obsoleted_accessions = $self->get_allow_obsoleted_accessions;
     my $nd_experiment_type_id = $self->get_nd_experiment_type_id();
     my $stock_type_id = $self->get_stock_type_id();
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
@@ -646,7 +648,7 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id(),undef,$allow_obsoleted_accessions);
                 my $cross_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
                 my $family_name_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
                 if ($accession_stock) {
