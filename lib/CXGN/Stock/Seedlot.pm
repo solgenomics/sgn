@@ -880,6 +880,128 @@ sub verify_seedlot_accessions_crosses {
 }
 
 
+
+# class method
+=head2 Class method: verify_seedlot_accessions_family_names()
+
+ Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, [[$seedlot_name, $accession_name or family_name]]);
+ Desc:         Class method that verifies if a given list of pairs of seedlot_name and accession_name or seedlot_name and family user_name have the same underlying accession/family_name.
+ Ret:          success or error
+ Args:         $schema, $stock_names, $seedlot_names
+ Side Effects: accesses the database
+
+=cut
+
+sub verify_seedlot_accessions_family_names {
+    my $class = shift;
+    my $schema = shift;
+    my $pairs = shift; #arrayref of [ [seedlot_name, accession_name or family names] ] #note: the variable accession_name can be either accession or cross stock type
+    my $error = '';
+    my %return;
+
+    if (!$pairs){
+        $error .= "No pair array passed!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my @pairs = @$pairs;
+    if (scalar(@pairs)<1){
+        $error .= "Your pairs list is empty!";
+    }
+    if ($error){
+        $return{error} = $error;
+        return \%return;
+    }
+
+    my %seen_stock_names;
+    foreach (@pairs){
+        $seen_stock_names{$_->[1]}++;
+    }
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
+    my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+
+    my @stocks = keys %seen_stock_names;
+
+    my %stock_lookup;
+    my $stock_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'type_id' => { -in => ($accession_cvterm_id, $family_name_cvterm_id)},
+    });
+
+    my %accession_names_lookup;
+    my %family_names_lookup;
+
+    while (my $stock_r=$stock_rs->next){
+        if ($stock_r->type_id == $family_name_cvterm_id) {
+            $family_names_lookup{$stock_r->uniquename} = $stock_r->stock_id;
+        } elsif ($stock_r->type_id == $accession_cvterm_id) {
+            $accession_names_lookup{$stock_r->uniquename} = $stock_r->stock_id;
+        }
+    }
+
+    my @accessions = keys %accession_names_lookup;
+    my %acc_synonyms_lookup;
+    if (scalar @accessions > 0) {
+        my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
+            'me.is_obsolete' => { '!=' => 't' },
+            'stockprops.value' => { -in => \@accessions},
+            'me.type_id' => $accession_cvterm_id,
+            'stockprops.type_id' => $synonym_cvterm_id
+        },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
+        while (my $r=$acc_synonym_rs->next){
+            $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+        }
+    }
+
+    foreach my $pair (@pairs){
+        my $seedlot_name = $pair->[0];
+        my $stock_name = $pair->[1];
+        if ($accession_names_lookup{$stock_name}){
+            if ($acc_synonyms_lookup{$stock_name}){
+                my @accession_names = keys %{$acc_synonyms_lookup{$stock_name}};
+                if (scalar(@accession_names)>1){
+                    print STDERR "There is more than one uniquename for this synonym $stock_name. this should not happen!\n";
+                }
+                $stock_name = $accession_names[0];
+            }
+            my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$stock_name, 'subject.type_id'=>[$accession_cvterm_id]});
+            if (!$seedlot_rs->first){
+                $error .= "The seedlot: $seedlot_name is not linked to the accession : $stock_name.";
+            }
+        } elsif ($family_names_lookup{$stock_name}) {
+            my $family_name_id = $family_names_lookup{$stock_name};
+            my @members = ();
+            my $members_of_family = $schema->resultset("Stock::StockRelationship")->search({ type_id=>$cross_member_of_cvterm_id, object_id=>$family_name_id });
+            while (my $each_member = $members_of_family->next() ) {
+                push @members, $each_member->subject_id;
+            }
+
+            my $seedlot_origin_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject');
+            my $origin_rs = $seedlot_origin_rs->first;
+            my $seedlot_origin_stock_id = $origin_rs->stock_id;
+
+            if (!grep {$_ eq $seedlot_origin_stock_id} @members) {
+                $error .= "The seedlot: $seedlot_name is not linked to any cross member of the family: $stock_name. ";
+            }
+        }
+    }
+    if ($error){
+        $return{error} = $error;
+    } else {
+        $return{success} = 1;
+    }
+    return \%return;
+}
+
+
 =head2 Class method: verify_seedlot_seedlot_compatibility()
 
  Usage:        my $seedlots = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, [[$seedlot_name_1, $seedlot_name_2]]);
