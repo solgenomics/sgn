@@ -3,6 +3,7 @@ package CXGN::List::Validate::Plugin::Traits;
 
 use Moose;
 use Data::Dumper;
+use CXGN::Onto;
 
 sub name {
     return "traits";
@@ -41,7 +42,11 @@ sub validate {
         $trait_name =~ s/^\s+//;
 
         if (!$context->get_conf('list_trait_require_id') && ($db_name eq '' || $db_name eq $trait_name)) {
-          $db_name = $context->get_conf('trait_ontology_db_name');
+          my $trait_db_names = CXGN::Onto->new({ schema => $schema })->get_trait_ontology_db_names();
+          if ( scalar @$trait_db_names > 1 ) {
+            print STDERR "DB Name not specified in trait term and more than one trait ontology in the database - defaulting to the first!\n";
+          }
+          $db_name = $trait_db_names->[0];
         }
 
         my $db_rs = $schema->resultset("General::Db")->search( { 'me.name' => $db_name });
