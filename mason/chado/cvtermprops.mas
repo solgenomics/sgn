@@ -101,7 +101,7 @@ Add <% $prop_select %>
 
 jQuery(document).ready(function() {
 
-var trait_format_choices = '<select id="<% $div_name %>_prop"><option>numeric</option><option>categorical</option><option>date</option><option>photo</option><option>boolean</option></select>';
+var trait_format_choices = '<select id="<% $div_name %>_prop"><option>numeric</option><option>qualitative</option><option>nominal</option><option>duration</option><option>ordinal</option><option>text</option><option>multicat</option><option>counter</option><option>categorical</option><option>date</option><option>photo</option><option>boolean</option></select>';
 
 var trait_repeat_type_choices = '<select id="<% $div_name %>_prop"><option>single</option><option>multiple</option><option>time_series</option></select>';
 
