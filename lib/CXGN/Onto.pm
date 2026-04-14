@@ -131,6 +131,27 @@ sub get_root_nodes {
       return @results;
 }
 
+sub get_trait_ontology_db_names {
+    my $self = shift;
+    my $schema = $self->schema();
+
+    # Get the CVs tagged as a 'trait_ontology' in the cvprop table
+    my $type_cvterm = $schema->resultset("Cv::Cvterm")->find(
+        { 'me.name' => 'trait_ontology', 'cv.name' => 'composable_cvtypes' },
+        { join => 'cv' }
+    );
+    my $trait_cv = $schema->resultset("Cv::Cvprop")->search({ type_id => $type_cvterm->cvterm_id() });
+    my @trait_cv_ids = $trait_cv->get_column('cv_id')->all();
+
+    # Get the db names of the matching cvs
+    my $db = $schema->resultset("Cv::Cvterm")->search(
+        { 'me.cv_id' => { -in => \@trait_cv_ids } },
+        { join => { dbxref => 'db' }, group_by => 'db.name' }
+    );
+    my @db_names = $db->get_column('db.name')->all();
+
+    return \@db_names;
+}
 
 sub store_composed_term {
     my $self = shift;
