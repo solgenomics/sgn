@@ -89,7 +89,7 @@ sub search :Path('/stock/search') Args(0) {
         sp_person_autocomplete_uri => $c->uri_for( '/ajax/people/autocomplete' ),
         trait_autocomplete_uri     => $c->uri_for('/ajax/stock/trait_autocomplete'),
         onto_autocomplete_uri      => $c->uri_for('/ajax/cvterm/autocomplete'),
-        trait_db_names              => CXGN::Onto->new({ schema => $self->schema })->get_trait_ontology_db_names(),
+        trait_db_names             => CXGN::Onto->new({ schema => $self->schema })->get_trait_ontology_db_names(),
         breeding_programs          => breeding_programs($self->schema),
 	);
     #my $results = $c->req->param('search_submitted') ? $self->_make_stock_search_rs($c) : undef;
@@ -386,7 +386,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
 		ontology_count => $c->stash->{ontology_count},
 		has_pedigree => $c->stash->{has_pedigree},
 		has_descendants => $c->stash->{has_descendants},
-		trait_ontology_db_name => $c->get_conf('trait_ontology_db_name'),
+		trait_ontology_db_names => CXGN::Onto->new({ schema => $self->schema })->get_trait_ontology_db_names(),
 		editable_stock_props   => $editable_stockprops,
 		editable_vector_props   => $editable_vectorprops,
         is_obsolete   => $obsolete,

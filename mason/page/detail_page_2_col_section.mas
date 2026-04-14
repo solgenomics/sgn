@@ -80,7 +80,7 @@ $has_pedigree => undef
 $image_ids => undef
 $related_image_ids => undef
 $dbh => undef
-$trait_ontology_db_name => undef
+$trait_ontology_db_names => undef
 $pubs => undef
 $cvterm_add_uri => undef
 $referer => undef
@@ -400,7 +400,7 @@ $logged_in_name => undef
 
                                 <&| /page/info_section.mas, id   => 'stock_ontology', title=>"Ontology annotation (" . $stockref->{ontology_count} . ")" &>
                                     <& /ontology/associate_ontology.mas,
-                                    trait_db_name => $trait_ontology_db_name,
+                                    trait_db_names => $trait_ontology_db_names,
                                     object_id     => $stock_id ,
                                     object_name   => "stock",
                                     cvterm_add_uri=> $cvterm_add_uri,
