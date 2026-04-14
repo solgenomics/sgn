@@ -13,7 +13,7 @@ use CXGN::Trait;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|intercrop_accession_name plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
-# Any additional columns that are not required or optional will be parsed as treatments. 
+# Any additional columns that are not required or optional will be parsed as treatments.
 
 # VALID DESIGN TYPES
 my %valid_design_types = (
@@ -79,7 +79,7 @@ sub _validate_with_plugin {
     my $treatments = $parsed->{'additional_columns'};
 
     my $trait_validator = CXGN::List::Validate->new();
-    
+
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
 
     foreach my $treatment (@{$treatments}) {
@@ -88,7 +88,7 @@ sub _validate_with_plugin {
         }
     }
 
-    if (@{$validate->{missing}}>0) { 
+    if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
             push @error_messages, "Treatment $missing does not exist in the database.\n";
         }
@@ -142,6 +142,8 @@ sub _validate_with_plugin {
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
+        my $trial_stock_type = $data->{'trial_stock_type'};
+        my %seedlot_trial_stock_type;
 
         foreach my $treatment (@{$treatments}) {
             my $lt = CXGN::List::Transform->new();
@@ -151,7 +153,7 @@ sub _validate_with_plugin {
             my $treatment_id = $treatment_id_list[0];
 
             my $treatment_obj = CXGN::Trait->new({
-                bcs_schema => $schema, 
+                bcs_schema => $schema,
                 cvterm_id => $treatment_id
             });
             if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
@@ -234,7 +236,8 @@ sub _validate_with_plugin {
         # count and weight must be a positive integer
         # return a warning if both count and weight are not provided
         if ( $seedlot_name ) {
-            push @seedlot_pairs, [$seedlot_name, $accession_name];
+#            push @seedlot_pairs, [$seedlot_name, $accession_name];
+            push @{$seedlot_trial_stock_type{$trial_stock_type}}, [$seedlot_name, $accession_name];
             if ( $num_seed_per_plot && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/) ) {
                 push @error_messages, "Row $row: num_seed_per_plot <strong>$num_seed_per_plot</strong> must be a positive integer.";
             }
@@ -449,8 +452,18 @@ sub _validate_with_plugin {
     }
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
-    if ( scalar(@seedlot_pairs) > 0 ) {
-        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);
+    my $family_seedlot_pairs = $seedlot_trial_stock_type{'family_name'};
+    my $cross_seedlot_pairs = $seedlot_trial_stock_type{'cross'};
+    my $accession_seedlot_pairs = $seedlot_trial_stock_type{'accession'};
+    my @cross_accession_seedlot_pairs = ();
+    push @accession_cross_seedlot_pairs, ($cross_seedlot_pairs, $accession_seedlot_pairs);
+    if (scalar(@$family_seedlot_pairs) > 0) {
+        $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, \@seedlot_pairs);
+        if (exists($return->{error})) {
+            push @error_messages, $return->{error};
+        }
+    } elsif ( scalar(@accession_cross_seedlot_pairs) > 0 ) {
+        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@accession_cross_seedlot_pairs);
         if (exists($return->{error})) {
             push @error_messages, $return->{error};
         }
