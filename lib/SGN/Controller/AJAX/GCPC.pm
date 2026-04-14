@@ -20,6 +20,7 @@ use CXGN::Blast::Parse;
 use CXGN::Blast::SeqQuery;
 use SGN::Model::Cvterm;
 use Cwd qw(cwd);
+use CXGN::Onto;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -254,14 +255,21 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
     # retrieve .
     #
     my $plant_sex_variable_name = $c->config->{plant_sex_variable_name};
-    my @cv_names = SGN::Model::Cvterm->get_cv_names_from_db_name($schema, $c->config->{trait_ontology_db_name});
+    my $db_names = CXGN::Onto->new({ schema => $schema })->get_trait_ontology_db_names();
+    my @cv_names;
+    foreach (@$db_names) {
+        push @cv_names, SGN::Model::Cvterm->get_cv_names_from_db_name($schema, $_);
+    }
 
     my $plant_sex_cvterm_id;
     my $plant_sex_variable_name_R = "";
 
     print STDERR "CVNAMES = ".Dumper(\@cv_names);
-    if (@cv_names && $plant_sex_variable_name) {
-	$plant_sex_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, $plant_sex_variable_name, $cv_names[0])->cvterm_id();
+    if ( scalar(@cv_names) > 0 && $plant_sex_variable_name) {
+        foreach (@cv_names) {
+            my $cvt = SGN::Model::Cvterm->get_cvterm_row($schema, $plant_sex_variable_name, $_);
+            $plant_sex_cvterm_id = $cvt->cvterm_id() if $cvt;
+        }
     }
 
     my $accession_sex_scores;
