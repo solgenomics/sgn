@@ -203,7 +203,7 @@ $t->while_logged_in_as("submitter", sub {
             $t->find_element_ok("raw_data_trait_select_button", "id", "Request raw phenotype data")->click();
             sleep(6);
 
-            # Step 1: Find and store the observation ID of the first row
+            # Find and store the observation ID of the first row
             my $obs_id = $t->find_element_ok(
                 '//table[@id="raw_trait_data_table"]//tbody/tr[1]/td[1]',
                 'xpath',
@@ -222,7 +222,7 @@ $t->while_logged_in_as("submitter", sub {
             $original_value_display =~ s/^\s+|\s+$//g;
             print STDERR "ORIGINAL VALUE DISPLAY: $original_value_display\n";
 
-            # Step 2: Click edit button, make trivial edits to value and timestamp
+            # Click edit button, make trivial edits to value and timestamp
             $t->find_element_ok("${obs_id}_edit_btn", "id", "Click edit button for first row")->click();
             sleep(1);
 
@@ -234,7 +234,7 @@ $t->while_logged_in_as("submitter", sub {
             $timestamp_input->send_keys(KEYS->{'control'}, 'a');
             $timestamp_input->send_keys("2020-01-01 00:00:00+0000");
 
-            # Step 3: Click discard and verify values are unchanged
+            # Click discard and verify values are unchanged
             $t->find_element_ok("${obs_id}_discard_changes_btn", "id", "Click discard button for first row")->click();
             sleep(1);
 
@@ -246,7 +246,7 @@ $t->while_logged_in_as("submitter", sub {
             $value_after_discard =~ s/^\s+|\s+$//g;
             ok($value_after_discard eq $original_value_display, "Value is unchanged after discarding edits");
 
-            # Step 4: Click edit again, edit only the value, click save
+            # Click edit again, edit only the value, click save
             $t->find_element_ok("${obs_id}_edit_btn", "id", "Click edit button again for first row")->click();
             sleep(1);
 
@@ -258,7 +258,7 @@ $t->while_logged_in_as("submitter", sub {
             $t->find_element_ok("${obs_id}_save_changes_btn", "id", "Click save button for first row")->click();
             sleep(4);
 
-            # Step 5: Refresh page and return to raw data section
+            # Refresh page and return to raw data section
             $t->get_ok('/breeders/trial/137');
             sleep(5);
 
@@ -268,7 +268,7 @@ $t->while_logged_in_as("submitter", sub {
             $t->find_element_ok("raw_data_trait_select_button", "id", "Request raw phenotype data after page refresh")->click();
             sleep(6);
 
-            # Step 6: Find the row by stored observation ID and verify the edit was retained
+            # Find the row by stored observation ID and verify the edit was retained
             my $updated_value_display = $t->find_element_ok(
                 "//table[\@id='raw_trait_data_table']//tbody/tr[td[1][normalize-space()='$obs_id']]/td[4]",
                 'xpath',
