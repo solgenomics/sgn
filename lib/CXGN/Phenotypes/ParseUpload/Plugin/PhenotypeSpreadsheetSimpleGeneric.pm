@@ -113,18 +113,34 @@ sub parse {
             my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
             my $timestamp = '';
             my $trait_value = '';
+	    my @trait_values;
             if ($timestamp_included){
-                ($trait_value, $timestamp) = split /,/, $value_string;
+		my @values;
+		# is it a multi-value line (separated by | )?
+		if ($value_string =~ /\|/) {
+		    @values = split /\|/, $value_string;
+		}
+		else {
+		    @values = ($value_string);
+		}
+		foreach my $v (@values) {
+		    ($trait_value, $timestamp) = split /,/, $v;
+		    if (defined($trait_value)) {
+			push @trait_values, [ $trait_value, $timestamp ];
+		    }
+		}
             } else {
-                $trait_value = $value_string;
+                @trait_values = ($value_string);
             }
             if (!defined($timestamp)){
                 $timestamp = '';
             }
 
-            if ( defined($trait_value) && defined($timestamp) ) {
-                if ($trait_value ne '.') {
-                    push @{$data{$observationunit_name}->{$trait_name}}, [$trait_value, $timestamp];
+            if ( @trait_values && defined($timestamp) ) {
+		foreach my $tv (@trait_values) {
+		    if ($tv->[0] ne ".") {
+			push @{$data{$observationunit_name}->{$trait_name}}, $tv;
+		    }
                 }
             }
         }
