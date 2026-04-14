@@ -4,7 +4,7 @@
   $sp_person_autocomplete_uri => '/ajax/people/autocomplete'
   $trait_autocomplete_uri     => '/ajax/stock/trait_autocomplete'
   $onto_autocomplete_uri      => '/ajax/cvterm/autocomplete'
-  $trait_db_name              => 'SP'
+  $trait_db_names             => ['SP']
 
   $organisms       => undef
   $stock_types     => undef
@@ -365,7 +365,7 @@ jQuery(document).ready(function () {
         source: '<% $trait_autocomplete_uri %>'
      });
      jQuery("#onto").autocomplete({
-        source: '<% $onto_autocomplete_uri %>' + "?db_name=" + '<% $trait_db_name %>'
+        source: '<% $onto_autocomplete_uri %>' + "?db_names=" + '<% join(",", @$trait_db_names) %>'
      });
      jQuery("#project").autocomplete({
         source: '/ajax/stock/project_autocomplete',
