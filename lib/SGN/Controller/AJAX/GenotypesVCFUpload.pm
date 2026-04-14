@@ -86,6 +86,9 @@ sub upload_genotype_verify_POST : Args(0) {
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
+#    print STDERR "PROJECT ID =".Dumper($project_id)."\n";
+#    print STDERR "PROTOCOL ID =".Dumper($protocol_id)."\n";
+
     my $organism_species = $c->req->param('upload_genotypes_species_name_input');
     my $protocol_description = $c->req->param('upload_genotypes_protocol_description_input');
     my $project_name = $c->req->param('upload_genotype_vcf_project_name');
@@ -108,7 +111,7 @@ sub upload_genotype_verify_POST : Args(0) {
     }
     my $add_markers;
     if ($add_new_markers) {
-	$add_markers = 1;
+        $add_markers = 1;
     }
     my $include_igd_numbers;
     if ($contains_igd){
@@ -186,12 +189,10 @@ sub upload_genotype_verify_POST : Args(0) {
     my $timestamp = $time->ymd()."_".$time->hms();
 
     my $upload_original_name;
-    my $transposed_basename;
     my $upload_tempfile;
     my $subdirectory;
     my $parser_plugin;
     if ($upload_vcf) {
-
         $upload_original_name = $upload_vcf->filename();
         $upload_tempfile = $upload_vcf->tempname;
         $subdirectory = "genotype_vcf_upload";
@@ -204,7 +205,7 @@ sub upload_genotype_verify_POST : Args(0) {
             open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
             open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
             my @outline;
-            my $lastcol = -1;
+            my $lastcol;
             while (<$F>) {
 		$_ =~ s/\r//g;
                 if ($_ =~ m/^\##/) {
@@ -231,11 +232,9 @@ sub upload_genotype_verify_POST : Args(0) {
             close($F);
             close($Fout);
             $upload_tempfile = $temp_file_transposed;
-            $transposed_basename = basename($temp_file_transposed);
+            $upload_original_name = basename($temp_file_transposed);
             $parser_plugin = 'transposedVCF';
-        } else {
-	    $transposed_basename = basename($upload_vcf->tempname);
-	}
+        }
     }
     if ($upload_transposed_vcf) {
         $upload_original_name = $upload_transposed_vcf->filename();
@@ -252,7 +251,7 @@ sub upload_genotype_verify_POST : Args(0) {
             tempfile => $upload_tempfile,
             subdirectory => $subdirectory,
             archive_path => $c->config->{archive_path},
-            archive_filename => $transposed_basename,
+            archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
             user_role => $user_role
@@ -303,7 +302,7 @@ sub upload_genotype_verify_POST : Args(0) {
         close($F);
         close($Fout);
         $upload_tempfile = $temp_file_transposed;
-        $transposed_basename = basename($temp_file_transposed);
+        $upload_original_name = basename($temp_file_transposed);
 
         $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
@@ -317,7 +316,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $parser_plugin = 'IntertekCSV';
 
         if ($obs_type eq 'accession') {
-	    $include_lab_numbers = 0;
+            $include_lab_numbers = 1;
         }
 
         my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
@@ -379,75 +378,66 @@ sub upload_genotype_verify_POST : Args(0) {
         unlink $upload_kasp_marker_info_tempfile;
     }
 
-    my $archived_filename_with_path;
-    my $organism_id;
-    my $parser;
-    my $md5;
-    if ($parser_plugin) {
-        my $uploader = CXGN::UploadFile->new({
-            tempfile => $upload_tempfile,
-            subdirectory => $subdirectory,
-            archive_path => $c->config->{archive_path},
-            archive_filename => $transposed_basename,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_role
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $upload_tempfile,
+        subdirectory => $subdirectory,
+        archive_path => $c->config->{archive_path},
+        archive_filename => $upload_original_name,
+        timestamp => $timestamp,
+        user_id => $user_id,
+        user_role => $user_role
+    });
+    my $archived_filename_with_path = $uploader->archive();
+    my $md5 = $uploader->get_md5($archived_filename_with_path);
+    if (!$archived_filename_with_path) {
+        push @error_status, "Could not save file $upload_original_name in archive.";
+        return (\@success_status, \@error_status);
+    } else {
+        push @success_status, "File $upload_original_name saved in archive.";
+    }
+    unlink $upload_tempfile;
+
+    #if protocol_id provided, a new one will not be created
+    if ($protocol_id){
+        my $protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
         });
-        $archived_filename_with_path = $uploader->archive();
-        $md5 = $uploader->get_md5($archived_filename_with_path);
-        if (!$archived_filename_with_path) {
-            push @error_status, "Could not save file $upload_original_name in archive.";
-            return (\@success_status, \@error_status);
-        } else {
-            push @success_status, "File $upload_original_name saved in archive.";
+        $organism_species = $protocol->species_name;
+        $obs_type = $protocol->sample_observation_unit_type_name;
+        if ($obs_type eq 'accession') {
+            $include_lab_numbers = 1;
         }
-        unlink $upload_tempfile;
+    }
 
-	#if protocol_id provided, a new one will not be created
-	if ($protocol_id) {
-            my $protocol = CXGN::Genotype::Protocol->new({
-                bcs_schema => $schema,
-                nd_protocol_id => $protocol_id
-            });
-            $organism_species = $protocol->species_name;
-            $obs_type = $protocol->sample_observation_unit_type_name;
-            if ($obs_type eq 'accession') {
-	        $include_lab_numbers = 0;
-            }
-	}
+    my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
+    my @found_organisms;
+    my $h = $schema->storage->dbh()->prepare($organism_q);
+    $h->execute($organism_species);
+    while (my ($organism_id) = $h->fetchrow_array()){
+        push @found_organisms, $organism_id;
+    }
+    if (scalar(@found_organisms) == 0){
+        $c->stash->{rest} = { error => 'The organism species you provided is not in the database! Please contact us.' };
+        $c->detach();
+    }
+    if (scalar(@found_organisms) > 1){
+        $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
+        $c->detach();
+    }
+    my $organism_id = $found_organisms[0];
 
-        my $organism_q = "SELECT organism_id FROM organism WHERE species = ?";
-        my @found_organisms;
-        my $h = $schema->storage->dbh()->prepare($organism_q);
-        $h->execute($organism_species);
-        while (my ($organism_id) = $h->fetchrow_array()){
-            push @found_organisms, $organism_id;
-        }
-        if (scalar(@found_organisms) == 0){
-            $c->stash->{rest} = { error => "The organism species you provided is not in the database! os =$organism_species pi = $protocol_id  Please contact us." };
-            $c->detach();
-        }
-        if (scalar(@found_organisms) > 1){
-            $c->stash->{rest} = { error => 'The organism species you provided is not unique in the database! Please contact us.' };
-            $c->detach();
-        }
-        $organism_id = $found_organisms[0];
-
-        $parser = CXGN::Genotype::ParseUpload->new({
+    my $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         filename_marker_info => $archived_marker_info_file,
         observation_unit_type_name => $obs_type,
         organism_id => $organism_id,
         create_missing_observation_units_as_accessions => $add_accessions,
-	create_missing_markers => $add_markers,
         igd_numbers_included => $include_igd_numbers,
-        lab_numbers_included => $include_lab_numbers
-        });
-        $parser->load_plugin($parser_plugin);
-    } else {
-        print STDERR "parse plugin\n";
-    }
+        # lab_numbers_included => $include_lab_numbers
+    });
+    $parser->load_plugin($parser_plugin);
 
     my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
     my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
@@ -553,63 +543,54 @@ sub upload_genotype_verify_POST : Args(0) {
 
             if ($protocol_id) {
                 my @protocol_match_errors;
-		my @mismatch_markers;
-
                 my $new_marker_data = $protocol->{markers};
-
                 my $stored_protocol = CXGN::Genotype::Protocol->new({
                     bcs_schema => $schema,
                     nd_protocol_id => $protocol_id
                 });
-
                 my $stored_markers = $stored_protocol->markers();
-                my %stored_marker_names = map { $_ => 1 } keys %{$stored_markers};
 
-		for my $chrom (keys %{$new_marker_data}) {
-                    my $markers_on_chrom = $new_marker_data->{$chrom};
-
-		    for my $marker_name (keys %{$markers_on_chrom}) {
-                        my $new_marker_details = $markers_on_chrom->{$marker_name};
-
-			unless ($stored_marker_names{$marker_name}) {
-                            push @mismatch_markers, [$chrom, $marker_name];
-                            next;
-                        }
-
-			my $stored_details = $stored_markers->{$marker_name};
-
-                        for my $key (keys %{$new_marker_details}) {
-                            my $new_value    = defined $new_marker_details->{$key}
-                                ? $new_marker_details->{$key}
-                                : '';
-                            my $stored_value = defined $stored_details->{$key}
-                                ? $stored_details->{$key}
-                                : '';
-
-                            if ($new_value ne $stored_value) {
-                                push @protocol_match_errors,
-                                    "Marker $marker_name in your file has $new_value for $key, "
-                                  . "but in the previously stored protocol shows $stored_value";
+                my @all_stored_markers = keys %$stored_markers;
+                my %compare_marker_names = map {$_ => 1} @all_stored_markers;
+                my @mismatch_marker_names;
+		my @mismatch_markers;
+                while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
+                    while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
+                        if (exists($compare_marker_names{$marker_name})) {
+                            while (my ($key, $value) = each %$new_marker_details) {
+                                if ($value ne ($stored_markers->{$marker_name}->{$key})) {
+                                    push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                                }
                             }
+                        } else {
+                            push @mismatch_marker_names, $marker_name;
+			    push @mismatch_markers, [$chrom, $marker_name];
                         }
                     }
                 }
 
-                if (@mismatch_markers) {
+                if (scalar(@mismatch_marker_names) > 0){
 		    if ($add_markers) {
 			print STDERR "Adding new markers\n";
-			    $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
+			$store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
 		    } else {
-			my $marker_name_error = join '<br>', map { $_->[0] . ': ' . $_->[1] } @mismatch_markers;
+                        my $marker_name_error;
+                        $marker_name_error .= "<br>";
+                        foreach my $error ( sort @mismatch_marker_names) {
+                            $marker_name_error .= $error."<br>";
+                        }
                         $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
                         $c->detach();
 		    }
                 }
 
-                if (@protocol_match_errors) {
-                    my $protocol_warning = join '<br>', @protocol_match_errors;
-                    
-	            if (!$accept_warnings){
+
+                if (scalar(@protocol_match_errors) > 0){
+                    my $protocol_warning;
+                    foreach my $match_error (@protocol_match_errors) {
+                        $protocol_warning .= $match_error."<br>";
+                    }
+                    if (!$accept_warnings){
                         $c->stash->{rest} = { warning => $protocol_warning };
                         $c->detach();
                     }
@@ -805,7 +786,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
     } else {
         print STDERR "Parser plugin $parser_plugin not recognized!\n";
-	#$c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
+        $c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
         $c->detach();
     }
 
