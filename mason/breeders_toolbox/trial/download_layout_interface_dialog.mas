@@ -11,19 +11,19 @@ $trial_stock_type => undef
         margin: 15px 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 5px 30px;
-        justify-content: flex-start;
-        align-items: center
+        gap: 30px;
+        justify-content: space-around;
+        align-items: flex-end;
     }
     div.layout-item {
         display: flex;
-        gap: 15px;
-        align-items: center;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
         max-width: 250px;
     }
     div.layout-item label {
-        text-align: right;
-        max-width: 150px;
+        text-align: left;
     }
 </style>
 
@@ -87,24 +87,14 @@ $trial_stock_type => undef
                     <div class="well">
                         <center><h4>Choose the columns you want to include (Or simply use defaults and click "Submit")</h4></center>
                         <hr>
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Included Columns: </label>
-                                    <div class="col-sm-9" >
-                                        <div id="create_fieldbook_included_columns_<% $download_type %>">
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="layout-container" style="align-items: flex-start !important";>
+                            <div class="layout-item">
+                                <label>Included Columns: </label>
+                                <div id="create_fieldbook_included_columns_<% $download_type %>"></div>
                             </div>
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-3 control-label">Not Included Columns: </label>
-                                    <div class="col-sm-9" >
-                                        <div id="create_fieldbook_not_included_columns_<% $download_type %>">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="layout-item">
+                                <label>Not Included Columns: </label>
+                                <div id="create_fieldbook_not_included_columns_<% $download_type %>"></div>
                             </div>
                         </div>
                     </div>
