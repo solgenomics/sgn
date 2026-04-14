@@ -26,7 +26,7 @@ a hashref with all the parameters needed for printing the locus page!
  locus_autocomplete_uri => '/ajax/locus/autocomplete/'
  cvterm_add_uri
  cvterm_autocomplete_uri => '/ajax/cvterm/autocomplete/'
- trait_db_name   => 'SP'
+ trait_db_names   => ['SP']
 =back
 
 =head1 AUTHOR
@@ -44,7 +44,6 @@ Naama Menda <nm249@cornell.edu>
   $locus_autocomplete_uri => undef
   $cvterm_add_uri => ''
   $cvterm_autocomplete_uri => undef
-  $trait_db_name => 'SP'
   $blast_url => '/tools/blast/'
 </%args>
 
@@ -70,6 +69,7 @@ my $feature   =  $locusref->{feature};
 my $src_feature = $locusref->{src_feature};
 my $dbxrefs     = $locusref->{dbxrefs};
 my $pubs        = $locusref->{pubs};
+my $trait_db_names = $locusref->{trait_db_names};
 
 ###check these params
 # dbxrefs, unigenes , ontology
@@ -451,7 +451,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
   collapsed   => 1,
   subtitle    => $ontology_subtitle &>
   <& /ontology/associate_ontology.mas,
-    trait_db_name => $trait_db_name,
+    trait_db_names => $trait_db_names,
     object_id     => $locus_id ,
     object_name   => "locus",
     cvterm_add_uri=> $cvterm_add_uri,

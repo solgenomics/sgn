@@ -16,6 +16,7 @@ use CXGN::Phenome::Locus;
 use CXGN::Phenome::Schema;
 use CXGN::Tools::Organism;
 use CXGN::Phenome::Locus::LinkageGroup;
+use CXGN::Onto;
 
 BEGIN { extends 'Catalyst::Controller' }
 with 'Catalyst::Component::ApplicationAttribute';
@@ -139,7 +140,7 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
     my $sequencer   = $logged_user->check_roles('sequencer') if $logged_user;
     my $dbh = $c->dbc->dbh;
 
-    my $trait_db_name => $c->get_conf('trait_ontology_db_name');
+    my $trait_db_names = CXGN::Onto->new({ schema => $c->dbic_schema('Bio::Chado::Schema') })->get_trait_ontology_db_names();
     ##################
 
     ###Check if a locus page can be printed###
@@ -211,14 +212,14 @@ sub view_locus : Chained('get_locus') PathPart('view') Args(0) {
             is_owner  => $is_owner,
             owners    => $owner_ids,
             dbxrefs   => $dbxrefs,
-	    pubs      => $pubs,
+            pubs      => $pubs,
             cview_tmp_dir  => $cview_tmp_dir,
             cview_basepath => $c->get_conf('basepath'),
             image_ids      => $image_ids,
             xrefs      => \@locus_xrefs,
-	    trait_db_name => $trait_db_name,
-	    feature     => $feature,
-	    src_feature => $src_feature,
+            trait_db_names => $trait_db_names,
+            feature     => $feature,
+            src_feature => $src_feature,
         },
         locus_add_uri  => $c->uri_for( '/ajax/locus/associate_locus' )->relative(),
         cvterm_add_uri => $c->uri_for( '/ajax/locus/associate_ontology')->relative(),
