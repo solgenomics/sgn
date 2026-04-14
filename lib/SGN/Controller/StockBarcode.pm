@@ -11,6 +11,7 @@ use CXGN::Stock;
 use SGN::Model::Cvterm;
 use CXGN::Stock::Order;
 use CXGN::TrackingActivity::ActivityProject;
+use CXGN::Onto;
 
 BEGIN { extends "Catalyst::Controller"; }
 
@@ -1362,9 +1363,9 @@ sub upload_barcode_output : Path('/breeders/phenotype/upload') :Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id) });
     my $identifier_prefix = $c->config->{identifier_prefix};
-    my $db_name = $c->config->{trait_ontology_db_name};
+    my $db_names = CXGN::Onto->new({ schema => $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id) })->get_trait_ontology_db_names();
 
-    $sb->parse(\@contents, $identifier_prefix, $db_name);
+    $sb->parse(\@contents, $identifier_prefix, $db_names);
     my $parse_errors = $sb->parse_errors;
     $sb->verify; #calling the verify function
     my $verify_errors = $sb->verify_errors;
@@ -1390,8 +1391,9 @@ sub store_barcode_output  : Path('/barcode/stock/store') :Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $sb = CXGN::Stock::StockBarcode->new( { schema=> $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id) });
     my $identifier_prefix = $c->config->{identifier_prefix};
-    my $db_name = $c->config->{trait_ontology_db_name};
-    $sb->parse(\@contents, $identifier_prefix, $db_name);
+    my $db_names = CXGN::Onto->new({ schema => $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id) })->get_trait_ontology_db_names();
+
+    $sb->parse(\@contents, $identifier_prefix, $db_names);
     $sb->store;
     my $error = $sb->store_error;
     my $message = $sb->store_message;

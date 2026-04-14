@@ -57,8 +57,8 @@ has 'store_message' => (
 sub parse {
     my $self = shift;
     my @errors;
-    my ($contents , $identifier_prefix, $db_name ) = @_;
-    print STDERR "Identifier prefix = $identifier_prefix, db_name = $db_name\n";
+    my ($contents , $identifier_prefix, $db_names ) = @_;
+    print STDERR "Identifier prefix = $identifier_prefix, db_name = " . join(',', @$db_names) . "\n";
     my $hashref; #hashref of hashrefs for storing the uploaded data , to be used for checking the fields
     ## multiple values are kept
     my ($op_name, $project_id, $location_id, $stock_id, $cvterm_accession, $value, $date, $count);
@@ -87,10 +87,13 @@ sub parse {
             print STDERR "Found stock $code\n";
             $stock_id = $1;
         }
-        if ($code =~ m/^($db_name:\d+)/ ) {
-            print STDERR "Found cvterm : $code \n";
-            $cvterm_accession = $code;
-
+        my $db_name;
+        foreach (@$db_names) {
+            if ($code =~ m/^($_:\d+)/ ) {
+                print STDERR "Found cvterm : $code, db name: $_\n";
+                $cvterm_accession = $code;
+                $db_name = $_;
+            }
         }
         ################################
         #values are recorded only manualy and not from the barcode.
