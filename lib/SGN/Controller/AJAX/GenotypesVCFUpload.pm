@@ -205,7 +205,7 @@ sub upload_genotype_verify_POST : Args(0) {
             open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
             open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
             my @outline;
-            my $lastcol;
+            my $lastcol = -1;
             while (<$F>) {
 		$_ =~ s/\r//g;
                 if ($_ =~ m/^\##/) {
@@ -215,7 +215,7 @@ sub upload_genotype_verify_POST : Args(0) {
                     my @line = split /\t/;
                     my $oldlastcol = $lastcol;
                     $lastcol = $#line if $#line > $lastcol;
-                    for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                    for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
                         if ($oldlastcol) {
                             $outline[$i] = "\t" x $oldlastcol;
                         }
@@ -275,7 +275,7 @@ sub upload_genotype_verify_POST : Args(0) {
         open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
         open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
         my @outline;
-        my $lastcol;
+        my $lastcol = -1;
         while (<$F>) {
 	    $_ =~ s/\r//g;
             if ($_ =~ m/^\##/) {
@@ -285,7 +285,7 @@ sub upload_genotype_verify_POST : Args(0) {
                 my @line = split /\t/;
                 my $oldlastcol = $lastcol;
                 $lastcol = $#line if $#line > $lastcol;
-                for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
                     if ($oldlastcol) {
                         $outline[$i] = "\t" x $oldlastcol;
                     }
@@ -378,7 +378,9 @@ sub upload_genotype_verify_POST : Args(0) {
         unlink $upload_kasp_marker_info_tempfile;
     }
 
-    my $uploader = CXGN::UploadFile->new({
+    my $archived_filename_with_path;
+    if ($upload_original_name) {
+      my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
         archive_path => $c->config->{archive_path},
@@ -386,14 +388,15 @@ sub upload_genotype_verify_POST : Args(0) {
         timestamp => $timestamp,
         user_id => $user_id,
         user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
+      });
+      $archived_filename_with_path = $uploader->archive();
+      my $md5 = $uploader->get_md5($archived_filename_with_path);
+      if (!$archived_filename_with_path) {
         push @error_status, "Could not save file $upload_original_name in archive.";
         return (\@success_status, \@error_status);
-    } else {
+      } else {
         push @success_status, "File $upload_original_name saved in archive.";
+      }
     }
     unlink $upload_tempfile;
 
@@ -427,7 +430,9 @@ sub upload_genotype_verify_POST : Args(0) {
     }
     my $organism_id = $found_organisms[0];
 
-    my $parser = CXGN::Genotype::ParseUpload->new({
+    my $parser;
+    if ($upload_original_name) {
+      $parser = CXGN::Genotype::ParseUpload->new({
         chado_schema => $schema,
         filename => $archived_filename_with_path,
         filename_marker_info => $archived_marker_info_file,
@@ -436,8 +441,9 @@ sub upload_genotype_verify_POST : Args(0) {
         create_missing_observation_units_as_accessions => $add_accessions,
         igd_numbers_included => $include_igd_numbers,
         # lab_numbers_included => $include_lab_numbers
-    });
-    $parser->load_plugin($parser_plugin);
+      });
+      $parser->load_plugin($parser_plugin);
+    }
 
     my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
     my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');

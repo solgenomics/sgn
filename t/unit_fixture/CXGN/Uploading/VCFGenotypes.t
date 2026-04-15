@@ -304,8 +304,7 @@ $response = $ua->post(
     );
 
 $message = $response->decoded_content;
-my $message_hash = eval { decode_json $message };
-ok(!$@, "valid JSON") or diag($message);
+$message_hash = decode_json $message;
 #print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});
@@ -348,8 +347,7 @@ $response = $ua->post(
     );
 
 $message = $response->decoded_content;
-my $message_hash = eval { decode_json $message };
-ok(!$@, "valid JSON") or diag($message);
+$message_hash = decode_json $message;
 #print STDERR Dumper $message_hash;
 is($message_hash->{success}, 1);
 ok($message_hash->{project_id});

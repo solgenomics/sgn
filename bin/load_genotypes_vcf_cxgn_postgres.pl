@@ -50,6 +50,7 @@ perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D imagebreedv4 -U pos
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
+ -M add markers that are not in the database protocol
  -z if sample names include an IGD number. sample names are in format 'sample_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
  -t Test run . Rolling back at the end. NOT IMPLEMENTED
  -w in the case that you have uploaded a normal VCF and you do not want to transpose it (because the transposition is memory intensive), use this flag
@@ -92,9 +93,9 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_v, $opt_r, $opt_R, $opt_i, $opt_s, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B, $opt_T);
+our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_v, $opt_r, $opt_R, $opt_i, $opt_s, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B, $opt_T, $opt_M);
 
-getopts('H:U:i:s:r:R:u:c:o:v:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:T:');
+getopts('H:U:i:s:r:R:u:c:o:v:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:T:M:');
 
 if ($opt_j && !$opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || (!$opt_i && !$opt_s) || !$opt_p || !$opt_y || !$opt_l || !$opt_q || !$opt_r || !$opt_R || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
     pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -p (project name), -y (project year), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure thi file is a fresh file between loadings.)\n");
@@ -117,7 +118,7 @@ if ($opt_c ne 'transposedVCF' && $opt_c ne 'VCF') {
     die "Not a valid option c\n";
 }
 
-if ($opt_c eq 'VCF '&& !$opt_o) {
+if ($opt_c eq 'VCF' && !$opt_o) {
     die "When uploading a VCF e.g. option c is VCF, you must give a temporary file using option o, so that this script can transpose your file before loading. All VCF are transposed for speed of loading.\n";
 }
 
@@ -131,7 +132,7 @@ if ($opt_a){
     $add_accessions = 1;
 }
 my $add_markers = 0;
-if ($opt_m){
+if ($opt_M){
     $add_markers = 1;
 }
 my $include_igd_numbers = 0;
@@ -157,9 +158,9 @@ $phenome_schema->storage->dbh->do('SET search_path TO phenome');
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
 
-my $q = "SELECT sp_person_id from sgn_people.sp_person where username = '$opt_u';";
+my $q = "SELECT sp_person_id from sgn_people.sp_person where username = ?";
 my $h = $dbh->prepare($q);
-$h->execute();
+$h->execute($opt_u);
 my ($sp_person_id) = $h->fetchrow_array();
 if (!$sp_person_id){
     die "Not a valid -u\n";
@@ -176,7 +177,7 @@ if ($opt_c eq 'VCF' && !$opt_w) {
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
     open (my $F, "<", $file) or die "Can't open file $file \n";
     my @outline;
-    my $lastcol = 0;
+    my $lastcol = -1;
     while (<$F>) {
         if ($_ =~ m/^\##/) {
             print $Fout $_;
@@ -185,7 +186,7 @@ if ($opt_c eq 'VCF' && !$opt_w) {
             my @line = split /\t/;
             my $oldlastcol = $lastcol;
             $lastcol = $#line if $#line > $lastcol;
-            for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+            for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
                 $outline[$i] = "\t" x $oldlastcol;
             }
             for (my $i=0; $i <=$lastcol; $i++) {
@@ -315,7 +316,6 @@ my $store_args = {
     protocol_id => $protocol_id,
     protocol_name=>$opt_m,
     protocol_description=>$opt_k,
-    protocol_name => $opt_m,
     organism_id=>$organism_id,
     igd_numbers_included=>$include_igd_numbers,
     user_id=>$sp_person_id,

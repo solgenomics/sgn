@@ -119,8 +119,7 @@ $response = $ua->post(
 );
 
 my $message = $response->decoded_content;
-my $message_hash = eval { decode_json $message };
-ok(!$@, "valid JSON") or diag($message);
+my $message_hash = decode_json $message;
 ok($message_hash->{nd_protocol_id});
 
 my $kasp_project_id_1 = $message_hash->{project_id};
