@@ -10,6 +10,7 @@ use CXGN::Stock::Seedlot;
 use CXGN::Calendar;
 use CXGN::Trial;
 use CXGN::Trait;
+use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|intercrop_accession_name plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
@@ -107,11 +108,13 @@ sub _validate_with_plugin {
     my %seen_plot_positions;    # check for plot row / col positions: each position only used once per trial
     my %seen_entry_numbers;     # check for entry numbers: used only once per trial
     my @seedlot_pairs;          # 2D array of [seedlot_name, accession_name]
+    my %seedlot_trial_stock_type;
 
     ##
     ## ROW BY ROW VALIDATION
     ## These are checks on the individual plot-level data
     ##
+
     foreach (@$parsed_data) {
         my $data = $_;
         my $row = $data->{'_row'};
@@ -143,7 +146,6 @@ sub _validate_with_plugin {
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
         my $trial_stock_type = $data->{'trial_stock_type'};
-        my %seedlot_trial_stock_type;
 
         foreach my $treatment (@{$treatments}) {
             my $lt = CXGN::List::Transform->new();
@@ -453,25 +455,29 @@ sub _validate_with_plugin {
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
     my $family_seedlot_pairs = $seedlot_trial_stock_type{'family_name'};
+    print STDERR "FAMILY SEEDLOT PAIRS =".Dumper($family_seedlot_pairs)."\n";
     my $cross_seedlot_pairs = $seedlot_trial_stock_type{'cross'};
     my $accession_seedlot_pairs = $seedlot_trial_stock_type{'accession'};
-    my @cross_accession_seedlot_pairs = ();
+    my @accession_cross_seedlot_pairs = ();
     push @accession_cross_seedlot_pairs, ($cross_seedlot_pairs, $accession_seedlot_pairs);
+    print STDERR "ACCESSION CROSS SEEDLOT PAIRS =".Dumper(\@accession_cross_seedlot_pairs)."\n";
+
 
     if ((scalar @accessions_missing == 0) && (scalar @seedlots_missing == 0)) {
+        my $return;
         if (scalar(@$family_seedlot_pairs) > 0) {
             $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, \@seedlot_pairs);
             if (exists($return->{error})) {
                 push @error_messages, $return->{error};
             }
         } elsif ( scalar(@accession_cross_seedlot_pairs) > 0 ) {
-            my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@accession_cross_seedlot_pairs);
+            $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@accession_cross_seedlot_pairs);
             if (exists($return->{error})) {
                 push @error_messages, $return->{error};
             }
         }
     }
-    
+
     # Check for duplicated plot numbers
     foreach my $tk (keys %seen_plot_numbers) {
         foreach my $pk (keys %{$seen_plot_numbers{$tk}}) {
