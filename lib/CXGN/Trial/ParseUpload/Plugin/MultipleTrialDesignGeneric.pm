@@ -457,18 +457,21 @@ sub _validate_with_plugin {
     my $accession_seedlot_pairs = $seedlot_trial_stock_type{'accession'};
     my @cross_accession_seedlot_pairs = ();
     push @accession_cross_seedlot_pairs, ($cross_seedlot_pairs, $accession_seedlot_pairs);
-    if (scalar(@$family_seedlot_pairs) > 0) {
-        $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, \@seedlot_pairs);
-        if (exists($return->{error})) {
-            push @error_messages, $return->{error};
-        }
-    } elsif ( scalar(@accession_cross_seedlot_pairs) > 0 ) {
-        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@accession_cross_seedlot_pairs);
-        if (exists($return->{error})) {
-            push @error_messages, $return->{error};
+
+    if ((scalar @accessions_missing == 0) && (scalar @seedlots_missing == 0)) {
+        if (scalar(@$family_seedlot_pairs) > 0) {
+            $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, \@seedlot_pairs);
+            if (exists($return->{error})) {
+                push @error_messages, $return->{error};
+            }
+        } elsif ( scalar(@accession_cross_seedlot_pairs) > 0 ) {
+            my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@accession_cross_seedlot_pairs);
+            if (exists($return->{error})) {
+                push @error_messages, $return->{error};
+            }
         }
     }
-
+    
     # Check for duplicated plot numbers
     foreach my $tk (keys %seen_plot_numbers) {
         foreach my $pk (keys %{$seen_plot_numbers{$tk}}) {

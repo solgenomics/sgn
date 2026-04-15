@@ -931,9 +931,10 @@ sub verify_seedlot_accessions_family_names {
     my @stocks = keys %seen_stock_names;
 
     my %stock_lookup;
+    my @types = ($accession_cvterm_id, $family_name_cvterm_id);
     my $stock_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'type_id' => { -in => ($accession_cvterm_id, $family_name_cvterm_id)},
+        'type_id' => { -in => \@types},
     });
 
     my %accession_names_lookup;
@@ -949,6 +950,7 @@ sub verify_seedlot_accessions_family_names {
 
     my @accessions = keys %accession_names_lookup;
     my %acc_synonyms_lookup;
+
     if (scalar @accessions > 0) {
         my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
             'me.is_obsolete' => { '!=' => 't' },

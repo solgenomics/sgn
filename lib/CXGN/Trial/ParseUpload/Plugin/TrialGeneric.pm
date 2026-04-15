@@ -287,15 +287,17 @@ sub _validate_with_plugin {
     }
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
-    if ( scalar(@seedlot_pairs) > 0 ) {
-        my $return;
-        if ($trial_stock_type eq 'family_name') {
-            $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, \@seedlot_pairs);
-        } else {
-            $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);            
-        }
-        if (exists($return->{error})){
-            push @error_messages, $return->{error};
+    if ((scalar @entry_names_missing == 0) && (scalar @seedlots_missing == 0)) {
+        if ( scalar(@seedlot_pairs) > 0 ) {
+            my $return;
+            if ($trial_stock_type eq 'family_name') {
+                $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, \@seedlot_pairs);
+            } else {
+                $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);
+            }
+            if (exists($return->{error})){
+                push @error_messages, $return->{error};
+            }
         }
     }
 
