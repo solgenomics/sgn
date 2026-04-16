@@ -51,7 +51,7 @@ $edit_privs ||= 0;
 sub prop_select {
   my $editable = shift;
   my $div_name = shift;
-  my $html = "<select id=\"$div_name"."_select"."\">";
+  my $html = "<select class=\"form-control col-sm-2\" id=\"$div_name"."_select"."\">";
   foreach my $item (@$editable) {
       $html .= qq{ <option>$item</option> };
   }
@@ -72,16 +72,24 @@ sub prop_select {
         </button>
       </div>
       <div class="modal-body">
-
-	<div id="<% $div_name %>_add_dialog" >
-	  Add <% $prop_select %>
-	  <span id="<% $div_name %>_prop_div">
-	    <input id="<% $div_name %>_prop" />
-	  </span>
-	</div>
+        <div id="<% $div_name %>_add_dialog">
+          <form class="form-horizontal" role="form" id="add_cvtermprop_form">
+            <div class="form-group">
+              <label class="control-label col-sm-3">Add</label> 
+              <div class="col-sm-4">
+                <% $prop_select %>
+              </div>
+              <div class="col-sm-4">
+                <span id="<% $div_name %>_prop_div">
+                  <input id="<% $div_name %>_prop"/>
+                </span>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
       <div class="modal-footer">
-	<button id="<% $div_name %>_addProp_submit" type="button" class="btn btn-primary">Store attribute</button>
+	      <button id="<% $div_name %>_addProp_submit" type="button" class="btn btn-primary">Store attribute</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
       </div>
     </div>
@@ -101,9 +109,9 @@ Add <% $prop_select %>
 
 jQuery(document).ready(function() {
 
-var trait_format_choices = '<select id="<% $div_name %>_prop"><option>Numeric</option><option>Categorical</option><option>Qualitative</option><option>Nominal</option><option>Duration</option><option>Ordinal</option><option>Text</option><option>Multicat</option><option>Counter</option><option>Date</option><option>Photo</option><option>Boolean</option><option>Audio</option><option>Zebra Label Print</option></select>';
+var trait_format_choices = '<select class="form-control" id="<% $div_name %>_prop"><option>Numeric</option><option>Categorical</option><option>Qualitative</option><option>Nominal</option><option>Duration</option><option>Ordinal</option><option>Text</option><option>Multicat</option><option>Counter</option><option>Date</option><option>Photo</option><option>Boolean</option><option>Audio</option><option>Zebra Label Print</option></select>';
 
-var trait_repeat_type_choices = '<select id="<% $div_name %>_prop"><option>single</option><option>multiple</option><option>time_series</option></select>';
+var trait_repeat_type_choices = '<select class="form-control" id="<% $div_name %>_prop"><option>single</option><option>multiple</option><option>time_series</option></select>';
 
 var choices = { 'trait_format' : trait_format_choices, 'trait_repeat_type' : trait_repeat_type_choices };
 
