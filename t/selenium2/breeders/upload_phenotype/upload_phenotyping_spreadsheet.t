@@ -10,7 +10,7 @@ use Selenium::Remote::WDKeys 'KEYS';
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
 
-$t->while_logged_in_as("submitter", sub {
+$t->while_logged_in_as("curator", sub {
 
     for my $extension ("xls", "xlsx") {
         sleep(2);
