@@ -67,7 +67,7 @@ $user_can_modify
 	    <td>
 			<div class="form-group">
 				<label for="raw_data_observation_level">Observation Level:</label>
-				<select id="raw_data_observation_level">
+				<select class="form-control" id="raw_data_observation_level">
 					<option value="plot">Plots</option>
 					<option value="plant">Plants</option>
 					<option value="subplot">Subplots</option>
@@ -75,6 +75,19 @@ $user_can_modify
 	      		</select>
 			</div>
 	    </td>
+		<td>
+			<div class="form-group">
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="
+				The site will automatically refresh
+				materialized views periodically, but
+				you can do this manually to ensure 
+				views are updated before analyses or
+				data downloads.
+				"></span> &nbsp;
+				<button id="refresh_phenoview_btn" class="btn btn-primary btn-sm">Refresh Materialized Phenotype View</button>
+			</div>
+		</td>
 	</tr>
 	<tr>
 	<!--
@@ -138,7 +151,8 @@ function save_single_observation(observation_id) {
 		url : '/ajax/phenotype/edit/'+observation_id+'',
 		data : {
 			'new_observation_value' : newValue,
-			'new_observation_timestamp' : newTimestamp
+			'new_observation_timestamp' : newTimestamp,
+			'trial_id' : <% $trial_id %>
 		},
 		beforeSend : function() {
 			jQuery('#working_modal').modal("show");
@@ -181,6 +195,28 @@ jQuery(window).ready( function() {
 		});
 	});
 
+	jQuery('#refresh_phenoview_btn').on('click', function() {
+		jQuery('#refresh_phenoview_btn').prop("disabled", true);
+		jQuery('#working_modal').modal("show");
+		fetch(
+			document.location.origin + `/ajax/breeder/refresh?matviews=phenotypes`,
+			{
+				method: 'POST',
+				credentials: 'include'
+			}
+		).then(resp => resp.json())
+		.then(json => {
+			if (json.error) {
+				throw new Error(json.error);
+			} else {
+				jQuery('#refresh_phenoview_btn').prop("disabled", false);
+				jQuery('#working_modal').modal("hide");
+			}
+		})
+		.catch(err => {
+			alert(err.message);
+		});
+	});
 
 	jQuery('#raw_data_trait_select_button').click( function() {
 	   	var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
@@ -305,7 +341,7 @@ jQuery(window).ready( function() {
     }
 
     function build_menu(result) {
-		var menu = '<select id="selectRawDataTrait">';
+		var menu = '<select class="form-control" id="selectRawDataTrait">';
 		for (var i=0; i<result.data.length; i++) {
 		    menu += '<option value="'+result.data[i].observationVariableDbId+'">'+result.data[i].trait.traitName+'</option>';
 		}

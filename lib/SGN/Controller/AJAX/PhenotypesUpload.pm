@@ -33,6 +33,8 @@ use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::Phenotype;
+use CXGN::Trial;
+use CXGN::Project;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -576,6 +578,12 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
 
     my $new_value = $c->req->param('new_observation_value');
     my $new_timestamp = $c->req->param('new_observation_timestamp');
+    my $trial_id = $c->req->param('trial_id');
+
+    if (!$trial_id) {
+        $c->stash->{rest} = {error => "This observation can only be edited in relation to a trial."};
+        return;
+    }
 
     if (!$observationID) {
         $c->stash->{rest} = {error => "You must supply an observation ID!"};
@@ -584,6 +592,19 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
 
     if (!defined($new_value) || $new_value eq '') {
         $c->stash->{rest} = {error => "This function can edit existing phenotype entries, but not delete them. Please enter a value."};
+        return;
+    }
+
+    #check for user permissions on this trial
+    my $this_trial = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        trial_id => $trial_id
+    });
+
+    my $breeding_program = $this_trial->get_breeding_program();
+
+    if ( ! $user->check_roles("curator")  ) {
+        $c->stash->{rest} = {error => "You do not have permission to make edits on this trial."};
         return;
     }
 
@@ -596,11 +617,6 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
         overwrite => 1,
         phenotype_id => $observationID,
     });
-
-    if (!$user_type eq "curator" && $username ne $phenotype->operator()) {
-        $c->stash->{rest} = {error => "You do not have permission to edit this phenotype."};
-        return;
-    }
 
     my $pheno_uniquename = $phenotype->uniquename();
     $pheno_uniquename =~ s/observation: [\w]*/observation: $new_value/;
