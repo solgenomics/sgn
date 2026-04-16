@@ -21,7 +21,6 @@ sub _validate_with_plugin {
     my $schema = $self->get_chado_schema();
     my $trial_name = $self->get_trial_name();
     my $trial_stock_type = $self->get_trial_stock_type();
-    print STDERR "TRIAL STOCK TYPE =".Dumper($trial_stock_type)."\n";
 
     # Encountered Error and Warning Messages
     my %errors;

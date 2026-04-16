@@ -10,7 +10,6 @@ use CXGN::Stock::Seedlot;
 use CXGN::Calendar;
 use CXGN::Trial;
 use CXGN::Trait;
-use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
 my @OPTIONAL_COLUMNS = qw|intercrop_accession_name plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
@@ -107,8 +106,7 @@ sub _validate_with_plugin {
     my %seen_plot_names;        # check for plot names: used only once per trial
     my %seen_plot_positions;    # check for plot row / col positions: each position only used once per trial
     my %seen_entry_numbers;     # check for entry numbers: used only once per trial
-    my @seedlot_pairs;          # 2D array of [seedlot_name, accession_name]
-    my %seedlot_trial_stock_type;
+    my %seedlot_trial_stock_type;  # check for seedlot and accession/cross/family compatibility :based on trial stock type
 
     ##
     ## ROW BY ROW VALIDATION
@@ -238,7 +236,6 @@ sub _validate_with_plugin {
         # count and weight must be a positive integer
         # return a warning if both count and weight are not provided
         if ( $seedlot_name ) {
-#            push @seedlot_pairs, [$seedlot_name, $accession_name];
             if ($trial_stock_type eq 'family_name') {
                 push @{$seedlot_trial_stock_type{'family_name'}}, [$seedlot_name, $accession_name];
             } else {
