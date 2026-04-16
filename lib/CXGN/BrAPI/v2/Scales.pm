@@ -432,7 +432,7 @@ sub _format_data_type {
     if ($value) {
         my %formats = (
 	    "categorical" => "Categorical",
-	    "orginal" => "Ordinal",
+	    "ordinal" => "Ordinal",
             "numeric" => "Numerical",
             "qualitative" => "Nominal",
             "numerical" => "Numerical",
