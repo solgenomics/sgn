@@ -1,5 +1,7 @@
-
-<!-- Login Dialog -->
+<!--
+TreeImprovementBase Modifications
+  - Remove signup dialog and associated javascript functions.
+-->
 
 <%args>
 $goto_url => '/'
@@ -7,11 +9,7 @@ $goto_url => '/'
 
 <%init>
     my $join_breeding_programs = eval{ $c->get_conf('user_registration_join_breeding_programs') };
-    my $random_factor = int rand(5);
-    my $minimum = int(rand(10)) * 10**$random_factor;
-    my $val_2 = int rand(20);
-    my $challenge_question = "$minimum + $val_2";
-    my $challenge_answer = $minimum + $val_2;
+    my $main_production_site_url = $c->get_conf('main_production_site_url');
 </%init>
 
 <div class="modal fade" id="site_login_dialog" name="site_login_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_dialog_title">
@@ -55,9 +53,9 @@ $goto_url => '/'
 
                         <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
 
-                        <div>
-                            <button class="btn btn-default" id="new_user_modal_show" style="float:left" tabindex="6">New User</button>
-                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit" style="float:right" tabindex="3">Login</button>
+                        <div style="display: grid">
+                            <button class="btn btn-default" id="new_user_modal_show" style="margin-bottom: 10px" tabindex="6">New User</button>
+                            <button class="btn btn-primary" id="submit_password" name="submit_password" type="submit"tabindex="3">Login</button>
                         </div>
                     </div>
                 </form>
@@ -160,80 +158,9 @@ $goto_url => '/'
                                     <div class="panel-heading">Notice</div>
                                     <div class="panel-body">
                                         <ul>
-                                            <li><b>Before</b> creating a new account, please check if you <b>already have an account</b> using the <a href="/search/direct_search.pl?search=directory">directory search</a>. </li>
-                                            <li>A link will be emailed to you. Please click on it to activate the account.</li>
-                                            <li><b>All fields are required.</b></li>
+                                            <li>Best Future Forests registration is not currently open to the public.</li>
+                                            <li>Please <b>contact the site administrator</b> to authorize your registration.</li>
                                         </ul>
-                                    </div>
-                                </div>
-
-                                <div class="form-horizontal">
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">First Name: </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" type="text" name="first_name" value="" />
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Last Name: </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" type="text" name="last_name" value="" />
-                                        </div>
-                                    </div>
-% if ( $join_breeding_programs ) { 
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Breeding Program(s): </label>
-                                        <div class="col-sm-9">
-                                            <div id="breeding_programs_div"></div>
-                                      </div>
-                                    </div>
-% } else {  
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Organization: </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" type="text" name="organization" value="" />
-                                        </div>
-                                    </div>
-% }
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Username: </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" type="text" name="username" value="" />
-                                            <p class="help-block">Username must be at least 7 characters long.</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Password: </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" type="password" name="password" value="" />
-                                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Confirm Password: </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" type="password" name="confirm_password" value="" />
-                                            <p class="help-block">Password must be at least 7 characters long and different from your username.</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Email Address: </label>
-                                        <div class="col-sm-9">
-                                            <input class="form-control" type="text" name="email_address" value="" />
-                                            <p class="help-block">An email will be sent to this address requiring you to confirm its receipt to activate your account.</p>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="col-sm-3 control-label">Are you Human? </label>
-                                        <div class="col-sm-9">
-                                            <p style="padding-top: 7px">What is <% $challenge_question %>?</p>
-                                            <input class="form-control" type="text" name="challenge_response" value="" />
-                                        </div>
-                                    </div>
-
-                                    <div align="right">
-                                        <button class="btn btn-default btn-lg" type="reset" >Reset</button>
-                                        <button class="btn btn-primary btn-lg" type="submit" name="create_account" >Create Account</button>
                                     </div>
                                 </div>
                             </div>
@@ -250,7 +177,7 @@ $goto_url => '/'
 </div>
 
 <script>
-jQuery(document).ready( function() { 
+jQuery(document).ready( function() {
 
     jQuery("#site_login_dialog").on('shown.bs.modal', function() {
         jQuery('#show_password').prop('checked', false);
@@ -271,7 +198,7 @@ jQuery(document).ready( function() {
             error: function(r) { alert('An error occurred! Sorry!');  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
-                else { 
+                else {
                     alert(r.message);
                     jQuery('#site_login_forgot_username_dialog').modal('hide');
                 }
@@ -293,7 +220,7 @@ jQuery(document).ready( function() {
             error: function(r) { alert('An error occurred! Sorry!');  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
-                else { 
+                else {
                     alert(r.message);
                     jQuery('#site_login_reset_password_dialog').modal('hide');
                 }
@@ -316,39 +243,7 @@ jQuery(document).ready( function() {
         jQuery('#site_login_new_user_dialog').modal('show');
     });
     jQuery("#site_login_new_user_dialog").on('shown.bs.modal', function() {
-        get_select_box('breeding_programs', 'breeding_programs_div', { 'name': 'breeding_programs', 'id': 'breeding_programs', 'default': -1, 'multiple': 1, 'empty': 1 });
-    });
-
-    jQuery('#new_account_form').submit(function(event) {
-        event.preventDefault();
-        var form_data = jQuery('#new_account_form').serialize();
-        //alert(JSON.stringify(form_data));
-
-        // Check bot challenge response and answer
-        var response = jQuery("input[name='challenge_response']").val();
-        if ( response !== "<% $challenge_answer %>" ) {
-            alert("Are you a bot?  The response to the 'Are you Human?' question did not match the answer.  Try again!");
-            return;
-        }
-
-        jQuery.ajax({
-            url: '/ajax/user/new',
-            beforeSend: function(){
-                jQuery('#working_modal').modal('show');
-            },
-            data: form_data,
-            success: function(r) {
-                jQuery('#working_modal').modal('hide');
-                console.log(r);
-                if (r.error) { alert(r.error); }
-                else {
-                    let message = r.message || 'New account added. Check your email for the confirmation link - you must confirm your account before you can login.';
-                    alert(message);
-                    jQuery('#site_login_new_user_dialog').modal('hide');
-                    jQuery('#site_login_dialog').modal('hide');
-                }
-            }
-        });
+        get_select_box('breeding_programs', 'breeding_programs_div', { 'name': 'breeding_programs', 'id': 'breeding_programs', 'default': -1, 'multiple': 1 });
     });
 
     jQuery("#username, #password").keydown(function(event) {
@@ -358,25 +253,25 @@ jQuery(document).ready( function() {
             event.preventDefault();
         }
     });
-    jQuery('#login_form').submit( function(event) { 
+    jQuery('#login_form').submit( function(event) {
         event.preventDefault();
         var form_data = jQuery('#login_form').serialize();
-        if (!jQuery('#username').val() || !jQuery('#password').val()) { 
+        if (!jQuery('#username').val() || !jQuery('#password').val()) {
             alert('Please enter a username and password');
             return;
         }
-        jQuery.ajax( { 
+        jQuery.ajax( {
             url: '/ajax/user/login',
             data: form_data,
             error: function(r) { alert('An error occurred! Sorry!');  },
             success: function(r) {
-                if (r.error) { 
+                if (r.error) {
                     alert(r.error);
                     return;
                 }
                 if (r.goto_url.match('login')) {
                     location.href='/';
-                } else if (r.goto_url && r.goto_url !== "" ) { 
+                } else if (r.goto_url && r.goto_url !== "" ) {
                     location.href=r.goto_url;
                 } else {
                     location.href='/';

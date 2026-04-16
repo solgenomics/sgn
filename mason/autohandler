@@ -1,12 +1,19 @@
-
-
 <%once>
 use utf8;
 </%once>
 
-<& /site/header.mas &>
+<%perl>
+  my $path = $c->_env->{PATH_INFO};
+  my $template = $c->state;
+</%perl>
+
+
+% if ( $path =~ m"^/(react)/") {
 
 % $m->call_next;
 
+% } else {
+  <& /site/header.mas &>
+% $m->call_next;
   <& /site/footer.mas &>
-
+% }

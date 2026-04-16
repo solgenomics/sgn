@@ -1,0 +1,7 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle button btn" data-toggle="dropdown" >New</a>
+  <ul class="dropdown-menu">
+    <li><a href="/react/page">React Page</a></li>
+    <li><a href="/react/breeders/manage_programs">Breeding Programs</a></li>
+    <li><a href="/react/basic">Basic</a></li>
+  </ul>
+</li>

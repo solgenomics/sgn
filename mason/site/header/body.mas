@@ -1,3 +1,8 @@
+<!--
+TreeImprovementBase Modifications
+  - Disable fade animations from all dialogs/modals
+-->
+
 <div id="outercontainer">
   <a name="top"></a>
 
@@ -8,7 +13,7 @@
   <& /site/header/browser_alert.mas &>
   <& /site/toolbar.mas &>
   <& /system_message.mas &>
-% if ( $c->req->uri->path_query =~ "logout=yes") {  
+% if ( $c->req->uri->path_query =~ "logout=yes") {
   <!-- & /logout_message.mas & -->
 
 
@@ -16,12 +21,15 @@
 
 <script defer="defer">
 
-jQuery(document).ready( function() { 
+jQuery(document).ready( function() {
 
   setUpLogin();
   setUpLists();
   setUpDatasets();
 
+  // Disable fade functions from all modals
+  jQuery(".modal").removeClass("fade");
+  jQuery("div").removeClass("fade");
 });
 
 </script>

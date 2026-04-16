@@ -1,3 +1,9 @@
+<%init>
+my $jbrowse_url = $c->config->{jbrowse_url};
+my $jbrowse_path = $c->config->{jbrowse_path};
+my $jbrowse_lodgepole_pine_url = "$jbrowse_url/$jbrowse_path?assembly=Lodgepole%20pine%20v3&loc=scaffold_1:2311-2377&tracklist=true&tracks=lodgepole_pine_v3_genomic_sequence,lodgepole_pine_v3_transposable_elements";
+</%init>
+
 <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
 
     <!-- Indicators -->
@@ -13,146 +19,65 @@
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
 
-
+      <!-- RES-FOR -->
       <div class="item">
-	<div style="background:url(/documents/img/homepage_carousel/varitome.jpeg) center center; background-size:cover;" class="slider-size">
-	  <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-	    <a href="/projects/varitome/" target="_blank" style="color: #00426c">
-              <h3>The Varitome Project</h3>
-              <p>Exploitation of genetic and epigenetic variation in the regulation of tomato fruit quality traits</p>
-	    </a>
-	  </div>
-	</div>
-      </div>
-
-      <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/5.jpg) center center; background-size:cover;" class="slider-size">
-          <div class="carousel-sgn-caption">
-            <h3><a href="/organism/Solanum_lycopersicum/genome">Tomato Genome</a></h3>
-            <p><a href="/organism/Solanum_lycopersicum/genome">The new Tomato Genome assembly (SL3.0) and annotations (ITAG3.0) are now available on SGN</a></p>
-            <!--<p><a href="http://www.nature.com/nature/journal/v485/n7400/full/nature11119.html" target="_blank">The tomato genome sequence provides insights into fleshy fruit evolution</a></p> -->
+        <div style="background:url(/img/BFF-AFIRMS_g128d_progeny_trial_swan_hills_timeau.jpg) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
+            <a href="/folder/195" target="_blank" style="color: #00426c">
+                    <h3>RESFOR</h3>
+                    <p>Resilient Forests (RES-FOR): Climate, Pests & Policy – Genomic Applications.</p>
+            </a>
           </div>
 
           <div class="carousel-sgn-links">
             <ul class="sgn_sm_list">
-              <a href="/jbrowse_solgenomics/?data=data/json/SL3.0"><li>Browse the tomato genome</li></a>
-              <a href="/tools/blast?db_id=283"><li>Find sequences by similarity</li></a>
-              <!--<a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a> -->
-              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/annotation/ITAG3.0_release/"><li>Download the annotations</li></a>
-              <a href="ftp://ftp.solgenomics.net/genomes/Solanum_lycopersicum/assembly/build_3.00/"><li>Download the Genome Sequence</li></a>
+              <a href='/folder/195#trials'><li>Browse the progeny trials</li></a>
             </ul>
           </div>
         </div>
       </div>
 
-   
+      <!-- USA Seedlings -->
       <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/3.jpg) center center; background-size:cover;" class="slider-size">
-        <div class="carousel-sgn-caption">
-            <h3><a href="/organism/Capsicum_annuum/genome">Pepper Sps. Genomes</a></h3>
-            <p><a href="http://www.nature.com/ng/journal/v46/n3/full/ng.2877.html" target="_blank">Genome sequence of the hot pepper provides insights into the evolution of pungency in Capsicum species</a></p>
-        </div>
-
-        <div class="carousel-sgn-links">
-          <ul class="sgn_sm_list">
-            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPepper.v.1.55"><li>Browse the pepper genome</li></a>
-            <a href="/tools/blast?db_id=217"><li>Find sequences by similarity</li></a>
-            <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/"><li>Download the annotations</li></a>
-            <a href="ftp://ftp.solgenomics.net/genomes/Capsicum_annuum/"><li>Download the Genome Sequence</li></a>
-          </ul>
-        </div>
-
-        </div>
-      </div>
-
-      <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/carousel_benth.jpeg) center center; background-size:cover;" class="slider-size">
-        <div class="carousel-sgn-caption">
-            <h3><a href="/organism/Nicotiana_benthamiana/genome"><i>N. benthamiana</i> Genome</a></h3>
-            <p><a href="http://apsjournals.apsnet.org/doi/abs/10.1094/MPMI-06-12-0148-TA" target="_blank">A draft genome sequence of <i>Nicotiana benthamiana</i> to enhance molecular plant-microbe biology research</a></p>
-        </div>
-
-        <div class="carousel-sgn-links">
-          <ul class="sgn_sm_list">
-            <a href="http://bti.cornell.edu/research/projects/nicotiana-benthamiana/"><li>The <i>N. benthamiana</i> sequencing project</li></a>
-            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FNiben1.0.1&loc=Niben101Scf00005"><li>Browse the genome</li></a>
-            <a href="/tools/blast/?db_id=266"><li>Find sequences by similarity</li></a>
-            <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
-            <a href="ftp://ftp.solgenomics.net/genomes/Nicotiana_benthamiana"><li>Downloads</li></a>
-          </ul>
-        </div>
-
-        </div>
-      </div>
-
-
-      <div class="item">
-        <div style="background:url(/documents/img/homepage_carousel/carousel_petunia.jpeg) center center; background-size:cover;" class="slider-size">
-        <div class="carousel-sgn-caption">
-            <h3><a href="http://www.nature.com/articles/nplants201674" target="_blank">Petunia Sps. Genomes</a></h3>
-            <p><a href="http://www.nature.com/articles/nplants201674" target="_blank">Insight into the evolution of the Solanaceae from the parental genomes of Petunia hybrida</a></p>
-        </div>
-
-        <div class="carousel-sgn-links">
-          <ul class="sgn_sm_list">
-            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeaxi162&loc=Peaxi162Scf00001"><li>Browse the <i>P. axillaris</i> genome</li></a>
-            <a href="/jbrowse_solgenomics/?data=data%2Fjson%2FPeinf101&loc=Peinf101Scf00001"><li>Browse the <i>P. inflata</i> genome</li></a>
-            <a href="/tools/blast/?db_id=270"><li>Find sequences by similarity</li></a>
-            <a href="http://vigs.solgenomics.net"><li>Design VIGS constructs</li></a>
-            <a href="ftp://ftp.solgenomics.net/genomes/Petunia_axillaris"><li><i>P. axillaris</i> Downloads</li></a>
-            <a href="ftp://ftp.solgenomics.net/genomes/Petunia_inflata"><li><i>P. inflata</i> Downloads</li></a>
-          </ul>
-        </div>
-
-        </div>
-      </div>
-
-
-      <!-- <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/carousel_slideshare.png) center center; background-size:cover;" class="slider-size">
-            <div class="carousel-sgn-caption">
-              <a href="http://www.slideshare.net/solgenomics" target="_blank">
-                <h3>SGN SlideShare</h3>
-                <p>Slides from conferences and courses</p>
-              </a>
-            </div>
-
-            <div class="carousel-sgn-links">
-              <ul class="sgn_sm_list">
-                <a href="http://www.slideshare.net/solgenomics/sol-meeting-2015-sgn-workshop-introduction?related=1" target="_blank"><li>SOL Meeting 2015</li></a>
-                <a href="http://www.slideshare.net/solgenomics/sgn-introduction-to-unix-commandline-2015-part-1?related=1" target="_blank"><li>Introduction to UNIX Command-line</li></a>
-              </ul>
-            </div>
-
+        <div style="background:url(/img/BFF-AFIRMS_usa_seedlings_carousel.png) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
+            <a href="/folder/193" target="_blank" style="color: #00426c">
+                    <h3>USA Seedlings</h3>
+                    <p>Lodgepole pine provenance trials.</p>
+            </a>
           </div>
-        </a>
-      </div> -->
 
-
-      <div class="item">
-          <div style="background:url(/documents/img/homepage_carousel/sol2019.jpg) center center; background-size:cover;" class="slider-size">
-            <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-              <a href="https://www.sol2019.org/" target="_blank" style="color: #00426c">
-                <!-- <h3>Solcuc2017</h3> -->
-                <h3>The 16th Solanaceae Conference</h3>
-                <p>September 15th - 19th 2019, Jerusalem, Israel</p>
-              </a>
-            </div>
-
-            <div class="carousel-sgn-links" style="background-color: #efefef">
-              <ul class="sgn_sm_list">
-                <a href="https://www.sol2019.org/registration" target="_blank"><li style="color: #00426c">Registration</li></a>
-                <a href="https://www.sol2019.org/program-outline" target="_blank"><li style="color: #00426c">Program outline</li></a>
-                <a href="https://www.sol2019.org/general-information" target="_blank"><li style="color: #00426c">Venue and Information</li></a>
-              </ul>
-            </div>
-
+          <div class="carousel-sgn-links">
+            <ul class="sgn_sm_list">
+              <a href='/breeders/trial/206'><li>Growing seedlings in the greenhouse</li></a>
+              <a href="/breeders/trial/194"><li>Healing into the landscape</li></a>
+            </ul>
           </div>
-        </a>
+        </div>
       </div>
-  
 
-</div><!-- Wrapper for slides end-->
+      <!-- Lodgepole pine reference genome -->
+      <div class="item">
+        <div style="background:url(/img/BFF-AFIRMS_greenhouse_pine_trial.jpg) center center; background-size:cover;" class="slider-size">
+          <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
+            <a href="/folder/196/" target="_blank" style="color: #00426c">
+                    <h3>Lodgepole Pine Reference Genome</h3>
+                    <p>The new Lodgepole pine assembly (v3) and annotations are now available.</p>
+            </a>
+          </div>
+
+          <div class="carousel-sgn-links">
+            <ul class="sgn_sm_list">
+              <a href='<% $jbrowse_lodgepole_pine_url %>'><li>Browse the lodgepole pine genome</li></a>
+              <a href="https://bff-afirms-compute.ales.ualberta.ca/data/genomes/lodgepole_pine/"><li>Download the data</li></a>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    
+    <!-- Wrapper for slides end-->
 
   <div class="progress" style="height:5px">
     <hr class="transition-timer-carousel-progress-bar" />
@@ -171,13 +96,9 @@
 </div>
 
 <ul id="btn_carousel_indicators" class="nav nav-pills nav-justified sgn_carousel_button_group">
-    <li><a data-target="#myCarousel" data-slide-to="0">Varitome</a></li>
-    <li class="active"><a data-target="#myCarousel" data-slide-to="1">Tomato</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="2">Pepper</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="3"><i>N. benthamiana</i></a></li>
-  <li><a data-target="#myCarousel" data-slide-to="4">Petunia</a></li>
-  <li><a data-target="#myCarousel" data-slide-to="5">SOL Meeting</a></li>
-  <!-- <li><a data-target="#myCarousel" data-slide-to="6">5th ISTD</a></li> -->
+    <li class="active"><a data-target="#myCarousel" data-slide-to="0">Resilient Forests</a></li>
+    <li class="active"><a data-target="#myCarousel" data-slide-to="1">USA Seedlings</a></li>
+    <li class="active"><a data-target="#myCarousel" data-slide-to="2">Lodgepole Pine Reference Genome</a></li>    
 </ul>
 
 <style>

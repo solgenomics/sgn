@@ -1,5 +1,12 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Search</a>
+<!--
+TreeImprovementBase Modifications
+  - Change menu to button for consistent css styling.
+-->
+
+<li class="dropdown">
+  <a class="menu_click_dropdown dropdown-toggle button btn" data-toggle="dropdown">Search</a>
   <ul class="dropdown-menu">
+    <li><a href="/search">All</a></li>
     <li><a href="/breeders/search">Wizard</a></li>
     <li><a href="/search/bulk">Bulk Search</a></li>
     <li><a href="/search/stocks">Accessions and Plots</a></li>
@@ -11,12 +18,12 @@
     <li><a href="/search/genotyping_trials">Genotyping Plates</a></li>
     <li><a href="/search/genotyping_data_projects">Genotyping Projects</a></li>
     <li><a href="/search/genotyping_protocols">Genotyping Protocols</a></li>
-    <li><a href="/search/stocks_using_genotypes">Accessions Using Genotypes</a></li>    
+    <li><a href="/search/stocks_using_genotypes">Accessions Using Genotypes</a></li>
     <li><a href="/search/vectors">Vector Constructs</a></li>
 
     <li role="separator" class="divider"></li>
+    <li><a href="/tools/onto/">Ontology Browser</a></li>
     <li><a href="/search/traits">Traits</a></li>
-    <li><a href="/search/treatments">Treatments</a></li>
     <!--<li><a href="/search/markers">Markers</a></li>-->
     <li><a href="/search/images">Images</a></li>
     <li><a href="/search/people">People</a></li>

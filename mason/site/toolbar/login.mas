@@ -6,16 +6,16 @@
 
   // Add URL paths to this array that should not have the login dialog shown
   // when the config `require_login` is set
-  const PATHS_TO_NOT_REQUIRE_LOGIN = ["/user/reset_password_form"];
+  const PATHS_TO_NOT_REQUIRE_LOGIN = ["/user/reset_password_form", "/authenticate/keycloak/callback", "/authenticate/google/callback"];
 
-  function update_login_button() { 
+  function update_login_button() {
 
-    jQuery.ajax( { 
+    jQuery.ajax( {
       url: '/ajax/user/login_button_html',
       error: function(r) { alert('An error occurred'); },
-      success: function(r) { 
+      success: function(r) {
         if (r.error) { alert(r.error); }
-        else { 
+        else {
           jQuery('#login_button_html_div').html(r.html);
 
           if (<% $c->config->{require_login} %> == 1 && !r.logged_in) {
@@ -27,32 +27,32 @@
       }
     });
   }
-        
-  function logout() { 
+
+  function logout() {
     var answer = confirm("Are you sure you want to log out?");
 
-    if (answer === true) { 
-      jQuery.ajax( { 
+    if (answer === true) {
+      jQuery.ajax( {
         url: '/ajax/user/logout',
         error: function(r) { alert('An error occurred'); },
-        success: function(r) { 
+        success: function(r) {
           if (r.error) { alert(r.error); }
-          else { 
+          else {
             location.reload();
           }
         }
       });
     }
   }
-  
+
 jQuery(document).ready(function () {
 
   update_login_button();
-   
-  jQuery(document).on('click', 'button[name="site_login_button"]', function(event) 
-  { 
+
+  jQuery(document).on('click', 'button[name="site_login_button"]', function(event)
+  {
     jQuery('#site_login_dialog').modal("show");
   });
 });
-  
+
 </script>

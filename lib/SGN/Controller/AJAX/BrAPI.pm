@@ -133,7 +133,29 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	$self->brapi_module($brapi);
 	$self->bcs_schema($bcs_schema);
 
-	$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+	# Allows CORS based on allowed_origins in config
+	my $request_origin = $c->request->env->{HTTP_ORIGIN};
+	my $main_production_site_url = $c->get_conf("main_production_site_url");
+
+	if ($request_origin){
+		$c->response->headers->header( "Access-Control-Allow-Credentials" => 'true' );
+		$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, OPTIONS" );
+		$c->response->headers->header( 'Access-Control-Allow-Headers' => 'Content-Type');
+
+		my $allowed_origins = $c->config->{"allowed_origins"};
+		my @allowed_origins;
+		if ($allowed_origins){
+			@allowed_origins = split(',', $allowed_origins);
+		}
+		if ( grep( /^$request_origin$/, @allowed_origins ) ) {
+			$c->response->headers->header( "Access-Control-Allow-Origin" => $request_origin );
+		} else {
+			$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+		}
+	} else {
+		$c->response->headers->header( "Access-Control-Allow-Origin" => '*' );
+	}
+
 	$c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, DELETE" );
 	$c->response->headers->header( 'Access-Control-Allow-Headers' => 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Content-Range,Range,Authorization');
 	$c->stash->{session_token} = $session_token;
