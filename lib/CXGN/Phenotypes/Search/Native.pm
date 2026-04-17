@@ -372,6 +372,7 @@ sub search {
       LEFT JOIN phenotype USING(phenotype_id)
       $phenotypeprop_sql
       LEFT JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id)
+      LEFT JOIN cvtermsynonym ON (cvterm.cvterm_id = cvtermsynonym.cvterm_id)
       LEFT JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
       LEFT JOIN db USING(db_id)
       LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
@@ -420,6 +421,7 @@ sub search {
                         folder.description, 
                         cvterm.cvterm_id, 
                         (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, 
+                        MIN(cvtermsynonym.synonym),
                         phenotype.value, 
                         phenotype.uniquename, 
                         phenotype.phenotype_id, 
@@ -636,7 +638,7 @@ sub search {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $phenotype_external_references, $full_count, $notes, $intercrop_stock_id, $intercrop_stock_name, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $trait_synonym, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $phenotype_external_references, $full_count, $notes, $intercrop_stock_id, $intercrop_stock_name, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
         my $timestamp_value;
         my $operator_value;
         if ($include_timestamp) {
@@ -733,6 +735,7 @@ sub search {
             folder_description => $folder_description,
             trait_id => $trait_id,
             trait_name => $trait_name,
+            trait_synonym => $trait_synonym,
             phenotype_value => $phenotype_value,
             phenotype_uniquename => $phenotype_uniquename,
             phenotype_id => $phenotype_id,
