@@ -85,6 +85,10 @@ $trial_stock_type
                     <ul>
                     <li>description (any additional information)</li>
                     </ul>
+                    <b>Notes:</b>
+                    <ul>
+                    <li>For plots of family name stock type, seedlots of cross members in the family can be used.</li>
+                    </ul>
                 </div>
                 <& /help/file_upload_type.mas, type => "Seedlots", optional_column => 1 &>
             </div>
