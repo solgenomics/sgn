@@ -455,10 +455,16 @@ sub _validate_with_plugin {
     }
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
+    my @family_seedlot_pairs_array;
+    my @accession_cross_seedlot_pairs_array;
     my $family_seedlot_pairs = $seedlot_trial_stock_type{'family_name'};
-    my @family_seedlot_pairs_array = @$family_seedlot_pairs;
+    if (defined $family_seedlot_pairs) {
+        @family_seedlot_pairs_array = @$family_seedlot_pairs;
+    }
     my $accession_cross_seedlot_pairs = $seedlot_trial_stock_type{'accession_cross'};
-    my @accession_cross_seedlot_pairs_array = @$accession_cross_seedlot_pairs;
+    if (defined $accession_cross_seedlot_pairs) {
+        @accession_cross_seedlot_pairs_array = @$accession_cross_seedlot_pairs;
+    }
 
     if ((scalar @accessions_missing == 0) && (scalar @seedlots_missing == 0)) {
         my $return;
