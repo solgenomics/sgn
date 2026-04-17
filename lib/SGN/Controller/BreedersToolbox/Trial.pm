@@ -618,11 +618,11 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         @trait_list = @{$lt->transform($schema, "traits_2_trait_ids", \@selected_trait_names)->{transform}};
     }
 
-    my @treatment_project_ids;
-    my $treatments = $trial->get_treatments();
-    foreach (@$treatments){
-        push @treatment_project_ids, $_->[0];
-    }
+    # my @treatment_project_ids;
+    # my $treatments = $trial->get_treatments();
+    # foreach (@$treatments){
+    #     push @treatment_project_ids, $_->[0];
+    # }
 
     if ($trait_list && $trait_list ne 'null') {
         @trait_list = @{_parse_list_from_json($trait_list)};
@@ -687,7 +687,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         data_level => $data_level,
         search_type => $search_type,
         include_timestamp => $timestamp_option,
-        treatment_project_ids => \@treatment_project_ids,
+        #treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
         include_measured => $include_measured,
         field_crossing_data_order => \@field_crossing_data_order,

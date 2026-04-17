@@ -1,9 +1,9 @@
-package CXGN::List::Validate::Plugin::NotObsoletedAndObsoletedAccessions;
+package CXGN::List::Validate::Plugin::AccessionsAndObsoletedAccessions;
 
 use Moose;
 
 sub name {
-    return "not_obsoleted_and_obsoleted_accessions";
+    return "accessions_and_obsoleted_accessions";
 }
 
 sub validate {

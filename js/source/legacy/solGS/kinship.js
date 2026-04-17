@@ -433,7 +433,7 @@ jQuery(document).ready(function () {
 
             var links = solGS.kinship.addDowloandLinks(res);
             var heatmapArgs = {
-              output_data: res.data,
+              heatmap_input_data: res.data,
               canvas: canvas,
               plot_div_id: kinshipPlotDivId,
               download_links: links,
@@ -496,7 +496,7 @@ jQuery(document).ready(function () {
 
                           var links = solGS.kinship.addDowloandLinks(res);
                           var heatmapArgs = {
-                            output_data: res.data,
+                            heatmap_input_data: res.data,
                             canvas: canvas,
                             plot_div_id: kinshipPlotDivId,
                             download_links: links,
@@ -573,7 +573,7 @@ jQuery(document).ready(function () {
 
           var links = solGS.kinship.addDowloandLinks(res);
           var heatMapArgs = {
-            output_data: res.data,
+            heatmap_input_data: res.data,
             canvas: canvas,
             plot_div_id: kinshipPlotDivId,
             download_links: links,

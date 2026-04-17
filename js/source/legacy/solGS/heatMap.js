@@ -10,12 +10,11 @@ var solGS = solGS || function solGS() {};
 solGS.heatmap = {
 
   plot: function (heatmapArgs) {
-    var outputData = heatmapArgs.output_data;
-    var inputData = heatmapArgs.input_data;
+    var heatmapInputData = heatmapArgs.heatmap_input_data;
+    var scatterInputData = heatmapArgs.scatter_input_data;
     var heatmapCanvasDiv = heatmapArgs.canvas;
     var heatmapPlotDivId = heatmapArgs.plot_div_id;
     var downloadLinks = heatmapArgs.download_links;
-    var inputData = heatmapArgs.input_data;
     var axisMode = heatmapArgs.axis_mode || 2;
 
     if (heatmapCanvasDiv == null) {
@@ -52,20 +51,20 @@ solGS.heatmap = {
 
     
 
-    var parsedInputData = null;
-    if (inputData) { 
-        parsedInputData = JSON.parse(inputData);
+    var parsedScatterInputData = null;
+    if (scatterInputData) {
+        parsedScatterInputData = JSON.parse(scatterInputData);
     }
 
-    var parsedOutputData = null;
-    if (outputData) {
-        parsedOutputData = JSON.parse(outputData);
+    var parsedHeatmaprInputData = null;
+    if (heatmapInputData) {
+        parsedHeatmaprInputData = JSON.parse(heatmapInputData);
     } else {
-        alert(`The heatmap output data is missing: ${outputData}`);
+        alert(`The heatmap output data is missing: ${heatmapInputData}`);
         return;
     }
 
-    var nLabels = parsedOutputData.labels.length;
+    var nLabels = parsedHeatmaprInputData.labels.length;
 
     if (nLabels >= 100) {
       height = 600;
@@ -95,9 +94,9 @@ solGS.heatmap = {
     var corr = [];
     var coefs = [];
 
-    var labels = parsedOutputData.labels;
-    var values = parsedOutputData.values;
-    var pvalues = parsedOutputData.pvalues;
+    var labels = parsedHeatmaprInputData.labels;
+    var values = parsedHeatmaprInputData.values;
+    var pvalues = parsedHeatmaprInputData.pvalues;
 
     for (var i = 0; i < values.length; i++) {
       var rw = values[i];
@@ -268,7 +267,7 @@ solGS.heatmap = {
             .attr("dominant-baseline", "middle")
             .attr("text-anchor", "middle");
 
-          if (parsedInputData) {
+          if (parsedScatterInputData) {
             jQuery("#" + scatterPlotMsgDivId)
               .html("Scatter plot: " + rowLabel + " vs. " + colLabel)
               .show();
@@ -277,7 +276,7 @@ solGS.heatmap = {
             var yData = [];
 
             
-            jQuery.each(parsedInputData, function (sampleName, colValues) {
+            jQuery.each(parsedScatterInputData, function (sampleName, colValues) {
               if (!colValues) {
                 return true;
               }

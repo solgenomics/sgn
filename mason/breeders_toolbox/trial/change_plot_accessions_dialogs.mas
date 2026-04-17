@@ -16,8 +16,8 @@ $trial_id
                 <div class="container-fluid">
 
                     <div class="well well-sm">
-                        <b>Upload a CSV file (.csv)</b>
-                        <br/><br/>
+                        <& /help/file_upload_type.mas, type => "Accession exchanges", optional_column => 0 &>
+                        <br/>
 
                         <div class="panel panel-default">
                             <div class="panel-body">
@@ -41,11 +41,14 @@ $trial_id
                         <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
                         <br><b>Optional column:</b><br>
                         <b>new_plot_name:</b> new name for plot.<br>
+                        <div class="list-group-item-warning" >
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
+                        </div>
                     </div>
 
                     <form class="form-horizontal" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trial_design_change_accessions_form" name="trial_design_change_accessions_form">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Upload File (.csv): </label>
+                            <label class="col-sm-3 control-label">Upload File: </label>
                             <div class="col-sm-9" >
                                 <input type="file" name="trial_design_change_accessions_file" id="trial_design_change_accessions_file" encoding="multipart/form-data" />
                             </div>
