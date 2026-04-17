@@ -456,16 +456,18 @@ sub _validate_with_plugin {
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
     my $family_seedlot_pairs = $seedlot_trial_stock_type{'family_name'};
+    my @family_seedlot_pairs_array = @$family_seedlot_pairs;
     my $accession_cross_seedlot_pairs = $seedlot_trial_stock_type{'accession_cross'};
+    my @accession_cross_seedlot_pairs_array = @$accession_cross_seedlot_pairs;
 
     if ((scalar @accessions_missing == 0) && (scalar @seedlots_missing == 0)) {
         my $return;
-        if (scalar(@$family_seedlot_pairs) > 0) {
+        if (scalar @family_seedlot_pairs_array > 0) {
             $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, $family_seedlot_pairs);
             if (exists($return->{error})) {
                 push @error_messages, $return->{error};
             }
-        } elsif ( scalar(@$accession_cross_seedlot_pairs) > 0 ) {
+        } elsif ( scalar @accession_cross_seedlot_pairs_array > 0 ) {
             $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, $accession_cross_seedlot_pairs);
             if (exists($return->{error})) {
                 push @error_messages, $return->{error};
