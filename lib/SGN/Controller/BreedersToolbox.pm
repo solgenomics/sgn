@@ -214,6 +214,23 @@ sub manage_locations : Path("/breeders/locations") Args(0) {
     $c->stash->{template} = '/breeders_toolbox/manage_locations.mas';
 }
 
+sub manage_images : Path("/breeders/images") Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (!$c->user()) {
+    
+    #redirect to login page
+	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+	return;
+    }
+
+    $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
+
+    $c->stash->{template} = '/breeders_toolbox/manage_images.mas';
+
+}
+
 sub manage_nurseries : Path("/breeders/nurseries") Args(0) {
     my $self = shift;
     my $c = shift;
