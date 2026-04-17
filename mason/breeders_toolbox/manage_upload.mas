@@ -40,6 +40,13 @@ $allowed_upload_types => undef
             <table style="width:100%">
                 <tr>
                     <td>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Check formatting requirements: </label>
+                            <div class="col-sm-6">
+                                <select class="form-control form-control-sm" id="upload_factory_check_file_format">
+                                </select>
+                            </div>
+                        </div>
                     </td>
                     <td>
                         &nbsp; &nbsp; &nbsp; &nbsp; 
@@ -295,14 +302,24 @@ jQuery(document).ready(function(){
         });
     });
 
-    jQuery(document).on('click','.check-format-btn', function() {
-        let file_id = jQuery(this).attr('id').replace('check_format_', '');
-        let upload_type = jQuery("#upload_select_type_"+file_id).val();
+    jQuery('#upload_factory_check_file_format').html(upload_type_options());
+
+    jQuery(document).on('change', '#upload_factory_check_file_format', function() {
+        let upload_type = jQuery('#upload_factory_check_file_format').val();
         jsMod["upload_factory"].display_upload_formats(upload_type, {
             default_seedlot_material_type : "<%$default_seedlot_material_type%>",
             user_role : "<%$user_role%>"
         });
     });
+
+    // jQuery(document).on('click','.check-format-btn', function() {
+    //     let file_id = jQuery(this).attr('id').replace('check_format_', '');
+    //     let upload_type = jQuery("#upload_select_type_"+file_id).val();
+    //     jsMod["upload_factory"].display_upload_formats(upload_type, {
+    //         default_seedlot_material_type : "<%$default_seedlot_material_type%>",
+    //         user_role : "<%$user_role%>"
+    //     });
+    // });
 
     jQuery(document).on('change', '.upload-type-select', function() {
         let file_id = jQuery(this).attr('id').replace('upload_select_type_', '');

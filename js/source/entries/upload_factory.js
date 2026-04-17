@@ -90,7 +90,7 @@ export function load_archived_files_table(user_id) {
                 }
 
                 header_row.append(jQuery('<th>').text("Upload As"));
-                header_row.append(jQuery('<th>').text("Check formatting rules"));
+                //header_row.append(jQuery('<th>').text("Check formatting rules"));
                 //header_row.append(jQuery('<th>').text("Delete"));
                 header_row.append(jQuery('<th>').text("Process File"));
 
@@ -114,11 +114,11 @@ export function load_archived_files_table(user_id) {
                             tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
                         }
                         tr.append(jQuery("<td>").html("<select class='form-control form-control-sm upload-type-select' id='upload_select_type_"+row.file_id+"'>"+upload_type_options().replace(`value='${row.type}'`, `value='${row.type}' selected`)+"</select>"));
-                        if (row.type != null && row.type != "" && row.type != "null_choice") {
-                            tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-primary check-format-btn' id='check_format_"+row.file_id+"'>Check format</button>"));
-                        } else {
-                            tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-primary check-format-btn' id='check_format_"+row.file_id+"'disabled>Check format</button>"));
-                        }
+                        // if (row.type != null && row.type != "" && row.type != "null_choice") {
+                        //     tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-primary check-format-btn' id='check_format_"+row.file_id+"'>Check format</button>"));
+                        // } else {
+                        //     tr.append(jQuery("<td>").html("<button class='btn btn-sm btn-primary check-format-btn' id='check_format_"+row.file_id+"'disabled>Check format</button>"));
+                        // }
                         //tr.append(jQuery("<td>").html("<button class='btn btn-danger'><span class="glyphicon glyphicon-trash"></span></button>"));
                         tr.append(jQuery("<td>").html("<button class='btn btn-success process-file-btn' id='process_file_"+row.file_id+"'><span class='glyphicon glyphicon-play-circle'></span></button>"));
                         file_tbody.append(tr);
@@ -126,7 +126,8 @@ export function load_archived_files_table(user_id) {
                 } 
 
                 let archived_files = jQuery('#upload_factory_archived_files_table').DataTable({
-                    order : [[0, 'desc']]
+                    order : [[0, 'desc']],
+                    scrollX : true
                 });
             }
         },
@@ -214,7 +215,8 @@ function load_in_progress_validations_table(user_id) {
                 jQuery('#upload_factory_validated_files_table').show();
 
                 let uploads_in_progress = jQuery('#upload_factory_validated_files_table').DataTable({
-                    order : [[0, 'desc']]
+                    order : [[0, 'desc']],
+                    scrollX : true
                 });
             }
         },
@@ -294,7 +296,8 @@ function load_in_progress_uploads_table(user_id) {
                 jQuery('#upload_factory_in_progress_uploads_table').show();
 
                 let uploads_in_progress = jQuery('#upload_factory_in_progress_uploads_table').DataTable({
-                    order : [[0, 'desc']]
+                    order : [[0, 'desc']],
+                    scrollX : true
                 });
             }
         },
@@ -371,7 +374,8 @@ function load_completed_uploads_table(user_id) {
                 jQuery('#upload_factory_completed_uploads_table').show();
 
                 let uploads_in_progress = jQuery('#upload_factory_completed_uploads_table').DataTable({
-                    order : [[0, 'desc']]
+                    order : [[0, 'desc']],
+                    scrollX : true
                 });
             }
         },
