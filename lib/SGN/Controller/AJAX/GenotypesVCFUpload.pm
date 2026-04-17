@@ -558,10 +558,12 @@ sub upload_genotype_verify_POST : Args(0) {
 
                 my @all_stored_markers = keys %$stored_markers;
                 my %compare_marker_names = map {$_ => 1} @all_stored_markers;
+		my $total_marker_count = 0;
                 my @mismatch_marker_names;
 		my @mismatch_markers;
                 while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
                     while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
+			$total_marker_count++;
                         if (exists($compare_marker_names{$marker_name})) {
                             while (my ($key, $value) = each %$new_marker_details) {
                                 if ($value ne ($stored_markers->{$marker_name}->{$key})) {
@@ -575,13 +577,17 @@ sub upload_genotype_verify_POST : Args(0) {
                     }
                 }
 
-                if (scalar(@mismatch_marker_names) > 0){
+                if (scalar(@mismatch_marker_names)) {
 		    if ($add_markers) {
-			print STDERR "Adding new markers\n";
-			$store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
+                        if ($total_marker_count && (scalar(@mismatch_marker_names) / $total_marker_count) < 0.1) {
+			    print STDERR "Adding new markers\n";
+			    $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
+			} else {
+			    $c->stash->{rest} = { error => "Too many new markers"};
+                            $c->detach();
+		        }
 		    } else {
-                        my $marker_name_error;
-                        $marker_name_error .= "<br>";
+                        my $marker_name_error = "<br>";
                         foreach my $error ( sort @mismatch_marker_names) {
                             $marker_name_error .= $error."<br>";
                         }
