@@ -192,16 +192,18 @@ $project_id => undef
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, has_col_and_row_numbers => $has_col_and_row_numbers, has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, trial_stock_type => $trial_stock_type, info_section_title => "<h4 style='display:inline'>Field Layout Tools and Phenotype Heatmap</h4>", info_section_subtitle => $subtitle, buttons_html => $layout_buttons, icon_class => "glyphicon glyphicon-th", info_section_id => "pheno_heatmap" &>
 
+% my $experimental_design_buttons = "";
 
 % if (! $can_read_phenotyping) {
 <& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Phenotyping Data</h4>", info_section_subtitle => 'Experimental Design, Phenotype Summary Statistics, Phenotype Raw Data', info_section_id=> 'access_denied', data_type => 'phenotyping' &>
 
-% my $experimental_design_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button>';
+% $experimental_design_buttons = '<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_download_layout_button">Download Layout</button>';
 % if ($user_can_modify) {
 %    $experimental_design_buttons .= ' <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_seedlot_button" >Upload Seedlots Planted In Trial</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_upload_plot_gps_button" >Upload GPS Coordinates</button> <button class="btn btn-sm btn-default" style="margin:3px" id="update_experimental_design_type_button">Update Experimental Design Type</button> <button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_change_accessions">Change Accessions</button>';
 %    if ($design_name eq 'greenhouse'){
 %        $experimental_design_buttons .= '<button class="btn btn-sm btn-default" style="margin:3px" id="trial_detail_page_add_additional_stocks"></button>';
 %    }
+% }
 % }
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.',
 buttons_html => $experimental_design_buttons,
