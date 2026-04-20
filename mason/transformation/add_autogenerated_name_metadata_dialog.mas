@@ -76,6 +76,7 @@ print "<option value='".@$program[0]."'>".@$program[1]."</option>";
                                 <select class="form-control" id="name_type">
                                     <option value="">Select a name type</option>
                                     <option value="transformant">transformant (accession)</option>
+                                    <option value="plot">plot name</option>
                                 </select>
                             </div>
                         </div>
@@ -192,13 +193,20 @@ jQuery(document).ready(function(){
     });
 
     jQuery("#number_of_attributes").change(function() {
+        let name_type = jQuery('#name_type').val();
+        if (!name_type) {
+            jQuery('#number_of_attributes').val('');
+            alert("Please select a name type first");
+            return;
+        }
+
         number_of_attributes = jQuery('#number_of_attributes').val();
         if (number_of_attributes){
-            name_attributes_form();
+            name_attributes_form(name_type);
         }
     })
 
-    function name_attributes_form () {
+    function name_attributes_form (name_type) {
         let number_of_attributes = parseInt(jQuery('#number_of_attributes').val());
 
         let html = '<table class="table table-bordered" id="name_attributes_table"><thead><tr><th>Attribute Order</th><th>Select Attribute</th></tr></thead><tbody>';
@@ -215,7 +223,11 @@ jQuery(document).ready(function(){
             .map(function() { return this.id; })
             .get();
         for(let i=0; i<attribute_list.length; i++){
-            get_select_box('related_attributes', attribute_list[i], {'name' : 'selected_attribute', 'id' : 'selected_attribute_'+i,  });
+            if (name_type == 'transformant') {
+                get_select_box('transformant_related_attributes', attribute_list[i], {'name' : 'selected_attribute', 'id' : 'selected_attribute_'+i,  });
+            } else if (name_type == 'plot') {
+                get_select_box('plot_related_attributes', attribute_list[i], {'name' : 'selected_attribute', 'id' : 'selected_attribute_'+i,  });
+            }
         };
     };
 
