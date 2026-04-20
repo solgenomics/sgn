@@ -435,7 +435,7 @@ sub search {
                         STRING_AGG(DISTINCT(ics.uniquename), ',')
                         ".$design_layout_select;
 
-    my $order_clause = " ORDER BY 6, 2, 29";
+    my $order_clause = " ORDER BY 6, 2, 30";
 
     my $group_by = " GROUP BY observationunit.stock_id, 
                     observationunit.uniquename, 
