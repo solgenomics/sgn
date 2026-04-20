@@ -608,9 +608,11 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
         return;
     }
 
-    my $epoch = str2time($new_timestamp);
-    my $dt = DateTime->from_epoch(epoch => $epoch);
-    $new_timestamp = $dt->strftime('%Y-%m-%d %H:%M:%S%z');
+    if ($new_timestamp) {
+        my $epoch = str2time($new_timestamp);
+        my $dt = DateTime->from_epoch(epoch => $epoch);
+        $new_timestamp = $dt->strftime('%Y-%m-%d %H:%M:%S%z');
+    }
 
     my $phenotype = CXGN::Phenotype->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -620,11 +622,21 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
 
     my $pheno_uniquename = $phenotype->uniquename();
     $pheno_uniquename =~ s/observation: [\w]*/observation: $new_value/;
-    $pheno_uniquename =~ s/date: [^,]*,/date: $new_timestamp,/;
+    if ($new_timestamp) {
+        $pheno_uniquename =~ s/date: [^,]*,/date: $new_timestamp,/;
+    }
+    if (!$phenotype->operator()) {
+        $pheno_uniquename =~ s/operator: [\w]*,/operator: $username,/;
+    }
 
     try {
         $phenotype->value($new_value);
-        $phenotype->collect_date($new_timestamp);
+        if ($new_timestamp) {
+            $phenotype->collect_date($new_timestamp);
+        }
+        if (!$phenotype->operator()) {
+            $phenotype->operator($username);
+        }
         $phenotype->uniquename($pheno_uniquename);
         $phenotype->store();
     } catch {
