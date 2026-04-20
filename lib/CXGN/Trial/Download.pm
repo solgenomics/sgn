@@ -239,6 +239,9 @@ has 'people_schema' => ( isa => 'Ref', is => 'rw');
 has 'dbh' => (is  => 'rw');
 has 'start_date' => ( isa => 'Maybe[Str]', is => 'rw');
 has 'end_date' => (isa => 'Maybe[Str]', is => 'rw');
+has 'include_plot_order' => (is => 'rw', isa => 'Bool', default => 0);
+has 'plot_order' => (is => 'rw', isa => 'Maybe[Str]', default => undef);
+has 'plot_start' => (is => 'rw', isa => 'Maybe[Str]', default => undef);
 
 
 sub BUILD {
