@@ -40,7 +40,7 @@ sub _validate_with_plugin {
     my $parsed_data = $parsed->{data};
 
     my @markers = @{$parsed->{values}->{'Marker'}};
-    my @aliases = @{$parsed->{values}->{'Alias'}};
+    my @aliases = @{$parsed->{values}->{'Alias'} || []};
     my @alleles = @{$parsed->{values}->{'Allele'}};
     my @categories = @{$parsed->{values}->{'Category'} || []};
     my @references = @{$parsed->{values}->{'Reference'} || []};
