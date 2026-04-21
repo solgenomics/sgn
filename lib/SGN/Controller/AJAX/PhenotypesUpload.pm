@@ -222,8 +222,6 @@ sub upload_phenotype_store_POST : Args(1) {
     my $user_first_name = $c->user()->get_object()->get_first_name();
     my $user_last_name = $c->user()->get_object()->get_last_name();
 
-    my $ignore_warnings = $c->req->param('ignore_warnings');
-
     my $submit_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
@@ -248,6 +246,8 @@ sub upload_phenotype_store_POST : Args(1) {
         $submit_type = "treatments";
     } elsif ($file_type eq "datacollector") {
         $submit_type = "datacollector_spreadsheet"
+    } elsif ($file_type eq "fieldbook") {
+        $submit_type = "fieldbook_phenotypes"
     }
     $submit_job->additional_args->{file_type} = $submit_type;
     if ($is_treatment eq "treatment") {
@@ -260,6 +260,11 @@ sub upload_phenotype_store_POST : Args(1) {
         $submit_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
     } elsif ($submit_type eq "datacollector_spreadsheet") {
         $submit_job->additional_args->{upload_datacollector_phenotype_timestamp_checkbox} = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
+    } elsif ($submit_type eq "fieldbook_phenotypes") {
+        $submit_job->additional_args->{upload_fieldbook_phenotype_data_level} = $c->req->param('upload_fieldbook_phenotype_data_level');
+        if ($c->req->param('archived_image_zipfile_id')) {
+            $submit_job->additional_args->{image_zipfile_id} = $c->req->param('archived_image_zipfile_id');
+        }
     }
 
     $submit_job->update_status("submitted");
@@ -332,7 +337,7 @@ sub upload_phenotype_store_POST : Args(1) {
         $submit_job->additional_args->{success_messages} = join("<br>", @$success_status);
     }
 
-    if (!$submit_job->additional_args->{error_messages} && !$submit_job->additional_args->{warning_messages}) {
+    if (!$submit_job->additional_args->{error_messages} && (!$submit_job->additional_args->{warning_messages} || $ignore_warnings)) {
         $submit_job->update_status("finished");
     } else {
         $submit_job->update_status("failed");

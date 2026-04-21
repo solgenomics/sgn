@@ -30,6 +30,8 @@ use File::Temp qw(tempdir);
 use File::Basename qw(basename);
 use JSON;
 use SGN::Model::Cvterm;
+use CXGN::Job;
+use CXGN::File;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -347,13 +349,73 @@ sub verify_exif_POST {
     my $user_id = $c->user()->get_object->get_sp_person_id;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
 
-    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
-    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
-    my @results;
+    my $archived_image_file_ids_ref = $c->req->param('archived_file_ids') ? $c->req->param('archived_file_ids') : undef;
 
-    foreach my $upload (@uploads) {
-        my $filename = $upload->filename;
-        my $file_path = $upload->tempname;
+    my $user = $c->user();
+
+	if (!$user) {# only checks for login, ask whether this needs to be changed...
+		$c->stash->{rest} = {error => "You must be logged in to upload images."};
+        return;
+	}
+
+    my $user_id = $c->can('user_exists') ? $c->user->get_object->get_sp_person_id : $c->sp_person_id;
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
+
+    my @images;
+
+    if (! $archived_image_file_ids_ref) {
+        my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+        my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+        foreach my $upload (@uploads) {
+            push @images, {
+                filename => $upload->filename,
+                path => $upload->tempname
+            };
+        }
+    } else {
+        my @archived_image_file_ids = @{$archived_image_file_ids_ref};
+        foreach my $file_id (@archived_image_file_ids) {
+            my $image_file = CXGN::File->new({
+                file_id => $file_id,
+                metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+                archive_path => $c->config->{archive_path}
+            });
+            push @images, {
+                filename => $image_file->filename(),
+                path => $image_file->get_path()
+            };
+        }
+    }
+
+    my $validation_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => "image file validation",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            is_validation => 1,
+            file_type => 'images',
+            user_name => "$user_first_name $user_last_name"
+        }
+    });
+
+    if ($archived_image_file_ids_ref) {
+        $validation_job->additional_args->{file_ids} = \@archived_image_file_ids;
+    }
+
+    $validation_job->update_status("submitted");
+    $validation_job->store();
+    
+    my @results;
+    my @error_messages;
+    my @success_messages;
+
+    foreach my $image (@images) {
+        my $filename = $image->{filename};
+        my $file_path = $image->{path};
  
         my $meta = CXGN::Image->extract_exif_info_class($file_path);
         if ($meta) {
@@ -370,8 +432,10 @@ sub verify_exif_POST {
                 if ($stock_name_found) {
                     my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name })->stock_id();
                     $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
+                    push @success_messages, "Stock $stock_name found.";
                 } else {
                     $stock_exists = "false";
+                    push @error_messages, "Stock $stock_name was not found. Image $filename is invalid.";
                 }
             } else {
                 my $stock_id = $decoded_json->{observation_unit}->{observation_unit_db_id};
@@ -381,8 +445,10 @@ sub verify_exif_POST {
                     my $stock = CXGN::Chado::Stock->new($schema, $stock_id);
                     $stock_name = $stock->get_name();
                     $stock_exists = "true";
+                    push @success_messages, "Stock $stock_name found.";
                 } else {
                     $stock_exists = "false";
+                    push @error_messages, "Stock $stock_name in $filename was not found.";
                 }
             }
             # Get cvterm_id of recorded trait
@@ -400,6 +466,15 @@ sub verify_exif_POST {
             push @results, { filename => $filename, exif => undef, status => "no_exif" };
         }
     }
+
+    if (scalar(@error_messages) > 0) {
+        $validation_job->update_status("failed");
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_messages);
+    } else {
+        $validation_job->update_status("finished");
+        $validation_job->additional_args->{success_messages} = join("<br>", @success_messages);
+    }
+
     $c->stash->{rest} = { images => \@results };
 }
 

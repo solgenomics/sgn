@@ -757,7 +757,7 @@ export function display_upload_formats(upload_type, config) {
             jQuery('#phenotype_upload_datacollector_info_dialog').modal("show");
             break;
         case 'fieldbook_phenotypes' : 
-            // nothing, there is no file format since the file has to be exported from the fieldbook app.
+            alert("No file format rules to show - export your files from the Field Book app.");
             break;
         case 'treatments' : 
             jQuery('#treatment_upload_spreadsheet_info_dialog').modal("show");
@@ -2507,6 +2507,27 @@ export function submit_upload_job() {
         case 'transcriptomics' :
             break;
         case 'images' :
+            let image_file_ids = [submit_params.file_id];
+            for (file_id  in submit_params.additional_args.additional_files) {
+                image_file_ids.push(file_id);
+            }
+            jQuery.ajax({
+                url : '/ajax/image/verify_exif',
+                method : "POST",
+                data : {
+                    archived_file_ids : image_file_ids
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function () {
+                    alert("An error occurred submitting images for validation, check console.");
+                    return;
+                }
+            })
             break;
         case 'images_barcodes' :
             break;
