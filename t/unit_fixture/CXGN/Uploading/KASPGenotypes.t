@@ -344,7 +344,7 @@ $response = $ua3->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-ok($message_hash->{warning});
+like($message_hash->{error}, qr/^These marker names/, 'error starts with "These marker names"');
 
 #checking protocol metadata
 my $protocol = CXGN::Genotype::Protocol->new({
