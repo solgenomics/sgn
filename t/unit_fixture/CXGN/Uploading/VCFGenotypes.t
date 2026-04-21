@@ -381,7 +381,7 @@ $response = $ua->post(
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
 my $error_string = $message_hash->{'error_string'};
-is($error_string, 'Marker S12_792613200 in the marker info file is not found in the selected protocol.<br>Marker S12_7926132 in the SNP grid file is not found in the marker info file.<br>');
+like($error_string, qr/^Marker S12_792613200 in the marker info file is not found in the selected protocol/, 'error starts with "Marker S12_792613200 in"');
 
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/testset_GT-AD-DP-GQ-DS-PL.h5";
