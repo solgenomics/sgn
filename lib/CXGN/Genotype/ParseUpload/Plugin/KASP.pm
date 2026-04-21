@@ -249,13 +249,13 @@ sub _validate_with_plugin {
     $protocolprop_info{'markers'} = \%marker_info;
     my @file_marker_names = keys %seen_marker_names;
 
-    if (defined $protocol_id) {
-        foreach (@file_marker_names) {
-            if (!exists($stored_marker_info{$_})) {
-                push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
-            }
-        }
-    }
+    #if (defined $protocol_id) {
+    #    foreach (@file_marker_names) {
+    #        if (!exists($stored_marker_info{$_})) {
+    #            push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
+    #        }
+    #    }
+    #}
 
     my $csv = Text::CSV->new({ sep_char => ',' });
     my $F;

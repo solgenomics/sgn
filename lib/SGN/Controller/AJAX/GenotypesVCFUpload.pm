@@ -648,7 +648,7 @@ sub upload_genotype_verify_POST : Args(0) {
                 $c->stash->{rest} = {error_string => $return_error,};
             } else {
                 $parse_errors = $parser->get_parse_errors();
-                #print STDERR Dumper $parse_errors;
+        	#print STDERR Dumper $parse_errors;
                 foreach my $error_string (@{$parse_errors->{'error_messages'}}){
                     $return_error=$return_error.$error_string."<br>";
                 }
@@ -720,15 +720,16 @@ sub upload_genotype_verify_POST : Args(0) {
                         push @mismatch_markers, [$chrom, $marker_name];
                     }
                 }
-            }
+	    }
 
-            if (scalar(@protocol_match_errors)){
+            if (scalar(@mismatch_marker_names)){
 		if ($add_markers) {
-		    if ($total_marker_count && (scalar(@mismatch_marker_names) / $total_marker_count) < 0.1) {
+		    if (scalar(@mismatch_marker_names) < 20) {
                         print STDERR "Adding new markers\n";
                         $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
                     } else {
-		        $c->stash->{rest} = { error => "Too many new markers"};
+			print STDERR "Too many new markers, should be less than 20\n";
+		        $c->stash->{rest} = { error => "Too many new markers, should be less than 20"};
                         $c->detach();
                     }
 		} else {
@@ -740,7 +741,18 @@ sub upload_genotype_verify_POST : Args(0) {
                     $c->detach();
                 }
             }
-        }
+
+	    if (scalar(@protocol_match_errors) > 0){
+                my $protocol_warning;
+                foreach my $match_error (@protocol_match_errors) {
+                    $protocol_warning .= $match_error."<br>";
+                }
+                if (!$accept_warnings){
+                    $c->stash->{rest} = { warning => $protocol_warning };
+                    $c->detach();
+                }
+            }
+	}
 
         $store_genotypes->store_metadata();
         $store_genotypes->store_identifiers();
