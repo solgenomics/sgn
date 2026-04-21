@@ -381,10 +381,12 @@ jQuery(document).on("click", "#calculate_si", function () {
                 genArgs["corr_table_file"] = res.corre_table_file;
                 var corrDownload = solGS.correlation.createCorrDownloadLink(genArgs);
                 var heatmapArgs = {
-                  output_data: res.data,
+                  heatmap_input_data: res.corr_output_data,
+                  scatter_input_data: res.corr_input_data,
                   canvas: canvas,
                   plot_div_id: corrPlotDivId,
                   download_links: corrDownload,
+                  axis_mode: 'four'
                 };
 
                 solGS.heatmap.plot(heatmapArgs);

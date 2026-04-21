@@ -224,7 +224,7 @@ has 'cmd' => (isa => 'Maybe[Str]', is => 'rw');
 
 =head2 logfile()
 
-The logfile used to store and retrieve finish timestamps. Required for object creation. 
+The logfile used to store and retrieve finish timestamps.
 
 =cut
 
@@ -269,7 +269,6 @@ sub BUILD {
                 cv_id => $cv_id
             });
         }
-        my $logfile;
         if (!$self->has_finish_logfile()) {
             die "Need a finish logfile to create new jobs.";
         }

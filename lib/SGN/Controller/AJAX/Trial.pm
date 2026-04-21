@@ -323,7 +323,7 @@ sub generate_experimental_design_POST : Args(0) {
         $trial_design->set_submit_host($c->config->{cluster_host});
         $trial_design->set_temp_base($c->config->{cluster_shared_tempdir});
 	    $trial_design->set_plot_numbering_scheme($plot_numbering_scheme);
-	
+
         my $design_created = 0;
         if ($use_same_layout) {
             $design_created = 1;
@@ -539,6 +539,7 @@ sub save_experimental_design_POST : Args(0) {
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
+    my $allow_obsoleted_accessions = $c->config->{allow_obsoleted_accessions};
     my $save;
 
     print STDERR "Saving trial... :-)\n";
@@ -662,6 +663,7 @@ sub save_experimental_design_POST : Args(0) {
             genotyping_trial_from_field_trial => $add_project_trial_genotype_trial_select,
             crossing_trial_from_field_trial => $add_project_trial_crossing_trial_select,
             trial_stock_type => $trial_stock_type,
+            allow_obsoleted_accessions => $allow_obsoleted_accessions,
         );
 
         if ($field_size){
@@ -870,6 +872,7 @@ sub verify_stock_list : Path('/ajax/trial/verify_stock_list') : ActionClass('RES
 sub verify_stock_list_POST : Args(0) {
     my ($self, $c) = @_;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $allow_obsoleted_accessions = $c->config->{allow_obsoleted_accessions};
     my @stock_names;
     my $error;
     my %errors;
@@ -883,7 +886,12 @@ sub verify_stock_list_POST : Args(0) {
     }
 
     my $lv = CXGN::List::Validate->new();
-    my @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+    my @accessions_missing = ();
+    if ($allow_obsoleted_accessions) {
+        @accessions_missing = @{$lv->validate($schema,'accessions_and_obsoleted_accessions',\@stock_names)->{'missing'}};
+    } else {
+        @accessions_missing = @{$lv->validate($schema,'accessions',\@stock_names)->{'missing'}};
+    }
 
     if (scalar(@accessions_missing) > 0){
         my $error = 'The following accessions are not valid in the database, so you must add them first: '.join ',', @accessions_missing;

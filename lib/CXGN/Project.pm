@@ -203,9 +203,9 @@ sub get_cxgn_project_type {
     my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
     my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'crossing_trial',  'project_type')->cvterm_id();
 
-    my $q = "SELECT projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id)";
+    my $q = "SELECT projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) WHERE project_id = ?";
 	my $h = $self->bcs_schema->storage->dbh->prepare($q);
-	$h->execute();
+	$h->execute($self->get_trial_id());
 
     my $cxgn_project_type = 'field_trial_project';
     my $plot_data_level = 'plot';
