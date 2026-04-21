@@ -99,7 +99,7 @@ sub access_table :Path('/ajax/access/table') Args(0) {
 		}
 
 		if ($resource->{name}) {
-
+		    no warnings;
 		    $html .= "<span class=\"chip\"><a href=\"javascript:delete_privilege(".$resource->{id}.")\">X</a> ".$resource->{name}." $breeding_program $ownership</span>  ";
 		}
 	    }
