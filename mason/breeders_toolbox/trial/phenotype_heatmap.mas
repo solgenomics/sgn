@@ -441,7 +441,7 @@ $trial_stock_type => undef
 
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="trait_deletion_form" name="trait_deletion_form">
 
-                    <p3><b>Please, confirm the deletion of selected trait...</b></p3> </br></br>
+                    <p3><b>Please, confirm the deletion of selected trait...</b></p3></br>
                     <center><p2> ...trait is deleted permanently from the database...</p2></center>
 
                     </form>
@@ -987,6 +987,14 @@ jQuery(document).ready( function() {
 
     }
 
+    function clear_fieldlayout_heatmap() {
+        d3.select("#container_heatmap").selectAll("svg").remove();
+        d3.select("#fieldmap_chart").selectAll("svg").remove();
+        d3.select("#container_fm").selectAll("svg").remove();
+        d3.select("#container_heatmap_geo").selectAll("svg").remove();
+        d3.select("#container_heatmap_geo_div").remove();
+    }
+
     var r = 0;
     var toggleWidthFM = 0;
     jQuery('#rotate_map').click(function(){
@@ -1387,7 +1395,7 @@ jQuery(document).ready( function() {
     });
 
     jQuery('#pheno_heatmap_offswitch').click( function() {
-        d3.select("svg").remove();
+        clear_fieldlayout_heatmap();
         jQuery("#trait_heatmap").css("display", "none");
         jQuery("#trial_heatmap_div").css("display", "none");
         jQuery("#container_heatmap").css("display", "none");
@@ -1402,19 +1410,17 @@ jQuery(document).ready( function() {
     function on_change_view() {
         selected = jQuery("#trait_list_dropdown").val();
         if (selected == 'fieldmap'){
-            d3.select("svg").remove();
+            clear_fieldlayout_heatmap();
             jQuery("#view_ctrl_button").css("display", "none");
             jQuery("#container_heatmap").css("display", "none");
             jQuery("#container_legend").css("display", "block");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#include_linked_trials").css("display", "block");
-            d3.select("#container_heatmap_geo_div").remove();
             FieldMap.heatmap_selected = false;
             FieldMap.load();
         } else if (selected == 'geofieldmap'){
             jQuery('#working_modal').modal("show");
-            d3.select("svg").remove();
-            d3.select("#container_heatmap_geo_div").remove();
+            clear_fieldlayout_heatmap();
             d3.select('#container_heatmap_geo').append('div').attr("id","container_heatmap_geo_div");
             jQuery("#container_heatmap").css("display", "none");
             jQuery("#d3legend").css("display", "none");
@@ -1427,8 +1433,7 @@ jQuery(document).ready( function() {
             geo_field_map_view();
             jQuery('#working_modal').modal("hide");
         } else  if (selected != ''){
-            d3.select("svg").remove();
-            d3.select("#container_heatmap_geo_div").remove();
+            clear_fieldlayout_heatmap();
             jQuery("#delete_button_fm").css("display", "none");
             jQuery("#ctrldiv").css("display", "none");
             jQuery("#view_ctrl_button").show();
