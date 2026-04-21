@@ -38,9 +38,6 @@ use Try::Tiny;
 use SGN::Model::Cvterm;
 use JSON;
 use Data::Dumper;
-use MooseX::FollowPBP;
-use Moose::Util::TypeConstraints;
-
 
 extends 'CXGN::Metadata::Dbpatch';
 
@@ -74,17 +71,13 @@ sub patch {
 	    while (my $each_row = $projectprop_rows->next()){
 			my %old_name_metadata_hash = ();
 		    my %new_data_structure = ();
-		    print STDERR "NEW DATA STRUCTURE 1 =".Dumper(\%new_data_structure)."\n";
 		    my $old_name_metadata_string = $each_row->value();
-			print STDERR "OLD STRING =".Dumper($old_name_metadata_string)."\n";
 		    my $old_name_metadata_hash_ref = decode_json $old_name_metadata_string;
 			%old_name_metadata_hash = %$old_name_metadata_hash_ref;
-			print STDERR "OLD HASH =".Dumper(\%old_name_metadata_hash)."\n";
             foreach my $format_name (keys %old_name_metadata_hash) {
 				my $name_type = $old_name_metadata_hash{$format_name}{'name_type'};
 				$new_data_structure{$name_type}{$format_name} = $old_name_metadata_hash{$format_name};
 			}
-			print STDERR "NEW DATA STRUCTURE 2 =".Dumper(\%new_data_structure)."\n";
 
 			my $new_name_metadata_string = encode_json \%new_data_structure;
 			$each_row->update({value=>$new_name_metadata_string});
