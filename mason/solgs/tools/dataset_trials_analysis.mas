@@ -18,6 +18,8 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $dataset_id => undef
 $dataset_name => undef
 $data_structure => undef
+$collapsed => 0
+$collapsible => 1
 $title => undef
 
 </%args>
@@ -33,17 +35,15 @@ if (!$data_structure) {
 }
 
 my $url = $c->req->path;
-my $collapsed = 0;
-my $collapsible = 0;
 
 </%perl>
 
 <& /solgs/tools/base.mas &>
 
 <&| /page/info_section.mas,
-  collapsible => 1,
-  collapsed   => 0,
-  title       =>'Analysis Tools'
+  collapsible => $collapsible,
+  collapsed   => $collapsed,
+  title       => 'Analysis Tools'
 &>
 
 <div id="dataset_trials_analysis" style="display: flex; align-items: center; justify-content-left: space-between;">

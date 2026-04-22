@@ -87,6 +87,8 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     $c->stash->{dataset_id} = $dataset_id;
     $c->stash->{dataset_description} = $dataset->description;
     $c->stash->{dataset_contents} = $html;
+    $c->stash->{dataset_owner} = $dataset->sp_person_id;
+    $c->stash->{dataset_is_public} = $dataset->is_public;
     print STDERR "dataset name $dataset->name()\n";
     $c->stash->{template} = '/dataset/index.mas';
     
