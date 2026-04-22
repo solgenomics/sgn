@@ -191,20 +191,20 @@ sub execute_predefined_searches: Private {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     # execute all the searches and stash the results
     for my $search_name ( sort keys %searches ) {
-	print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";
-         my $search = $searches{$search_name};
-         my $b = time;
-         my $searchresults = $self->do_quick_search(
+	#print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";
+        my $search = $searches{$search_name};
+        my $b = time;
+        my $searchresults = $self->do_quick_search(
              $c->dbc->dbh,
              %$search,
              term => $c->stash->{term},
 	     schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
-           );
-         $c->stash->{results}{$search_name} = {
+          );
+        $c->stash->{results}{$search_name} = {
              result => $searchresults,
              time   => time - $b,
              exact  => $search->{exact}
-           };
+        };
 	print STDERR "SEARCH RESULTS: ".Dumper($searchresults);
     }
 }
@@ -224,11 +224,17 @@ sub do_quick_search {
     my ( $self, $db, %args ) = @_;
 
     if ($args{function}) { #just run legacy functions and return their results
-	print STDERR "INVOKING $args{function} with $args{term}\n";
-        return $args{function}->( $self, $db,$args{term}, $args{schema});
+        my $result = eval {
+	    $args{function}->($self, $db, $args{term}, $args{schema})
+	};
+	if ($@) {
+	    warn "Search failed for term '$args{term}': $@";
+            return [undef, "0 results"];
+        }
+        return $result;
     } else {
-        my $classname = $args{sf_class}
-            or die 'Must provide a class name';
+        my $classname = $args{sf_class} or die 'Must provide a class name';
+	my $result_desc = $args{result_desc} or die "Must provide result_desc";
 
         Class::Load::load_class( $classname );
         $classname->isa( 'CXGN::Search::SearchI' )
@@ -248,13 +254,11 @@ sub do_quick_search {
 
             if ($count > 0) {
                 my $qstr = encode_entities($query->to_query_string());
-                return [ "$args{search_path}?$qstr", "$count $args{result_desc}" ];
+                return [ "$args{search_path}?$qstr", "$count $result_desc" ];
             }
         }
-        return [undef, "0 $args{result_desc}"];
+        return [undef, "0 $result_desc"];
     }
-
-    die 'this point should not be reached';
 }
 
 ###################### LEGACY QUICK SEARCH FUNCTIONS ##########################
@@ -488,11 +492,11 @@ EOSQL
 }
 
 sub sql_query_count {
-    my $db = shift;
-    my $query = shift;
+    my ($db, $query, @bind) = @_;
     my $qh = $db -> prepare_cached($query);
-    $qh -> execute(@_);
+    $qh -> execute(@bind);
     my ($count) = $qh -> fetchrow_array();
+    $qh->finish;
     return $count;
 }
 
@@ -666,11 +670,10 @@ sub quick_locations_search {
 	my $row = $rs->next();
 	$id = $row->nd_geolocation_id();
 	$name = $row->description();
-    }
-    else {
+	print STDERR "RETURNED: $id, $name\n";
+    } else {
 	print STDERR "LOCATION HAS ".$rs->count()." MATCHES!!!!\n";
     }
-    print STDERR "RETURNED: $id, $name\n";
     if ($id) {
 	return [ '/breeders/locations/', '1 location: '.$name ]; # just link to generic locations page
     }
@@ -713,7 +716,16 @@ sub quick_bp_search {
     my $schema = shift;
 
     print STDERR "breeding program search... \n";
-    my $rs = $schema->resultset("Project::Project")->search( { 'me.name' => { ilike => $term }  } , { cvterm_name => 'breeding_program', join => 'projectprops' => { 'cvterms', '+select' => [ 'cvterm.name'], '+as' => ['cvterm_name'] } } );
+    my $rs = $schema->resultset("Project::Project")->search(
+        {
+            'me.name'   => { ilike => $term },
+            'type.name' => 'breeding_program',
+        },
+        {
+            join => { projectprops => 'type' },
+            distinct => 1,
+        }
+    );
 
     my ($id, $name);
 
@@ -722,24 +734,24 @@ sub quick_bp_search {
 	while (my $row = $rs->next()) {
 	    print STDERR join("\t", $row->name(), $row->project_id())."\n";
 	}
-	return [ '', 'too many hits' ];
+	return [ undef, 'too many hits' ];
     }
 
     elsif ($rs->count() == 1) {
 	my $row = $rs->next();
 	$id = $row->project_id();
 	$name = $row->name();
+	print STDERR "FOUND: $id\n";
     }
     else {
 	print STDERR "Sorry, no match!\n";
     }
 
-    print STDERR "FOUND: $id\n";
     if ($id) {
-	return [ '/breeders/program/'.$id, "1 breeding program: ".$name ];
+	return [ '/breeders/program/'.$id, "1 breeding program: $name" ];
     }
     else { 
-	return [ '', '0 breeding programs' ];
+	return [ undef, '0 breeding programs' ];
     }
 
 }
