@@ -245,6 +245,11 @@ sub _get_unique_accession_names_from_trial {
     foreach my $key (sort { $a <=> $b} keys %design) {
         my %design_info = %{$design{$key}};
         $unique_acc{$design_info{"accession_name"}} = $design_info{"accession_id"};
+        if ( defined $design_info{"intercrop_accessions"} ) {
+            foreach my $a (@{$design_info{"intercrop_accessions"}} ) {
+                $unique_acc{$a->{"accession_name"}} = $a->{"accession_id"};
+            }
+        }
     }
 
     foreach (sort keys %unique_acc){
@@ -645,6 +650,24 @@ sub retrieve_plot_info {
             $design_info{"accession_id"} = $accession_id;
         }
     }
+
+    # Add intercropped accessions to the layout
+    my $intercrop_rs = $plot->search_related('stock_relationship_subjects')->search({
+        'me.type_id' => $self->cvterm_id('intercrop_plot_of'),
+        'object.type_id' => { -in => $self->get_source_primary_stock_type_ids() }
+    }, { 'join' => 'object' });
+    my @intercrop_accessions;
+    while (my $r = $intercrop_rs->next()) {
+        my $o = $r->object;
+        push @intercrop_accessions, {
+            accession_name => $o->uniquename,
+            accession_id => $o->stock_id
+        };
+    }
+    if ( scalar(@intercrop_accessions) > 0 ) {
+        $design_info{"intercrop_accessions"} = \@intercrop_accessions;
+    }
+
 
     if ($self->get_verify_layout){
 	if (!$accession_name || !$accession_id || !$plot_name || !$plot_id){
