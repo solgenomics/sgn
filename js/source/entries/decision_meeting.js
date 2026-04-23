@@ -375,7 +375,7 @@
           + '            <th>Decision</th>'
           + '            <th>New Stage</th>'
           + '            <th>Current Notes</th>'
-          + '            <th>Comment Before Save</th>'
+          + '            <th>Meeting Comments</th>'
           + '          </tr>'
           + '        </thead>'
           + '        <tbody></tbody>'
