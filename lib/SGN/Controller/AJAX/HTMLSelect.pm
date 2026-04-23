@@ -2788,16 +2788,16 @@ sub get_plot_related_attributes_select : Path('/ajax/html/select/plot_related_at
     my @related_attributes;
     push @related_attributes, ["", "Select Attribute"];
     push @related_attributes, ['breedingProgram', 'breeding program'];
-    push @related_attributes, ['trial_name', 'trial name'];
-    push @related_attributes, ['accession_name', 'accession name'];
-    push @related_attributes, ['intercrop_accession_name', 'intercrop accession name'];
-    push @related_attributes, ['plot_number', 'plot number'];
-    push @related_attributes, ['block_number', 'block number'];
-    push @related_attributes, ['is_a_control', 'is a control'];
-    push @related_attributes, ['rep_number', 'rep number'];
-    push @related_attributes, ['range_number', 'range number'];
-    push @related_attributes, ['row_number', 'row number'];
-    push @related_attributes, ['col_number', 'col number'];
+    push @related_attributes, ['trialName', 'trial name'];
+    push @related_attributes, ['accessionName', 'accession name'];
+    push @related_attributes, ['intercropAccessionName', 'intercrop accession name'];
+    push @related_attributes, ['plotNumber', 'plot number'];
+    push @related_attributes, ['blockNumber', 'block number'];
+    push @related_attributes, ['isAcontrol', 'is a control'];
+    push @related_attributes, ['repNumber', 'rep number'];
+    push @related_attributes, ['rangeNumber', 'range number'];
+    push @related_attributes, ['rowNumber', 'row number'];
+    push @related_attributes, ['colNumber', 'col number'];
 
     my $html = simple_selectbox_html(
         name => $name,
