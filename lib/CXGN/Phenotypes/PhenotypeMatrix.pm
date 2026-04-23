@@ -581,18 +581,16 @@ sub get_phenotype_matrix {
                     if ($self->repetitive_measurements() eq "average") {
                         my $count = 0;
                         my $sum = 0;
-                        my @string_values;
+                        my $has_non_numeric = 0;
 
                         foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
                             my ($value, $timestamp);
-
                             if (defined($v)) {
                                 ($value, $timestamp) = split(',', $v, 2);
                             }
-
                             $value = $v unless defined $timestamp;
-                            next unless defined $value;
 
+                            next unless defined $value;
                             $value =~ s/^\s+|\s+$//g;
 
                             if ($value =~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) {
@@ -600,13 +598,12 @@ sub get_phenotype_matrix {
                                 $count++;
                             }
                             else {
-                                push @string_values, [$value, $timestamp];
+                                $has_non_numeric = 1;
                             }
                         }
 
-                        if ($count > 0) {
-                            my $averaged_values = $sum / $count;
-
+                        if ($count > 0 && !$has_non_numeric) {
+                            my $averaged_values = $sum/$count;
                             my $last_measurement = $sorted_measurements[-1];
                             my ($last_value, $last_timestamp) = split(',', $last_measurement, 2);
                             $last_value = $last_measurement unless defined $last_timestamp;
@@ -617,35 +614,24 @@ sub get_phenotype_matrix {
                                 $obsunit_data{$obsunit_id}->{$cvterm} = $averaged_values;
                             }
                         }
-                        elsif (@string_values) {
-                            # for non-numeric repeated values such as dates, keep the last value
-                            my ($last_value, $last_timestamp) = @{ $string_values[-1] };
-
-                            if ($include_timestamp && defined $last_timestamp) {
-                                $obsunit_data{$obsunit_id}->{$cvterm} = "$last_value, $last_timestamp";
-                            } else {
-                                $obsunit_data{$obsunit_id}->{$cvterm} = $last_value;
-                            }
-                        }
                         else {
-                            $obsunit_data{$obsunit_id}->{$cvterm} = undef;
+                            # fallback for non-numeric repeated values such as dates
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[-1];
                         }
                     }
                     if ($self->repetitive_measurements() eq "sum") {
                         my $sum_all_values = 0;
                         my $has_numeric = 0;
-                        my @string_values;
+                        my $has_non_numeric = 0;
 
                         foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
                             my ($value, $timestamp);
-
                             if (defined($v)) {
                                 ($value, $timestamp) = split(',', $v, 2);
                             }
-
                             $value = $v unless defined $timestamp;
-                            next unless defined $value;
 
+                            next unless defined $value;
                             $value =~ s/^\s+|\s+$//g;
 
                             if ($value =~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) {
@@ -653,14 +639,17 @@ sub get_phenotype_matrix {
                                 $has_numeric = 1;
                             }
                             else {
-                                push @string_values, [$value, $timestamp];
+                                $has_non_numeric = 1;
                             }
                         }
 
-                        if ($has_numeric) {
+                        if ($has_numeric && !$has_non_numeric) {
                             my $last_measurement = $sorted_measurements[-1];
-                            my ($last_value, $last_timestamp) = split(',', $last_measurement, 2);
-                            $last_value = $last_measurement unless defined $last_timestamp;
+                            my ($last_value, $last_timestamp) = (undef, undef);
+
+                            if ($last_measurement) {
+                                ($last_value, $last_timestamp) = split(',', $last_measurement, 2);
+                            }
 
                             if ($include_timestamp && defined $last_timestamp) {
                                 $obsunit_data{$obsunit_id}->{$cvterm} = "$sum_all_values, $last_timestamp";
@@ -668,18 +657,9 @@ sub get_phenotype_matrix {
                                 $obsunit_data{$obsunit_id}->{$cvterm} = $sum_all_values;
                             }
                         }
-                        elsif (@string_values) {
-                            # for non-numeric repeated values such as dates, keep the last value
-                            my ($last_value, $last_timestamp) = @{ $string_values[-1] };
-
-                            if ($include_timestamp && defined $last_timestamp) {
-                                $obsunit_data{$obsunit_id}->{$cvterm} = "$last_value, $last_timestamp";
-                            } else {
-                                $obsunit_data{$obsunit_id}->{$cvterm} = $last_value;
-                            }
-                        }
                         else {
-                            $obsunit_data{$obsunit_id}->{$cvterm} = undef;
+                            # fallback for non-numeric repeated values such as dates
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[-1];
                         }
                     }
 
