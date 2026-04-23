@@ -106,48 +106,40 @@ sub parse {
     my $trait_columns = $parsed->{optional_columns};
 
     my %data;
+    my %units_seen;
+
     for my $row (@$parsed_data) {
+        next unless $row && ref($row) eq 'HASH';
+
         my $observationunit_name = $row->{'observationunit_name'};
+        next unless defined $observationunit_name && $observationunit_name ne '';
+
+        $units_seen{$observationunit_name} = 1;
 
         for my $trait_name (@$trait_columns) {
+            next unless defined $trait_name && $trait_name ne '';
+
             my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
             my $timestamp = '';
             my $trait_value = '';
-	    my @trait_values;
-            if ($timestamp_included){
-		my @values;
-		# is it a multi-value line (separated by | )?
-		if ($value_string =~ /\|/) {
-		    @values = split /\|/, $value_string;
-		}
-		else {
-		    @values = ($value_string);
-		}
-		foreach my $v (@values) {
-		    ($trait_value, $timestamp) = split /,/, $v;
-		    if (defined($trait_value)) {
-			push @trait_values, [ $trait_value, $timestamp ];
-		    }
-		}
+
+            if ($timestamp_included) {
+                ($trait_value, $timestamp) = split /,/, $value_string, 2;
             } else {
-                @trait_values = ($value_string);
-            }
-            if (!defined($timestamp)){
-                $timestamp = '';
+                $trait_value = $value_string;
             }
 
-            if ( @trait_values && defined($timestamp) ) {
-		foreach my $tv (@trait_values) {
-		    if ($tv->[0] ne ".") {
-			push @{$data{$observationunit_name}->{$trait_name}}, $tv;
-		    }
-                }
-            }
+            $trait_value = '' unless defined $trait_value;
+            $timestamp   = '' unless defined $timestamp;
+
+            next if $trait_value eq '' || $trait_value eq '.';
+
+            push @{ $data{$observationunit_name}->{$trait_name} }, [ $trait_value, $timestamp ];
         }
     }
 
-    my @sorted_units = sort(@{$parsed_values->{'observationunit_name'}});
-    my @sorted_variables = sort(@$trait_columns);
+    my @sorted_units = sort keys %units_seen;
+    my @sorted_variables = sort @$trait_columns;
 
     my %parse_result;
     $parse_result{'data'} = \%data;
