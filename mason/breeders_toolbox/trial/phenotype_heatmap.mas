@@ -704,12 +704,12 @@ $trial_stock_type => undef
     </div>
 </div>
 
-<div class="modal  fade" id="delete_filler_plots_confirm_message" name="delete_trait_dialog_confirm_message" tabindex="-1" role="dialog" aria-labelledby="DeleteFillerPlotsDialog">
+<div class="modal  fade" id="delete_filler_plots_confirm_message" name="delete_filler_dialog_confirm_message" tabindex="-1" role="dialog" aria-labelledby="DeleteFillerPlotsDialog">
     <div class="modal-dialog " role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="DeleteAssayedTraitDialog">Remove Filler Plots</h4>
+                <h4 class="modal-title" id="DeleteFillerPlotsDialog">Remove Filler Plots</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -719,7 +719,7 @@ $trial_stock_type => undef
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_delete_trait_dialog" type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button id="close_delete_filler_dialog" type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" name="delete_filler_plots_dialog_submit" id="remove_filler_plots_dialog_submit">Remove Fillers</button>
             </div>
         </div>
