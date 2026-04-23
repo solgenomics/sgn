@@ -493,10 +493,19 @@ EOSQL
 
 sub sql_query_count {
     my ($db, $query, @bind) = @_;
-    my $qh = $db -> prepare_cached($query);
-    $qh -> execute(@bind);
-    my ($count) = $qh -> fetchrow_array();
-    $qh->finish;
+    my $count = eval {
+        my $qh = $db -> prepare_cached($query);
+        $qh -> execute(@bind);
+        my ($result) = $qh -> fetchrow_array();
+        $qh->finish;
+	$result // 0;
+    };
+
+    if ($@) {
+	print STDERR "Query failed: $@";
+	return 0;
+    }
+
     return $count;
 }
 
