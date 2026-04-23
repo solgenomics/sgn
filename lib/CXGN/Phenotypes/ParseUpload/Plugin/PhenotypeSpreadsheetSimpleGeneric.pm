@@ -23,6 +23,39 @@ use Data::Dumper;
 
 my @oun_aliases = qw|plot_name subplot_name plant_name observationUnitName plotName subplotName plantName|;
 
+sub _parse_measurements {
+    my ($value_string, $timestamp_included) = @_;
+
+    $value_string = '' unless defined $value_string;
+
+    my @measurements;
+    my @raw_measurements = $timestamp_included ? split(/\|/, $value_string) : ($value_string);
+
+    for my $raw_measurement (@raw_measurements) {
+        next unless defined $raw_measurement;
+
+        my ($trait_value, $timestamp) = ('', '');
+        if ($timestamp_included) {
+            ($trait_value, $timestamp) = split /,/, $raw_measurement, 2;
+        }
+        else {
+            $trait_value = $raw_measurement;
+        }
+
+        $trait_value = '' unless defined $trait_value;
+        $timestamp = '' unless defined $timestamp;
+
+        $trait_value =~ s/^\s+|\s+$//g;
+        $timestamp =~ s/^\s+|\s+$//g;
+
+        next if $trait_value eq '' || $trait_value eq '.';
+
+        push @measurements, [ $trait_value, $timestamp ];
+    }
+
+    return \@measurements;
+}
+
 sub name {
     return "phenotype spreadsheet simple generic";
 }
@@ -68,10 +101,14 @@ sub validate {
         foreach my $d (@$parsed_data) {
             foreach my $t (@$trait_columns) {
                 my $value_string = $d->{$t};
-                my ($value, $timestamp) = split /,/, $value_string;
-                if (!$timestamp =~ m/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\S)(\d{4})/) {
-                    $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
-                    return \%parse_result;
+                my $measurements = _parse_measurements($value_string, $timestamp_included);
+                foreach my $measurement (@$measurements) {
+                    my ($value, $timestamp) = @$measurement;
+                    next if !$timestamp;
+                    if ($timestamp !~ m/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:[+-]\d{4})?$/) {
+                        $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
+                        return \%parse_result;
+                    }
                 }
             }
         }
@@ -106,48 +143,28 @@ sub parse {
     my $trait_columns = $parsed->{optional_columns};
 
     my %data;
+    my %units_seen;
+
     for my $row (@$parsed_data) {
+        next unless $row && ref($row) eq 'HASH';
+
         my $observationunit_name = $row->{'observationunit_name'};
+        next unless defined $observationunit_name && $observationunit_name ne '';
+
+        $units_seen{$observationunit_name} = 1;
 
         for my $trait_name (@$trait_columns) {
-            my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
-            my $timestamp = '';
-            my $trait_value = '';
-	    my @trait_values;
-            if ($timestamp_included){
-		my @values;
-		# is it a multi-value line (separated by | )?
-		if ($value_string =~ /\|/) {
-		    @values = split /\|/, $value_string;
-		}
-		else {
-		    @values = ($value_string);
-		}
-		foreach my $v (@values) {
-		    ($trait_value, $timestamp) = split /,/, $v;
-		    if (defined($trait_value)) {
-			push @trait_values, [ $trait_value, $timestamp ];
-		    }
-		}
-            } else {
-                @trait_values = ($value_string);
-            }
-            if (!defined($timestamp)){
-                $timestamp = '';
-            }
+            next unless defined $trait_name && $trait_name ne '';
 
-            if ( @trait_values && defined($timestamp) ) {
-		foreach my $tv (@trait_values) {
-		    if ($tv->[0] ne ".") {
-			push @{$data{$observationunit_name}->{$trait_name}}, $tv;
-		    }
-                }
-            }
+            my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
+            my $measurements = _parse_measurements($value_string, $timestamp_included);
+            next unless @$measurements;
+            push @{ $data{$observationunit_name}->{$trait_name} }, @$measurements;
         }
     }
 
-    my @sorted_units = sort(@{$parsed_values->{'observationunit_name'}});
-    my @sorted_variables = sort(@$trait_columns);
+    my @sorted_units = sort keys %units_seen;
+    my @sorted_variables = sort @$trait_columns;
 
     my %parse_result;
     $parse_result{'data'} = \%data;
