@@ -801,6 +801,9 @@ $design_types => ()
                     <b>Header as a string:</b><br/>
                     <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
 
+                    <b>Notes:</b><br/>
+                    <p>If the stocks that are being evaluated in any trial are crosses or family names, <b>trial_stock_type</b> column is required and indicates as 'cross' or 'family_name'.  All rows for the same trial must have the same trial stock type.</p>
+
                     <b> Required fields:</b>
                     <ul>
                     <li>trial_name (Must be unique across entire database. It is often a concatenation of the year, transplanting_date, purpose, unique number, and location.)</li>
