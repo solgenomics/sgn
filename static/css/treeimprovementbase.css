@@ -16,33 +16,39 @@
 
     /* Button */
     --button-background:       none;
-    --button-box-shadow:       var(--shadow-color) 0 1px 2px 0, var(--shadow-color) 0 1px 3px 0;
+    --button-box-shadow:       var(--shadow-color) 0 1px 2px 0;
 
     --button-background-color: var(--gray-200);
     --button-text-color:       var(--text-color-primary);
     --button-border-color:     var(--gray-300);
 
-    --button-hover-background:   linear-gradient( to bottom right, var(--gray-200), var(--gray-400) );
+    --button-hover-background:   var(--gray-400);
     --button-hover-border-color: var(--gray-500);
     --button-hover-box-shadow:   var(--shadow-color) 0 2px 4px 0;
+
+    --button-active-background:  var(--gray-500);
 
     /* Button Primary */
     --button-primary-background-color: var(--green-600);
     --button-primary-text-color:       var(--text-color-light);
     --button-primary-border-color:     var(--green-600);
 
-    --button-primary-hover-background: linear-gradient( to bottom right, var(--green-600), var(--gray-700) );
+    --button-primary-hover-background: var(--green-700);
     --button-primary-hover-border-color: var(--green-800);
     --button-primary-hover-box-shadow:   var(--shadow-color) 0 2px 4px 0;
+
+    --button-primary-active-background: var(--green-800);
 
     /* Button Danger */
     --button-danger-background-color: var(--red-500);
     --button-danger-text-color:       var(--text-color-light);
     --button-danger-border-color:     var(--red-500);
 
-    --button-danger-hover-background: linear-gradient( to bottom right, var(--red-500), var(--red-600) );
+    --button-danger-hover-background: var(--red-600);
     --button-danger-hover-border-color: var(--red-700);
     --button-danger-hover-box-shadow:   var(--shadow-color) 0 2px 4px 0;
+
+    --button-danger-active-background: var(--red-700);
 
     /* Filter */
     --filter-light:            brightness(0) invert(1);
@@ -143,7 +149,7 @@
     --min-screen-width: 480px;
 
     /* Shadows */
-    --shadow-color: rgba(0, 0, 0, .1);
+    --shadow-color: rgba(0, 0, 0, .05);
 
     /* Sidebar */
     --sidebar-width:                 160px;
@@ -242,6 +248,8 @@ Buttons
 -------------------------------------------------------------------------------
 */
 
+/* Standard */
+
 .btn, button.modesel {
     background:       var(--button-background);
     background-color: var(--button-background-color);
@@ -253,14 +261,6 @@ Buttons
 
 a.btn {
     color: var(--button-text-color);
-}
-
-.btn-primary {
-    background:       var(--button-background);
-    background-color: var(--button-primary-background-color);
-    color:            var(--button-primary-text-color);
-    border:           1px solid var(--button-primary-border-color);
-    box-shadow:       var(--button-box-shadow);
 }
 
 .btn:hover,
@@ -275,6 +275,29 @@ button.modesel_hi:hover,
     text-shadow:      var(--text-hover-shadow);
 }
 
+.btn:active,
+.btn:active:hover
+.btn:focus,
+.btn:focus:hover,
+.btn:active:focus,
+.btn-info:active,
+.btn-info:active:hover,
+.btn-info:focus,
+.btn-info:focus:hover,
+.btn-info:active:focus {
+    background:       var(--button-active-background);
+}
+
+/* Primary */
+
+.btn-primary {
+    background:       var(--button-background);
+    background-color: var(--button-primary-background-color);
+    color:            var(--button-primary-text-color);
+    border:           1px solid var(--button-primary-border-color);
+    box-shadow:       var(--button-box-shadow);
+}
+
 .btn-primary:hover {
     background:       var(--button-primary-hover-background);
     border-color:     var(--button-primary-hover-border-color);
@@ -282,44 +305,19 @@ button.modesel_hi:hover,
     color:            var(--button-primary-text-color);
 }
 
+.btn-primary:active,
+.btn-primary:active:hover,
+.btn-primary:focus,
+.btn-primary:focus:hover,
+.btn-primary:active:focus {
+    background:       var(--button-primary-active-background);
+}
+
 a.btn-primary {
     color: var(--button-primary-text-color);
 }
 
-.btn-xs {
-    font-size:        var(--font-size-xs);
-}
-
-.btn-sm {
-    font-size:        var(--font-size-sm);
-}
-
-.btn-group {
-    display: inline-flex;
-}
-
-.btn-color {
-    background-color: var(--green-500);
-    border:           1px solid var(--green-600);
-    color:            var(--text-color-light);
-}
-
-.btn-color:hover {
-    background:       linear-gradient( to bottom right, var(--green-600), var(--green-800) );
-    color:            var(--text-color-light);
-}
-
-button.modesel_hi {
-    background-color: var(--green-600);
-    color:            var(--text-color-light);
-    border-color:     var(--green-800);
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-    border-radius:    var(--border-radius);
-    padding:          0px;
-}
+/* Danger */
 
 .btn-danger {
     background:       var(--button-background);
@@ -333,6 +331,40 @@ button.modesel_hi {
     border-color:     var(--button-danger-hover-border-color);
     box-shadow:       var(--button-danger-hover-box-shadow);
     color:            var(--button-danger-text-color);
+}
+
+.btn-danger:active,
+.btn-danger:active:hover,
+.btn-danger:focus,
+.btn-danger:focus:hover,
+.btn-danger:active:focus {
+    background:       var(--button-danger-active-background);
+}
+
+/* Miscellaneous */
+
+.btn-xs {
+    font-size:        var(--font-size-xs);
+}
+
+.btn-sm {
+    font-size:        var(--font-size-sm);
+}
+
+.btn-group {
+    display: inline-flex;
+}
+
+button.modesel_hi {
+    background-color: var(--green-600);
+    color:            var(--text-color-light);
+    border-color:     var(--green-800);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius:    var(--border-radius);
+    padding:          0px;
 }
 
 /* Buttons that dismiss dialogs */
