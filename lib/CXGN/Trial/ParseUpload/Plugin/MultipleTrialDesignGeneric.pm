@@ -420,12 +420,25 @@ sub _validate_with_plugin {
     }
 
     #now validate again the accession names
-    $accessions_hashref = $validator->validate($schema,'accessions_or_crosses_or_familynames',\@merged_accessions);
-    my @accessions_missing = @{$accessions_hashref->{'missing'}};
 
-    if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "Stocks(s) <strong>".join(',',@accessions_missing)."</strong> are not in the database as uniquenames or synonyms of accessions, crosses, or families.";
+    my @entry_name_missing = ();
+    if ($trial_stock_type eq 'cross') {
+        @entry_names_missing = @{$validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or cross stock type.";
+        }
+    } elsif ($trial_stock_type eq 'family_name') {
+        @entry_names_missing = @{$validator->validate($schema,'accessions_or_family_names',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or family name stock type.";
+        }
+    } else {
+        @entry_names_missing = @{$validator->validate($schema,'accessions',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database as uniquenames or synonyms of accession stock type.";
+        }
     }
+
     if (scalar(@multiple_synonyms) > 0) {
         my @msgs;
         foreach my $m (@multiple_synonyms) {

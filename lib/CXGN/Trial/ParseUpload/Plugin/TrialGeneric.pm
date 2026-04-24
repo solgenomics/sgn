@@ -275,7 +275,7 @@ sub _validate_with_plugin {
     my $entry_name_validator = CXGN::List::Validate->new();
     my @entry_name_missing = ();
     if ($trial_stock_type eq 'cross') {
-        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses',\@merged_names)->{'missing'}};
+        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_names)->{'missing'}};
         if (scalar(@entry_names_missing) > 0) {
             $errors{'missing_stocks'} = \@entry_names_missing;
             push @error_messages, "The following entry names are not in the database or are not accession or cross stock type: ".join(',',@entry_names_missing);
