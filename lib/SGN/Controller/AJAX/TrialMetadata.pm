@@ -43,6 +43,7 @@ use CXGN::BreedersToolbox::Projects;
 use Sort::Key::Natural qw(natkeysort);
 use CXGN::Trial::ParseUpload;
 use CXGN::Job;
+use CXGN::List::Transform;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -2262,7 +2263,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id);
-    $parser->load_plugin('TrialChangePlotAccessionsCSV');
+    $parser->load_plugin('TrialChangePlotAccessions');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
@@ -2285,6 +2286,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
 
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+    my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
 
     my $replace_accession_fieldmap = CXGN::Trial::FieldMap->new({
         bcs_schema => $schema,
@@ -2302,47 +2304,71 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         return;
     }
 
-    my $upload_change_plot_accessions_txn = sub {
-        my @stock_names;
-        print STDERR Dumper $parsed_data;
-        while (my ($key, $val) = each(%$parsed_data)){
-            my $plot_name = $val->{plot_name};
-            my $accession_name = $val->{accession_name};
-            my $new_plot_name = $val->{new_plot_name};
-            push @stock_names, $plot_name;
-            push @stock_names, $accession_name;
-        }
-        my %stock_id_map;
-        my $stock_rs = $schema->resultset("Stock::Stock")->search({
-            uniquename => {'-in' => \@stock_names}
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+            schema => $schema,
+            trial_id => $trial_id,
+            data_level => 'plots',
+            selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1},
         });
-        while (my $r = $stock_rs->next()){
-            $stock_id_map{$r->uniquename} = $r->stock_id;
+    my @layout = @{$trial_layout_download->get_layout_output()->{output}};
+    shift @layout;
+    
+    my $rep_hash = {};
+
+    my $upload_change_plot_accessions_txn = sub {
+
+        foreach my $plot_row (@layout) {
+            my @row = @$plot_row;
+            my $plot_name = $row[0];
+            my $plot_id = $row[1];
+            my $accession_name = $row[2];
+            my $accession_id = $row[3];
+            my $plot_number = $row[4];
+
+            $parsed_data->{$plot_name}->{'old_accession_name'} = $accession_name;
+            $parsed_data->{$plot_name}->{'old_accession_id'} = $accession_id;
+            $parsed_data->{$plot_name}->{'plot_id'} = $plot_id;
+            $parsed_data->{$plot_name}->{'plot_number'} = $plot_number;
+
+            $rep_hash->{$accession_id}->{'start'}->{$plot_id} = {
+                plot_number => $plot_number
+            };
         }
-        print STDERR Dumper \%stock_id_map;
+
         while (my ($key, $val) = each(%$parsed_data)){
-            my $plot_id = $stock_id_map{$val->{plot_name}};
-            my $accession_id = $stock_id_map{$val->{accession_name}};
-            my $plot_name = $val->{plot_name};
-            my $new_plot_name = $val->{new_plot_name};
+            my $plot_id = $val->{plot_id};
+            my $new_accession_name = $val->{new_accession_name} ? $val->{new_accession_name} : undef;
+            my $new_accession_id = $val->{new_accession_id} ? $val->{new_accession_id} : undef;
+            my $old_accession_id = $val->{old_accession_id};
+            my $old_accession_name = $val->{old_accession_name};
+            my $old_plot_name = $val->{old_plot_name};
+            my $new_plot_name = $val->{new_plot_name} ? $val->{new_plot_name} : undef;
+            my $plot_number = $val->{plot_number};
 
-            my $old_accession_id = $schema->resultset("Stock::StockRelationship")->find({
-                subject_id => $plot_id,
-                type_id => $plot_of_type_id
-            })->object_id();
+            
 
-            my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $accession_id, $plot_of_type_id);
-            if ($replace_accession_error) {
-                die "$replace_accession_error\n";
-            }
-
-            if ($new_plot_name) {
-                my $replace_plot_name_error = $replace_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $plot_name, $new_plot_name);
-                if ($replace_plot_name_error) {
-                    die "$replace_plot_name_error\n";
+            if ($new_accession_id) {
+                $rep_hash->{$new_accession_id}->{add}->{$plot_id} = {
+                    plot_number => $plot_number
+                };
+                $rep_hash->{$old_accession_id}->{remove}->{$plot_id} = {
+                    plot_number => $plot_number
+                };
+                my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
+                if ($replace_accession_error) {
+                    die "$replace_accession_error\n";
+                }
+                if ($new_plot_name) {
+                    my $replace_plot_name_error = $replace_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $old_plot_name, $new_plot_name);
+                    if ($replace_plot_name_error) {
+                        die "$replace_plot_name_error\n";
+                    }
                 }
             }
         }
+
+        $replace_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
+        $replace_accession_fieldmap->_regenerate_trial_layout_cache();
     };
     eval {
         $schema->txn_do($upload_change_plot_accessions_txn);
@@ -2353,9 +2379,9 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         $c->detach();
     }
 
-#    my $dbh = $c->dbc->dbh();
-#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+   my $dbh = $c->dbc->dbh();
+   my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname} } );
+   my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
     $c->stash->{rest} = { success => 1 };
 }
@@ -3007,6 +3033,35 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
         return;
     }
 
+    my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
+        schema => $schema,
+        trial_id => $trial_id,
+        data_level => 'plots',
+        selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1},
+    });
+    my @layout = @{$trial_layout_download->get_layout_output()->{output}};
+    shift @layout;
+    
+    my $rep_hash = {};
+    my $plot_hash = {};
+
+    foreach my $plot_row (@layout) {
+        my @row = @$plot_row;
+        my $plot_name = $plot_row->[0];
+        my $plot_id = $plot_row->[1];
+        my $accession_name = $plot_row->[2];
+        my $accession_id = $plot_row->[3];
+        my $plot_number = $plot_row->[4];
+
+        $rep_hash->{$accession_id}->{'start'}->{$plot_id} = {
+            plot_number => $plot_number
+        };
+
+        $plot_hash->{$plot_id} = {
+            plot_number => $plot_number
+        };
+    }
+
 
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $accession_rs = $schema->resultset("Stock::Stock")->search({
@@ -3019,6 +3074,9 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     });
     $old_accession_rs = $old_accession_rs->next();
     my $old_accession_id = $old_accession_rs->stock_id;
+
+    $rep_hash->{$old_accession_id}->{'remove'}->{$plot_id} = $plot_hash->{$plot_id};
+    $rep_hash->{$new_accession_id}->{'add'}->{$plot_id} = $plot_hash->{$plot_id};
 
     print "Calling Replace Function...............\n";
     my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
@@ -3034,6 +3092,11 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
             return;
         }
     }
+
+    my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
+    
+    $replace_plot_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
+    $replace_plot_accession_fieldmap->_regenerate_trial_layout_cache();
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});

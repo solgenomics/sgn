@@ -390,7 +390,6 @@ has 'description' => (
 has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
-    default => 0,
 );
 
 =head2 accessor organization_name()
@@ -552,6 +551,9 @@ sub BUILD {
     $self->stock($stock);
     $self->stock_id($stock->stock_id);
     $self->create_date($stock->create_date);
+    if (!defined ($self->is_obsolete)) {
+        $self->is_obsolete($stock->is_obsolete);
+    }
 
     unless ($self->is_saving) {
         $self->organism_id($stock->organism_id);
@@ -675,7 +677,7 @@ sub store {
                 description => $self->description(),
                 type_id => $self->type_id(),
                 organism_id => $self->organism_id(),
-                is_obsolete => $self->is_obsolete(),
+                is_obsolete => 0,
             });
             $new_row->insert();
 
@@ -2036,7 +2038,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2053,7 +2055,7 @@ sub get_child_stocks {
                     stock_id => $subplot->{stock_id},
                     type => $subplot->{type}
                 });
-                $stock_structure->{has}->{"".$subplot->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$subplot->{name}.""} = $child_stock->get_child_stocks();
             }
         } elsif (@has_plants) {
             foreach my $plant (@has_plants) {
@@ -2062,7 +2064,7 @@ sub get_child_stocks {
                     stock_id => $plant->{stock_id},
                     type => $plant->{type}
                 });
-                $stock_structure->{has}->{"".$plant->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$plant->{name}.""} = $child_stock->get_child_stocks();
             }
         } else { # no plants or subplots, just accessions
             foreach my $accession (@accessions) {
@@ -2071,7 +2073,7 @@ sub get_child_stocks {
                     stock_id => $accession->{stock_id},
                     type => $accession->{type}
                 });
-                $stock_structure->{has}->{''.$accession->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{''.$accession->{name}.""} = $child_stock->get_child_stocks();
             }
         }
 
@@ -2085,7 +2087,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2097,7 +2099,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2114,7 +2116,7 @@ sub get_child_stocks {
                     stock_id => $plant->{stock_id},
                     type => $plant->{type}
                 });
-                $stock_structure->{has}->{"".$plant->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$plant->{name}.""} = $child_stock->get_child_stocks();
             }
         } else {# if no plants, subplots can only have accessions
             foreach my $accession (@child_stocks) {
@@ -2123,7 +2125,7 @@ sub get_child_stocks {
                     stock_id => $accession->{stock_id},
                     type => $accession->{type}
                 });
-                $stock_structure->{has}->{"".$accession->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$accession->{name}.""} = $child_stock->get_child_stocks();
             }
         }
 
@@ -2137,7 +2139,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2149,7 +2151,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2164,7 +2166,7 @@ sub get_child_stocks {
                 stock_id => $child->{stock_id},
                 type => $child->{type}
             });
-            $stock_structure->{has}->{"".$child->{stock_name}.""} = $child_stock->get_child_stocks();
+            $stock_structure->{has}->{"".$child->{name}.""} = $child_stock->get_child_stocks();
         }
 
     } elsif ($type eq "tissue_sample") {
@@ -2181,7 +2183,7 @@ sub get_child_stocks {
 =head2 get_child_stocks_flat_list
 
 Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are ommitted.
-Listref elements are hashrefs with structure {stock_id, name, type}. This stock is dropped in the list,
+Listref elements are hashrefs with structure {stock_id, name, type}. Self is dropped in the list,
 unlike in get_child_stocks where it remains at the top of the hierarchy.
 
 =cut
@@ -2285,7 +2287,7 @@ sub get_child_stocks_flat_list {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @{$stock_structure}, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type
             };
         }
