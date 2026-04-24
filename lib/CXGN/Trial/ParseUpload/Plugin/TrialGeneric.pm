@@ -273,10 +273,25 @@ sub _validate_with_plugin {
     my @intercrop_names = $parsed_values->{'intercrop_stock_name'} ? @{$parsed_values->{'intercrop_stock_name'}} : ();
     my @merged_names = uniq(@entry_names, @intercrop_names);
     my $entry_name_validator = CXGN::List::Validate->new();
-    my @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses_or_familynames',\@merged_names)->{'missing'}};
-    if (scalar(@entry_names_missing) > 0) {
-        $errors{'missing_stocks'} = \@entry_names_missing;
-        push @error_messages, "The following entry names are not in the database as uniquenames or synonyms: ".join(',',@entry_names_missing);
+    my @entry_name_missing = ();
+    if ($trial_stock_type eq 'cross') {
+        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            $errors{'missing_stocks'} = \@entry_names_missing;
+            push @error_messages, "The following entry names are not in the database or are not accession or cross stock type: ".join(',',@entry_names_missing);
+        }
+    } elsif ($trial_stock_type eq 'family_name') {
+        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_family_names',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            $errors{'missing_stocks'} = \@entry_names_missing;
+            push @error_messages, "The following entry names are not in the database or are not accession or family name stock type: ".join(',',@entry_names_missing);
+        }
+    } else {
+        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            $errors{'missing_stocks'} = \@entry_names_missing;
+            push @error_messages, "The following entry names are not in the database as uniquenames or synonyms of accession stock type: ".join(',',@entry_names_missing);
+        }
     }
 
     # Seedlots: names must exist in the database
