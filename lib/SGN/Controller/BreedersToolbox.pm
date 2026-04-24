@@ -203,6 +203,42 @@ sub index :Path('/breeders/meeting') :Args(0) {
     $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     return;
   }
+
+  my $raw_decision_role = $c->config->{decision_role};
+  my $decision_role_conf = '';
+
+  if (ref($raw_decision_role) eq 'ARRAY') {
+    $decision_role_conf = defined($raw_decision_role->[0]) ? $raw_decision_role->[0] : '';
+  }
+  else {
+    $decision_role_conf = $raw_decision_role // '';
+  }
+
+  my @allowed_roles = grep { $_ ne '' }
+    map {
+      my $x = $_ // '';
+      $x =~ s/^\s+|\s+$//g;
+      $x;
+    }
+    split(/\s*,\s*/, $decision_role_conf);
+
+  my %allowed = map { $_ => 1 } @allowed_roles;
+  my $can_access = 0;
+
+  foreach my $role ($c->user->roles) {
+    if ($allowed{$role}) {
+      $can_access = 1;
+      last;
+    }
+  }
+
+  if (!$can_access) {
+    $c->res->status(403);
+    $c->res->content_type('text/plain; charset=utf-8');
+    $c->res->body('You are not authorized to access the decision meeting page.');
+    return;
+  }
+
   $c->stash->{template} = '/breeders_toolbox/decision_meeting.mas';
   
 }
