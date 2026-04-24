@@ -19,6 +19,7 @@ use File::Slurp qw | read_file |;
 use File::Temp 'tempfile';
 use File::Basename;
 use File::Copy;
+use Excel::Writer::XLSX
 use utf8;
 
 
@@ -1407,6 +1408,8 @@ sub get_list_details :Path('/ajax/list/details') :Args(1) {
 sub download_list_details : Path('/list/download_details') {
     my $self = shift;
     my $c = shift;
+
+    my $file_format = $c->req->param('file_format');
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
@@ -1417,48 +1420,75 @@ sub download_list_details : Path('/list/download_details') {
     my $type = $list->type();
     my $list_name = $list->name();
     my @list_details;
-    my $header;
 
     if ($type eq 'seedlots') {
-        my $result = $list->seedlot_list_details();
-        my @details = @$result;
-        foreach my $seedlot_ref (@details) {
-            my @seedlot = @$seedlot_ref;
-            push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[10]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\t$seedlot[9]\n";
-        }
-        $header = "Seedlot_Name\tContent_Name\tContent_type\tMaterial_type\tDescription\tBox_Name\tCurrent_Count\tCurrent_Weight\tQuality";
+	my @header =  qw | Seedlot_Name Content_Name Content_type Material_type Description Box_Name Current_Count Current_Weight Quality |;
+	my $header;
+
+	my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "list_details_download_XXXXX", UNLINK=> 0);
+
+	my $result = $list->seedlot_list_details();
+	my @details = @$result;
+	if ($file_format =~ /.xlsx/) {
+
+	    foreach my $seedlot_ref (@details) {
+		# Create a new Excel workbook
+		my $workbook = Excel::Writer::XLSX->new( $tempfile );
+
+		# Add a worksheet
+		$worksheet = $workbook->add_worksheet();
+
+		# Write a formatted and unformatted string, row and column notation.
+		$col = $row = 0;
+		for (my $col =0; $col < @header; $col++) {
+		    $worksheet->write(1, $col, $header[$col]);
+		}
+
+		for (my $row = 1; $row <= @details; $row++) {
+		    for (my $col = 1; $col <= @header; $col++) {
+			$worksheet->write($row, $col, $details[$row][$col]);
+		    }
+		}
+		$workbook->close();
+	    }
+	}
+	if ($file_format =~ /\.txt/) {
+	    foreach my $seedlot_ref (@details) {
+		my @seedlot = @$seedlot_ref;
+		push @list_details, "$seedlot[1]\t$seedlot[3]\t$seedlot[4]\t$seedlot[10]\t$seedlot[5]\t$seedlot[6]\t$seedlot[7]\t$seedlot[8]\t$seedlot[9]\n";
+	    }
+	    $header = join("\t", @header);
+
+
+	    my $dl_token = $c->req->param("list_download_token") || "no_token";
+	    my $dl_cookie = "download".$dl_token;
+	    print STDERR "Token is: $dl_token\n";
+
+	    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+	    print $FILE $header."\n";
+	    my $row = 0;
+	    foreach my $each_row (@list_details) {
+		print $FILE $each_row;
+		$row++;
+	    }
+	    close $FILE;
+	}
+
+	$c->res->content_type("application/text");
+	$c->res->cookies->{$dl_cookie} = {
+	    value => $dl_token,
+	    expires => '+1m',
+	};
+
+	$c->res->header("Content-Disposition", qq[attachment; filename="$list_name.txt"]);
+	my $output = "";
+	open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+	while (<$F>) {
+	    $output .= $_;
+	}
+	close($F);
+	$c->res->body($output);
     }
-
-    my $dl_token = $c->req->param("list_download_token") || "no_token";
-    my $dl_cookie = "download".$dl_token;
-    print STDERR "Token is: $dl_token\n";
-
-    my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "list_details_download_XXXXX", UNLINK=> 0);
-
-    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
-    print $FILE $header."\n";
-    my $row = 0;
-    foreach my $each_row (@list_details) {
-        print $FILE $each_row;
-        $row++;
-    }
-    close $FILE;
-
-    $c->res->content_type("application/text");
-    $c->res->cookies->{$dl_cookie} = {
-        value => $dl_token,
-        expires => '+1m',
-    };
-
-    $c->res->header("Content-Disposition", qq[attachment; filename="$list_name.txt"]);
-    my $output = "";
-    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
-    while (<$F>) {
-        $output .= $_;
-    }
-    close($F);
-
-    $c->res->body($output);
 }
 
 
