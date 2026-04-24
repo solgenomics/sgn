@@ -237,7 +237,7 @@ $logged_in_name => undef
 % } #End trial_detail_traits_assayed
 
 % if ($info_section_id eq 'trial_raw_data') {
-   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
+   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type, user_can_modify => $user_can_modify &>
 % }
 
 % if ($info_section_id eq 'repetitive_measurements_data') {

@@ -470,9 +470,10 @@ sub set_description {
 
 #
 # Add metadata and alleles the markers in this protocol
-# @param param_data = a hashref of marker metadata,
-#   where the key is the marker/locus name
-#   and the value is a hashref of marker details (marker, alias, description, categories, references, alleles)
+# @param parsed_data = parsed data from the marker metadata upload plugin, a hashref of:
+#   markers = marker metadata, where the key is the marker/locus name and the value is a hashref of marker details (marker, alias, description, categories, references, alleles)
+#   existing_locus_ids = ids of phenome.locus that exist and should be removed before storing the new marker metadata
+#   existing_allele_ids = ids of phenome.allele that exist and should be removed before storing the new marker metadata
 #
 sub set_marker_metadata {
     my $self = shift;
@@ -484,6 +485,21 @@ sub set_marker_metadata {
     my $protocol_id = $self->nd_protocol_id;
     my $sp_person_id = $self->sp_person_id;
 
+    my $parsed_markers = $parsed_data->{markers};
+    my $existing_locus_ids = $parsed_data->{existing_locus_ids};
+    my $existing_allele_ids = $parsed_data->{existing_allele_ids};
+
+    # Delete existing alleles
+    if ( $existing_allele_ids && scalar @$existing_allele_ids > 0 ) {
+        my $allele_rs = $phenome_schema->resultset('Allele')->search({ 'me.allele_id' => { -in => $existing_allele_ids } });
+        $allele_rs->delete_all();
+    }
+
+    # Delete existing loci
+    if ( $existing_locus_ids && scalar @$existing_locus_ids > 0 ) {
+        $self->delete_marker_metadata($existing_locus_ids);
+    }
+
     my $is_a_rel_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is_a', 'relationship')->cvterm_id();
 
     # Get the organism to use for the loci
@@ -492,8 +508,10 @@ sub set_marker_metadata {
     $sths->execute();
     my ($common_name_id) = $sths->fetchrow_array();
 
-    foreach my $name (keys %$parsed_data) {
-        my $ml = $parsed_data->{$name};
+
+    # Parse the markers
+    foreach my $name (keys %$parsed_markers) {
+        my $ml = $parsed_markers->{$name};
         my $marker = $ml->{'marker'};
         my $alias = $ml->{'alias'};
         my $locus_description = $ml->{'description'};
@@ -581,13 +599,15 @@ sub set_marker_metadata {
 
         # Add each allele value for the locus
         foreach my $av (@$allele_values) {
-            my $av_symbol = $av;
-            $locus_obj->create_related('alleles', {
-                allele_name => $av,
-                allele_symbol => $av_symbol,
-                sp_person_id => $sp_person_id,
-                is_default => 0
-            });
+            if ( defined $av && $av ne '' ) {
+                my $av_symbol = $av;
+                $locus_obj->create_related('alleles', {
+                    allele_name => $av,
+                    allele_symbol => $av_symbol,
+                    sp_person_id => $sp_person_id,
+                    is_default => 0
+                });
+            }
         }
 
         # Add the Locus / Marker link
@@ -609,10 +629,14 @@ sub get_marker_metadata {
     my $dbh = $schema->storage->dbh();
     my $protocol_id = $self->nd_protocol_id;
 
-    my $q = "SELECT nd_protocol_id, locus.locus_id, locus.locus_name, marker_name, locus.description, allele.allele_id, allele_name ";
+    my $q = "SELECT nd_protocol_id, locus.locus_id, locus.locus_name, marker_name, locus.description, allele.allele_id, allele_name, db.name, db.urlprefix, db.url, dbxref.accession, cvterm.cvterm_id, cvterm.name ";
     $q .= "FROM phenome.locus_geno_marker ";
     $q .= "LEFT JOIN phenome.locus ON (locus_geno_marker.locus_id = locus.locus_id) ";
     $q .= "LEFT JOIN phenome.allele ON (allele.locus_id = locus.locus_id) ";
+    $q .= "LEFT JOIN phenome.locus_dbxref ON (locus.locus_id = locus_dbxref.locus_id) ";
+    $q .= "LEFT JOIN public.dbxref ON (locus_dbxref.dbxref_id = dbxref.dbxref_id) ";
+    $q .= "LEFT JOIN public.db ON (dbxref.db_id = db.db_id) ";
+    $q .= "LEFT JOIN public.cvterm ON (dbxref.dbxref_id = cvterm.dbxref_id) ";
     $q .= "WHERE nd_protocol_id = ? ";
     $q .= "AND marker_name = ?" if $marker_name;
 
@@ -624,27 +648,126 @@ sub get_marker_metadata {
         $sth->execute($protocol_id);
     }
 
-    my %alleles;
-    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name) = $sth->fetchrow_array()) {
-        if ( ! exists($alleles{$locus_name}) ) {
-            $alleles{$locus_name} = {
+    my %metadata;
+    my %seen_alleles;
+    my %seen_references;
+    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name, $db_name, $db_urlprefix, $db_url, $dbxref_accession, $cvterm_id, $cvterm_name) = $sth->fetchrow_array()) {
+        if ( ! exists($metadata{$locus_name}) ) {
+            $metadata{$locus_name} = {
                 nd_protocol_id => $nd_protocol_id,
                 locus_id => $locus_id,
                 locus_name => $locus_name,
                 marker_name => $marker_name,
                 locus_description => $locus_description,
-                alleles => []
+                alleles => [],
+                references => [],
             };
         }
 
-        push @{$alleles{$locus_name}->{'alleles'}}, { 
-            allele_id => $allele_id,
-            allele_name => $allele_name
-        };
+        if ( !exists $seen_alleles{$locus_name}->{$allele_name} ) {
+            push @{$metadata{$locus_name}->{'alleles'}}, { 
+                allele_id => $allele_id,
+                allele_name => $allele_name
+            };
+            $seen_alleles{$locus_name}->{$allele_name} = 1;
+        }
+
+        if ( defined $db_name && defined $dbxref_accession ) {
+            my $refkey = "$db_name:$dbxref_accession";
+            if ( !exists $seen_references{$locus_name}->{$refkey} ) {
+                my $url;
+                if ( defined $db_urlprefix && defined $db_url ) {
+                    $url = $db_urlprefix. $db_url . $dbxref_accession;
+                }
+                elsif ( defined $cvterm_id ) {
+                    $url = "/cvterm/$cvterm_id/view";
+                }
+                push @{$metadata{$locus_name}->{'references'}}, { 
+                    db_name => $db_name,
+                    dbxref_accession => $dbxref_accession,
+                    url => $url,
+                    cvterm_id => $cvterm_id,
+                    cvterm_name => $cvterm_name
+                };
+                $seen_references{$locus_name}->{$refkey} = 1;
+            }
+        }
     }
 
-    return \%alleles;
+    return \%metadata;
 }
 
+#
+# Delete Marker Metadata
+# Delete all or a specified set of marker metadata from this protocol
+# This will remove:
+#    - the associated alleles
+#    - any associated locus dbxrefs
+#    - the entries in the locus_geno_markers junction table
+#    - the locus entries
+# When not given an array of locus ids, all of the marker metadata will be removed
+# @param locus_ids = (optional) array ref of locus ids of specific markers to remove metadata from
+# @return = a hasref with removed locus ids
+#
+sub delete_marker_metadata {
+    my $self = shift;
+    my $locus_ids = shift;
+    my $schema = $self->bcs_schema();
+    my $phenome_schema = $self->phenome_schema();
+    my $dbh = $phenome_schema->storage->dbh();
+    my $protocol_id = $self->nd_protocol_id;
+
+    # Get locus IDs to remove
+    my @remove_locus_ids;
+    my $q = "SELECT locus_id FROM phenome.locus_geno_marker WHERE nd_protocol_id = ?";
+    if ( defined $locus_ids && scalar($locus_ids) > 0 ) {
+        my $ph = join ',', map { "?" } @$locus_ids;
+        $q .= " AND locus_id IN ($ph)";
+    }
+    my $sth = $dbh->prepare($q);
+    if ( defined $locus_ids && scalar($locus_ids) > 0 ) {
+        $sth->execute($protocol_id, @$locus_ids);
+    }
+    else {
+        $sth->execute($protocol_id);
+    }
+    while (my ($locus_id) = $sth->fetchrow_array()) {
+        push @remove_locus_ids, $locus_id;
+    }
+
+    # Remove the requested loci...
+    if ( scalar @remove_locus_ids > 0 ) {
+        my $lph = join ',', map { "?" } @remove_locus_ids;
+
+        # Get the loci to remove
+        my $locus_rs = $phenome_schema->resultset('Locus')->search({ 'me.locus_id' => { -in => \@remove_locus_ids } });
+
+        # Remove the alleles
+        my $allele_rs = $locus_rs->search_related('alleles');
+        $allele_rs->delete_all();
+
+        # Remove references
+        my $ref_rs = $phenome_schema->resultset('LocusDbxref')->search({ 'locus_id' => { -in => \@remove_locus_ids } });
+        my @locus_dbxref_ids;
+        while ( my $r = $ref_rs->next() ) {
+            push @locus_dbxref_ids, $r->locus_dbxref_id();
+        }
+        if ( scalar @locus_dbxref_ids > 0 ) {
+            my $refev_rs = $phenome_schema->resultset('LocusDbxrefEvidence')->search({ 'locus_dbxref_id' => { -in => \@locus_dbxref_ids } });
+            $refev_rs->delete_all();
+            $ref_rs->delete_all();
+        }
+
+        # Remove from junction table
+        $q = "DELETE FROM phenome.locus_geno_marker WHERE locus_id IN ($lph)";
+        $sth = $dbh->prepare($q);
+        $sth->execute(@remove_locus_ids);
+
+        # Remove the loci
+        $locus_rs->delete_all();
+    }
+
+    return { removed => \@remove_locus_ids }
+}
 
 1;

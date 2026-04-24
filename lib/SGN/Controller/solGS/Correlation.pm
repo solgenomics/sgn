@@ -52,8 +52,8 @@ sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0)
     
     if (-s $corre_json_file) {
         $ret->{status}   = 'success';
-        $ret->{output_data}     = read_file($corre_json_file, {binmode => ':utf8'});
-        $ret->{input_data} = read_file($corre_input_data_json_file, {binmode => ':utf8'});
+        $ret->{corr_output_data}     = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{corr_input_data} = read_file($corre_input_data_json_file, {binmode => ':utf8'});
         $ret->{corre_table_file} = $self->download_pheno_correlation_file($c);
     }
 
@@ -97,8 +97,8 @@ sub genetic_correlation_analysis :Path('/genetic/correlation/analysis') Args() {
 
     if (-s $corre_json_file) {
         $ret->{status}   = 'success';
-        $ret->{output_data} = read_file($corre_json_file, {binmode => ':utf8'});
-        $ret->{input_data} = read_file($corre_input_data_json_file, {binmode => ':utf8'});
+        $ret->{corr_output_data} = read_file($corre_json_file, {binmode => ':utf8'});
+        $ret->{corr_input_data} = read_file($corre_input_data_json_file, {binmode => ':utf8'});
         $ret->{corre_table_file} = $self->download_genetic_correlation_file($c);
     } 
 
