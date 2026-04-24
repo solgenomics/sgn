@@ -39,6 +39,25 @@ sub get_trials : Path('/ajax/breeders/get_trials') Args(0) {
     $c->stash->{rest} = \%data;
 }
 
+sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $tree_type = $c->req->param('type') || 'trial';
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+
+    my $dir = catdir($c->config->{static_content_path}, "folder");
+    eval { make_path($dir) };
+    if ($@) {
+        print STDERR "Couldn't create $dir: $@";
+    }
+
+    my $filename = $dir . "/entire_jstree_html_$tree_type.txt";
+    _write_cached_folder_tree($schema, $tree_type, $filename);
+
+    $c->stash->{rest} = { status => 1 };
+}
+
 sub _get_trial_designs_by_ids {
     my ($schema, $trial_ids_ref) = @_;
 
