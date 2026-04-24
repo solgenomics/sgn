@@ -294,6 +294,7 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
     my $empty = $c->req->param("empty") || "";
     my $multiple = $c->req->param("multiple") || 0;
     my $live_search = $c->req->param("live_search") || 0;
+    my $has_phenotype = $c->req->param("has_phenotype") || 0;
 
     my @projects;
     foreach my $project (@$projects) {
@@ -350,6 +351,46 @@ sub get_projects_select : Path('/ajax/html/select/projects') Args(0) {
                 push @projects, @g_projects;
             }
         }
+    }
+
+    # Optionally restrict to trials with phenotype measurements (used by selection index only)
+    if ($has_phenotype) {
+        my $plot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+        my $plant_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+        my $phenotyping_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
+
+        my @trial_ids = map { $_->[0] || () } @projects;
+        my %trial_has_pheno;
+        if (@trial_ids) {
+            my $rs = $schema->resultset('Phenotype::Phenotype')->search(
+                {
+                    'stock.type_id'         => [$plot_type_id, $plant_type_id],
+                    'nd_experiment.type_id' => $phenotyping_experiment_type_id,
+                    'me.value'              => { '!=' => '' },
+                    'project.project_id'    => { -in => \@trial_ids }
+                },
+                {
+                    join => {
+                        nd_experiment_phenotypes => {
+                            nd_experiment => [
+                                { nd_experiment_stocks   => 'stock' },
+                                { nd_experiment_projects => 'project' }
+                            ]
+                        }
+                    },
+                    # Select the project_id from the joined nd_experiment_projects -> project
+                    '+select' => ['nd_experiment_projects.project_id'],
+                    '+as'     => ['project_id'],
+                    distinct => 1
+                }
+            );
+            while (my $row = $rs->next) {
+                my $pid = $row->get_column('project_id');
+                $trial_has_pheno{$pid} = 1 if defined $pid;
+            }
+        }
+
+        @projects = grep { $_->[0] && $trial_has_pheno{ $_->[0] } } @projects;
     }
 
 #    if ($empty) { unshift @projects, [ "", "Please select a trial" ]; }

@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id => undef
 $trial_name => undef
@@ -10,68 +9,189 @@ $trial_name => undef
 <script type="text/javascript" async
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
 </script>
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
+<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.Dataset', 'CXGN.SelectionIndex' ] &>
 <& /page/page_title.mas, title=>"Build a Selection Index" &>
 
-<div class="panel panel-default">
+<style>
+  /* Workflow visibility rules: hide all steps by default and only show the focused one.
+     This ensures completed steps do not remain visible while progressing through the wizard. */
+  #selection_index_workflow .workflow-content>li { display: none; }
+  #selection_index_workflow .workflow-content>li.workflow-focus { display: block !important; }
+
+  /* Defensive sizing to prevent an apparently-blank area when parent containers collapse */
+  #selection_index_workflow { display: block; width: 100%; }
+  #selection_index_workflow .panel { min-height: 160px; }
+  #selection_index_workflow .workflow-content>li { box-sizing: border-box; padding: 12px 8px; }
+  #selection_index_workflow .panel-body { overflow: visible !important; min-height: 120px; }
+  /* make sure the progress titles wrap and the content isn't pushed off-screen */
+  #selection_index_workflow .workflow-title { white-space: normal; }
+</style>
+
+<div class="panel panel-default" >
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse1">
     <div class="panel-title"><a href="#form" class="accordion-toggle">Parameters</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse1" class="panel-collapse collapse in">
     <div class="panel-body form-horizontal container-fluid" style="overflow:hidden">
       <div class="col-sm-12 col-md-12 col-lg-12">
-          <label for="select_trial_for_selection_index">Trial: </label>
-          <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
-      </div><br><br><br><br><br>
-      <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
-        <label id="trait_table_label">Traits and coefficients: </label>
-          <table class="table table-bordered table-striped table-highlight">
-            <thead>
-              <th>Trait name</th>
-              <th>Trait synonym</th>
-              <th data-toggle="tooltip" title="Must be a positive or negative number.">Index coefficient</th>
-              <th data-toggle="tooltip" title="Select the trial name, or a control, to normalize means for this trait to the trial or control mean">Normalize with a control?</th>
-              <th>Remove?</th>
-            </thead>
-            <tbody id ="trait_table"></tbody>
-            <tfoot><td colspan="5">
-            <select class="form-control" id="trait_list"></select>
-            </td></tfoot>
-          </table>
+        <div id="selection_index_workflow_container">
+          <&| /util/workflow.mas, id=> "selection_index_workflow" &>
+
+          <!-- STEP 1: choose workflow mode -->
+          <&| /util/workflow.mas:step, title=> "Choose action" &>
+            <h4>What would you like to do?</h4>
+            <label class="radio-inline"><input type="radio" name="sin_workflow" value="create" id="sin_workflow_create" checked> Create a Selection Index</label>
+            <label class="radio-inline"><input type="radio" name="sin_workflow" value="load" id="sin_workflow_load"> Load a saved formula</label>
+            <p style="color:#666; margin-top:8px">
+              Choose <b>Create</b> to build a new SIN from trials/datasets, or <b>Load</b> to open an existing formula for editing.
+            </p>
+            <div style="float:right">
+              <button type="button" class="btn btn-main" onclick="chooseActionNext(this);">Next</button>
+            </div>
+          </&>
+
+          <!-- STEP 2: source OR saved formula (depending on mode) -->
+          <&| /util/workflow.mas:step, title=> "Choose source or formula" &>
+            <h4 id="source_step_heading">Select Source Data</h4>
+
+            <!-- Source selection (CREATE mode only) -->
+            <div id="create_source_block">
+    <input type="hidden" id="source_type_select" value="trials" />
+    <div id="trial_list_tools" style="margin-top:8px;">
+        <div class="form-inline">
+            <label style="font-weight:normal; margin-right:6px;">
+                Load from a saved trial list or dataset:
+            </label>
+            <span id="trial_list_menu"></span>
+            <br />
+            <!--
+            <button type="button" class="btn btn-default btn-xs" id="load_selected_trial_list_btn" style="margin-left:6px;">
+                Load list
+            </button>
+            -->
+
         </div>
+        <p style="color:#777; font-size:90%; margin-top:4px;">
+            You can select one or more trials below. Use the button to save them as a reusable trial list, or pick an existing list to auto-select its trials.
+        </p>
+    </div>
+    <div id="trial_dual_wrapper" class="panel panel-default" style="margin-top:6px;">
+        <div class="panel-body" style=s"padding:10px;">
+            <input id="trial_search_input" type="text" class="form-control" placeholder="Search trials" style="margin-bottom:8px;">
+            <div class="btn-group btn-group-xs" role="group" aria-label="Trial actions" style="margin-bottom:8px;">
+                <button type="button" class="btn btn-default" id="trial_select_all_btn">Select All</button>
+            </div>
+            <span id="trial_counts_text" class="text-muted small"></span>
+            <div class="row" style="margin-top:10px;">
+                <div class="col-sm-6">
+                    <label class="small" id="dual_list_available_label">Available trials</label>
+                    <div id="trial_available_list" class="list-group" style="max-height:250px; overflow:auto;"></div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="small" id="dual_list_selected_label">Selected trials</label>
+                    <div id="trial_selected_list" class="list-group" style="max-height:250px; overflow:auto;"></div>
+                    <div class="clearfix" style="margin-top:10px;">
+                        <div class="btn-group btn-group-sm pull-right" role="group" aria-label="Selected trial actions">
+                            <button type="button" class="btn btn-default" id="trial_clear_btn">Clear selection</button>
+                            <button type="button" class="btn btn-primary" id="save_selected_trials_btn">Save selected trials as list</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="select_trial_container" style="display:none;"></div>
+</div>
 
-        <div class="col-sm-6 col-md-6 col-lg-6" id="sin_formula"><br>
-        <center><label>Selection Index (SIN) formula:</label></center><br>
-          <p id="ranking_formula"></p><br><br>
-          <center><button type="button" class="btn btn-primary disabled" id="calculate_rankings">Calculate Rankings</button></center>
-        </div><br><br><br><br><br>
+            <!-- Saved formula selection (LOAD mode only) -->
+            <div id="sin_list_container_step" style="margin-top:12px; display:none">
+              <h4 style="margin-top:0;">Saved formulas</h4>
+              <div id="sin_list_container">&nbsp;</div>
+              <div style="color:#666; font-size:90%; margin-top:4px">
+                Select a saved formula to load it. You can edit coefficients and controls before calculating rankings.
+              </div>
+            </div>
 
-        <div class="col-sm-6 col-md-6 col-lg-6"><br>
-        <label>Options:</label><br>
-        <label>Load a saved formula:</label>
-        <div id="sin_list"></div><br>
-        <label>Save the current formula:</label>
-          <div class="input-group">
-            <input type='text' id='save_sin_name' class='form-control disabled' placeholder='Enter a name'></input>
-            <span class="input-group-btn">
-              <button class="btn btn-default disabled" id="save_sin" type="button">Save</button>
-            </span>
-          </div><br>
-            <label><input type="checkbox" id="allow_missing" value="">Include accessions with missing values in calculations</label>
-          <select class="form-control" id="control_list" style="display: none"></select>
-        </div><br><br><br><br><br>
+            <div style="margin-top:10px; float:right">
+              <button type="button" class="btn btn-default" onclick="workflowBack(this)">Back</button>
+              <button type="button" class="btn btn-main" id="choose_source_next">Next</button>
+            </div>
+          </&>
+          <script type="text/javascript">
+            (function ensureSelectionIndexSource() {
+              if (typeof load_items_for_source === 'function') {
+                load_items_for_source(jQuery('#source_type_select').val() || 'trials');
+              } else {
+                setTimeout(ensureSelectionIndexSource, 200);
+              }
+            })();
+          </script>
+
+          <!-- STEP 3: traits and coefficients -->
+          <&| /util/workflow.mas:step, title=> "Traits & Coefficients" &>
+            <h4>Pick traits and set index coefficients</h4>
+            <div class="col-sm-12 col-md-12 col-lg-12 table-responsive" id="trait_table_div">
+              <label id="trait_table_label">Traits and coefficients: </label>
+              <table class="table table-bordered table-striped table-highlight">
+                <thead>
+                  <th>Trait name</th>
+                  <th>Trait synonym</th>
+                  <th data-toggle="tooltip" title="Must be a positive or negative number.">Index coefficient</th>
+                  <th data-toggle="tooltip" title="Select the trial name, or a control, to normalize means for this trait to the trial or control mean">Normalize with a control?</th>
+                  <th>Remove?</th>
+                </thead>
+                <tbody id="trait_table"></tbody>
+                <tfoot>
+                  <td colspan="5">
+                    <select class="form-control" id="trait_list"></select>
+                  </td>
+                </tfoot>
+              </table>
+            </div>
+            <div style="margin-top:10px; float:right">
+              <button type="button" class="btn btn-default" onclick="workflowBack(this)">Back</button>
+              <button type="button" class="btn btn-main" id="traits_coeffs_next">Next</button>
+            </div>
+          </&>
+
+          <!-- STEP 4: review & save -->
+          <&| /util/workflow.mas:step, title=> "Review & Save" &>
+            <h4>Selection Index (SIN) formula</h4>
+            <p id="ranking_formula"></p>
+            <div style="margin-top:10px; float:right">
+              <button type="button" class="btn btn-default" onclick="workflowBack(this)">Back</button>
+              <!-- This button just calls the global calculate_rankings defined in CXGN.SelectionIndex.js -->
+              <button type="button" class="btn btn-primary disabled" id="calculate_rankings_button" onclick="jQuery('#calculate_rankings').click();">Calculate Rankings</button>
+            </div>
+            <hr />
+            <div>
+              <label>Save the current formula:</label>
+              <div class="input-group" style="max-width:420px;">
+                <input type='text' id='save_sin_name' class='form-control disabled' placeholder='Enter a name'></input>
+                <span class="input-group-btn">
+                  <button class="btn btn-default disabled" id="save_sin" type="button">Save</button>
+                </span>
+              </div>
+            </div>
+          </&>
+
+          </&>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
-
-<div class="panel panel-default">
+<div class="panel panel-default" id="selection_index_results_panel" style="display:none;">
   <div class="panel-heading" data-toggle="collapse" data-parent="#accordion" data-target="#collapse2">
     <div class="panel-title"><a href="#table_panel" class="accordion-toggle">Results</a><span class="pull-right clickable" onmouseover="" style="cursor: pointer;"><i class="glyphicon glyphicon-chevron-up"></i></span></div>
   </div>
   <div id="collapse2" class="panel-collapse collapse in">
     <div class="panel-body" id="table_panel" style="overflow:hidden">
-      <ul class="nav nav-tabs"><li class="active"><a data-toggle="tab" href="#weighted_values_div">Rankings</a></li><li><a data-toggle="tab" href="#raw_avgs_div">Unweighted Means</a></li></ul>
+      <ul class="nav nav-tabs">
+        <li class="active"><a data-toggle="tab" href="#weighted_values_div">Rankings</a></li>
+        <li><a data-toggle="tab" href="#raw_avgs_div">Unweighted Means</a></li>
+      </ul>
       <div class="tab-content">
         <div id="weighted_values_div" class="tab-pane fade in active"></div>
         <div id="raw_avgs_div" class="tab-pane fade"></div>
@@ -90,40 +210,32 @@ $trial_name => undef
       <div class="modal-body">
         <div class="container-fluid">
 
-        <h4>
-          Background:
-        </h4>
+          <h4>Background:</h4>
           <center><p>A selection index is a method of optimizing selection by acting on multiple traits simultaneously. An index can accomplish this because it incorporates multiple sources of information about an individual into a single best linear prediction of breeding value. This selection index tool combines phenotypic observations with index coefficients into a selection index, SIN, of the form:</p></center>
           <center>\(SIN = b_1x_1 + b_2x_2\hspace{2mm}...\hspace{2mm}b_ix_i\)</center><br>
           <center><p>where $x_i$ is the mean of observations on the $_i$th trait and $b_i$ is the selection index coefficient (or weight) for that trait.</p></center>
 
-        <h4>
-          Parameters:
-        </h4>
-        <dl>
-          <dt>Trial</dt>
-          <dd>One trial. Must be selected first. Multiple trial selection indices are not yet supported.</dd>
-          <dt>Traits</dt>
-          <dd>One or more traits. Must be traits that were measured in the trial. At maximum, all of the traits from the trial can be used.</dd>
-          <dt>Selection coefficients</dt>
-          <dd>One for each trait. Must be a positive or negative number, and should reflect the importance of the trait in the index. If left blank it defaults to 1.</dd>
-          <dt>Normalization</dt>
-          <dd>By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using a control mean or the overall trial mean.</dd>
-        </dl>
+          <h4>Parameters:</h4>
+          <dl>
+            <dt>Trial</dt>
+            <dd>One trial. Must be selected first. Multiple trial selection indices are not yet supported.</dd>
+            <dt>Traits</dt>
+            <dd>One or more traits. Must be traits that were measured in the trial. At maximum, all of the traits from the trial can be used.</dd>
+            <dt>Selection coefficients</dt>
+            <dd>One for each trait. Must be a positive or negative number, and should reflect the importance of the trait in the index. If left blank it defaults to 1.</dd>
+            <dt>Normalization</dt>
+            <dd>By default the unadjusted mean of phenotypic observations is used. For each trait, users have the option to normalize these means using a control mean or the overall trial mean.</dd>
+          </dl>
 
-        <h4>
-          Options:
-        </h4>
-        <dt>Save</dt>
-        <dd>The save option allows a user to enter a name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager where it can be edited or shared with others.</dd>
-        <dt>Select</dt>
-        <dd>The select option allows a user to load a saved formula, which will consist of a saved combination of traits, coefficients, and normalization options.</dd>
-        <dt>Include checkbox</dt>
-        <dd>Accessions with missing phenotypes are excluded by default. If the allow missing phenotypes option is enabled, the rankings will expand to include any accessions which were planted in the trial but which are missing observations for one or more of the traits in the index. Missing phenotypes will not contribute to the SIN score, so the final SIN interpretation should change accordingly.</dd>
+          <h4>Options:</h4>
+          <dt>Save</dt>
+          <dd>The save option allows a user to enter a name, and save the current index formula as a dataset. It is then available for later use, and visible in their list manager where it can be edited or shared with others.</dd>
+          <dt>Select</dt>
+          <dd>The select option allows a user to load a saved formula, which will consist of a saved combination of traits, coefficients, and normalization options.</dd>
+          <dt>Include checkbox</dt>
+          <dd>Accessions with missing phenotypes are excluded by default. If the allow missing phenotypes option is enabled, the rankings will expand to include any accessions which were planted in the trial but which are missing observations for one or more of the traits in the index. Missing phenotypes will not contribute to the SIN score, so the final SIN interpretation should change accordingly.</dd>
 
-        <h4>
-          Results:
-        </h4>
+          <h4>Results:</h4>
           <p>The <b>Calculate Rankings</b> button will produce a SIN score and ranking for each accession, based on the selected parameters and phenotype means. The rankings and phenotype means are displayed in the <b>Rankings</b> and <b>Unweighted Means</b> tabs of the results section, where they can be manipulated, copied and downloaded. Below the results table, users have the option to <b>save top ranked accessions to a list</b>.</p>
         </div>
       </div>
@@ -135,31 +247,694 @@ $trial_name => undef
 </div>
 
 <div class="modal fade" id="selection_index_error_dialog" tabindex="-1" role="dialog" aria-labelledby="selectionIndexErrorDialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content ui-front">
-            <div class="modal-header text-center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="selectionIndexErrorDialog"></h4>
-            </div>
-            <div class="modal-body" id="selection_index_error_body">
-              <ul class="list-group" id="selection_index_error_message"></ul>
-            </div>
-            <div class="modal-footer">
-                <button id="selection_index_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header text-center">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="selectionIndexErrorDialog"></h4>
+      </div>
+      <div class="modal-body" id="selection_index_error_body">
+        <ul class="list-group" id="selection_index_error_message"></ul>
+      </div>
+      <div class="modal-footer">
+        <button id="selection_index_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
     </div>
+  </div>
 </div>
 
+<div class="modal fade" id="sin_save_choice_modal" tabindex="-1" role="dialog" aria-labelledby="sinSaveChoiceLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title" id="sinSaveChoiceLabel">Save changes to formula</h4>
+      </div>
+      <div class="modal-body">
+        <p>You have edited a loaded selection index formula.</p>
+        <p><strong>Current formula name:</strong> <span id="sin_save_current_name"></span></p>
+
+        <form id="sin_save_choice_form">
+          <div class="radio">
+            <label>
+              <input type="radio" name="sin_save_mode" id="sin_save_use_same" value="same" checked>
+              Save using the same name
+            </label>
+          </div>
+          <div class="radio">
+            <label>
+              <input type="radio" name="sin_save_mode" value="new">
+              Save as a new formula
+            </label>
+          </div>
+
+          <div class="form-group" style="margin-top:8px;">
+            <label for="sin_save_new_name">New formula name (if saving as new):</label>
+            <input type="text" class="form-control" id="sin_save_new_name" placeholder="Enter new name">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" id="sin_save_discard_button" data-dismiss="modal">
+          Discard changes
+        </button>
+        <button type="button" class="btn btn-primary" id="sin_save_confirm_button">
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
-    jQuery(document).ready(function() {
-        jQuery('#ranking_formula').html("<center><i>Select a trial, then pick traits and weights (or load a saved formula).</i></center>");
-        get_select_box('projects', 'select_trial_for_selection_index', { 'get_field_trials' : 1, 'include_analyses' : 1, 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'default': 'Select a trial or analysis', 'live_search': 1 });
-        var lo = new CXGN.List();
-        jQuery('#sin_list').html(lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined));
-        jQuery('#sin_list_list_select').change(
-          function() {
-            load_sin();
+  jQuery(document).ready(function() {
+    console.log('selection_index: document ready');
+
+    // If bootstrap-select is missing, provide a no-op shim
+    if (typeof jQuery.fn.selectpicker !== 'function') {
+      jQuery.fn.selectpicker = function(action) {
+        this.each(function() {
+          var $s = jQuery(this);
+          if (!$s.data('selectpicker')) {
+            var $fakeButton = jQuery('<button type="button">');
+            $s.data('selectpicker', { $button: $fakeButton });
+          }
         });
+        return this;
+      };
+    }
+
+    jQuery('#ranking_formula').html("<center><i>Select a source, then pick traits and weights (or load a saved formula).</i></center>");
+
+    var WORKFLOW_MODE = 'create'; // 'create' or 'load'
+    var CURRENT_SOURCE_TYPE = 'trials';
+
+    // --- Simple helpers --------------------------------------------------
+
+    function showError(msg) {
+      jQuery('#selection_index_error_message').html(
+        "<center><li class='list-group-item list-group-item-danger'> " + msg + "</li></center>"
+      );
+      jQuery('#selection_index_error_dialog').modal('show');
+    }
+
+    function showWarning(msg) {
+      jQuery('#selection_index_error_message').html(
+        "<center><li class='list-group-item list-group-item-warning'> " + msg + "</li></center>"
+      );
+      jQuery('#selection_index_error_dialog').modal('show');
+    }
+
+    function validateSourceSelection() {
+      var val = jQuery('#select_trial_for_selection_index').val();
+      if (!val) { return false; }
+      if (Array.isArray(val)) { return val.length > 0; }
+      return (val && val !== '');
+    }
+
+    function hasUsableTraits() {
+      try {
+        var $opts = jQuery('#trait_list option').filter(function() {
+          var v = jQuery(this).val();
+          var id = jQuery(this).attr('id');
+          if (!v || v === '') { return false; }
+          if (id && id === 'select_message') { return false; }
+          return true;
+        });
+        return $opts.length > 0;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function waitForTraits(timeout_ms) {
+      timeout_ms = timeout_ms || 5000;
+
+      function checkNow(resolve, reject) {
+        // Traits loaded normally
+        if (hasUsableTraits()) {
+          resolve(true);
+          return true;
+        }
+        // Explicit "No trait measurements found" message from SelectionIndex.js
+        var msgOpt = jQuery('#trait_list option#select_message');
+        if (msgOpt.length && /No trait measurements found/i.test(msgOpt.text())) {
+          reject(new Error(msgOpt.text()));
+          return true;
+        }
+        return false;
+      }
+
+      return new Promise(function (resolve, reject) {
+        // maybe it's already in a terminal state
+        if (checkNow(resolve, reject)) return;
+
+        var node = document.getElementById('trait_list');
+        var timer = setTimeout(function () {
+          try { if (mo) mo.disconnect(); } catch (e) {}
+          if (!checkNow(resolve, reject)) {
+            reject(new Error('No trait measurements found for the selected source.'));
+          }
+        }, timeout_ms);
+
+        var mo = null;
+        try {
+          mo = new MutationObserver(function () {
+            if (checkNow(resolve, reject)) {
+              clearTimeout(timer);
+              if (mo) mo.disconnect();
+            }
+          });
+          if (node) mo.observe(node, { childList: true, subtree: true });
+        } catch (e) {
+          clearTimeout(timer);
+          if (!checkNow(resolve, reject)) {
+            reject(new Error('No trait measurements found for the selected source.'));
+          }
+        }
+      });
+    }
+
+    function updateResultsVisibility(wf) {
+      var $panel = jQuery('#selection_index_results_panel');
+      if (!$panel.length) { return; }
+      try {
+        if (!wf) {
+          wf = document.getElementById('selection_index_workflow') || document.querySelector('.workflow');
+        }
+        if (!wf) {
+          $panel.hide();
+          return;
+        }
+        var progsAll = wf.querySelectorAll('.workflow-prog>li');
+        var focusIndex = -1;
+        for (var i = 0; i < progsAll.length; i++) {
+          if (progsAll[i].classList && progsAll[i].classList.contains('workflow-focus')) {
+            focusIndex = i;
+            break;
+          }
+        }
+        if (focusIndex !== -1 && progsAll.length && focusIndex === progsAll.length - 1) {
+          $panel.show();
+        } else {
+          $panel.hide();
+        }
+      } catch (e) {
+        console.error('updateResultsVisibility error', e);
+        $panel.hide();
+      }
+    }
+
+    function syncWorkflowDisplay(wf) {
+      try {
+        if (!wf) {
+          wf = document.getElementById('selection_index_workflow') || document.querySelector('.workflow');
+        }
+        if (!wf) { return; }
+        var contsAll = wf.querySelectorAll('.workflow-content>li');
+        if (!contsAll || contsAll.length === 0) { return; }
+
+        for (var i = 0; i < contsAll.length; i++) {
+          contsAll[i].style.display = 'none';
+        }
+
+        var focused = wf.querySelector('.workflow-content>li.workflow-focus');
+        if (focused) {
+          focused.style.display = 'block';
+          updateResultsVisibility(wf);
+          return;
+        }
+
+        var progsAll = wf.querySelectorAll('.workflow-prog>li');
+        var idx = -1;
+        for (var j = 0; j < progsAll.length; j++) {
+          if (progsAll[j].classList && progsAll[j].classList.contains('workflow-focus')) {
+            idx = j;
+            break;
+          }
+        }
+        if (idx >= 0 && contsAll[idx]) {
+          contsAll[idx].style.display = 'block';
+          contsAll[idx].classList.add('workflow-focus');
+        }
+        updateResultsVisibility(wf);
+      } catch (e) {
+        console.error('syncWorkflowDisplay error', e);
+      }
+    }
+
+    // Keep content in sync when user clicks directly on steps 1–4
+    jQuery(document).on('click', '#selection_index_workflow .workflow-prog li', function () {
+      var wf = document.getElementById('selection_index_workflow');
+      // Let Workflow.focus run first, then fix the content visibility
+      setTimeout(function () {
+        syncWorkflowDisplay(wf);
+      }, 10);
     });
+
+    function workflowBack(btn) {
+      try {
+        var wf = jQuery(btn).closest('.workflow')[0] || document.getElementById('selection_index_workflow') || document.querySelector('.workflow');
+        if (!wf) { return; }
+
+        var progs = wf.querySelectorAll('.workflow-prog>li');
+        var idx = -1;
+        for (var j = 0; j < progs.length; j++) {
+          if (progs[j].classList.contains('workflow-focus')) {
+            idx = j;
+            break;
+          }
+        }
+
+        if (idx === -1) {
+          var conts = wf.querySelectorAll('.workflow-content>li');
+          for (var i = 0; i < conts.length; i++) {
+            if (conts[i].classList.contains('workflow-focus')) {
+              idx = i;
+              break;
+            }
+          }
+        }
+
+        if (idx === -1) { idx = 0; }
+        var target = Math.max(0, idx - 1);
+
+        var progsAll = wf.querySelectorAll('.workflow-prog>li');
+        var contsAll = wf.querySelectorAll('.workflow-content>li');
+        for (var a = 0; a < progsAll.length; a++) { progsAll[a].classList.remove('workflow-focus'); }
+        for (var b = 0; b < contsAll.length; b++) { contsAll[b].classList.remove('workflow-focus'); }
+
+        if (progsAll[target]) { progsAll[target].classList.add('workflow-focus'); }
+        if (contsAll[target]) {
+          contsAll[target].classList.add('workflow-focus');
+          contsAll[target].style.display = 'block';
+        }
+        for (var c = 0; c < contsAll.length; c++) {
+          if (c !== target) { contsAll[c].style.display = 'none'; }
+        }
+
+        if (window.Workflow && typeof Workflow.focus === 'function') {
+          if (wf && wf.id) {
+            Workflow.focus('#' + wf.id, target);
+          } else {
+            Workflow.focus('#selection_index_workflow', target);
+          }
+          setTimeout(function () {
+            updateResultsVisibility(wf);
+          }, 10);
+        } else {
+          updateResultsVisibility(wf);
+        }
+      } catch (e) {
+        console.error('workflowBack error', e);
+      }
+    }
+
+    // Expose for inline handlers
+    window.workflowBack = workflowBack;
+    window.validateSourceSelection = validateSourceSelection;
+
+    // --- MODE TOGGLE (Create vs Load) ------------------------------------
+
+    jQuery(document).on('change', 'input[name="sin_workflow"]', function() {
+      WORKFLOW_MODE = jQuery(this).val();
+      if (WORKFLOW_MODE === 'load') {
+        jQuery('#sin_list_container_step').show(); // Show saved formulas
+        jQuery('#create_source_block').hide();  //hide trial picker
+        jQuery('#source_step_heading').text('Choose a saved formula');
+        try {
+          var lo = new CXGN.List();
+          jQuery('#sin_list_container').html(
+            lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined)
+          );
+        } catch (e) {
+          console.error('error rendering sin_list selector', e);
+        }
+      } else {
+        jQuery('#sin_list_container_step').hide();
+        jQuery('#sin_list_container').empty();
+        jQuery('#create_source_block').show();
+        jQuery('#source_step_heading').text('Select Source Data');
+      }
+    });
+
+    function chooseActionNext(btn) {
+      try {
+        var mode = jQuery('input[name="sin_workflow"]:checked').val() || WORKFLOW_MODE;
+        WORKFLOW_MODE = mode;
+        if (WORKFLOW_MODE === 'load') {
+          jQuery('#sin_list_container_step').show();
+          jQuery('#create_source_block').hide();
+          jQuery('#source_step_heading').text('Choose a saved formula');
+          try {
+            var lo = new CXGN.List();
+            jQuery('#sin_list_container').html(
+              lo.listSelect('sin_list', ['dataset'], 'Select a formula', 'refresh', undefined)
+            );
+          } catch (e) {
+            console.error('chooseActionNext: render sin_list failed', e);
+          }
+        } else {
+          jQuery('#sin_list_container_step').hide();
+          jQuery('#create_source_block').show();
+          jQuery('#source_step_heading').text('Select Source Data');
+        }
+
+        setTimeout(function() {
+          try {
+            Workflow.complete(btn);
+            syncWorkflowDisplay(document.getElementById('selection_index_workflow'));
+          } catch (e) {
+            console.error('chooseActionNext Workflow.complete error', e);
+          }
+        }, 10);
+      } catch (e) {
+        console.error('chooseActionNext error', e);
+      }
+    }
+    window.chooseActionNext = chooseActionNext;
+
+    // --- Source loading (CREATE mode) ------------------------------------
+
+    function load_items_for_source(type) {
+    CURRENT_SOURCE_TYPE = 'trials';
+
+    if (typeof hideTrialLoadingModal === 'function') {
+        hideTrialLoadingModal();
+    }
+    if (typeof showTrialLoadingModal === 'function') {
+        showTrialLoadingModal('Loading trials. Please wait...');
+    }
+
+    // For trials, the hidden select is still needed as a data store.
+    // get_select_box will place it into #select_trial_container, which is fine even if hidden.
+    jQuery('#select_trial_for_selection_index').remove();
+    jQuery('#select_trial_container').html('<div class="loading">Loading...</div>');
+
+    // Standard field-trial selector (hidden, used as data store + change events)
+    get_select_box('projects', 'select_trial_container', {
+      'get_field_trials': 1,
+      'include_analyses': 0,
+      // 'has_phenotype': 1,
+      'name': 'select_trial_for_selection_index',
+      'id':   'select_trial_for_selection_index',
+      'default': 'Select one or more trials',
+      'live_search': 1
+    });
+
+    // Enhance once injected, using a MutationObserver for robustness
+    var container = document.getElementById('select_trial_container');
+    if (container) {
+        var observer = new MutationObserver(function(mutations, obs) {
+            var $sel = jQuery('#select_trial_for_selection_index');
+            if ($sel.length && $sel.find('option').length > 1) { // check for actual options
+                obs.disconnect(); // We found the select, stop observing
+
+                $sel.attr('multiple', 'multiple').css('display', 'none');
+
+                try {
+                    var lo = new CXGN.List();
+                    jQuery('#trial_list_menu').html(
+                      lo.listSelect(
+                        'trial_source_list',
+                        ['trials'],
+                        'Use saved trial list',
+                        'refresh',
+                        undefined
+                      )
+                    );
+                } catch (e) {
+                    console.error('error rendering trial_source_list selector', e);
+                }
+                build_trial_dual_list_ui($sel);
+                if (typeof hideTrialLoadingModal === 'function') {
+                    hideTrialLoadingModal();
+                }
+            }
+        });
+        observer.observe(container, {
+            childList: true,
+            subtree: true
+        });
+    }
+}
+
+    window.load_items_for_source = load_items_for_source;
+
+    // --- Trials dual-list UI helpers ------------------------------------
+    var trialDualState = { all: [], selected: [], search: '' };
+    window.trialDualSyncLock = false;
+
+    function rebuildTrialStateFromSelect($sel, selectedIds) {
+      trialDualState.all = [];
+      $sel.find('option').each(function () {
+        var id = jQuery(this).val();
+        if (!id) return;
+        trialDualState.all.push({ id: id, name: jQuery(this).text() });
+      });
+
+      var selSet = {};
+      (selectedIds || []).forEach(function (id) { selSet[String(id)] = true; });
+      trialDualState.selected = trialDualState.all.filter(function (t) { return selSet[String(t.id)]; });
+    }
+
+    function renderTrialDualLists() {
+      if (!jQuery('#trial_dual_wrapper').length) return;
+      var term = (trialDualState.search || '').toLowerCase();
+      var selMap = {};
+      trialDualState.selected.forEach(function (t) { selMap[String(t.id)] = true; });
+      var available = trialDualState.all.filter(function (t) { return !selMap[String(t.id)]; });
+
+      if (term) {
+        available = available.filter(function (t) {
+          return t.name.toLowerCase().indexOf(term) !== -1;
+        });
+      }
+
+      var availHtml = available.map(function (t) {
+        return '<div class="list-group-item" data-id="' + t.id + '">' +
+          '<button class="btn btn-success btn-xs trial-add-btn" data-id="' + t.id + '" aria-label="Add trial">+</button> ' +
+          t.name +
+          '</div>';
+      }).join('');
+      jQuery('#trial_available_list').html(availHtml || '<div class="text-muted" style="padding:6px;">No trials matched</div>');
+
+      var selectedHtml = trialDualState.selected.map(function (t) {
+        return '<div class="list-group-item" data-id="' + t.id + '">' +
+          '<button class="btn btn-danger btn-xs trial-remove-btn" data-id="' + t.id + '" aria-label="Remove trial">&times;</button> ' +
+          t.name +
+          '</div>';
+      }).join('');
+      jQuery('#trial_selected_list').html(selectedHtml || '<div class="text-muted" style="padding:6px;">No trials selected</div>');
+
+      jQuery('#trial_counts_text').text(trialDualState.selected.length + ' selected / ' + trialDualState.all.length + ' total');
+    }
+
+    function applySelectionToHiddenSelect(ids) {
+      var $sel = jQuery('#select_trial_for_selection_index');
+      if (!$sel.length) return;
+      window.trialDualSyncLock = true;
+      $sel.find('option').prop('selected', false);
+      ids.forEach(function (id) {
+        $sel.find('option[value="' + id + '"]').prop('selected', true);
+      });
+      if ($sel.selectpicker) $sel.selectpicker('refresh');
+      window.trialDualSyncLock = false;
+      $sel.trigger('change');
+    }
+
+    function build_trial_dual_list_ui($sel) {
+      // This function now only initializes the state for the dual-list UI,
+      // assuming the DOM structure is already in place.
+      rebuildTrialStateFromSelect($sel, $sel.val() || []);
+      renderTrialDualLists();
+
+      window.syncTrialDualListUI = function (ids) {
+        rebuildTrialStateFromSelect(jQuery('#select_trial_for_selection_index'), ids || []);
+        renderTrialDualLists();
+      };
+    }
+
+    // Dual-list events
+    jQuery(document).on('keyup change', '#trial_search_input', function () {
+      trialDualState.search = jQuery(this).val();
+      renderTrialDualLists();
+    });
+
+    jQuery(document).on('click', '.trial-add-btn', function (e) {
+      e.preventDefault();
+      var id = jQuery(this).data('id');
+      var item = trialDualState.all.find(function (t) { return String(t.id) === String(id); });
+      if (!item) return;
+      var already = trialDualState.selected.find(function (t) { return String(t.id) === String(id); });
+      if (already) return;
+      trialDualState.selected.push(item);
+      applySelectionToHiddenSelect(trialDualState.selected.map(function (t) { return t.id; }));
+      renderTrialDualLists();
+    });
+
+    jQuery(document).on('click', '.trial-remove-btn', function (e) {
+      e.preventDefault();
+      var id = jQuery(this).data('id');
+      trialDualState.selected = trialDualState.selected.filter(function (t) { return String(t.id) !== String(id); });
+      applySelectionToHiddenSelect(trialDualState.selected.map(function (t) { return t.id; }));
+      renderTrialDualLists();
+    });
+
+    jQuery(document).on('click', '#trial_select_all_btn', function () {
+      var term = (trialDualState.search || '').toLowerCase();
+      var selMap = {};
+      trialDualState.selected.forEach(function (t) { selMap[String(t.id)] = true; });
+      trialDualState.all.forEach(function (t) {
+        var matches = !term || t.name.toLowerCase().indexOf(term) !== -1;
+        if (matches) selMap[String(t.id)] = true;
+      });
+      trialDualState.selected = trialDualState.all.filter(function (t) { return selMap[String(t.id)]; });
+      applySelectionToHiddenSelect(trialDualState.selected.map(function (t) { return t.id; }));
+      renderTrialDualLists();
+    });
+
+    jQuery(document).on('click', '#trial_clear_btn', function () {
+      trialDualState.selected = [];
+      applySelectionToHiddenSelect([]);
+      renderTrialDualLists();
+    });
+
+    // initial source type
+    jQuery(document).on('change', '#source_type_select', function() {
+      load_items_for_source(jQuery(this).val());
+    });
+
+// Keep the dual-list UI in sync when the hidden select changes (e.g., saved list loaded)
+jQuery(document).on('change', '#select_trial_for_selection_index', function () {
+  if (typeof window.syncTrialDualListUI === 'function' && !window.trialDualSyncLock) {
+    window.syncTrialDualListUI(jQuery(this).val() || []);
+  }
+});
+
+// --- Saved formula select change (LOAD mode) -------------------------
+
+    jQuery(document).on('change', '#sin_list_list_select', function() {
+      // Just load the formula rows; no source required here.
+      if (typeof load_sin === 'function') {
+        load_sin();
+      }
+    });
+
+    // --- NEXT from step 2 ------------------------------------------------
+
+    jQuery(document).on('click', '#choose_source_next', function(e) {
+      e.preventDefault();
+
+      if (WORKFLOW_MODE === 'load') {
+        // LOAD WORKFLOW: only require a saved formula
+        var sin_id = jQuery('#sin_list_list_select').val() || jQuery('#sin_formula_list_select').val();
+        if (!sin_id) {
+          showError('Please select a saved formula to continue.');
+          return;
+        }
+        try {
+          if (typeof load_sin === 'function') {
+            load_sin(); // New load_sin does not depend on a source
+          }
+        } catch (err) {
+          console.error('load_sin error', err);
+          showError('There was a problem loading the saved formula.');
+          return;
+        }
+
+        // Move to Traits & Coefficients step
+        try {
+          var li = jQuery(this).closest('li')[0] || jQuery(this).closest('.workflow-content>li')[0] || this;
+          Workflow.complete(li);
+          setTimeout(function() {
+            syncWorkflowDisplay(document.getElementById('selection_index_workflow'));
+          }, 20);
+        } catch (err2) {
+          console.error('Workflow.complete error (load mode)', err2);
+        }
+        return;
+      }
+
+      // CREATE WORKFLOW: require a source with traits
+      if (!validateSourceSelection()) {
+        showError('Please select a source to continue.');
+        return;
+      }
+
+      var $btn = jQuery('#choose_source_next');
+      if ($btn.data('waiting')) {
+        // already in-flight; ignore extra clicks
+        return;
+      }
+      $btn.data('waiting', true).prop('disabled', true);
+
+      try {
+        jQuery('#select_trial_for_selection_index').trigger('change');
+      } catch (e1) {
+        console.error('change trigger error', e1);
+      }
+
+      waitForTraits(2500).then(function () {
+        var li = $btn.closest('li')[0] ||
+                 $btn.closest('.workflow-content>li')[0] ||
+                 $btn[0];
+        try {
+          Workflow.complete(li);
+        } catch (e2) {
+          console.error('Workflow.complete error (create mode)', e2);
+        }
+        setTimeout(function () {
+          syncWorkflowDisplay(document.getElementById('selection_index_workflow'));
+        }, 20);
+      }).catch(function (err) {
+        var msg = 'No trait measurements found for the selected source.';
+        if (err && err.message) msg = err.message;
+        showWarning(msg);
+      }).then(function () {
+        $btn.data('waiting', false).prop('disabled', false);
+      });
+    });
+
+    // --- NEXT from Traits step -------------------------------------------
+
+    jQuery(document).on('click', '#traits_coeffs_next', function(e) {
+      e.preventDefault();
+      var li = jQuery(this).closest('li')[0] || this;
+      try {
+        Workflow.complete(li);
+      } catch (e2) {
+        console.error('Workflow.complete error (traits next)', e2);
+      }
+      setTimeout(function() {
+        syncWorkflowDisplay(document.getElementById('selection_index_workflow'));
+      }, 20);
+    });
+
+    // --- Init Workflow + initial load ------------------------------------
+
+    setTimeout(function() {
+      try {
+        var wf = document.getElementById('selection_index_workflow');
+        if (window.Workflow && typeof Workflow.init === 'function' && wf) {
+          Workflow.init('#selection_index_workflow');
+          Workflow.focus('#selection_index_workflow', 0);
+          syncWorkflowDisplay(wf);
+        }
+      } catch (e) {
+        console.error('Workflow init error', e);
+      }
+      // Default: trials as source in CREATE mode
+      try {
+        if (jQuery('#source_type_select').length) {
+          load_items_for_source(jQuery('#source_type_select').val() || 'trials');
+        }
+      } catch (e2) {
+        console.error('initial load_items_for_source error', e2);
+      }
+    }, 0);
+  });
 </script>

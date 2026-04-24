@@ -47,6 +47,48 @@ $training_pop_name
       <div id="si_help"><p> And assign relative weights to traits.<i style="color:#5cb85c;" class="fa fa-question-circle" id="si_tooltip" title="<% $si_tooltip %>"> </i></p></div>
     </div>
 
+    <div id="create_source_block">
+    <input type="hidden" id="source_type_select" value="trials" />
+    <div id="trial_list_tools" style="margin-top:8px;">
+        <div class="form-inline">
+            <label style="font-weight:normal; margin-right:6px;">
+                Load from a saved trial list:
+            </label>
+            <span id="trial_list_menu"></span>
+            <button type="button" class="btn btn-default btn-xs" id="load_selected_trial_list_btn" style="margin-left:6px;">
+                Load list
+            </button>
+            <button type="button" class="btn btn-default btn-xs" id="save_selected_trials_btn" style="margin-left:10px;">
+                Save selected trials as list
+            </button>
+        </div>
+        <p style="color:#777; font-size:90%; margin-top:4px;">
+            You can select one or more trials below. Use the button to save them as a reusable trial list, or pick an existing list to auto-select its trials.
+        </p>
+    </div>
+    <div id="trial_dual_wrapper" class="panel panel-default" style="margin-top:6px;">
+        <div class="panel-body" style="padding:10px;">
+            <input id="trial_search_input" type="text" class="form-control" placeholder="Search trials" style="margin-bottom:8px;">
+            <div class="btn-group btn-group-xs" role="group" aria-label="Trial actions" style="margin-bottom:8px;">
+                <button type="button" class="btn btn-default" id="trial_select_all_btn">Select All</button>
+                <button type="button" class="btn btn-default" id="trial_clear_btn">Clear</button>
+            </div>
+            <span id="trial_counts_text" class="text-muted small"></span>
+            <div class="row" style="margin-top:10px;">
+                <div class="col-sm-6">
+                    <label class="small" id="dual_list_available_label">Available trials</label>
+                    <div id="trial_available_list" class="list-group" style="max-height:250px; overflow:auto;"></div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="small" id="dual_list_selected_label">Selected trials</label>
+                    <div id="trial_selected_list" class="list-group" style="max-height:250px; overflow:auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="select_trial_container" style="display:none;"></div>
+</div>
+
    
     <div id="si_selected_pop_div" style="display:none">
       <input type="hidden" id="training_pop_id" value="<% $training_pop_id %>" />
