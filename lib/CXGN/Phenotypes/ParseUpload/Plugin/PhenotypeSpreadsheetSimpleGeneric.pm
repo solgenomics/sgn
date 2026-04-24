@@ -137,10 +137,11 @@ sub parse {
             }
 
             if ( @trait_values && defined($timestamp) ) {
-		foreach my $tv (@trait_values) {
-		    if ($tv->[0] ne ".") {
-			push @{$data{$observationunit_name}->{$trait_name}}, $tv;
-		    }
+                foreach my $tv (@trait_values) {
+                    my $tv0 = ref($tv) eq 'ARRAY' ? $tv->[0] : $tv;
+                    if (defined $tv0 && $tv0 ne ".") {
+                        push @{$data{$observationunit_name}->{$trait_name}}, $tv;
+                    }
                 }
             }
         }
