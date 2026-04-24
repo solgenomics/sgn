@@ -15,7 +15,12 @@ use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
 use File::Spec qw(catfile);
 use File::Basename qw(basename);
+use File::Path qw(make_path);
 use Scalar::Util qw(looks_like_number);
+use Excel::Writer::XLSX;
+use Spreadsheet::ParseExcel;
+use Spreadsheet::ParseXLSX;
+use Spreadsheet::WriteExcel;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -151,6 +156,23 @@ sub decisions_GET {
     return $self->status_bad_request($c, message => 'Missing list_id')
         unless $list_id;
 
+    my $entity = $self->_decision_rows_entity(
+        $c,
+        list_id          => $list_id,
+        meeting_id       => $meeting_id,
+        breeding_program => $selected_program,
+    );
+
+    return $self->status_ok($c, entity => $entity);
+}
+
+sub _decision_rows_entity {
+    my ($self, $c, %args) = @_;
+
+    my $list_id          = $args{list_id};
+    my $meeting_id       = $args{meeting_id};
+    my $selected_program = $args{breeding_program} // '';
+
     my $dbh    = $c->dbc->dbh;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
 
@@ -164,8 +186,7 @@ sub decisions_GET {
     my $els  = $list->elements || [];
     my @accessions = grep { defined $_ && $_ ne '' } @$els;
 
-    return $self->status_ok($c, entity => { rows => [] })
-        unless @accessions;
+    return { rows => [] } unless @accessions;
 
     my $ps       = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
     my $programs = $ps->get_breeding_programs() || [];
@@ -390,7 +411,504 @@ sub decisions_GET {
         }
     }
 
-    return $self->status_ok($c, entity => { rows => \@rows });
+    return { rows => \@rows };
+}
+
+sub _decision_upload_headers {
+    return (
+        'Accession',
+        'Breeding Program',
+        'Previous Stage',
+        'Decision',
+        'New Stage',
+        'Notes',
+        'Comment',
+    );
+}
+
+sub _normalize_decision_upload_header {
+    my ($self, $value) = @_;
+    $value = defined $value ? "$value" : '';
+    $value =~ s/^\s+|\s+$//g;
+    $value = lc($value);
+    $value =~ s/[^a-z0-9]+/ /g;
+    $value =~ s/\s+/ /g;
+    $value =~ s/^\s+|\s+$//g;
+    return $value;
+}
+
+sub _parse_decision_upload_file {
+    my ($self, %args) = @_;
+
+    my $filename = $args{filename} || '';
+    my $original_filename = $args{original_filename} || $filename;
+    my @errors;
+
+    my ($extension) = $original_filename =~ /(\.[^.]+)$/;
+    $extension = lc($extension || '');
+
+    my $parser;
+    if ($extension eq '.xlsx') {
+        $parser = Spreadsheet::ParseXLSX->new();
+    }
+    elsif ($extension eq '.xls') {
+        $parser = Spreadsheet::ParseExcel->new();
+    }
+    else {
+        return (undef, ['The uploaded file must be an Excel .xls or .xlsx file.']);
+    }
+
+    my $excel_obj = $parser->parse($filename);
+    if (!$excel_obj) {
+        my $err = eval { $parser->error() } || 'Could not parse the Excel file.';
+        return (undef, [$err]);
+    }
+
+    my $worksheet = ($excel_obj->worksheets())[0];
+    unless ($worksheet) {
+        return (undef, ['Spreadsheet must be on the first worksheet.']);
+    }
+
+    my ($row_min, $row_max) = $worksheet->row_range();
+    my ($col_min, $col_max) = $worksheet->col_range();
+    if (!defined $row_max || $row_max < 1) {
+        return (undef, ['Spreadsheet is missing data rows.']);
+    }
+
+    my @expected_headers = $self->_decision_upload_headers();
+    my @normalized_expected = map { $self->_normalize_decision_upload_header($_) } @expected_headers;
+
+    for my $idx (0 .. $#expected_headers) {
+        my $cell = $worksheet->get_cell($row_min, $idx);
+        my $header = $cell ? $cell->value() : '';
+        my $normalized = $self->_normalize_decision_upload_header($header);
+        if ($normalized ne $normalized_expected[$idx]) {
+            my $col_letter = chr(65 + $idx);
+            push @errors, "Cell ${col_letter}1 must contain '$expected_headers[$idx]'.";
+        }
+    }
+
+    return (undef, \@errors) if @errors;
+
+    my @rows;
+    my %allowed_decisions = map { $_ => 1 } qw(drop hold advance jump);
+
+    for my $row ($row_min + 1 .. $row_max) {
+        my @values;
+        for my $col (0 .. $#expected_headers) {
+            my $cell = $worksheet->get_cell($row, $col);
+            my $value = $cell ? $cell->value() : '';
+            $value = '' unless defined $value;
+            $value =~ s/^\s+|\s+$//g;
+            push @values, $value;
+        }
+
+        next unless grep { defined $_ && $_ ne '' } @values;
+
+        my $row_number = $row + 1;
+        my ($accession, $breeding_program, $previous_stage, $decision, $new_stage, $notes, $comment) = @values;
+
+        if ($accession eq '') {
+            push @errors, "Cell A$row_number: accession is required.";
+        }
+        if ($breeding_program eq '') {
+            push @errors, "Cell B$row_number: breeding program is required.";
+        }
+
+        my $decision_norm = lc($decision || '');
+        if ($decision_norm ne '' && !$allowed_decisions{$decision_norm}) {
+            push @errors, "Cell D$row_number: decision must be one of drop, hold, advance, or jump.";
+        }
+
+        push @rows, {
+            accession        => $accession,
+            breeding_program => $breeding_program,
+            previous_stage   => $previous_stage,
+            decision         => $decision_norm,
+            new_stage        => $new_stage,
+            notes            => $notes,
+            save_comment     => $comment,
+            row_number       => $row_number,
+        };
+    }
+
+    if (!@rows) {
+        push @errors, 'Spreadsheet contains no accession decision rows.';
+    }
+
+    return (undef, \@errors) if @errors;
+    return (\@rows, []);
+}
+
+sub _decision_format_config {
+    my ($self, $c) = @_;
+    return $c->config->{decision_format} || 'state,year yy,stage';
+}
+
+sub _breeding_stages_config {
+    my ($self, $c) = @_;
+    my $raw_stages_conf = $c->config->{breeding_stages};
+    my $breeding_stages = '';
+
+    if (ref($raw_stages_conf) eq 'ARRAY') {
+        $breeding_stages = defined($raw_stages_conf->[0]) ? $raw_stages_conf->[0] : '';
+    }
+    else {
+        $breeding_stages = defined($raw_stages_conf) ? $raw_stages_conf : '';
+    }
+
+    return $breeding_stages;
+}
+
+sub _meeting_year_from_meeting_id {
+    my ($self, $c, $meeting_id) = @_;
+    return '' unless $meeting_id;
+
+    my $dbh = $c->dbc->dbh;
+    my $sth = $dbh->prepare(q{
+        SELECT pp.value
+        FROM projectprop pp
+        WHERE pp.project_id = ?
+          AND pp.type_id = (
+              SELECT cvterm_id
+              FROM cvterm
+              WHERE name = 'meeting_json'
+              LIMIT 1
+          )
+        ORDER BY pp.projectprop_id DESC
+        LIMIT 1
+    });
+    $sth->execute($meeting_id);
+
+    my ($meeting_json) = $sth->fetchrow_array;
+    return '' unless $meeting_json;
+
+    my $decoded = {};
+    eval { $decoded = decode_json($meeting_json); };
+    $decoded ||= {};
+
+    my $date = $decoded->{date} || '';
+    return $1 if $date =~ /^(\d{4})-/;
+
+    return '';
+}
+
+sub _stage_name_suggestion {
+    my ($self, $candidate, $choices) = @_;
+
+    $candidate = defined $candidate ? "$candidate" : '';
+    $candidate =~ s/^\s+|\s+$//g;
+    return '' if $candidate eq '';
+
+    my $cand_lc = lc($candidate);
+    foreach my $choice (@{$choices || []}) {
+        next unless defined $choice && $choice ne '';
+        return $choice if lc($choice) eq $cand_lc;
+    }
+    foreach my $choice (@{$choices || []}) {
+        next unless defined $choice && $choice ne '';
+        return $choice if index(lc($choice), $cand_lc) >= 0 || index($cand_lc, lc($choice)) >= 0;
+    }
+    return $choices && @{$choices} ? $choices->[0] : '';
+}
+
+sub _is_drop_stage_value {
+    my ($self, $value) = @_;
+    $value = defined $value ? "$value" : '';
+    $value =~ s/^\s+|\s+$//g;
+    return 0 if $value eq '';
+    return $value =~ /^DROP(?:-|$)/i ? 1 : 0;
+}
+
+sub _compute_stage_transition_data {
+    my ($self, %args) = @_;
+
+    my $current_stage    = $args{current_stage};
+    my $decision         = lc($args{decision} // '');
+    my $year             = $args{year};
+    my $stock_id         = $args{stock_id};
+    my $selected_stage   = $args{selected_stage} || '';
+    my $decision_format  = $args{decision_format} || 'state,year yy,stage';
+    my $breeding_stages  = $args{breeding_stages} || '';
+    my $schema           = $args{schema};
+
+    my @ordered_stages = grep { defined($_) && $_ ne '' }
+                         map  { my $x = $_; $x =~ s/^\s+|\s+$//g; $x }
+                         split(/\s*,\s*/, $breeding_stages);
+
+    my %pos;
+    @pos{@ordered_stages} = (0 .. $#ordered_stages);
+
+    my $current_stage_token = '';
+
+    if (defined $current_stage && $current_stage ne '') {
+        my $tmp = $current_stage;
+        $tmp =~ s/^\s+|\s+$//g;
+
+        if (exists $pos{$tmp}) {
+            $current_stage_token = $tmp;
+        }
+        elsif ($tmp =~ /-([^-]+)$/) {
+            my $last = $1;
+            $last =~ s/^\s+|\s+$//g;
+            if (exists $pos{$last}) {
+                $current_stage_token = $last;
+            }
+        }
+    }
+
+    my @allowed_stages;
+    if ($current_stage_token ne '' && exists $pos{$current_stage_token}) {
+        my $idx = $pos{$current_stage_token};
+
+        if ($decision eq 'advance') {
+            @allowed_stages = @ordered_stages[($idx + 1) .. $#ordered_stages]
+                if $idx < $#ordered_stages;
+        }
+        elsif ($decision eq 'jump') {
+            my $start = $idx + 2;
+            @allowed_stages = @ordered_stages[$start .. $#ordered_stages]
+                if $start <= $#ordered_stages;
+        }
+    }
+
+    my $stage_only = '';
+    my $state = $self->_get_stockprop_value(
+        schema    => $schema,
+        stock_id  => $stock_id,
+        prop_name => 'state',
+    );
+
+    my $state_for_format = $state;
+
+    if ($decision eq 'advance' || $decision eq 'jump') {
+        my %allowed_lookup = map { $_ => 1 } @allowed_stages;
+
+        if ($selected_stage && $allowed_lookup{$selected_stage}) {
+            $stage_only = $selected_stage;
+        }
+        else {
+            $stage_only = '';
+        }
+    }
+    elsif ($decision eq 'hold') {
+        $stage_only = $current_stage_token || '';
+    }
+    elsif ($decision eq 'drop') {
+        $stage_only = $current_stage_token || '';
+        $state_for_format = 'DROP';
+    }
+    else {
+        return {
+            new_stage           => '',
+            selected_stage      => '',
+            allowed_stages      => [],
+            state               => '',
+            stock_id            => $stock_id,
+            decision_format     => $decision_format,
+            current_stage_token => $current_stage_token,
+            ordered_stages      => \@ordered_stages,
+        };
+    }
+
+    my $new_stage = '';
+    if ($decision eq 'jump') {
+        if ($stage_only ne '' && $current_stage_token ne '') {
+            my $jump_year = $year // '';
+            $jump_year =~ s/^\s+|\s+$//g;
+
+            if (($decision_format || '') =~ /\byear\s*yy\b/i) {
+                $jump_year = substr($jump_year, -2) if $jump_year ne '';
+            }
+
+            my $jump_from = $current_stage_token;
+            $jump_from =~ s/^\s+|\s+$//g;
+            my @jump_parts = grep { defined $_ && $_ ne '' } split /-/, $jump_from;
+            $jump_from = @jump_parts ? $jump_parts[-1] : '';
+
+            $new_stage = join('-', grep { defined($_) && $_ ne '' }
+                'JUMP',
+                $jump_year,
+                $jump_from,
+                $stage_only,
+            );
+        }
+    }
+    elsif ($decision eq 'advance') {
+        if ($stage_only ne '') {
+            $new_stage = $self->_format_decision_stage(
+                decision_format => $decision_format,
+                year            => $year,
+                stage           => $stage_only,
+                state           => $state_for_format,
+            );
+        }
+    }
+    else {
+        $new_stage = $self->_format_decision_stage(
+            decision_format => $decision_format,
+            year            => $year,
+            stage           => $stage_only,
+            state           => $state_for_format,
+        );
+    }
+
+    return {
+        new_stage           => $new_stage,
+        selected_stage      => $stage_only,
+        allowed_stages      => \@allowed_stages,
+        state               => $state_for_format,
+        stock_id            => $stock_id,
+        decision_format     => $decision_format,
+        current_stage_token => $current_stage_token,
+        ordered_stages      => \@ordered_stages,
+    };
+}
+
+sub _validate_uploaded_decision_rows {
+    my ($self, %args) = @_;
+
+    my $c           = $args{c};
+    my $schema      = $args{schema};
+    my $meeting_year = $args{meeting_year} || '';
+    my $current_rows = $args{current_rows} || [];
+    my $parsed_rows  = $args{parsed_rows} || [];
+
+    my $decision_format = $self->_decision_format_config($c);
+    my $breeding_stages = $self->_breeding_stages_config($c);
+
+    my %current_lookup;
+    foreach my $row (@$current_rows) {
+        my $key = join("\t", lc($row->{accession} || ''), lc($row->{breeding_program} || ''));
+        $current_lookup{$key} = $row;
+    }
+
+    my @errors;
+    my @unmatched_rows;
+
+    foreach my $uploaded (@$parsed_rows) {
+        my $key = join("\t", lc($uploaded->{accession} || ''), lc($uploaded->{breeding_program} || ''));
+        my $target = $current_lookup{$key};
+        unless ($target) {
+            push @unmatched_rows, {
+                accession        => $uploaded->{accession} || '',
+                breeding_program => $uploaded->{breeding_program} || '',
+                row_number       => $uploaded->{row_number},
+            };
+            next;
+        }
+
+        my $decision = $uploaded->{decision} || '';
+        my $new_stage = $uploaded->{new_stage} || '';
+        my $row_number = $uploaded->{row_number} || '?';
+        my $current_stage_value = $target->{stage} || '';
+
+        if ($self->_is_drop_stage_value($current_stage_value)) {
+            if ($decision ne '') {
+                push @errors, "Row $row_number: current stage '$current_stage_value' is already a DROP stage, so no further decision can be applied to this accession.";
+                next;
+            }
+            next;
+        }
+
+        if ($decision eq '') {
+            if ($new_stage ne '') {
+                push @errors, "Row $row_number: new stage '$new_stage' was provided but decision is empty.";
+            }
+            next;
+        }
+
+        my $transition = $self->_compute_stage_transition_data(
+            current_stage   => $target->{stage},
+            decision        => $decision,
+            year            => $meeting_year,
+            stock_id        => $target->{stock_id},
+            selected_stage  => '',
+            decision_format => $decision_format,
+            breeding_stages => $breeding_stages,
+            schema          => $schema,
+        );
+
+        my @allowed = @{$transition->{allowed_stages} || []};
+        my @all_stages = @{$transition->{ordered_stages} || []};
+        my $uploaded_token = $self->_normalize_stage_token($new_stage, $breeding_stages);
+
+        if (($decision eq 'advance' || $decision eq 'jump') && !@allowed) {
+            push @errors, "Row $row_number: decision '$decision' is not compatible with current stage '" . ($target->{stage} || '') . "'.";
+            next;
+        }
+
+        if ($decision eq 'advance' || $decision eq 'jump') {
+            if ($new_stage eq '') {
+                push @errors, "Row $row_number: decision '$decision' requires a new stage.";
+                next;
+            }
+
+            if ($uploaded_token eq '') {
+                my $suggest = $self->_stage_name_suggestion($new_stage, \@allowed) || $self->_stage_name_suggestion($new_stage, \@all_stages);
+                my $msg = "Row $row_number: stage '$new_stage' is not stored.";
+                $msg .= " Did you mean '$suggest'?" if $suggest ne '';
+                push @errors, $msg;
+                next;
+            }
+
+            my %allowed_lookup = map { $_ => 1 } @allowed;
+            if (!$allowed_lookup{$uploaded_token}) {
+                push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Allowed target stages: " . join(', ', @allowed) . ".";
+                next;
+            }
+
+            my $expected = $self->_compute_stage_transition_data(
+                current_stage   => $target->{stage},
+                decision        => $decision,
+                year            => $meeting_year,
+                stock_id        => $target->{stock_id},
+                selected_stage  => $uploaded_token,
+                decision_format => $decision_format,
+                breeding_stages => $breeding_stages,
+                schema          => $schema,
+            );
+
+            if (($expected->{new_stage} || '') ne $new_stage && $new_stage ne $uploaded_token) {
+                push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Did you mean '$expected->{new_stage}'?";
+                next;
+            }
+        }
+        else {
+            my $expected = $self->_compute_stage_transition_data(
+                current_stage   => $target->{stage},
+                decision        => $decision,
+                year            => $meeting_year,
+                stock_id        => $target->{stock_id},
+                selected_stage  => '',
+                decision_format => $decision_format,
+                breeding_stages => $breeding_stages,
+                schema          => $schema,
+            );
+            my $expected_new_stage = $expected->{new_stage} || '';
+            my $current_stage_for_hold = $target->{stage} || '';
+
+            if ($new_stage eq '') {
+                my $required_stage = $decision eq 'hold' ? ($current_stage_for_hold || $expected_new_stage) : $expected_new_stage;
+                push @errors, "Row $row_number: decision '$decision' requires new stage '$required_stage'.";
+                next;
+            }
+
+            if ($decision eq 'hold') {
+                if ($new_stage ne $expected_new_stage && $new_stage ne $current_stage_for_hold) {
+                    my $suggest = $current_stage_for_hold || $expected_new_stage;
+                    push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Did you mean '$suggest'?";
+                    next;
+                }
+            }
+            elsif ($new_stage ne $expected_new_stage) {
+                push @errors, "Row $row_number: this stage '$new_stage' is not compatible with the decision '$decision'. Did you mean '$expected_new_stage'?";
+                next;
+            }
+        }
+    }
+
+    return (\@errors, \@unmatched_rows);
 }
 
 sub _normalize_stage_token {
@@ -475,146 +993,22 @@ sub compute_new_stage_GET {
     my $stock_id       = $c->req->param('stock_id');
     my $selected_stage = $c->req->param('selected_stage') || '';
 
-    my $decision_format = $c->config->{decision_format} || 'state,year yy,stage';
-
-    my $raw_stages_conf = $c->config->{breeding_stages};
-    my $breeding_stages = '';
-
-    if (ref($raw_stages_conf) eq 'ARRAY') {
-        $breeding_stages = defined($raw_stages_conf->[0]) ? $raw_stages_conf->[0] : '';
-    }
-    else {
-        $breeding_stages = defined($raw_stages_conf) ? $raw_stages_conf : '';
-    }
+    my $decision_format = $self->_decision_format_config($c);
+    my $breeding_stages = $self->_breeding_stages_config($c);
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
-
-    my @ordered_stages = grep { defined($_) && $_ ne '' }
-                         map  { my $x = $_; $x =~ s/^\s+|\s+$//g; $x }
-                         split(/\s*,\s*/, $breeding_stages);
-
-    my %pos;
-    @pos{@ordered_stages} = (0 .. $#ordered_stages);
-
-    my $current_stage_token = '';
-
-    if (defined $current_stage && $current_stage ne '') {
-        my $tmp = $current_stage;
-        $tmp =~ s/^\s+|\s+$//g;
-
-        if (exists $pos{$tmp}) {
-            $current_stage_token = $tmp;
-        }
-        elsif ($tmp =~ /-([^-]+)$/) {
-            my $last = $1;
-            $last =~ s/^\s+|\s+$//g;
-            if (exists $pos{$last}) {
-                $current_stage_token = $last;
-            }
-        }
-    }
-
-    my @allowed_stages;
-    if ($current_stage_token ne '' && exists $pos{$current_stage_token}) {
-        my $idx = $pos{$current_stage_token};
-
-        if ($decision eq 'advance') {
-            @allowed_stages = @ordered_stages[($idx + 1) .. $#ordered_stages]
-                if $idx < $#ordered_stages;
-        }
-        elsif ($decision eq 'jump') {
-            my $start = $idx + 2;
-            @allowed_stages = @ordered_stages[$start .. $#ordered_stages]
-                if $start <= $#ordered_stages;
-        }
-    }
-
-    my $stage_only = '';
-    my $state = $self->_get_stockprop_value(
-        schema    => $schema,
-        stock_id  => $stock_id,
-        prop_name => 'state',
+    my $result = $self->_compute_stage_transition_data(
+        current_stage   => $current_stage,
+        decision        => $decision,
+        year            => $year,
+        stock_id        => $stock_id,
+        selected_stage  => $selected_stage,
+        decision_format => $decision_format,
+        breeding_stages => $breeding_stages,
+        schema          => $schema,
     );
 
-    my $state_for_format = $state;
-
-    if ($decision eq 'advance' || $decision eq 'jump') {
-        my %allowed_lookup = map { $_ => 1 } @allowed_stages;
-
-        if ($selected_stage && $allowed_lookup{$selected_stage}) {
-            $stage_only = $selected_stage;
-        }
-        else {
-            $stage_only = '';
-        }
-    }
-    elsif ($decision eq 'hold') {
-        $stage_only = $current_stage_token || '';
-    }
-    elsif ($decision eq 'drop') {
-        $stage_only = $current_stage_token || '';
-        $state_for_format = 'DROP';
-    }
-    else {
-        return $self->status_ok($c, entity => {
-            new_stage      => '',
-            selected_stage => '',
-            allowed_stages => [],
-            state          => '',
-            stock_id       => $stock_id,
-        });
-    }
-
-    my $new_stage = '';
-    if ($decision eq 'jump') {
-        if ($stage_only ne '' && $current_stage_token ne '') {
-            my $jump_year = $year // '';
-            $jump_year =~ s/^\s+|\s+$//g;
-
-            if (($decision_format || '') =~ /\byear\s*yy\b/i) {
-                $jump_year = substr($jump_year, -2) if $jump_year ne '';
-            }
-
-            my $jump_from = $current_stage_token;
-            $jump_from =~ s/^\s+|\s+$//g;
-            my @jump_parts = grep { defined $_ && $_ ne '' } split /-/, $jump_from;
-            $jump_from = @jump_parts ? $jump_parts[-1] : '';
-
-            $new_stage = join('-', grep { defined($_) && $_ ne '' }
-                'JUMP',
-                $jump_year,
-                $jump_from,
-                $stage_only,
-            );
-        }
-    }
-    elsif ($decision eq 'advance') {
-        if ($stage_only ne '') {
-            $new_stage = $self->_format_decision_stage(
-                decision_format => $decision_format,
-                year            => $year,
-                stage           => $stage_only,
-                state           => $state_for_format,
-            );
-        }
-    }
-    else {
-        $new_stage = $self->_format_decision_stage(
-            decision_format => $decision_format,
-            year            => $year,
-            stage           => $stage_only,
-            state           => $state_for_format,
-        );
-    }
-
-    return $self->status_ok($c, entity => {
-        new_stage       => $new_stage,
-        selected_stage  => $stage_only,
-        allowed_stages  => \@allowed_stages,
-        state           => $state_for_format,
-        stock_id        => $stock_id,
-        decision_format => $decision_format,
-    });
+    return $self->status_ok($c, entity => $result);
 }
 
 sub compute_new_stage_POST {
@@ -1440,6 +1834,161 @@ sub save_all_decisions_POST {
             message      => 'Decisions saved successfully'
         }
     );
+}
+
+sub decision_upload_template : Path('decision_upload_template') : Args(0) {
+    my ($self, $c) = @_;
+
+    unless ($c->user) {
+        $c->res->status(403);
+        $c->res->content_type('application/json');
+        $c->res->body(encode_json({ error => 'Login required' }));
+        return;
+    }
+
+    my $list_id    = $c->req->param('list_id');
+    my $meeting_id = $c->req->param('meeting_id');
+
+    unless ($list_id) {
+        $c->res->status(400);
+        $c->res->content_type('application/json');
+        $c->res->body(encode_json({ error => 'Missing list_id' }));
+        return;
+    }
+
+    my $entity = $self->_decision_rows_entity(
+        $c,
+        list_id    => $list_id,
+        meeting_id => $meeting_id,
+    );
+
+    my @headers = $self->_decision_upload_headers();
+    my @rows = @{$entity->{rows} || []};
+
+    $c->tempfiles_subdir("decisionmeeting");
+    my $temp_dir = $c->config->{basepath} . "/$c->{tempfiles_subdir}";
+    if (!-d $temp_dir) {
+        make_path($temp_dir) or die "Could not create temp directory $temp_dir: $!";
+    }
+    my $tempfile = $c->config->{basepath} . "/" . $c->tempfile(TEMPLATE => 'decisionmeeting/dm_template_XXXXXX');
+    my $wb = Excel::Writer::XLSX->new($tempfile);
+    die "Could not create Excel template" unless $wb;
+
+    my $ws = $wb->add_worksheet('Decisions');
+    for my $col (0 .. $#headers) {
+        $ws->write(0, $col, $headers[$col]);
+    }
+
+    my $line = 1;
+    foreach my $row (@rows) {
+        $ws->write_row($line, 0, [
+            $row->{accession}        || '',
+            $row->{breeding_program} || '',
+            $row->{stage}            || '',
+            $row->{decision}         || '',
+            $row->{new_stage}        || '',
+            $row->{notes}            || '',
+            $row->{save_comment}     || '',
+        ]);
+        $line++;
+    }
+    $wb->close();
+
+    open(my $fh, '<', $tempfile) or die "Could not open template file: $!";
+    binmode $fh;
+    local $/;
+    my $output = <$fh>;
+    close($fh);
+    unlink $tempfile;
+
+    my $filename = 'decision_meeting_upload_template.xlsx';
+    $c->res->status(200);
+    $c->res->content_type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    $c->res->header('Content-Disposition', qq[attachment; filename="$filename"]);
+    $c->res->body($output);
+}
+
+sub upload_decision_template : Path('upload_decision_template') : Args(0) : ActionClass('REST') { }
+sub upload_decision_template_POST {
+    my ($self, $c) = @_;
+
+    return $self->status_forbidden($c, message => 'Login required')
+        unless $c->user;
+
+    my $list_id    = $c->req->param('list_id');
+    my $meeting_id = $c->req->param('meeting_id');
+
+    return $self->status_bad_request($c, message => 'Missing list_id')
+        unless $list_id;
+    return $self->status_bad_request($c, message => 'Missing meeting_id')
+        unless $meeting_id;
+
+    my $upload = $c->req->upload('decision_upload_file');
+    return $self->status_bad_request($c, message => 'Missing uploaded Excel file')
+        unless $upload;
+
+    my ($parsed_rows, $parse_errors) = $self->_parse_decision_upload_file(
+        filename          => $upload->tempname,
+        original_filename => $upload->filename,
+    );
+
+    if ($parse_errors && @$parse_errors) {
+        return $self->status_bad_request($c, message => join(' ', @$parse_errors));
+    }
+
+    my $entity = $self->_decision_rows_entity(
+        $c,
+        list_id    => $list_id,
+        meeting_id => $meeting_id,
+    );
+
+    my @current_rows = @{$entity->{rows} || []};
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $meeting_year = $self->_meeting_year_from_meeting_id($c, $meeting_id);
+
+    unless ($meeting_year) {
+        return $self->status_bad_request($c, message => 'The selected meeting does not have a valid date/year, so uploaded stages cannot be validated.');
+    }
+
+    my ($validation_errors, $unmatched_rows) = $self->_validate_uploaded_decision_rows(
+        c            => $c,
+        schema       => $schema,
+        meeting_year => $meeting_year,
+        current_rows => \@current_rows,
+        parsed_rows  => $parsed_rows,
+    );
+
+    if ($validation_errors && @$validation_errors) {
+        return $self->status_bad_request($c, message => join(' ', @$validation_errors));
+    }
+
+    my %current_lookup;
+    foreach my $row (@current_rows) {
+        my $key = join("\t", lc($row->{accession} || ''), lc($row->{breeding_program} || ''));
+        $current_lookup{$key} = $row;
+    }
+
+    my $updated_count = 0;
+    foreach my $uploaded (@{$parsed_rows || []}) {
+        my $key = join("\t", lc($uploaded->{accession} || ''), lc($uploaded->{breeding_program} || ''));
+        my $target = $current_lookup{$key};
+        next unless $target;
+
+        $target->{decision}     = $uploaded->{decision} || '';
+        $target->{new_stage}    = $uploaded->{new_stage} || '';
+        $target->{notes}        = $uploaded->{notes} || '';
+        $target->{save_comment} = $uploaded->{save_comment} || '';
+        $updated_count++;
+    }
+
+    return $self->status_ok($c, entity => {
+        success        => JSON::true,
+        rows           => \@current_rows,
+        updated_count  => $updated_count,
+        unmatched_rows => $unmatched_rows,
+        message        => 'Decision upload processed successfully',
+    });
 }
 
 sub meetings : Path('meetings') : Args(0) : ActionClass('REST') {}

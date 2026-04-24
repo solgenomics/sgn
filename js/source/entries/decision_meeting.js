@@ -181,6 +181,18 @@
           font-weight: 600;
         }
 
+        #dm_download_template_btn,
+        #dm_upload_template_btn {
+          min-width: 170px;
+        }
+
+        #dm-upload-hint {
+          margin-top: 6px;
+          color: #666;
+          font-size: 12px;
+          text-align: right;
+        }
+
         .dm-save-dialog::backdrop {
           background: rgba(0,0,0,0.35);
         }
@@ -339,8 +351,14 @@
         if ($target.length) {
           $target.after(
             '<div id="dm-saveall-wrap">' +
+              '<button type="button" id="dm_download_template_btn" class="btn btn-default">Download Excel template</button>' +
+              '<button type="button" id="dm_upload_template_btn" class="btn btn-default">Upload Excel decisions</button>' +
               '<button type="button" id="dm_save_all_btn" class="btn btn-primary">Save all decisions</button>' +
+              '<input type="file" id="dm_upload_template_file" accept=".xls,.xlsx" style="display:none;">' +
             '</div>'
+          );
+          $target.after(
+            '<div id="dm-upload-hint">Excel columns: Accession, Breeding Program, Previous Stage, Decision, New Stage, Notes, Comment.</div>'
           );
         }
       }
@@ -1268,9 +1286,28 @@
           new_stage:        (r.new_stage || ''),
           female_parent:    (r.female_parent || ''),
           male_parent:      (r.male_parent || ''),
-          notes:            (r.notes || '')
+          notes:            (r.notes || ''),
+          save_comment:     (r.save_comment || '')
         };
       });
+    }
+
+    function replaceDecisionRows(rows){
+      STATE.baseRows = normalizeRows(rows);
+      STATE.rows = normalizeRows(rows);
+      STATE.accessions = uniq(
+        STATE.baseRows.map(function(r){ return r.accession || ''; }).filter(Boolean)
+      );
+      STATE.programs = uniq(
+        STATE.baseRows.map(function(r){ return r.breeding_program || ''; }).filter(Boolean)
+      );
+      STATE.decisionsMap.clear();
+      STATE.baseRows.forEach(function(r){
+        var k = keyFor(r.accession, r.breeding_program);
+        STATE.decisionsMap.set(k, normDecision(r.decision));
+      });
+      populateBpHeaderFilterOptions(STATE.programs);
+      renderRows(STATE.rows);
     }
 
     function renderRows(rows){
@@ -1445,7 +1482,7 @@
 
     function getDecisionRowsForSave(){
       return (STATE.rows || []).filter(function(r){
-        return r && r.accession && (r.decision || r.new_stage || r.notes);
+        return r && r.accession && (r.decision || r.new_stage || r.notes || r.save_comment);
       }).map(function(r){
         return {
           stock_id: r.stock_id || '',
@@ -1454,7 +1491,8 @@
           previous_stage: r.stage || '',
           decision: normDecision(r.decision),
           new_stage: r.new_stage || '',
-          notes: r.notes || ''
+          notes: r.notes || '',
+          save_comment: r.save_comment || ''
         };
       });
     }
@@ -1582,6 +1620,68 @@
       }
     }
 
+    function getRequiredMeetingAndListContext(){
+      var meetingCtx = getSelectedMeetingContext();
+      if (!meetingCtx) {
+        alert('Please select one meeting first.');
+        return null;
+      }
+
+      if (!STATE.list_id) {
+        alert('Please select one accession list first.');
+        return null;
+      }
+
+      return {
+        meeting_id: meetingCtx.meeting_id || '',
+        list_id: STATE.list_id || ''
+      };
+    }
+
+    function downloadDecisionUploadTemplate(){
+      var ctx = getRequiredMeetingAndListContext();
+      if (!ctx) return;
+
+      var base = window.DM_API_BASE || '/ajax/decisionmeeting';
+      var url = base + '/decision_upload_template?list_id=' + encodeURIComponent(ctx.list_id) +
+        '&meeting_id=' + encodeURIComponent(ctx.meeting_id);
+      window.location = url;
+    }
+
+    async function uploadDecisionTemplate(file){
+      var ctx = getRequiredMeetingAndListContext();
+      if (!ctx || !file) return;
+
+      var formData = new FormData();
+      formData.append('decision_upload_file', file);
+      formData.append('meeting_id', ctx.meeting_id);
+      formData.append('list_id', ctx.list_id);
+
+      var $btn = $('#dm_upload_template_btn');
+      var originalText = $btn.text();
+      $btn.prop('disabled', true).text('Uploading...');
+
+      try {
+        var resp = await fetch((window.DM_API_BASE || '/ajax/decisionmeeting') + '/upload_decision_template', {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: formData
+        });
+
+        var data = await resp.json();
+        if (!resp.ok) {
+          throw new Error((data && (data.message || data.error || data.detail)) || ('HTTP ' + resp.status));
+        }
+
+        replaceDecisionRows(data.rows || []);
+      } catch (e) {
+        alert('Failed to upload decision Excel file: ' + (e && e.message ? e.message : e));
+      } finally {
+        $btn.prop('disabled', false).text(originalText);
+        $('#dm_upload_template_file').val('');
+      }
+    }
+
     function bindUI(){
       $(document).off('change.dm','#dm_list_sel').on('change.dm','#dm_list_sel', async function(){
         var id = $(this).val() || '';
@@ -1633,6 +1733,19 @@
         var payload = buildSavePayloadFromState();
         if (!payload) return;
         await openSaveReportDialog(payload);
+      });
+
+      $(document).off('click.dmDownloadTemplate', '#dm_download_template_btn').on('click.dmDownloadTemplate', '#dm_download_template_btn', function(){
+        downloadDecisionUploadTemplate();
+      });
+
+      $(document).off('click.dmUploadTemplate', '#dm_upload_template_btn').on('click.dmUploadTemplate', '#dm_upload_template_btn', function(){
+        $('#dm_upload_template_file').trigger('click');
+      });
+
+      $(document).off('change.dmUploadTemplateFile', '#dm_upload_template_file').on('change.dmUploadTemplateFile', '#dm_upload_template_file', async function(){
+        var file = this.files && this.files[0] ? this.files[0] : null;
+        await uploadDecisionTemplate(file);
       });
 
       $(document).off('click.dmConfirmSaveAll', '#dm_confirm_save_all_btn').on('click.dmConfirmSaveAll', '#dm_confirm_save_all_btn', async function(){

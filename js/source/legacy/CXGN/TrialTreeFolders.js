@@ -1,31 +1,31 @@
 
 jQuery(document).ready(function($) {
 
-    jQuery("[name='refresh_jstree_html']").click(function(){
+    jQuery("[name='refresh_jstree_html']").off('click.cxgnTrialTreeFolders').on('click.cxgnTrialTreeFolders', function(){
         refreshTrailJsTree(1);
     });
 
-    jQuery("[name='refresh_crosses_jstree_html']").click(function(){
+    jQuery("[name='refresh_crosses_jstree_html']").off('click.cxgnTrialTreeFolders').on('click.cxgnTrialTreeFolders', function(){
         refreshCrossJsTree(1);
     });
 
-    jQuery("[name='refresh_genotyping_trial_jstree_html']").click( function() {
+    jQuery("[name='refresh_genotyping_trial_jstree_html']").off('click.cxgnTrialTreeFolders').on('click.cxgnTrialTreeFolders', function() {
         refreshGenotypingTrialJsTree(1);
     });
 
-    jQuery("[name='refresh_genotyping_project_jstree_html']").click( function() {
+    jQuery("[name='refresh_genotyping_project_jstree_html']").off('click.cxgnTrialTreeFolders').on('click.cxgnTrialTreeFolders', function() {
         refreshGenotypingProjectJsTree(1);
     });
 
-    jQuery("[name='refresh_activity_jstree_html']").click(function(){
+    jQuery("[name='refresh_activity_jstree_html']").off('click.cxgnTrialTreeFolders').on('click.cxgnTrialTreeFolders', function(){
         refreshActivityJsTree(1);
     });
 
-    jQuery("[name='refresh_transformation_project_jstree_html']").click( function() {
+    jQuery("[name='refresh_transformation_project_jstree_html']").off('click.cxgnTrialTreeFolders').on('click.cxgnTrialTreeFolders', function() {
         refreshTransformationProjectJsTree(1);
     });
 
-    jQuery("[name='refresh_propagation_project_jstree_html']").click( function() {
+    jQuery("[name='refresh_propagation_project_jstree_html']").off('click.cxgnTrialTreeFolders').on('click.cxgnTrialTreeFolders', function() {
         refreshPropagationProjectJsTree(1);
     });
 
