@@ -45,6 +45,12 @@ my $collapsible = 0;
 
 </%perl>
 
+<&| /page/info_section.mas,
+  collapsible => $collapsible,
+  collapsed   => $collapsed,
+  title       => $title
+&>
+
 <div id='trials_select_div' class="col-xs-12 col-sm-6 col-md-4" style="margin-top: 18px;">
     <select id="trial_select" class="form-control">
         <option value="" disabled selected>Select a trial</option>
@@ -59,12 +65,8 @@ my $collapsible = 0;
 <input type="hidden" id="data_structure" value="<% $data_structure %>" />
 <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
 
+</&>
 
-<input type="hidden" id="dataset_id" value="<% $dataset_id %>" />
-<input type="hidden" id="dataset_name" value="<% $dataset_name %>" />
-<input type="hidden" id="list_id" value="<% $list_id %>">
-<input type="hidden" id="combo_pops_id" value="<% $combo_pops_id %>" />
-<input type="hidden" id="data_structure" value="<% $data_structure %>" />
-<input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
+
 
 <& /util/import_javascript.mas, classes => ["solGS.trialsSelect"] &>
