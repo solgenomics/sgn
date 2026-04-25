@@ -130,7 +130,7 @@ sub parse {
 		    }
 		}
             } else {
-                @trait_values = ($value_string);
+                @trait_values = ( [ $value_string, '' ]);
             }
             if (!defined($timestamp)){
                 $timestamp = '';
