@@ -113,6 +113,8 @@ sub _validate_with_plugin {
     ## These are checks on the individual plot-level data
     ##
 
+    my $trial_stock_type;
+
     foreach (@$parsed_data) {
         my $data = $_;
         my $row = $data->{'_row'};
@@ -143,7 +145,7 @@ sub _validate_with_plugin {
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
-        my $trial_stock_type = $data->{'trial_stock_type'};
+        $trial_stock_type = $data->{'trial_stock_type'};
 
         foreach my $treatment (@{$treatments}) {
             my $lt = CXGN::List::Transform->new();
@@ -401,10 +403,10 @@ sub _validate_with_plugin {
     }
 
     # Accession Names: must exist in the database
-    my @accessions = @{$parsed_values->{'accession_name'}};
+    my @stock_names = @{$parsed_values->{'accession_name'}};
     my @intercrop_accessions = $parsed_values->{'intercrop_accession_name'} ? @{$parsed_values->{'intercrop_accession_name'}} : ();
-    my @merged_accessions = uniq(@accessions, @intercrop_accessions);
-    my $accessions_hashref = $validator->validate($schema,'accessions',\@merged_accessions);
+    my @merged_stock_names = uniq(@stock_names, @intercrop_accessions);
+    my $accessions_hashref = $validator->validate($schema,'accessions',\@merged_stock_names);
     my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
     #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
@@ -415,25 +417,25 @@ sub _validate_with_plugin {
 
         push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
 
-        @merged_accessions = grep !/\Q$matched_synonym/, @merged_accessions;
-        push @merged_accessions, $found_acc_name_from_synonym;
+        @merged_stock_names = grep !/\Q$matched_synonym/, @merged_stock_names;
+        push @merged_stock_names, $found_acc_name_from_synonym;
     }
 
     #now validate again the accession names
 
-    my @entry_name_missing = ();
+    my @entry_names_missing = ();
     if ($trial_stock_type eq 'cross') {
-        @entry_names_missing = @{$validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_names)->{'missing'}};
+        @entry_names_missing = @{$validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_stock_names)->{'missing'}};
         if (scalar(@entry_names_missing) > 0) {
             push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or cross stock type.";
         }
     } elsif ($trial_stock_type eq 'family_name') {
-        @entry_names_missing = @{$validator->validate($schema,'accessions_or_family_names',\@merged_names)->{'missing'}};
+        @entry_names_missing = @{$validator->validate($schema,'accessions_or_family_names',\@merged_stock_names)->{'missing'}};
         if (scalar(@entry_names_missing) > 0) {
             push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or family name stock type.";
         }
     } else {
-        @entry_names_missing = @{$validator->validate($schema,'accessions',\@merged_names)->{'missing'}};
+        @entry_names_missing = @{$validator->validate($schema,'accessions',\@merged_stock_names)->{'missing'}};
         if (scalar(@entry_names_missing) > 0) {
             push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database as uniquenames or synonyms of accession stock type.";
         }
@@ -479,7 +481,7 @@ sub _validate_with_plugin {
         @accession_cross_seedlot_pairs_array = @$accession_cross_seedlot_pairs;
     }
 
-    if ((scalar @accessions_missing == 0) && (scalar @seedlots_missing == 0)) {
+    if ((scalar @entry_names_missing == 0) && (scalar @seedlots_missing == 0)) {
         my $return;
         if (scalar @family_seedlot_pairs_array > 0) {
             $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, $family_seedlot_pairs);
