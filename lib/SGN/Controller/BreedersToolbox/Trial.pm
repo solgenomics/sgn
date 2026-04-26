@@ -545,6 +545,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $trait_list = $c->req->param("trait_list");
     my $include_measured = $c->req->param('include_measured') || '';
     my $search_type = $c->req->param("search_type") || 'fast';
+    my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
+    my $plot_order = $c->req->param('plot_order');
+    my $plot_start = $c->req->param('plot_start');
 
     my $trial = $c->stash->{trial};
     if ($data_level eq 'plants') {
@@ -644,7 +647,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
         trial_id => $c->stash->{trial_id},
@@ -658,7 +660,10 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         selected_columns => $selected_cols,
         include_measured => $include_measured,
         field_crossing_data_order => \@field_crossing_data_order,
-        prop_id => $prop_id
+        prop_id => $prop_id,
+        include_plot_order => $include_plot_order,
+        plot_order => $plot_order,
+        plot_start => $plot_start,
     });
 
     my $error = $download->download();
