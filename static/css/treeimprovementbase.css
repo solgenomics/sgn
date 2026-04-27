@@ -408,6 +408,12 @@ button[data-dismiss]:hover {
     background:       linear-gradient( to bottom right, #efefef, #b9b8b8 );
 }
 
+/* Sizing */
+
+.form-group-sm .btn {
+    height: 30px;
+}
+
 
 /*
 -------------------------------------------------------------------------------
@@ -778,8 +784,8 @@ Table
 }
 
 .table.dataTable {
-    overflow: auto;
-    display: flow;
+    /* Include borders in size calculations to avoid unnecessary scrollbars */
+    box-sizing: border-box;
 }
 
 .table-flow-scroll {
