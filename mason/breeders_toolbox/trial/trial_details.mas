@@ -74,8 +74,23 @@ sub _days_since {
     } || undef;
 }
 
+sub _positive_integer_conf {
+    my ($conf_name) = @_;
+    my $value = eval { $c->get_conf($conf_name) };
+    return undef unless defined $value && $value =~ /^\d+$/ && $value > 0;
+    return int($value);
+}
+
+sub _limit_days_display {
+    my ($days, $limit) = @_;
+    return undef unless defined $days;
+    return (defined $limit && $days >= $limit) ? '>'.$limit : $days;
+}
+
 $dap = _days_since($planting_date);
 $dah = _days_since($harvest_date);
+my $dap_display = _limit_days_display($dap, _positive_integer_conf('limit_dap'));
+my $dah_display = _limit_days_display($dah, _positive_integer_conf('limit_dah'));
 </%init>
 
 
@@ -182,8 +197,8 @@ $dah = _days_since($harvest_date);
                     <div id="planting_date">
 % if ($planting_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
-% if (defined $dap) {
-&nbsp;<span>| DAP: <% $dap %> </span>
+% if (defined $dap_display) {
+&nbsp;<span>| DAP: <% $dap_display %> </span>
 % }
 % } else {
 %  print "<span class='text-danger'>[No Planting Date]</span>";
@@ -207,8 +222,8 @@ $dah = _days_since($harvest_date);
                     <div id="harvest_date">
 % if ($harvest_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
-% if (defined $dah) {
-&nbsp;<span> | DAH: <% $dah %> </span>
+% if (defined $dah_display) {
+&nbsp;<span> | DAH: <% $dah_display %> </span>
 % }
 % } else {
 %  print "<span class='text-danger'>[No Harvest Date]</span>";
