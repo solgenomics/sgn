@@ -28,13 +28,13 @@
                 <label class="col-sm-3 control-label">Trait format:</label>
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_trait_format_select" name="new_trait_format_select" type="select">
-                        <option value="numeric" selected>Numeric</option>
-                        <option value="categorical">Categorical</option>
-                        <option value="percent">Percent</option>
-                        <option value="boolean">Boolean</option>
-                        <option value="date">Date</option>
-                        <option value="text">Text</option>
-                        <option value="counter">Counter</option>
+                        <option value="Numeric" selected>Numeric</option>
+                        <option value="Categorical">Categorical</option>
+                        <option value="Percent">Percent</option>
+                        <option value="Boolean">Boolean</option>
+                        <option value="Date">Date</option>
+                        <option value="Text">Text</option>
+                        <option value="Counter">Counter</option>
                         <option value="ontology">Ontology (parent to child terms)</option>
                     </select>
                 </div>
@@ -83,7 +83,7 @@
                 </div>
             </div>
             <div class="form-group" id="chain_parent_term_container">
-                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term. 
+                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term.
 Will be the trait root term by default."></span>&nbsp;Chain to an existing term:</label>
                 <div class="col-sm-9">
                     <input style="width:70%;" class="form-control" id="new_trait_parent_term" name="new_trait_parent_term" type="text" placeholder="Full name, as in 'CGIAR cassava trait ontology|CO_334:0000000'"/>
@@ -139,7 +139,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                     parent_term : parent_term,
                     repeat_type : repeat_type
                 },
-                success: function(response) { 
+                success: function(response) {
                     jQuery('#working_modal').modal("hide");
                     if (response.error) {
                         alert(response.error);
@@ -148,7 +148,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                         window.location.reload();
                     }
                 },
-                error: function(response) { 
+                error: function(response) {
                     jQuery('#working_modal').modal("hide");
                     console.log(response);
                     alert("An error occurred, check console.");
@@ -162,7 +162,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
 
         jQuery('#new_trait_format_select').on('change', function () {
             let trait_type = jQuery(this).val();
-            if (trait_type === 'numeric') {
+            if (trait_type.toLowerCase() === 'numeric') {
                 jQuery('#new_trait_minimum_value_container').show();
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
@@ -172,7 +172,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                 jQuery('#new_trait_min_value').val('');
                 jQuery('#new_trait_max_value').val('');
                 jQuery('#new_trait_repeat_select_container').show();
-            } else if (trait_type === 'categorical') {
+            } else if (trait_type.toLowerCase() === 'categorical') {
                 jQuery('#new_trait_minimum_value_container').hide();
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').hide();
@@ -182,7 +182,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                 jQuery('#new_trait_min_value').val('');
                 jQuery('#new_trait_max_value').val('');
                 jQuery('#new_trait_repeat_select_container').show();
-            } else if (trait_type === 'ontology') {
+            } else if (trait_type.toLowerCase() === 'ontology') {
                 jQuery('#new_trait_minimum_value_container').hide();
                 jQuery('#new_trait_maximum_value_container').hide();
                 jQuery('#new_trait_add_categories_container').hide();
@@ -191,7 +191,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('');
                 jQuery('#new_trait_max_value').val('');
-            } else if (trait_type === 'percent') { 
+            } else if (trait_type.toLowerCase() === 'percent') {
                 jQuery('#new_trait_minimum_value_container').show();
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
@@ -201,7 +201,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                 jQuery('#new_trait_min_value').val('0');
                 jQuery('#new_trait_max_value').val('100');
                 jQuery('#new_trait_repeat_select_container').show();
-            } else if (trait_type === 'counter') {
+            } else if (trait_type.toLowerCase() === 'counter') {
                 jQuery('#new_trait_minimum_value_container').show();
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
@@ -211,7 +211,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                 jQuery('#new_trait_min_value').val('0');
                 jQuery('#new_trait_max_value').val('');
                 jQuery('#new_trait_repeat_select_container').show();
-            } else if (trait_type === 'boolean') {
+            } else if (trait_type.toLowerCase() === 'boolean') {
                 jQuery('#new_trait_minimum_value_container').show();
                 jQuery('#new_trait_default_value_container').show();
                 jQuery('#new_trait_maximum_value_container').show();
@@ -221,7 +221,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                 jQuery('#new_trait_min_value').val('0');
                 jQuery('#new_trait_max_value').val('1');
                 jQuery('#new_trait_repeat_select_container').show();
-            } else if (trait_type === 'date') {
+            } else if (trait_type.toLowerCase() === 'date') {
                 jQuery('#new_trait_minimum_value_container').hide();
                 jQuery('#new_trait_maximum_value_container').hide();
                 jQuery('#new_trait_add_categories_container').hide();
@@ -230,7 +230,7 @@ Will be the trait root term by default."></span>&nbsp;Chain to an existing term:
                 jQuery('#new_trait_default_value').val('');
                 jQuery('#new_trait_min_value').val('');
                 jQuery('#new_trait_max_value').val('');
-            } else if (trait_type === 'text') {
+            } else if (trait_type.toLowerCase() === 'text') {
                 jQuery('#new_trait_minimum_value_container').hide();
                 jQuery('#new_trait_maximum_value_container').hide();
                 jQuery('#new_trait_add_categories_container').hide();
