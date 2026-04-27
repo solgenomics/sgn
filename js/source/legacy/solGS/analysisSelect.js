@@ -181,7 +181,6 @@ jQuery(document).ready(function () {
             corrArgs['corr_pop_name'] = solGS.analysisSelect.getAnalysisPopName();
             }
 
-            console.log("Correlation args: ", JSON.stringify(corrArgs));
             corrPlotDivId = corrArgs.corr_plot_div;
 
             var canvas = solGS.correlation.canvas;
@@ -191,11 +190,12 @@ jQuery(document).ready(function () {
             jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
             solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
-                if (res.data) {
+                if (res.corr_output_data) {
                     corrArgs["corr_table_file"] = res.corre_table_file;
                     var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
+                    console.log(`results for correlation: ${JSON.stringify(res)}`);
                     var heatmapArgs = {
-                      heatmap_input_data: res.data,
+                      heatmap_input_data: res.corr_output_data,
                       canvas: canvas,
                       plot_div_id: corrPlotDivId,
                       download_links: corrDownload,
