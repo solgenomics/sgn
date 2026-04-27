@@ -45,7 +45,7 @@ lives_ok( sub { $image->process_image("t/data/tv_test_1.png", "organism", $organ
 my $url = $image->get_image_url('medium');
 like($url, qr!^/fake_static_datasets_url/images/[a-f\d\/]+/medium\.jpg$!, 'getting a medium image');
 
-can_ok( $image, qw/get_organisms get_stocks get_experiments get_loci process_image config associate_experiment/);
+can_ok( $image, qw/get_organisms get_stocks get_trials get_experiments get_loci process_image config associate_experiment/);
 
 # we can't use $image->hard_delete because that connects as web_usr which doesn't
 # have permissions to delete images

@@ -52,6 +52,8 @@ use CXGN::People::Person;
 use CXGN::BreedersToolbox::Accessions;
 use CXGN::Cross;
 use Sort::Key::Natural qw(natkeysort);
+use Time::Piece;
+
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
     my $self = shift;
@@ -246,9 +248,10 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $data_level = $c->req->param("dataLevel") && $c->req->param("dataLevel") ne 'null' ? $c->req->param("dataLevel") : "plot";
     my $repetitive_measurements = $c->req->param("repetitive_measurements") || "average";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
-    my $entry_numbers_option = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
     my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
+    my $include_intercrop_stocks = $c->req->param("intercrop") && $c->req->param("intercrop") ne 'null' && $c->req->param("intercrop") ne 'undefined' ? $c->req->param("intercrop") : 0;
+    my $include_entry_numbers = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -399,14 +402,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         }
     }
 
-    my $plugin = "";
-    if ($format eq "xlsx") {
-        $plugin = $entry_numbers_option ? "TrialPhenotypeExcelEntryNumbers" : "TrialPhenotypeExcel";
-    }
-    if ($format eq "csv") {
-        $plugin = $entry_numbers_option ? "TrialPhenotypeCSVEntryNumbers" : "TrialPhenotypeCSV";
-    }
-
+    my $plugin = $format eq 'xlsx' ? "TrialPhenotypeExcel" : "TrialPhenotypeCSV";
     my $temp_file_name;
     my $download_file_name;
     my $dir = $c->tempfiles_subdir('download');
@@ -439,6 +435,8 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         data_level => $data_level,
         include_timestamp => $timestamp_option,
         include_pedigree_parents=>$include_pedigree_parents,
+        include_intercrop_stocks => $include_intercrop_stocks,
+        include_entry_numbers => $include_entry_numbers,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
@@ -532,6 +530,8 @@ sub download_action : Path('/breeders/download_action') Args(0) {
         $datalevel         = $c->req->param("metadata_datalevel");
     }
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
+    my $include_intercrop_stocks = $c->req->param("intercrop") || 0;
+    my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
 
     # parameters for outliers download
@@ -556,18 +556,45 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 	    $trait_data = SGN::Controller::AJAX::List->retrieve_list($c, $trait_list_id);
     }
 
-    my $outliers;
-    if (defined $dataset_id) {
+    my $dataset_outliers;
+    my $dataset_accession_ids;
+    my $dataset_trait_ids;
+    my $dataset_trial_ids;
+    if (defined $dataset_id && $dataset_id ne '') {
         my $people_schema = $c->dbic_schema("CXGN::People::Schema");
         my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
         my $dataset = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => int($dataset_id), exclude_dataset_outliers => 1);
-        $outliers = $dataset->outliers();
+	die "Dataset not created" unless $dataset;
+
+	$dataset_outliers = $dataset->outliers();
+	$dataset_accession_ids = $dataset->retrieve_accessions();
+	$dataset_trait_ids     = $dataset->retrieve_traits();
+	$dataset_trial_ids = $dataset->retrieve_trials();
     }
 
+    # Build lookup sets from dataset results (keyed by name, column [1])
+    my %dataset_accessions = map { $_->[1] => 1 } @{ $dataset_accession_ids // [] };
+    my %dataset_traits     = map { $_->[1] => 1 } @{ $dataset_trait_ids     // [] };
+    my %dataset_trials     = map { $_->[1] => 1 } @{ $dataset_trial_ids     // [] };
 
-    my @accession_list = map { $_->[1] } @$accession_data;
-    my @trial_list = map { $_->[1] } @$trial_data;
-    my @trait_list = map { $_->[1] } @$trait_data;
+    my @accession_list;
+    if ($accession_list_id) {
+        @accession_list = map { $_->[1] } @$accession_data;
+    } else {
+	@accession_list = keys %dataset_accessions;
+    }
+    my @trial_list;
+    if ($trial_list_id) {
+        @trial_list = map { $_->[1] } @$trial_data;
+    } else {
+	@trial_list = keys %dataset_trials;
+    }
+    my @trait_list;
+    if ($trait_list_id) {
+        @trait_list = map { $_->[1] } @$trait_data;
+    } else {
+	@trait_list = keys %dataset_traits;
+    }
 
     my $tf = CXGN::List::Transform->new();
 
@@ -596,7 +623,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
 
     # if we work with dataset then @trait_ids we have directly from http request but we need reference/pointer to it
     # if we work with lists than we need to use result of transform method from class Transform - reference type to list
-    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform},
+    my $trait_list_ref = defined $dataset_id ? \@trait_ids : $trait_id_data->{transform};
 
     my @data;
     if ($datalevel eq 'metadata'){
@@ -617,7 +644,9 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     		accession_list=>$accession_id_data->{transform},
     		include_timestamp=>$timestamp_included,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
-            dataset_excluded_outliers=>$outliers,
+            dataset_excluded_outliers=>$dataset_outliers,
+            include_intercrop_stocks=>$include_intercrop_stocks,
+            include_entry_numbers=>$include_entry_numbers,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
@@ -864,7 +893,7 @@ sub build_accession_properties_info {
     }
 
     # Build Header
-    my @accession_headers = ("accession_name", "species_name", "population_name");
+    my @accession_headers = ("accession_name", "create_date", "species_name", "population_name");
     push(@accession_headers, @stock_props);
 
     # Add Header to Rows
@@ -872,7 +901,7 @@ sub build_accession_properties_info {
     push(@accession_rows, \@accession_headers);
 
     # Start query blocks
-    my $select = "SELECT stock.uniquename AS accession_name, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
+    my $select = "SELECT stock.uniquename AS accession_name, stock.create_date AS create_date, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
     my $from = "FROM public.stock";
     my $joins = "LEFT JOIN public.organism USING (organism_id)";
     $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id AND stock_relationship.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship')))";
@@ -904,6 +933,11 @@ sub build_accession_properties_info {
     $h->execute(@params);
     while (my @results = $h->fetchrow_array()) {
         # print STDERR "RETRIEVED: ".join(",", @results)."\n";
+        my $original_date_format = $results[1];
+        my $create_date = Time::Piece->strptime($original_date_format, "%Y-%m-%d %H:%M:%S");
+        my $download_date_format = $create_date->strftime("%Y-%B-%d");
+
+        splice(@results,1,1,$download_date_format);
         push(@accession_rows, \@results);
     }
 
@@ -1170,7 +1204,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         if ($accession_list_id) {
             $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
             @accession_list = map { $_->[1] } @$accession_data;
-        
+
             my $t = CXGN::List::Transform->new();
             my $acc_t = $t->can_transform("accessions", "accession_ids");
             my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
@@ -1258,7 +1292,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 
     my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    
+
     if ($download_format eq 'VCF') {
         $filename .= '.vcf';
     }
@@ -1351,7 +1385,7 @@ sub download_grm_action : Path('/breeders/download_grm_action') {
 
     my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
-    
+
     if ($download_format eq 'heatmap') {
         $filename .= '.pdf';
     }
@@ -1397,7 +1431,7 @@ sub download_gwas_action : Path('/breeders/download_gwas_action') {
     my $shared_cluster_dir_config = $c->config->{cluster_shared_tempdir};
     my $tmp_gwas_dir = $shared_cluster_dir_config."/tmp_genotype_download_gwas";
     mkdir $tmp_gwas_dir if ! -d $tmp_gwas_dir;
-    
+
     my $compute_from_parents = $c->req->param('compute_from_parents') eq 'true' ? 1 : 0;
 
     my ($gwas_tempfile_fh, $gwas_tempfile) = tempfile("wizard_download_gwas_XXXXX", DIR=> $tmp_gwas_dir);
@@ -1932,11 +1966,15 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
 
     my @download_rows = ();
     foreach my $obsolete_info (@$obsolete_metadata) {
-        my ($stock_id, $stock_name, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
+        my ($stock_id, $stock_name, $create_date, $stock_type, $obsolete_note, $obsolete_date, $sp_person_id) =@$obsolete_info;
         my $person= CXGN::People::Person->new($dbh, $sp_person_id);
         my $full_name = $person->get_first_name()." ".$person->get_last_name();
+
+        my $create_date_obj = Time::Piece->strptime($create_date, "%Y-%m-%d %H:%M:%S");
+        my $download_create_date = $create_date_obj->strftime("%Y-%B-%d");
+
         if ($obsolete_date =~ /Obsolete/) {
-            push @download_rows, [$stock_name, $stock_type, $obsolete_note, $obsolete_date,$full_name];
+            push @download_rows, [$stock_name, $download_create_date, $stock_type, $obsolete_note, $obsolete_date,$full_name];
         }
     }
 
@@ -1948,7 +1986,7 @@ sub download_obsolete_metadata_action : Path('/breeders/download_obsolete_metada
     my $workbook = Excel::Writer::XLSX->new($file_path);
     my $worksheet = $workbook->add_worksheet();
 
-    my @header = ("Stock Name", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
+    my @header = ("Stock Name", "Create Date", "Stock Type", "Obsolete Note", "Obsolete Date", "Obsoleted by");
     $worksheet->write_row(0, 0, \@header);
 
     my $row_count = 1;

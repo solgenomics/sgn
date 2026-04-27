@@ -12,8 +12,8 @@ use CXGN::Trial;
 use CXGN::Trait;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
-my @OPTIONAL_COLUMNS = qw|plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
-# Any additional columns that are not required or optional will be parsed as treatments. 
+my @OPTIONAL_COLUMNS = qw|intercrop_accession_name plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+# Any additional columns that are not required or optional will be parsed as treatments.
 
 # VALID DESIGN TYPES
 my %valid_design_types = (
@@ -67,6 +67,7 @@ sub _validate_with_plugin {
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
         optional_columns => \@OPTIONAL_COLUMNS,
+        column_arrays => [ 'intercrop_accession_name' ],
         column_aliases => {
             'accession_name' => [ 'stock_name', 'cross_unique_id', 'family_name' ]
         }
@@ -78,7 +79,7 @@ sub _validate_with_plugin {
     my $treatments = $parsed->{'additional_columns'};
 
     my $trait_validator = CXGN::List::Validate->new();
-    
+
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
 
     foreach my $treatment (@{$treatments}) {
@@ -87,7 +88,7 @@ sub _validate_with_plugin {
         }
     }
 
-    if (@{$validate->{missing}}>0) { 
+    if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
             push @error_messages, "Treatment $missing does not exist in the database.\n";
         }
@@ -105,12 +106,15 @@ sub _validate_with_plugin {
     my %seen_plot_names;        # check for plot names: used only once per trial
     my %seen_plot_positions;    # check for plot row / col positions: each position only used once per trial
     my %seen_entry_numbers;     # check for entry numbers: used only once per trial
-    my @seedlot_pairs;          # 2D array of [seedlot_name, accession_name]
+    my %seedlot_trial_stock_type;  # check for seedlot and accession/cross/family compatibility :based on trial stock type
 
     ##
     ## ROW BY ROW VALIDATION
     ## These are checks on the individual plot-level data
     ##
+
+    my $trial_stock_type;
+
     foreach (@$parsed_data) {
         my $data = $_;
         my $row = $data->{'_row'};
@@ -121,6 +125,7 @@ sub _validate_with_plugin {
         my $design_type = $data->{'design_type'};
         my $description = $data->{'description'};
         my $accession_name = $data->{'accession_name'};
+        my $intercrop_accession_name = $data->{'intercrop_accession_name'};
         my $plot_number = $data->{'plot_number'};
         my $block_number = $data->{'block_number'};
         my $plot_name = $data->{'plot_name'} || _create_plot_name($trial_name, $plot_number);
@@ -140,6 +145,7 @@ sub _validate_with_plugin {
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
+        $trial_stock_type = $data->{'trial_stock_type'};
 
         foreach my $treatment (@{$treatments}) {
             my $lt = CXGN::List::Transform->new();
@@ -149,7 +155,7 @@ sub _validate_with_plugin {
             my $treatment_id = $treatment_id_list[0];
 
             my $treatment_obj = CXGN::Trait->new({
-                bcs_schema => $schema, 
+                bcs_schema => $schema,
                 cvterm_id => $treatment_id
             });
             if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
@@ -232,7 +238,11 @@ sub _validate_with_plugin {
         # count and weight must be a positive integer
         # return a warning if both count and weight are not provided
         if ( $seedlot_name ) {
-            push @seedlot_pairs, [$seedlot_name, $accession_name];
+            if ($trial_stock_type eq 'family_name') {
+                push @{$seedlot_trial_stock_type{'family_name'}}, [$seedlot_name, $accession_name];
+            } else {
+                push @{$seedlot_trial_stock_type{'accession_cross'}}, [$seedlot_name, $accession_name];
+            }
             if ( $num_seed_per_plot && $num_seed_per_plot ne '' && !($num_seed_per_plot =~ /^\d+?$/) ) {
                 push @error_messages, "Row $row: num_seed_per_plot <strong>$num_seed_per_plot</strong> must be a positive integer.";
             }
@@ -393,8 +403,10 @@ sub _validate_with_plugin {
     }
 
     # Accession Names: must exist in the database
-    my @accessions = @{$parsed_values->{'accession_name'}};
-    my $accessions_hashref = $validator->validate($schema,'accessions',\@accessions);
+    my @stock_names = @{$parsed_values->{'accession_name'}};
+    my @intercrop_accessions = $parsed_values->{'intercrop_accession_name'} ? @{$parsed_values->{'intercrop_accession_name'}} : ();
+    my @merged_stock_names = uniq(@stock_names, @intercrop_accessions);
+    my $accessions_hashref = $validator->validate($schema,'accessions',\@merged_stock_names);
     my @multiple_synonyms = @{$accessions_hashref->{'multiple_synonyms'}};
 
     #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
@@ -405,17 +417,30 @@ sub _validate_with_plugin {
 
         push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
 
-        @accessions = grep !/\Q$matched_synonym/, @accessions;
-        push @accessions, $found_acc_name_from_synonym;
+        @merged_stock_names = grep !/\Q$matched_synonym/, @merged_stock_names;
+        push @merged_stock_names, $found_acc_name_from_synonym;
     }
 
     #now validate again the accession names
-    $accessions_hashref = $validator->validate($schema,'accessions_or_crosses_or_familynames',\@accessions);
-    my @accessions_missing = @{$accessions_hashref->{'missing'}};
 
-    if (scalar(@accessions_missing) > 0) {
-        push @error_messages, "Stocks(s) <strong>".join(',',@accessions_missing)."</strong> are not in the database as uniquenames or synonyms of accessions, crosses, or families.";
+    my @entry_names_missing = ();
+    if ($trial_stock_type eq 'cross') {
+        @entry_names_missing = @{$validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_stock_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or cross stock type.";
+        }
+    } elsif ($trial_stock_type eq 'family_name') {
+        @entry_names_missing = @{$validator->validate($schema,'accessions_or_family_names',\@merged_stock_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or family name stock type.";
+        }
+    } else {
+        @entry_names_missing = @{$validator->validate($schema,'accessions',\@merged_stock_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database as uniquenames or synonyms of accession stock type.";
+        }
     }
+
     if (scalar(@multiple_synonyms) > 0) {
         my @msgs;
         foreach my $m (@multiple_synonyms) {
@@ -445,10 +470,29 @@ sub _validate_with_plugin {
     }
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
-    if ( scalar(@seedlot_pairs) > 0 ) {
-        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);
-        if (exists($return->{error})) {
-            push @error_messages, $return->{error};
+    my @family_seedlot_pairs_array;
+    my @accession_cross_seedlot_pairs_array;
+    my $family_seedlot_pairs = $seedlot_trial_stock_type{'family_name'};
+    if (defined $family_seedlot_pairs) {
+        @family_seedlot_pairs_array = @$family_seedlot_pairs;
+    }
+    my $accession_cross_seedlot_pairs = $seedlot_trial_stock_type{'accession_cross'};
+    if (defined $accession_cross_seedlot_pairs) {
+        @accession_cross_seedlot_pairs_array = @$accession_cross_seedlot_pairs;
+    }
+
+    if ((scalar @entry_names_missing == 0) && (scalar @seedlots_missing == 0)) {
+        my $return;
+        if (scalar @family_seedlot_pairs_array > 0) {
+            $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, $family_seedlot_pairs);
+            if (exists($return->{error})) {
+                push @error_messages, $return->{error};
+            }
+        } elsif ( scalar @accession_cross_seedlot_pairs_array > 0 ) {
+            $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, $accession_cross_seedlot_pairs);
+            if (exists($return->{error})) {
+                push @error_messages, $return->{error};
+            }
         }
     }
 
@@ -535,9 +579,11 @@ sub _parse_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'accession_name'}};
+    my @intercrop_accessions = $values->{'intercrop_accession_name'} ? @{$values->{'intercrop_accession_name'}} : ();
+    my @merged_accessions = uniq(@accessions, @intercrop_accessions);
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },
-        'stockprops.value' => { -in => \@accessions},
+        'stockprops.value' => { -in => \@merged_accessions },
         'me.type_id' => $accession_cvterm_id,
         'stockprops.type_id' => $synonym_cvterm_id
     },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
@@ -561,6 +607,7 @@ sub _parse_with_plugin {
         my $row_id = $row->{'_row'};
         my $current_trial_name = $row->{'trial_name'};
         my $accession_name = $row->{'accession_name'};
+        my $intercrop_accession_name = $row->{'intercrop_accession_name'};
         my $plot_number = $row->{'plot_number'};
         my $plot_name = $row->{'plot_name'} || _create_plot_name($current_trial_name, $plot_number);
         my $block_number = $row->{'block_number'};
@@ -641,10 +688,22 @@ sub _parse_with_plugin {
             }
             $accession_name = $accession_names[0];
         }
+        my @checked_intercrop_accession_names;
+        foreach my $accession_name (@$intercrop_accession_name) {
+            if ($acc_synonyms_lookup{$accession_name}) {
+                my @accession_names = keys %{$acc_synonyms_lookup{$accession_name}};
+                if (scalar(@accession_names)>1) {
+                    print STDERR "There is more than one uniquename for this synonym $accession_name. this should not happen!\n";
+                }
+                $accession_name = $accession_names[0];
+            }
+            push @checked_intercrop_accession_names, $accession_name;
+        }
 
         my $key = $row_id;
         $design_details{$key}->{plot_name} = $plot_name;
         $design_details{$key}->{stock_name} = $accession_name;
+        $design_details{$key}->{intercrop_stock_name} = \@checked_intercrop_accession_names;
         $design_details{$key}->{plot_number} = $plot_number;
         $design_details{$key}->{block_number} = $block_number;
         if ($is_a_control) {

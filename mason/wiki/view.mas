@@ -10,7 +10,7 @@ $page_name => 'WikiHome'
   /* Adds space between the content and cell border */
   padding: 0.6em;
   /* Adds borders to all cells */
-  border: 1px solid #ddd
+  border: 1px solid #ddd;
   /* Aligns text within cells */
   text-align: left;
     }

@@ -419,6 +419,43 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         $c->stash->{default_plant_material_name} = $default_plant_material_name;
         $c->stash->{template} = '/transformation/transformation_project.mas';
     }
+    elsif ($trial_type_name eq "propagation_project"){
+        my $propagation_project_id = $c->stash->{trial_id};
+        my $program_name = $breeding_program_data->[0]->[1];
+        my $locations = $program_object->get_all_locations_by_breeding_program();
+        my @locations_by_program;
+        foreach my $location_hashref (@$locations) {
+            my $properties = $location_hashref->{'properties'};
+            my $program = $properties->{'Program'};
+            my $name = $properties->{'Name'};
+            if ($program eq $program_name) {
+                push @locations_by_program, $name;
+            }
+        }
+        my $locations_by_program_json = encode_json(\@locations_by_program);
+        $c->stash->{locations_by_program_json} = $locations_by_program_json;
+
+        my $propagation_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'propagation_type', 'project_property')->cvterm_id();
+        my $propagation_type_rs = $schema->resultset("Project::Projectprop")->find ({
+            project_id =>  $propagation_project_id,
+            type_id => $propagation_type_cvterm_id
+        });
+        my $propagation_type = $propagation_type_rs->value;
+        $c->stash->{propagation_type} = $propagation_type;
+
+        my $time = DateTime->now();
+        my $date = $time->ymd();
+        $c->stash->{date} = $date;
+
+        my $user = $c->user()->get_object();
+        my $first_name = $user->get_first_name();
+        my $last_name = $user->get_last_name();
+        my $full_name = $first_name.' '.$last_name;
+        $c->stash->{logged_in_name} = $full_name;
+
+        $c->stash->{template} = '/propagation/propagation_project.mas';
+    }
+
     else {
         my $field_management_factors = $c->config->{management_factor_types};
         my @management_factor_types = split ',',$field_management_factors;
@@ -508,6 +545,9 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $trait_list = $c->req->param("trait_list");
     my $include_measured = $c->req->param('include_measured') || '';
     my $search_type = $c->req->param("search_type") || 'fast';
+    my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
+    my $plot_order = $c->req->param('plot_order');
+    my $plot_start = $c->req->param('plot_start');
 
     my $trial = $c->stash->{trial};
     if ($data_level eq 'plants') {
@@ -548,11 +588,11 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         @trait_list = @{$lt->transform($schema, "traits_2_trait_ids", \@selected_trait_names)->{transform}};
     }
 
-    my @treatment_project_ids;
-    my $treatments = $trial->get_treatments();
-    foreach (@$treatments){
-        push @treatment_project_ids, $_->[0];
-    }
+    # my @treatment_project_ids;
+    # my $treatments = $trial->get_treatments();
+    # foreach (@$treatments){
+    #     push @treatment_project_ids, $_->[0];
+    # }
 
     if ($trait_list && $trait_list ne 'null') {
         @trait_list = @{_parse_list_from_json($trait_list)};
@@ -607,7 +647,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     $rel_file = $rel_file . ".$format";
     my $tempfile = $c->config->{basepath}."/".$rel_file;
 
-
     my $download = CXGN::Trial::Download->new({
         bcs_schema => $schema,
         trial_id => $c->stash->{trial_id},
@@ -617,11 +656,14 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         data_level => $data_level,
         search_type => $search_type,
         include_timestamp => $timestamp_option,
-        treatment_project_ids => \@treatment_project_ids,
+        #treatment_project_ids => \@treatment_project_ids,
         selected_columns => $selected_cols,
         include_measured => $include_measured,
         field_crossing_data_order => \@field_crossing_data_order,
-        prop_id => $prop_id
+        prop_id => $prop_id,
+        include_plot_order => $include_plot_order,
+        plot_order => $plot_order,
+        plot_start => $plot_start,
     });
 
     my $error = $download->download();

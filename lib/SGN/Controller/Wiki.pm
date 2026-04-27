@@ -25,7 +25,7 @@ sub view_page :Path('/wiki/') Args(1) {
 }
 
 
-sub view_home :Path('/wiki/') Args(0) {
+sub view_home :Path('/wiki') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -35,6 +35,9 @@ sub view_home :Path('/wiki/') Args(0) {
 	$c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
     }
 
+    $c->res->redirect( uri( path => '/wiki/WikiHome') );
+    
+    $c->stash->{page_name} = "WikiHome";
     $c->stash->{template} = '/wiki/view.mas';
 }
 

@@ -259,7 +259,7 @@ ok($post1_exp_md_files_diff == 15, "Check num rows in NdExperimentMdFIles table 
 # The file "t/data/trial/upload_phenotypin_spreadsheet_duplicate.xlsx
 # contains data for the same trial and traits as the previous file.
 # When overwrite values is not set, it will still store the values as
-# additional values. 
+# additional values.
 # The number of phenotypes should still be 15 at the end.
 #
 $parser = CXGN::Phenotypes::ParseUpload->new();
@@ -314,6 +314,183 @@ my $traits_assayed  = $tn->get_traits_assayed();
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 print STDERR Dumper @traits_assayed_sorted;
 my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15, undef, undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
+
+
+
+#####################################
+# Test the Phenotype Matrix Native Search
+# to ensure plots with no trait observations are still returned
+
+my $filename = "t/data/trial/upload_phenotyping_spreadsheet_plots_with_no_trait_data.$extension";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+print STDERR "NOW UPLOADING FILE $filename\n";
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $filename,
+  subdirectory => 'temp_fieldbook',
+  archive_path => '/tmp',
+  archive_filename => "upload_phenotyping_spreadsheet_plots_with_no_trait_data.$extension",
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path_plots_with_no_trait_data = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path_plots_with_no_trait_data);
+ok($archived_filename_with_path_plots_with_no_trait_data);
+ok($md5);
+
+print STDERR "NOW PARSING FILE $archived_filename_with_path_plots_with_no_trait_data\n";
+
+#Now parse phenotyping spreadsheet file using correct parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path_plots_with_no_trait_data, 0, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for phenotype file");
+
+my $parsed_file = $parser->parse('phenotype spreadsheet simple', $archived_filename_with_path_plots_with_no_trait_data, 0, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works ($extension)");
+
+# Now store the phenotype data
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path_plots_with_no_trait_data;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_01:10:56";
+my %parsed_data = %{$parsed_file->{'data'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+  basepath=>$f->config->{basepath},
+  dbhost=>$f->config->{dbhost},
+  dbname=>$f->config->{dbname},
+  dbuser=>$f->config->{dbuser},
+  dbpass=>$f->config->{dbpass},
+  temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_plots_with_no_trait_data",
+  bcs_schema=>$f->bcs_schema,
+  metadata_schema=>$f->metadata_schema,
+  phenome_schema=>$f->phenome_schema,
+  user_id=>41,
+  stock_list=>\@plots,
+  trait_list=>\@traits,
+  values_hash=>\%parsed_data,
+  has_timestamps=>0,
+  overwrite_values=>1,
+  remove_values=>1,
+  metadata_hash=>\%phenotype_metadata,
+  composable_validation_check_name=>$f->config->{composable_validation_check_name}
+);
+
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works 4");
+
+print STDERR "STORED PHENOTYPE ERROR MESG 4: $stored_phenotype_error_msg\n";
+
+my $refresh = $bs->refresh_matviews($f->config->{dbhost}, $f->config->{dbname}, $f->config->{dbuser}, $f->config->{dbpass}, 'phenotypes', 'concurrent', $f->config->{basepath});
+
+
+# Get the Phenotype Matrix and make sure all of the plots are included
+my @trials = (137);
+my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
+    bcs_schema=>$f->bcs_schema,
+    search_type=>'Native',
+    data_level=>'plot',
+    trial_list=>\@trials
+);
+my @data = $phenotypes_search->get_phenotype_matrix();
+
+# check plot count
+is(scalar(@data), 16, '15 plots plus header row count');
+
+#
+# restore original data
+#
+
+my $filename = "t/data/trial/upload_phenotypin_spreadsheet.$extension";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+print STDERR "NOW UPLOADING FILE $filename\n";
+
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $filename,
+  subdirectory => 'temp_fieldbook',
+  archive_path => '/tmp',
+  archive_filename => "upload_phenotypin_spreadsheet.$extension",
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
+#check that parse fails for fieldbook file when using phenotype spreadsheet parser
+my $parser = CXGN::Phenotypes::ParseUpload->new();
+my $filename = "t/data/fieldbook/fieldbook_phenotype_file.csv";
+my $validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
+ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for fieldbook - restore");
+
+#check that parse fails for datacollector file when using phenotype spreadsheet parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$filename = "t/data/trial/data_collector_upload.$extension";
+$validate_file = $parser->validate('phenotype spreadsheet', $filename, 1, 'plots', $f->bcs_schema);
+ok($validate_file != 1, "Check if parse validate phenotype spreadsheet fails for datacollector - restore");
+
+#Now parse phenotyping spreadsheet file using correct parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$validate_file = $parser->validate('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for phenotype file - restore");
+
+my $parsed_file = $parser->parse('phenotype spreadsheet', $archived_filename_with_path, 1, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works - restore");
+
+print STDERR "PARSED FILE FOR $archived_filename_with_path".Dumper($parsed_file);
+
+my %phenotype_metadata;
+$phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
+$phenotype_metadata{'operator'}="janedoe";
+$phenotype_metadata{'date'}="2016-02-16_01:10:56";
+my %parsed_data = %{$parsed_file->{'data'}};
+my @plots = @{$parsed_file->{'units'}};
+my @traits = @{$parsed_file->{'variables'}};
+
+my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new(
+  basepath=>$f->config->{basepath},
+  dbhost=>$f->config->{dbhost},
+  dbname=>$f->config->{dbname},
+  dbuser=>$f->config->{dbuser},
+  dbpass=>$f->config->{dbpass},
+  temp_file_nd_experiment_id=>$f->config->{cluster_shared_tempdir}."/test_temp_nd_experiment_id_delete",
+  bcs_schema=>$f->bcs_schema,
+  metadata_schema=>$f->metadata_schema,
+  phenome_schema=>$f->phenome_schema,
+  user_id=>41,
+  stock_list=>\@plots,
+  trait_list=>\@traits,
+  values_hash=>\%parsed_data,
+  has_timestamps=>1,
+  overwrite_values=>1,
+  metadata_hash=>\%phenotype_metadata,
+  composable_validation_check_name=>$f->config->{composable_validation_check_name}
+);
+
+my ($verified_warning, $verified_error) = $store_phenotypes->verify();
+ok(!$verified_error);
+
+my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
+ok(!$stored_phenotype_error_msg, "check that store pheno spreadsheet works 1 - restore");
+
 
 #
 # Tests for phenotype spreadsheet parsing - this time updating and removing
@@ -450,7 +627,7 @@ is_deeply(\@pheno_for_trait_sorted, \@pheno_for_trait_check, 'check pheno traits
 
 # This test checks if the fieldbook format is parsed correctly.
 # The fieldbook file contains two traits, dry matter content and dry yield with
-# 15 measurements each, for the same trial as before. 
+# 15 measurements each, for the same trial as before.
 # We use overwrite values, so each of these traits should have 15 measurements associated
 # with it after loading.
 
@@ -1137,6 +1314,62 @@ my ($stored_phenotype_error_msg, $store_success) = $store_phenotypes->store();
 ok(!$stored_phenotype_error_msg, "check that store phenotypes from fieldbook file works");
 
 
+######################################################
+# NEW (revived) test for phenotype spreadsheet parsing
+
+my $filename = "t/data/trial/trial_phenotype_upload_file_simple.xlsx";
+my $time = DateTime->now();
+my $timestamp = $time->ymd()."_".$time->hms();
+
+#Test archive upload file
+my $uploader = CXGN::UploadFile->new({
+  tempfile => $filename,
+  subdirectory => 'temp_fieldbook',
+  archive_path => '/tmp',
+  archive_filename => 'trial_phenotype_upload_file_simple.xlsx',
+  timestamp => $timestamp,
+  user_id => 41, #janedoe in fixture
+  user_role => 'curator'
+});
+
+## Store uploaded temporary file in archive
+my $archived_filename_with_path = $uploader->archive();
+my $md5 = $uploader->get_md5($archived_filename_with_path);
+ok($archived_filename_with_path);
+ok($md5);
+
+#Now parse phenotyping spreadsheet file using correct parser
+$parser = CXGN::Phenotypes::ParseUpload->new();
+$validate_file = $parser->validate('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+ok($validate_file == 1, "Check if parse validate works for phenotype file");
+
+my $parsed_file = $parser->parse('phenotype spreadsheet simple generic', $archived_filename_with_path, 0, 'plots', $f->bcs_schema);
+ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
+
+print STDERR Dumper $parsed_file;
+
+is_deeply($parsed_file, {'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],'variables' => ['CO_334:0000011','number of planted stakes counting|CO_334:0000159','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count|CO_334:0000213'],'data' => {'test_trial212' => {'root weight in air|CO_334:0000157' => [['','']],'sprout count|CO_334:0000213' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['','']],'CO_334:0000011' => [['','']],'root weight in water|CO_334:0000158' => [['','']]},'test_trial215' => {'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'root weight in air|CO_334:0000157' => [['','']],'sprout count|CO_334:0000213' => [['','']]},'test_trial28' => {'root weight in water|CO_334:0000158' => [['0.32','']],'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['20','']],'root weight in air|CO_334:0000157' => [['3','']],'sprout count|CO_334:0000213' => [['14','']]},'test_trial27' => {'number of planted stakes counting|CO_334:0000159' => [['20','']],'CO_334:0000011' => [['','']],'root weight in water|CO_334:0000158' => [['0.32','']],'root weight in air|CO_334:0000157' => [['3','']],'sprout count|CO_334:0000213' => [['14','']]},'test_trial22' => {'sprout count|CO_334:0000213' => [['','']],'root weight in air|CO_334:0000157' => [['3','']],'number of planted stakes counting|CO_334:0000159' => [['20','']],'CO_334:0000011' => [['3','']],'root weight in water|CO_334:0000158' => [['','']]},'test_trial213' => {'root weight in air|CO_334:0000157' => [['','']],'sprout count|CO_334:0000213' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['','']]},'test_trial214' => {'number of planted stakes counting|CO_334:0000159' => [['','']],'CO_334:0000011' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'sprout count|CO_334:0000213' => [['','']],'root weight in air|CO_334:0000157' => [['','']]},'test_trial25' => {'root weight in water|CO_334:0000158' => [['','']],'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['20','']],'root weight in air|CO_334:0000157' => [['3','']]},'test_trial23' => {'sprout count|CO_334:0000213' => [['20','']],'root weight in air|CO_334:0000157' => [['3','']],'root weight in water|CO_334:0000158' => [['0.32','']],'number of planted stakes counting|CO_334:0000159' => [['20','']],'CO_334:0000011' => [['4','']]},'test_trial211' => {'sprout count|CO_334:0000213' => [['0','']],'root weight in air|CO_334:0000157' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['','']]},'test_trial29' => {'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'root weight in air|CO_334:0000157' => [['','']],'sprout count|CO_334:0000213' => [['','']]},'test_trial210' => {'root weight in water|CO_334:0000158' => [['','']],'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['0','']],'sprout count|CO_334:0000213' => [['','']],'root weight in air|CO_334:0000157' => [['','']]},'test_trial24' => {'root weight in air|CO_334:0000157' => [['3','']],'sprout count|CO_334:0000213' => [['6','']],'number of planted stakes counting|CO_334:0000159' => [['20','']],'CO_334:0000011' => [['','']],'root weight in water|CO_334:0000158' => [['','']]},'test_trial26' => {'root weight in air|CO_334:0000157' => [['3','']],'sprout count|CO_334:0000213' => [['18','']],'root weight in water|CO_334:0000158' => [['0.36','']],'CO_334:0000011' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['20','']]},'test_trial21' => {'CO_334:0000011' => [['2','']],'number of planted stakes counting|CO_334:0000159' => [['20','']],'root weight in water|CO_334:0000158' => [['0.3','']],'root weight in air|CO_334:0000157' => [['3','']],'sprout count|CO_334:0000213' => [['18','']]}}});
+
+    # {
+    #     'test_trial213' => {'CO_334:0000011' => [['','']],'sprout count|CO_334:0000213' => [['','']],'root weight in air|CO_334:0000157' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['','']]},
+    #     'test_trial28' => {'number of planted stakes counting|CO_334:0000159' => [['20','']],'root weight in water|CO_334:0000158' => [['0.32','']],'sprout count|CO_334:0000213' => [['14','']],'root weight in air|CO_334:0000157' => [['3','']],'CO_334:0000011' => [['','']]},
+    #     'test_trial29' => {'number of planted stakes counting|CO_334:0000159' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'sprout count|CO_334:0000213' => [['','']],'root weight in air|CO_334:0000157' => [['','']],'CO_334:0000011' => [['','']]},
+    #     'test_trial25' => {'CO_334:0000011' => [['','']],'root weight in air|CO_334:0000157' => [['3','']],'root weight in water|CO_334:0000158' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['20','']]},
+    #     'test_trial212' => {'CO_334:0000011' => [['','']],'root weight in air|CO_334:0000157' => [['','']],'sprout count|CO_334:0000213' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'number of planted stakes counting|CO_334:0000159' => [['','']]},
+    #     'test_trial214' => {'number of planted stakes counting|CO_334:0000159' => [['','']],'root weight in water|CO_334:0000158' => [['','']],'sprout count|CO_334:0000213' => [['','']],'root weight in air|CO_334:0000157' => [['','']],'CO_334:0000011' => [['','']]},
+    #     'test_trial210' => {'number of planted stakes counting|CO_334:0000159' => [['0','']],'root weight in water|CO_334:0000158' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'sprout count|CO_334:0000213' => ['',''],'CO_334:0000011' => ['','']},
+    #     'test_trial215' => {'CO_334:0000011' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in air|CO_334:0000157' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'number of planted stakes counting|CO_334:0000159' => ['','']},
+    #     'test_trial27' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['0.32',''],'sprout count|CO_334:0000213' => ['14',''],'root weight in air|CO_334:0000157' => ['3',''],'CO_334:0000011' => ['','']},
+    #     'test_trial23' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['0.32',''],'sprout count|CO_334:0000213' => ['20',''],'root weight in air|CO_334:0000157' => ['3',''],'CO_334:0000011' => ['4','']},
+    #     'test_trial211' => {'number of planted stakes counting|CO_334:0000159' => ['',''],'root weight in water|CO_334:0000158' => ['',''],'sprout count|CO_334:0000213' => ['0',''],'root weight in air|CO_334:0000157' => ['',''],'CO_334:0000011' => ['','']},
+    #     'test_trial26' => {'CO_334:0000011' => ['',''],'root weight in air|CO_334:0000157' => ['3',''],'sprout count|CO_334:0000213' => ['18',''],'root weight in water|CO_334:0000158' => ['0.36',''],'number of planted stakes counting|CO_334:0000159' => ['20','']},
+    #     'test_trial24' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['',''],'root weight in air|CO_334:0000157' => ['3',''],'sprout count|CO_334:0000213' => ['6',''],'CO_334:0000011' => ['','']},
+    #     'test_trial22' => {'number of planted stakes counting|CO_334:0000159' => ['20',''],'root weight in water|CO_334:0000158' => ['',''],'sprout count|CO_334:0000213' => ['',''],'root weight in air|CO_334:0000157' => ['3',''],'CO_334:0000011' => ['3','']},
+    #     'test_trial21' => {'CO_334:0000011' => ['2',''],'sprout count|CO_334:0000213' => ['18',''],'root weight in air|CO_334:0000157' => ['3',''],'root weight in water|CO_334:0000158' => ['0.3',''],'number of planted stakes counting|CO_334:0000159' => ['20','']}
+    # },
+    # 'units' => ['test_trial21','test_trial210','test_trial211','test_trial212','test_trial213','test_trial214','test_trial215','test_trial22','test_trial23','test_trial24','test_trial25','test_trial26','test_trial27','test_trial28','test_trial29'],
+    # 'variables' => ['CO_334:0000011','number of planted stakes counting|CO_334:0000159','root weight in air|CO_334:0000157','root weight in water|CO_334:0000158','sprout count|CO_334:0000213']}, 'check parse simple');
+
 done_testing();
 
 $f->clean_up_db();
@@ -1649,7 +1882,7 @@ $f->clean_up_db();
 
 #is_deeply(\%file_names, {
 #    'upload_phenotypin_spreadsheet_plants.xlsx' => ['upload_phenotypin_spreadsheet_plants.xlsx','spreadsheet phenotype file'],'fieldbook_phenotype_file.csv' => ['fieldbook_phenotype_file.csv','tablet phenotype file'],'fieldbook_phenotype_plants_file.csv' => ['fieldbook_phenotype_plants_file.csv','tablet phenotype file'],'upload_phenotypin_spreadsheet_large.xlsx' => ['upload_phenotypin_spreadsheet_large.xlsx','spreadsheet phenotype file'],'2025-02-17_04:28:22_upload_phenotypin_spreadsheet_update.xlsx' => ['2025-02-17_04:28:22_upload_phenotypin_spreadsheet_update.xlsx','spreadsheet phenotype file']}, "uploaded file metadata");
-    
+
         #   'fieldbook_phenotype_file.csv' => [
         #                                       'fieldbook_phenotype_file.csv',
         #                                       'tablet phenotype file'
@@ -1674,7 +1907,7 @@ $f->clean_up_db();
         #                                                      'upload_phenotypin_spreadsheet_duplicate.xlsx',
         #                                                      'spreadsheet phenotype file'
         #                                                    ]
-        # }, 
+        # },
 
 # $experiment = $f->bcs_schema->resultset('NaturalDiversity::NdExperiment')->search({type_id => $phenotyping_experiment_cvterm_id}, {order_by => {-asc => 'nd_experiment_id'}});
 # $post1_experiment_count = $experiment->count();
@@ -4846,9 +5079,9 @@ print STDERR Dumper $response;
 
 my $python_dependencies_installed = `locate keras.py`;
 
-			
+
 #print STDERR "PYTHON DEPENDENCIES INSTALLED=".Dumper($python_dependencies_installed)."\n";
-			
+
 SKIP: {
     skip 'missing pyhton dependencies', 1 unless $python_dependencies_installed;
     my $stored_image_ids_string = encode_json $stored_image_ids;
@@ -4863,9 +5096,3 @@ SKIP: {
 
 
 done_testing();
-
-
-
-
-
-

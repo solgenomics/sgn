@@ -414,7 +414,7 @@ sub children_GET {
 
     my ($db_name, $accession) = split ":", $c->request->param('node');
 
-    my $db = $schema->resultset('General::Db')->search({ name => uc($db_name) })->first();
+    my $db = $schema->resultset('General::Db')->search({ 'UPPER(name)' => uc($db_name) })->first();
     my $dbxref = $db->find_related('dbxrefs', { accession => $accession });
 
     my $cvterm = $dbxref->cvterm;
@@ -470,6 +470,12 @@ sub parents_GET  {
 	}
 	);
     my $db_id;
+
+    if ($db->count() == 0) {
+        $c->stash->{rest} = { error => "The term $db_name:$accession does not exist." };
+        $c->detach();
+    }
+    
     if (!$db || !$accession) {
 	#not sure we need here to send an error key, since cache is usually called after parents (? )
 	$response{error} = "Did not pass a legal ontology term ID! ( $db_name : $accession)";
@@ -548,7 +554,7 @@ sub menu_GET  {
     print STDERR "MENUDATA: $menudata\n";
     my @menuitems = split ",", $menudata;
 
-    my $menu = '<select name="cv_select">';
+    my $menu = '<select class="form-control" name="cv_select">';
 
     foreach my $mi (@menuitems) {
 	print STDERR "MENU ITEM: $mi\n";

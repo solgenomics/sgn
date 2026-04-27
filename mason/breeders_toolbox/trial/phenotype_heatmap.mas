@@ -341,13 +341,6 @@ $trial_stock_type => undef
 </div> -->
 
 
-<div id="delete_field_map_dialog_message" title="Physical Field Map Deletion" style="display:none;">
-   <p>
-       <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-       The field coordinates were deleted successfully...
-   </p>
-</div>
-
 <div id="delete_field_map_dialog" title="Physical Field Map Deletion" style="display:none;">
    <div id="trait_list_dc" name="trait_list">
        <label id="trait_list_label_dc" for="trait_list_list_select" style="display: inline-block; width: 300px;">Please, confirm field map deletion... <br />
@@ -609,16 +602,18 @@ $trial_stock_type => undef
                         </div>
                       </div>
 
-                      <div class="form-group">
-                        <div class="col-sm-9" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible.</i></p>
-                        </div>
-                      </div>
+                      
 
                       <div class="form-group">
                         <label class="col-sm-3 control-label">New Plot Name:<br> (Optional) </label>
                         <div class="col-sm-9">
                           <input class="form-control" id="hm_new_plot_name" name="hm_new_plot_name"></input>
+                        </div>
+                      </div>
+
+                      <div class="form-group">
+                        <div class="col-sm-12 list-group-item-warning" >
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
                         </div>
                       </div>
 
@@ -1534,6 +1529,11 @@ function _finish() {
                 cellVal = plot.germplasmName;
             } else if (plot.crossName) {
                 cellVal = plot.crossName;
+            }
+            if ( plot.additionalInfo?.intercropGermplasm ) {
+                for ( let i = 0; i < plot.additionalInfo.intercropGermplasm.length; i++ ) {
+                    cellVal += `,${plot.additionalInfo.intercropGermplasm[i].germplasmName}`;
+                }
             }
         } else {
             cellVal = '';

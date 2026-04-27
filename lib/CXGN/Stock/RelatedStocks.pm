@@ -23,6 +23,10 @@ has 'trial_id' => (
     is => 'rw',
 );
 
+has 'stock_ids' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+);
 
 
 sub get_trial_related_stock {
@@ -235,8 +239,9 @@ sub get_vector_related_accessions {
     my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $transformant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transformant_of', 'stock_relationship')->cvterm_id();
     my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
+    my $expression_data_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'transgene_expression_data', 'stock_property')->cvterm_id();
 
-    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename, stockprop.value
+    my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, transformation.stock_id, transformation.uniquename, stockprop.value, expression.value
         FROM stock AS transformant
         JOIN stock_relationship AS plant_relationship ON (plant_relationship.object_id = transformant.stock_id) AND plant_relationship.type_id = ?
         JOIN stock AS plant ON (plant_relationship.subject_id = plant.stock_id) AND plant.type_id = ?
@@ -245,14 +250,15 @@ sub get_vector_related_accessions {
         LEFT JOIN stock_relationship AS transformation_relationship ON (transformation_relationship.subject_id = transformant.stock_id) AND transformation_relationship.type_id = ?
         LEFT JOIN stock AS transformation ON (transformation_relationship.object_id = transformation.stock_id) AND transformation.type_id = ?
         LEFT JOIN stockprop ON (transformant.stock_id = stockprop.stock_id) AND stockprop.type_id = ?
+        LEFT JOIN stockprop AS expression ON (transformant.stock_id = expression.stock_id) AND expression.type_id = ?
         WHERE vector.stock_id = ? AND transformant.is_obsolete = 'F' ORDER BY transformation.uniquename, transformant.uniquename";
 
     my $h = $schema->storage->dbh->prepare($q);
-    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $number_of_insertions_type_id, $stock_id);
+    $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id,  $transformant_of_type_id, $transformation_type_id, $number_of_insertions_type_id, $expression_data_type_id, $stock_id);
 
     my @related_stocks =();
-    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions) = $h->fetchrow_array()){
-        push @related_stocks, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions]
+    while(my($transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data) = $h->fetchrow_array()){
+        push @related_stocks, [$transformant_id, $transformant_name, $plant_id, $plant_name, $transformation_id, $transformation_name, $number_of_insertions, $expression_data]
     }
 
     return \@related_stocks;
@@ -294,6 +300,34 @@ sub get_vector_obsoleted_accessions {
 
     return \@obsoleted_accessions;
 
+}
+
+
+sub get_vector_related_accession_list {
+    my $self = shift;
+    my $stock_id = $self->stock_id;
+    my $schema = $self->dbic_schema();
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "vector_construct", "stock_type")->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
+
+    my $q = "SELECT transformant.uniquename
+        FROM stock AS vector
+        JOIN stock_relationship ON (stock_relationship.subject_id = vector.stock_id) AND stock_relationship.type_id = ?
+        JOIN stock as transformant ON (stock_relationship.object_id = transformant.stock_id) AND transformant.type_id = ?
+        WHERE vector.stock_id = ? AND vector.type_id = ? AND transformant.is_obsolete = 'F' ORDER BY transformant.uniquename";
+
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute($male_parent_type_id, $accession_type_id, $stock_id, $vector_construct_type_id);
+
+    my @transformant_list =();
+
+    while(my $transformant_name = $h->fetchrow_array()) {
+        push @transformant_list, $transformant_name;
+    }
+
+    return \@transformant_list;
 }
 
 
@@ -456,6 +490,49 @@ sub get_original_derived_from_stock {
 
     return \%original_stock_info;
 }
+
+
+sub get_plots_related_seedlots {
+    my $self = shift;
+    my $plot_ids = $self->stock_ids;
+    my $schema = $self->dbic_schema();
+    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
+    my @plot_array = @$plot_ids;
+    my $placeholder = join ",",("?") x @plot_array;
+
+    my $where_clause = "plot.stock_id in ($placeholder)";
+    my @related_seedlots;
+
+    my $q1 = "SELECT distinct(seedlot.stock_id), seedlot.uniquename, plot.stock_id, plot.uniquename
+            FROM stock_relationship
+            JOIN stock AS seedlot ON (stock_relationship.subject_id = seedlot.stock_id)
+            JOIN stock AS plot ON (stock_relationship.object_id = plot.stock_id)
+            WHERE $where_clause AND stock_relationship.type_id = ? ";
+
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+    $h1->execute(@plot_array, $seed_transaction_type_id);
+
+    while(my($seedlot_id, $seedlot_name, $plot_id, $plot_name ) = $h1->fetchrow_array()){
+      push @related_seedlots, ['source of', $seedlot_id, $seedlot_name, $plot_id, $plot_name]
+    }
+
+    my $q2 = "SELECT distinct(seedlot.stock_id), seedlot.uniquename, plot.stock_id, plot.uniquename
+            FROM stock_relationship
+            JOIN stock AS seedlot ON (stock_relationship.object_id = seedlot.stock_id)
+            JOIN stock AS plot ON (stock_relationship.subject_id = plot.stock_id)
+            WHERE $where_clause AND stock_relationship.type_id = ? ";
+
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+    $h2->execute(@plot_array, $seed_transaction_type_id);
+
+    while(my($seedlot_id, $seedlot_name, $plot_id, $plot_name) = $h2->fetchrow_array()){
+      push @related_seedlots, ['derived from', $seedlot_id, $seedlot_name, $plot_id, $plot_name]
+    }
+
+    return\@related_seedlots;
+
+}
+
 
 
 1;

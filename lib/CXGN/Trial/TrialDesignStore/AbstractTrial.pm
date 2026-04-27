@@ -306,6 +306,9 @@ has 'family_name_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'facility_identifier_cvterm_id' => (isa => 'Int', is => 'rw');
 
+#Whether obsoleted accessions are allowed to include in this trial (set by using 'allow_obsoleted_accessions' conf key)
+has 'allow_obsoleted_accessions' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
+
 sub BUILD {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema();
@@ -410,12 +413,12 @@ sub store {
     my %design = %{$self->get_design};
     my $trial_id = $self->get_trial_id;
     my $nd_geolocation_id = $self->get_nd_geolocation_id;
-
-
+    my $allow_obsoleted_accessions = $self->get_allow_obsoleted_accessions;
     my $nd_experiment_type_id = $self->get_nd_experiment_type_id();
     my $stock_type_id = $self->get_stock_type_id();
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
+    my $intercrop_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'intercrop_plot_of', 'stock_relationship')->cvterm_id();
 
     my @source_stock_types = @{$self->get_source_stock_types()};
 
@@ -461,6 +464,11 @@ sub store {
         if ($design{$key}->{stock_name}) {
             my $stock_name = $design{$key}->{stock_name};
             $seen_accessions_hash{$stock_name}++;
+        }
+        if ($design{$key}->{intercrop_stock_name}) {
+            foreach my $stock_name (@{$design{$key}->{intercrop_stock_name}}) {
+                $seen_accessions_hash{$stock_name}++;
+            }
         }
         if ($design{$key}->{seedlot_name}) {
             my $stock_name = $design{$key}->{seedlot_name};
@@ -537,6 +545,12 @@ sub store {
             my $stock_name;
             if ($design{$key}->{stock_name}) {
                 $stock_name = $design{$key}->{stock_name};
+            }
+            my @intercrop_stock_names;
+            if ($design{$key}->{intercrop_stock_name}) {
+                foreach my $stock_name (@{$design{$key}->{intercrop_stock_name}}) {
+                    push @intercrop_stock_names, $stock_name;
+                }
             }
             my $seedlot_name;
             my $seedlot_stock_id;
@@ -634,7 +648,7 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id(),undef,$allow_obsoleted_accessions);
                 my $cross_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
                 my $family_name_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
                 if ($accession_stock) {
@@ -715,6 +729,12 @@ sub store {
                 my $parent_stock;
                 push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $stock_id_checked };
 
+                # Add intercrop stocks as plot subjects
+                foreach my $stock_name (@intercrop_stock_names) {
+                    my $stock_id = $stock_data{$stock_name}[0];
+                    push @plot_subjects, { type_id => $intercrop_rel_type_id, object_id => $stock_id };
+                }
+
                 # For genotyping plate, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $self->get_plot_cvterm_id){
                     my $parent_plot_rs;
@@ -750,6 +770,43 @@ sub store {
 
                     if ($parent_plot_rs->count == 1){
                         push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_plot_rs->first->object_id };
+                    }
+                }
+                # For genotyping plate, if the well tissue_sample is sourced from a subplot, then we store relationships between the tissue_sample and the subplot, and the tissue sample and the subplot's accession.
+                if ($stock_type_checked == $self->get_subplot_cvterm_id){
+                    my $parent_subplot_rs;
+                    my $parent_subplot_accession_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_subplot_of_cvterm_id,
+                        'object.type_id'=>$self->get_accession_cvterm_id
+                    }, {join => 'object'});
+
+                    my $parent_subplot_cross_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_subplot_of_cvterm_id,
+                        'object.type_id'=>$self->get_cross_cvterm_id
+                    }, {join => 'object'});
+
+                    my $parent_subplot_family_name_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
+                        'me.subject_id'=>$stock_id_checked,
+                        'me.type_id'=>$self->get_subplot_of_cvterm_id,
+                        'object.type_id'=>$self->get_family_name_cvterm_id
+                    }, {join => 'object'});
+
+                    if ($parent_subplot_accession_rs->count > 0) {
+                        $parent_subplot_rs = $parent_subplot_accession_rs;
+                    } elsif ($parent_subplot_cross_rs->count > 0) {
+                        $parent_subplot_rs = $parent_subplot_cross_rs;
+                    } elsif ($parent_subplot_family_name_rs->count > 0) {
+                        $parent_subplot_rs = $parent_subplot_family_name_rs;
+                    }
+
+                    if ($parent_subplot_rs->count > 1){
+                        die "Subplot $stock_id_checked is linked to more than one accession/cross/family name!\n"
+                    }
+
+                    if ($parent_subplot_rs->count == 1){
+                        push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $parent_subplot_rs->first->object_id };
                     }
                 }
                 #   For genotyping plate, if the well tissue_sample is sourced from a plant, then we store relationships between the tissue_sample and the plant, and the tissue_sample and the plant's plot if it exists, and the tissue sample and the plant's accession if it exists.
@@ -874,7 +931,7 @@ sub store {
                     nd_experiment_stocks => \@plot_nd_experiment_stocks,
                 };
                 my $plot;
-                if ((! defined $plant_names || scalar $plant_names eq 0) && (! defined $tissue_sample_names || scalar $tissue_sample_names eq 0)) {
+                if ((! defined $plant_names || scalar $plant_names == 0) && (! defined $tissue_sample_names || scalar $tissue_sample_names == 0) && (! defined $subplot_names || scalar $subplot_names == 0)) {
                     $plot = $stock_rs->create($plot_params);
                 } else {
                     $plot = $stock_rs->find_or_create($plot_params);
@@ -1011,12 +1068,12 @@ sub store {
                     my $parent_plant_id;
                     if ($parent_plant_stock) {
                         $parent_plant_id = $parent_plant_stock->stock_id;
-                    } 
+                    }
                     #print STDERR "parent plant id: $parent_plant_id";
                     if ($parent_plant_id) {
                         push @tissue_sample_subjects, { type_id => $self->get_tissue_sample_of_cvterm_id, object_id => $parent_plant_id };
                     }
-                    
+
                     my $parent_plot_of_plant_rs = $chado_schema->resultset("Stock::StockRelationship")->search({
                         'me.object_id'=>$parent_plant_id,
                         'me.type_id'=>$self->get_plant_of_cvterm_id,
