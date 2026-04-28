@@ -218,7 +218,9 @@ sub search {
 
 sub _format_timestamp {
     my $str = shift;
-    return undef unless defined $str && $str ne '';
+    unless (defined $str && $str ne '') {
+        return;
+    }
 
     my $tp;
     for my $fmt ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d') {
