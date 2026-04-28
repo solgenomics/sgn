@@ -545,4 +545,38 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     }
 }
 
+
+sub publish_dataset : Path('/ajax/dataset/publish') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Login required to perform requested action." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    if ($dataset->sp_person_id() != $user_id ) {
+        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+        return;
+    }
+
+    my $resp = $dataset->generate_archive_files($c->config->{dataset_archive_path});
+    if ( defined $resp->{error} ) {
+        print STDERR "PUBLISH DATASET ERROR = " . Dumper $resp->{error};
+        $c->stash->{rest} = { error => "Could not publish dataset [" . $resp->{error} . "]" };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1 };
+    return;
+}
+
 1

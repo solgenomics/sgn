@@ -142,6 +142,14 @@ $dataset_is_public => 0
                     <td>Analyses using this dataset</td>
                     <td id="dataset_analysis_usage"></td>
                 </tr>
+                <tr>
+                    <td>Publish Dataset</td>
+                    <td>
+% if ( $is_dataset_owner ) {
+                        <button id="dataset-publish" class="btn btn-info">Publish Dataset</button>
+% }
+                    </td>
+                </tr>
         </table>
     </div>
 </div>
@@ -425,6 +433,21 @@ jQuery(document).ready( function() {
         error: function(response) {
             alert("Error retrieving analyses using this dataset.");
         }
+    });
+
+    jQuery("#dataset-publish").click(function() {
+        jQuery.ajax({
+            url: '/ajax/dataset/publish/<% $dataset_id %>',
+            success: (resp) => {
+                console.log(resp);
+                if ( resp?.error ) {
+                    alert(resp.error);
+                }
+            },
+            error: () => {
+                alert("Could not publish the dataset");
+            }
+        })
     });
 });
 

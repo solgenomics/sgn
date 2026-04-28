@@ -55,6 +55,7 @@ use Moose::Util::TypeConstraints;
 #use Data::Dumper;
 use JSON::XS;
 use CXGN::BreederSearch;
+use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Schema;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
@@ -62,6 +63,9 @@ use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Trial;
 use CXGN::Trait;
+use POSIX qw(strftime);
+use File::Path qw(mkpath);
+use Text::CSV qw(csv);
 
 =head2 people_schema()
 
@@ -1714,6 +1718,144 @@ sub get_child_analyses {
     return join(" | ", @html);
 }
 
+
+sub generate_archive_files {
+    my $self = shift;
+    my $dir = shift;
+    my $schema = $self->schema;
+    my $dbh = $schema->storage->dbh();
+    my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema=> $schema });
+
+    # Check for base directory
+    return { error => "Archived dataset base path not set" } if !defined $dir;
+
+    my $categories = $self->data()->{categories};
+
+    # Phenotype Categories
+    my $breeding_programs = $categories->{breeding_programs};
+    my $locations = $categories->{locations};
+    my $trials = $categories->{trials};
+    my $traits = $categories->{traits};
+
+    # Genotype Categories
+    my $protocols = $categories->{genotyping_protocols};
+    my $projects = $categories->{genotyping_projects};
+
+    # Shared Categories
+    my $accessions = $categories->{accessions};
+
+    # Breeder Search to find missing associated data
+    my $bs = CXGN::BreederSearch->new({ dbh=>$dbh });
+
+    use Data::Dumper;
+    print STDERR "========================\n";
+    print STDERR Dumper $categories;
+    print STDERR "========================\n";
+
+
+    #
+    # PHENOTYPE DATA
+    # Fill in missing phenotype-related data if trials are in the dataset
+    #
+    if ( exists $categories->{trials} ) {
+
+        # Get breeding programs
+        if ( !defined $breeding_programs ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'breeding_programs' ],
+                { 'breeding_programs' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $breeding_programs = \@ids;
+        }
+
+        # Get locations
+        if ( !defined $locations ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'locations' ],
+                { 'locations' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $locations = \@ids;
+        }
+
+        # Get traits
+        if ( !defined $traits ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'traits' ],
+                { 'traits' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $traits = \@ids;
+        }
+
+        # Get accessions
+        if ( !defined $accessions ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'accessions' ],
+                { 'accessions' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $accessions = \@ids;
+        }
+    }
+
+
+    #
+    # GENOTYPE DATA
+    # Get all genotype-related data if genotyping_protocols or genotyping_projects are in the dataset
+    #
+    if ( exists $categories->{genotying_protocols} || exists $categories->{genotyping_projects} ) {
+        print STDERR "... processing genotype data\n";
+    }
+
+
+    print STDERR "Programs = " . Dumper $breeding_programs;
+    print STDERR "Locations = " . Dumper $locations;
+    print STDERR "Trials = " . Dumper $trials;
+    print STDERR "Traits = " . Dumper $traits;
+    print STDERR "Protocols = " . Dumper $protocols;
+    print STDERR "Projects = " . Dumper $projects;
+    print STDERR "Accessions = " . Dumper $accessions;
+
+
+    #
+    # EXPORT DATA
+    #
+
+    # Set export directory
+    my $ts = strftime "%Y%m%d_%H%M%S", localtime;               # Timestamp to use in directory name
+    my $output = "$dir/" . $self->sp_dataset_id . "/$ts";
+    unless (-d $output) {
+        mkpath($output) or return { error => "Couldn't mkdir $output: $!" };
+    }
+
+    # Save breeding programs
+    if ( defined $breeding_programs ) {
+        my $results = $BTProjects->get_breeding_programs($breeding_programs);
+        my @header = ("id", "name", "description");
+        my @rows = (\@header, @$results);
+        csv(in => \@rows, out => "$output/breeding_programs.csv", sep_char => ",");
+    }
+
+    # Save locations
+    if ( defined $locations ) {
+        my $results = $BTProjects->get_locations($locations);
+        my @header = ("id", "name", "location_type", "latitude", "longitude", "altitude", "abbreviation", "country_code", "country_name", "noaa_station_id");
+        my @data;
+        foreach my $r (@$results) {
+            push @data, [$r->[0], $r->[1], $r->[9], $r->[2], $r->[3], $r->[4], $r->[6], $r->[7], $r->[8], $r->[10]];
+        }
+        my @rows = (\@header, @data);
+        csv(in => \@rows, out => "$output/locations.csv", sep_char => ",");
+    }
+
+    return { directory => $output };
+}
 
 
 1;
