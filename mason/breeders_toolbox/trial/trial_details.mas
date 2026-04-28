@@ -89,8 +89,9 @@ sub _limit_days_display {
 
 $dap = _days_since($planting_date);
 $dah = _days_since($harvest_date);
-my $dap_display = _limit_days_display($dap, _positive_integer_conf('limit_dap'));
-my $dah_display = _limit_days_display($dah, _positive_integer_conf('limit_dah'));
+my $display_dap_dah = eval { $c->get_conf('display_dap_dah') } ? 1 : 0;
+my $dap_display = $display_dap_dah ? _limit_days_display($dap, _positive_integer_conf('limit_dap')) : undef;
+my $dah_display = $display_dap_dah ? _limit_days_display($dah, _positive_integer_conf('limit_dah')) : undef;
 </%init>
 
 
