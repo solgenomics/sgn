@@ -260,4 +260,93 @@ sub get_possible_seedlots {
     return \%seedlot_hash;
 }
 
+=head2 function export_properties
+Export accession properties
+
+Download rows of accession properties for a specified subset of accessions (by id)
+This is used to generate a file download of accession metadata
+
+Usage: my $rows = $accessions->export_properties($c, \@accession_ids);
+Arguments:
+    $c = Catalyst context, to get the editable stock props from the config
+    $accession_ids = array ref of accession ids
+Returns: an arrayref where each array item is an array of accession properties
+          the first item is an array of the header values
+The order of the properties is: id, accession_name, create_date, species_name, population_name, female_parent, male_parent, cross_type, ...editable stock props
+=cut
+
+sub export_properties {
+    my $self = shift;
+    my $c = shift;
+    my $accession_ids = shift;
+
+    my $schema = $self->schema;
+    my $dbh = $schema->storage->dbh;
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+
+    # Setup Stock Props
+    my @stock_props = ("organization", "stock_synonym", "PUI");
+    foreach my $esp (@editable_stock_props) {
+        if (!scalar grep { $_ eq $esp } @stock_props) {
+            push(@stock_props, $esp)
+        }
+    }
+
+    # Build Header
+    my @accession_headers = ("id", "accession_name", "create_date", "species_name", "population_name", "female_parent", "male_parent", "cross_type");
+    push(@accession_headers, @stock_props);
+
+    # Add Header to Rows
+    my @accession_rows = ();
+    push(@accession_rows, \@accession_headers);
+
+    # Start query blocks
+    my $select = "SELECT stock.stock_id, stock.uniquename AS accession_name, stock.create_date AS create_date, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name, fs.uniquename AS female_parent, ms.uniquename AS male_parent, fsr.value AS cross_type";
+    my $from = "FROM public.stock";
+    my $joins = "LEFT JOIN public.organism USING (organism_id)";
+    $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id AND stock_relationship.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship')))";
+    $joins .= " LEFT JOIN public.stock AS rs ON (stock_relationship.object_id = rs.stock_id)";
+    $joins .= " LEFT JOIN public.stock_relationship AS fsr ON (stock.stock_id = fsr.object_id) AND fsr.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'female_parent' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship'))";
+    $joins .= " LEFT JOIN public.stock AS fs ON (fsr.subject_id = fs.stock_id)";
+    $joins .= " LEFT JOIN public.stock_relationship AS msr ON (stock.stock_id = msr.object_id) AND msr.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'male_parent' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship'))";
+    $joins .= " LEFT JOIN public.stock AS ms ON (msr.subject_id = ms.stock_id)";
+    my $group = "GROUP BY stock.stock_id, organism.species, fs.uniquename, ms.uniquename, fsr.value";
+    my $order = "ORDER BY stock.uniquename ASC;";
+    my @params;
+
+    # Add each of the stock props
+    my $count = 0;
+    foreach my $sp (@stock_props) {
+        $count++;
+        my $table = "sp" . $count;
+        $select .= ", string_agg(distinct($table.value), ', ') AS \"$sp\"";
+        $joins .= " LEFT JOIN public.stockprop AS $table ON (stock.stock_id = $table.stock_id AND $table.type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$sp' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_property')))";
+    }
+
+    # Build where block using accession ids
+    my $where = "WHERE stock.stock_id IN (" . join(',', ('?') x @$accession_ids) . ")";
+    push(@params, @$accession_ids);
+
+    # Put query together
+    my $q = "$select $from $joins $where $group $order";
+
+    # print STDERR "QUERY = $q\n";
+
+    # Execute the query and add results to accession rows
+    my $h = $dbh->prepare($q);
+    $h->execute(@params);
+    while (my @results = $h->fetchrow_array()) {
+        # print STDERR "RETRIEVED: ".join(",", @results)."\n";
+        my $original_date_format = $results[2];
+        my $create_date = Time::Piece->strptime($original_date_format, "%Y-%m-%d %H:%M:%S");
+        my $download_date_format = $create_date->strftime("%Y-%B-%d");
+
+        splice(@results,2,1,$download_date_format);
+        push(@accession_rows, \@results);
+    }
+
+    return \@accession_rows;
+}
+
+
 1;
