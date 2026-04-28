@@ -1074,6 +1074,23 @@
       };
     }
 
+    function extractYearFromStage(stageValue){
+      var stage = String(stageValue || '').trim();
+      if (!stage) return '';
+
+      var parts = stage.split('-').map(function(part){
+        return String(part || '').trim();
+      }).filter(Boolean);
+
+      for (var i = 0; i < parts.length; i++) {
+        if (/^\d{2}$/.test(parts[i]) || /^\d{4}$/.test(parts[i])) {
+          return parts[i];
+        }
+      }
+
+      return '';
+    }
+
     function normalizeStageList(raw){
       var flat = [];
 
@@ -1805,6 +1822,7 @@
         }
 
         var stageText = rowObj ? (rowObj.stage || '') : '';
+        var originalYear = rowObj ? (rowObj.year || '') : '';
         var previousNewStage = rowObj ? (rowObj.new_stage || '') : '';
         var stockId = rowObj ? (rowObj.stock_id || '') : '';
 
@@ -1865,6 +1883,7 @@
         }
 
         var selectedStage = '';
+        var stageYear = v === 'drop' ? (extractYearFromStage(stageText) || originalYear) : meetingYearFull;
         if (v === 'advance' || v === 'jump') {
           $.ajax({
             url: (window.DM_API_BASE || '/ajax/decisionmeeting') + '/compute_new_stage',
@@ -1873,7 +1892,7 @@
             data: {
               current_stage: stageText,
               decision: v,
-              year: meetingYearFull,
+              year: stageYear,
               meeting_date: meetingDate,
               stock_id: stockId,
               selected_stage: ''
@@ -1909,7 +1928,7 @@
                 data: {
                   current_stage: stageText,
                   decision: v,
-                  year: meetingYearFull,
+                  year: stageYear,
                   meeting_date: meetingDate,
                   stock_id: stockId,
                   selected_stage: chosenStage
@@ -1937,7 +1956,7 @@
           data: {
             current_stage: stageText,
             decision: v,
-            year: meetingYearFull,
+            year: stageYear,
             meeting_date: meetingDate,
             stock_id: stockId,
             selected_stage: selectedStage
