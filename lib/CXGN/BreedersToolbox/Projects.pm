@@ -478,33 +478,56 @@ sub get_location_geojson_data {
 
 sub get_locations {
     my $self = shift;
+    my $ids = shift;
+    my $dbh = $self->schema()->storage()->dbh;
 
-    my @rows = $self->schema()->resultset('NaturalDiversity::NdGeolocation')->all();
+    my $abbreviation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'abbreviation', 'geolocation_property')->cvterm_id();
+    my $country_code_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'country_code', 'geolocation_property')->cvterm_id();
+    my $country_name_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'country_name', 'geolocation_property')->cvterm_id();
+    my $location_type_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'location_type', 'geolocation_property')->cvterm_id();
+    my $noaa_station_id_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'noaa_station_id', 'geolocation_property')->cvterm_id();
 
-    my $type_id = $self->schema()->resultset('Cv::Cvterm')->search( { 'name'=>'plot' })->first->cvterm_id;
-
+    my $where = "";
+    if ( defined $ids ) {
+        my $phs = join ',', map { "?" } @$ids;
+        $where = "WHERE nd_geolocation.nd_geolocation_id IN ($phs)"
+    }
+    my $q = "SELECT nd_geolocation.nd_geolocation_id, nd_geolocation.description, latitude, longitude, altitude, abbreviation.value, country_code.value, country_name.value, location_type.value, noaa_station_id.value
+        FROM nd_geolocation
+        LEFT JOIN nd_geolocationprop AS abbreviation ON (nd_geolocation.nd_geolocation_id = abbreviation.nd_geolocation_id) AND abbreviation.type_id = ?
+        LEFT JOIN nd_geolocationprop AS country_code ON (nd_geolocation.nd_geolocation_id = country_code.nd_geolocation_id) AND country_code.type_id = ?
+        LEFT JOIN nd_geolocationprop AS country_name ON (nd_geolocation.nd_geolocation_id = country_name.nd_geolocation_id) AND country_name.type_id = ?
+        LEFT JOIN nd_geolocationprop AS location_type ON (nd_geolocation.nd_geolocation_id = location_type.nd_geolocation_id) AND location_type.type_id = ?
+        LEFT JOIN nd_geolocationprop AS noaa_station_id ON (nd_geolocation.nd_geolocation_id = noaa_station_id.nd_geolocation_id) AND noaa_station_id.type_id = ?
+        $where
+        GROUP BY 1,2,3,4,5,6,7,8,9,10;";
+    my $h = $dbh->prepare($q);
+    $h->execute($abbreviation_type_id, $country_code_type_id, $country_name_type_id, $location_type_type_id, $noaa_station_id_type_id, @$ids);
 
     my @locations = ();
-    foreach my $row (@rows) {
-	my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
-	my $sh = $self->schema()->storage()->dbh->prepare($plot_count);
-	$sh->execute($row->nd_geolocation_id); #, $c->user->get_object->get_sp_person_id);
+    while (my ($id, $name, $lat, $lon, $alt, $abv, $cc, $cn, $lt, $noaa) = $h->fetchrow_array()) {
+        my $plot_count = "SELECT count(*) from stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock using(stock_id) join nd_experiment using(nd_experiment_id)   where cvterm.name='plot' and nd_geolocation_id=?"; # and sp_person_id=?";
+        my $sh = $dbh->prepare($plot_count);
+        $sh->execute($id); #, $c->user->get_object->get_sp_person_id);
 
-	my ($count) = $sh->fetchrow_array();
+        my ($count) = $sh->fetchrow_array();
 
-	#if ($count > 0) {
-
-		push @locations,  [ $row->nd_geolocation_id,
-				    $row->description,
-				    $row->latitude,
-				    $row->longitude,
-				    $row->altitude,
-				    $count, # number of experiments TBD
-
-		];
+        push @locations, [
+            $id,
+            $name,
+            $lat,
+            $lon,
+            $alt,
+            $count, # number of experiments TBD
+            $abv,
+            $cc,
+            $cn,
+            $lt,
+            $noaa
+        ];
     }
-    return \@locations;
 
+    return \@locations;
 }
 
 sub get_all_years {
