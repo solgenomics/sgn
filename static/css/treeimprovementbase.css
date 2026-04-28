@@ -192,11 +192,20 @@ h1,h2,h3,h4,h5,h6 {
     font-family:      var(--font-family);
 }
 
+html, body, #outercontainer {
+    height: 100%;
+}
+
 #wrapper {
-    min-height: 80vh;
     margin: 0;
     display: grid;
     grid-template-rows: auto 1fr auto;
+
+    /* Ensure footer is always at the bottom */
+    min-height: 100%;
+
+    /* Space for nav bar */
+    padding-top: 50px;
 }
 
 
