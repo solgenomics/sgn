@@ -151,9 +151,8 @@ sub _search {
         foreach my $treatment (@{$obs_unit->{treatments}}) {
             while (my ($treatment_id, $treatment_data) = each %$treatment) {
                 push @brapi_treatments, {
-                    factor   => $treatment_data->{name},
+                    factor   => $treatment_data->{name}." value = ".$treatment_data->{value},
                     modality => $treatment_data->{description},
-                    value    => $treatment_data->{value},
                 };
             }
         }
