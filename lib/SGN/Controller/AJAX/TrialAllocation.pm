@@ -13,9 +13,16 @@ use Bio::Chado::Schema;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
 use SGN::Controller::AJAX::Locations;
+use SGN::Model::Cvterm;
 use Text::CSV;
 use JSON;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Trial::ParseUpload;
+use CXGN::Trial::TrialCreate;
+use CXGN::Trial;
+use CXGN::TrialStatus;
+use CXGN::Calendar;
+use List::MoreUtils qw(any);
 
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -52,8 +59,8 @@ sub list_accessions :Path('/ajax/trialallocation/accession_lists') Args(0) {
             is_public => $_->[6]
         }
     } @$lists;
-    
-    print Dumper \@formatted;
+
+    @formatted = sort { lc($a->{name}) cmp lc($b->{name}) } @formatted;
 
     $c->stash->{rest} = { success => 1, lists => \@formatted };
 }
@@ -81,7 +88,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
 
     # Use trial data
     my $name       = $trial->{name};
-    my $design     = $trial->{design};
+    my $design     = _trial_allocation_display_design_type($trial->{design});
     my $description = $trial->{description};
     my $treatments = $trial->{treatment_list_id};
     my $controls   = $trial->{control_list_id};
@@ -248,7 +255,7 @@ sub farms :Path('/ajax/trialallocation/farms') Args(0) {
     my @farms;
     foreach my $l (@$locations) {
         push @farms, {
-            location_id => $l->{properties}->{location_id},
+            location_id => $l->{properties}->{Id},
             name        => $l->{properties}->{Name}
         };
     }
@@ -282,6 +289,519 @@ sub breeding_programs :Path('/ajax/trialallocation/breeding_programs') Args(0) {
     $c->stash->{rest} = {
         success  => 1,
         programs => \@formatted
+    };
+}
+
+sub seasons :Path('/ajax/trialallocation/seasons') Args(0) {
+    my ($self, $c) = @_;
+
+    my $configured = $c->config->{available_seasons} || 'summer,winter';
+    my @seasons = grep { $_ ne '' } map {
+        my $season = $_;
+        $season =~ s/^\s+|\s+$//g;
+        $season;
+    } split /,/, $configured;
+
+    $c->stash->{rest} = {
+        success => 1,
+        seasons => \@seasons
+    };
+}
+
+sub trial_types :Path('/ajax/trialallocation/trial_types') Args(0) {
+    my ($self, $c) = @_;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my @types = map {
+        {
+            type_id => $_->[0],
+            name => $_->[1],
+            description => $_->[2]
+        }
+    } CXGN::Trial::get_all_project_types($schema);
+
+    @types = sort { lc($a->{name}) cmp lc($b->{name}) } @types;
+
+    $c->stash->{rest} = {
+        success => 1,
+        trial_types => \@types
+    };
+}
+
+sub trial_designs :Path('/ajax/trialallocation/trial_designs') Args(0) {
+    my ($self, $c) = @_;
+
+    my %supported = (
+        CRD => 'CRD',
+        RCBD => 'RCBD',
+        RRC => 'Row-Column Design',
+        DRRC => 'Doubly-Resolvable Row-Column',
+        URDD => 'Un-Replicated Diagonal',
+        Alpha => 'Alpha',
+        Lattice => 'Lattice',
+        Augmented => 'Augmented',
+        MAD => 'MAD',
+        genotyping_plate => 'genotyping_plate',
+        greenhouse => 'greenhouse',
+        'p-rep' => 'p-rep',
+        splitplot => 'splitplot',
+        Westcott => 'Westcott',
+        Analysis => 'Analysis',
+    );
+    my %aliases = (
+        'Row-Column Design' => 'RRC',
+        'Doubly-Resolvable Row-Column' => 'DRRC',
+        'Un-Replicated Diagonal' => 'URDD',
+        'Augmented Row-Column' => 'Augmented',
+    );
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my %designs = %supported;
+    eval {
+        my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
+        if ($design_cvterm) {
+            my $rs = $schema->resultset('Project::Projectprop')->search(
+                { type_id => $design_cvterm->cvterm_id },
+                { columns => [qw/value/], distinct => 1 }
+            );
+            while (my $row = $rs->next) {
+                my $value = _clean_optional_value($row->value);
+                my $code = $aliases{$value} || $value;
+                $designs{$code} = $supported{$code} if $supported{$code};
+            }
+        }
+    };
+
+    my @designs = map {
+        {
+            value => $_,
+            name => $designs{$_}
+        }
+    } sort { lc($designs{$a}) cmp lc($designs{$b}) } keys %designs;
+
+    $c->stash->{rest} = {
+        success => 1,
+        trial_designs => \@designs
+    };
+}
+
+sub _multi_trial_layout_type_id {
+    my ($self, $c) = @_;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => 'multi_trial_layout_json' });
+
+    die "Cvterm multi_trial_layout_json was not found" unless $cvterm;
+
+    return $cvterm->cvterm_id;
+}
+
+sub _layout_key_matches {
+    my ($layout, $year, $season) = @_;
+
+    return ($layout->{year} // '') eq ($year // '') &&
+           ($layout->{season} // '') eq ($season // '');
+}
+
+sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
+    my ($self, $c) = @_;
+
+    my $json_string = $c->req->param('layout');
+    my $layout = eval { decode_json($json_string) };
+
+    if (!$layout) {
+        $c->stash->{rest} = {
+            success => 0,
+            error   => "Invalid JSON in 'layout' param: $@"
+        };
+        return;
+    }
+
+    my $location_id = $layout->{farm}->{location_id};
+    my $year = $layout->{year};
+    my $season = $layout->{season};
+
+    $season = '' unless defined $season;
+
+    if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
+        $c->stash->{rest} = {
+            success => 0,
+            error   => 'A valid location and year are required to save layout.'
+        };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $type_id = eval { $self->_multi_trial_layout_type_id($c) };
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => "$@" };
+        return;
+    }
+
+    my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({
+        nd_geolocation_id => $location_id
+    });
+    if (!$location) {
+        $c->stash->{rest} = {
+            success => 0,
+            error   => "Location $location_id was not found."
+        };
+        return;
+    }
+
+    my $prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+        nd_geolocation_id => $location_id,
+        type_id => $type_id
+    });
+
+    my $stored = { schema_version => 1, layouts => [] };
+    if ($prop && $prop->value) {
+        my $decoded = eval { decode_json($prop->value) };
+        $stored = $decoded if $decoded && ref($decoded) eq 'HASH';
+        $stored->{layouts} ||= [];
+    }
+
+    my @remaining = grep { !_layout_key_matches($_, $year, $season) } @{$stored->{layouts}};
+    push @remaining, $layout;
+    $stored->{layouts} = \@remaining;
+
+    my $encoded = encode_json($stored);
+    if ($prop) {
+        $prop->value($encoded);
+        $prop->update();
+    } else {
+        $schema->resultset('NaturalDiversity::NdGeolocationprop')->create({
+            nd_geolocation_id => $location_id,
+            type_id => $type_id,
+            value => $encoded
+        });
+    }
+
+    $c->stash->{rest} = {
+        success => 1,
+        message => 'Layout saved.',
+        layout_count => scalar @remaining
+    };
+}
+
+sub get_layout :Path('/ajax/trialallocation/get_layout') Args(0) {
+    my ($self, $c) = @_;
+
+    my $location_id = $c->req->param('location_id');
+    my $year = $c->req->param('year');
+    my $season = $c->req->param('season');
+
+    $season = '' unless defined $season;
+
+    if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
+        $c->stash->{rest} = {
+            success => 0,
+            error => 'A valid location and year are required to load layout.'
+        };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $type_id = eval { $self->_multi_trial_layout_type_id($c) };
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => "$@" };
+        return;
+    }
+
+    my $prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+        nd_geolocation_id => $location_id,
+        type_id => $type_id
+    });
+
+    if (!$prop || !$prop->value) {
+        $c->stash->{rest} = { success => 1, found => 0 };
+        return;
+    }
+
+    my $stored = eval { decode_json($prop->value) };
+    if (!$stored || ref($stored) ne 'HASH') {
+        $c->stash->{rest} = {
+            success => 0,
+            error => 'Stored layout JSON could not be decoded.'
+        };
+        return;
+    }
+
+    my ($layout) = grep { _layout_key_matches($_, $year, $season) } @{$stored->{layouts} || []};
+
+    $c->stash->{rest} = {
+        success => 1,
+        found => $layout ? 1 : 0,
+        layout => $layout
+    };
+}
+
+sub _trial_allocation_design_type {
+    my $design = shift || '';
+
+    my %design_map = (
+        'Row-Column Design' => 'RRC',
+        'Doubly-Resolvable Row-Column' => 'DRRC',
+        'Un-Replicated Diagonal' => 'URDD',
+        'Augmented Row-Column' => 'Augmented',
+    );
+
+    return $design_map{$design} || $design;
+}
+
+sub _trial_allocation_display_design_type {
+    my $design = shift || '';
+
+    my %design_map = (
+        RRC => 'Row-Column Design',
+        DRRC => 'Doubly-Resolvable Row-Column',
+        URDD => 'Un-Replicated Diagonal',
+        Augmented => 'Augmented Row-Column',
+    );
+
+    return $design_map{$design} || $design;
+}
+
+sub _sanitize_trial_allocation_trial_name {
+    my $trial_name = _clean_optional_value(shift);
+    $trial_name =~ s/\s+/_/g;
+    $trial_name =~ s/[\\\/:,"*?<>|]+/_/g;
+    $trial_name =~ s/_+/_/g;
+    $trial_name =~ s/^_+|_+$//g;
+    return $trial_name;
+}
+
+sub _clean_optional_value {
+    my $value = shift;
+    $value = '' unless defined $value;
+    $value =~ s/^\s+|\s+$//g;
+    return '' if $value =~ /^Select /i;
+    return $value;
+}
+
+sub _plot_name_from_trial_and_number {
+    my ($trial_name, $plot_number) = @_;
+    my $plot_name = ($trial_name || 'trial') . '_PLOT_' . ($plot_number || '');
+    $plot_name =~ s/\s+/_/g;
+    $plot_name =~ s/[\/\\]+/_/g;
+    return $plot_name;
+}
+
+sub _layout_to_multiple_trial_rows {
+    my ($layout, $schema) = @_;
+
+    my $farm = $layout->{farm} || {};
+    my $breeding_program = $layout->{breeding_program} || {};
+    my $field = $layout->{field} || {};
+    my $location_id = $farm->{location_id};
+    my $program_id = $breeding_program->{program_id};
+    my $year = $layout->{year};
+
+    die "A valid location and year are required to save trials.\n"
+        if !$location_id || $location_id !~ /^\d+$/ || !$year;
+    die "A valid breeding program is required to save trials.\n"
+        if !$program_id || $program_id !~ /^\d+$/;
+
+    my $location = $schema->resultset('NaturalDiversity::NdGeolocation')->find({
+        nd_geolocation_id => $location_id
+    });
+    die "Location $location_id was not found.\n" unless $location;
+
+    my $program = $schema->resultset('Project::Project')->find({
+        project_id => $program_id
+    });
+    die "Breeding program $program_id was not found.\n" unless $program;
+
+    my %forms_by_index = map { $_->{trial_index} => $_ } @{$layout->{trial_forms} || []};
+    my @rows;
+
+    foreach my $placed_trial (sort { ($a->{trial_index} || 0) <=> ($b->{trial_index} || 0) } @{$layout->{placed_trials} || []}) {
+        my $trial_index = $placed_trial->{trial_index};
+        my $form = $forms_by_index{$trial_index} || {};
+        my $trial_name = _sanitize_trial_allocation_trial_name($form->{name});
+        my $design_type = _trial_allocation_design_type(_clean_optional_value($form->{design}));
+
+        die "Trial " . ($trial_index + 1) . " is missing a trial name.\n" unless $trial_name;
+        die "Trial $trial_name is missing a valid design type.\n" unless $design_type;
+
+        foreach my $plot (sort { ($a->{design_index} || 0) <=> ($b->{design_index} || 0) } @{$placed_trial->{plots} || []}) {
+            my $plot_number = _clean_optional_value($plot->{plot_number}) || _clean_optional_value($plot->{original_plot_number});
+            my $accession_name = _clean_optional_value($plot->{filler_accession}) || _clean_optional_value($plot->{accession_name});
+            my $block_number = _clean_optional_value($plot->{block}) || 1;
+
+            die "Trial $trial_name has a plot without a plot number.\n" unless $plot_number;
+            die "Trial $trial_name plot $plot_number has no accession name.\n" unless $accession_name;
+
+            push @rows, {
+                trial_name => $trial_name,
+                breeding_program => $program->name,
+                location => $location->description,
+                year => $year,
+                design_type => $design_type,
+                description => _clean_optional_value($form->{description}) || $trial_name,
+                accession_name => $accession_name,
+                plot_number => $plot_number,
+                block_number => $block_number,
+                plot_name => _plot_name_from_trial_and_number($trial_name, $plot_number),
+                trial_type => _clean_optional_value($form->{type}),
+                trial_stock_type => 'accession',
+                plot_width => _clean_optional_value($field->{plot_width}),
+                plot_length => _clean_optional_value($field->{plot_length}),
+                is_a_control => $plot->{filler_accession} ? 0 : ($plot->{is_control} ? 1 : 0),
+                row_number => _clean_optional_value($plot->{row}),
+                col_number => _clean_optional_value($plot->{col})
+            };
+        }
+    }
+
+    die "There are no placed trial plots to save.\n" unless @rows;
+
+    return \@rows;
+}
+
+sub _write_multiple_trial_upload_file {
+    my ($self, $c, $rows) = @_;
+
+    my @columns = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number plot_name trial_type trial_stock_type plot_width plot_length is_a_control row_number col_number|;
+
+    $c->tempfiles_subdir("trial_allocation");
+    my ($fh, $tempfile) = $c->tempfile(TEMPLATE => "trial_allocation/multi_trial_XXXXX");
+    my $filepath = $c->config->{basepath} . "/" . $tempfile . ".tsv";
+    close($fh);
+
+    open(my $out, ">", $filepath) or die "Could not write multi-trial upload file: $!";
+    my $csv = Text::CSV->new({ sep_char => "\t", binary => 1, eol => "\n" });
+    $csv->print($out, \@columns);
+    foreach my $row (@$rows) {
+        $csv->print($out, [ map { defined $row->{$_} ? $row->{$_} : '' } @columns ]);
+    }
+    close($out);
+
+    return $filepath;
+}
+
+sub _parse_multiple_trial_upload_file {
+    my ($schema, $filepath) = @_;
+
+    my $parser = CXGN::Trial::ParseUpload->new(
+        chado_schema => $schema,
+        filename => $filepath
+    );
+    $parser->load_plugin('MultipleTrialDesignGeneric');
+    my $parsed_data = $parser->parse();
+
+    if ($parser->has_parse_errors()) {
+        my $errors = $parser->get_parse_errors();
+        die join("\n", @{$errors->{error_messages} || []}) . "\n";
+    }
+    if ($parser->has_parse_warnings()) {
+        my $warnings = $parser->get_parse_warnings();
+        die join("\n", @{$warnings->{warning_messages} || []}) . "\n";
+    }
+    die "There is no parsed data from the generated multi-trial file.\n" if !$parsed_data;
+
+    return $parsed_data;
+}
+
+sub save_trials_database :Path('/ajax/trialallocation/save_trials_database') Args(0) {
+    my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { success => 0, error => "You need to be logged in to save trials." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
+        $c->stash->{rest} = { success => 0, error => "You have insufficient privileges to save trials." };
+        return;
+    }
+
+    my $json_string = $c->req->param('layout');
+    my $layout = eval { decode_json($json_string) };
+    if (!$layout) {
+        $c->stash->{rest} = {
+            success => 0,
+            error => "Invalid JSON in 'layout' param: $@"
+        };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $dbh = $c->dbc->dbh();
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $username = $c->user()->get_object()->get_username();
+    my @saved_trials;
+
+    eval {
+        my $rows = _layout_to_multiple_trial_rows($layout, $schema);
+        my $filepath = $self->_write_multiple_trial_upload_file($c, $rows);
+        my $parsed_data = _parse_multiple_trial_upload_file($schema, $filepath);
+
+        $schema->txn_do(sub {
+            foreach my $trial_name (sort keys %$parsed_data) {
+                my $trial_design = $parsed_data->{$trial_name};
+                my %trial_info_hash = (
+                    chado_schema => $schema,
+                    dbh => $dbh,
+                    owner_id => $user_id,
+                    trial_year => $trial_design->{year},
+                    trial_description => $trial_design->{description},
+                    trial_location => $trial_design->{location},
+                    trial_name => $trial_name,
+                    design_type => $trial_design->{design_type},
+                    trial_stock_type => $trial_design->{trial_stock_type},
+                    design => $trial_design->{design_details},
+                    program => $trial_design->{breeding_program},
+                    upload_trial_file => $filepath,
+                    operator => $username
+                );
+
+                $trial_info_hash{trial_type} = $trial_design->{trial_type} if $trial_design->{trial_type};
+                $trial_info_hash{plot_width} = $trial_design->{plot_width} if $trial_design->{plot_width};
+                $trial_info_hash{plot_length} = $trial_design->{plot_length} if $trial_design->{plot_length};
+                $trial_info_hash{field_size} = $trial_design->{field_size} if $trial_design->{field_size};
+
+                my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
+                die "Trial name \"" . $trial_create->get_trial_name() . "\" already exists.\n"
+                    if $trial_create->trial_name_already_exists();
+
+                my $save = $trial_create->save_trial();
+                die $save->{error} . "\n" if $save->{error};
+
+                my $trial_id = $save->{trial_id};
+                die "Trial $trial_name could not be saved.\n" unless $trial_id;
+
+                my $time = DateTime->now();
+                my $timestamp = $time->ymd();
+                my $calendar_funcs = CXGN::Calendar->new({});
+                my $formatted_date = $calendar_funcs->check_value_format($timestamp);
+                my $upload_date = $calendar_funcs->display_start_date($formatted_date);
+
+                my %trial_activity;
+                $trial_activity{'Trial Uploaded'}{'user_id'} = $user_id;
+                $trial_activity{'Trial Uploaded'}{'activity_date'} = $upload_date;
+
+                my $trial_activity_obj = CXGN::TrialStatus->new({ bcs_schema => $schema });
+                $trial_activity_obj->trial_activities(\%trial_activity);
+                $trial_activity_obj->parent_id($trial_id);
+                $trial_activity_obj->store();
+
+                push @saved_trials, {
+                    trial_id => $trial_id,
+                    name => $trial_name
+                };
+            }
+        });
+    };
+    if ($@) {
+        my $error = "$@";
+        $error =~ s/\s+$//;
+        $c->stash->{rest} = { success => 0, error => $error };
+        return;
+    }
+
+    $c->stash->{rest} = {
+        success => 1,
+        trials => \@saved_trials
     };
 }
 

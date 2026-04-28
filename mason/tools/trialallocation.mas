@@ -19,7 +19,7 @@ Chris Simoes - ccs263@cornell.edu
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
-<& /util/import_javascript.mas, classes => ['jquery', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['trialallocation' ] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'jszip-min', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['trialallocation' ] &>
 <& /page/page_title.mas, title=>"Trial Allocation" &>
 
 <!DOCTYPE html>
@@ -168,7 +168,7 @@ Chris Simoes - ccs263@cornell.edu
     <p class="mb-4">Toggle unused plots with a single click (when the switch is on). Palette boxes disable once their trial is placed and re-enable when deleted.</p>
   </&>
 
-  <&| /page/info_section.mas, id=>"farm_settings_section", title=>"2 - Farm settings", collapsible=>1, collapsed=>0 &>
+  <&| /page/info_section.mas, id=>"farm_settings_section", title=>"2 - Location settings", collapsible=>1, collapsed=>0 &>
     <div class="space-y-4">
       <div class="grid grid-cols-4 gap-4">
         <label>Breeding Program
@@ -176,16 +176,18 @@ Chris Simoes - ccs263@cornell.edu
             <option value="">Select Breeding Program</option>
           </select>
         </label>
-        <label>Farm
+        <label>Location
           <select id="farm_dropdown" class="w-full border rounded px-2 py-1">
-            <option value="">Select Farm</option>
+            <option value="">Select Location</option>
           </select>
         </label>
         <label>Year
-          <input type="number" class="w-full border rounded px-2 py-1" />
+          <input type="number" id="layout-year" class="w-full border rounded px-2 py-1" />
         </label>
         <label>Season
-          <input type="text" class="w-full border rounded px-2 py-1" />
+          <select id="layout-season" class="w-full border rounded px-2 py-1">
+            <option value="">Select Season</option>
+          </select>
         </label>
       </div>
       <div class="grid grid-cols-2 gap-4">
@@ -226,6 +228,11 @@ Chris Simoes - ccs263@cornell.edu
     <label class="inline-flex items-center mb-4 space-x-2 ml-4">
       <input type="checkbox" id="border-toggle" />
       <span class="font-semibold ml-1">Place Borders</span>
+    </label>
+
+    <label class="inline-flex items-center mb-4 ml-4">
+      <span class="font-semibold mr-2">Border accession</span>
+      <input id="border-accession" class="border rounded px-2 py-1" placeholder="Optional accession" />
     </label>
 
     <label class="inline-flex items-center mb-4 space-x-2 ml-4">
@@ -277,16 +284,18 @@ Chris Simoes - ccs263@cornell.edu
       <div class="w-1/4">
         <h3 class="font-semibold mb-2">Trials</h3>
         <div id="trial-boxes" class="space-y-4"></div>
+        <button id="save-trials-db-btn" class="mt-4 w-full bg-indigo-700 text-white px-5 py-4 rounded hover:bg-indigo-800 text-base font-bold">Save Layout Trials in Database</button>
       </div>
 
       <div class="border p-4 rounded w-3/4 bg-green-50 relative">
-        <h3 class="font-semibold mb-2 flex justify-between">
-          Farm Field Grid
-          <div>
-            <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm mr-2">Export FULL Grid</button>
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h3 class="font-semibold">Location Field Grid</h3>
+          <div class="flex flex-wrap gap-2">
+            <button id="save-layout-btn" class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm">Save Layout</button>
+            <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm">Export FULL Grid</button>
             <button id="export-jpg-btn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">Export View as JPG</button>
           </div>
-        </h3>
+        </div>
 
         <div id="farm-scroll">
           <div id="field-zoom-container" class="relative">
@@ -302,27 +311,36 @@ Chris Simoes - ccs263@cornell.edu
     </div>
   </&>
 
-  <&| /page/info_section.mas, id=>"field_management_section", title=>"5 - Field management factor", collapsible=>1, collapsed=>0 &>
-    <div class="grid grid-cols-2 gap-4">
-      <label>Previous Crop
-        <input id="prev-crop" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Maize" />
+  <&| /page/info_section.mas, id=>"planting_map_section", title=>"5 - Download planting map", collapsible=>1, collapsed=>0 &>
+    <div class="grid grid-cols-3 gap-4">
+      <label>Rows per plot
+        <input id="planting-rows-per-plot" type="number" min="1" value="1" class="w-full border rounded px-2 py-1" />
       </label>
-      <label>Soil Type
-        <input id="soil-type" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Clay Loam" />
+      <label>Plants per plot
+        <input id="planting-plants-per-plot" type="number" min="1" value="1" class="w-full border rounded px-2 py-1" />
       </label>
-      <label>Fertilizer Used
-        <input id="fertilizer" type="text" class="w-full border rounded px-2 py-1" placeholder="e.g. Urea 100kg/ha" />
+      <label>Plant spacing
+        <input id="planting-plant-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
       </label>
-      <label>Irrigation
-        <select id="irrigation" class="w-full border rounded px-2 py-1">
-          <option value="">Select</option>
-          <option>Rainfed</option>
-          <option>Drip</option>
-          <option>Sprinkler</option>
-          <option>Furrow</option>
+      <label>Row spacing
+        <input id="planting-row-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
+      </label>
+      <label>Alley between plots
+        <input id="planting-alley-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
+      </label>
+      <label>Planting direction
+        <select id="planting-direction" class="w-full border rounded px-2 py-1">
+          <option value="row_col">Rows, left to right</option>
+          <option value="row_col_reverse">Rows, right to left</option>
+          <option value="serpentine">Serpentine by row</option>
+          <option value="col_row">Columns, top to bottom</option>
         </select>
       </label>
+      <label class="col-span-3">Planting notes
+        <input id="planting-notes" type="text" class="w-full border rounded px-2 py-1" placeholder="Optional planter instructions" />
+      </label>
     </div>
+    <button id="download-planting-map-btn" class="mt-4 bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 text-sm font-semibold">Download Planting Map Excel</button>
   </&>
 
 </body>
@@ -335,6 +353,7 @@ Chris Simoes - ccs263@cornell.edu
 .grid-cell.hover-preview{outline:2px dashed #3b82f6;background-color:rgba(59,130,246,0.1);}
 .border-plot{background-color:#d1fae5 !important;font-weight:bold;color:#065f46;}
 .filler-plot{background-color:#fef3c7 !important;font-weight:bold;color:#78350f;}
+.locked-trial{cursor:not-allowed;outline:2px solid #4b5563;}
 #grid-loader{display:flex;align-items:center;gap:0.5rem;background:white;padding:0.5rem 1rem;border:1px solid #ccc;border-radius:0.375rem;font-size: 2.00rem;color:#065f46;box-shadow:0 0 4px rgba(0,0,0,0.1);margin-bottom:1rem;pointer-events:none;}
 #grid-loader.hidden{display:none;}
 @keyframes spin{to{transform:rotate(360deg);}}

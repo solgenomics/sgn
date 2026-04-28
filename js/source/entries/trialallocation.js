@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastUnusedRows = '';
   let lastUnusedCols = '';
   const trialDesignCache = {};
+  let availableTrialTypes = [];
+  let availableTrialDesigns = [];
 
   /******** constants and utils ********/
   const qs  = s => document.querySelector(s);
@@ -23,9 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let manualBlock   = new Set();
   let manualAllow   = new Set();
   let manualBorders = new Set();
+  let borderPlots   = new Map();
   let fillerPlots   = new Map();
   let selectedRoot  = null;
   let suppressCellClick = false;
+  let lockedTrialRoots = new Set();
+  let lockedTrialForms = new Map();
+  let layoutContextLocked = false;
 
   const intList = id => {
     const t = qs('#'+id)?.value.trim();
@@ -148,6 +154,127 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
+  function currentBorderAccession() {
+    return String(qs('#border-accession')?.value || '').trim();
+  }
+
+  function sanitizeTrialName(name) {
+    return String(name || '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[\\/:,"*?<>|]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
+  function designIsAugmentedRowColumn(value) {
+    return value === 'ARC' || value === 'Augmented' || value === 'Augmented Row-Column';
+  }
+
+  function designIsRowColumn(value) {
+    return value === 'RRC' || value === 'Row-Column Design';
+  }
+
+  function populateTrialMetadataSelects(scope = document) {
+    Array.from(scope.querySelectorAll('select[id^="ttype"]')).forEach(select => {
+      const trialIndex = +(select.id.replace('ttype', '') || 0);
+      const selected = select.value || lockedTrialForms.get(trialIndex)?.type || '';
+      select.innerHTML = '<option value="">Select type</option>';
+      availableTrialTypes.forEach(type => {
+        select.appendChild(new Option(type.name, type.name));
+      });
+      if (selected) select.value = selected;
+    });
+
+    Array.from(scope.querySelectorAll('select[id^="tdesign"]')).forEach(select => {
+      const trialIndex = +(select.id.replace('tdesign', '') || 0);
+      const selected = select.value || lockedTrialForms.get(trialIndex)?.design || '';
+      select.innerHTML = '<option value="">Select design</option>';
+      availableTrialDesigns.forEach(design => {
+        select.appendChild(new Option(design.name, design.value));
+      });
+      if (selected) select.value = selected;
+    });
+  }
+
+  function isLockedRoot(root) {
+    return !!root && lockedTrialRoots.has(root);
+  }
+
+  function lockControl(id, locked = true) {
+    const el = qs(`#${id}`);
+    if (!el) return;
+    el.disabled = locked;
+    if (window.jQuery) $(`#${id}`).trigger('change.select2');
+  }
+
+  function lockLayoutContext(locked = true) {
+    layoutContextLocked = locked;
+    ['farm_dropdown', 'breeding_program_dropdown', 'layout-year', 'layout-season', 'farm-rows', 'farm-cols'].forEach(id => lockControl(id, locked));
+  }
+
+  function restoreTrialFormValues(form) {
+    if (!form) return;
+    const i = form.trial_index;
+    setInputValue(`tname${i}`, form.name);
+    setInputValue(`tdesc${i}`, form.description);
+    setSelectValue(`ttype${i}`, form.type);
+    setSelectValue(`tdesign${i}`, form.design);
+    setSelectValue(`tlayout${i}`, form.layout_type);
+    setSelectValue(`grid-direction-horizontal${i}`, form.horizontal_direction);
+    setSelectValue(`grid-direction-vertical${i}`, form.vertical_direction);
+    setInputValue(`tstartplot${i}`, form.start_plot_number);
+    setSelectValue(`tplotnumbering${i}`, form.plot_numbering);
+    setInputValue(`treps${i}`, form.reps);
+    setInputValue(`tblocks${i}`, form.blocks);
+    setInputValue(`trepsblocks${i}`, form.repsblocks);
+    setInputValue(`trows${i}`, form.rows);
+    setInputValue(`tcols${i}`, form.cols);
+    setInputValue(`tblockrows${i}`, form.block_rows);
+    setInputValue(`tblockcols${i}`, form.block_cols);
+    setInputValue(`tsuperrows${i}`, form.super_rows);
+    setInputValue(`tsupercols${i}`, form.super_cols);
+    setSelectValue(`ttreatments${i}`, form.treatment_list_id);
+    setSelectValue(`tcontrols${i}`, form.control_list_id);
+  }
+
+  function lockTrialForm(trialIndex, locked = true) {
+    const form = qs(`#tname${trialIndex}`)?.closest('.border.rounded');
+    if (!form) return;
+    form.classList.toggle('opacity-70', locked);
+    form.querySelectorAll('input, textarea, select, button').forEach(el => {
+      el.disabled = locked;
+    });
+    [`grid-direction-horizontal${trialIndex}`, `grid-direction-vertical${trialIndex}`].forEach(id => lockControl(id, locked));
+  }
+
+  function lockTrialVisuals(root, locked = true) {
+    qsa(`.trial-group[data-root="${root}"]`).forEach(group => {
+      group.dataset.locked = locked ? '1' : '0';
+      group.draggable = !locked;
+      group.classList.toggle('locked-trial', locked);
+      group.querySelectorAll('.trial-box').forEach(box => {
+        box.draggable = !locked;
+      });
+      group.querySelectorAll('.remove-btn,.transpose-btn').forEach(btn => {
+        btn.style.display = locked ? 'none' : '';
+      });
+    });
+  }
+
+  function lockPlacedTrials(locked = true, roots = null) {
+    const allowedRoots = roots ? new Set(roots) : null;
+    qsa('.trial-group').forEach(group => {
+      if (allowedRoots && !allowedRoots.has(group.dataset.root)) return;
+      if (locked) lockedTrialRoots.add(group.dataset.root);
+      else lockedTrialRoots.delete(group.dataset.root);
+      lockTrialVisuals(group.dataset.root, locked);
+      lockTrialForm(+group.dataset.trial, locked);
+      const form = serializeTrialForms().find(item => item.trial_index === +group.dataset.trial);
+      if (locked && form) lockedTrialForms.set(+group.dataset.trial, form);
+    });
+  }
+
   function movePlotTooltip(e){
     const tooltip = qs('#plot-hover-tooltip');
     if (!tooltip) return;
@@ -219,13 +346,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const isUnused = cellIsUnused(r, c);
     const isBorder = manualBorders.has(k);
     const filler = fillerPlots.get(k);
+    const border = borderPlots.get(k);
 
     cell.classList.toggle('border-plot', isBorder);
     cell.classList.toggle('filler-plot', !!filler);
     cell.style.backgroundColor = filler ? '#fef3c7' : (isUnused ? '#d1d5db' : '#ffffff');
     cell.style.color = isBorder ? '#065f46' : (filler ? '#78350f' : '');
     cell.textContent = filler ? 'F' : (isBorder ? 'B' : '');
-    cell.title = filler ? `Filler: ${filler.accession}` : '';
+    cell.title = filler ? `Filler: ${filler.accession}` : (isBorder && border?.accession ? `Border: ${border.accession}` : '');
   }
 
   function disablePal(t){ const p = qs(`#palette${t}`); if(p){ p.style.opacity='0.3'; p.draggable=false; p.classList.add('cursor-not-allowed'); } }
@@ -246,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
       scale: 2
     }).then(canvas => {
       const link = document.createElement('a');
-      link.download = 'farm_field_grid.jpg';
+      link.download = 'location_field_grid.jpg';
       link.href = canvas.toDataURL('image/jpeg');
       link.click();
     });
@@ -282,11 +410,277 @@ document.addEventListener('DOMContentLoaded', () => {
       zoomContainer.style.height = originalHeightZoom;
 
       const link = document.createElement('a');
-      link.download = 'farm_field_grid_full.jpg';
+      link.download = 'location_field_grid_full.jpg';
       link.href = canvas.toDataURL('image/jpeg');
       link.click();
     });
   });
+
+  function xmlEscape(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  function excelColumnName(index) {
+    let name = '';
+    let n = index + 1;
+    while (n > 0) {
+      const rem = (n - 1) % 26;
+      name = String.fromCharCode(65 + rem) + name;
+      n = Math.floor((n - 1) / 26);
+    }
+    return name;
+  }
+
+  function xlsxCell(value, rowIndex, colIndex) {
+    const ref = `${excelColumnName(colIndex)}${rowIndex}`;
+    const isNumeric = value !== '' && value !== null && value !== undefined && !Number.isNaN(Number(value));
+    if (isNumeric) return `<c r="${ref}"><v>${Number(value)}</v></c>`;
+    return `<c r="${ref}" t="inlineStr"><is><t>${xmlEscape(value)}</t></is></c>`;
+  }
+
+  function xlsxSheetXml(headers, rows) {
+    const allRows = [Object.fromEntries(headers.map(header => [header, header])), ...rows];
+    const sheetRows = allRows.map((row, rowIndex) => {
+      const excelRow = rowIndex + 1;
+      return `<row r="${excelRow}">${headers.map((header, colIndex) => xlsxCell(row[header] ?? '', excelRow, colIndex)).join('')}</row>`;
+    }).join('');
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <sheetData>${sheetRows}</sheetData>
+</worksheet>`;
+  }
+
+  function cleanSheetName(name) {
+    return String(name || 'Sheet').replace(/[\[\]:*?/\\]/g, '_').slice(0, 31);
+  }
+
+  function downloadExcelWorkbook(filename, sheets) {
+    if (!window.JSZip) {
+      alert('The XLSX export library is not available on this page.');
+      return;
+    }
+
+    const zip = new JSZip();
+    const worksheetEntries = sheets.map((sheet, index) => ({
+      id: index + 1,
+      name: cleanSheetName(sheet.name),
+      headers: sheet.headers,
+      rows: sheet.rows
+    }));
+
+    zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+${worksheetEntries.map(sheet => `  <Override PartName="/xl/worksheets/sheet${sheet.id}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('\n')}
+</Types>`);
+    zip.folder('_rels').file('.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`);
+
+    const xl = zip.folder('xl');
+    xl.file('workbook.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+${worksheetEntries.map(sheet => `    <sheet name="${xmlEscape(sheet.name)}" sheetId="${sheet.id}" r:id="rId${sheet.id}"/>`).join('\n')}
+  </sheets>
+</workbook>`);
+    xl.folder('_rels').file('workbook.xml.rels', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${sheet.id}.xml"/>`).join('\n')}
+</Relationships>`);
+    const worksheets = xl.folder('worksheets');
+    worksheetEntries.forEach(sheet => {
+      worksheets.file(`sheet${sheet.id}.xml`, xlsxSheetXml(sheet.headers, sheet.rows));
+    });
+
+    const finishDownload = blob => {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename.replace(/\.xls$/i, '.xlsx');
+      link.click();
+      URL.revokeObjectURL(link.href);
+    };
+
+    if (zip.generateAsync) {
+      zip.generateAsync({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }).then(finishDownload);
+    } else {
+      finishDownload(zip.generate({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      }));
+    }
+  }
+
+  function plantingSettings() {
+    return {
+      rows_per_plot: qs('#planting-rows-per-plot')?.value || '',
+      plants_per_plot: qs('#planting-plants-per-plot')?.value || '',
+      plant_spacing: qs('#planting-plant-spacing')?.value || '',
+      row_spacing: qs('#planting-row-spacing')?.value || '',
+      alley_spacing: qs('#planting-alley-spacing')?.value || '',
+      planting_direction: qs('#planting-direction')?.value || '',
+      notes: qs('#planting-notes')?.value || ''
+    };
+  }
+
+  function formByTrialIndex(layout) {
+    return Object.fromEntries((layout.trial_forms || []).map(form => [form.trial_index, form]));
+  }
+
+  function trialNameForPlot(layout, trialIndex) {
+    return formByTrialIndex(layout)[trialIndex]?.name || `Trial ${trialIndex}`;
+  }
+
+  function borderRowsForPlanting(layout, settings) {
+    return (layout.manual_borders || []).map(border => ({
+      planting_order: '',
+      field_row: border.row,
+      field_col: border.col,
+      plot_type: 'border',
+      trial_name: '',
+      plot_number: '',
+      plot_name: '',
+      accession_name: border.accession || '',
+      block_number: '',
+      is_check: '',
+      rows_per_plot: settings.rows_per_plot,
+      plants_per_plot: settings.plants_per_plot,
+      plant_spacing: settings.plant_spacing,
+      row_spacing: settings.row_spacing,
+      alley_spacing: settings.alley_spacing,
+      planting_notes: settings.notes
+    }));
+  }
+
+  function fillerRowsForPlanting(layout, settings, occupiedKeys) {
+    return (layout.filler_plots || [])
+      .filter(filler => !occupiedKeys.has(key((+filler.row || 1) - 1, (+filler.col || 1) - 1)))
+      .map(filler => ({
+        planting_order: '',
+        field_row: filler.row,
+        field_col: filler.col,
+        plot_type: 'filler',
+        trial_name: '',
+        plot_number: '',
+        plot_name: '',
+        accession_name: filler.accession || '',
+        block_number: '',
+        is_check: '',
+        rows_per_plot: settings.rows_per_plot,
+        plants_per_plot: settings.plants_per_plot,
+        plant_spacing: settings.plant_spacing,
+        row_spacing: settings.row_spacing,
+        alley_spacing: settings.alley_spacing,
+        planting_notes: settings.notes
+      }));
+  }
+
+  function plantingSort(rows, direction) {
+    const rowAsc = (a, b) => (+a.field_row - +b.field_row) || (+a.field_col - +b.field_col);
+    const rowDesc = (a, b) => (+a.field_row - +b.field_row) || (+b.field_col - +a.field_col);
+    const colAsc = (a, b) => (+a.field_col - +b.field_col) || (+a.field_row - +b.field_row);
+
+    rows.sort((a, b) => {
+      if (direction === 'row_col_reverse') return rowDesc(a, b);
+      if (direction === 'col_row') return colAsc(a, b);
+      if (direction === 'serpentine') {
+        const rowDiff = +a.field_row - +b.field_row;
+        if (rowDiff) return rowDiff;
+        return (+a.field_row % 2 === 1) ? (+a.field_col - +b.field_col) : (+b.field_col - +a.field_col);
+      }
+      return rowAsc(a, b);
+    });
+
+    rows.forEach((row, index) => {
+      row.planting_order = index + 1;
+    });
+    return rows;
+  }
+
+  function collectPlantingMapRows(layout, settings) {
+    const forms = formByTrialIndex(layout);
+    const occupiedKeys = new Set();
+    const rows = [];
+
+    (layout.placed_trials || []).forEach(trial => {
+      const form = forms[trial.trial_index] || {};
+      const trialName = sanitizeTrialName(form.name) || `Trial_${trial.trial_index}`;
+      (trial.plots || []).forEach(plot => {
+        occupiedKeys.add(key((+plot.row || 1) - 1, (+plot.col || 1) - 1));
+        rows.push({
+          planting_order: '',
+          field_row: plot.row,
+          field_col: plot.col,
+          plot_type: plot.filler_accession ? 'filler' : (String(plot.is_control) === '1' ? 'check' : 'test'),
+          trial_name: trialName,
+          plot_number: plot.plot_number || plot.original_plot_number || '',
+          plot_name: `${trialName}_PLOT_${plot.plot_number || plot.original_plot_number || ''}`,
+          accession_name: plot.filler_accession || plot.accession_name || '',
+          block_number: plot.block || '',
+          is_check: plot.filler_accession ? 0 : (String(plot.is_control) === '1' ? 1 : 0),
+          rows_per_plot: settings.rows_per_plot,
+          plants_per_plot: settings.plants_per_plot,
+          plant_spacing: settings.plant_spacing,
+          row_spacing: settings.row_spacing,
+          alley_spacing: settings.alley_spacing,
+          planting_notes: settings.notes
+        });
+      });
+    });
+
+    rows.push(...borderRowsForPlanting(layout, settings));
+    rows.push(...fillerRowsForPlanting(layout, settings, occupiedKeys));
+    return plantingSort(rows, settings.planting_direction);
+  }
+
+  function downloadPlantingMap() {
+    const layout = collectLayoutJson();
+    const settings = plantingSettings();
+    const rows = collectPlantingMapRows(layout, settings);
+
+    if (!rows.length) {
+      alert('Place trials, borders, or fillers before downloading the planting map.');
+      return;
+    }
+
+    const plotHeaders = [
+      'planting_order', 'field_row', 'field_col', 'plot_type', 'trial_name',
+      'plot_number', 'plot_name', 'accession_name', 'block_number', 'is_check',
+      'rows_per_plot', 'plants_per_plot', 'plant_spacing', 'row_spacing',
+      'alley_spacing', 'planting_notes'
+    ];
+    const settingsRows = [
+      { setting: 'location', value: layout.farm.name },
+      { setting: 'year', value: layout.year },
+      { setting: 'season', value: layout.season },
+      { setting: 'breeding_program', value: layout.breeding_program.name },
+      { setting: 'field_rows', value: layout.field.rows },
+      { setting: 'field_cols', value: layout.field.cols },
+      { setting: 'plot_width', value: layout.field.plot_width },
+      { setting: 'plot_length', value: layout.field.plot_length },
+      { setting: 'planting_direction', value: settings.planting_direction }
+    ];
+    const filenameParts = ['planting_map', layout.farm.name, layout.year, layout.season].filter(Boolean);
+    const filename = `${filenameParts.join('_').replace(/[^\w.-]+/g, '_') || 'planting_map'}.xlsx`;
+
+    downloadExcelWorkbook(filename, [
+      { name: 'Planting_Map', headers: plotHeaders, rows },
+      { name: 'Settings', headers: ['setting', 'value'], rows: settingsRows }
+    ]);
+  }
+
+  qs('#download-planting-map-btn')?.addEventListener('click', downloadPlantingMap);
 
   
 
@@ -313,6 +707,29 @@ document.addEventListener('DOMContentLoaded', () => {
   /* State ---------------------------------------------------------- */
   let totalRows = 0, totalCols = 0;
   let lastRow   = 0, lastCol   = 0;
+
+  function maxStartRow() {
+    return Math.max(0, totalRows - VISIBLE_ROWS);
+  }
+
+  function maxStartCol() {
+    return Math.max(0, totalCols - VISIBLE_COLS);
+  }
+
+  function clampScrollStart(row, col) {
+    return {
+      row: Math.max(0, Math.min(row, maxStartRow())),
+      col: Math.max(0, Math.min(col, maxStartCol()))
+    };
+  }
+
+  function syncScrollerSize() {
+    const scroller = grid.querySelector('.fake-scroller');
+    if (!scroller) return;
+
+    scroller.style.width = `${maxStartCol() * STEP + grid.clientWidth}px`;
+    scroller.style.height = `${maxStartRow() * STEP + grid.clientHeight}px`;
+  }
 
   /* One-time cell pool -------------------------------------------- */
   const cellPool = [];
@@ -390,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gCol = c + startCol;          // global col index
         const cell = cellPool[idx];
 
-        /* hide cells that are outside farm bounds */
+        /* hide cells that are outside location bounds */
         if (gRow >= totalRows || gCol >= totalCols) {
           cell.style.display = 'none';
           continue;
@@ -439,8 +856,7 @@ document.addEventListener('DOMContentLoaded', () => {
       scroller.className = 'fake-scroller';
       grid.appendChild(scroller);
     }
-    scroller.style.width  = `${cols * STEP + STEP}px`; 
-    scroller.style.height = `${rows * STEP + STEP}px`; 
+    syncScrollerSize();
 
     /* first draw */
     viewport.style.transform = 'translate(0,0)';
@@ -454,8 +870,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (needsPaint) return;
     needsPaint = true;
     requestAnimationFrame(() => {
-      const newCol = Math.floor(grid.scrollLeft / STEP);
-      const newRow = Math.floor(grid.scrollTop  / STEP);
+      const rawCol = Math.floor(grid.scrollLeft / STEP);
+      const rawRow = Math.floor(grid.scrollTop  / STEP);
+      const clamped = clampScrollStart(rawRow, rawCol);
+      const newRow = clamped.row;
+      const newCol = clamped.col;
+
+      if (rawRow !== newRow) grid.scrollTop = newRow * STEP;
+      if (rawCol !== newCol) grid.scrollLeft = newCol * STEP;
+
       if (newRow !== lastRow || newCol !== lastCol) {
         renderVisibleCells(newRow, newCol);
         viewport.style.transform =
@@ -501,22 +924,22 @@ document.addEventListener('DOMContentLoaded', () => {
     totalCols = cols;
 
     /* update fake scroller div */
-    const scroller = grid.querySelector('.fake-scroller');
-    if (scroller) {
-      scroller.style.width  = `${cols * STEP + STEP}px`;
-      scroller.style.height = `${rows * STEP + STEP}px`;
-    }
+    syncScrollerSize();
 
     /* if user shrank the grid and current scroll is out-of-bounds,
        bring it back into range */
-    const maxLeft = Math.max(0, cols * STEP - grid.clientWidth);
-    const maxTop  = Math.max(0, rows * STEP - grid.clientHeight);
+    const maxLeft = maxStartCol() * STEP;
+    const maxTop  = maxStartRow() * STEP;
     if (grid.scrollLeft > maxLeft) grid.scrollLeft = maxLeft;
     if (grid.scrollTop  > maxTop)  grid.scrollTop  = maxTop;
 
     /* repaint visible area */
-    const newCol = Math.floor(grid.scrollLeft / STEP);
-    const newRow = Math.floor(grid.scrollTop  / STEP);
+    const clamped = clampScrollStart(
+      Math.floor(grid.scrollTop / STEP),
+      Math.floor(grid.scrollLeft / STEP)
+    );
+    const newRow = clamped.row;
+    const newCol = clamped.col;
     renderVisibleCells(newRow, newCol);
     viewport.style.transform =
       `translate(${newCol * STEP}px, ${newRow * STEP}px)`;
@@ -599,8 +1022,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if (manualBorders.has(k)) {
         manualBorders.delete(k);
+        borderPlots.delete(k);
       } else {
         manualBorders.add(k);
+        borderPlots.set(k, { accession: currentBorderAccession() });
       }
     }
 
@@ -639,8 +1064,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const makeBorder = forceOn === null ? !manualBorders.has(k) : forceOn;
       if (makeBorder) {
         manualBorders.add(k);
+        borderPlots.set(k, { accession: currentBorderAccession() });
       } else {
         manualBorders.delete(k);
+        borderPlots.delete(k);
       }
       paintCell(cell);
       return true;
@@ -667,20 +1094,12 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class='grid grid-cols-2 gap-4 mb-4'>
         <label>Trial Type
           <select id='ttype${i}' class='w-full border rounded px-2 py-1'>
-            <option>Select type</option>
-            <option>Yield Trial</option>
-            <option>Phenotyping</option>
-            <option>Nursery</option>
+            <option value="">Loading...</option>
           </select>
         </label>
         <label>Trial Design
           <select id='tdesign${i}' class='w-full border rounded px-2 py-1'>
-            <option>Select design</option>
-            <option>RCBD</option>
-            <option>Augmented Row-Column</option>
-            <option>Row-Column Design</option>
-            <option>Doubly-Resolvable Row-Column</option>
-            <option>Un-Replicated Diagonal</option>
+            <option value="">Loading...</option>
           </select>
         </label>
       </div>
@@ -746,6 +1165,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     qs('#trial-details').appendChild(d);
     loadGlobalFarmDropdown();
+    populateTrialMetadataSelects(d);
 
     // Design-specific toggles
     const designSelect = d.querySelector(`#tdesign${i}`);
@@ -755,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     designSelect.addEventListener('change', () => {
       const val        = designSelect.value;
       const isRCBD     = val === 'RCBD';
-      const isAugRC    = val === 'Augmented Row-Column';
+      const isAugRC    = designIsAugmentedRowColumn(val);
 
       /* REPS / BLOCKS PANEL */
       if (isRCBD) {
@@ -842,26 +1262,26 @@ document.addEventListener('DOMContentLoaded', () => {
       dataType: 'json',
       success: function(data) {
         if (!data.success || !Array.isArray(data.farms)) {
-          $select.html('<option value="">Failed to load farms</option>');
+          $select.html('<option value="">Failed to load locations</option>');
           return;
         }
 
         // Populate dropdown
-        $select.empty().append('<option value="">-- Select Farm --</option>');
+        $select.empty().append('<option value="">-- Select Location --</option>');
         data.farms.forEach(loc => {
           $select.append(`<option value="${loc.location_id}">${loc.name}</option>`);
         });
 
         // Initialize Select2 *after* data is populated
         $select.select2({
-          placeholder: 'Select or type a farm',
+          placeholder: 'Select or type a location',
           allowClear: true,
           width: '100%',
           dropdownParent: $('#farm_dropdown').closest('div')
         });
       },
       error: function(xhr, status, error) {
-        console.error('Failed to load global farm list:', error);
+        console.error('Failed to load global location list:', error);
         $select.html('<option value="">Failed to load</option>');
       }
     });
@@ -902,6 +1322,69 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function loadSeasonDropdown() {
+    const select = qs('#layout-season');
+    if (!select) return;
+
+    const selected = select.value;
+    select.innerHTML = '<option value="">Loading...</option>';
+
+    $.ajax({
+      url: '/ajax/trialallocation/seasons',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        select.innerHTML = '<option value="">Select Season</option>';
+        const seasons = data.success && Array.isArray(data.seasons) ? data.seasons : [];
+        seasons.forEach(season => {
+          select.appendChild(new Option(season, season));
+        });
+        if (selected) select.value = selected;
+        if (layoutContextLocked) lockControl('layout-season', true);
+      },
+      error: function(_, __, error) {
+        console.error('Failed to load seasons:', error);
+        select.innerHTML = '<option value="">Select Season</option>';
+        ['summer', 'winter'].forEach(season => select.appendChild(new Option(season, season)));
+        if (selected) select.value = selected;
+        if (layoutContextLocked) lockControl('layout-season', true);
+      }
+    });
+  }
+
+  function loadTrialTypes() {
+    return $.ajax({
+      url: '/ajax/trialallocation/trial_types',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        availableTrialTypes = data.success && Array.isArray(data.trial_types) ? data.trial_types : [];
+        populateTrialMetadataSelects();
+      },
+      error: function(_, __, error) {
+        console.error('Failed to load trial types:', error);
+        availableTrialTypes = [];
+        populateTrialMetadataSelects();
+      }
+    });
+  }
+
+  function loadTrialDesigns() {
+    return $.ajax({
+      url: '/ajax/trialallocation/trial_designs',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        availableTrialDesigns = data.success && Array.isArray(data.trial_designs) ? data.trial_designs : [];
+        populateTrialMetadataSelects();
+      },
+      error: function(_, __, error) {
+        console.error('Failed to load trial designs:', error);
+        availableTrialDesigns = [];
+        populateTrialMetadataSelects();
+      }
+    });
+  }
 
 
 
@@ -942,7 +1425,11 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('#trial-boxes').appendChild(wrap);
 
     // if(document.querySelector(`.trial-group[data-trial="${i}"]`)) disablePal(i);
-    disablePal(i);
+    if (lockedTrialForms.has(i)) {
+      disablePal(i);
+    } else {
+      disablePal(i);
+    }
   }
 
   /******** getting lists **********/
@@ -950,6 +1437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const $select = $(`#ttreatments${i}`);
     if ($select.length === 0) return;
 
+    const pendingValue = selectedListId || $select[0].dataset.pendingValue || lockedTrialForms.get(i)?.treatment_list_id || '';
     $select.html(`<option value="">Loading...</option>`);
 
     $.ajax({
@@ -966,7 +1454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $select.empty().append(`<option value="">-- Select a list --</option>`);
 
         data.lists.forEach(function(list) {
-          const selected = (selectedListId && list.list_id == selectedListId) ? 'selected' : '';
+          const selected = (pendingValue && String(list.list_id) === String(pendingValue)) ? 'selected' : '';
           const label = `${list.name} (${list.is_public ? 'Public' : 'Private'})`;
           $select.append(`<option value="${list.list_id}" ${selected}>${label}</option>`);
         });
@@ -979,9 +1467,20 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
+        if ($select.data('select2')) $select.select2('destroy');
+        $select.select2({
+          placeholder: 'Select a treatment list',
+          allowClear: true,
+          width: '100%',
+          dropdownParent: $select.closest('label')
+        });
+        if (pendingValue) {
+          $select.val(String(pendingValue)).trigger('change');
+        }
+
         // Optional: trigger callback if pre-selected
-        if (selectedListId && onSelectedCallback) {
-          onSelectedCallback(selectedListId);
+        if (pendingValue && onSelectedCallback && $select.val() !== String(pendingValue)) {
+          onSelectedCallback(pendingValue);
         }
       },
       error: function(xhr, status, error) {
@@ -996,6 +1495,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const $select = $(`#tcontrols${i}`);
     if ($select.length === 0) return;
 
+    const pendingValue = $select[0].dataset.pendingValue || lockedTrialForms.get(i)?.control_list_id || '';
     $select.html(`<option value="">Loading...</option>`);
 
     $.ajax({
@@ -1012,10 +1512,23 @@ document.addEventListener('DOMContentLoaded', () => {
         $select.empty().append(`<option value="">-- Select a list --</option>`);
 
         data.lists.forEach(function(list) {
-          if (excludeListId && list.list_id == excludeListId) return; //skip treatment list
           const label = `${list.name} (${list.is_public ? 'Public' : 'Private'})`;
           $select.append(`<option value="${list.list_id}">${label}</option>`);
         });
+
+        if (pendingValue) {
+          $select.val(String(pendingValue));
+        }
+        if ($select.data('select2')) $select.select2('destroy');
+        $select.select2({
+          placeholder: 'Select a controls list',
+          allowClear: true,
+          width: '100%',
+          dropdownParent: $select.closest('label')
+        });
+        if (pendingValue) {
+          $select.trigger('change');
+        }
       },
       error: function(xhr, status, error) {
         console.error("Error loading Controls List:", status, error);
@@ -1030,7 +1543,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const design  = $(`#tdesign${i}`).val();
     const layoutType = $(`#tlayout${i}`).val();
     const isRCBD  = design === 'RCBD';
-    const isAugRC = design === 'Augmented Row-Column';
+    const isAugRC = designIsAugmentedRowColumn(design);
 
     if (btn && btn.textContent.includes('Re-Run')) {
       delete trialDesignCache[i];
@@ -1109,6 +1622,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function startDrag(e){
     const el = e.target.closest('.trial-group') || e.target;
     const fromPal = el.id.startsWith('palette');
+    if (!fromPal && isLockedRoot(el.dataset.root)) {
+      e.preventDefault();
+      alert('This trial is part of a saved layout and cannot be moved.');
+      return;
+    }
     const rect = el.getBoundingClientRect();
     e.dataTransfer.setData('src', fromPal ? 'pal' : 'grid');
     e.dataTransfer.setData('tn', el.dataset.trial);
@@ -1151,6 +1669,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let row = Math.floor((e.clientY - rect.top  + farmGridEl.scrollTop  - (src === 'grid' ? offY : 0)) / STEP) - 1;
 
     if (col < 0 || row < 0) return;
+    if (src === 'grid' && isLockedRoot(root)) {
+      alert('This trial is part of a saved layout and cannot be moved.');
+      return;
+    }
 
     const name   = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
     const colour = colourFor(tn);
@@ -1239,6 +1761,11 @@ document.addEventListener('DOMContentLoaded', () => {
   farmGridEl.addEventListener('drop', handleDrop);
 
   function selectTrial(root){
+    if (isLockedRoot(root)) {
+      selectedRoot = null;
+      qsa('.trial-group').forEach(g => g.classList.remove('selected-trial'));
+      return;
+    }
     selectedRoot = root;
     qsa('.trial-group').forEach(g => {
       g.classList.toggle('selected-trial', !!root && g.dataset.root === root);
@@ -1251,6 +1778,11 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
 
     const box = e.currentTarget;
+    const root = box.closest('.trial-group')?.dataset.root;
+    if (isLockedRoot(root)) {
+      alert('This trial is part of a saved layout and cannot be changed.');
+      return;
+    }
     const useStandard = qs('#standard-filler-toggle')?.checked;
     const standard = qs('#filler-accession')?.value.trim() || '';
     let accession = standard;
@@ -1301,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function moveSelectedTrial(dRow, dCol){
-    if (!selectedRoot || !canMoveRoot(selectedRoot, dRow, dCol)) return false;
+    if (!selectedRoot || isLockedRoot(selectedRoot) || !canMoveRoot(selectedRoot, dRow, dCol)) return false;
 
     const parts = qsa(`.trial-group[data-root="${selectedRoot}"]`);
     if (!parts.length) return false;
@@ -1598,6 +2130,10 @@ document.addEventListener('DOMContentLoaded', () => {
         rm.className = 'remove-btn';
         rm.textContent = 'x';
         rm.onclick = () => {
+          if (isLockedRoot(root)) {
+            alert('This trial is part of a saved layout and cannot be removed.');
+            return;
+          }
           const loading = qs('#grid-loader');
           if (loading) {
             loading.querySelector('span').textContent = 'Removing trial...';
@@ -1700,6 +2236,10 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
 
   /* Transpose (rows/cols) */
   function transposeTrial(root){
+    if (isLockedRoot(root)) {
+      alert('This trial is part of a saved layout and cannot be changed.');
+      return;
+    }
     const parts = [...document.querySelectorAll(`.trial-group[data-root="${root}"]`)];
     if(!parts.length) return;
 
@@ -1806,8 +2346,22 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
   function makeTrials(){
     qs('#trial-details').innerHTML='';
     qs('#trial-boxes').innerHTML='';
-    const n=+qs('#num-trials')?.value||0;
-    for(let i=1;i<=n;i++){ addTrialForm(i); addPaletteBox(i); }
+    const lockedMax = lockedTrialForms.size ? Math.max(...lockedTrialForms.keys()) : 0;
+    const n = Math.max(+qs('#num-trials')?.value || 0, lockedMax);
+    setInputValue('num-trials', n);
+    for(let i=1;i<=n;i++){
+      addTrialForm(i);
+      addPaletteBox(i);
+      if (lockedTrialForms.has(i)) {
+        restoreTrialFormValues(lockedTrialForms.get(i));
+        setTimeout(() => {
+          restoreTrialFormValues(lockedTrialForms.get(i));
+          lockTrialForm(i, true);
+          disablePal(i);
+        }, 750);
+      }
+    }
+    if (layoutContextLocked) lockLayoutContext(true);
   }
 
   function updateUnusedRowHighlights(rowList) {
@@ -1832,10 +2386,431 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
     }
   }
 
+  function setInputValue(id, value) {
+    const el = qs(`#${id}`);
+    if (el && value !== undefined && value !== null) el.value = value;
+  }
+
+  function setSelectValue(id, value) {
+    const el = qs(`#${id}`);
+    if (!el || value === undefined || value === null) return;
+    const normalized = String(value);
+    el.dataset.pendingValue = normalized;
+    el.value = normalized;
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    if (window.jQuery) $(`#${id}`).trigger('change.select2');
+  }
+
+  function serializeSet(set) {
+    return Array.from(set).map(k => {
+      const [row, col] = k.split(',').map(Number);
+      return { row: row + 1, col: col + 1 };
+    });
+  }
+
+  function serializeBorders() {
+    return Array.from(manualBorders).map(k => {
+      const [row, col] = k.split(',').map(Number);
+      return {
+        row: row + 1,
+        col: col + 1,
+        accession: borderPlots.get(k)?.accession || ''
+      };
+    });
+  }
+
+  function serializeTrialForms() {
+    const n = +qs('#num-trials')?.value || 0;
+    const trials = [];
+
+    for (let i = 1; i <= n; i++) {
+      trials.push({
+        trial_index: i,
+        name: qs(`#tname${i}`)?.value || '',
+        description: qs(`#tdesc${i}`)?.value || '',
+        type: qs(`#ttype${i}`)?.value || '',
+        design: qs(`#tdesign${i}`)?.value || '',
+        layout_type: qs(`#tlayout${i}`)?.value || '',
+        horizontal_direction: qs(`#grid-direction-horizontal${i}`)?.value || 'ltr',
+        vertical_direction: qs(`#grid-direction-vertical${i}`)?.value || 'ttb',
+        start_plot_number: qs(`#tstartplot${i}`)?.value || '',
+        plot_numbering: qs(`#tplotnumbering${i}`)?.value || '',
+        treatment_list_id: qs(`#ttreatments${i}`)?.value || '',
+        control_list_id: qs(`#tcontrols${i}`)?.value || '',
+        reps: qs(`#treps${i}`)?.value || '',
+        blocks: qs(`#tblocks${i}`)?.value || '',
+        repsblocks: qs(`#trepsblocks${i}`)?.value || '',
+        rows: qs(`#trows${i}`)?.value || '',
+        cols: qs(`#tcols${i}`)?.value || '',
+        block_rows: qs(`#tblockrows${i}`)?.value || '',
+        block_cols: qs(`#tblockcols${i}`)?.value || '',
+        super_rows: qs(`#tsuperrows${i}`)?.value || '',
+        super_cols: qs(`#tsupercols${i}`)?.value || ''
+      });
+    }
+
+    return trials;
+  }
+
+  function serializePlacedTrials() {
+    const roots = {};
+
+    qsa('.trial-group').forEach(group => {
+      const root = group.dataset.root;
+      if (!roots[root]) {
+        roots[root] = {
+          root,
+          trial_index: +group.dataset.trial,
+          anchor_row: (+group.dataset.anchorRow || 0) + 1,
+          anchor_col: (+group.dataset.anchorCol || 0) + 1,
+          rows_wanted: +group.dataset.rowsWanted || 0,
+          cols_wanted: +group.dataset.colsWanted || 0,
+          plots: []
+        };
+      }
+
+      group.querySelectorAll('.trial-box').forEach(box => {
+        roots[root].plots.push({
+          row: (+box.dataset.row || 0) + 1,
+          col: (+box.dataset.col || 0) + 1,
+          design_index: +box.dataset.designIndex || 0,
+          plot_number: box.dataset.plotNumber || '',
+          original_plot_number: box.dataset.originalPlotNumber || '',
+          block: box.dataset.block || '',
+          is_control: box.dataset.isControl || '0',
+          accession_name: box.dataset.accessionName || '',
+          filler_accession: box.dataset.fillerAccession || ''
+        });
+      });
+    });
+
+    return Object.values(roots).map(trial => {
+      trial.plots.sort((a, b) => a.design_index - b.design_index);
+      return trial;
+    });
+  }
+
+  function collectLayoutJson() {
+    const farm = qs('#farm_dropdown');
+    const breedingProgram = qs('#breeding_program_dropdown');
+    const validValue = value => {
+      const normalized = String(value || '').trim();
+      return (normalized && normalized !== 'null' && normalized !== 'undefined') ? normalized : '';
+    };
+    const selectedValue = el => validValue(el?.value || el?.selectedOptions?.[0]?.value);
+    const farmLocationId = selectedValue(farm);
+    const breedingProgramId = selectedValue(breedingProgram);
+    const year = String(qs('#layout-year')?.value || '').trim();
+
+    return {
+      schema_version: 1,
+      saved_at: new Date().toISOString(),
+      year,
+      season: String(qs('#layout-season')?.value || '').trim(),
+      breeding_program: {
+        program_id: breedingProgramId,
+        name: breedingProgramId ? (breedingProgram?.selectedOptions?.[0]?.textContent || '') : ''
+      },
+      farm: {
+        location_id: farmLocationId,
+        name: farmLocationId ? (farm?.selectedOptions?.[0]?.textContent || '') : ''
+      },
+      field: {
+        rows: +qs('#farm-rows')?.value || 0,
+        cols: +qs('#farm-cols')?.value || 0,
+        plot_width: qs('#plot-width')?.value || '',
+        plot_length: qs('#plot-length')?.value || ''
+      },
+      unused_rows: qs('#unused-rows')?.value || '',
+      unused_cols: qs('#unused-cols')?.value || '',
+      manual_block: serializeSet(manualBlock),
+      manual_allow: serializeSet(manualAllow),
+      manual_borders: serializeBorders(),
+      filler_plots: Array.from(fillerPlots.entries()).map(([k, v]) => {
+        const [row, col] = k.split(',').map(Number);
+        return { row: row + 1, col: col + 1, accession: v.accession };
+      }),
+      planting_settings: plantingSettings(),
+      trial_forms: serializeTrialForms(),
+      placed_trials: serializePlacedTrials()
+    };
+  }
+
+  function restoreSet(items) {
+    return new Set((items || []).map(item => key((+item.row || 1) - 1, (+item.col || 1) - 1)));
+  }
+
+  function clearPlacedTrials() {
+    qsa('.trial-group').forEach(el => el.remove());
+    selectedRoot = null;
+  }
+
+  function drawSavedTrial(savedTrial, lockLoadedTrial = false) {
+    const tn = savedTrial.trial_index;
+    const root = savedTrial.root || uid();
+    const colour = colourFor(tn);
+    const rowsMap = {};
+
+    (savedTrial.plots || []).forEach(plot => {
+      const row = (+plot.row || 1) - 1;
+      const col = (+plot.col || 1) - 1;
+      (rowsMap[row] = rowsMap[row] || []).push(Object.assign({}, plot, { row0: row, col0: col }));
+    });
+
+    Object.entries(rowsMap).forEach(([row, plots]) => {
+      plots.sort((a, b) => a.col0 - b.col0);
+      let start = 0;
+      for (let i = 1; i <= plots.length; i++) {
+        if (i === plots.length || plots[i].col0 !== plots[i - 1].col0 + 1) {
+          createSavedSegment(+row, plots.slice(start, i));
+          start = i;
+        }
+      }
+    });
+
+    function createSavedSegment(row, plots) {
+      const startCol = plots[0].col0;
+      const seg = plots.length;
+      const g = document.createElement('div');
+
+      g.className = 'trial-group';
+      g.dataset.trial = tn;
+      g.dataset.root = root;
+      g.dataset.row = row;
+      g.dataset.col = startCol;
+      g.dataset.rowsWanted = savedTrial.rows_wanted || 0;
+      g.dataset.colsWanted = savedTrial.cols_wanted || seg;
+      g.dataset.anchorRow = (+savedTrial.anchor_row || row + 1) - 1;
+      g.dataset.anchorCol = (+savedTrial.anchor_col || startCol + 1) - 1;
+      if (lockLoadedTrial) g.dataset.locked = '1';
+      g.style.left = `${(startCol + 1) * STEP}px`;
+      g.style.top = `${(row + 1) * STEP}px`;
+      g.style.width = `${seg * STEP - GAP}px`;
+      g.style.height = `${CELL}px`;
+      g.style.gridTemplateColumns = `repeat(${seg}, ${CELL}px)`;
+      g.draggable = !lockLoadedTrial;
+      g.ondragstart = startDrag;
+      g.tabIndex = 0;
+      g.addEventListener('click', e => {
+        e.stopPropagation();
+        selectTrial(root);
+      });
+
+      plots.forEach(plot => {
+        const b = document.createElement('div');
+        b.className = 'trial-box';
+        b.draggable = !lockLoadedTrial;
+        b.ondragstart = startDrag;
+        b.dataset.row = plot.row0;
+        b.dataset.col = plot.col0;
+        b.dataset.designIndex = plot.design_index || 0;
+        b.dataset.plotNumber = plot.plot_number || '';
+        b.dataset.originalPlotNumber = plot.original_plot_number || plot.plot_number || '';
+        b.dataset.block = plot.block || 1;
+        b.dataset.isControl = String(plot.is_control || 0);
+        b.dataset.accessionName = plot.accession_name || '';
+        if (plot.filler_accession) b.dataset.fillerAccession = plot.filler_accession;
+        b.addEventListener('click', handleTrialPlotClick);
+        b.addEventListener('mouseenter', showPlotTooltip);
+        b.addEventListener('mousemove', movePlotTooltip);
+        b.addEventListener('mouseleave', hidePlotTooltip);
+        applyPlotVisual(b, colour);
+        g.appendChild(b);
+      });
+
+      qs('#farm-grid').appendChild(g);
+      if (lockLoadedTrial) {
+        lockedTrialRoots.add(root);
+        lockTrialVisuals(root, true);
+      }
+      disablePal(tn);
+    }
+  }
+
+  function applySavedLayout(layout) {
+    if (!layout) return;
+
+    lockedTrialRoots = new Set();
+    lockedTrialForms = new Map((layout.trial_forms || []).map(form => [form.trial_index, form]));
+    lockLayoutContext(true);
+    setInputValue('num-trials', (layout.trial_forms || []).length);
+    makeTrials();
+
+    setInputValue('layout-year', layout.year);
+    setInputValue('layout-season', layout.season);
+    setSelectValue('breeding_program_dropdown', layout.breeding_program?.program_id);
+    setInputValue('farm-rows', layout.field?.rows);
+    setInputValue('farm-cols', layout.field?.cols);
+    setInputValue('plot-width', layout.field?.plot_width);
+    setInputValue('plot-length', layout.field?.plot_length);
+    setInputValue('unused-rows', layout.unused_rows);
+    setInputValue('unused-cols', layout.unused_cols);
+
+    (layout.trial_forms || []).forEach(form => {
+      const i = form.trial_index;
+      restoreTrialFormValues(form);
+      lockTrialForm(i, true);
+      setTimeout(() => {
+        restoreTrialFormValues(form);
+        lockTrialForm(i, true);
+      }, 750);
+    });
+
+    manualBlock = restoreSet(layout.manual_block);
+    manualAllow = restoreSet(layout.manual_allow);
+    manualBorders = restoreSet(layout.manual_borders);
+    borderPlots = new Map((layout.manual_borders || []).map(item => [
+      key((+item.row || 1) - 1, (+item.col || 1) - 1),
+      { accession: item.accession || '' }
+    ]));
+    fillerPlots = new Map((layout.filler_plots || []).map(item => [
+      key((+item.row || 1) - 1, (+item.col || 1) - 1),
+      { accession: item.accession || '' }
+    ]));
+    setInputValue('planting-rows-per-plot', layout.planting_settings?.rows_per_plot);
+    setInputValue('planting-plants-per-plot', layout.planting_settings?.plants_per_plot);
+    setInputValue('planting-plant-spacing', layout.planting_settings?.plant_spacing);
+    setInputValue('planting-row-spacing', layout.planting_settings?.row_spacing);
+    setInputValue('planting-alley-spacing', layout.planting_settings?.alley_spacing);
+    setSelectValue('planting-direction', layout.planting_settings?.planting_direction);
+    setInputValue('planting-notes', layout.planting_settings?.notes);
+
+    drawGrid();
+    clearPlacedTrials();
+    (layout.placed_trials || []).forEach(trial => drawSavedTrial(trial, true));
+    lockPlacedTrials(true);
+    lockLayoutContext(true);
+    renderVisibleCells(lastRow, lastCol);
+  }
+
+  function saveCurrentLayout() {
+    const layout = collectLayoutJson();
+    if (!layout.farm.location_id || !layout.year) {
+      alert('Select location and year before saving the layout.');
+      return;
+    }
+
+    $.ajax({
+      url: '/ajax/trialallocation/save_layout',
+      method: 'POST',
+      dataType: 'json',
+      data: { layout: JSON.stringify(layout) },
+      success: function(response) {
+        if (response.success) {
+          lockLayoutContext(true);
+          lockPlacedTrials(true);
+          alert('Layout saved.');
+        } else {
+          alert(response.error || 'Could not save layout.');
+        }
+      },
+      error: function(_, __, error) {
+        console.error('Save layout failed:', error);
+        alert('Could not save layout.');
+      }
+    });
+  }
+
+  function saveTrialsInDatabase() {
+    const layout = collectLayoutJson();
+    const saveButton = qs('#save-trials-db-btn');
+
+    if (!layout.farm.location_id || !layout.year) {
+      alert('Select location and year before saving the trials.');
+      return;
+    }
+    if (!layout.breeding_program.program_id) {
+      alert('Select a breeding program before saving the trials.');
+      return;
+    }
+    if (!layout.placed_trials.length) {
+      alert('Place at least one trial in the grid before saving.');
+      return;
+    }
+    const placedTrialIndexes = new Set(layout.placed_trials.map(trial => String(trial.trial_index)));
+    const missingTrials = layout.trial_forms.filter(form => !placedTrialIndexes.has(String(form.trial_index)));
+    if (missingTrials.length) {
+      const names = missingTrials.map(form => sanitizeTrialName(form.name) || `Trial ${form.trial_index}`).join(', ');
+      alert(`These trials are not placed in the grid yet: ${names}. Place all trials before saving them in the database.`);
+      return;
+    }
+    if (!window.confirm('Save all placed trials in the database?')) {
+      return;
+    }
+
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.textContent = 'Saving Trials...';
+      saveButton.classList.add('opacity-70', 'cursor-wait');
+    }
+
+    $.ajax({
+      url: '/ajax/trialallocation/save_trials_database',
+      method: 'POST',
+      dataType: 'json',
+      data: { layout: JSON.stringify(layout) },
+      success: function(response) {
+        if (response.success) {
+          lockLayoutContext(true);
+          lockPlacedTrials(true);
+          const names = (response.trials || []).map(trial => `${trial.name} (${trial.trial_id})`).join('\n');
+          alert(names ? `Trials saved:\n${names}` : 'Trials saved in the database.');
+        } else {
+          alert(response.error || 'Could not save trials in the database.');
+        }
+      },
+      error: function(xhr, __, error) {
+        console.error('Save trials failed:', error, xhr?.responseText);
+        alert('Could not save trials in the database.');
+      },
+      complete: function() {
+        if (saveButton) {
+          saveButton.disabled = false;
+          saveButton.textContent = 'Save Layout Trials in Database';
+          saveButton.classList.remove('opacity-70', 'cursor-wait');
+        }
+      }
+    });
+  }
+
+  function loadExistingLayoutForSelection() {
+    const locationId = qs('#farm_dropdown')?.value;
+    const year = qs('#layout-year')?.value;
+    const season = qs('#layout-season')?.value;
+
+    if (!locationId || !year) return;
+
+    $.ajax({
+      url: '/ajax/trialallocation/get_layout',
+      method: 'GET',
+      dataType: 'json',
+      data: { location_id: locationId, year, season },
+      success: function(response) {
+        if (!response.success) {
+          console.warn(response.error || 'Could not load saved layout.');
+          return;
+        }
+        if (!response.found) return;
+
+        const hasCurrentLayout = qsa('.trial-group').length > 0;
+        if (hasCurrentLayout && !window.confirm('A layout is already saved for this location, year, and season. Load it and replace the current grid view?')) {
+          return;
+        }
+        applySavedLayout(response.layout);
+      },
+      error: function(_, __, error) {
+        console.error('Load layout failed:', error);
+      }
+    });
+  }
+
 
   window.onload = ()=>{
     loadBreedingProgramDropdown();
     loadGlobalFarmDropdown();
+    loadSeasonDropdown();
+    loadTrialTypes();
+    loadTrialDesigns();
     makeTrials();
     drawGrid();
     qs('#farm-rows').addEventListener('change',drawGrid);
@@ -1912,6 +2887,11 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
 
 
     qs('#num-trials')?.addEventListener('change',makeTrials);
+    qs('#save-layout-btn')?.addEventListener('click', saveCurrentLayout);
+    qs('#save-trials-db-btn')?.addEventListener('click', saveTrialsInDatabase);
+    qs('#layout-year')?.addEventListener('change', loadExistingLayoutForSelection);
+    qs('#layout-season')?.addEventListener('change', loadExistingLayoutForSelection);
+    $('#farm_dropdown').on('change', loadExistingLayoutForSelection);
   };
 
 
