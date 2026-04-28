@@ -15,6 +15,7 @@ use CXGN::Phenotypes::File;
 use SGN::Controller::AJAX::Locations;
 use Text::CSV;
 use JSON;
+use CXGN::BreedersToolbox::Projects;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -260,6 +261,30 @@ sub farms :Path('/ajax/trialallocation/farms') Args(0) {
     };
 }
 
+sub breeding_programs :Path('/ajax/trialallocation/breeding_programs') Args(0) {
+    my ($self, $c) = @_;
+
+    my $project_obj = CXGN::BreedersToolbox::Projects->new({
+        schema => $c->dbic_schema('Bio::Chado::Schema')
+    });
+    my $programs = $project_obj->get_breeding_programs();
+
+    my @formatted = map {
+        {
+            program_id  => $_->[0],
+            name        => $_->[1],
+            description => $_->[2],
+        }
+    } @$programs;
+
+    @formatted = sort { lc($a->{name}) cmp lc($b->{name}) } @formatted;
+
+    $c->stash->{rest} = {
+        success  => 1,
+        programs => \@formatted
+    };
+}
+
 
 
 
@@ -284,9 +309,10 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
     my $trial_id    = $data->{trial_id};
     my $coords      = $data->{coordinates};
     my $design_file = $data->{design_file};
+    my $breeding_program_id = $data->{breeding_program_id};
     # Log or process
     $c->log->debug("Got trial $trial_name with coords:");
-    # $c->log->debug(" → $_->[0], $_->[1]") for @$coords;
+    # $c->log->debug(" -> $_->[0], $_->[1]") for @$coords;
 
 
     ## Adding coordinates to the trial
@@ -297,7 +323,21 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
 
     # Read header
     my $header = $csv_in->getline($in);
-    push @$header, 'row_number', 'col_number';
+    my %col_index = map { $header->[$_] => $_ } 0 .. $#$header;
+    my $plot_col = exists $col_index{plots} ? $col_index{plots} : undef;
+
+    if (!exists $col_index{row_number}) {
+      push @$header, 'row_number';
+      $col_index{row_number} = $#$header;
+    }
+    if (!exists $col_index{col_number}) {
+      push @$header, 'col_number';
+      $col_index{col_number} = $#$header;
+    }
+    if (!exists $col_index{breeding_program_id}) {
+      push @$header, 'breeding_program_id';
+      $col_index{breeding_program_id} = $#$header;
+    }
 
     # Read data rows and filter out empty ones
     my @rows;
@@ -315,8 +355,21 @@ sub save_coordinates :Path('/ajax/trialallocation/save_coordinates') :Args(0) {
 
     # Add coordinates
     for my $i (0 .. $#rows) {
-      my ($r, $c) = @{ $coords->[$i] };
-      push @{ $rows[$i] }, $r, $c;
+      my $coord = $coords->[$i];
+      my ($r, $c, $plot_number);
+
+      if (ref($coord) eq 'HASH') {
+        $r = $coord->{row};
+        $c = $coord->{col};
+        $plot_number = $coord->{plot_number};
+      } else {
+        ($r, $c) = @$coord;
+      }
+
+      $rows[$i]->[ $col_index{row_number} ] = $r;
+      $rows[$i]->[ $col_index{col_number} ] = $c;
+      $rows[$i]->[ $col_index{breeding_program_id} ] = $breeding_program_id if defined $breeding_program_id;
+      $rows[$i]->[ $plot_col ] = $plot_number if defined $plot_col && defined $plot_number && $plot_number ne '';
     }
 
     # Write to same file

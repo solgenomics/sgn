@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let manualBlock   = new Set();
   let manualAllow   = new Set();
   let manualBorders = new Set();
+  let fillerPlots   = new Map();
+  let selectedRoot  = null;
+  let suppressCellClick = false;
 
   const intList = id => {
     const t = qs('#'+id)?.value.trim();
@@ -36,6 +39,193 @@ document.addEventListener('DOMContentLoaded', () => {
     if (manualAllow.has(k)) return false;
     if (manualBlock.has(k)) return true;
     return row || col;
+  }
+
+  function activeTool(){
+    if (qs('#edit-toggle')?.checked) return 'unused';
+    if (qs('#border-toggle')?.checked) return 'border';
+    if (qs('#filler-toggle')?.checked) return 'filler';
+    return null;
+  }
+
+  function isCellOccupied(r, c, ignoreRoot = null){
+    return [...document.querySelectorAll('.trial-group')].some(group => {
+      if (ignoreRoot && group.dataset.root === ignoreRoot) return false;
+      const gr = +group.dataset.row;
+      const gc = +group.dataset.col;
+      const gw = groupWidth(group);
+      const gh = groupHeight(group);
+      return r >= gr && r < gr + gh && c >= gc && c < gc + gw;
+    }) || fillerPlots.has(key(r, c));
+  }
+
+  function groupWidth(group){
+    return group.style.gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+  }
+
+  function groupHeight(group){
+    return Math.max(1, Math.round(group.offsetHeight / STEP));
+  }
+
+  function designRows(design){
+    if (!design) return [];
+    if (Array.isArray(design)) return design;
+    try {
+      const parsed = JSON.parse(design);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error('Could not parse trial design metadata:', e);
+      return [];
+    }
+  }
+
+  function trialLayoutSettings(tn){
+    return {
+      layoutType: qs(`#tlayout${tn}`)?.value || 'serpentine',
+      horizontalDir: qs(`#grid-direction-horizontal${tn}`)?.value || 'ltr',
+      verticalDir: qs(`#grid-direction-vertical${tn}`)?.value || 'ttb',
+      startPlotNumber: parseInt(qs(`#tstartplot${tn}`)?.value, 10) || 1,
+      plotNumbering: qs(`#tplotnumbering${tn}`)?.value || 'continuous'
+    };
+  }
+
+  function orderedCells(cells, colsWanted, settings){
+    const rows = [];
+    for (let i = 0; i < cells.length; i += colsWanted) {
+      rows.push(cells.slice(i, i + colsWanted));
+    }
+
+    return rows.flatMap((row, rowIndex) => {
+      const reverseRow = (settings.horizontalDir === 'rtl') !==
+        (settings.layoutType === 'serpentine' && rowIndex % 2 === 1);
+      return reverseRow ? row.slice().reverse() : row;
+    });
+  }
+
+  function assignPlotNumbers(rows, settings){
+    const blockCounts = {};
+    const start = settings.startPlotNumber;
+    const magnitude = start < 100 ? 100 : Math.pow(10, Math.max(1, String(Math.abs(start)).length - 1));
+    const withinBlockStart = start % magnitude || 1;
+
+    return rows.map((row, index) => {
+      const block = parseInt(row.block, 10) || 1;
+      const numbered = Object.assign({}, row);
+
+      if (settings.plotNumbering === 'block_prefix') {
+        const blockIndex = blockCounts[block] || 0;
+        numbered.plot_number = block * magnitude + withinBlockStart + blockIndex;
+        blockCounts[block] = blockIndex + 1;
+      } else {
+        numbered.plot_number = start + index;
+      }
+
+      return numbered;
+    });
+  }
+
+  function basePlotLabel(box){
+    return box.dataset.plotNumber || '';
+  }
+
+  function plotTypeLabel(box){
+    if (box.dataset.fillerAccession) return 'Filler';
+    return box.dataset.isControl === '1' ? 'Check accession' : 'Test accession';
+  }
+
+  function plotTooltipHtml(box){
+    const plotNumber = basePlotLabel(box);
+    const accession = box.dataset.fillerAccession || box.dataset.accessionName || 'Not available';
+    const rowNumber = Number.isNaN(Number(box.dataset.row)) ? 'Not available' : Number(box.dataset.row) + 1;
+    const colNumber = Number.isNaN(Number(box.dataset.col)) ? 'Not available' : Number(box.dataset.col) + 1;
+
+    return `
+      <div><span class="tooltip-label">Plot number:</span> ${plotNumber || 'Not available'}</div>
+      <div><span class="tooltip-label">Row:</span> ${rowNumber}</div>
+      <div><span class="tooltip-label">Column:</span> ${colNumber}</div>
+      <div><span class="tooltip-label">Accession:</span> ${accession}</div>
+      <div><span class="tooltip-label">Type:</span> ${plotTypeLabel(box)}</div>
+    `;
+  }
+
+  function movePlotTooltip(e){
+    const tooltip = qs('#plot-hover-tooltip');
+    if (!tooltip) return;
+
+    const offset = 14;
+    const rect = tooltip.getBoundingClientRect();
+    let left = e.clientX + offset;
+    let top = e.clientY + offset;
+
+    if (left + rect.width > window.innerWidth) left = e.clientX - rect.width - offset;
+    if (top + rect.height > window.innerHeight) top = e.clientY - rect.height - offset;
+
+    tooltip.style.left = `${Math.max(8, left)}px`;
+    tooltip.style.top = `${Math.max(8, top)}px`;
+  }
+
+  function showPlotTooltip(e){
+    let tooltip = qs('#plot-hover-tooltip');
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.id = 'plot-hover-tooltip';
+      tooltip.className = 'plot-hover-tooltip';
+      document.body.appendChild(tooltip);
+    }
+    tooltip.innerHTML = plotTooltipHtml(e.currentTarget);
+    tooltip.style.display = 'block';
+    movePlotTooltip(e);
+  }
+
+  function hidePlotTooltip(){
+    const tooltip = qs('#plot-hover-tooltip');
+    if (tooltip) tooltip.style.display = 'none';
+  }
+
+  function setPlotLabel(box){
+    const plotNumber = basePlotLabel(box);
+    box.textContent = box.dataset.fillerAccession ? `${plotNumber}\nF` : plotNumber;
+    box.title = box.dataset.fillerAccession
+      ? `Plot ${plotNumber}; accession: ${box.dataset.fillerAccession}; type: Filler`
+      : `Plot ${plotNumber}; accession: ${box.dataset.accessionName || 'Not available'}; type: ${plotTypeLabel(box)}`;
+  }
+
+  function applyPlotVisual(box, baseColour){
+    const keep = ['trial-box'];
+    if (box.classList.contains('filler-applied')) keep.push('filler-applied');
+    box.className = keep.join(' ');
+
+    if (box.dataset.fillerAccession) {
+      box.classList.add('filler-applied');
+      setPlotLabel(box);
+      return;
+    }
+
+    if (box.dataset.isControl === '1') {
+      box.classList.add('bg-blue-900', 'text-white', 'bg-opacity-100');
+    } else {
+      const block = parseInt(box.dataset.block, 10) || 1;
+      box.classList.add(block % 2 === 0 ? lighterColor(baseColour) : baseColour, 'bg-opacity-60');
+    }
+    setPlotLabel(box);
+  }
+
+  function paintCell(cell){
+    if (!cell || !cell.dataset.row) return;
+
+    const r = +cell.dataset.row;
+    const c = +cell.dataset.col;
+    const k = key(r, c);
+    const isUnused = cellIsUnused(r, c);
+    const isBorder = manualBorders.has(k);
+    const filler = fillerPlots.get(k);
+
+    cell.classList.toggle('border-plot', isBorder);
+    cell.classList.toggle('filler-plot', !!filler);
+    cell.style.backgroundColor = filler ? '#fef3c7' : (isUnused ? '#d1d5db' : '#ffffff');
+    cell.style.color = isBorder ? '#065f46' : (filler ? '#78350f' : '');
+    cell.textContent = filler ? 'F' : (isBorder ? 'B' : '');
+    cell.title = filler ? `Filler: ${filler.accession}` : '';
   }
 
   function disablePal(t){ const p = qs(`#palette${t}`); if(p){ p.style.opacity='0.3'; p.draggable=false; p.classList.add('cursor-not-allowed'); } }
@@ -107,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /******** grid ********/
 
   /***************************************************************
-   *  Virtual-grid renderer  (50 × 50 cell window, cell pool reuse)
+   *  Virtual-grid renderer  (50 x 50 cell window, cell pool reuse)
    ***************************************************************/
   const VISIBLE_ROWS = 50, VISIBLE_COLS = 50;
 
@@ -116,7 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const viewport = document.createElement('div');
   viewport.id = 'virtual-viewport';
   viewport.style.position      = 'absolute';
-  viewport.style.pointerEvents = 'none';   // trial plots float over cells
+  viewport.style.pointerEvents = 'auto';
+  viewport.style.zIndex        = '5';
   grid.appendChild(viewport);
 
   /* State ---------------------------------------------------------- */
@@ -133,13 +324,18 @@ document.addEventListener('DOMContentLoaded', () => {
       d.style.position = 'absolute';
       d.style.width  = `${CELL}px`;
       d.style.height = `${CELL}px`;
+      d.addEventListener('click', handleCellClick);
+      d.addEventListener('mouseenter', () => {
+        if (activeTool()) d.classList.add('hover-preview');
+      });
+      d.addEventListener('mouseleave', () => d.classList.remove('hover-preview'));
       frag.appendChild(d);
       cellPool.push(d);
     }
     viewport.appendChild(frag);
   })();
 
-  /* ——— row / column label pools ——————————————————————— */
+  /* row / column label pools */
   const rowLabelContainer = document.createElement('div');
   rowLabelContainer.style.position      = 'absolute';
   rowLabelContainer.style.left = '0';            
@@ -176,20 +372,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  /* Render current 50×50 window ----------------------------------- */
+  /* Render current 50x50 window ----------------------------------- */
   function renderVisibleCells(startRow, startCol) {
     let idx = 0;
 
-    /* —— rows ——————————————————————————————————————— */
+    /* rows */
     for (let r = 0; r < VISIBLE_ROWS; r++) {
-      const gRow = r + startRow;            // global row index (0‑based)
+      const gRow = r + startRow;            // global row index (0-based)
 
       /* row label (green bar at left) */
       const rl = rowLabelPool[r];
       rl.style.top       = `${r * STEP}px`;
       rl.textContent     = gRow < totalRows ? gRow + 1 : '';
 
-      /* —— columns inside this visible row —— */
+      /* columns inside this visible row */
       for (let c = 0; c < VISIBLE_COLS; c++, idx++) {
         const gCol = c + startCol;          // global col index
         const cell = cellPool[idx];
@@ -201,31 +397,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         cell.style.display = 'block';
-        cell.style.left = `${c * STEP}px`;
-        cell.style.top  = `${r * STEP}px`;
+        cell.style.left = `${(c + 1) * STEP}px`;
+        cell.style.top  = `${(r + 1) * STEP}px`;
 
-        /* cache row/col in data‑attrs for hit‑tests later */
+        /* cache row/col in data attrs for hit tests later */
         if (cell.dataset.row !== String(gRow)) cell.dataset.row = gRow;
         if (cell.dataset.col !== String(gCol)) cell.dataset.col = gCol;
 
-        /* paint state */
-        const k        = key(gRow, gCol);
-        const isUnused = cellIsUnused(gRow, gCol);
-        const isBorder = manualBorders.has(k);
-
-        cell.style.backgroundColor = isUnused ? '#d1d5db' : '#ffffff';
-
-        if (isBorder) {
-          cell.textContent = 'B';
-          cell.classList.add('border-plot');
-        } else {
-          cell.textContent = '';
-          cell.classList.remove('border-plot');
-        }
+        paintCell(cell);
       }
     }
 
-    /* —— column labels (green bar on top) ——————————————— */
+    /* column labels (green bar on top) */
     for (let c = 0; c < VISIBLE_COLS; c++) {
       const gCol = c + startCol;
       const cl = colLabelPool[c];
@@ -297,7 +480,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rows = +qs('#farm-rows')?.value || 0;
     const cols = +qs('#farm-cols')?.value || 0;
 
-    /* ── first run? build everything ─────────────────────────── */
+    /* first run? build everything */
     if (!gridInitialised) {
       initVirtualGrid(rows, cols);
       gridInitialised   = true;
@@ -306,14 +489,14 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    /* ── dimensions unchanged → just repaint window ─────────── */
+    /* dimensions unchanged: just repaint window */
     if (rows === prevRows && cols === prevCols) {
       /* keep scroll position; only redraw visible cells */
       renderVisibleCells(lastRow, lastCol);
       return;
     }
 
-    /* ── only scroller size changes → quick resize ───────────── */
+    /* only scroller size changes: quick resize */
     totalRows = rows;
     totalCols = cols;
 
@@ -343,7 +526,7 @@ document.addEventListener('DOMContentLoaded', () => {
     prevCols = cols;
   }
 
-  /* ─── hook UI controls back to the optimised drawGrid() ─── */
+  /* hook UI controls back to the optimised drawGrid() */
   qs('#farm-rows')?.addEventListener('change', drawGrid);
   qs('#farm-cols')?.addEventListener('change', drawGrid);
 
@@ -376,17 +559,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function toggleCell(e) {
-    const cell = e.target;
+    handleCellClick(e);
+  }
+
+  function handleCellClick(e) {
+    if (suppressCellClick) {
+      suppressCellClick = false;
+      return;
+    }
+
+    const cell = e.target.closest('.grid-cell');
+    if (!cell || !cell.dataset.row) return;
     const r = +cell.dataset.row;
     const c = +cell.dataset.col;
     const k = key(r, c);
 
-    const editMode = qs('#edit-toggle').checked;
-    const borderMode = qs('#border-toggle').checked;
+    const tool = activeTool();
 
-    if (!editMode && !borderMode) return;
+    if (!tool) return;
 
-    if (editMode) {
+    if (tool === 'unused') {
+      if (isCellOccupied(r, c) || manualBorders.has(k)) {
+        alert('This plot already contains a trial, filler, or border.');
+        return;
+      }
       if (cellIsUnused(r, c)) {
         manualBlock.delete(k);
         manualAllow.add(k);
@@ -394,22 +590,63 @@ document.addEventListener('DOMContentLoaded', () => {
         manualAllow.delete(k);
         manualBlock.add(k);
       }
-      // Just update this cell background
-      const unused = cellIsUnused(r, c);
-      cell.style.background = unused ? '#d1d5db' : '#ffffff';
     }
 
-    if (borderMode) {
+    if (tool === 'border') {
+      if (!manualBorders.has(k) && isCellOccupied(r, c)) {
+        alert('Borders cannot be placed on trial or filler plots.');
+        return;
+      }
       if (manualBorders.has(k)) {
         manualBorders.delete(k);
-        cell.classList.remove('border-plot');
-        cell.textContent = '';
       } else {
         manualBorders.add(k);
-        cell.classList.add('border-plot');
-        cell.textContent = 'B';
       }
     }
+
+    if (tool === 'filler') {
+      alert('Select a trial plot to place a filler inside the trial.');
+      return;
+    }
+
+    paintCell(cell);
+  }
+
+  function applyGridBrush(cell, forceOn = null){
+    if (!cell || !cell.dataset.row) return false;
+
+    const r = +cell.dataset.row;
+    const c = +cell.dataset.col;
+    const k = key(r, c);
+    const tool = activeTool();
+
+    if (tool === 'unused') {
+      if (isCellOccupied(r, c) || manualBorders.has(k)) return false;
+      const makeUnused = forceOn === null ? !cellIsUnused(r, c) : forceOn;
+      if (makeUnused) {
+        manualAllow.delete(k);
+        manualBlock.add(k);
+      } else {
+        manualBlock.delete(k);
+        manualAllow.add(k);
+      }
+      paintCell(cell);
+      return true;
+    }
+
+    if (tool === 'border') {
+      if (isCellOccupied(r, c) || cellIsUnused(r, c)) return false;
+      const makeBorder = forceOn === null ? !manualBorders.has(k) : forceOn;
+      if (makeBorder) {
+        manualBorders.add(k);
+      } else {
+        manualBorders.delete(k);
+      }
+      paintCell(cell);
+      return true;
+    }
+
+    return false;
   }
 
 
@@ -458,6 +695,18 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <div class='grid grid-cols-2 gap-4 mb-4'>
+        <label>Start Plot Number
+          <input id='tstartplot${i}' type='number' min='1' value='1' class='w-full border rounded px-2 py-1' />
+        </label>
+        <label>Plot Numbering
+          <select id='tplotnumbering${i}' class='w-full border rounded px-2 py-1'>
+            <option value="continuous">Continuous across blocks</option>
+            <option value="block_prefix">Start with block number</option>
+          </select>
+        </label>
+      </div>
+
+      <div class='grid grid-cols-2 gap-4 mb-4'>
         <label>Treatments List
           <select id='ttreatments${i}' class='w-full border rounded px-2 py-1'>
             <option value="">Loading...</option>
@@ -498,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qs('#trial-details').appendChild(d);
     loadGlobalFarmDropdown();
 
-    // Design-specific toggles ────────────────
+    // Design-specific toggles
     const designSelect = d.querySelector(`#tdesign${i}`);
     const rowcol       = d.querySelector(`#rowcol-container${i}`);
     const repsblocks   = d.querySelector(`#repsblocks-container${i}`);
@@ -508,7 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isRCBD     = val === 'RCBD';
       const isAugRC    = val === 'Augmented Row-Column';
 
-      /* ── REPS / BLOCKS PANEL ───────────────────────────── */
+      /* REPS / BLOCKS PANEL */
       if (isRCBD) {
         repsblocks.innerHTML = `
           <label>Reps / Blocks
@@ -532,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </label>`;
       }
 
-      /* ── ROW / COL PANEL ────────────────────────────────── */
+      /* ROW / COL PANEL */
       if (isRCBD) {
         rowcol.innerHTML = `
           <label>Number of Rows per Block
@@ -618,6 +867,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function loadBreedingProgramDropdown() {
+    const $select = $('#breeding_program_dropdown');
+    if ($select.length === 0) return;
+
+    $select.html('<option value="">Loading...</option>');
+
+    $.ajax({
+      url: '/ajax/trialallocation/breeding_programs',
+      method: 'GET',
+      dataType: 'json',
+      success: function(data) {
+        if (!data.success || !Array.isArray(data.programs)) {
+          $select.html('<option value="">Failed to load programs</option>');
+          return;
+        }
+
+        $select.empty().append('<option value="">-- Select Breeding Program --</option>');
+        data.programs.forEach(program => {
+          $select.append(`<option value="${program.program_id}">${program.name}</option>`);
+        });
+
+        $select.select2({
+          placeholder: 'Select a breeding program',
+          allowClear: true,
+          width: '100%',
+          dropdownParent: $('#breeding_program_dropdown').closest('div')
+        });
+      },
+      error: function(xhr, status, error) {
+        console.error('Failed to load breeding programs:', error);
+        $select.html('<option value="">Failed to load</option>');
+      }
+    });
+  }
+
 
 
 
@@ -625,14 +909,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   function addPaletteBox(i){
+    const wrap = document.createElement('div');
+    wrap.className = 'border rounded p-3 bg-white';
+
     const box = document.createElement('div');
     box.id = `palette${i}`;
-    box.className = `trial-box ${colourFor(i)} bg-opacity-60`;
+    box.className = `trial-box ${colourFor(i)} bg-opacity-60 mb-2`;
     box.textContent = `Trial ${i}`;
     box.dataset.trial = i;
     box.draggable = true;
     box.ondragstart = startDrag;
-    qs('#trial-boxes').appendChild(box);
+
+    const controls = document.createElement('div');
+    controls.className = 'grid grid-cols-2 gap-2 text-xs';
+    controls.innerHTML = `
+      <label>Horizontal
+        <select id="grid-direction-horizontal${i}" class="w-full border rounded px-1 py-1">
+          <option value="ltr">Left to right</option>
+          <option value="rtl">Right to left</option>
+        </select>
+      </label>
+      <label>Vertical
+        <select id="grid-direction-vertical${i}" class="w-full border rounded px-1 py-1">
+          <option value="ttb">Top to bottom</option>
+          <option value="btt">Bottom to top</option>
+        </select>
+      </label>
+    `;
+
+    wrap.appendChild(box);
+    wrap.appendChild(controls);
+    qs('#trial-boxes').appendChild(wrap);
+
     // if(document.querySelector(`.trial-group[data-trial="${i}"]`)) disablePal(i);
     disablePal(i);
   }
@@ -737,6 +1045,10 @@ document.addEventListener('DOMContentLoaded', () => {
       treatment_list_id:$(`#ttreatments${i}`).val(),
       control_list_id:  $(`#tcontrols${i}`).val(),
       layout_type:      layoutType,
+      horizontal_direction: $(`#grid-direction-horizontal${i}`).val(),
+      vertical_direction:   $(`#grid-direction-vertical${i}`).val(),
+      start_plot_number:    parseInt($(`#tstartplot${i}`).val()) || 1,
+      plot_numbering:       $(`#tplotnumbering${i}`).val(),
 
       // reps / blocks logic
       reps: parseInt($(`#treps${i}`).val()) || 0,
@@ -800,7 +1112,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const rect = el.getBoundingClientRect();
     e.dataTransfer.setData('src', fromPal ? 'pal' : 'grid');
     e.dataTransfer.setData('tn', el.dataset.trial);
-    if(!fromPal) e.dataTransfer.setData('root', el.dataset.root);
+    if(!fromPal) {
+      const root = el.dataset.root;
+      const rootPart = qs(`.trial-group[data-root="${root}"]`);
+      const anchorRow = +(rootPart?.dataset.anchorRow || el.dataset.row || 0);
+      const anchorCol = +(rootPart?.dataset.anchorCol || el.dataset.col || 0);
+      const gridRect = farmGridEl.getBoundingClientRect();
+      const anchorLeft = gridRect.left - farmGridEl.scrollLeft + ((anchorCol + 1) * STEP);
+      const anchorTop = gridRect.top - farmGridEl.scrollTop + ((anchorRow + 1) * STEP);
+
+      e.dataTransfer.setData('root', root);
+      e.dataTransfer.setData('offX', e.clientX - anchorLeft);
+      e.dataTransfer.setData('offY', e.clientY - anchorTop);
+      return;
+    }
+
     e.dataTransfer.setData('offX', e.clientX - rect.left);
     e.dataTransfer.setData('offY', e.clientY - rect.top);
   }
@@ -821,20 +1147,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const rect = qs('#farm-grid').getBoundingClientRect();
 
-    let col = Math.floor((e.clientX - rect.left - (src === 'grid' ? offX : 0)) / STEP) - 1;
-    let row = Math.floor((e.clientY - rect.top  - (src === 'grid' ? offY : 0)) / STEP) - 1;
+    let col = Math.floor((e.clientX - rect.left + farmGridEl.scrollLeft - (src === 'grid' ? offX : 0)) / STEP) - 1;
+    let row = Math.floor((e.clientY - rect.top  + farmGridEl.scrollTop  - (src === 'grid' ? offY : 0)) / STEP) - 1;
 
     if (col < 0 || row < 0) return;
 
     const name   = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
     const colour = colourFor(tn);
 
-    /* remove previously placed instance of this trial (if dragging from grid) */
-    if (src === 'grid') {
-      qsa(`.trial-group[data-root="${root}"]`).forEach(el => el.remove());
-    }
-
-    /* ───── request design from server ───── */
+    /* request design from server */
     const cached = trialDesignCache[tn];
     if (!cached) {
       alert("Please click 'Generate Design' before placing the trial.");
@@ -858,9 +1179,15 @@ document.addEventListener('DOMContentLoaded', () => {
       rowStart: row,
       colStart: col,
       colour,
-      rootId: null,
+      rootId: src === 'grid' ? root : null,
+      ignoreRoot: src === 'grid' ? root : null,
       design: cached.design
     });
+
+    if (!coords || !coords.length) {
+      if (loading) loading.classList.add('hidden');
+      return;
+    }
 
     // save coordinates
     $.ajax({
@@ -870,6 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         trial: JSON.stringify({
           trial_name: name,
           trial_id: tn,
+          breeding_program_id: $('#breeding_program_dropdown').val(),
           coordinates: coords,
           design_file: cached.design_file,
           param_file: cached.param_file,
@@ -898,7 +1226,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   
   function lighterColor(base) {
-    // drop one Tailwind “step” (e.g. 400→200, 500→300, 900→700)
+    // drop one Tailwind step (e.g. 400 to 200, 500 to 300, 900 to 700)
     return base.replace(/-(\d+)$/, (_, num) => {
       let n = Math.max(+num - 200, 50);
       return '-' + n;
@@ -909,6 +1237,124 @@ document.addEventListener('DOMContentLoaded', () => {
   const farmGridEl = qs('#farm-grid');
   farmGridEl.addEventListener('dragover', e=>e.preventDefault());
   farmGridEl.addEventListener('drop', handleDrop);
+
+  function selectTrial(root){
+    selectedRoot = root;
+    qsa('.trial-group').forEach(g => {
+      g.classList.toggle('selected-trial', !!root && g.dataset.root === root);
+    });
+  }
+
+  function handleTrialPlotClick(e){
+    if (activeTool() !== 'filler') return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const box = e.currentTarget;
+    const useStandard = qs('#standard-filler-toggle')?.checked;
+    const standard = qs('#filler-accession')?.value.trim() || '';
+    let accession = standard;
+
+    if (!useStandard || !accession) {
+      accession = window.prompt('Filler accession name', box.dataset.fillerAccession || standard || '');
+      if (accession === null) return;
+      accession = accession.trim();
+    }
+
+    if (!accession) {
+      delete box.dataset.fillerAccession;
+      box.classList.remove('filler-applied');
+    } else {
+      box.dataset.fillerAccession = accession;
+      box.classList.add('filler-applied');
+    }
+
+    applyPlotVisual(box, colourFor(box.closest('.trial-group')?.dataset.trial || 1));
+  }
+
+  function rootCells(root){
+    const cells = [];
+    qsa(`.trial-group[data-root="${root}"]`).forEach(group => {
+      const gr = +group.dataset.row;
+      const gc = +group.dataset.col;
+      group.querySelectorAll('.trial-box').forEach((box, i) => {
+        if (box.classList.contains('filler-box')) return;
+        const row = Number(box.dataset.row);
+        const col = Number(box.dataset.col);
+        cells.push({
+          row: Number.isNaN(row) ? gr : row,
+          col: Number.isNaN(col) ? gc + i : col
+        });
+      });
+    });
+    return cells;
+  }
+
+  function canMoveRoot(root, dRow, dCol){
+    const parts = qsa(`.trial-group[data-root="${root}"]`);
+    if (!parts.length) return false;
+
+    const startRow = +(parts[0].dataset.anchorRow || Math.min(...parts.map(g => +g.dataset.row))) + dRow;
+    const startCol = +(parts[0].dataset.anchorCol || Math.min(...parts.map(g => +g.dataset.col))) + dCol;
+
+    return startRow >= 0 && startCol >= 0;
+  }
+
+  function moveSelectedTrial(dRow, dCol){
+    if (!selectedRoot || !canMoveRoot(selectedRoot, dRow, dCol)) return false;
+
+    const parts = qsa(`.trial-group[data-root="${selectedRoot}"]`);
+    if (!parts.length) return false;
+
+    const first = parts[0];
+    const tn = first.dataset.trial;
+    const name = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
+    const startRow = +(first.dataset.anchorRow || Math.min(...parts.map(g => +g.dataset.row))) + dRow;
+    const startCol = +(first.dataset.anchorCol || Math.min(...parts.map(g => +g.dataset.col))) + dCol;
+    const boxes = parts
+      .flatMap(part => [...part.querySelectorAll('.trial-box')])
+      .sort((a, b) => (+a.dataset.designIndex - +b.dataset.designIndex));
+
+    const plotDesign = boxes.map(box => ({
+      plot_number: box.dataset.plotNumber,
+      block: box.dataset.block,
+      accession_name: box.dataset.accessionName,
+      is_control: box.dataset.isControl,
+      original_plot_number: box.dataset.originalPlotNumber || box.dataset.plotNumber
+    }));
+
+    const coords = placeTrial({
+      tn,
+      name,
+      rowsWanted: +first.dataset.rowsWanted || Math.max(...parts.map(groupHeight)),
+      colsWanted: +first.dataset.colsWanted || boxes.length,
+      total: boxes.length,
+      rowStart: startRow,
+      colStart: startCol,
+      colour: colourFor(tn),
+      rootId: selectedRoot,
+      ignoreRoot: selectedRoot,
+      design: plotDesign
+    });
+
+    return !!(coords && coords.length);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (!selectedRoot || ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+
+    const jump = e.shiftKey ? 5 : 1;
+    const delta = {
+      ArrowUp:    [-jump, 0],
+      ArrowDown:  [ jump, 0],
+      ArrowLeft:  [0, -jump],
+      ArrowRight: [0,  jump]
+    }[e.key];
+
+    if (!delta) return;
+    e.preventDefault();
+    moveSelectedTrial(delta[0], delta[1]);
+  });
 
   /************* grab coodinates from grd ****************/
 
@@ -942,11 +1388,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function trialCellExists(r,c){
+    if (fillerPlots.has(key(r, c))) return true;
     return [...document.querySelectorAll('.trial-group')].some(group=>{
       const gr = +group.dataset.row;
       const gc = +group.dataset.col;
-      const cols = group.style.gridTemplateColumns.split(' ').length || 1;
-      const rows = Math.round(group.offsetHeight / (CELL+GAP));
+      const cols = groupWidth(group);
+      const rows = groupHeight(group);
       return (r>=gr && r<gr+rows) && (c>=gc && c<gc+cols);
     });
   }
@@ -981,6 +1428,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rowsWanted, colsWanted, total,
     rowStart, colStart,
     colour, rootId,
+    ignoreRoot,
     design,                 // (not changed here)
     rowsPerBlock, blocks    // (not used here yet)
   }) {
@@ -988,37 +1436,87 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const root   = rootId || uid();
     const coords = [];
+    const settings = trialLayoutSettings(tn);
+    let plotDesign = designRows(design);
+    const fillerByPlot = new Map();
 
-    let r = rowStart,
-        c = colStart;
-
-    /* walk row-by-row until we have the required number of plots */
-    while (coords.length < total) {
-
-      /* FIX: accept only *usable* cells  ─────────────────────── */
-      if (!cellIsUnused(r, c) && !manualBorders.has(key(r, c))) {
-        if (trialCellExists(r, c)) {
-          alert('Please find another region to place your trial. This is occupied!');
-          return;                          // abort placement
-        }
-        coords.push([r, c]);
-      }
-
-      /* advance to next column / row */
-      c++;
-      if (coords.length % colsWanted === 0) {   // finished a logical row
-        c = colStart;
-        r++;
-      }
-
-      /* safety valve – prevents infinite loop if nothing fits */
-      if (r > 1000) {
-        alert('Could not place trial: not enough space.');
-        return;
-      }
+    if (rootId) {
+      qsa(`.trial-group[data-root="${rootId}"] .trial-box[data-filler-accession]`).forEach(box => {
+        if (box.dataset.plotNumber) fillerByPlot.set(box.dataset.plotNumber, box.dataset.fillerAccession);
+      });
     }
 
-    /* group consecutive cells into “segments” so each visual row
+    while (plotDesign.length < total) {
+      plotDesign.push({
+        plot_number: plotDesign.length + 1,
+        block: 1,
+        is_control: 0,
+        accession_name: ''
+      });
+    }
+
+    if (rowStart < 0 || colStart < 0 || rowStart >= totalRows || colStart >= totalCols) {
+      alert('Could not place trial: starting plot is outside the field.');
+      return;
+    }
+
+    let rr = rowStart;
+    let cc = colStart;
+    let rowPlots = 0;
+    let guard = 0;
+    let blockingConflict = false;
+    const maxChecks = Math.max(1, totalRows * totalCols);
+    const rowStep = settings.verticalDir === 'btt' ? -1 : 1;
+    const colInBounds = col => col >= 0 && col < totalCols;
+    const rowInBounds = row => row >= 0 && row < totalRows;
+
+    while (coords.length < total && guard < maxChecks && rowInBounds(rr)) {
+      const k = key(rr, cc);
+
+      if (colInBounds(cc)) {
+        if (manualBorders.has(k) || fillerPlots.has(k) || isCellOccupied(rr, cc, ignoreRoot)) {
+          blockingConflict = true;
+          break;
+        }
+
+        if (!cellIsUnused(rr, cc)) {
+          coords.push([rr, cc]);
+          rowPlots++;
+        }
+      }
+
+      cc++;
+      if (rowPlots === colsWanted || !colInBounds(cc)) {
+        rr += rowStep;
+        cc = colStart;
+        rowPlots = 0;
+      }
+
+      guard++;
+    }
+
+    if (blockingConflict) {
+      alert('Could not place trial: the selected path contains another trial, border, or filler plot.');
+      return;
+    }
+
+    if (coords.length < total) {
+      alert('Could not place trial: not enough available plots from this starting position.');
+      return;
+    }
+
+    if (rootId) {
+      qsa(`.trial-group[data-root="${rootId}"]`).forEach(el => el.remove());
+    }
+
+    plotDesign = assignPlotNumbers(plotDesign, settings);
+    const ordered = orderedCells(coords, colsWanted, settings);
+    const designIndexByKey = new Map();
+    ordered.forEach(([coordRow, coordCol], index) => {
+      designIndexByKey.set(key(coordRow, coordCol), index);
+    });
+
+    /* group consecutive cells into segments so each visual row
        becomes a single `.trial-group` div for efficient DOM use  */
     const rowsMap = {};
     coords.forEach(([rr, cc]) => ((rowsMap[rr] = rowsMap[rr] || []).push(cc)));
@@ -1033,8 +1531,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+    selectTrial(root);
 
-    /* helper – draw one contiguous horizontal segment */
+    /* helper - draw one contiguous horizontal segment */
     function createSeg(rr, start, end) {
       const seg = end - start + 1;
       const g   = document.createElement('div');
@@ -1044,6 +1543,10 @@ document.addEventListener('DOMContentLoaded', () => {
       g.dataset.root  = root;
       g.dataset.row   = rr;
       g.dataset.col   = start;
+      g.dataset.rowsWanted = rowsWanted;
+      g.dataset.colsWanted = colsWanted;
+      g.dataset.anchorRow = rowStart;
+      g.dataset.anchorCol = colStart;
 
       g.style.left  = `${(start + 1) * STEP}px`;
       g.style.top   = `${(rr    + 1) * STEP}px`;
@@ -1053,24 +1556,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
       g.draggable    = true;
       g.ondragstart  = startDrag;
+      g.tabIndex     = 0;
+      g.addEventListener('click', e => {
+        e.stopPropagation();
+        selectTrial(root);
+      });
 
       /* individual plot boxes */
       for (let i = 0; i < seg; i++) {
+        const col = start + i;
+        const designIndex = designIndexByKey.get(key(rr, col));
+        const meta = plotDesign[designIndex] || {};
         const b = document.createElement('div');
-        b.className    = `trial-box ${colour} bg-opacity-60`;
-        b.textContent  = name;
+        b.className    = 'trial-box';
         b.draggable    = true;
         b.ondragstart  = startDrag;
+        b.title        = 'Click to select, then use arrow keys to move';
         b.dataset.row  = rr;          // for recoloring later
-        b.dataset.col  = start + i;
+        b.dataset.col  = col;
+        b.dataset.designIndex = designIndex;
+        b.dataset.plotNumber = meta.plot_number || (designIndex + 1);
+        b.dataset.originalPlotNumber = meta.original_plot_number || meta.plot_number || (designIndex + 1);
+        b.dataset.block = meta.block || 1;
+        b.dataset.isControl = String(meta.is_control || 0);
+        b.dataset.accessionName = meta.accession_name || '';
+        if (fillerByPlot.has(b.dataset.plotNumber)) {
+          b.dataset.fillerAccession = fillerByPlot.get(b.dataset.plotNumber);
+          b.classList.add('filler-applied');
+        }
+        b.addEventListener('click', handleTrialPlotClick);
+        b.addEventListener('mouseenter', showPlotTooltip);
+        b.addEventListener('mousemove', movePlotTooltip);
+        b.addEventListener('mouseleave', hidePlotTooltip);
+        applyPlotVisual(b, colour);
         g.appendChild(b);
       }
 
-      /* one “×” close button per root group */
+      /* one remove button per root group */
       if (!qs(`[data-root="${root}"] .remove-btn`)) {
         const rm   = document.createElement('div');
         rm.className = 'remove-btn';
-        rm.textContent = '×';
+        rm.textContent = 'x';
         rm.onclick = () => {
           const loading = qs('#grid-loader');
           if (loading) {
@@ -1088,17 +1614,22 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         g.appendChild(rm);
 
-        /* ⇄ transpose button (one per root) */
+        /* transpose button (one per root) */
         const tp = document.createElement('div');
         tp.className = 'transpose-btn';
-        tp.textContent = '⇄';
+        tp.textContent = 'T';
+        tp.title = 'Transpose trial';
         tp.onclick = () => transposeTrial(root);
         g.appendChild(tp);
       }
 
-      qs('#field-zoom-container').appendChild(g);
+      qs('#farm-grid').appendChild(g);
     }
-    return coords.map(([row, col]) => [row + 1, col + 1]);
+    return ordered.map(([row, col], index) => ({
+      row: row + 1,
+      col: col + 1,
+      plot_number: plotDesign[index]?.plot_number || (index + 1)
+    }));
   }
 
 
@@ -1116,46 +1647,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const idx = k => header.indexOf(k);
         const bI = idx('block'), rI = idx('row_number'),
-              cI = idx('col_number'), ctlI = idx('is_control');
+              cI = idx('col_number'), ctlI = idx('is_control'),
+              pI = idx('plots'), aI = idx('all_entries');
 
         if ([bI, rI, cI, ctlI].includes(-1)) {
           console.error('Design file missing columns');  return;
         }
 
-        /* Map: block # → colour (base or lighter) */
-        const blockColour = new Map();
-
-        lines.forEach(l => {
+        lines.forEach((l, designIndex) => {
           const f   = l.split('\t');
-          const blk = +f[bI];              // 1‑based block number
-          const row = +f[rI] - 1;          // to 0‑based
-          const col = +f[cI] - 1;
+          const blk = +f[bI];              // 1-based block number
           const ctl = +f[ctlI] === 1;
 
           const box = document.querySelector(
-            `.trial-box[data-row="${row}"][data-col="${col}"]`
+            `.trial-group[data-trial="${trialId}"] .trial-box[data-design-index="${designIndex}"]`
           );
           if (!box) return;
 
-          /* strip existing bg‑ & text‑ classes */
-          box.className = box.className
-            .replace(/\bbg-[^\s]+\b/g, '')
-            .replace(/\btext-[^\s]+\b/g, '')
-            .trim();
-
-          if (ctl) {
-            box.classList.add('bg-blue-900', 'text-white', 'bg-opacity-100');
-            return;
-          }
-
-          /* decide colour for this block only once */
-          if (!blockColour.has(blk)) {
-            const colour = (blk % 2 === 0)
-              ? lighterColor(baseColour)   // even block → lighter shade
-              : baseColour;                // odd block  → base shade
-            blockColour.set(blk, colour);
-          }
-          box.classList.add(blockColour.get(blk), 'bg-opacity-60');
+          box.dataset.block = blk || 1;
+          box.dataset.isControl = ctl ? '1' : '0';
+          if (pI !== -1) box.dataset.originalPlotNumber = f[pI] || (designIndex + 1);
+          if (aI !== -1) box.dataset.accessionName = f[aI] || '';
+          applyPlotVisual(box, baseColour);
         });
       },
 
@@ -1163,20 +1676,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /* ─── Helper: is the rectangle free? ────────────────────── */
+  /* Helper: is the rectangle free? */
 function regionHasConflict(r0, c0, h, w, ignoreRoot){
   for(let r=r0; r<r0+h; r++){
     for(let c=c0; c<c0+w; c++){
       const k = key(r,c);
-      if(cellIsUnused(r,c) || manualBorders.has(k)) return true;
+      if(cellIsUnused(r,c) || manualBorders.has(k) || fillerPlots.has(k)) return true;
 
       const clash = [...document.querySelectorAll('.trial-group')]
         .some(g=>{
           if(g.dataset.root === ignoreRoot) return false;
           const gr = +g.dataset.row;
           const gc = +g.dataset.col;
-          const gw = g.style.gridTemplateColumns.split(' ').length;
-          const gh = Math.round(g.offsetHeight / (CELL+GAP));
+          const gw = groupWidth(g);
+          const gh = groupHeight(g);
           return r>=gr && r<gr+gh && c>=gc && c<gc+gw;
         });
       if(clash) return true;
@@ -1185,7 +1698,7 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
   return false;
 }
 
-  /* ─── Transpose (rows↔cols) ─────────────────────────────── */
+  /* Transpose (rows/cols) */
   function transposeTrial(root){
     const parts = [...document.querySelectorAll(`.trial-group[data-root="${root}"]`)];
     if(!parts.length) return;
@@ -1210,16 +1723,24 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
 
     if(minR+newH > rowsMax || minC+newW > colsMax ||
        regionHasConflict(minR, minC, newH, newW, root)){
-      alert('Cannot transpose – no free space at current position.');
+      alert('Cannot transpose - no free space at current position.');
       return;
     }
 
     /* remove old, place new */
     const tn     = parts[0].dataset.trial;
-    const name   = parts[0].querySelector('.trial-box').textContent;
+    const name   = qs(`#tname${tn}`)?.value || `Trial ${tn}`;
     const colour = colourFor(tn);
+    const plotDesign = parts
+      .flatMap(part => [...part.querySelectorAll('.trial-box')])
+      .sort((a, b) => (+a.dataset.row - +b.dataset.row) || (+a.dataset.col - +b.dataset.col))
+      .map(box => ({
+        plot_number: box.dataset.plotNumber,
+        block: box.dataset.block,
+        accession_name: box.dataset.accessionName,
+        is_control: box.dataset.isControl
+      }));
 
-    parts.forEach(p=>p.remove());                // clear existing
     placeTrial({
       tn, name,
       rowsWanted: newH,
@@ -1228,8 +1749,9 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
       rowStart: minR,
       colStart: minC,
       colour,
-      rootId: root,         // reuse same root → buttons stay unique
-      design: null          // unchanged; placement only
+      rootId: root,         // reuse same root so buttons stay unique
+      ignoreRoot: root,
+      design: plotDesign    // keep plot numbers, block colours, checks
     });
   }
 
@@ -1238,96 +1760,38 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
 
   /******** selection drag for unused & borders (logic unchanged) ********/
   let isDragging=false;
-  let dragStart=null;
+  let brushForceOn=null;
+  let brushedCells = new Set();
   qs('#farm-grid').addEventListener('mousedown',e=>{
     const cell=e.target.closest('.grid-cell');
     if(!cell||!cell.dataset.row) return;
-    const editMode=qs('#edit-toggle').checked;
-    const borderMode=qs('#border-toggle').checked;
-    if(!editMode && !borderMode) return;
+    const tool = activeTool();
+    if(tool !== 'unused' && tool !== 'border') return;
     isDragging=true;
-    dragStart={row:+cell.dataset.row,col:+cell.dataset.col};
+    suppressCellClick = true;
+    const r = +cell.dataset.row;
+    const c = +cell.dataset.col;
+    brushForceOn = tool === 'border' ? !manualBorders.has(key(r, c)) : !cellIsUnused(r, c);
+    brushedCells = new Set();
+    brushedCells.add(key(r, c));
+    applyGridBrush(cell, brushForceOn);
     e.preventDefault();
   });
 
+  qs('#farm-grid').addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    const cell = e.target.closest('.grid-cell');
+    if (!cell || !cell.dataset.row) return;
+    const k = key(+cell.dataset.row, +cell.dataset.col);
+    if (brushedCells.has(k)) return;
+    brushedCells.add(k);
+    applyGridBrush(cell, brushForceOn);
+  });
 
   document.addEventListener('mouseup', e => {
-    if (!isDragging || !dragStart) return;
-
-    const cell = document.elementFromPoint(e.clientX, e.clientY)?.closest('.grid-cell');
-    if (!cell || !cell.dataset.row) {
-      isDragging = false;
-      dragStart = null;
-      return;
-    }
-
-    const row1 = dragStart.row, col1 = dragStart.col;
-    const row2 = +cell.dataset.row, col2 = +cell.dataset.col;
-    const rMin = Math.min(row1, row2), rMax = Math.max(row1, row2);
-    const cMin = Math.min(col1, col2), cMax = Math.max(col1, col2);
-    const editMode = qs('#edit-toggle').checked;
-    const borderMode = qs('#border-toggle').checked;
-    let overlap = false;
-
-    if (editMode && !borderMode) {
-      for (let r = rMin; r <= rMax; r++) {
-        for (let c = cMin; c <= cMax; c++) {
-          const occupied = [...document.querySelectorAll('.trial-group')].some(group => {
-            const gr = +group.dataset.row;
-            const gc = +group.dataset.col;
-            const gw = parseFloat(group.style.width) / STEP;
-            const gh = parseFloat(group.style.height) / STEP;
-            return (r === gr && c >= gc && c < gc + gw) ||
-                   (c === gc && r >= gr && r < gr + gh) ||
-                   (r >= gr && r < gr + gh && c >= gc && c < gc + gw);
-          });
-          if (occupied) {
-            overlap = true;
-            break;
-          }
-        }
-        if (overlap) break;
-      }
-    }
-
-    if (overlap) {
-      alert('It is not possible to turn entire row or column unutilized because there is a trial already placed.');
-    } else {
-      for (let r = rMin; r <= rMax; r++) {
-        for (let c = cMin; c <= cMax; c++) {
-          const k = key(r, c);
-          const cell = qs(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
-          if (!cell) continue;
-
-          if (editMode) {
-            if (cellIsUnused(r, c)) {
-              manualBlock.delete(k);
-              manualAllow.add(k);
-            } else {
-              manualAllow.delete(k);
-              manualBlock.add(k);
-            }
-            const unused = cellIsUnused(r, c);
-            cell.style.background = unused ? '#d1d5db' : '#ffffff';
-          }
-
-          if (borderMode) {
-            if (manualBorders.has(k)) {
-              manualBorders.delete(k);
-              cell.classList.remove('border-plot');
-              cell.textContent = '';
-            } else {
-              manualBorders.add(k);
-              cell.classList.add('border-plot');
-              cell.textContent = 'B';
-            }
-          }
-        }
-      }
-    }
-
     isDragging = false;
-    dragStart = null;
+    brushForceOn = null;
+    brushedCells = new Set();
   });
 
 
@@ -1352,9 +1816,7 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
       for (let c = 0; c < cols; c++) {
         const cell = qs(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
         if (!cell) continue;
-        const k = key(r, c);
-        const isUnused = rowList.includes(r) || intList('unused-cols').includes(c);
-        cell.style.background = isUnused && !manualAllow.has(k) ? '#d1d5db' : '#ffffff';
+        paintCell(cell);
       }
     }
   }
@@ -1365,22 +1827,37 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
       for (let r = 0; r < rows; r++) {
         const cell = qs(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
         if (!cell) continue;
-        const k = key(r, c);
-        const isUnused = colList.includes(c) || intList('unused-rows').includes(r);
-        cell.style.background = isUnused && !manualAllow.has(k) ? '#d1d5db' : '#ffffff';
+        paintCell(cell);
       }
     }
   }
 
 
   window.onload = ()=>{
+    loadBreedingProgramDropdown();
     loadGlobalFarmDropdown();
     makeTrials();
     drawGrid();
     qs('#farm-rows').addEventListener('change',drawGrid);
     qs('#farm-cols').addEventListener('change',drawGrid);
-    qs('#edit-toggle').addEventListener('change',()=>{ if(qs('#edit-toggle').checked) qs('#border-toggle').checked=false; });
-    qs('#border-toggle').addEventListener('change',()=>{ if(qs('#border-toggle').checked) qs('#edit-toggle').checked=false; });
+    qs('#edit-toggle').addEventListener('change',()=>{
+      if(qs('#edit-toggle').checked) {
+        qs('#border-toggle').checked=false;
+        qs('#filler-toggle').checked=false;
+      }
+    });
+    qs('#border-toggle').addEventListener('change',()=>{
+      if(qs('#border-toggle').checked) {
+        qs('#edit-toggle').checked=false;
+        qs('#filler-toggle').checked=false;
+      }
+    });
+    qs('#filler-toggle')?.addEventListener('change',()=>{
+      if(qs('#filler-toggle').checked) {
+        qs('#edit-toggle').checked=false;
+        qs('#border-toggle').checked=false;
+      }
+    });
     lastUnusedRows = qs('#unused-rows').value;
     lastUnusedCols = qs('#unused-cols').value;
 
@@ -1392,9 +1869,9 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
       const conflict = rowList.some(row => {
         return [...document.querySelectorAll('.trial-group')].some(group => {
           const gr = +group.dataset.row;
-          const gh = parseFloat(group.style.height) / STEP;
+          const gh = groupHeight(group);
           return row >= gr && row < gr + gh;
-        }) || Array.from({ length: cols }).some((_, c) => manualBorders.has(key(row, c)));
+        }) || Array.from({ length: cols }).some((_, c) => manualBorders.has(key(row, c)) || fillerPlots.has(key(row, c)));
       });
 
       if (conflict) {
@@ -1417,9 +1894,9 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
       const conflict = colList.some(col => {
         return [...document.querySelectorAll('.trial-group')].some(group => {
           const gc = +group.dataset.col;
-          const gw = parseFloat(group.style.width) / STEP;
+          const gw = groupWidth(group);
           return col >= gc && col < gc + gw;
-        }) || Array.from({ length: rows }).some((_, r) => manualBorders.has(key(r, col)));
+        }) || Array.from({ length: rows }).some((_, r) => manualBorders.has(key(r, col)) || fillerPlots.has(key(r, col)));
       });
 
       if (conflict) {
@@ -1439,6 +1916,3 @@ function regionHasConflict(r0, c0, h, w, ignoreRoot){
 
 
 });
-
-
-

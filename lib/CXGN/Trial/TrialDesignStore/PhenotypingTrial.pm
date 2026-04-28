@@ -195,13 +195,6 @@ sub validate_design {
         }
     }
 
-    # Report any missing names
-    foreach my $name (@accession_names) {
-        if (!$found_data{$name}) {
-            $error .= "The following name is not in the database: $name.\n";
-        }
-    }
-
     # Check that the plot numbers are unique in the db for the given study
     my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_layout_json', 'project_property')->cvterm_id();
     my $plot_number_select = "select projectprop.value from project " .

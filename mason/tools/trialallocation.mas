@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-/breeders_toolbox/trial.mas – Trial allocation page (hot‑fix v13, Apr‑15‑2025)
+/breeders_toolbox/trial.mas - Trial allocation page (hot-fix v13, Apr-15-2025)
 
 =head1 AUTHOR
 
-Chris Simoes – ccs263@cornell.edu
+Chris Simoes - ccs263@cornell.edu
 
 =cut
 
@@ -85,7 +85,7 @@ Chris Simoes – ccs263@cornell.edu
     gap: var(--gap);
     cursor: move;
     z-index: 20;
-    border: 1px dashed red; /* diagnostic only */
+    border: 1px solid transparent;
   }
 
   .trial-box {
@@ -99,6 +99,47 @@ Chris Simoes – ccs263@cornell.edu
     justify-content: center;
     box-sizing: border-box;
     cursor: move;
+    line-height: 1;
+    white-space: pre-line;
+  }
+
+  .trial-group.selected-trial {
+    outline: 3px solid #111827;
+    outline-offset: 2px;
+    z-index: 35;
+  }
+
+  .trial-box.filler-box {
+    background: #fef3c7;
+    border: 2px solid #92400e;
+    color: #78350f;
+    cursor: pointer;
+    z-index: 18;
+  }
+
+  .trial-box.filler-applied {
+    background: #fef3c7 !important;
+    border: 2px solid #92400e;
+    color: #78350f !important;
+  }
+
+  .plot-hover-tooltip {
+    position: fixed;
+    z-index: 10000;
+    max-width: 18rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.375rem;
+    background: #111827;
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    pointer-events: none;
+    white-space: normal;
+  }
+
+  .plot-hover-tooltip .tooltip-label {
+    color: #d1d5db;
   }
 
   .remove-btn {
@@ -124,12 +165,17 @@ Chris Simoes – ccs263@cornell.edu
 
   <&| /page/info_section.mas, id=>"trial_summary_section", title=>"1 - Trial allocation summary", collapsible=>1, collapsed=>0 &>
     <h2 class="text-2xl font-bold mb-4">Field Layout Workflow</h2>
-    <p class="mb-4">Toggle unused plots with a single click (when the switch is on). Palette boxes disable once their trial is placed and re‑enable when deleted.</p>
+    <p class="mb-4">Toggle unused plots with a single click (when the switch is on). Palette boxes disable once their trial is placed and re-enable when deleted.</p>
   </&>
 
   <&| /page/info_section.mas, id=>"farm_settings_section", title=>"2 - Farm settings", collapsible=>1, collapsed=>0 &>
     <div class="space-y-4">
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-4 gap-4">
+        <label>Breeding Program
+          <select id="breeding_program_dropdown" class="w-full border rounded px-2 py-1">
+            <option value="">Select Breeding Program</option>
+          </select>
+        </label>
         <label>Farm
           <select id="farm_dropdown" class="w-full border rounded px-2 py-1">
             <option value="">Select Farm</option>
@@ -182,11 +228,30 @@ Chris Simoes – ccs263@cornell.edu
       <span class="font-semibold ml-1">Place Borders</span>
     </label>
 
+    <label class="inline-flex items-center mb-4 space-x-2 ml-4">
+      <input type="checkbox" id="filler-toggle" />
+      <span class="font-semibold ml-1">Place Filler</span>
+    </label>
+
+    <label class="inline-flex items-center mb-4 ml-4">
+      <span class="font-semibold mr-2">Filler accession</span>
+      <input id="filler-accession" class="border rounded px-2 py-1" placeholder="Accession name" />
+    </label>
+
+    <label class="inline-flex items-center mb-4 space-x-2 ml-4">
+      <input type="checkbox" id="standard-filler-toggle" />
+      <span class="font-semibold ml-1">Use standard filler</span>
+    </label>
+
+    <div id="layout-hint" class="text-sm text-gray-600 mb-4">
+      Click a placed trial to select it, then use arrow keys to move it. Use Shift + arrow to move five plots.
+    </div>
+
     <div class="mb-6">
-      <label class="block mb-2">Unused Rows (comma‑separated)
+      <label class="block mb-2">Unused Rows (comma-separated)
         <input id="unused-rows" class="w-full border rounded px-2 py-1" />
       </label>
-      <label class="block">Unused Columns (comma‑separated)
+      <label class="block">Unused Columns (comma-separated)
         <input id="unused-cols" class="w-full border rounded px-2 py-1" />
       </label>
     </div>
@@ -269,6 +334,7 @@ Chris Simoes – ccs263@cornell.edu
 #farm-grid.edit-mode .grid-cell{cursor:crosshair;}
 .grid-cell.hover-preview{outline:2px dashed #3b82f6;background-color:rgba(59,130,246,0.1);}
 .border-plot{background-color:#d1fae5 !important;font-weight:bold;color:#065f46;}
+.filler-plot{background-color:#fef3c7 !important;font-weight:bold;color:#78350f;}
 #grid-loader{display:flex;align-items:center;gap:0.5rem;background:white;padding:0.5rem 1rem;border:1px solid #ccc;border-radius:0.375rem;font-size: 2.00rem;color:#065f46;box-shadow:0 0 4px rgba(0,0,0,0.1);margin-bottom:1rem;pointer-events:none;}
 #grid-loader.hidden{display:none;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -282,4 +348,3 @@ $(document).ready( function() {
   var trialallocation = window.jsMod['trialallocation'].init("trialallocation");
 });
 </script>
-
