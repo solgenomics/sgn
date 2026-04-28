@@ -52,11 +52,13 @@ sub trial_exists {
 
 sub get_breeding_programs {
     my $self = shift;
-
+    my $ids = shift;
 
     my $breeding_program_cvterm_id = $self->get_breeding_program_cvterm_id();
 
-    my $rs = $self->schema->resultset('Project::Project')->search( { 'projectprops.type_id'=>$breeding_program_cvterm_id }, { join => 'projectprops', order_by => { -asc => 'name'}}  );
+    my $search = { 'projectprops.type_id'=>$breeding_program_cvterm_id };
+    $search->{'me.project_id'} = { -in => $ids } if defined $ids;
+    my $rs = $self->schema->resultset('Project::Project')->search($search, { join => 'projectprops', order_by => { -asc => 'name'}}  );
 
     my @projects;
     while (my $row = $rs->next()) {
