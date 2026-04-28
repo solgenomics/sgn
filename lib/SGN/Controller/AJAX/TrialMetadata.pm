@@ -2905,6 +2905,12 @@ sub delete_field_coord : Path('/ajax/phenotype/delete_field_coords') Args(0) {
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    $c->stash->{trial_id} = $trial_id;
+    $c->stash->{schema} = $schema;
+    $c->stash->{trial} = CXGN::Trial->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id,
+    });
 
     if ($self->privileges_denied($c)) {
         $c->stash->{rest} = { error => "You have insufficient access privileges to update this map." };
