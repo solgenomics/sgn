@@ -2790,10 +2790,8 @@ sub get_plot_related_attributes_select : Path('/ajax/html/select/plot_related_at
     push @related_attributes, ['breedingProgram', 'breeding program'];
     push @related_attributes, ['trialName', 'trial name'];
     push @related_attributes, ['accessionName', 'accession name'];
-    push @related_attributes, ['intercropAccessionName', 'intercrop accession name'];
     push @related_attributes, ['plotNumber', 'plot number'];
     push @related_attributes, ['blockNumber', 'block number'];
-    push @related_attributes, ['isAcontrol', 'is a control'];
     push @related_attributes, ['repNumber', 'rep number'];
     push @related_attributes, ['rangeNumber', 'range number'];
     push @related_attributes, ['rowNumber', 'row number'];
