@@ -76,7 +76,10 @@ sub download {
             treatment_project_ids => $self->treatment_project_ids,
             selected_columns => $self->selected_columns,
             selected_trait_ids => $self->trait_list,
-            include_measured => $self->include_measured
+            include_measured => $self->include_measured,
+            include_plot_order => $self->include_plot_order,
+            plot_order => $self->plot_order,
+            plot_start => $self->plot_start,
         });
         my $output = $trial_layout_download->get_layout_output();
         if ($output->{error_messages}){

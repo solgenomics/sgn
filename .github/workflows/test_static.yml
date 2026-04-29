@@ -35,11 +35,11 @@ jobs:
       - name: Create manual pdf         
         working-directory: ./docs/r_markdown_docs
         run: R -q -e 'bookdown::render_book("index.Rmd", "bookdown::pdf_book")'        
-      - name: Commit and push documentation        
-        run: |          
-          date > generated.txt
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add --force --all docs/
-          git commit -m "update bookdown docs"
-          git push
+      # - name: Commit and push documentation
+      #   run: |
+      #     date > generated.txt
+      #     git config user.name github-actions
+      #     git config user.email github-actions@github.com
+      #     git add --force --all docs/
+      #     git commit -m "update bookdown docs"
+      #     git push

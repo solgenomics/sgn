@@ -22,6 +22,7 @@ package SGN::Controller::AJAX::PhenotypesUpload;
 use Moose;
 use Try::Tiny;
 use DateTime;
+use Date::Parse;
 use File::Slurp;
 use File::Spec::Functions;
 use File::Copy;
@@ -31,6 +32,9 @@ use CXGN::Phenotypes::StorePhenotypes;
 use List::MoreUtils qw /any /;
 use CXGN::BreederSearch;
 use CXGN::BreedersToolbox::Projects;
+use CXGN::Phenotype;
+use CXGN::Trial;
+use CXGN::Project;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -557,6 +561,94 @@ sub view_all_uploads :Path('/ajax/phenotype/view_uploads') Args(0) {
     $c->stash->{rest} = $file_list;
 }
 
-#########
+sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $observationID = shift;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = {error => "You need to be logged in to record a phenotype." };
+        return;
+    }
+
+    my $user = $c->user();
+
+    my $user_type = $user->get_object->get_user_type();
+    my $username = $user->get_username();
+
+    my $new_value = $c->req->param('new_observation_value');
+    my $new_timestamp = $c->req->param('new_observation_timestamp');
+    my $trial_id = $c->req->param('trial_id');
+
+    if (!$trial_id) {
+        $c->stash->{rest} = {error => "This observation can only be edited in relation to a trial."};
+        return;
+    }
+
+    if (!$observationID) {
+        $c->stash->{rest} = {error => "You must supply an observation ID!"};
+        return;
+    }
+
+    if (!defined($new_value) || $new_value eq '') {
+        $c->stash->{rest} = {error => "This function can edit existing phenotype entries, but not delete them. Please enter a value."};
+        return;
+    }
+
+    #check for user permissions on this trial
+    my $this_trial = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        trial_id => $trial_id
+    });
+
+    my $breeding_program = $this_trial->get_breeding_program();
+
+    if ( ! $user->check_roles("curator")  ) {
+        $c->stash->{rest} = {error => "You do not have permission to make edits on this trial."};
+        return;
+    }
+
+    if ($new_timestamp) {
+        my $epoch = str2time($new_timestamp);
+        my $dt = DateTime->from_epoch(epoch => $epoch);
+        $new_timestamp = $dt->strftime('%Y-%m-%d %H:%M:%S%z');
+    }
+
+    my $phenotype = CXGN::Phenotype->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        overwrite => 1,
+        phenotype_id => $observationID,
+    });
+
+    my $pheno_uniquename = $phenotype->uniquename();
+    $pheno_uniquename =~ s/observation: [\w]*/observation: $new_value/;
+    if ($new_timestamp) {
+        $pheno_uniquename =~ s/date: [^,]*,/date: $new_timestamp,/;
+    }
+    if (!$phenotype->operator()) {
+        $pheno_uniquename =~ s/operator: [\w]*,/operator: $username,/;
+    }
+
+    try {
+        $phenotype->value($new_value);
+        if ($new_timestamp) {
+            $phenotype->collect_date($new_timestamp);
+        }
+        if (!$phenotype->operator()) {
+            $phenotype->operator($username);
+        }
+        $phenotype->uniquename($pheno_uniquename);
+        $phenotype->store();
+    } catch {
+        $c->stash->{rest} = {error => "An error occurred trying to store phenotype: $_"};
+        return;
+    };
+
+    $c->stash->{rest} = {success => 1};
+    return;
+
+}
+
+######### 
 1;
 #########

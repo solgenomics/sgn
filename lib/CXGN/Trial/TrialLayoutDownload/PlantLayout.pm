@@ -51,8 +51,11 @@ sub retrieve {
     my $all_stats = $self->all_stats;
     my @output;
     my $trial_stock_type = $self->trial_stock_type();
+    my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json');
+    my @possible_cols = ('plant_name','plant_id','subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','range_number','rep_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','plant_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json');
+
+    $selected_cols{plot_order} = 1 if $include_plot_order;
 
     my @header;
     foreach (@possible_cols){
@@ -78,6 +81,16 @@ sub retrieve {
     my $trial_year = $trial->get_year ? $trial->get_year : '';
     my $trial_planting_date = $trial->get_planting_date ? $trial->get_planting_date : '';
     my $pedigree_strings = $self->_get_all_pedigrees(\%design);
+
+    # Add plot order to design, if requested by the user
+    if ( $include_plot_order ) {
+        my $results = CXGN::Trial->get_sorted_plots($schema, [$self->trial_id], $self->plot_order, $self->plot_start);
+        if ( $results->{plots} ) {
+            foreach (@{$results->{plots}}) {
+                $design{$_->{plot_number}}->{plot_order} = $_->{order};
+            }
+        }
+    }
 
     #Turn plot level design into a plant level design that can be sorted on plot_number and then plant index number..
     my @plant_design;
@@ -131,8 +144,10 @@ sub retrieve {
     my @overall_trait_names = sort keys %$overall_performance_hash;
     my @exact_trait_names = sort keys %$exact_performance_hash;
 
+    # sort plots by plot order, if requested, otherwise plot number then subplot and plant
     no warnings 'uninitialized';
-    @plant_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{subplot_number} <=> $b->{subplot_number} || $a->{plant_number} <=> $b->{plant_number} } @plant_design;
+    my $sort_key = $include_plot_order ? 'plot_order' : 'plot_number';
+    @plant_design = sort { $a->{$sort_key} <=> $b->{$sort_key} || $a->{subplot_number} <=> $b->{subplot_number} || $a->{plant_number} <=> $b->{plant_number} } @plant_design;
 
     foreach my $design_info (@plant_design) {
         my $line;
