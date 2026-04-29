@@ -101,7 +101,7 @@ sub search {
     $h_treatments->execute();
     while (my ($trial_id, $treatment_db, $treatment_id_str, $treatment_def, $treatment_value, $treatment_ts, $stock_id) = $h_treatments->fetchrow_array()) {
         my $key = "$trial_id\0$treatment_id_str\0$treatment_value";
-        my $tg = $treatment_groups{$key} //= {
+        my $tg = $treatment_groups{$key} ||= {
             trial_id         => $trial_id,
             treatment_db     => $treatment_db,
             treatment_id_str => $treatment_id_str,
@@ -120,7 +120,7 @@ sub search {
     my $h_mgmt = $schema->storage->dbh()->prepare($q_mgmt);
     $h_mgmt->execute();
     while (my ($trial_id, $json_value) = $h_mgmt->fetchrow_array()) {
-        my $factors = eval { decode_json($json_value) } // [];
+        my $factors = eval { decode_json($json_value) } || [];
         for my $factor (@$factors) {
             push @mgmt_factor_rows, { trial_id => $trial_id, factor => $factor };
         }
@@ -132,7 +132,7 @@ sub search {
     for my $key (sort keys %treatment_groups) {
         my $tg      = $treatment_groups{$key};
         my $trial_id = $tg->{trial_id};
-        my $meta    = $study_meta{$trial_id} // {};
+        my $meta    = $study_meta{$trial_id} || {};
 
         my @discrete_dates = map { _format_timestamp($_) } sort keys %{$tg->{timestamps}};
         my @stock_ids      = sort keys %{$tg->{stock_ids}};
@@ -150,7 +150,7 @@ sub search {
                 startDate     => undef,
             },
             eventDbId            => $tg->{treatment_id_str},
-            eventDescription     => $tg->{treatment_def} // $tg->{treatment_id_str},
+            eventDescription     => $tg->{treatment_def} || $tg->{treatment_id_str},
             eventParameters      => [ { value => $tg->{treatment_value} } ],
             eventType            => 'treatment',
             eventTypeDbId        => $tg->{treatment_db},
@@ -164,11 +164,11 @@ sub search {
     for my $mf (@mgmt_factor_rows) {
         my $trial_id   = $mf->{trial_id};
         my $factor     = $mf->{factor};
-        my $meta       = $study_meta{$trial_id} // {};
-        my $all_stocks = $study_stocks{$trial_id} // [];
-        my $factor_type = $factor->{type} // '';
+        my $meta       = $study_meta{$trial_id} || {};
+        my $all_stocks = $study_stocks{$trial_id} || [];
+        my $factor_type = $factor->{type} || '';
 
-        my @discrete_dates = map { _format_timestamp($_) } @{$factor->{completions} // []};
+        my @discrete_dates = map { _format_timestamp($_) } @{$factor->{completions} || []};
 
         push @data, {
             additionalInfo => {
