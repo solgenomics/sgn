@@ -122,13 +122,28 @@ sub _parse_with_plugin {
 
     my $parsed_data = $self->_parsed_data()->{parsed};
 
+    my @error_messages = ();
+    my %seen = ();
     foreach my $row (@$parsed_data) {
+        if (! $seen{$row->{'plot_name'}}) {
+            $seen{$row->{'plot_name'}} = 1;
+        } else {
+            my $plot_name = $row->{'plot_name'};
+            push @error_messages, "$plot_name appears in the plot list more than once.";
+        }
         $parsed_entries->{$row->{'plot_name'}} = {
             'old_plot_name' => $row->{'plot_name'},
             'new_plot_name' => $row->{'new_plot_name'} ? $row->{'new_plot_name'} : '',
             'new_accession_name' => $row->{'accession_name'},
             'new_accession_id' => $parsed_accession_ids->{$row->{'accession_name'}}
         };
+    }
+
+    if (scalar(@error_messages) > 0) {
+        $self->_set_parse_errors({
+            'error_messages' => \@error_messages
+        });
+        return 0;
     }
 
     $self->_set_parsed_data($parsed_entries);
