@@ -62,7 +62,7 @@ for (my $i = 0; $i < (scalar @folders); $i++) {
                 next;
             }
 
-            my $cmd = "echo -ne \"$dbuser\\n$dbpass\" | mx-run $patch -H $host -D $db -u $editinguser" . ($test ? ' -t' : '');
+            my $cmd = "echo -ne \"\$PGUSER\\n\$PGPASSWORD\" | mx-run $patch -H \$PGHOST -D \$PGDATABASE -u $editinguser" . ($test ? ' -t' : '');
             print STDERR $cmd . "\n";
             system("bash -c '$cmd'");
 

@@ -10,7 +10,7 @@ use CXGN::People::Person;
 use List::MoreUtils 'uniq';
 use JSON::XS;
 use Data::Dumper;
-
+use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller' }
 
@@ -44,7 +44,6 @@ sub index :Path :Args(0) {
     if ($c->user) {
 	($role) = $c->user()->roles(); # get the highest role
     }
-    
     if ($c->config->{homepage_display_phenotype_uploads}){
         my @file_array;
         my %file_info;
@@ -106,10 +105,10 @@ sub index :Path :Args(0) {
 	$c->stash->{template} = '/index_logged_in_user.mas';
 	$c->stash->{role} = $role;
     }
-    else { 
+    else {
 	$c->stash->{template} = '/index.mas';
     }
- 
+
 }
 
 =head2 default
@@ -242,6 +241,31 @@ sub auto : Private {
     $c->stash->{c} = $c;
     weaken $c->stash->{c};
 
+    # Allows CORS based on allowed_origins in config
+    my $request_origin = $c->request->env->{HTTP_ORIGIN};
+    my $main_production_site_url = $c->get_conf("main_production_site_url");
+
+    if ($request_origin){
+        $c->response->headers->header( "Access-Control-Allow-Credentials" => 'true' );
+        $c->response->headers->header( "Access-Control-Allow-Methods" => "POST, GET, PUT, OPTIONS" );
+        $c->response->headers->header( 'Access-Control-Allow-Headers' => 'Content-Type');
+
+        my $allowed_origins = $c->config->{"allowed_origins"};
+        my @allowed_origins;
+        if ($allowed_origins){
+            @allowed_origins = split(',', $allowed_origins);
+        }
+        if ( grep( /^$request_origin$/, @allowed_origins ) ) {
+            $c->response->headers->header( "Access-Control-Allow-Origin" => $request_origin );
+        }
+    }
+
+    my $request_uri = $c->request->env->{REQUEST_URI};
+
+    # Handle CORS pre-flight OPTIONS
+    if ($c->request->method eq "OPTIONS"){
+        return 1;
+    }
     # gluecode for logins
     #
     unless( $c->config->{'disable_login'} ) {
@@ -250,16 +274,16 @@ sub auto : Private {
             #For audit system
             $dbh->do("CREATE temporary table IF NOT EXISTS logged_in_user (sp_person_id bigint)");
 
-	    my $already_there_q = "SELECT sp_person_id FROM logged_in_user where sp_person_id=?";
-	    my $already_there_h = $dbh->prepare($already_there_q);
-	    $already_there_h->execute($sp_person_id);
-	    my ($already_there) = $already_there_h->fetchrow_array();
-	    if (!$already_there) {
-		print STDERR "inserting $sp_person_id\n";
-		my $insert_query = "INSERT INTO logged_in_user (sp_person_id) VALUES (?)";
-		my $insert_handle = $dbh->prepare($insert_query);
-		$insert_handle->execute($sp_person_id);
-	    }
+            my $already_there_q = "SELECT sp_person_id FROM logged_in_user where sp_person_id=?";
+            my $already_there_h = $dbh->prepare($already_there_q);
+            $already_there_h->execute($sp_person_id);
+            my ($already_there) = $already_there_h->fetchrow_array();
+            if (!$already_there) {
+                print STDERR "inserting $sp_person_id\n";
+                my $insert_query = "INSERT INTO logged_in_user (sp_person_id) VALUES (?)";
+                my $insert_handle = $dbh->prepare($insert_query);
+                $insert_handle->execute($sp_person_id);
+            }
             my $count_q = "select count(*) from logged_in_user";
             my $count_h = $dbh -> prepare($count_q);
             $count_h -> execute();
@@ -278,6 +302,47 @@ sub auto : Private {
                 username => $sp_person->get_username(),
                 password => $sp_person->get_password(),
             });
+        } else {
+            # If not logged in, check if we need to redirect
+            my $allowed = 0;
+
+            # allow javascript static requests
+            if ( $request_uri =~ m'^/js/') {
+                $allowed = 1;
+                no warnings 'exiting';
+                last;
+            }
+            # allow .well-known devtools static requests
+            if ( $request_uri =~ m'^/.well-known/') {
+                $allowed = 1;
+                no warnings 'exiting';
+                last;
+            }
+            # allow authentication routes
+            my @auth_routes = (
+                "/user/login", "/ajax/user/login",
+                "/authenticate/check/token", "/authenticate/oidc",
+                "/brapi/v1/token",
+            );
+            foreach my $route (@auth_routes) {
+                if ( $request_uri =~ m"^$route") {
+                    $allowed = 1;
+                    no warnings 'exiting';
+                    last;
+                }
+            }
+
+            # allow all routes when testing
+            if ($main_production_site_url eq "http://localhost:3010"){
+                $allowed = 1;
+            }
+
+            # Final decision on whether to redirect to login
+            if (not $allowed) {
+                my $redirect_url = uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query });
+                $c->res->redirect( $redirect_url );
+                return;
+            }
         }
     }
 

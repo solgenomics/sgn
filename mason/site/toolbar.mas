@@ -1,20 +1,21 @@
+<!--
+TreeImprovementBase Modifications
+  - Disable dropdown menus from opening on hover. Requiring a click improves mobile support.
+-->
 
 <nav class="navbar navbar-default navbar-fixed-top">
   <div class="container-fluid">
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
+      <button type="button" class="navbar-toggle btn glyphicon glyphicon-menu-hamburger" data-toggle="collapse" data-target="#myNavbar"></button>
       <& toolbar/logo_and_name.mas &>
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
         <& toolbar/search_menu.mas &>
-	  <& toolbar/manage.mas &>
-	  <& toolbar/analyze.mas &>
+        <& toolbar/manage.mas &>
+        <& toolbar/analyze.mas &>
         <& toolbar/about.mas &>
+        <& toolbar/new.mas &>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <& toolbar/search.mas &>
@@ -57,11 +58,6 @@
   }
 
   @media (min-width: 768px) {
-    .dropdown:hover .dropdown-menu {
-      display: block;
-      margin-top: 0;
-      padding-bottom: 10px;
-    }
     .dropdown-menu > li > a {
         line-height: 14px;
         font-size: 14px;
@@ -71,14 +67,3 @@
   }
 
 </style>
-
-<script>
-
-jQuery(document).ready(function() {
-  if (jQuery(document).width() > 768) {
-    jQuery(".menu_click_dropdown").removeClass("dropdown-toggle");
-    jQuery(".menu_click_dropdown").removeAttr("data-toggle");
-  }
-});
-
-</script>
