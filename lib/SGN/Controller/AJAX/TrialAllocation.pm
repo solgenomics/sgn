@@ -20,8 +20,10 @@ use CXGN::BreedersToolbox::Projects;
 use CXGN::Trial::ParseUpload;
 use CXGN::Trial::TrialCreate;
 use CXGN::Trial;
+use CXGN::Trial::Search;
 use CXGN::TrialStatus;
 use CXGN::Calendar;
+use CXGN::List;
 use List::MoreUtils qw(any);
 
 
@@ -63,6 +65,53 @@ sub list_accessions :Path('/ajax/trialallocation/accession_lists') Args(0) {
     @formatted = sort { lc($a->{name}) cmp lc($b->{name}) } @formatted;
 
     $c->stash->{rest} = { success => 1, lists => \@formatted };
+}
+
+sub accession_autocomplete :Path('/ajax/trialallocation/accession_autocomplete') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $term = $c->req->param('q') || $c->req->param('term') || '';
+    $term =~ s/^\s+|\s+$//g;
+
+    if (length($term) < 2) {
+        $c->stash->{rest} = { success => 1, results => [] };
+        return;
+    }
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
+    my $like = '%' . $term . '%';
+
+    my $rs = $schema->resultset('Stock::Stock')->search(
+        {
+            type_id => $accession_type_id,
+            is_obsolete => 'false',
+            -or => [
+                uniquename => { ilike => $like },
+                name => { ilike => $like }
+            ]
+        },
+        {
+            columns => [qw/stock_id uniquename name/],
+            order_by => [{ -asc => 'uniquename' }],
+            rows => 25
+        }
+    );
+
+    my @results;
+    while (my $stock = $rs->next) {
+        my $uniquename = $stock->uniquename || '';
+        my $name = $stock->name || '';
+        my $label = $name && $name ne $uniquename ? "$uniquename ($name)" : $uniquename;
+        push @results, {
+            id => $uniquename,
+            text => $label,
+            stock_id => $stock->stock_id
+        };
+    }
+
+    $c->stash->{rest} = { success => 1, results => \@results };
 }
 
 sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
@@ -121,7 +170,7 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
 
     my $n_trt = scalar(@$treatment_names);
     my $n_ctl = scalar(@$control_names);
-    
+
     # Send paramenter to a temp file
     $c->tempfiles_subdir("trial_allocation");
 
@@ -163,33 +212,41 @@ sub generate_design :Path('/ajax/trialallocation/generate_design') :Args(0) {
 
     # Run R if needed
     if ($design eq "RCBD") {
-        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/RCBD.R $outfile";
+        my $cmd = "R CMD BATCH --no-save --no-restore '--args paramfile=\"$paramfile\"' R/RCBD.R $outfile";
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
     
     if ($design eq "Doubly-Resolvable Row-Column") {
-        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/DRRC.r $outfile";
+        my $cmd = "R CMD BATCH --no-save --no-restore '--args paramfile=\"$paramfile\"' R/DRRC.r $outfile";
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
     
     if ($design eq "Un-Replicated Diagonal") {
-        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/urdd_design.R $outfile";
+        my $cmd = "R CMD BATCH --no-save --no-restore '--args paramfile=\"$paramfile\"' R/urdd_design.R $outfile";
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
 
     if ($design eq "Row-Column Design") {
-        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/rrc_design.R $outfile";
+        my $cmd = "R CMD BATCH --no-save --no-restore '--args paramfile=\"$paramfile\"' R/rrc_design.R $outfile";
         print STDERR "Running: $cmd\n";
         system($cmd);
     }
 
     if ($design eq "Augmented Row-Column") {
-        my $cmd = "R CMD BATCH '--args paramfile=\"$paramfile\"' R/augmented_row_column.R $outfile";
+        my $cmd = "R CMD BATCH --no-save --no-restore '--args paramfile=\"$paramfile\"' R/augmented_row_column.R $outfile";
         print STDERR "Running: $cmd\n";
-        system($cmd);
+        my $status = system($cmd);
+        if ($status != 0 || !-e $design_file) {
+            my $r_output = -e $outfile ? read_file($outfile) : '';
+            $c->stash->{rest} = {
+                success => 0,
+                error => 'Augmented Row-Column design generation failed. ' . ($r_output || 'No R output was produced.')
+            };
+            return;
+        }
     }
 
     ## Handelling with error messages
@@ -331,29 +388,8 @@ sub trial_types :Path('/ajax/trialallocation/trial_types') Args(0) {
 sub trial_designs :Path('/ajax/trialallocation/trial_designs') Args(0) {
     my ($self, $c) = @_;
 
-    my %supported = (
-        CRD => 'CRD',
-        RCBD => 'RCBD',
-        RRC => 'Row-Column Design',
-        DRRC => 'Doubly-Resolvable Row-Column',
-        URDD => 'Un-Replicated Diagonal',
-        Alpha => 'Alpha',
-        Lattice => 'Lattice',
-        Augmented => 'Augmented',
-        MAD => 'MAD',
-        genotyping_plate => 'genotyping_plate',
-        greenhouse => 'greenhouse',
-        'p-rep' => 'p-rep',
-        splitplot => 'splitplot',
-        Westcott => 'Westcott',
-        Analysis => 'Analysis',
-    );
-    my %aliases = (
-        'Row-Column Design' => 'RRC',
-        'Doubly-Resolvable Row-Column' => 'DRRC',
-        'Un-Replicated Diagonal' => 'URDD',
-        'Augmented Row-Column' => 'Augmented',
-    );
+    my %supported = _trial_allocation_supported_designs();
+    my %aliases = _trial_allocation_design_aliases();
 
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my %designs = %supported;
@@ -382,6 +418,161 @@ sub trial_designs :Path('/ajax/trialallocation/trial_designs') Args(0) {
     $c->stash->{rest} = {
         success => 1,
         trial_designs => \@designs
+    };
+}
+
+sub _trial_allocation_supported_designs {
+    return (
+        CRD => 'CRD',
+        RCBD => 'RCBD',
+        RRC => 'Row-Column Design',
+        DRRC => 'Doubly-Resolvable Row-Column',
+        URDD => 'Un-Replicated Diagonal',
+        Alpha => 'Alpha',
+        Lattice => 'Lattice',
+        Augmented => 'Augmented',
+        'Augmented Row-Column' => 'Augmented Row-Column',
+        MAD => 'MAD',
+        greenhouse => 'greenhouse',
+        'p-rep' => 'p-rep',
+        splitplot => 'splitplot',
+        Westcott => 'Westcott',
+    );
+}
+
+sub _trial_allocation_design_aliases {
+    return (
+        'Row-Column Design' => 'RRC',
+        'Doubly-Resolvable Row-Column' => 'DRRC',
+        'Un-Replicated Diagonal' => 'URDD',
+    );
+}
+
+sub existing_trials :Path('/ajax/trialallocation/existing_trials') Args(0) {
+    my ($self, $c) = @_;
+
+    my $location_id = $c->req->param('location_id');
+    my $year = $c->req->param('year');
+
+    if (!$location_id || !$year || $location_id eq 'null' || $year eq 'null') {
+        $c->stash->{rest} = { success => 1, trials => [] };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my %supported_designs = _trial_allocation_supported_designs();
+    my %design_aliases = _trial_allocation_design_aliases();
+    my $trial_search = CXGN::Trial::Search->new({
+        bcs_schema => $schema,
+        location_id_list => [int($location_id)],
+        year_list => ["$year"],
+        field_trials_only => 1,
+        sort_by => ' ORDER BY study.name ',
+        order_by => '',
+        externalReferenceSources => [],
+        externalReferenceIds => []
+    });
+    my ($results) = $trial_search->search();
+
+    my @trials;
+    foreach my $trial (@$results) {
+        my $design = _clean_optional_value($trial->{design});
+        my $design_code = $design_aliases{$design} || $design;
+        next unless $design_code && $supported_designs{$design_code};
+
+        push @trials, {
+            trial_id => $trial->{trial_id},
+            name => $trial->{trial_name},
+            description => $trial->{description} || '',
+            year => $trial->{year} || '',
+            location_id => $trial->{location_id} || '',
+            location_name => $trial->{location_name} || '',
+            breeding_program_id => $trial->{breeding_program_id} || '',
+            breeding_program_name => $trial->{breeding_program_name} || '',
+            design => $design_code,
+            design_name => $supported_designs{$design_code},
+            type => $trial->{trial_type_name} || $trial->{trial_type_value} || ''
+        };
+    }
+
+    $c->stash->{rest} = { success => 1, trials => \@trials };
+}
+
+sub existing_trial_design :Path('/ajax/trialallocation/existing_trial_design') Args(0) {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->req->param('trial_id');
+    if (!$trial_id || $trial_id eq 'null') {
+        $c->stash->{rest} = { success => 0, error => 'Missing trial id.' };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $trial = $schema->resultset('Project::Project')->find({ project_id => $trial_id });
+    if (!$trial) {
+        $c->stash->{rest} = { success => 0, error => 'Trial not found.' };
+        return;
+    }
+
+    my $plots = CXGN::Trial->get_sorted_plots(
+        $schema,
+        [int($trial_id)],
+        'by_row_zigzag',
+        'top_left',
+        { top => 0, right => 0, bottom => 0, left => 0 },
+        0
+    );
+
+    if (ref($plots) eq 'HASH' && $plots->{error}) {
+        $c->stash->{rest} = { success => 0, error => $plots->{error} };
+        return;
+    }
+
+    my @plots = ref($plots) eq 'HASH' ? @{$plots->{plots} || []} : @$plots;
+    if (!@plots) {
+        $c->stash->{rest} = { success => 0, error => 'No plots found for selected trial.' };
+        return;
+    }
+
+    my ($min_row, $max_row, $min_col, $max_col);
+    foreach my $plot (@plots) {
+        my $row = int($plot->{row_number} || 1);
+        my $col = int($plot->{col_number} || 1);
+        $min_row = $row if !defined($min_row) || $row < $min_row;
+        $max_row = $row if !defined($max_row) || $row > $max_row;
+        $min_col = $col if !defined($min_col) || $col < $min_col;
+        $max_col = $col if !defined($max_col) || $col > $max_col;
+    }
+
+    my @design;
+    for my $i (0 .. $#plots) {
+        my $plot = $plots[$i];
+        my $is_control = $plot->{is_a_control} || 0;
+        $is_control = ($is_control && $is_control ne 'false') ? 1 : 0;
+        my $plot_number = _clean_optional_value($plot->{plot_number})
+            || _clean_optional_value($plot->{'plot number'})
+            || _clean_optional_value($plot->{plot});
+        push @design, {
+            plot_id => $plot->{plot_id} || '',
+            plot_name => $plot->{plot_name} || '',
+            plot_number => $plot_number || ($i + 1),
+            original_plot_number => $plot_number || ($i + 1),
+            block => $plot->{block_number} || 1,
+            accession_name => $plot->{accession_name} || '',
+            is_control => $is_control
+        };
+    }
+
+    $c->stash->{rest} = {
+        success => 1,
+        trial => {
+            trial_id => int($trial_id),
+            name => $trial->name,
+            description => $trial->description || '',
+            n_row => ($max_row - $min_row + 1),
+            n_col => ($max_col - $min_col + 1),
+            design => \@design
+        }
     };
 }
 
@@ -466,22 +657,132 @@ sub save_layout :Path('/ajax/trialallocation/save_layout') Args(0) {
     $stored->{layouts} = \@remaining;
 
     my $encoded = encode_json($stored);
-    if ($prop) {
-        $prop->value($encoded);
-        $prop->update();
-    } else {
-        $schema->resultset('NaturalDiversity::NdGeolocationprop')->create({
-            nd_geolocation_id => $location_id,
-            type_id => $type_id,
-            value => $encoded
+    my $existing_trials_updated = 0;
+    my $saved = eval {
+        $schema->txn_do(sub {
+            if ($prop) {
+                $prop->value($encoded);
+                $prop->update();
+            } else {
+                $schema->resultset('NaturalDiversity::NdGeolocationprop')->create({
+                    nd_geolocation_id => $location_id,
+                    type_id => $type_id,
+                    value => $encoded
+                });
+            }
+            $existing_trials_updated = _update_existing_trial_layouts_from_multi_layout($schema, $layout);
         });
+        1;
+    };
+
+    if (!$saved) {
+        $c->stash->{rest} = {
+            success => 0,
+            error => "Could not save layout: $@"
+        };
+        return;
     }
 
     $c->stash->{rest} = {
         success => 1,
         message => 'Layout saved.',
-        layout_count => scalar @remaining
+        layout_count => scalar @remaining,
+        existing_trials_updated => $existing_trials_updated
     };
+}
+
+sub _update_existing_trial_layouts_from_multi_layout {
+    my ($schema, $layout) = @_;
+
+    my $trial_layout_json_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
+    my $row_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+
+    my $updated_trials = 0;
+
+    foreach my $placed_trial (@{$layout->{placed_trials} || []}) {
+        my $project_id = _clean_optional_value($placed_trial->{existing_project_id});
+        next unless $project_id && $project_id =~ /^\d+$/;
+
+        my $project = $schema->resultset('Project::Project')->find({ project_id => $project_id });
+        die "Existing trial $project_id was not found.\n" unless $project;
+
+        my $layout_prop = $project->projectprops->find({ type_id => $trial_layout_json_type_id });
+        my $design = {};
+        if ($layout_prop && $layout_prop->value) {
+            my $decoded = eval { decode_json($layout_prop->value) };
+            die "Could not decode trial_layout_json for trial $project_id: $@\n" if $@;
+            $design = $decoded if $decoded && ref($decoded) eq 'HASH';
+        }
+
+        foreach my $plot (@{$placed_trial->{plots} || []}) {
+            my $row = _clean_optional_value($plot->{row});
+            my $col = _clean_optional_value($plot->{col});
+            my $plot_id = _clean_optional_value($plot->{plot_id});
+            my $plot_name = _clean_optional_value($plot->{plot_name});
+            my $plot_number = _clean_optional_value($plot->{plot_number}) || _clean_optional_value($plot->{original_plot_number});
+
+            die "Existing trial $project_id has a placed plot without row or column.\n" unless $row ne '' && $col ne '';
+
+            my $entry_key = _find_trial_layout_entry_key($design, $plot_id, $plot_name, $plot_number);
+            $entry_key ||= $plot_number || $plot_id || _clean_optional_value($plot->{design_index});
+            next unless defined $entry_key && $entry_key ne '';
+
+            $design->{$entry_key} ||= {};
+            $plot_id ||= _clean_optional_value($design->{$entry_key}->{plot_id});
+
+            if ($plot_id && $plot_id =~ /^\d+$/) {
+                $schema->resultset("Stock::Stockprop")->update_or_create({
+                    type_id => $row_number_type_id,
+                    stock_id => $plot_id,
+                    rank => 0,
+                    value => $row
+                }, { key => 'stockprop_c1' });
+
+                $schema->resultset("Stock::Stockprop")->update_or_create({
+                    type_id => $col_number_type_id,
+                    stock_id => $plot_id,
+                    rank => 0,
+                    value => $col
+                }, { key => 'stockprop_c1' });
+            }
+
+            $design->{$entry_key}->{row_number} = $row;
+            $design->{$entry_key}->{col_number} = $col;
+            $design->{$entry_key}->{plot_id} = $plot_id if $plot_id;
+            $design->{$entry_key}->{plot_name} = $plot_name if $plot_name;
+            $design->{$entry_key}->{plot_number} = $plot_number if $plot_number;
+            $design->{$entry_key}->{block_number} = _clean_optional_value($plot->{block}) if _clean_optional_value($plot->{block}) ne '';
+            $design->{$entry_key}->{accession_name} = _clean_optional_value($plot->{accession_name}) if _clean_optional_value($plot->{accession_name}) ne '';
+            $design->{$entry_key}->{is_a_control} = $plot->{is_control} ? 1 : 0 if exists $plot->{is_control};
+        }
+
+        $schema->resultset('Project::Projectprop')->update_or_create({
+            project_id => $project_id,
+            type_id => $trial_layout_json_type_id,
+            rank => 0,
+            value => encode_json($design)
+        }, { key => 'projectprop_c1' });
+
+        $updated_trials++;
+    }
+
+    return $updated_trials;
+}
+
+sub _find_trial_layout_entry_key {
+    my ($design, $plot_id, $plot_name, $plot_number) = @_;
+
+    return $plot_number if $plot_number && exists $design->{$plot_number};
+
+    foreach my $key (keys %{$design || {}}) {
+        my $entry = $design->{$key} || {};
+        return $key if $plot_id && defined $entry->{plot_id} && "$entry->{plot_id}" eq "$plot_id";
+        return $key if $plot_name && defined $entry->{plot_name} && "$entry->{plot_name}" eq "$plot_name";
+        return $key if $plot_number && defined $entry->{plot_number} && "$entry->{plot_number}" eq "$plot_number";
+    }
+
+    return;
 }
 
 sub get_layout :Path('/ajax/trialallocation/get_layout') Args(0) {
@@ -536,6 +837,137 @@ sub get_layout :Path('/ajax/trialallocation/get_layout') Args(0) {
     };
 }
 
+sub delete_layout :Path('/ajax/trialallocation/delete_layout') Args(0) {
+    my ($self, $c) = @_;
+
+    if (!$c->user || !$c->user->check_roles('curator')) {
+        $c->stash->{rest} = { success => 0, error => 'Only curators can delete a saved layout view.' };
+        return;
+    }
+
+    my $location_id = $c->req->param('location_id');
+    my $year = $c->req->param('year');
+    my $season = $c->req->param('season');
+    $season = '' unless defined $season;
+
+    if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
+        $c->stash->{rest} = { success => 0, error => 'A valid location and year are required to delete layout.' };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $type_id = eval { $self->_multi_trial_layout_type_id($c) };
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => "$@" };
+        return;
+    }
+
+    my $prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+        nd_geolocation_id => $location_id,
+        type_id => $type_id
+    });
+
+    if (!$prop || !$prop->value) {
+        $c->stash->{rest} = { success => 0, error => 'No saved layout view was found.' };
+        return;
+    }
+
+    my $stored = eval { decode_json($prop->value) };
+    if (!$stored || ref($stored) ne 'HASH') {
+        $c->stash->{rest} = { success => 0, error => 'Stored layout JSON could not be decoded.' };
+        return;
+    }
+
+    my @remaining = grep { !_layout_key_matches($_, $year, $season) } @{$stored->{layouts} || []};
+    if (@remaining == scalar(@{$stored->{layouts} || []})) {
+        $c->stash->{rest} = { success => 0, error => 'No matching saved layout view was found.' };
+        return;
+    }
+
+    $stored->{layouts} = \@remaining;
+    $prop->value(encode_json($stored));
+    $prop->update();
+
+    $c->stash->{rest} = { success => 1, layout_count => scalar @remaining };
+}
+
+sub delete_layout_trial :Path('/ajax/trialallocation/delete_layout_trial') Args(0) {
+    my ($self, $c) = @_;
+
+    if (!$c->user || !$c->user->check_roles('curator')) {
+        $c->stash->{rest} = { success => 0, error => 'Only curators can remove a trial from a saved layout view.' };
+        return;
+    }
+
+    my $location_id = $c->req->param('location_id');
+    my $year = $c->req->param('year');
+    my $season = $c->req->param('season');
+    my $root = _clean_optional_value($c->req->param('root'));
+    my $trial_index = _clean_optional_value($c->req->param('trial_index'));
+    $season = '' unless defined $season;
+
+    if (!$location_id || $location_id !~ /^\d+$/ || !$year) {
+        $c->stash->{rest} = { success => 0, error => 'A valid location and year are required to update layout.' };
+        return;
+    }
+    if (!$root && $trial_index eq '') {
+        $c->stash->{rest} = { success => 0, error => 'A trial identifier is required.' };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $type_id = eval { $self->_multi_trial_layout_type_id($c) };
+    if ($@) {
+        $c->stash->{rest} = { success => 0, error => "$@" };
+        return;
+    }
+
+    my $prop = $schema->resultset('NaturalDiversity::NdGeolocationprop')->find({
+        nd_geolocation_id => $location_id,
+        type_id => $type_id
+    });
+
+    if (!$prop || !$prop->value) {
+        $c->stash->{rest} = { success => 0, error => 'No saved layout view was found.' };
+        return;
+    }
+
+    my $stored = eval { decode_json($prop->value) };
+    if (!$stored || ref($stored) ne 'HASH') {
+        $c->stash->{rest} = { success => 0, error => 'Stored layout JSON could not be decoded.' };
+        return;
+    }
+
+    my $removed = 0;
+    foreach my $layout (@{$stored->{layouts} || []}) {
+        next unless _layout_key_matches($layout, $year, $season);
+
+        my @placed = grep {
+            my $matches_root = $root && (($_->{root} || '') eq $root);
+            my $matches_index = $trial_index ne '' && (($_->{trial_index} // '') eq $trial_index);
+            my $remove = $matches_root || (!$root && $matches_index);
+            $removed++ if $remove;
+            !$remove;
+        } @{$layout->{placed_trials} || []};
+
+        my %remaining_indexes = map { $_->{trial_index} => 1 } @placed;
+        my @forms = grep { $remaining_indexes{$_->{trial_index}} } @{$layout->{trial_forms} || []};
+        $layout->{placed_trials} = \@placed;
+        $layout->{trial_forms} = \@forms;
+        last;
+    }
+
+    if (!$removed) {
+        $c->stash->{rest} = { success => 0, error => 'No matching trial was found in the saved layout view.' };
+        return;
+    }
+
+    $prop->value(encode_json($stored));
+    $prop->update();
+
+    $c->stash->{rest} = { success => 1, removed => $removed };
+}
+
 sub _trial_allocation_design_type {
     my $design = shift || '';
 
@@ -556,7 +988,6 @@ sub _trial_allocation_display_design_type {
         RRC => 'Row-Column Design',
         DRRC => 'Doubly-Resolvable Row-Column',
         URDD => 'Un-Replicated Diagonal',
-        Augmented => 'Augmented Row-Column',
     );
 
     return $design_map{$design} || $design;
@@ -645,8 +1076,8 @@ sub _layout_to_multiple_trial_rows {
                 plot_name => _plot_name_from_trial_and_number($trial_name, $plot_number),
                 trial_type => _clean_optional_value($form->{type}),
                 trial_stock_type => 'accession',
-                plot_width => _clean_optional_value($field->{plot_width}),
-                plot_length => _clean_optional_value($field->{plot_length}),
+                plot_width => _clean_optional_value($form->{plot_width}) || _clean_optional_value($field->{plot_width}),
+                plot_length => _clean_optional_value($form->{plot_length}) || _clean_optional_value($field->{plot_length}),
                 is_a_control => $plot->{filler_accession} ? 0 : ($plot->{is_control} ? 1 : 0),
                 row_number => _clean_optional_value($plot->{row}),
                 col_number => _clean_optional_value($plot->{col})
@@ -730,14 +1161,21 @@ sub save_trials_database :Path('/ajax/trialallocation/save_trials_database') Arg
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $username = $c->user()->get_object()->get_username();
     my @saved_trials;
+    my $existing_trials_updated = 0;
 
     eval {
-        my $rows = _layout_to_multiple_trial_rows($layout, $schema);
-        my $filepath = $self->_write_multiple_trial_upload_file($c, $rows);
-        my $parsed_data = _parse_multiple_trial_upload_file($schema, $filepath);
+        my $new_trial_layout = _layout_without_existing_trials($layout);
+        my $rows = @{$new_trial_layout->{placed_trials} || []} ? _layout_to_multiple_trial_rows($new_trial_layout, $schema) : [];
+        my ($filepath, $parsed_data);
+        if (@$rows) {
+            $filepath = $self->_write_multiple_trial_upload_file($c, $rows);
+            $parsed_data = _parse_multiple_trial_upload_file($schema, $filepath);
+        }
 
         $schema->txn_do(sub {
-            foreach my $trial_name (sort keys %$parsed_data) {
+            $existing_trials_updated = _update_existing_trial_layouts_from_multi_layout($schema, $layout);
+
+            foreach my $trial_name (sort keys %{$parsed_data || {}}) {
                 my $trial_design = $parsed_data->{$trial_name};
                 my %trial_info_hash = (
                     chado_schema => $schema,
@@ -791,6 +1229,9 @@ sub save_trials_database :Path('/ajax/trialallocation/save_trials_database') Arg
                 };
             }
         });
+
+        die "There are no new trials or existing-trial coordinate updates to save.\n"
+            unless @saved_trials || $existing_trials_updated;
     };
     if ($@) {
         my $error = "$@";
@@ -801,8 +1242,27 @@ sub save_trials_database :Path('/ajax/trialallocation/save_trials_database') Arg
 
     $c->stash->{rest} = {
         success => 1,
-        trials => \@saved_trials
+        trials => \@saved_trials,
+        existing_trials_updated => $existing_trials_updated
     };
+}
+
+sub _layout_without_existing_trials {
+    my $layout = shift;
+
+    my @placed_trials = grep {
+        !_clean_optional_value($_->{existing_project_id})
+    } @{$layout->{placed_trials} || []};
+    my %trial_indexes = map { $_->{trial_index} => 1 } @placed_trials;
+    my @trial_forms = grep {
+        $trial_indexes{$_->{trial_index}}
+    } @{$layout->{trial_forms} || []};
+
+    my %copy = %$layout;
+    $copy{placed_trials} = \@placed_trials;
+    $copy{trial_forms} = \@trial_forms;
+
+    return \%copy;
 }
 
 
