@@ -417,6 +417,7 @@ sub store {
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
     my $intercrop_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'intercrop_plot_of', 'stock_relationship')->cvterm_id();
+    my $filler_plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row( $chado_schema, 'filler_plot', 'stock_property' )->cvterm_id();
 
     my @source_stock_types = @{$self->get_source_stock_types()};
 
@@ -630,6 +631,8 @@ sub store {
             }
             my $additional_info = $design{$key}->{additional_info} ? encode_json $design{$key}->{additional_info} : undef;
 
+            my $is_filler = $design{$key}->{additional_info}->{filler_plot};
+
             my $facility_identifier;
             if ($design{$key}->{facility_identifier}) {
                 $facility_identifier = $design{$key}->{facility_identifier};
@@ -719,6 +722,10 @@ sub store {
                 }
                 if ($facility_identifier) {
                     push @plot_stock_props, { type_id => $self->get_facility_identifier_cvterm_id, value => $facility_identifier };
+                }
+
+                if ($is_filler) {
+                    push @plot_stock_props, { type_id => $filler_plot_cvterm_id, value => $is_filler };
                 }
 
                 my @plot_subjects;

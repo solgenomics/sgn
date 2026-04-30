@@ -2538,17 +2538,24 @@ sub remove_filler_plots : Chained('trial') PathPart('remove_fillers') Args(0) {
 
     my $stocks_rs = $schema->resultset('Stock::Stock')->search(
         {
-            'me.uniquename'      => { ilike => '%filler%' },
             'project.project_id' => $trial_id,
+            'stockprops.type_id' => SGN::Model::Cvterm->get_cvterm_row(
+                $schema,
+                'filler_plot',
+                'stock_property'
+            )->cvterm_id(),
         },
         {
-            join => {
-                nd_experiment_stocks => {
-                    nd_experiment => {
-                        nd_experiment_projects => 'project'
+            join => [
+                {
+                    nd_experiment_stocks => {
+                        nd_experiment => {
+                            nd_experiment_projects => 'project'
+                        }
                     }
-                }
-            },
+                },
+                'stockprops'
+            ],
             distinct => 1,
         }
     );
@@ -2571,8 +2578,10 @@ sub remove_filler_plots : Chained('trial') PathPart('remove_fillers') Args(0) {
             my $layout = decode_json($row->value);
 
             # Remove filler plot numbers from projectprop.value json
+            my %filler_ids = map { $_ => 1 } @stock_ids;
+
             foreach my $plot_number (keys %$layout) {
-                if ($layout->{$plot_number}->{accession_name} =~ /filler/i) {
+                if ($filler_ids{ $layout->{$plot_number}->{plot_id} }) {
                     delete $layout->{$plot_number};
                 }
             }

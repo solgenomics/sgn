@@ -714,7 +714,7 @@ $trial_stock_type => undef
             <div class="modal-body">
                 <div class="container-fluid">
 
-                    <p3>This will remove all plots with accessions that contain the string "filler". Do you want to continue?</p3> </br></br>
+                    <p3>This will remove all filler plots in this trial. Do you want to continue?</p3> </br></br>
 
                 </div>
             </div>
