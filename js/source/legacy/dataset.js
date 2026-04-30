@@ -9,11 +9,17 @@ function datasetDelete(val) {
 }
 
 function datasetPublic(val) {
-    datasets.makePublicDataset(val);
+    datasets.makePublicDataset(val, () => {
+        jQuery("#dataset-edit-private").show();
+        jQuery("#dataset-edit-public").hide();
+    });
 }
 
 function datasetPrivate(val) {
-    datasets.makePrivateDataset(val);
+    datasets.makePrivateDataset(val, () => {
+        jQuery("#dataset-edit-private").hide();
+        jQuery("#dataset-edit-public").show();
+    });
 }
 
 function datasetEdit() {

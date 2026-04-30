@@ -55,12 +55,24 @@ $dataset_is_public => 0
                     <tr>
                         <td>Edit</td>
                         <td>
-% if ( $dataset_is_public ) {
-                            <button style="margin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetPrivate(<% $dataset_id %>)">Make Private</button>
-% } else {
-                            <button style="margin-left:4px;" class="btn btn-sm btn-primary" onclick="datasetPublic(<% $dataset_id %>)">Make Public</button>
-% }
-                            <button style="margin-left:4px;" class="btn btn-sm btn-danger" onclick="datasetDelete(<% $dataset_id %>)">Delete</button>
+                            <button id="dataset-edit-private"
+                                style="display: <% $dataset_is_public ? 'inline-block' : 'none' %>" 
+                                class="btn btn-sm btn-primary" 
+                                onclick="datasetPrivate(<% $dataset_id %>)">
+                                    Make Private
+                            </button>
+                            <button id="dataset-edit-public"
+                                style="display: <% $dataset_is_public ? 'none' : 'inline-block' %>"
+                                class="btn btn-sm btn-primary"
+                                onclick="datasetPublic(<% $dataset_id %>)">
+                                    Make Public
+                            </button>
+                            <button 
+                                style="margin-left:4px;"
+                                class="btn btn-sm btn-danger"
+                                onclick="datasetDelete(<% $dataset_id %>)">
+                                    Delete
+                            </button>
                         </td>
                     </tr>
 % }

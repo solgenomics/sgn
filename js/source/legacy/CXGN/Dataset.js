@@ -90,7 +90,7 @@ CXGN.Dataset.prototype = {
 	});
     },
 
-    makePublicDataset: function(id) {
+    makePublicDataset: function(id, callback) {
         var dataset;
         jQuery.ajax( {
             'url' : '/ajax/dataset/set_public/'+id,
@@ -98,8 +98,13 @@ CXGN.Dataset.prototype = {
             'success': function(response) {
                 if (response.error) {
                     alert('An error occurred during action. '+response.error);
-		} else {
-                    alert('The dataset is now public.');
+                } else {
+                    if ( callback ) {
+                        return callback();
+                    }
+                    else {
+                        alert('The dataset is now public.');
+                    }
                 }
             },
             'error': function(response) {
@@ -109,7 +114,7 @@ CXGN.Dataset.prototype = {
         });
     },
 
-   makePrivateDataset: function(id) {
+   makePrivateDataset: function(id, callback) {
         var dataset;
         jQuery.ajax( {
             'url' : '/ajax/dataset/set_private/'+id,
@@ -118,7 +123,12 @@ CXGN.Dataset.prototype = {
                 if (response.error) {
                     alert('An error occurred during action. '+response.error);
                 } else {
-                    alert('The dataset is now private.');
+                    if ( callback ) {
+                        return callback();
+                    }
+                    else {
+                        alert('The dataset is now private.');
+                    }
                 }
             },
             'error': function(response) {

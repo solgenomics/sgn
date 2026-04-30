@@ -394,7 +394,7 @@ sub BUILD {
     $self->category_order($dataset->{category_order});
     $self->tool_compatibility($dataset->{tool_compatibility});
     $self->is_live($dataset->{is_live});
-    $self->is_public($dataset->{is_public}); 
+    $self->is_public($row->is_public); 
     if (exists $args->{outliers}) {
         $self->outliers($args->{outliers});
     } else {
