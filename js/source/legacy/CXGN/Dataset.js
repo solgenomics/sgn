@@ -70,24 +70,28 @@ CXGN.Dataset.prototype = {
 
     },
 
-    deleteDataset: function(id) {
+    deleteDataset: function(id, callback) {
       	var dataset;
-	jQuery.ajax( {
-	    'url' : '/ajax/dataset/delete/'+id,
-	    'async': false,
-	    'success': function(response) {
-		if (response.error) {
-		    alert('An error occurred during dataset deletion. '+response.error);
-		}
-		else {
-		    alert('The dataset has been deleted.');
-		}
-	    },
-	    'error': function(response) {
-		alert('An error occurred. The specified dataset may not exist. Please try again.'+JSON.stringify(response));
-		
-	    }
-	});
+        jQuery.ajax( {
+            'url' : '/ajax/dataset/delete/'+id,
+            'async': false,
+            'success': function(response) {
+                if (response.error) {
+                    alert('An error occurred during dataset deletion. '+response.error);
+                }
+                else {
+                    if ( callback ) {
+                        return callback();
+                    }
+                    else {
+                        alert('The dataset has been deleted.');
+                    }
+                }
+            },
+            'error': function(response) {
+                alert('An error occurred. The specified dataset may not exist. Please try again.'+JSON.stringify(response));
+            }
+        });
     },
 
     makePublicDataset: function(id, callback) {

@@ -4,7 +4,9 @@ var datasets = new CXGN.Dataset();
 
 function datasetDelete(val) {
     if ( confirm(`Dataset. Are you sure you would like to delete it? Deletion cannot be undone.`)) {
-        datasets.deleteDataset(val);
+        datasets.deleteDataset(val, () => {
+            window.location.reload();
+        });
     }
 }
 

@@ -206,6 +206,7 @@ export function init(datasetId, datasetName, baseWidth) {
             // Handle Select Events
             let selection = document.getElementById("trait_selection");
             selection.addEventListener("change", (event) => {
+                jQuery(".hide_until_trait_selected").css("display", event.target.value === 'default' ? 'none' : 'flex');
                 d3.select("svg").remove();
                 LocalThis.selection = event.target.value;
                 LocalThis.setData();

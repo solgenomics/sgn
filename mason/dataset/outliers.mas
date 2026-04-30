@@ -14,7 +14,7 @@ $dataset_name
         </select>
     </div>
 
-    <div style="margin: 15px; display: flex; gap: 15px; flex-wrap: wrap">
+    <div class="hide_until_trait_selected" style="margin: 15px; display: none; gap: 15px; flex-wrap: wrap">
         <div style="min-width: 300px; flex-grow: 1">
             <div id="outliers_range">
                 <div id="custom-handle" class="ui-slider-handle"></div>
@@ -40,7 +40,7 @@ $dataset_name
 
 <div style="margin: 15px 0;">
     <div id="trait_graph"></div>
-    <div style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: space-around">
+    <div class="hide_until_trait_selected" style="display: none; flex-wrap: wrap; gap: 5px; justify-content: space-around">
         <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
         <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
         <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
@@ -112,6 +112,10 @@ jQuery(document).ready( function() {
 
 
 <style>
+    .hide_until_trait_selected {
+        display: none;
+    }
+
     .top-row {
         # display: flex;
         # justify-content: center;

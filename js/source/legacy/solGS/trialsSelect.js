@@ -114,10 +114,10 @@ jQuery(document).ready(function () {
                 });
                 
             } else {
-                console.log("No trials found for dataset " + datasetName);
+                console.log("No trials found for dataset " + datasetId);
             }
         }).fail(function () {
-            console.error("Failed to retrieve trials for dataset " + datasetName);
+            console.error("Failed to retrieve trials for dataset " + datasetId);
         });
 
     }

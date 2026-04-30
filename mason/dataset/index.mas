@@ -35,12 +35,16 @@ $dataset_is_public => 0
                     <td>
                         <div id="dataset-description-update" style="display: none">
                             <textarea type="text" id="description" class="form-control" rows=5><% $dataset_description %></textarea>
-                            <button class="btn btn-sm btn-primary" onclick="datasetUpdate(<% $dataset_id %>)">Update</button>
+                            <button class="btn btn-sm btn-primary" onclick="datasetUpdate(<% $dataset_id %>)">
+                                <span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;Update
+                            </button>
                         </div>
                         <div id="dataset-description-display">
                             <p id="dataset-description-update-content"><% $dataset_description_string %></p>
 % if ( $is_dataset_owner ) {
-                                <button class="btn btn-sm btn-primary" onclick="datasetEdit()">Edit</button>
+                                <button class="btn btn-sm btn-primary" onclick="datasetEdit()">
+                                    <span class="glyphicon glyphicon-pencil"></span>&nbsp;&nbsp;Edit
+                                </button>
 % }
                         </div>
                     </td>
@@ -59,19 +63,19 @@ $dataset_is_public => 0
                                 style="display: <% $dataset_is_public ? 'inline-block' : 'none' %>" 
                                 class="btn btn-sm btn-primary" 
                                 onclick="datasetPrivate(<% $dataset_id %>)">
-                                    Make Private
+                                    <span class="glyphicon glyphicon-eye-close"></span>&nbsp;&nbsp;Make Private
                             </button>
                             <button id="dataset-edit-public"
                                 style="display: <% $dataset_is_public ? 'none' : 'inline-block' %>"
                                 class="btn btn-sm btn-primary"
                                 onclick="datasetPublic(<% $dataset_id %>)">
-                                    Make Public
+                                    <span class="glyphicon glyphicon-eye-open"></span>&nbsp;&nbsp;Make Public
                             </button>
                             <button 
                                 style="margin-left:4px;"
                                 class="btn btn-sm btn-danger"
                                 onclick="datasetDelete(<% $dataset_id %>)">
-                                    Delete
+                                    <span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Delete
                             </button>
                         </td>
                     </tr>
