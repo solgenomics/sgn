@@ -363,7 +363,7 @@ sub _validate_with_plugin {
             }
 
             if (!defined $yvalue){
-                push @error_messages, 'Y value is required for all value.';
+                push @error_messages, 'Y value is required for all rows.';
             }
 
             if ((defined $marker_name) && (defined $sample_name) && (defined $snpcall) && (defined $xvalue) && (defined $yvalue)) {
@@ -447,7 +447,7 @@ sub _parse_with_plugin {
         my $facility_identifiers_obj = CXGN::Stock::TissueSample::FacilityIdentifiers->new(bcs_schema => $schema, facility_identifier_list => \@facility_sample_list);
         my $db_sample_name_info = $facility_identifiers_obj->get_tissue_samples();
         %facility_sample_name_link = %{$db_sample_name_info};
-        @observation_unit_names = values %facility_sample_name_link
+        @observation_unit_names = values %facility_sample_name_link;
     } else {
         @observation_unit_names = keys %seen_samples;
     }

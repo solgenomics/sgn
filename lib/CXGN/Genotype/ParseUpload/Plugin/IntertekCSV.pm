@@ -127,7 +127,7 @@ sub _validate_with_plugin {
             if (!$alt){
                 push @error_messages, 'Alternate is required for all markers.';
             }
-            if ($chrom eq '' || !defined($chrom)) {
+	    if (!defined($chrom) || $chrom eq '') {
                 push @error_messages, 'Chromosome is required for all markers.';
             }
             $marker_names{$customer_snp_id} = 1;
