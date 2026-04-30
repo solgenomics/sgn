@@ -419,7 +419,7 @@ sub parse {
           if ( !defined($v) || $v eq '' ) {
             push @{$parsed->{errors}}, "Required column $c does not have a value in row $r";
           }
-          if ($unique_only_columns->{$c} && $seen->{$c}->{$v}) {
+          if (($v ne '' && defined($v)) && $unique_only_columns->{$c} && $seen->{$c}->{$v}) {
             push @{$parsed->{errors}}, "Column $c requires unique values, but $v on row $r appears more than once";
           }
           $seen->{$c}->{$v} = 1;
@@ -427,7 +427,7 @@ sub parse {
         foreach my $c ( (@{$parsed->{optional_columns}}, @{$parsed->{additional_columns}}) ) {
           my $v = $d->{$c};
           my $r = $d->{_row};
-          if ($unique_only_columns->{$c} && $seen->{$c}->{$v}) {
+          if (($v ne '' && defined($v)) && $unique_only_columns->{$c} && $seen->{$c}->{$v}) {
             push @{$parsed->{errors}}, "Column $c requires unique values, but $v on row $r appears more than once";
           }
           $seen->{$c}->{$v} = 1;
