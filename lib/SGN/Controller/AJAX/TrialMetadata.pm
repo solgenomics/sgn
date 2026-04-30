@@ -2530,6 +2530,71 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     $c->stash->{rest} = { plots => \@data };
 }
 
+sub remove_filler_plots : Chained('trial') PathPart('remove_fillers') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $trial = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $stocks_rs = $schema->resultset('Stock::Stock')->search(
+        {
+            'project.project_id' => $trial_id,
+            'stockprops.type_id' => SGN::Model::Cvterm->get_cvterm_row(
+                $schema,
+                'filler_plot',
+                'stock_property'
+            )->cvterm_id(),
+        },
+        {
+            join => [
+                {
+                    nd_experiment_stocks => {
+                        nd_experiment => {
+                            nd_experiment_projects => 'project'
+                        }
+                    }
+                },
+                'stockprops'
+            ],
+            distinct => 1,
+        }
+    );
+
+    my @stock_ids = $stocks_rs->get_column('stock_id')->all;
+
+    my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
+
+    if (@stock_ids) {
+        $schema->resultset('Stock::Stock')->search({
+            stock_id => { -in => \@stock_ids }
+        })->delete;
+
+        my $pp_rs = $schema->resultset('Project::Projectprop')->search({
+            project_id => $trial_id,
+            type_id    => $trial_layout_cvterm_id,
+        });
+
+        while (my $row = $pp_rs->next) {
+            my $layout = decode_json($row->value);
+
+            # Remove filler plot numbers from projectprop.value json
+            my %filler_ids = map { $_ => 1 } @stock_ids;
+
+            foreach my $plot_number (keys %$layout) {
+                if ($filler_ids{ $layout->{$plot_number}->{plot_id} }) {
+                    delete $layout->{$plot_number};
+                }
+            }
+
+            $row->value(encode_json($layout));
+            $row->update;
+        }
+    }
+    $c->stash->{rest} = { success => 1, deleted => scalar(@stock_ids) };
+}
+
 sub trial_has_data_levels : Chained('trial') PathPart('has_data_levels') Args(0) {
     my $self = shift;
     my $c = shift;
