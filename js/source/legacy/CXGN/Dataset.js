@@ -128,7 +128,7 @@ CXGN.Dataset.prototype = {
         });
     },
 
-    updateDescription: function(id) {
+    updateDescription: function(id, callback) {
 	var dataset;
 	var description = document.getElementById('description').value
         jQuery.ajax( {
@@ -143,7 +143,12 @@ CXGN.Dataset.prototype = {
                 if (response.error) {
                     alert('An error occurred during action. '+response.error);
                 } else {
-                    alert('The dataset description has been updated.');
+                    if ( callback ) {
+                        callback(description)
+                    }
+                    else {
+                        alert('The dataset description has been updated.');
+                    }
                 }
             },
             'error': function(response) {

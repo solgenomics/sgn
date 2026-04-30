@@ -18,8 +18,6 @@ Isaak Y Tecle (iyt2@cornell.edu)
 $dataset_id => undef
 $dataset_name => undef
 $data_structure => undef
-$collapsed => 0
-$collapsible => 1
 $title => undef
 
 </%args>
@@ -40,12 +38,6 @@ my $url = $c->req->path;
 
 <& /solgs/tools/base.mas &>
 
-<&| /page/info_section.mas,
-  collapsible => $collapsible,
-  collapsed   => $collapsed,
-  title       => 'Analysis Tools'
-&>
-
 <div id="dataset_trials_analysis" style="display: flex; align-items: center; justify-content-left: space-between;">
     <& /solgs/tools/trials_select.mas,
         dataset_id => $dataset_id,
@@ -63,5 +55,3 @@ my $url = $c->req->path;
 <div id="correlation_analysis_output" class="display:none">
     <& /solgs/tools/correlation/plot.mas &>
 </div>
-
-</&>

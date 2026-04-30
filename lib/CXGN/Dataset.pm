@@ -1724,7 +1724,8 @@ sub generate_archive_files {
     my $dir = shift;
     my $schema = $self->schema;
     my $dbh = $schema->storage->dbh();
-    my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema=> $schema });
+    my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+    my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
 
     # Check for base directory
     return { error => "Archived dataset base path not set" } if !defined $dir;
@@ -1852,6 +1853,13 @@ sub generate_archive_files {
         }
         my @rows = (\@header, @data);
         csv(in => \@rows, out => "$output/locations.csv", sep_char => ",");
+    }
+
+    # Save accessions
+    if ( defined $accessions ) {
+        # TODO: need a way to get the Catalyst Context or pass the editable stock props to this function
+        # my $results = $BTAccessions->export_properties($c, $accessions);
+        # csv(in => $results, out => "$output/accessions.csv", sep_cahr => ",");
     }
 
     return { directory => $output };

@@ -1,0 +1,31 @@
+<%args>
+$dataset_id
+$dataset_name
+$is_dataset_owner => 0
+</%args>
+
+
+% if ( $is_dataset_owner ) {
+    <button id="dataset-publish" class="btn btn-info">Publish Dataset</button>
+% }
+
+<script>
+jQuery(document).ready(function() {
+
+    jQuery("#dataset-publish").click(function() {
+        jQuery.ajax({
+            url: '/ajax/dataset/publish/<% $dataset_id %>',
+            success: (resp) => {
+                console.log(resp);
+                if ( resp?.error ) {
+                    alert(resp.error);
+                }
+            },
+            error: () => {
+                alert("Could not publish the dataset");
+            }
+        })
+    });
+
+});
+</script>

@@ -190,6 +190,11 @@ $propagation_type => undef
 $date => undef
 $logged_in_name => undef
 
+#Specific to dataset detail page
+$dataset_id => undef
+$dataset_name => undef
+$is_dataset_owner => 0
+
 
 </%args>
 
@@ -688,6 +693,19 @@ $logged_in_name => undef
 % if ($info_section_id eq 'propagation_group_ids_in_project_section'){
                                 <& /propagation/propagation_groups_in_project.mas, trial_id=>$trial_id &>
 % } #End propagation_group_ids_in_project_section
+
+% if ($info_section_id eq 'dataset_outlier_detection') {
+    <& /dataset/outliers.mas, dataset_id => $dataset_id, dataset_name => $dataset_name &>
+% }
+% if ( $info_section_id eq 'dataset_analysis_tools') {
+    <& /solgs/tools/dataset_trials_analysis.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, data_structure => 'dataset' &>
+% }
+% if ( $info_section_id eq 'dataset_tool_compatibility') {
+    <& /dataset/tool_compatibility.mas, dataset_id => $dataset_id, dataset_name => $dataset_name &>
+% }
+% if ( $info_section_id eq 'dataset_publish') {
+    <& /dataset/publish.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner &>
+% }
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

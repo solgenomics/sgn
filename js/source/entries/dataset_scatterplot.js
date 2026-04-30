@@ -1,4 +1,4 @@
-export function init(datasetId, datasetName) {
+export function init(datasetId, datasetName, baseWidth) {
     class Dataset {
         constructor() {
             this.datasets = {};
@@ -17,6 +17,7 @@ export function init(datasetId, datasetName) {
             this.traitVals = [];
             this.storedOutliersIds = [];
             this.metricValue = document.querySelector('input[name="dataset_metric"]:checked').value;
+            this.baseWidth = baseWidth || 1180;
         }
 
         getPhenotypes() {
@@ -432,7 +433,7 @@ export function init(datasetId, datasetName) {
                 this.outliers = [];
 
                 const margin = { top: 10, right: 30, bottom: 30, left: 60 },
-                    width = 1180 - margin.left - margin.right,
+                    width = this.baseWidth - margin.left - margin.right,
                     height = 600 - margin.top - margin.bottom;
 
                 var svg = d3.select("#trait_graph")
