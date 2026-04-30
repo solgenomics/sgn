@@ -34,7 +34,6 @@ solGS.analysisSelect = {
         }
         return this.datasetId;
     },
-
     getAnalysisPopName: function () {
         var analysisPopName = jQuery("#analysis_pop_name").val();
         if (analysisPopName) {
@@ -93,8 +92,7 @@ solGS.analysisSelect = {
         console.log("Tools Compatibility Check: ", toolsCompatibilityCheck);
 
         return toolsCompatibilityCheck;
-},
-
+    },
     
 }
 
@@ -105,11 +103,21 @@ jQuery(document).on("change", "#analysis_select", function () {
     jQuery("#dataset_trials_analysis_message").empty();
     jQuery("#run_analysis").prop("disabled", false);
     if (selectedAnalysis) {
-        jQuery("#analysis_type").val(selectedAnalysis)
+        jQuery("#analysis_type").val(selectedAnalysis);
+        solGS.analysisSelect.getAnalysisPopId();
+        solGS.analysisSelect.getAnalysisPopName();
+        solGS.analysisSelect.getAnalysisType();
+        solGS.analysisSelect.getDataStructure();
+
+        console.log("Analysis Pop ID: ", solGS.analysisSelect.analysisPopId);
+        console.log("Analysis Pop Name: ", solGS.analysisSelect.analysisPopname);
+        console.log("Analysis Type: ", solGS.analysisSelect.analysisType);
+        console.log("Data Structure: ", solGS.analysisSelect.dataStructure);
+
         var datasetId = solGS.analysisSelect.getDatasetId();
         console.log("Dataset ID: ", datasetId);
 
-        implementedAnalyses = solGS.analysisSelect.implementedAnalyses;
+        var implementedAnalyses = solGS.analysisSelect.implementedAnalyses;
         if (!implementedAnalyses.includes(selectedAnalysis)) {
             selectedAnalysis = selectedAnalysis.replace(/_/, ' ');
             jQuery("#dataset_trials_analysis_message").html(
@@ -156,11 +164,13 @@ jQuery(document).ready(function () {
         var analysisPopId = solGS.analysisSelect.getAnalysisPopId();
 
         if (!analysisType) {
-        jQuery("#dataset_trials_analysis_message").html("Please select an analysis type.").show();
+            jQuery("#dataset_trials_analysis_message").html("Please select an analysis type.").show();
+            return;
         }
 
         if (!analysisPopId) {   
-        jQuery("#dataset_trials_analysis_message").html("Please select an analysis population.").show();
+            jQuery("#dataset_trials_analysis_message").html("Please select an analysis population.").show();
+            return;
         }
 
         console.log("Running analysis: ", analysisType, " on population: ", analysisPopId);
@@ -172,13 +182,13 @@ jQuery(document).ready(function () {
             jQuery("#corr_pop_id").val(solGS.analysisSelect.getAnalysisPopId());
 
             jQuery("#data_type").val("Phenotype");
-            if (jQuery("#corr_pop_id").val().match(/dataset/) === "") {
-            jQuery("#data_structure").val('dataset');
+            if (!jQuery("#corr_pop_id").val().match(/dataset/)) {
+                jQuery("#data_structure").val('dataset');
             }
 
             corrArgs = solGS.correlation.getPhenoCorrArgs();
             if (!corrArgs['corr_pop_name']) {
-            corrArgs['corr_pop_name'] = solGS.analysisSelect.getAnalysisPopName();
+                corrArgs['corr_pop_name'] = solGS.analysisSelect.getAnalysisPopName();
             }
 
             corrPlotDivId = corrArgs.corr_plot_div;
@@ -215,5 +225,4 @@ jQuery(document).ready(function () {
             });
         }
     });
-
 });
