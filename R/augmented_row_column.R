@@ -1,5 +1,4 @@
-
-args=commandArgs(TRUE)
+#!/usr/bin/env Rscript
 
 # =============================================================================
 # Augmented row-column design allocator
@@ -10,63 +9,48 @@ args=commandArgs(TRUE)
 # - Prints and writes a field grid
 # =============================================================================
 
-if(length(args)==0){
-    print("No arguments supplied.")
-    ##supply default values
-    paramfile=''
+args <- commandArgs(TRUE)
+
+if (length(args) == 0) {
+  message("No arguments supplied. Using default values unless a paramfile is set inside the script.")
 } else {
-    for(i in 1:length(args)){
-        print(paste("Processing arg ", args[[i]]));
-        eval(parse(text=args[[i]]))
-    }
+  for (arg in args) {
+    message("Processing arg: ", arg)
+    eval(parse(text = arg), envir = .GlobalEnv)
+  }
 }
 
-source(paramfile)
+if (!exists("paramfile", envir = .GlobalEnv)) {
+  paramfile <- ""
+}
 
+if (!is.null(paramfile) && nzchar(paramfile)) {
+  source(paramfile)
+}
 
-library(blocksdesign)
-library(agricolae)
-library(dplyr)
-
-# Augmented Row-Column Design - R version from Piepho & Williams (2016)
-# vc = Number of check varieties
-# The number of control or check genotypes that will be replicated across blocks.
-# 
-# gk = Number of row groups (super-rows)
-# The layout is divided vertically into gk super-rows (each containing multiple rows).
-# 
-# gs = Number of column groups (super-columns)
-# The layout is divided horizontally into gs super-columns (each containing multiple columns).
-# 
-# kb = Number of rows per row group
-# Each row group contains kb rows.
-# 
-# sb = Number of columns per column group
-# Each column group contains sb columns.
-# 
-# pb = Number of check plots per block
-# Each block (intersection of a row group and a column group) will have pb checks.
+set_default <- function(name, value) {
+  if (!exists(name, envir = .GlobalEnv)) {
+    assign(name, value, envir = .GlobalEnv)
+  }
+}
 
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
+n_candidates <- 1000
 validate_inputs <- function(treatments, controls, rows_in_field, cols_in_field,
-                            rows_per_block, cols_per_block,
-                            n_candidates = 1000) {
+                            rows_per_block, cols_per_block, n_candidates) {
   rows_in_field <- as.integer(rows_in_field)
   cols_in_field <- as.integer(cols_in_field)
   rows_per_block <- as.integer(rows_per_block)
   cols_per_block <- as.integer(cols_per_block)
   n_candidates <- as.integer(n_candidates)
-
+  
   if (rows_in_field <= 0 || cols_in_field <= 0) {
     stop("rows_in_field and cols_in_field must be positive integers.")
   }
   if (rows_per_block <= 0 || cols_per_block <= 0) {
     stop("rows_per_block and cols_per_block must be positive integers.")
-  }
-  if (is.na(n_candidates) || n_candidates <= 0) {
-    stop("n_candidates must be a positive integer.")
   }
   if (rows_in_field %% rows_per_block != 0) {
     stop("rows_in_field must be divisible by rows_per_block.")
@@ -83,22 +67,27 @@ validate_inputs <- function(treatments, controls, rows_in_field, cols_in_field,
   if (length(unique(treatments)) != length(treatments)) {
     stop("treatments contains duplicated names. Entry names must be unique.")
   }
-
+  if (is.na(n_candidates) || n_candidates < 1) {
+    stop("n_candidates must be a positive integer.")
+  }
+  
   n_checks <- length(controls)
   if (n_checks > rows_per_block || n_checks > cols_per_block) {
     stop(
       paste0(
-        "Impossible check placement: ", n_checks, " checks must fit inside each block with no duplicated row or column, but block size is ",
-        rows_per_block, " rows x ", cols_per_block, " columns. Increase block size or reduce number of checks."
+        "Impossible check placement: ", n_checks,
+        " checks must fit inside each block with no duplicated row or column, but block size is ",
+        rows_per_block, " rows x ", cols_per_block,
+        " columns. Increase block size or reduce number of checks."
       )
     )
   }
-
+  
   super_rows <- rows_in_field / rows_per_block
   super_cols <- cols_in_field / cols_per_block
   n_blocks <- super_rows * super_cols
   expected_entries <- rows_in_field * cols_in_field - n_blocks * n_checks
-
+  
   if (length(treatments) != expected_entries) {
     stop(
       paste0(
@@ -107,7 +96,7 @@ validate_inputs <- function(treatments, controls, rows_in_field, cols_in_field,
       )
     )
   }
-
+  
   invisible(TRUE)
 }
 
@@ -146,7 +135,6 @@ make_plot_order <- function(df, plot_type = "serpentine") {
   df
 }
 
-
 validate_check_layout <- function(df) {
   check_df <- df[df$type == "check", c("block", "row", "col", "trt")]
   
@@ -163,8 +151,88 @@ validate_check_layout <- function(df) {
       stop("Invalid plot_type: block ", b, " has duplicated check/control labels.")
     }
   }
+
+  if (any(table(check_df$trt, check_df$row) > 1)) {
+    stop("Invalid check layout: the same check appears more than once in the same field row.")
+  }
+  if (any(table(check_df$trt, check_df$col) > 1)) {
+    stop("Invalid check layout: the same check appears more than once in the same field column.")
+  }
   
   invisible(TRUE)
+}
+
+make_control_permutations <- function(controls) {
+  if (length(controls) == 1) {
+    return(list(controls))
+  }
+
+  perms <- list()
+  for (i in seq_along(controls)) {
+    rest <- controls[-i]
+    rest_perms <- make_control_permutations(rest)
+    for (p in rest_perms) {
+      perms[[length(perms) + 1L]] <- c(controls[i], p)
+    }
+  }
+  perms
+}
+
+assign_check_names_without_row_col_repeats <- function(check_slots, controls) {
+  check_slots <- check_slots[order(check_slots$block, check_slots$row, check_slots$col), ]
+  check_slots$trt <- NA_character_
+
+  blocks <- split(seq_len(nrow(check_slots)), check_slots$block)
+  control_perms <- make_control_permutations(controls)
+  used_rows <- setNames(vector("list", length(controls)), controls)
+  used_cols <- setNames(vector("list", length(controls)), controls)
+
+  assign_block <- function(block_number) {
+    if (block_number > length(blocks)) {
+      return(TRUE)
+    }
+
+    idx <- blocks[[block_number]]
+    perms <- sample(control_perms)
+
+    for (perm in perms) {
+      ok <- TRUE
+      for (i in seq_along(idx)) {
+        control <- perm[i]
+        if (check_slots$row[idx[i]] %in% used_rows[[control]] ||
+            check_slots$col[idx[i]] %in% used_cols[[control]]) {
+          ok <- FALSE
+          break
+        }
+      }
+      if (!ok) next
+
+      old_rows <- used_rows
+      old_cols <- used_cols
+      for (i in seq_along(idx)) {
+        control <- perm[i]
+        check_slots$trt[idx[i]] <<- control
+        used_rows[[control]] <<- c(used_rows[[control]], check_slots$row[idx[i]])
+        used_cols[[control]] <<- c(used_cols[[control]], check_slots$col[idx[i]])
+      }
+
+      if (assign_block(block_number + 1L)) {
+        return(TRUE)
+      }
+
+      check_slots$trt[idx] <<- NA_character_
+      used_rows <<- old_rows
+      used_cols <<- old_cols
+    }
+
+    FALSE
+  }
+
+  if (!assign_block(1L)) {
+    stop("Could not assign check names without repeating the same check in a field row or column.")
+  }
+
+  check_slots
 }
 
 score_count_balance <- function(x, weight) {
@@ -213,16 +281,20 @@ score_augmented_design <- function(df) {
   score
 }
 
-
-
 # -----------------------------------------------------------------------------
-# Efficient augmented row-column allocator
+# Allocator
 # -----------------------------------------------------------------------------
 allocate_augmented_row_column <- function(field_template, treatments, controls,
                                           rows_per_block, cols_per_block,
                                           plot_type = "serpentine") {
   field <- field_template
   n_checks <- length(controls)
+  check_slots <- data.frame(
+    check_idx = integer(0),
+    block = integer(0),
+    row = integer(0),
+    col = integer(0)
+  )
   
   # Place checks block by block.
   # Each block receives one copy of each check/control.
@@ -235,14 +307,24 @@ allocate_augmented_row_column <- function(field_template, treatments, controls,
     
     check_rows <- sample(block_rows, n_checks, replace = FALSE)
     check_cols <- sample(block_cols, n_checks, replace = FALSE)
-    check_trt <- sample(controls, n_checks, replace = FALSE)
     
     local_idx <- match(paste(check_rows, check_cols), paste(field$row[block_idx], field$col[block_idx]))
     check_idx <- block_idx[local_idx]
     
-    field$trt[check_idx] <- check_trt
     field$type[check_idx] <- "check"
+    check_slots <- rbind(
+      check_slots,
+      data.frame(
+        check_idx = check_idx,
+        block = b,
+        row = check_rows,
+        col = check_cols
+      )
+    )
   }
+
+  check_slots <- assign_check_names_without_row_col_repeats(check_slots, controls)
+  field$trt[check_slots$check_idx] <- check_slots$trt
   
   # Randomize unreplicated entries in all non-check plots.
   entry_idx <- which(field$type == "entry")
@@ -283,14 +365,20 @@ allocate_best_augmented_row_column <- function(treatments, controls,
   best_score <- Inf
   
   for (i in seq_len(as.integer(n_candidates))) {
-    candidate <- allocate_augmented_row_column(
-      field_template = field_template,
-      treatments = treatments,
-      controls = controls,
-      rows_per_block = rows_per_block,
-      cols_per_block = cols_per_block,
-      plot_type = plot_type
+    candidate <- try(
+      allocate_augmented_row_column(
+        field_template = field_template,
+        treatments = treatments,
+        controls = controls,
+        rows_per_block = rows_per_block,
+        cols_per_block = cols_per_block,
+        plot_type = plot_type
+      ),
+      silent = TRUE
     )
+    if (inherits(candidate, "try-error")) {
+      next
+    }
     
     candidate_score <- score_augmented_design(candidate)
     
@@ -299,6 +387,10 @@ allocate_best_augmented_row_column <- function(treatments, controls,
       best_design <- candidate
     }
   }
+
+  if (is.null(best_design)) {
+    stop("Unable to assign check names without repeating the same check in a field row or column.")
+  }
   
   attr(best_design, "design_score") <- best_score
   message("Best design selected from ", n_candidates, " candidates.")
@@ -306,7 +398,6 @@ allocate_best_augmented_row_column <- function(treatments, controls,
   
   best_design
 }
-
 
 # -----------------------------------------------------------------------------
 # Generate design
@@ -319,24 +410,16 @@ design_full <- allocate_best_augmented_row_column(
   rows_per_block = as.integer(rows_per_block),
   cols_per_block = as.integer(cols_per_block),
   plot_type = plot_type,
-  n_candidates = 1000
+  n_candidates = as.integer(n_candidates)
 )
 
-# Keep the same output format used by the original script.
-design <- design_full[, c("plots", "block", "trt", "rep", "is_control")]
-colnames(design) <- c("plots", "block", "all_entries", "rep", "is_control")
+# Keep Breedbase-compatible main output columns first.
+design_out <- design_full[, c("plots", "block", "trt", "rep", "is_control")]
+names(design_out)[names(design_out) == "trt"] <- "all_entries"
 
-# -----------------------------------------------------------------------------
-# Save result file
-# -----------------------------------------------------------------------------
+
 basefile <- tools::file_path_sans_ext(paramfile)
-outfile <- paste0(basefile, ".design")
+outfile = paste(basefile, ".design", sep="");
 sink(outfile)
-write.table(design, file = outfile, quote = FALSE, sep = "\t", row.names = FALSE)
+write.table(design_out, quote=F, sep='\t', row.names=FALSE)
 sink();
-
-
-
-
-
-

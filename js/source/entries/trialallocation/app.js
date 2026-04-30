@@ -2132,7 +2132,7 @@ export function initTrialAllocation() {
       qsa(`.trial-group[data-root="${rootId}"]`).forEach(el => el.remove());
     }
 
-    if (!existingProjectTrials.has(tn)) {
+    if (!existingProjectTrials.has(Number(tn))) {
       plotDesign = assignPlotNumbers(plotDesign, settings);
     }
     const ordered = orderedCells(coords, colsWanted, settings);
@@ -3207,31 +3207,86 @@ export function initTrialAllocation() {
     }
     if (!requireValidLayoutYear()) return;
 
-    $.ajax({
+    saveLayoutView(layout)
+      .done(function(response) {
+        if (!response.success) {
+          alert(response.error || 'Could not save layout.');
+          return;
+        }
+        markLayoutViewSaved(layout);
+        alert('Layout saved.');
+      })
+      .fail(function(_, __, error) {
+        console.error('Save layout failed:', error);
+        alert('Could not save layout.');
+      });
+  }
+
+  function saveLayoutView(layout) {
+    return $.ajax({
       url: '/ajax/trialallocation/save_layout',
       method: 'POST',
       dataType: 'json',
-      data: { layout: JSON.stringify(layout) },
-      success: function(response) {
-        if (response.success) {
-          savedLayoutContext = {
-            year: layout.year || '',
-            season: layout.season || '',
-            farm: Object.assign({}, layout.farm || {}),
-            breeding_program: Object.assign({}, layout.breeding_program || {})
-          };
-          lockLayoutContext(true);
-          lockPlacedTrials(true);
-          alert('Layout saved.');
-        } else {
-          alert(response.error || 'Could not save layout.');
-        }
-      },
-      error: function(_, __, error) {
-        console.error('Save layout failed:', error);
-        alert('Could not save layout.');
-      }
+      data: { layout: JSON.stringify(layout) }
     });
+  }
+
+  function markLayoutViewSaved(layout) {
+    savedLayoutContext = {
+      year: layout.year || '',
+      season: layout.season || '',
+      farm: Object.assign({}, layout.farm || {}),
+      breeding_program: Object.assign({}, layout.breeding_program || {})
+    };
+    lockLayoutContext(true);
+    lockPlacedTrials(true);
+  }
+
+  function restoreSaveTrialsButton(saveButton) {
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = 'Save Layout Trials in Database';
+      saveButton.classList.remove('opacity-70', 'cursor-wait');
+    }
+  }
+
+  function trialSaveSuccessMessage(response) {
+    const names = (response.trials || []).map(trial => `${trial.name} (${trial.trial_id})`).join('\n');
+    const updated = response.existing_trials_updated || 0;
+    if (names && updated) return `Trials saved:\n${names}\n\nExisting trial coordinate updates: ${updated}`;
+    if (names) return `Trials saved:\n${names}`;
+    if (updated) return `Existing trial coordinate updates saved: ${updated}`;
+    return 'Trials saved in the database.';
+  }
+
+  function finishTrialsDatabaseSave(layout, newTrialLayout, response, saveButton) {
+    lockLayoutContext(true);
+    const savedIndexes = new Set((newTrialLayout.placed_trials || []).map(trial => String(trial.trial_index)));
+    savedIndexes.forEach(index => databaseSavedTrialIndexes.add(index));
+    const savedRoots = (layout.placed_trials || [])
+      .filter(trial => savedIndexes.has(String(trial.trial_index)))
+      .map(trial => trial.root);
+    lockPlacedTrials(true, savedRoots);
+
+    const message = trialSaveSuccessMessage(response);
+    if (saveButton) saveButton.textContent = 'Saving Layout...';
+
+    saveLayoutView(layout)
+      .done(function(layoutResponse) {
+        if (layoutResponse.success) {
+          markLayoutViewSaved(layout);
+          alert(`${message}\n\nLayout view saved.`);
+        } else {
+          alert(`${message}\n\nCould not save layout view: ${layoutResponse.error || 'Unknown error'}`);
+        }
+      })
+      .fail(function(xhr, __, error) {
+        console.error('Save layout after trial database save failed:', error, xhr?.responseText);
+        alert(`${message}\n\nCould not save layout view.`);
+      })
+      .always(function() {
+        restoreSaveTrialsButton(saveButton);
+      });
   }
 
   function saveTrialsInDatabase() {
@@ -3280,38 +3335,16 @@ export function initTrialAllocation() {
       data: { layout: JSON.stringify(newTrialLayout) },
       success: function(response) {
         if (response.success) {
-          lockLayoutContext(true);
-          const savedIndexes = new Set((newTrialLayout.placed_trials || []).map(trial => String(trial.trial_index)));
-          savedIndexes.forEach(index => databaseSavedTrialIndexes.add(index));
-          const savedRoots = (layout.placed_trials || [])
-            .filter(trial => savedIndexes.has(String(trial.trial_index)))
-            .map(trial => trial.root);
-          lockPlacedTrials(true, savedRoots);
-          const names = (response.trials || []).map(trial => `${trial.name} (${trial.trial_id})`).join('\n');
-          const updated = response.existing_trials_updated || 0;
-          if (names && updated) {
-            alert(`Trials saved:\n${names}\n\nExisting trial coordinate updates: ${updated}`);
-          } else if (names) {
-            alert(`Trials saved:\n${names}`);
-          } else if (updated) {
-            alert(`Existing trial coordinate updates saved: ${updated}`);
-          } else {
-            alert('Trials saved in the database.');
-          }
+          finishTrialsDatabaseSave(layout, newTrialLayout, response, saveButton);
         } else {
           alert(response.error || 'Could not save trials in the database.');
+          restoreSaveTrialsButton(saveButton);
         }
       },
       error: function(xhr, __, error) {
         console.error('Save trials failed:', error, xhr?.responseText);
         alert('Could not save trials in the database.');
-      },
-      complete: function() {
-        if (saveButton) {
-          saveButton.disabled = false;
-          saveButton.textContent = 'Save Layout Trials in Database';
-          saveButton.classList.remove('opacity-70', 'cursor-wait');
-        }
+        restoreSaveTrialsButton(saveButton);
       }
     });
   }

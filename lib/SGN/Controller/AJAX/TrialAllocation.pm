@@ -462,6 +462,7 @@ sub existing_trials :Path('/ajax/trialallocation/existing_trials') Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema');
     my %supported_designs = _trial_allocation_supported_designs();
     my %design_aliases = _trial_allocation_design_aliases();
+    my $allocated_trial_ids = $self->_allocated_existing_trial_ids($c);
     my $trial_search = CXGN::Trial::Search->new({
         bcs_schema => $schema,
         location_id_list => [int($location_id)],
@@ -476,6 +477,8 @@ sub existing_trials :Path('/ajax/trialallocation/existing_trials') Args(0) {
 
     my @trials;
     foreach my $trial (@$results) {
+        next if $allocated_trial_ids->{ $trial->{trial_id} };
+
         my $design = _clean_optional_value($trial->{design});
         my $design_code = $design_aliases{$design} || $design;
         next unless $design_code && $supported_designs{$design_code};
@@ -514,6 +517,23 @@ sub existing_trial_design :Path('/ajax/trialallocation/existing_trial_design') A
         return;
     }
 
+    my $stored_design = _trial_layout_json_for_project($schema, $trial_id);
+    my $stored_layout = _existing_trial_design_from_projectprop($stored_design);
+    if (@{$stored_layout->{design} || []}) {
+        $c->stash->{rest} = {
+            success => 1,
+            trial => {
+                trial_id => int($trial_id),
+                name => $trial->name,
+                description => $trial->description || '',
+                n_row => $stored_layout->{n_row} || 1,
+                n_col => $stored_layout->{n_col} || scalar(@{$stored_layout->{design}}),
+                design => $stored_layout->{design}
+            }
+        };
+        return;
+    }
+
     my $plots = CXGN::Trial->get_sorted_plots(
         $schema,
         [int($trial_id)],
@@ -534,6 +554,9 @@ sub existing_trial_design :Path('/ajax/trialallocation/existing_trial_design') A
         return;
     }
 
+    my $stored_design_indexes = _index_trial_layout_design($stored_design);
+    my $plot_number_by_plot_id = _plot_number_stockprops_by_plot_id($schema, \@plots);
+
     my ($min_row, $max_row, $min_col, $max_col);
     foreach my $plot (@plots) {
         my $row = int($plot->{row_number} || 1);
@@ -549,12 +572,16 @@ sub existing_trial_design :Path('/ajax/trialallocation/existing_trial_design') A
         my $plot = $plots[$i];
         my $is_control = $plot->{is_a_control} || 0;
         $is_control = ($is_control && $is_control ne 'false') ? 1 : 0;
-        my $plot_number = _clean_optional_value($plot->{plot_number})
-            || _clean_optional_value($plot->{'plot number'})
-            || _clean_optional_value($plot->{plot});
+        my $plot_id = _existing_trial_plot_id($plot);
+        my $plot_name = _existing_trial_plot_name($plot);
+        my $plot_number = _existing_trial_plot_number(
+            $plot,
+            $stored_design_indexes,
+            $plot_number_by_plot_id
+        );
         push @design, {
-            plot_id => $plot->{plot_id} || '',
-            plot_name => $plot->{plot_name} || '',
+            plot_id => $plot_id,
+            plot_name => $plot_name,
             plot_number => $plot_number || ($i + 1),
             original_plot_number => $plot_number || ($i + 1),
             block => $plot->{block_number} || 1,
@@ -574,6 +601,228 @@ sub existing_trial_design :Path('/ajax/trialallocation/existing_trial_design') A
             design => \@design
         }
     };
+}
+
+sub _existing_trial_design_from_projectprop {
+    my $design = shift || {};
+    return { n_row => 0, n_col => 0, design => [] } unless $design && ref($design) eq 'HASH' && keys %$design;
+
+    my @entries;
+    foreach my $key (keys %$design) {
+        my $entry = $design->{$key};
+        next unless $entry && ref($entry) eq 'HASH';
+
+        my $plot_number = _clean_optional_value($entry->{plot_number}) || _clean_optional_value($key);
+        next unless $plot_number ne '';
+
+        my $row = _clean_optional_value($entry->{row_number});
+        my $col = _clean_optional_value($entry->{col_number});
+        push @entries, {
+            sort_row => ($row ne '' && $row =~ /^-?\d+$/) ? int($row) : 0,
+            sort_col => ($col ne '' && $col =~ /^-?\d+$/) ? int($col) : 0,
+            sort_plot => ($plot_number =~ /^\d+$/) ? int($plot_number) : $plot_number,
+            plot_id => _clean_optional_value($entry->{plot_id}),
+            plot_name => _clean_optional_value($entry->{plot_name}),
+            plot_number => $plot_number,
+            original_plot_number => $plot_number,
+            block => _clean_optional_value($entry->{block_number}) || _clean_optional_value($entry->{block}) || 1,
+            accession_name => _clean_optional_value($entry->{accession_name}),
+            is_control => _clean_optional_value($entry->{is_a_control}) ? 1 : 0
+        };
+    }
+
+    return { n_row => 0, n_col => 0, design => [] } unless @entries;
+
+    my @rows = grep { $_ > 0 } map { $_->{sort_row} } @entries;
+    my @cols = grep { $_ > 0 } map { $_->{sort_col} } @entries;
+    my ($min_row, $max_row, $min_col, $max_col);
+    foreach my $row (@rows) {
+        $min_row = $row if !defined($min_row) || $row < $min_row;
+        $max_row = $row if !defined($max_row) || $row > $max_row;
+    }
+    foreach my $col (@cols) {
+        $min_col = $col if !defined($min_col) || $col < $min_col;
+        $max_col = $col if !defined($max_col) || $col > $max_col;
+    }
+
+    @entries = sort {
+        ($a->{sort_row} || 0) <=> ($b->{sort_row} || 0)
+            || ($a->{sort_col} || 0) <=> ($b->{sort_col} || 0)
+            || $a->{sort_plot} cmp $b->{sort_plot}
+    } @entries;
+
+    my @output = map {
+        my %copy = %$_;
+        delete @copy{qw/sort_row sort_col sort_plot/};
+        \%copy;
+    } @entries;
+
+    return {
+        n_row => (defined($min_row) && defined($max_row)) ? ($max_row - $min_row + 1) : 1,
+        n_col => (defined($min_col) && defined($max_col)) ? ($max_col - $min_col + 1) : scalar(@output),
+        design => \@output
+    };
+}
+
+sub _allocated_existing_trial_ids {
+    my ($self, $c) = @_;
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema');
+    my $type_id = eval { $self->_multi_trial_layout_type_id($c) };
+    return {} if $@ || !$type_id;
+
+    my %allocated;
+    my $props = $schema->resultset('NaturalDiversity::NdGeolocationprop')->search({ type_id => $type_id });
+    while (my $prop = $props->next) {
+        next unless $prop->value;
+        my $stored = eval { decode_json($prop->value) };
+        next unless $stored && ref($stored) eq 'HASH';
+
+        foreach my $layout (@{$stored->{layouts} || []}) {
+            foreach my $placed_trial (@{$layout->{placed_trials} || []}) {
+                my $project_id = _clean_optional_value($placed_trial->{existing_project_id});
+                $allocated{$project_id} = 1 if $project_id && $project_id =~ /^\d+$/;
+            }
+            foreach my $form (@{$layout->{trial_forms} || []}) {
+                my $project_id = _clean_optional_value($form->{existing_project_id}) || _clean_optional_value($form->{project_id});
+                $allocated{$project_id} = 1 if $project_id && $project_id =~ /^\d+$/;
+            }
+        }
+    }
+
+    return \%allocated;
+}
+
+sub _trial_layout_json_for_project {
+    my ($schema, $project_id) = @_;
+
+    my $type_id = eval { SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id() };
+    return {} if $@ || !$type_id;
+
+    my $prop = $schema->resultset('Project::Projectprop')->find({
+        project_id => $project_id,
+        type_id => $type_id
+    });
+    return {} unless $prop && $prop->value;
+
+    my $decoded = eval { decode_json($prop->value) };
+    return ($decoded && ref($decoded) eq 'HASH') ? $decoded : {};
+}
+
+sub _index_trial_layout_design {
+    my $design = shift || {};
+    my %by_plot_id;
+    my %by_plot_name;
+    my %by_plot_number;
+
+    foreach my $key (keys %$design) {
+        my $entry = $design->{$key};
+        next unless $entry && ref($entry) eq 'HASH';
+
+        my $plot_id = _clean_optional_value($entry->{plot_id});
+        my $plot_name = _clean_optional_value($entry->{plot_name});
+        my $plot_number = _clean_optional_value($entry->{plot_number}) || _clean_optional_value($key);
+        my %indexed_entry = %$entry;
+        $indexed_entry{plot_number} = $plot_number if $plot_number ne '' && _clean_optional_value($indexed_entry{plot_number}) eq '';
+        my $indexed_entry_ref = \%indexed_entry;
+
+        $by_plot_id{$plot_id} = $indexed_entry_ref if $plot_id ne '';
+        $by_plot_name{$plot_name} = $indexed_entry_ref if $plot_name ne '';
+        $by_plot_number{$plot_number} = $indexed_entry_ref if $plot_number ne '';
+    }
+
+    return {
+        by_plot_id => \%by_plot_id,
+        by_plot_name => \%by_plot_name,
+        by_plot_number => \%by_plot_number
+    };
+}
+
+sub _plot_number_stockprops_by_plot_id {
+    my ($schema, $plots) = @_;
+
+    my @plot_ids = grep { $_ && /^\d+$/ } map { _existing_trial_plot_id($_) } @$plots;
+    return {} unless @plot_ids;
+
+    my $type_id = eval { SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id() };
+    return {} if $@ || !$type_id;
+
+    my %plot_numbers;
+    my $props = $schema->resultset('Stock::Stockprop')->search({
+        stock_id => { -in => \@plot_ids },
+        type_id => $type_id
+    });
+    while (my $prop = $props->next) {
+        my $plot_number = _clean_optional_value($prop->value);
+        $plot_numbers{$prop->stock_id} = $plot_number if $plot_number ne '';
+    }
+
+    return \%plot_numbers;
+}
+
+sub _existing_trial_plot_number {
+    my ($plot, $stored_design_indexes, $plot_number_by_plot_id) = @_;
+
+    my $plot_id = _existing_trial_plot_id($plot);
+    my $plot_name = _existing_trial_plot_name($plot);
+    my $reported_plot_number = _reported_existing_plot_number($plot);
+
+    my $stored_entry =
+        ($plot_id ne '' && $stored_design_indexes->{by_plot_id}{$plot_id}) ||
+        ($plot_name ne '' && $stored_design_indexes->{by_plot_name}{$plot_name}) ||
+        ($reported_plot_number ne '' && $stored_design_indexes->{by_plot_number}{$reported_plot_number}) ||
+        undef;
+
+    return _clean_optional_value($stored_entry->{plot_number}) if $stored_entry && _clean_optional_value($stored_entry->{plot_number}) ne '';
+    return _clean_optional_value($plot_number_by_plot_id->{$plot_id}) if $plot_id ne '' && _clean_optional_value($plot_number_by_plot_id->{$plot_id}) ne '';
+    return $reported_plot_number;
+}
+
+sub _existing_trial_plot_id {
+    my $plot = shift || {};
+
+    return _clean_optional_value($plot->{plot_id})
+        || _clean_optional_value($plot->{stock_id})
+        || _clean_optional_value($plot->{observationunit_stock_id})
+        || _clean_optional_value($plot->{observation_unit_id})
+        || _clean_optional_value($plot->{observationUnitDbId});
+}
+
+sub _existing_trial_plot_name {
+    my $plot = shift || {};
+
+    return _clean_optional_value($plot->{plot_name})
+        || _clean_optional_value($plot->{plotname})
+        || _clean_optional_value($plot->{uniquename})
+        || _clean_optional_value($plot->{observationunit_uniquename})
+        || _clean_optional_value($plot->{observation_unit_name})
+        || _clean_optional_value($plot->{observationUnitName});
+}
+
+sub _reported_existing_plot_number {
+    my $plot = shift || {};
+    my $plot_name = _existing_trial_plot_name($plot);
+
+    return _clean_optional_value($plot->{plot_number})
+        || _clean_optional_value($plot->{'plot number'})
+        || _clean_optional_value($plot->{plotn})
+        || _clean_optional_value($plot->{plot_no})
+        || _clean_optional_value($plot->{plot_No})
+        || _clean_optional_value($plot->{plot_num})
+        || _clean_optional_value($plot->{plot_num_per_block})
+        || _clean_optional_value($plot->{obsunit_plot_number})
+        || _clean_optional_value($plot->{observationunit_plot_number})
+        || _clean_optional_value($plot->{plot})
+        || _plot_number_from_plot_name($plot_name);
+}
+
+sub _plot_number_from_plot_name {
+    my $plot_name = _clean_optional_value(shift);
+
+    return '' unless $plot_name;
+    return $1 if $plot_name =~ /(?:^|[_-])PLOT[_-]?(\d+)\s*$/i;
+    return $1 if $plot_name =~ /(?:^|[_-])plot[_-]?(\d+)\s*$/i;
+    return '';
 }
 
 sub _multi_trial_layout_type_id {
