@@ -412,11 +412,29 @@ $facilities
                                     </div>
 
                                     <div class="form-group">
-                                        <label class="col-sm-5 control-label">Add these missing stocks as new accessions?: </label>
+                                        <label class="col-sm-5 control-label">Add missing stocks as new accessions?: </label>
                                         <div class="col-sm-7">
                                             <select class="form-control" id="upload_genotype_add_new_accessions" name="upload_genotype_add_new_accessions">
                                                 <option value="">No (currently disabled for safety)</option>
                                                 <!--option value="1">Yes</option-->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="upload_genotypes_missing_marker_div" >
+                                    <div id="upload_genotypes_add_missing_marker_html">
+                                    </div>
+                         
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">Add missing markers?: </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="upload_genotype_add_new_markers" name="upload_genotype_add_new_markers">
+%                                               if ($c->user() && $c->user()->has_role("curator")) {
+                                                 <option value="0">No</option>
+                                                 <option value="1">Yes</option>
+%                                               } else {
+                                                 <option value="">No (currently disabled for safety)</option>
+%                                               } 
                                             </select>
                                         </div>
                                     </div>
@@ -1046,7 +1064,6 @@ $facilities
                                         <li>1RS:1AL</li>
                                     </ul>
                                 </li>
-                            </p>
 
                             </ul>
                             <p>
