@@ -951,7 +951,7 @@ export function initTrialAllocation() {
       </div>
 
       <div class='grid grid-cols-2 gap-4 mb-4'>
-        <label>Treatments List
+        <label>Accessions List
           <select id='ttreatments${i}' class='w-full border rounded px-2 py-1'>
             <option value="">Loading...</option>
           </select>
@@ -1488,7 +1488,7 @@ export function initTrialAllocation() {
       success: function(data) {
         if (!data.success) {
           $select.html(`<option value="">Failed to load</option>`);
-          alert("Could not load Treatments List");
+          alert("Could not load Accessions List");
           return;
         }
 
@@ -1510,7 +1510,7 @@ export function initTrialAllocation() {
 
         if ($select.data('select2')) $select.select2('destroy');
         $select.select2({
-          placeholder: 'Select a treatment list',
+          placeholder: 'Select an accessions list',
           allowClear: true,
           width: '100%',
           dropdownParent: $select.closest('label')
@@ -1528,9 +1528,9 @@ export function initTrialAllocation() {
         }
       },
       error: function(xhr, status, error) {
-        console.error("Error loading Treatments List:", status, error);
+        console.error("Error loading Accessions List:", status, error);
         $select.html(`<option value="">Failed to load</option>`);
-        alert("Error loading Treatments List.");
+        alert("Error loading Accessions List.");
       }
     });
   }
