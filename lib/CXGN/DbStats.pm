@@ -10,7 +10,7 @@ has 'include_dateless_items' => (is => 'rw', isa => 'Bool', default => 1 );
 
 # retrieve all trials grouped by trial type
 #
-sub trial_types { 
+sub trial_types {
     my $self = shift;
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
@@ -18,7 +18,7 @@ sub trial_types {
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
     my $datelessq = "";
-    
+
     if ($include_dateless_items == 1) {
 	$datelessq = " project.create_date IS NULL OR ";
     }
@@ -31,7 +31,7 @@ sub trial_types {
 
 # retrieve all trials grouped by breeding programs
 #
-sub trial_count_by_breeding_program { 
+sub trial_count_by_breeding_program {
     my $self = shift;
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
@@ -57,13 +57,34 @@ sub phenotype_count_by_breeding_program {
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $datelessq = "";
     if ($include_dateless_items == 1) {
 	$datelessq = " trial.create_date IS NULL OR ";
     }
-   
+
     my $q = "select project.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) join nd_experiment_project on(trial.project_id=nd_experiment_project.project_id) join nd_experiment_phenotype using(nd_experiment_id) where ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and cvterm.name='breeding_program' and trialcvterm.name in (SELECT cvterm.name FROM cvterm join cv using(cv_id) WHERE cv.name='project_type') group by project.name order by count(*) desc";
+    my $h = $self->dbh->prepare($q);
+    $h->execute($start_date, $end_date);
+    return $h->fetchall_arrayref();
+
+}
+
+
+sub phenotype_completeness_by_breeding_program_and_trial {
+    my $self = shift;
+    my $start_date = shift || $self->start_date();
+    my $end_date = shift || $self->end_date();
+    my $include_dateless_items = shift;
+
+    if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
+
+    my $datelessq = "";
+    if ($include_dateless_items == 1) {
+	$datelessq = " trial.create_date IS NULL OR ";
+    }
+
+    my $q = "select project.name, trial.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) join nd_experiment_project on(trial.project_id=nd_experiment_project.project_id)  where ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and cvterm.name='breeding_program' and trialcvterm.name in (SELECT cvterm.name FROM cvterm join cv using(cv_id) WHERE cv.name='project_type') group by project.name, trial.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
@@ -72,38 +93,38 @@ sub phenotype_count_by_breeding_program {
 
 # retrieve all the traits measured with counts
 #
-sub traits { 
+sub traits {
     my $self = shift;
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " phenotype.create_date IS NULL OR ";
     }
-	
+
     my $q = "select cvterm.name, count(*) from phenotype join cvterm on (observable_id=cvterm_id) where ( $datelessq ( phenotype.create_date > ? and phenotype.create_date < ? )) group by cvterm.name order by count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
     return $h->fetchall_arrayref();
 }
 
-sub stocks { 
+sub stocks {
     my $self = shift;
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " stock.create_date IS NULL OR ";
     }
-    
+
     my $q = "SELECT cvterm.name, count(*) FROM stock join cvterm on(type_id=cvterm_id)  WHERE ( $datelessq ( stock.create_date > ? and stock.create_date < ? )) GROUP BY cvterm.name ORDER BY count(*) desc";
     my $h = $self->dbh->prepare($q);
     $h->execute($start_date, $end_date);
@@ -118,7 +139,7 @@ sub projects {
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " project.create_date IS NULL OR ";
@@ -131,27 +152,27 @@ sub projects {
     $h->execute($start_date, $end_date);
 
 }
-    
 
 
-sub activity { 
+
+sub activity {
     my $self = shift;
 
     my @counts;
     my @weeks;
-    foreach my $week (0..51) { 
+    foreach my $week (0..51) {
 	my $days = $week * 7;
 	my $previous_days = ($week + 1) * 7;
-	my $q = "SELECT count(*) FROM nd_experiment WHERE create_date > (now() - INTERVAL '$previous_days DAYS') and create_date < (now() - INTERVAL '$days DAYS')"; 
+	my $q = "SELECT count(*) FROM nd_experiment WHERE create_date > (now() - INTERVAL '$previous_days DAYS') and create_date < (now() - INTERVAL '$days DAYS')";
 	my $h = $self->dbh()->prepare($q);
 	$h->execute();
 	my ($count) = $h->fetchrow_array();
 
 	print STDERR "Activity in week $week = $count\n";
-	
+
 	push @counts, { letter => $week, frequency => $count };
 	#push @weeks, $week;
-    }    
+    }
     return \@counts;
 }
 
@@ -169,9 +190,9 @@ sub stock_stats {
     if ($include_dateless_items == 1) {
 	$datelessq = " create_date IS NULL OR ";
     }
-    
+
     my $dbh = $self->dbh();
-    
+
     my $query = "SELECT distinct(cvterm.name), count(*) FROM stock join cvterm on(type_id=cvterm_id) WHERE ( $datelessq ( create_date > ? and create_date < ? )) group by cvterm.name";
 
     my $h = $dbh->prepare($query);
@@ -191,11 +212,11 @@ sub accession_count_by_breeding_program {
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
-    
+
     my $dbh = $self->dbh();
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $datelessq;
     if ($include_dateless_items == 1 ) {
 	$datelessq = " accession.create_date IS NULL OR ";
@@ -204,12 +225,12 @@ sub accession_count_by_breeding_program {
 
     my $h = $dbh->prepare($query);
     $h->execute($start_date, $end_date);
-    
-    my @data; 
+
+    my @data;
     while (my ($bp, $count) = $h-> fetchrow_array()) {
 	push @data, [ $bp, $count ];
     }
-    return \@data;	
+    return \@data;
 }
 
 sub accession_count_by_breeding_program_without_trials {
@@ -217,11 +238,11 @@ sub accession_count_by_breeding_program_without_trials {
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift;
-    
+
     my $dbh = $self->dbh();
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $datelessq;
     if ($include_dateless_items == 1 ) {
 	$datelessq = " stock.create_date IS NULL OR ";
@@ -230,12 +251,12 @@ sub accession_count_by_breeding_program_without_trials {
 
     my $h = $dbh->prepare($query);
     $h->execute($start_date, $end_date);
-    
-    my @data; 
+
+    my @data;
     while (my ($bp, $count) = $h-> fetchrow_array()) {
 	push @data, [ $bp, $count ];
     }
-    return \@data;	
+    return \@data;
 }
 
 sub plot_count_by_breeding_program {
@@ -245,7 +266,7 @@ sub plot_count_by_breeding_program {
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $dbh = $self->dbh();
 
     my $datelessq;
@@ -256,12 +277,12 @@ sub plot_count_by_breeding_program {
 
     my $h = $dbh->prepare($query);
     $h->execute($start_date, $end_date);
-    
-    my @data; 
+
+    my @data;
     while (my ($bp, $count) = $h-> fetchrow_array()) {
 	push @data, [ $bp, $count ];
     }
-    return \@data;	
+    return \@data;
 }
 
 sub germplasm_count_with_pedigree {
@@ -272,15 +293,15 @@ sub germplasm_count_with_pedigree {
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $dbh = $self->dbh();
-    
+
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " stock.create_date IS NULL OR ";
     }
-       
-       
+
+
     my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join stock_relationship on(stock_id=object_id) WHERE stock_relationship.type_id in (select cvterm_id FROM cvterm where name='female_parent' or name='male_parent') and cvterm.name='accession' and ( $datelessq ( stock.create_date > ? and stock.create_date < ? )) group by cvterm.name";
 
     my $h = $dbh->prepare($query);
@@ -302,7 +323,7 @@ sub germplasm_count_with_phenotypes {
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $dbh = $self->dbh();
 
     my $datelessq;
@@ -331,7 +352,7 @@ sub germplasm_count_with_genotypes {
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $dbh = $self->dbh();
 
     my $datelessq;
@@ -343,11 +364,11 @@ sub germplasm_count_with_genotypes {
     #
     my $query = "SELECT count(*) FROM stock join cvterm on(type_id=cvterm_id) join nd_experiment_stock on(stock.stock_id=nd_experiment_stock.stock_id) join nd_experiment_genotype on(nd_experiment_stock.nd_experiment_id=nd_experiment_genotype.nd_experiment_id) WHERE cvterm.name='accession' and ( $datelessq (stock.create_date > ? and stock.create_date < ?)) group by cvterm.name";
 
-    
+
     my $h = $dbh->prepare($query);
     $h->execute($start_date, $end_date);
 
-    
+
     my @data;
     while (my ($stock_type, $count) = $h->fetchrow_array()) {
 	push @data, [ 'accessions with pedigree', $count ];
@@ -356,7 +377,7 @@ sub germplasm_count_with_genotypes {
     # genotypes associated with plants
 
     # gentoypes associated with plots, etc.??? need to do this separately?
-    
+
     return \@data;
 }
 
@@ -369,9 +390,9 @@ sub phenotype_count_per_trial {
     my $include_dateless_items = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
-    
+
     my $dbh = $self->dbh();
-    
+
     my $datelessq;
     if ($include_dateless_items == 1) {
 	$datelessq = " phenotype.create_date IS NULL OR ";
