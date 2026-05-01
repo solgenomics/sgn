@@ -57,7 +57,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial_id = $c->req->param('trial_id');
     my $data_level = $c->req->param('data_level') || 'plots';
-    my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
+    my $treatments = $c->req->param('treatments');
     my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
     my $plot_order = $c->req->param('plot_order');
     my $plot_start = $c->req->param('plot_start');
@@ -124,6 +124,8 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     my $use_synonyms = $c->req->param('use_synonyms') || '';
     my $selected_trait_list_id = $c->req->param('trait_list');
     my @selected_traits;
+    my $selected_treatment_list_id = $c->req->param('treatments');
+    my @selected_treatments;
     if ($selected_trait_list_id){
         my $list = CXGN::List->new({ dbh => $c->dbc->dbh, list_id => $selected_trait_list_id });
         my @trait_list = @{$list->elements()};
@@ -136,6 +138,18 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         }
         my $lt = CXGN::List::Transform->new();
         @selected_traits = @{$lt->transform($schema, "traits_2_trait_ids", \@trait_list)->{transform}};
+    }
+    if ($treatments){
+        $treatments = [$treatments];
+        my $validator = CXGN::List::Validate->new();
+        my @absent_treatments = @{$validator->validate($schema, 'traits', $treatments)->{'missing'}};
+        if (scalar(@absent_treatments)>0){
+            $c->stash->{rest} = {error =>  "Treatment list is not valid because of these terms: ".join ',',@absent_treatments };
+            $c->detach();
+	    return;
+        }
+        my $lt = CXGN::List::Transform->new();
+        @selected_treatments = @{$lt->transform($schema, "traits_2_trait_ids", $treatments)->{transform}};
     }
 
     my $dir = $c->tempfiles_subdir('/other');
@@ -151,7 +165,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
         data_level => $data_level,
-        treatment_project_ids => $treatment_project_ids,
+        selected_treatment_ids => \@selected_treatments,
         selected_columns => $selected_columns,
         include_measured => $include_measured,
         all_stats => $all_stats,

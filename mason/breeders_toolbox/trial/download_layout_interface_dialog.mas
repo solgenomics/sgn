@@ -539,7 +539,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
             data: {
                 'trial_id': parseInt(trial_id),
                 'data_level': jQuery('#create_fieldbook_data_level_<% $download_type %>').val(),
-                'treatment_project_id': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
+                'treatments': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
                 'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
                 'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
                 'all_stats': jQuery('#create_fieldbook_all_stats_<% $download_type %>').prop('checked'),
