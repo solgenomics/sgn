@@ -333,7 +333,11 @@ sub get_layout_output {
     my $trait_names_list = $trt_transform->transform($schema, 'trait_ids_2_trait_names', \@selected_traits);
     @selected_traits = @{$trait_names_list->{transform}};
     my $new_exact_hash = {};
-    foreach my $term ((@selected_traits,@selected_treatments)) {
+    my @combined_terms = @selected_treatments;
+    if ($include_measured) {
+        @combined_terms = (@combined_terms, @selected_traits);
+    }
+    foreach my $term (@combined_terms) {
         $new_exact_hash->{$term} = $exact_performance_hash->{$term};
     }
     $exact_performance_hash = $new_exact_hash;

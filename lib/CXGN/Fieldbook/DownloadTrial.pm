@@ -18,7 +18,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => $c->user()->get_object()->get_sp_person_id(),
     user_name => $c->user()->get_object()->get_username(),
     data_level => 'plots',
-    treatment_ids => ['test_treatment|EXPERIMENT_TREATMENT:0000001'],
+    selected_treatment_ids => ['test_treatment|EXPERIMENT_TREATMENT:0000001'],
     selected_columns => {"plot_name"=>1,"block_number"=>1,"plot_number"=>1},
     include_measured => 1,
     selected_trait_ids => [2,3],
