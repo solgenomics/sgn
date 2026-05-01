@@ -1194,27 +1194,6 @@ jQuery(document).ready(function(){
             jQuery('#upload_genotype_data_format_ssr').hide();
         }
 
-
-    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
-        if (data_type == 'ssr') {
-            selected = [];
-            jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
-                selected.push(jQuery(this).val());
-            });
-            if (selected.length == 0){
-                jQuery('#upload_ssr_protocol_dialog').modal('show');
-                jQuery("#upload_ssr_species_name_input").autocomplete({
-                    source: '/organism/autocomplete'
-                });
-            } else if (selected.length > 0) {
-                alert('If you selected a protocol, do not try to make a new one at the same time!');
-            }
-        } else {
-            jQuery('#upload_genotype_data_protocol_details').show();
-        }
-        return false;
-    });
-
     });
 
     var upload_genotyping_data_trial_table = jQuery('#upload_genotyping_data_project_search_results').DataTable( {
@@ -1248,6 +1227,7 @@ jQuery(document).ready(function(){
             Workflow.complete('#upload_genotyping_data_type_check_button');
             Workflow.focus('#upload_genotypes_workflow', 2);
         }
+        return false;
     });
 
     jQuery('#upload_genotyping_data_project_check_button').click(function(){
@@ -1280,6 +1260,27 @@ jQuery(document).ready(function(){
         }
         return false;
     });
+
+    jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
+        if (data_type == 'ssr') {
+            selected = [];
+            jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
+                selected.push(jQuery(this).val());
+            });
+            if (selected.length == 0){
+                jQuery('#upload_ssr_protocol_dialog').modal('show');
+                jQuery("#upload_ssr_species_name_input").autocomplete({
+                    source: '/organism/autocomplete'
+                });
+            } else if (selected.length > 0) {
+                alert('If you selected a protocol, do not try to make a new one at the same time!');
+            }
+        } else {
+            jQuery('#upload_genotype_data_protocol_details').show();
+        }
+        return false;
+    });
+
 
     var ssr_protocol_id;
 
