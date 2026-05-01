@@ -208,7 +208,7 @@ function finish_blast(jobid, seq_count) {
 }
 
 function disable_ui() { 
-  jQuery('#myModal').modal({
+  jQuery('#blast_working_modal').modal({
     show: true,
     keyboard: false,
     backdrop: 'static'
@@ -217,7 +217,7 @@ function disable_ui() {
 }
 
 function enable_ui() { 
-  jQuery('#myModal').modal('hide');
+  jQuery('#blast_working_modal').modal('hide');
     // jQuery('#working').dialog("close");
     clear_status();
 }

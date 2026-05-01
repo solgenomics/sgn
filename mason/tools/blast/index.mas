@@ -202,7 +202,7 @@ The default word_size for blastn is 11 and for protein-based blast programs it i
 
 <div id="jobid" style="display:none;"></div>
 
-<div class="modal fade" id="myModal" role="dialog">
+<div class="modal fade" id="blast_working_modal" role="dialog">
   <div class="modal-dialog modal-sm">
 
     <!-- Modal content-->
