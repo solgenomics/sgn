@@ -18,7 +18,7 @@ my $create_fieldbook = CXGN::Fieldbook::DownloadTrial->new({
     user_id => $c->user()->get_object()->get_sp_person_id(),
     user_name => $c->user()->get_object()->get_username(),
     data_level => 'plots',
-    treatment_project_ids => [1],
+    treatment_ids => ['test_treatment|EXPERIMENT_TREATMENT:0000001'],
     selected_columns => {"plot_name"=>1,"block_number"=>1,"plot_number"=>1},
     include_measured => 1,
     selected_trait_ids => [2,3],
@@ -112,7 +112,7 @@ has 'data_level' => (
 
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
-has 'treatment_project_ids' => (
+has 'selected_treatment_ids' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw'
 );
@@ -207,7 +207,7 @@ sub download {
         schema => $schema,
         trial_id => $trial_id,
         data_level => $self->data_level,
-        treatment_project_ids => $self->treatment_project_ids,
+        selected_treatment_ids => $self->selected_treatment_ids,
         selected_columns => $self->selected_columns,
         include_measured => $self->include_measured,
         all_stats => $self->all_stats,
