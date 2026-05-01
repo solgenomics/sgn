@@ -33,6 +33,15 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
 	    return;
     }
     
+    # Only show dataset if the user is the owner OR the dataset is public
+    my $user_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $owner_id = $dataset->sp_person_id;
+    if ( ! ($user_id == $owner_id || $dataset->is_public) ) {
+        $c->stash->{template} = 'generic_message.mas';
+        $c->stash->{message} = "You do not have access to this dataset.<br /><br />If you are the owner of this dataset, make sure you are logged in, or ask the owner to make it public.";
+        return;
+    }
+
     my $info = $dataset->get_dataset_data();
 
     my $dataset_info = {
@@ -80,13 +89,16 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     }
     $html .= "</table>";
 
+    my $owner = $people_schema->resultset("SpPerson")->find({ sp_person_id => $dataset->sp_person_id });
+    my $onwer_name = $owner->first_name." ".$owner->last_name();
+
     $c->stash->{dataset_name} = $dataset->name();
     $c->stash->{dataset_id} = $dataset_id;
     $c->stash->{dataset_description} = $dataset->description;
     $c->stash->{dataset_contents} = $html;
-    $c->stash->{dataset_owner} = $dataset->sp_person_id;
+    $c->stash->{dataset_owner_id} = $dataset->sp_person_id;
+    $c->stash->{dataset_owner_name} = $onwer_name;
     $c->stash->{dataset_is_public} = $dataset->is_public;
-    print STDERR "dataset name $dataset->name()\n";
     $c->stash->{template} = '/dataset/index.mas';
     
 }

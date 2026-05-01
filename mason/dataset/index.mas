@@ -4,14 +4,15 @@ $dataset_id
 $dataset_name => ''
 $dataset_description => ''
 $dataset_contents => ''
-$dataset_owner => 0
+$dataset_owner_id => 0
+$dataset_owner_name => ''
 $dataset_is_public => 0
 </%args>
 
 <%perl>
     my $is_dataset_owner = 0;
     if ( $c->user() ) {
-        $is_dataset_owner = $c->user->get_object->get_sp_person_id eq $dataset_owner;
+        $is_dataset_owner = $c->user->get_object->get_sp_person_id eq $dataset_owner_id;
     }
 
     (my $dataset_description_string = $dataset_description) =~ s|\n|<br />|g;
@@ -48,6 +49,11 @@ $dataset_is_public => 0
 % }
                         </div>
                     </td>
+                </tr>
+
+                <tr>
+                    <td>Owner</td>
+                    <td><a href='/solpeople/personal-info.pl?sp_person_id=<% $dataset_owner_id %>'><% $dataset_owner_name %></a></td>
                 </tr>
 
                 <tr>
@@ -128,5 +134,6 @@ jQuery(document).ready(function() {
 <style>
     #dataset-table > tbody:nth-child(1) > tr > td:nth-child(1) {
         font-weight: bold;
+        font-size: 105%;
     }
 </style>

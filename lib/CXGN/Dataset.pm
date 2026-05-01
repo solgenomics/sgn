@@ -64,7 +64,8 @@ use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Trial;
 use CXGN::Trait;
 use POSIX qw(strftime);
-use File::Path qw(mkpath);
+use File::Path qw(mkpath rmtree);
+use File::Basename;
 use Text::CSV qw(csv);
 
 =head2 people_schema()
@@ -349,6 +350,12 @@ has 'tool_compatibility' => (
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
+has 'published' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw',
+    default => sub { {} }
+);
+
 sub BUILD {
     my ($self, $args) = @_;
 
@@ -405,6 +412,7 @@ sub BUILD {
     } else {
         $self->outlier_cutoffs($dataset->{outlier_cutoffs});
     }
+    $self->published($dataset->{published});
 }
 
 
@@ -621,6 +629,7 @@ sub get_dataset_data {
     $dataref->{outliers} = $self->outliers() if $self->outliers;
     $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
     $dataref->{tool_compatibility} = ($self->tool_compatibility) ? $self->tool_compatibility() : undef;
+    $dataref->{published} = $self->published;
     return $dataref;
 }
 
@@ -641,6 +650,7 @@ sub _get_dataref {
     $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->locations && scalar(@{$self->locations})>0;
     $dataref->{tool_compatibility} = $self->tool_compatibility() if $self->tool_compatibility;
+    $dataref->{published} = $self->published() if $self->published;
     return $dataref;
 }
 
@@ -1722,6 +1732,8 @@ sub get_child_analyses {
 sub generate_archive_files {
     my $self = shift;
     my $dir = shift;
+    my $editable_stock_props = shift;
+
     my $schema = $self->schema;
     my $dbh = $schema->storage->dbh();
     my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
@@ -1834,6 +1846,7 @@ sub generate_archive_files {
     unless (-d $output) {
         mkpath($output) or return { error => "Couldn't mkdir $output: $!" };
     }
+    my @files;
 
     # Save breeding programs
     if ( defined $breeding_programs ) {
@@ -1841,6 +1854,7 @@ sub generate_archive_files {
         my @header = ("id", "name", "description");
         my @rows = (\@header, @$results);
         csv(in => \@rows, out => "$output/breeding_programs.csv", sep_char => ",");
+        push @files, "breeding_programs.csv";
     }
 
     # Save locations
@@ -1853,17 +1867,107 @@ sub generate_archive_files {
         }
         my @rows = (\@header, @data);
         csv(in => \@rows, out => "$output/locations.csv", sep_char => ",");
+        push @files, "locations.csv";
     }
 
     # Save accessions
     if ( defined $accessions ) {
-        # TODO: need a way to get the Catalyst Context or pass the editable stock props to this function
-        # my $results = $BTAccessions->export_properties($c, $accessions);
-        # csv(in => $results, out => "$output/accessions.csv", sep_cahr => ",");
+        my $results = $BTAccessions->export_properties($accessions, $editable_stock_props);
+        csv(in => $results, out => "$output/accessions.csv", sep_char => ",");
+        push @files, "accessions.csv";
     }
 
-    return { directory => $output };
+    return { directory => $output, files => \@files };
 }
 
+sub add_published {
+    my $self = shift;
+    my $sp_person_id = shift;
+    my $directory = shift;
+    my $files = shift;
+    my $dataset_id = $self->sp_dataset_id();
+    my $key = time();
+
+    # Get user info
+    my $person = $self->people_schema()->resultset("SpPerson")->find({ sp_person_id => $sp_person_id });
+    my $person_name = $person->first_name." ".$person->last_name();
+
+    # Get existing dataset row
+    my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $dataset_id });
+    return { error => "Dataset with id $dataset_id does not exist" } unless $row;
+
+    # Get existing published data
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
+    my $published = $dataset->{published} || {};
+
+    # Add new published data
+    $published->{$key} = {
+        user => {
+            id => $sp_person_id,
+            name => $person_name
+        },
+        directory => $directory,
+        files => $files,
+        ts => $key*1000,
+        key => $key
+    };
+    $dataset->{published} = $published;
+
+    # Store the updated dataset
+    eval {
+        $row->dataset(JSON::Any->encode($dataset));
+        $row->update();
+    };
+    if ($@) {
+        return { error => "Could not add to dataset published: $@" };
+    }
+
+    return { key => $key };
+}
+
+sub remove_published {
+    my $self = shift;
+    my $key = shift;
+    my $base_directory = shift;
+    my $dataset_id = $self->sp_dataset_id();
+
+    # Get existing dataset row
+    my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $dataset_id });
+    return { error => "Dataset with id $dataset_id does not exist" } unless $row;
+
+    # Get existing published data
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
+    my $published = $dataset->{published} || {};
+
+    # Make sure key exists
+    if ( !exists $published->{$key} ) {
+        return { error => 'The specified key does not exist for this dataset' };
+    }
+
+    # remove the directory
+    my $directory = $published->{$key}->{'directory'};
+    my $re = qr/^$base_directory/;
+    if ( -d $directory && $directory =~ $re ) {
+        rmtree("$directory") or return { error => 'Failed to remove the archived files from the server' };
+    }
+    else {
+        return { error => 'Could not remove the archived files from the server' };
+    }
+
+    # remove from dataset
+    delete $published->{$key};
+    $dataset->{published} = $published;
+
+    # Store the updated dataset
+    eval {
+        $row->dataset(JSON::Any->encode($dataset));
+        $row->update();
+    };
+    if ($@) {
+        return { error => "Could not remove from published metadata from the dataset: $@" };
+    }
+
+    return { success => 1 };
+}
 
 1;

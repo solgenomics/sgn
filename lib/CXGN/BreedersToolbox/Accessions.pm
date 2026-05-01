@@ -266,10 +266,10 @@ Export accession properties
 Download rows of accession properties for a specified subset of accessions (by id)
 This is used to generate a file download of accession metadata
 
-Usage: my $rows = $accessions->export_properties($c, \@accession_ids);
+Usage: my $rows = $accessions->export_properties(\@accession_ids, \@editable_stock_props);
 Arguments:
-    $c = Catalyst context, to get the editable stock props from the config
     $accession_ids = array ref of accession ids
+    $editable_stock_props = array ref of stock prop names of accession properties
 Returns: an arrayref where each array item is an array of accession properties
           the first item is an array of the header values
 The order of the properties is: id, accession_name, create_date, species_name, population_name, female_parent, male_parent, cross_type, ...editable stock props
@@ -277,16 +277,15 @@ The order of the properties is: id, accession_name, create_date, species_name, p
 
 sub export_properties {
     my $self = shift;
-    my $c = shift;
     my $accession_ids = shift;
+    my $editable_stock_props = shift;
 
     my $schema = $self->schema;
     my $dbh = $schema->storage->dbh;
-    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
 
     # Setup Stock Props
     my @stock_props = ("organization", "stock_synonym", "PUI");
-    foreach my $esp (@editable_stock_props) {
+    foreach my $esp (@$editable_stock_props) {
         if (!scalar grep { $_ eq $esp } @stock_props) {
             push(@stock_props, $esp)
         }

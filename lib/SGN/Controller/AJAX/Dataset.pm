@@ -550,6 +550,8 @@ sub publish_dataset : Path('/ajax/dataset/publish') Args(1) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = shift;
+    my $dataset_archive_path = $c->config->{dataset_archive_path};
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
 
     my $dataset = CXGN::Dataset->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -568,15 +570,111 @@ sub publish_dataset : Path('/ajax/dataset/publish') Args(1) {
         return;
     }
 
-    my $resp = $dataset->generate_archive_files($c->config->{dataset_archive_path});
+    my $resp = $dataset->generate_archive_files($dataset_archive_path, \@editable_stock_props);
     if ( defined $resp->{error} ) {
         print STDERR "PUBLISH DATASET ERROR = " . Dumper $resp->{error};
         $c->stash->{rest} = { error => "Could not publish dataset [" . $resp->{error} . "]" };
         return;
     }
 
+    if ( defined $resp->{directory} ) {
+        $dataset->add_published($user_id, $resp->{directory}, $resp->{files});
+    }
+    else {
+        $c->stash->{rest} = { error => "Could not store dataset archive on server" };
+        return;
+    }
+
     $c->stash->{rest} = { success => 1 };
     return;
+}
+
+sub publish_dataset_status : Path('/ajax/dataset/publish/status') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+
+    $c->stash->{rest} = { published => $dataset->published() };
+    return;
+}
+
+sub publish_dataset_remove : Path('/ajax/dataset/publish/remove') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $dataset_archive_path = $c->config->{dataset_archive_path};
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Login required to perform requested action." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    if ($dataset->sp_person_id() != $user_id ) {
+        $c->stash->{rest} = { error => "Only the owner can remove published metadata" };
+        return;
+    }
+
+    my $resp = $dataset->remove_published($key, $dataset_archive_path);
+
+    $c->stash->{rest} = $resp;
+    return;
+}
+
+sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $file = shift;
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+
+    my $published = $dataset->published();
+
+    if ( exists $published->{$key} ) {
+        my $dir = $published->{$key}->{directory};
+        my $path = "$dir/$file";
+
+        if ( -f "$path" ) {
+            $c->res->content_type('text/plain');
+            $c->res->header('Content-Disposition', qq[attachment; filename="$file"]);
+
+            my $output = "";
+            open(my $F, "< :raw", $path) || return { error => 'Cannot open file to read contents' };
+            while (<$F>) {
+                $output .= $_;
+            }
+            close($F);
+
+            $c->res->body($output);
+        }
+        else {
+            $c->stash->{rest} = { error => 'The specified file does not exist' };
+            return;
+        }
+    }
+    else {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
 }
 
 1

@@ -5,27 +5,113 @@ $is_dataset_owner => 0
 </%args>
 
 
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Date Published</th>
+            <th>User</th>
+            <th>Files</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="dataset-publish-status"></tbody>
+</table>
+
 % if ( $is_dataset_owner ) {
+    <br /><br />
     <button id="dataset-publish" class="btn btn-info">Publish Dataset</button>
 % }
 
 <script>
 jQuery(document).ready(function() {
+    updateStatus();
 
     jQuery("#dataset-publish").click(function() {
         jQuery.ajax({
             url: '/ajax/dataset/publish/<% $dataset_id %>',
+            beforeSend: () => {
+                jQuery('#working_modal').modal('show');
+            },
             success: (resp) => {
+                jQuery('#working_modal').modal('hide');
                 console.log(resp);
                 if ( resp?.error ) {
                     alert(resp.error);
                 }
+                else {
+                    updateStatus();
+                }
             },
             error: () => {
+                jQuery('#working_modal').modal('hide');
                 alert("Could not publish the dataset");
             }
         })
     });
-
 });
+
+function updateStatus() {
+    jQuery.ajax({
+        url: '/ajax/dataset/publish/status/<% $dataset_id %>',
+        success: (resp) => {
+            console.log(resp);
+            if ( resp?.error ) {
+                alert(resp.error);
+            }
+            else {
+                displayStatus(resp?.published);
+            }
+        },
+        error: () => {
+            alert("Could not get dataset published status");
+        }
+    });
+}
+
+function displayStatus(status = {}) {
+    const rows = [];
+    if ( Object.keys(status).length > 0 ) {
+        Object.keys(status).forEach((k) => {
+            const s = status[k];
+            var html = `<td>${new Date(s.ts).toLocaleString()}</td>`;
+            html += `<td><a href='/solpeople/personal-info.pl?sp_person_id=${s.user.id}'>${s.user.name}</a></td>`;
+            html += `<td><ul style='padding-left: 15px'>`;
+            (s.files || []).forEach((f) => {
+                const url = `/ajax/dataset/publish/file/<% $dataset_id %>/${k}/${f}`;
+                html += `<li><a href='${url}' target='_blank'>${f}</a></li>`;
+            });
+            html += `</ul></td>`;
+% if ( $is_dataset_owner ) {
+            html += `<td><button class='btn btn-small btn-danger' onclick='deletePublished(${s.key})'><span class='glyphicon glyphicon-trash'></span></button></td>`;
+% } else {
+            html += `<td></td>`;
+% }
+            rows.push(html);
+        });
+        jQuery("#dataset-publish-status").html(`<tr>${rows.join('</tr><tr>')}</tr>`);
+    }
+    else {
+        const html = "<tr><td colspan=4><em>This dataset has not been published</em></td></tr>";
+        jQuery("#dataset-publish-status").html(html);
+    }
+}
+
+function deletePublished(key) {
+    if (confirm("Are you sure you want to unlink this published metadata from the dataset?  This will remove the archived data on this server and the connection between the dataset and the external service.  This will NOT remove anything from the external service.") ) {
+        jQuery.ajax({
+        url: `/ajax/dataset/publish/remove/<% $dataset_id %>/${key}`,
+        success: (resp) => {
+            if ( resp?.error ) {
+                alert(resp.error);
+            }
+            else {
+                updateStatus();
+            }
+        },
+        error: () => {
+            alert("Could not remove dataset published metadata");
+        }
+    });
+    }
+}
 </script>
