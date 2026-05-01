@@ -546,7 +546,7 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
 }
 
 
-sub publish_dataset : Path('/ajax/dataset/publish') Args(1) {
+sub publish_dataset_generate : Path('/ajax/dataset/publish/generate') Args(1) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = shift;

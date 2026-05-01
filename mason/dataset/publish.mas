@@ -19,16 +19,16 @@ $is_dataset_owner => 0
 
 % if ( $is_dataset_owner ) {
     <br /><br />
-    <button id="dataset-publish" class="btn btn-info">Publish Dataset</button>
+    <button id="dataset-generate-archive" class="btn btn-primary"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;Generate Archive Files</button>
 % }
 
 <script>
 jQuery(document).ready(function() {
     updateStatus();
 
-    jQuery("#dataset-publish").click(function() {
+    jQuery("#dataset-generate-archive").click(function() {
         jQuery.ajax({
-            url: '/ajax/dataset/publish/<% $dataset_id %>',
+            url: '/ajax/dataset/publish/generate/<% $dataset_id %>',
             beforeSend: () => {
                 jQuery('#working_modal').modal('show');
             },

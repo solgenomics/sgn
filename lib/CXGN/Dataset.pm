@@ -57,6 +57,7 @@ use JSON::XS;
 use CXGN::BreederSearch;
 use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Schema;
+use CXGN::Phenotypes::MetaDataMatrix;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Genotype::Protocol;
@@ -1875,6 +1876,19 @@ sub generate_archive_files {
         my $results = $BTAccessions->export_properties($accessions, $editable_stock_props);
         csv(in => $results, out => "$output/accessions.csv", sep_char => ",");
         push @files, "accessions.csv";
+    }
+
+    # Save trial metadata
+    if ( defined $trials ) {
+        my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
+            bcs_schema => $schema,
+            search_type => 'MetaData',
+            data_level => 'plot',
+            trial_list => $trials,
+        );
+        my @results = $metadata_search->get_metadata_matrix();
+        csv(in => \@results, out => "$output/trials.csv", sep_char => ",");
+        push @files, "trials.csv";
     }
 
     return { directory => $output, files => \@files };
