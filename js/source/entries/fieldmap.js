@@ -568,7 +568,7 @@ export function init() {
             let tempNumCols = this.meta_data.num_cols;
             this.meta_data.num_cols = this.meta_data.num_rows;
             this.meta_data.num_rows = tempNumCols;
-            d3.select("svg").remove();
+            d3.select("#fieldmap_chart").selectAll("svg").remove();
             this.add_borders();
             this.render();
         }
@@ -1402,7 +1402,7 @@ export function init() {
         }
 
         load() {
-            d3.select("svg").remove();
+            d3.select("#fieldmap_chart").selectAll("svg").remove();
             this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
             this.add_borders();
             this.render();
