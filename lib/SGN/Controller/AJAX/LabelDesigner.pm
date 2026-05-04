@@ -99,6 +99,9 @@ my %ADDITIONAL_LIST_DATA = (
                 if ( $parents->{'mother'} && $parents->{'father'} ) {
                     $pedigree = $parents->{'mother'} . '/' . $parents->{'father'};
                 }
+		elsif ( $parents->{'mother'}) {
+		    $pedigree = $parents->{'mother'} .'/NA';
+		}
 
                 # Add pedigree to return hash
                 for my $index (0 .. $#$list_item_db_ids ) {

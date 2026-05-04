@@ -247,7 +247,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[5]
+        return a[6]
       }
     });
   
@@ -451,7 +451,7 @@ jQuery(document).ready(function () {
 
     var corrArgs;
     var corrPopId;
-    if (runCorrBtnId.match(/run_corr/)) {
+    if (runCorrBtnId.match(/run_correlation/)) {
         corrArgs = solGS.correlation.getPhenoCorrArgs();
         corrPopId = corrArgs.corr_pop_id;
 

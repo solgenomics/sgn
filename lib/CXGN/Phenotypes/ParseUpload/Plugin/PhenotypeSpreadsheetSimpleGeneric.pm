@@ -155,6 +155,31 @@ sub parse {
 
         for my $trait_name (@$trait_columns) {
             next unless defined $trait_name && $trait_name ne '';
+            my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
+            my $timestamp = '';
+            my $trait_value = '';
+	    my @trait_values;
+            if ($timestamp_included){
+		my @values;
+		# is it a multi-value line (separated by | )?
+		if ($value_string =~ /\|/) {
+		    @values = split /\|/, $value_string;
+		}
+		else {
+		    @values = ($value_string);
+		}
+		foreach my $v (@values) {
+		    ($trait_value, $timestamp) = split /,/, $v;
+		    if (defined($trait_value)) {
+			push @trait_values, [ $trait_value, $timestamp ];
+		    }
+		}
+            } else {
+                @trait_values = ( [ $value_string, '' ]);
+            }
+            if (!defined($timestamp)){
+                $timestamp = '';
+            }
 
             my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
             my $measurements = _parse_measurements($value_string, $timestamp_included);
