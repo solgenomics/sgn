@@ -11,6 +11,21 @@ jobs:
 
   test_breedbase:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        subtest_key:
+          - unit
+          - unit_fixture
+          - unit_mech
+          - selenium2_list
+          - selenium2_trial
+          - selenium2_dataset
+          - selenium2_authenticate
+          - selenium2_breeders
+          - selenium2_onto
+          - selenium2_search
+          - selenium2_stock
+          - selenium2_tools
     steps:
 
       # -----------------------------------------------------------------------
@@ -62,62 +77,74 @@ jobs:
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run unit tests
+        if: ${{ matrix.subtest_key == 'unit' }}
         run: |
           ./run_test t/unit
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run fixture tests
+        if: ${{ matrix.subtest_key == 'unit_fixture' }}
         run: |
           ./run_test t/unit_fixture
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run mech tests
+        if: ${{ matrix.subtest_key == 'unit_mech' }}
         run: |
           ./run_test t/unit_mech
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       # Run all selenium tests individually to avoid solgs for now
       - name: Run selenium tests lists
+        if: ${{ matrix.subtest_key == 'selenium2_list' }}
         run: |
           ./run_test t/selenium2/01_list
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests trial
+        if: ${{ matrix.subtest_key == 'selenium2_trial' }}
         run: |
           ./run_test t/selenium2/02_trial
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests dataset
+        if: ${{ matrix.subtest_key == 'selenium2_dataset' }}
         run: |
           ./run_test t/selenium2/03_dataset
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests authenticate
+        if: ${{ matrix.subtest_key == 'selenium2_authenticate' }}
         run: |
           ./run_test t/selenium2/authenticate
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests breeders
+        if: ${{ matrix.subtest_key == 'selenium2_breeders' }}
         run: |
           ./run_test t/selenium2/breeders
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests onto
+        if: ${{ matrix.subtest_key == 'selenium2_onto' }}
         run: |
           ./run_test t/selenium2/onto
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests search
+        if: ${{ matrix.subtest_key == 'selenium2_search' }}
         run: |
           ./run_test t/selenium2/search
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests stock
+        if: ${{ matrix.subtest_key == 'selenium2_stock' }}
         run: |
           ./run_test t/selenium2/stock
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Run selenium tests tools
+        if: ${{ matrix.subtest_key == 'selenium2_tools' }}
         run: |
           ./run_test t/selenium2/tools
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
