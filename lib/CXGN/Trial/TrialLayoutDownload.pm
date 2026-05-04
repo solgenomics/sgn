@@ -339,7 +339,7 @@ sub get_layout_output {
 
     # filter through exact performance hash and keep traits and treatments as requested
     my $new_exact_hash = {};
-    my @combined_terms = ();
+    my @combined_terms = (@selected_traits);
     if ($include_measured eq 'true') {
         @combined_terms = (@combined_terms, @trait_ids);
     }
@@ -347,7 +347,7 @@ sub get_layout_output {
         @combined_terms = (@combined_terms, @treatment_ids);
     }
     foreach my $term (@combined_terms) {
-        $new_exact_hash->{$term} = $exact_performance_hash->{$term};
+        $new_exact_hash->{$term} = $exact_performance_hash->{$term} ? $exact_performance_hash->{$term} : {};
     }
     $exact_performance_hash = $new_exact_hash;
 
