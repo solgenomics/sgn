@@ -36,10 +36,10 @@ $d->while_logged_in_as('submitter', sub {
     wait_until { $d->driver()->accept_alert(); };
     $d->wait_for_alert_dismissed();
 
-    my $textarea = $d->find_element_ok("dialog_add_list_item", "id", "add trial test list");
     my $trials_list = "Kasese solgs trial\ntrial2 NaCRRI";
-    $textarea->send_keys($trials_list);
-    wait_until { $textarea->get_attribute("value") eq $trials_list; };
+    $d->set_value_ok("dialog_add_list_item", "id", "add trial test list", $trials_list);
+
+    sleep(1); # Determined empirically; needed so the following button click will register
 
     $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
     wait_until { 

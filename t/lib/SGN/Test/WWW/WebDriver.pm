@@ -129,7 +129,7 @@ sub login {
     my $login_button = $d->find_element("submit_password", "id");
     $login_button->click();
 
-    sleep(2); # prevents an "error has occurred" alert
+    sleep(2); # Determined empirically, prevents an "error has occurred" alert
 }
 
 sub logout { 
@@ -222,7 +222,23 @@ sub download_linked_file {
 
 }
 
+=item set_value_ok($self, $name, $method, $test_name, $value)
+Uses JavaScript to set the value of an input element more reliably
+than sending keys.
+=cut
+sub set_value_ok {
+    my ($self, $name, $method, $test_name, $value) = @_;
 
+    my $element = $self->find_element_ok($name, $method, $test_name);
+    $self->driver->execute_script("arguments[0].value = arguments[1];", $element, $value);
+    $self->driver->execute_script("arguments[0].dispatchEvent(new Event('change'));", $element);
+
+    return $element;
+}
+
+=item wait_for_working_dialog($self, $max, $id)
+Waits for a working dialog to disappear.  The default id is "working_modal".
+=cut
 sub wait_for_working_dialog {
     my $self = shift;
     my $max = shift || 300;
@@ -242,6 +258,9 @@ sub wait_for_working_dialog {
     print STDERR "... working dialog dismissed ...\n";
 }
 
+=item wait_for_spinner($self, $name, $method)
+Waits for an element to appear and disappear.
+=cut
 sub wait_for_spinner {
     my $self = shift;
     my ($name, $method) = @_;
@@ -255,6 +274,9 @@ sub wait_for_spinner {
     };
 }
 
+=item wait_for_alert_dismissed($self)
+Waits for an alert to disappear.
+=cut
 sub wait_for_alert_dismissed {
     my $self = shift;
     wait_until {
