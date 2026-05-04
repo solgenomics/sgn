@@ -5,6 +5,8 @@
     <li><a href="/breeders/manage_programs/">Breeding Programs</a></li>
     <li><a href="/breeders/locations">Locations</a></li>
     <li><a href="/tools/report/">Report Factory</a></li>
+    <li><a href="/breeders/meeting/">Decision Meetings</a></li>
+
 
     <li role="separator" class="divider"></li>
     <li><a href="/breeders/accessions/">Accessions</a></li>
