@@ -112,9 +112,10 @@ has 'data_level' => (
 
 has 'file_metadata' => (isa => 'Str', is => 'rw', predicate => 'has_file_metadata');
 
-has 'selected_treatment_ids' => (
-    isa => 'ArrayRef[Int]|Undef',
-    is => 'rw'
+has 'include_treatments' => (
+    isa => 'Str',
+    is => 'rw',
+    default => 'true'
 );
 
 has 'selected_columns' => (
@@ -207,7 +208,7 @@ sub download {
         schema => $schema,
         trial_id => $trial_id,
         data_level => $self->data_level,
-        selected_treatment_ids => $self->selected_treatment_ids,
+        include_treatments => $self->include_treatments,
         selected_columns => $self->selected_columns,
         include_measured => $self->include_measured,
         all_stats => $self->all_stats,

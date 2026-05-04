@@ -66,14 +66,12 @@ sub download {
 
     my $it = 0;
     foreach my $trial_id (@trial_ids) {
-        my $trial = CXGN::Trial->new( { bcs_schema => $self->bcs_schema, trial_id => $trial_id });
-        my $treatments = $trial->get_treatments();
 
         my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
             schema => $self->bcs_schema,
             trial_id => $trial_id,
             data_level => $self->data_level,
-            selected_treatment_ids => $self->treatment_ids,
+            include_treatments => $self->include_treatments,
             selected_columns => $self->selected_columns,
             selected_trait_ids => $self->trait_list,
             include_measured => $self->include_measured,

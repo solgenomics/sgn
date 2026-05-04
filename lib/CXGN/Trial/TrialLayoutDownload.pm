@@ -117,9 +117,10 @@ has 'selected_trait_ids'=> (
     isa => 'ArrayRef[Int]|Undef',
 );
 
-has 'selected_treatment_ids' => (
+has 'include_treatments' => (
     is => 'ro',
-    isa => 'ArrayRef[Int]|Undef'
+    isa => 'Str',
+    default => 'true'
 );
 
 has 'trial_stock_type'=> (
@@ -194,11 +195,21 @@ sub get_layout_output {
     my $use_synonyms = $self->use_synonyms();
     my %selected_cols = %{$self->selected_columns};
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
-    my @selected_treatments = $self->selected_treatment_ids() ? @{$self->selected_treatment_ids} : ();
+    my $include_treatments = $self->include_treatments();
     my %errors;
     my @error_messages;
     my $trial_stock_type = $self->trial_stock_type();
     print STDERR "TrialLayoutDownload for Trial id: ($trial_id) ".localtime()."\n";
+
+    my $trial = CXGN::Project->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id
+    });
+
+    my $treatments = $trial->get_treatments();
+    my $traits = $trial->get_traits_assayed();
+    my @treatment_ids = map { $_->{trait_name} } @{$treatments};
+    my @trait_ids = map {$_->[1] if $_->[1] !~ m/_TREATMENT/} @{$traits};
 
     my $trial_layout;
     try {
@@ -326,16 +337,14 @@ sub get_layout_output {
         $selected_cols{'exported_tissue_sample_name'} = 1;
     }
 
-    # filter through exact performance hash and keep only selected treatments and traits
-    my $trt_transform = CXGN::List::Transform->new();
-    my $treatment_names_list = $trt_transform->transform($schema, 'trait_ids_2_trait_names', \@selected_treatments);
-    @selected_treatments = @{$treatment_names_list->{transform}};
-    my $trait_names_list = $trt_transform->transform($schema, 'trait_ids_2_trait_names', \@selected_traits);
-    @selected_traits = @{$trait_names_list->{transform}};
+    # filter through exact performance hash and keep traits and treatments as requested
     my $new_exact_hash = {};
-    my @combined_terms = @selected_treatments;
-    if ($include_measured) {
-        @combined_terms = (@combined_terms, @selected_traits);
+    my @combined_terms = ();
+    if ($include_measured eq 'true') {
+        @combined_terms = (@combined_terms, @trait_ids);
+    }
+    if ($include_treatments eq 'true') {
+        @combined_terms = (@combined_terms, @treatment_ids);
     }
     foreach my $term (@combined_terms) {
         $new_exact_hash->{$term} = $exact_performance_hash->{$term};

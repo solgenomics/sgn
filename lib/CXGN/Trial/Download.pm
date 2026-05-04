@@ -223,7 +223,7 @@ has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
 has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
 has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 has 'search_type' => (isa => 'Str', is => 'rw');
-has 'treatment_ids' => (isa => 'ArrayRef[Int]|Undef', is => 'rw');
+has 'include_treatments' => (isa => 'Str', is => 'rw', default => 'true');
 has 'selected_columns' => (isa => 'HashRef|Undef', is => 'rw');
 has 'include_notes' => (isa => 'Str', is => 'rw');
 has 'filename' => (isa => 'Str', is => 'ro',

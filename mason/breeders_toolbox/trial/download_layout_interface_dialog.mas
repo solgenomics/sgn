@@ -62,12 +62,14 @@ $trial_stock_type => undef
                             </div>
                         </div>
                     </div>
-                    <div id="management_factore">
+                    <div>
                         <div class="form-group">
-                            <label class="col-sm-3 control-label">Treatment: </label>
+                            <label class="col-sm-3 control-label">Include treatments: </label>
                             <div class="col-sm-9" >
-                                <div id="create_fieldbook_treatment_<% $download_type %>">
-                                </div>
+                                <select class="form-control" id="create_fieldbook_include_treatments_<% $download_type %>">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -215,13 +217,13 @@ jQuery(document).ready(function() {
         jQuery('#create_fieldbook_with_trait_list_TrialLayout').html(lo.listSelect('create_fieldbook_with_trait_list_select_TrialLayout', [ 'traits' ], 'select', undefined, undefined));
         jQuery('#accession_average_performance').css("display", "inline-block");
         jQuery('#selected_columns_well').css("display", "inline-block");
-        jQuery('#management_factore').css("display", "inline-block");
+        jQuery('#include_treatments_select_div').css("display", "inline-block");
         jQuery('#create_fieldbook_dialog_TrialLayout').modal('show');
         show_fieldbook_treatments_TrialLayout();
     });
 
     // jQuery("#trial_fieldmap_download_layout_button").click( function () {
-    //     jQuery('#management_factore').css("display", "none");
+    //     jQuery('#include_treatments_select_div').css("display", "none");
     //     jQuery("#create_fieldbook_format_TrialFieldMapLayout option[value='xlsx']").prop('selected', true);
     //     jQuery("#create_fieldbook_format_TrialFieldMapLayout").prop('disabled', 'disabled');
     //     jQuery("#create_fieldbook_data_level_TrialFieldMapLayout").prop('disabled', 'disabled');
@@ -513,17 +515,6 @@ function include_column_<% $download_type %>(name){
 
 % if ($download_type eq 'Fieldbook'){
 
-function show_fieldbook_treatments_<% $download_type %>(){
-    var selected_trial_id = jQuery("#html_select_trial_for_create_fieldbook_<% $download_type %>").val();
-    if ( selected_trial_id && !selected_trial_id.includes(',') ) {
-        jQuery("#management_factore").show();
-        get_select_box('treatments', 'create_fieldbook_treatment_<% $download_type %>', { 'name':'html_select_treatment_create_fieldbook_<% $download_type %>', 'id':'html_select_treatment_create_fieldbook_<% $download_type %>', 'trial_id':selected_trial_id, 'empty':1 });
-    }
-    else {
-        jQuery("#management_factore").hide();
-    }
-}
-
 function open_create_fieldbook_dialog_<% $download_type %>() {
     var trial_stock_type = "<% $trial_stock_type %>";
     let trial_ids = jQuery('#html_select_trial_for_create_fieldbook_<% $download_type %>').val().split(',').filter((e) => !!e && e !== '');
@@ -539,7 +530,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
             data: {
                 'trial_id': parseInt(trial_id),
                 'data_level': jQuery('#create_fieldbook_data_level_<% $download_type %>').val(),
-                'treatments': jQuery("#html_select_treatment_create_fieldbook_<% $download_type %>").val(),
+                'treatments': jQuery("#create_fieldbook_include_treatments_<% $download_type %>").val(),
                 'selected_columns':JSON.stringify(selected_columns_<% $download_type %>),
                 'include_measured': jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked'),
                 'all_stats': jQuery('#create_fieldbook_all_stats_<% $download_type %>').prop('checked'),
@@ -589,7 +580,6 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
 % } elsif ($download_type eq 'TrialLayout') {
 
 function show_fieldbook_treatments_<% $download_type %>(){
-    jQuery('#create_fieldbook_treatment_<% $download_type %>').html('Include All Treatments In Download');
     jQuery('#create_fieldbook_format_div_<% $download_type %>').show();
 }
 
@@ -598,6 +588,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var data_level = jQuery('#create_fieldbook_data_level_<% $download_type %>').val();
     var selected_columns = JSON.stringify(selected_columns_<% $download_type %>);
     var trait_list_id = jQuery('#create_fieldbook_with_trait_list_select_<% $download_type %>_list_select').val();
+    var treatments = jQuery("#create_fieldbook_include_treatments_<% $download_type %>").val();
     var format = jQuery('#create_fieldbook_format_<% $download_type %>').val();
     var include_measurements = jQuery('#create_fieldbook_include_measured_<% $download_type %>').prop('checked');
     var include_plot_order = jQuery('#create_fieldbook_include_plot_order_<% $download_type %>').prop('checked');
@@ -607,7 +598,7 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     //Calls SGN::Controller:BreedersToolbox::Trial
     for ( let i = 0; i < trial_ids.length; i++ ) {
         let trial_id = parseInt(trial_ids[i]);
-        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements+"&include_plot_order="+include_plot_order+"&plot_order="+plot_order+"&plot_start="+plot_start);
+        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&treatments="+treatments+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements+"&include_plot_order="+include_plot_order+"&plot_order="+plot_order+"&plot_start="+plot_start);
     }
 }
 

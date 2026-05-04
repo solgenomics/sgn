@@ -80,7 +80,7 @@ sub download {
         schema => $self->bcs_schema,
         trial_id => $self->trial_id,
         data_level => $self->data_level,
-        selected_treatment_ids => $self->treatment_ids,
+        include_treatments => $self->include_treatments,
         selected_columns => $self->selected_columns,
         selected_trait_ids => $self->trait_list,
         include_measured => $self->include_measured,
