@@ -421,7 +421,7 @@ $facilities
                                         </div>
                                     </div>
                                 </div>
-                                <div id="upload_genotypes_missing_marker_div" >
+                                <div id="upload_genotypes_missing_marker_div" style="display:none">
                                     <div id="upload_genotypes_add_missing_marker_html">
                                     </div>
                          

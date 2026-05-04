@@ -216,7 +216,7 @@ sub upload_genotype_verify_POST : Args(0) {
                     my $oldlastcol = $lastcol;
                     $lastcol = $#line if $#line > $lastcol;
                     for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
-                        if ($oldlastcol) {
+                        if ($oldlastcol > 0) {
                             $outline[$i] = "\t" x $oldlastcol;
                         }
                     }
@@ -537,7 +537,7 @@ sub upload_genotype_verify_POST : Args(0) {
                 foreach my $error (@{$verified_errors->{error_messages}}) {
                     $error_string .= $error."<br>";
                 }
-                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
                 $c->detach();
             }
 
@@ -596,11 +596,10 @@ sub upload_genotype_verify_POST : Args(0) {
                         foreach my $error ( sort @mismatch_marker_names) {
                             $marker_name_error .= $error."<br>";
                         }
-                        $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
+			$c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error", missing_markers => \@mismatch_marker_names };
                         $c->detach();
-		    }
+                    }
                 }
-
 
                 if (scalar(@protocol_match_errors) > 0){
                     my $protocol_warning;
@@ -612,7 +611,7 @@ sub upload_genotype_verify_POST : Args(0) {
                         $c->detach();
                     }
                 }
-            }
+	    }
 
             $store_genotypes->store_metadata();
             $store_genotypes->store_identifiers();
@@ -678,7 +677,7 @@ sub upload_genotype_verify_POST : Args(0) {
             foreach my $error (@{$verified_errors->{error_messages}}) {
                 $error_string .= $error."<br>";
             }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
             $c->detach();
         }
 
@@ -737,7 +736,7 @@ sub upload_genotype_verify_POST : Args(0) {
                     foreach my $error ( sort @mismatch_marker_names) {
                         $marker_name_error .= $error."<br>";
                     }
-                    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
+		    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
                     $c->detach();
                 }
             }
@@ -810,7 +809,7 @@ sub upload_genotype_verify_POST : Args(0) {
             foreach my $error (@{$verified_errors->{error_messages}}) {
                 $error_string .= $error."<br>";
             }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks} };
+            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
             $c->detach();
         }
 

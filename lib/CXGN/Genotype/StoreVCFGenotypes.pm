@@ -605,6 +605,7 @@ sub validate {
     my $stock_type = $self->observation_unit_type_name;
     my $stock_type_id;
     my @missing_stocks;
+    my @missing_markers;
     my $validator = CXGN::List::Validate->new();
     if ($stock_type eq 'tissue_sample'){
         @missing_stocks = @{$validator->validate($schema,'tissue_samples',\@observation_unit_uniquenames_stripped)->{'missing'}};
@@ -703,6 +704,7 @@ sub validate {
         if (scalar(@not_stored_markers) > 0) {
             my $missing_markers = join(",", @not_stored_markers);
             push @error_messages, "Error: some markers in SSR genotyping data are not in the selected protocol. Missing markers: $missing_markers";
+            @missing_markers = @not_stored_markers;
         }
     }
 
@@ -753,6 +755,7 @@ sub validate {
         error_messages => \@error_messages,
         warning_messages => \@warning_messages,
         missing_stocks => \@missing_stocks,
+        missing_markers => \@missing_markers,
         previous_genotypes_exist => $previous_genotypes_exist
     };
 }
@@ -1212,16 +1215,16 @@ sub store_new_markers_in_protocolprop {
     my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id()
         or die "Could not find cvterm for vcf_map_details";
 
+    # Load existing chromosome rank/marker_count info from vcf_map_details
     my $protocolprop = $schema->resultset('NaturalDiversity::NdProtocolprop')->find({
         nd_protocol_id => $protocol_id,
         type_id        => $vcf_map_details_id,
         rank           => 0,
-    });
-    my $chromosomes;
-    if ($protocolprop && $protocolprop->value) {
-        my $protocol_info = decode_json($protocolprop->value);
-        $chromosomes = $protocol_info->{chromosomes};
-    }
+    }) or die "Could not find vcf_map_details protocolprop for protocol_id=$protocol_id";
+
+    my $top_level_info = decode_json($protocolprop->value)
+        or die "Could not decode vcf_map_details value for protocol_id=$protocol_id";
+    my $chromosomes = $top_level_info->{chromosomes} || {};
 
     my %chrom_rank = map {
         $_ => $chromosomes->{$_}->{rank}
@@ -1233,7 +1236,8 @@ sub store_new_markers_in_protocolprop {
         $max_rank = $r if defined $r && $r > $max_rank;
     }
 
-    my $update_sql = q{
+    # Add a single marker key into the markers hash for a chromosome
+    my $h_update_markers = $dbh->prepare(q{
         UPDATE nd_protocolprop
         SET value = jsonb_set(
             COALESCE(value::jsonb, '{}'::jsonb),
@@ -1244,30 +1248,34 @@ sub store_new_markers_in_protocolprop {
         WHERE nd_protocol_id = ?
           AND type_id = ?
           AND rank = ?
-    };
+    });
 
-    my $check_sql = q{
-        SELECT nd_protocolprop_id
-        FROM nd_protocolprop
-        WHERE nd_protocol_id = ?
-          AND type_id = ?
-          AND rank = ?
-    };
-
-    my $insert_sql = q{
-        INSERT INTO nd_protocolprop (nd_protocol_id, type_id, rank, value)
-        VALUES (?, ?, ?, ?)
-    };
-
-    my $update_array_sql = q{
+    # Append a single marker object to the markers array for a chromosome
+    my $h_update_markers_array = $dbh->prepare(q{
         UPDATE nd_protocolprop
         SET value = COALESCE(value::jsonb, '[]'::jsonb) || ?::jsonb
         WHERE nd_protocol_id = ?
           AND type_id = ?
           AND rank = ?
-    };
+    });
 
-    my $update_chrom_sql = q{
+    # Insert a new nd_protocolprop row
+    my $h_insert = $dbh->prepare(q{
+        INSERT INTO nd_protocolprop (nd_protocol_id, type_id, rank, value)
+        VALUES (?, ?, ?, ?)
+    });
+
+    # Check whether a nd_protocolprop row exists for a given protocol/type/rank
+    my $h_check = $dbh->prepare(q{
+        SELECT nd_protocolprop_id
+        FROM nd_protocolprop
+        WHERE nd_protocol_id = ?
+          AND type_id = ?
+          AND rank = ?
+    });
+
+    # Insert a new chromosome into the chromosomes hash in vcf_map_details (rank=0)
+    my $h_insert_chrom = $dbh->prepare(q{
         UPDATE nd_protocolprop
         SET value = jsonb_set(
             value::jsonb,
@@ -1278,25 +1286,54 @@ sub store_new_markers_in_protocolprop {
         WHERE nd_protocol_id = ?
           AND type_id = ?
           AND rank = 0
-    };
+    });
 
-    my $h_update = $dbh->prepare($update_sql);
-    my $h_update_array = $dbh->prepare($update_array_sql);
-    my $h_check  = $dbh->prepare($check_sql);
-    my $h_insert = $dbh->prepare($insert_sql);
-    my $h_update_chrom = $dbh->prepare($update_chrom_sql);
+    # Increment marker_count for a chromosome in vcf_map_details (rank=0)
+    my $h_increment_marker_count = $dbh->prepare(q{
+        UPDATE nd_protocolprop
+        SET value = jsonb_set(
+            value::jsonb,
+            ARRAY['chromosomes', ?, 'marker_count']::text[],
+            (
+                COALESCE(
+                    (value::jsonb->'chromosomes'->?->>'marker_count')::int,
+                    0
+                ) + 1
+            )::text::jsonb,
+            true
+        )
+        WHERE nd_protocol_id = ?
+          AND type_id = ?
+          AND rank = 0
+    });
+
+    # Append new marker names to the top-level marker_names array in vcf_map_details (rank=0)
+    my $h_update_marker_names = $dbh->prepare(q{
+        UPDATE nd_protocolprop
+        SET value = jsonb_set(
+            value::jsonb,
+            '{marker_names}',
+            (COALESCE(value::jsonb->'marker_names', '[]'::jsonb) || ?::jsonb),
+            true
+        )
+        WHERE nd_protocol_id = ?
+          AND type_id = ?
+          AND rank = 0
+    });
 
     $schema->txn_do(sub {
 
 	for my $pair (@$mismatch_markers) {
 	    my ($chrom, $marker_name) = @$pair;
 
-	    my $marker_details = $new_marker_data->{$chrom}{$marker_name};
-            unless (defined $marker_details) {
-		die "No marker details found for chrom=$chrom marker=$marker_name in protocol_info";
-            }
+	    my $marker_details = $new_marker_data->{$chrom}{$marker_name}
+                or die "No marker details found for chrom=$chrom marker=$marker_name in protocol_info";
 
-	    my $rank = $chrom_rank{$chrom};
+	    my $marker_json       = encode_json($marker_details);
+            my $marker_array_json = encode_json([$marker_details]);
+
+	    # Assign rank for this chromosome, creating a new entry if needed
+            my $rank = $chrom_rank{$chrom};
             unless (defined $rank) {
 		# Assign the next available rank
                 $max_rank++;
@@ -1307,95 +1344,79 @@ sub store_new_markers_in_protocolprop {
                 # of existing chromosomes in vcf_map_details
                 my $new_chrom_entry = encode_json({
                     rank         => $rank,
-                    chrom        => $chrom,
-                    marker_names => [],
+                    marker_count => 0,
                 });
 
-                # Insert new chromosome into the top-level vcf_map_details JSON
-                $h_update_chrom->execute(
+		$h_insert_chrom->execute(
                     $chrom,
                     $new_chrom_entry,
                     $protocol_id,
                     $vcf_map_details_id,
                 );
-
 		print STDERR "Inserted new chromosome '$chrom' at rank=$rank into vcf_map_details\n";
-		
             }
 
-            my $marker_json = encode_json($marker_details);
-
-            # Ensure the row exists
+	    # Ensure the markers hash row exists for this chromosome
             $h_check->execute($protocol_id, $marker_type_id, $rank);
-            my ($nd_protocolprop_id) = $h_check->fetchrow_array();
+            my ($markers_prop_id) = $h_check->fetchrow_array();
 
-            unless ($nd_protocolprop_id) {
+            unless ($markers_prop_id) {
                 # If for some reason the chromosome marker row does not exist yet,
                 # create it with this one marker as the initial JSON object.
                 my $initial_json = encode_json({ $marker_name => $marker_details });
                 $h_insert->execute($protocol_id, $marker_type_id, $rank, $initial_json);
                 print STDERR "Inserted new nd_protocolprop row for chrom=$chrom rank=$rank marker=$marker_name\n";
 
-                # Also insert the array row
-                my $initial_array_json = encode_json([$marker_name]);
-                $h_insert->execute($protocol_id, $array_type_id, $rank, $initial_array_json);
-                print STDERR "Inserted new nd_protocolprop array row for chrom=$chrom rank=$rank marker=$marker_name\n";
+		# Ensure the markers array row also exists
+                $h_check->execute($protocol_id, $array_type_id, $rank);
+                my ($array_prop_id) = $h_check->fetchrow_array();
+		unless ($array_prop_id) {
+                    $h_insert->execute($protocol_id, $array_type_id, $rank, $marker_array_json);
+                    print STDERR "Inserted new markers array row for chrom=$chrom rank=$rank\n";
+                }
 
+		# marker_count still needs incrementing even on a fresh row
+                $h_increment_marker_count->execute($chrom, $chrom, $protocol_id, $vcf_map_details_id);
                 next;
-            }
+	    }
 
-            # Ensure the array row exists
+            # Ensure the markers array row exists
             $h_check->execute($protocol_id, $array_type_id, $rank);
-            my ($array_nd_protocolprop_id) = $h_check->fetchrow_array();
-
-            unless ($array_nd_protocolprop_id) {
-                my $initial_array_json = encode_json([$marker_name]);
-                $h_insert->execute($protocol_id, $array_type_id, $rank, $initial_array_json);
-                print STDERR "Inserted new nd_protocolprop array row for chrom=$chrom rank=$rank marker=$marker_name\n";
+            my ($array_prop_id) = $h_check->fetchrow_array();
+            unless ($array_prop_id) {
+                $h_insert->execute($protocol_id, $array_type_id, $rank, $marker_array_json);
+                print STDERR "Inserted new markers array row for chrom=$chrom rank=$rank\n";
             }
-
-            # Add marker_name => marker_details into the chromosome marker hash
-            $h_update->execute(
+	   
+	    # Add marker into the hash row
+            $h_update_markers->execute(
                 $marker_name,
                 $marker_json,
                 $protocol_id,
                 $marker_type_id,
-                $rank
+                $rank,
             );
 
-            # Also append to the markers array
-	    my $marker_name_json = encode_json($marker_name);
-            $h_update_array->execute(
-                $marker_name_json,
+            # Append marker to the array row
+            $h_update_markers_array->execute(
+                $marker_array_json,
                 $protocol_id,
                 $array_type_id,
-                $rank
-            );
+                $rank,
+            ); 
 
-            print STDERR "Added marker '$marker_name_json' to chrom '$chrom' rank $rank\n";
+            # Increment marker_count in vcf_map_details
+            $h_increment_marker_count->execute($chrom, $chrom, $protocol_id, $vcf_map_details_id);
+
+            print STDERR "Added marker '$marker_name' to chrom '$chrom' rank=$rank\n";
         }
 
         # Update the top-level marker_names array in vcf_map_details
         # This is what the protocol detail page uses to display the marker count
         my @new_marker_names = map { $_->[1] } @$mismatch_markers;
         my $new_markers_json = encode_json(\@new_marker_names);
-
-        my $update_marker_names_sql = q{
-            UPDATE nd_protocolprop
-            SET value = jsonb_set(
-                value::jsonb,
-                '{marker_names}',
-                (COALESCE(value::jsonb->'marker_names', '[]'::jsonb) || ?::jsonb),
-                true
-            )
-            WHERE nd_protocol_id = ?
-              AND type_id = ?
-              AND rank = 0
-        };
-
-        my $h_update_marker_names = $dbh->prepare($update_marker_names_sql);
         $h_update_marker_names->execute($new_markers_json, $protocol_id, $vcf_map_details_id);
-        print STDERR "Updated top-level marker_names array in vcf_map_details for protocol_id=$protocol_id\n";
+        print STDERR "Updated top-level marker_names in vcf_map_details for protocol_id=$protocol_id\n";
 
     });
     if ($@) {
