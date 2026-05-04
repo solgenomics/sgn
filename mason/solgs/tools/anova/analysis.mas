@@ -34,7 +34,10 @@ $training_pop_id   => undef,
 
     <div>
     <div id="anova_select_a_trait_div" style="display:inline-block;"></div>
-    <button style="display:inline-block;" id="run_anova" class="btn btn-success" type="button">Run ANOVA</button>
+    <button style="display:inline-block;" id="run_anova" class="btn btn-success">Run ANOVA</button>
+
+    <button id="clear_cache_anova" class="btn btn-warning pull-right hidden">Clear cache</button>
+
   </div>
     <div id="anova_selected_trait_div" style="display:none">
 
@@ -45,7 +48,7 @@ $training_pop_id   => undef,
 
     <div id="anova_message"  class="message"></div>
     <& /solgs/spinner/spinner.mas &>
-    <div id="anova_table"> </div>
+    <div id="anova_table" style="display:none;"> </div>
     <input type="hidden" id="trial_id" value="<% $trial_id %>" />
 
   </div>
