@@ -795,7 +795,9 @@ sub get_trial_design {
         my $trial_management_regime = $trial->get_management_regime();
 
         my $treatments = $trial->get_treatments();
+        my $traits = $trial->get_traits_assayed();
         my @treatment_ids = map { $_->{trait_id} } @{$treatments};
+        my @trait_ids = map {$_->[0]} @{$traits};
         # print STDERR "treatment ids are @treatment_ids\n";
         my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
             schema => $schema,
@@ -803,7 +805,7 @@ sub get_trial_design {
             data_level => $type,
             selected_treatment_ids => \@treatment_ids,
             selected_columns => $selected_columns{$type},
-            selected_trait_ids => [],
+            selected_trait_ids => \@trait_ids,
             use_synonyms => 'false',
             include_measured => 'true'
         });
