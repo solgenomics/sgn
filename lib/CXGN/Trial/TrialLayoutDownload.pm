@@ -206,10 +206,15 @@ sub get_layout_output {
         trial_id => $trial_id
     });
 
-    my $treatments = $trial->get_treatments();
-    my $traits = $trial->get_traits_assayed();
-    my @treatment_ids = map { $_->{trait_name} } @{$treatments};
-    my @trait_ids = map {$_->[1] if $_->[1] !~ m/_TREATMENT/} @{$traits};
+    my $trial_treatments = $trial->get_treatments();
+    my $trial_traits = $trial->get_traits_assayed();
+    my @trial_treatment_names = map { $_->{trait_name} } @{$trial_treatments};
+    my @trial_trait_names = map {$_->[1] if $_->[1] !~ m/_TREATMENT/} @{$trial_traits};
+
+    my $t = CXGN::List::Transform->new();
+    my @selected_trait_names_all = @{$t->transform($schema, 'trait_ids_2_trait_names', \@selected_traits)->{'transform'}};
+    my @selected_trait_names = uniq(());
+    
 
     my $trial_layout;
     try {
@@ -339,15 +344,15 @@ sub get_layout_output {
 
     # filter through exact performance hash and keep traits and treatments as requested
     my $new_exact_hash = {};
-    my @combined_terms = (@selected_traits);
+    my @combined_terms = (@selected_trait_names);
     if ($include_measured eq 'true') {
-        @combined_terms = (@combined_terms, @trait_ids);
+        @combined_terms = (@combined_terms, @trial_trait_names);
     }
     if ($include_treatments eq 'true') {
-        @combined_terms = (@combined_terms, @treatment_ids);
+        @combined_terms = (@combined_terms, @trial_treatment_names);
     }
     foreach my $term (@combined_terms) {
-        $new_exact_hash->{$term} = $exact_performance_hash->{$term} ? $exact_performance_hash->{$term} : {};
+        $new_exact_hash->{$term} = $exact_performance_hash->{$term};
     }
     $exact_performance_hash = $new_exact_hash;
 
@@ -356,9 +361,15 @@ sub get_layout_output {
     my @overall_trait_names = sort keys %overall_performance_hash;
     my @traits = (@exact_trait_names,@overall_trait_names);
 
+    print STDERR "\n=================================\n";
+    print STDERR Dumper \@traits;
+    print STDERR Dumper \@exact_trait_names;
+    print STDERR Dumper \@overall_trait_names;
+    print STDERR "\n=================================\n";
+
     if ($use_synonyms eq 'true') {
         print STDERR "Getting synonyms\n";
-        my $t = CXGN::List::Transform->new();
+        
         my $trait_id_list = $t->transform($schema, 'traits_2_trait_ids', [@traits]);
         my @trait_ids = @{$trait_id_list->{'transform'}};
         my $synonym_list = $t->transform($schema, 'trait_ids_2_synonyms', $trait_id_list->{'transform'});

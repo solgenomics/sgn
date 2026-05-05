@@ -57,7 +57,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial_id = $c->req->param('trial_id');
     my $data_level = $c->req->param('data_level') || 'plots';
-    my $include_treatments = $c->req->param('treatments');
+    my $include_treatments = $c->req->param('treatments') || 'true';
     my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
     my $plot_order = $c->req->param('plot_order');
     my $plot_start = $c->req->param('plot_start');
