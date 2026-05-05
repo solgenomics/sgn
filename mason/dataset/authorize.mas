@@ -1,0 +1,42 @@
+<%args>
+$code => undef
+</%args>
+
+<p id="authorize-status">
+% if ( defined $code ) {
+    Connecting account...
+% } else {
+    ERROR: Authorization code not returned
+% }
+</p>
+
+<script>
+
+jQuery(document).ready(() => {
+    storeConnection("<% $code %>");
+});
+
+function storeConnection(code) {
+    if ( code && code !== "" && window.opener ) {
+        const service = window.opener.authorize_data?.service || {};
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/connection/`,
+            method: 'POST',
+            data: { code, service: service.key },
+            success: (resp) => {
+                if ( resp?.error ) {
+                    alert("Could not store connection info [" + resp.error + "]");
+                }
+                else {
+                    jQuery("#authorize-status").html("Accounts connected - you may close this window");
+                    window.close();
+                }
+            },
+            error: () => {
+                alert("Could not store connection info");
+            }
+        });
+    }
+}
+
+</script>

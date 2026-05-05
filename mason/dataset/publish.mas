@@ -4,6 +4,12 @@ $dataset_name
 $is_dataset_owner => 0
 </%args>
 
+<%once>
+    my $project_name = $c->get_conf('project_name');
+    my $user = $c->user();
+    my $user_name = $user ? $user->get_first_name() . " " . $user->get_last_name() : "";
+</%once>
+
 
 <table class="table table-hover">
     <thead>
@@ -22,53 +28,296 @@ $is_dataset_owner => 0
     <button id="dataset-generate-archive" class="btn btn-primary"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;Generate Archive Files</button>
 % }
 
-<script>
-jQuery(document).ready(function() {
-    updateStatus();
+<div class="modal modal-md fade" id="dataset-archive-publish-dialog" name="dataset-archive-publish-dialog" tabindex="-1" role="dialog" aria-labelledby="datasetArchivePublishDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="datasetArchivePublishDialog">Publish Dataset</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <ol id="dataset-archive-publish-instructions">
+                <li>
+                    <p>Select the external service to publish this dataset to:</p>
+                    <select id="dataset-archive-publish-services" class="form-control"></select>
+                </li>
+                <li class="dataset-archive-publish-connect">
+                    <p>Make sure you have an account and are logged in to <span class="dataset-archive-publish-service-name"></span></p>
+                    <a id="dataset-archive-publish-account" class="btn btn-info btn-sm" href="#" target="_blank">
+                        <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;View your <span class="dataset-archive-publish-service-name"></span> account
+                    </a>
+                <li class="dataset-archive-publish-connect">
+                    <p>Grant <% $project_name %> access to your <span class="dataset-archive-publish-service-name"></span> account</p>
+                    <button id="dataset-archive-publish-connect" class="btn btn-primary btn-sm">
+                        <span class="glyphicon glyphicon-resize-small"></span>&nbsp;&nbsp;Connect Accounts
+                    </button>
+                </li>
+                <li class="dataset-archive-publish-connected">
+                    <p>You are connected to this <span class="dataset-archive-publish-service-name"></span> account:</p>
+                    <p><strong>Name:</strong> <span id="dataset-archive-publish-connected-name"></span></p>
+                    <p><strong>Email:</strong> <span id="dataset-archive-publish-connected-email"></span></p>
+                    <button id="dataset-archive-publish-disconnect" class="btn btn-danger btn-sm">
+                        <span class="glyphicon glyphicon-resize-full"></span>&nbsp;&nbsp;Disconnect Accounts
+                    </button>
+                </li>
+                <li class="dataset-archive-publish-connected">
+                    <p>Select a <span class="dataset-archive-publish-service-name"></span> dataset to associate this data with:</p>
+                    <select id="dataset-archive-publish-articles" class="form-control">
+                        <option value="">Create a new <span class="dataset-archive-publish-service-name"></span> dataset</option>
+                    </select>
+                    <hr />
+                    <label>Title:</label>
+                    <input id="dataset-archive-publish-article-title" class="form-control dataset-archive-publish-article-details" />
+                    <br />
+                    <label>Description:</label>
+                    <textarea id="dataset-archive-publish-article-description" class="form-control dataset-archive-publish-article-details"></textarea>
+                    <br />
+                    <label>Authors (one per line):</label>
+                    <textarea id="dataset-archive-publish-article-authors" class="form-control dataset-archive-publish-article-details"><% $user_name %></textarea>
+                    <br />
+                    <p><em>The dataset metadata can be updated later on <span class="dataset-archive-publish-service-name dataset-archive-publish-article-details"></span> until a DOI is generated</em></p>
+                </li>
+                <li class="dataset-archive-publish-connected">
+                    <p>Attach the archived files to the specified Article:</p>
+                    <button id="dataset-archive-publish-send" class="btn btn-primary btn-sm">
+                        <span class="glyphicon glyphicon-export"></span>&nbsp;&nbsp;Send Files
+                    </button>
+                    <br /><br />
+                    <div class="progress">
+                        <div id="dataset-archive-publish-send-pb" class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" style="width: 0%;">
+                            <span class="sr-only">60% Complete</span>
+                        </div>
+                    </div>
+                    <p id="dataset-archive-publish-send-status"></p>
+                </li>
+            </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    jQuery("#dataset-generate-archive").click(function() {
-        jQuery.ajax({
-            url: '/ajax/dataset/publish/generate/<% $dataset_id %>',
-            beforeSend: () => {
-                jQuery('#working_modal').modal('show');
-            },
-            success: (resp) => {
-                jQuery('#working_modal').modal('hide');
-                console.log(resp);
-                if ( resp?.error ) {
-                    alert(resp.error);
-                }
-                else {
-                    updateStatus();
-                }
-            },
-            error: () => {
-                jQuery('#working_modal').modal('hide');
-                alert("Could not publish the dataset");
-            }
-        })
-    });
+<script>
+var ISSUES = {};             // Status information about individual published issues of the dataset
+var SELECTED_ISSUE;          // The currently selected published issue
+var SERVICES = {};           // Information about available external services
+var SELECTED_SERVICE = {};   // The currently selected external service
+var SELECTED_ACCOUNT = {};   // Information on the currently selected account
+
+jQuery(document).ready(() => {
+    updateIssues();
+    updateServices();
+
+    jQuery("#dataset-generate-archive").click(generateArchive)
+    jQuery("#dataset-archive-publish-services").on("change", onServiceChanged);
+    jQuery("#dataset-archive-publish-connect").click(connectService);
+    jQuery("#dataset-archive-publish-disconnect").click(disconnectService);
+    jQuery("#dataset-archive-publish-send").click(sendArchive);
+    jQuery("#dataset-archive-publish-articles").on("change", onArticleChanged);
 });
 
-function updateStatus() {
+
+function updateServices() {
     jQuery.ajax({
-        url: '/ajax/dataset/publish/status/<% $dataset_id %>',
+        url: '/ajax/dataset/publish/services',
         success: (resp) => {
-            console.log(resp);
             if ( resp?.error ) {
                 alert(resp.error);
             }
             else {
-                displayStatus(resp?.published);
+                displayServices(resp)
             }
         },
         error: () => {
-            alert("Could not get dataset published status");
+            alert("Could not get external services");
         }
     });
 }
 
-function displayStatus(status = {}) {
+function displayServices(services = {}) {
+    SERVICES = services;
+    var html = "";
+    Object.keys(SERVICES).sort().forEach((key) => {
+        html += `<option value='${key}'>${SERVICES[key].display_name} [${SERVICES[key].web_url}]</option>`;
+    });
+    jQuery("#dataset-archive-publish-services").html(html);
+    onServiceChanged();
+}
+
+function onServiceChanged() {
+    SELECTED_SERVICE = SERVICES[jQuery("#dataset-archive-publish-services").val()];
+
+    jQuery(".dataset-archive-publish-service-name").html(SELECTED_SERVICE.display_name);
+    jQuery("#dataset-archive-publish-account").attr('href', `${SELECTED_SERVICE.web_url}${SELECTED_SERVICE.user_path}`);
+    updateConnection();
+}
+
+function updateConnection() {
+    if ( SELECTED_SERVICE.key ) {
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/connection/${SELECTED_SERVICE.key}`,
+            success: (resp) => {
+                if ( resp?.error ) {
+                    alert("Could not update connection info [" + resp.error + "]");
+                    displayConnection();
+                }
+                else {
+                    displayConnection(resp);
+                }
+            },
+            error: () => {
+                alert("Could not update connection info");
+                displayConnection();
+            }
+        });
+    }
+    else {
+        displayConnection();
+    }
+}
+
+function displayConnection(account = {}) {
+    SELECTED_ACCOUNT = account;
+
+    if ( SELECTED_ACCOUNT.hasOwnProperty('token') && SELECTED_ACCOUNT.hasOwnProperty('profile') ) {
+        const now = new Date().getTime();
+        if ( SELECTED_ACCOUNT.token.expiration > now ) {
+            jQuery(".dataset-archive-publish-connected").show();
+            jQuery(".dataset-archive-publish-connect").hide();
+            jQuery("#dataset-archive-publish-connected-name").html(SELECTED_ACCOUNT.profile.first_name + ' ' + SELECTED_ACCOUNT.profile.last_name);
+            jQuery("#dataset-archive-publish-connected-email").html(SELECTED_ACCOUNT.profile.email);
+            jQuery("#dataset-archive-publish-send").attr("disabled", false);
+            updateArticles();
+            return;
+        }
+    }
+
+    // Default to showing connect steps
+    jQuery(".dataset-archive-publish-connected").hide();
+    jQuery(".dataset-archive-publish-connect").show();
+    jQuery("#dataset-archive-publish-send").attr("disabled", true);
+}
+
+function connectService() {
+    jQuery("#dataset-archive-publish-connect").attr("disabled", true);
+    window.authorize_data = { service: SELECTED_SERVICE };
+    const popup = window.open(`/dataset/publish/authorize/${SELECTED_SERVICE.key}`, '_authorize', 
+        `toolbar=no,
+        location=no,
+        status=no,
+        menubar=no,
+        scrollbars=yes,
+        resizable=yes,
+        width=700, 
+        height=700`
+    );
+
+    if ( !popup ) {
+        jQuery("#dataset-archive-publish-connect").attr("disabled", false);
+        alert("You must allow popup windows in your browser to continue");
+    }
+
+    const interval = setInterval(() => {
+        if (popup.closed) {
+            clearInterval(interval);
+            jQuery("#dataset-archive-publish-connect").attr("disabled", false);
+            window.authorize_data = {};
+            updateConnection();
+        }
+    }, 500);
+}
+
+function disconnectService() {
+    SELECTED_ACCOUNT = {};
+    jQuery.ajax({
+        url: `/ajax/dataset/publish/connection/remove/${SELECTED_SERVICE.key}`,
+        method: 'DELETE',
+        success: () => {
+            updateConnection();
+        }
+    });
+}
+
+function updateArticles() {
+    jQuery.ajax({
+        url: `/ajax/dataset/publish/articles/${SELECTED_SERVICE.key}`,
+        success: (resp) => {
+            if ( resp?.error ) {
+                alert(resp.error)
+            }
+            else {
+                displayArticles(resp?.articles);
+            }
+        },
+        error: () => {
+            alert("Could not get account articles");
+        }
+    });
+}
+
+function displayArticles(articles = []) {
+    var html = `<option value="">Create a new ${SELECTED_SERVICE.display_name} dataset</option>`;
+    articles.forEach((a) => {
+        html += `<option value='${a.id}'>${a.title}</a>`;
+    });
+    jQuery("#dataset-archive-publish-articles").html(html);
+    onArticleChanged();
+}
+
+function onArticleChanged() {
+    var selected = jQuery("#dataset-archive-publish-articles").val();
+    if ( selected && selected !== '' ) {
+        jQuery(".dataset-archive-publish-article-details").attr("disabled", true);
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/articles/${SELECTED_SERVICE.key}/${selected}`,
+            success: (resp) => {
+                if ( resp?.error ) {
+                    alert(resp.error)
+                }
+                else if ( resp?.article ) {
+                    jQuery("#dataset-archive-publish-article-title").val(`[${resp.article.status.toUpperCase()}] ${resp.article.title}`);
+                    jQuery("#dataset-archive-publish-article-description").val(resp.article.description);
+                    jQuery("#dataset-archive-publish-article-authors").val(resp.article.authors.map((e) => e.full_name).join('\n'));
+                }
+            },
+            error: () => {
+                alert("Could not get article details");
+            }
+        });
+    }
+    else {
+        jQuery(".dataset-archive-publish-article-details").attr("disabled", false);
+        jQuery("#dataset-archive-publish-article-title").val("");
+        jQuery("#dataset-archive-publish-article-description").val("");
+        jQuery("#dataset-archive-publish-article-authors").val("<% $user_name %>");
+
+    }
+}
+
+function updateIssues() {
+    jQuery.ajax({
+        url: '/ajax/dataset/publish/issues/<% $dataset_id %>',
+        success: (resp) => {
+            console.log(resp);
+            if ( resp?.error ) {
+                alert("Could not get the dataset published issues [" + resp.error + "]");
+            }
+            else {
+                displayIssues(resp?.published);
+            }
+        },
+        error: () => {
+            alert("Could not get dataset published issues");
+        }
+    });
+}
+
+function displayIssues(status = {}) {
+    ISSUES = status;
     const rows = [];
     if ( Object.keys(status).length > 0 ) {
         Object.keys(status).forEach((k) => {
@@ -82,7 +331,10 @@ function displayStatus(status = {}) {
             });
             html += `</ul></td>`;
 % if ( $is_dataset_owner ) {
-            html += `<td><button class='btn btn-small btn-danger' onclick='deletePublished(${s.key})'><span class='glyphicon glyphicon-trash'></span></button></td>`;
+            html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
+            html += `<button class='btn btn-primary btn-xs' onclick='publishIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Publish</button>`;
+            html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;Remove</button>`;
+            html += `</div></td>`;
 % } else {
             html += `<td></td>`;
 % }
@@ -96,22 +348,161 @@ function displayStatus(status = {}) {
     }
 }
 
-function deletePublished(key) {
-    if (confirm("Are you sure you want to unlink this published metadata from the dataset?  This will remove the archived data on this server and the connection between the dataset and the external service.  This will NOT remove anything from the external service.") ) {
-        jQuery.ajax({
-        url: `/ajax/dataset/publish/remove/<% $dataset_id %>/${key}`,
+function generateArchive() {
+    jQuery.ajax({
+        url: '/ajax/dataset/publish/generate/<% $dataset_id %>',
+        beforeSend: () => {
+            jQuery('#working_modal').modal('show');
+        },
         success: (resp) => {
+            jQuery('#working_modal').modal('hide');
             if ( resp?.error ) {
                 alert(resp.error);
             }
             else {
-                updateStatus();
+                updateIssues();
             }
         },
         error: () => {
-            alert("Could not remove dataset published metadata");
+            jQuery('#working_modal').modal('hide');
+            alert("Could not publish the dataset");
         }
     });
+}
+
+function publishIssue(key) {
+    SELECTED_ISSUE = ISSUES[key];
+    jQuery("#dataset-archive-publish-dialog").modal("show");
+}
+
+function removeIssue(key) {
+    if (confirm("Are you sure you want to unlink this published metadata from the dataset?  This will remove the archived data on this server and the connection between the dataset and the external service.  This will NOT remove anything from the external service.") ) {
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/issues/remove/<% $dataset_id %>/${key}`,
+            success: (resp) => {
+                if ( resp?.error ) {
+                    alert(resp.error);
+                }
+                else {
+                    updateIssues();
+                }
+            },
+            error: () => {
+                alert("Could not remove dataset published issues");
+            }
+        });
+    }
+}
+
+function sendArchive() {
+    const article = jQuery("#dataset-archive-publish-articles").val()
+    const files = SELECTED_ISSUE.files || [];
+    let total = files.length+1;
+    let count = 0;
+
+    // Create article first, if necessary
+    if ( !article || article === '' ) {
+        total = total+1;
+        _progress(1);
+        _createArticle();
+    }
+
+    // Using exising article, send files
+    else {
+        _progress(1);
+        _sendFile(0);
+    }
+
+    function _createArticle() {
+        const title = jQuery("#dataset-archive-publish-article-title").val();
+        const description = jQuery("#dataset-archive-publish-article-description").val();
+        const authors = jQuery("#dataset-archive-publish-article-authors").val().split('\n');
+
+        jQuery("#dataset-archive-publish-send-status").html(`Creating ${SELECTED_SERVICE.display_name} dataset`);
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/articles/new`,
+            method: 'POST',
+            data: {
+                service: SELECTED_SERVICE.key,
+                title,
+                description,
+                authors
+            },
+            success: (resp) => {
+                if ( resp?.error ) {
+                    alert("Could not create new article [" + resp.error + "]");
+                }
+                else {
+                    _progress();
+                    _sendFile(0);
+                }
+            },
+            error: () => {
+                alert("Could not create new article")
+            }
+        });
+    }
+
+    function _sendFile(index) {
+        if ( index >= files.length ) {
+            jQuery("#dataset-archive-publish-send-pb").removeClass('active');
+            jQuery("#dataset-archive-publish-send-status").html('Files Sent');
+            return;
+        }
+
+        const file = files[index];
+        jQuery("#dataset-archive-publish-send-status").html(`Sending file: ${file}`);
+
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/submit`,
+            method: 'POST',
+            data: {
+                dataset_id: <% $dataset_id %>,
+                key: SELECTED_ISSUE.key,
+                file: file
+            },
+            success: (resp) => {
+                if ( resp?.error ) {
+                    alert("Could not submit file: " + file + " [" + resp.error + "]");
+                }
+                else {
+                    _progress();
+                    _sendFile(index+1);
+                }
+            },
+            error: () => {
+                alert("Could not submit file: " + file)
+            }
+        });
+    }
+
+    function _progress(init) {
+        if ( init ) {
+            count = init;
+            jQuery("#dataset-archive-publish-send-pb").addClass('active');
+        }
+        else {
+            count = count+1;
+        }
+        const percent = (count/total)*100;
+        jQuery("#dataset-archive-publish-send-pb").css("width", `${percent}%`);
     }
 }
 </script>
+
+
+<style>
+    #dataset-archive-publish-instructions li:not(:last-child) {
+        margin-bottom: 15px;
+    }
+    a.btn-info {
+        color: #fff !important;
+    }
+    a.btn-info:hover {
+        color: #fff;
+        background-color: #31b0d5;
+    }
+    .dataset-archive-publish-service-name {
+        font-weight: 600;
+    }
+</style>

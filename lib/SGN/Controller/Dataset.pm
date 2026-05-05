@@ -103,4 +103,48 @@ sub dataset :Chained('/') Path('dataset') Args(1) {
     
 }
 
+sub publish_dataset_authorize_start : Path('/dataset/publish/authorize') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $service = shift;
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{template} = "generic_message.mas";
+        $c->stash->{message} = "The selected service does not exist in the server configuration";
+        return;
+    }
+    my $selected = $config->{$service};
+
+    my $url = $selected->{web_url} . $selected->{auth_path};
+    $url .= '?response_type=code';
+    $url .= '&scope=all';
+    $url .= '&client_id=' . $selected->{client_id};
+    $url .= '&redirect_uri=' . $c->get_conf('main_production_site_url') . $selected->{redirect_path};
+
+    $c->res->redirect($url);
+    return;
+}
+
+sub publish_dataset_authorize_finish : Path('/dataset/publish/authorize') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $error = $c->req->param('error');
+    my $code = $c->req->param('code');
+
+    if ( !defined $code && !defined $error ) {
+        $error = "Authorization code not returned by the service";
+    }
+
+    if ( $error ) {
+        $c->stash->{template} = 'generic_message.mas';
+        $c->stash->{message} = "Could not authorize the appication: $error";
+        return;
+    }
+
+    $c->stash->{code} = $code;
+    $c->stash->{template} = '/dataset/authorize.mas';
+    return;
+}
+
 1;
