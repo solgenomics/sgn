@@ -160,38 +160,38 @@ sub parse {
             my @trait_values;
 
             if ($timestamp_included) {
-                if ($value_string eq '') {
-                    @trait_values = ([ '', '' ]);
-                }
-                else {
-                    my @values = split(/\|/, $value_string, -1);
+                my @values = split(/\|/, $value_string, -1);
 
-                    foreach my $v (@values) {
-                        my ($trait_value, $timestamp) = split(/,/, $v, 2);
+                foreach my $v (@values) {
+                    next unless defined $v;
 
-                        $trait_value = '' unless defined $trait_value;
-                        $timestamp   = '' unless defined $timestamp;
+                    my ($trait_value, $timestamp) = split(/,/, $v, 2);
 
-                        push @trait_values, [ $trait_value, $timestamp ];
-                    }
+                    $trait_value = '' unless defined $trait_value;
+                    $timestamp   = '' unless defined $timestamp;
+
+                    # Skip only fully empty timestamp tokens.
+                    # Keep empty values when they have timestamps.
+                    next if $trait_value eq '' && $timestamp eq '';
+
+                    next if $trait_value eq '.';
+
+                    push @trait_values, [ $trait_value, $timestamp ];
                 }
             }
             else {
-                @trait_values = ([ $value_string, '' ]);
+                # Simple trait without timestamp:
+                # keep empty values, but still skip "." missing marker.
+                if ($value_string ne '.') {
+                    push @trait_values, [ $value_string, '' ];
+                }
             }
 
-            foreach my $tv (@trait_values) {
-                $tv->[0] = '' unless defined $tv->[0];
-                $tv->[1] = '' unless defined $tv->[1];
-
-                # Keep empty values. Only skip "." if "." means missing.
-                next if $tv->[0] eq '.';
-
-                push @{ $data{$observationunit_name}->{$trait_name} }, $tv;
-            }
+            push @{ $data{$observationunit_name}->{$trait_name} }, @trait_values
+                if @trait_values;
         }
     }
-    
+         
     my @sorted_units = sort keys %units_seen;
     my @sorted_variables = sort @$trait_columns;
 
