@@ -7,12 +7,13 @@ TreeImprovementBase Modifications
   <a class="menu_click_dropdown dropdown-toggle button btn" data-toggle="dropdown">Search</a>
   <ul class="dropdown-menu">
     <li><a href="/search">All</a></li>
+    <li><a href="/search/organisms">Organisms</a></li>
+    <li><a href="/breeders/seedlots/">Seed Lots</a></li>    
+    <li><a href="/search/trials">Field Trials and Orchards</a></li>
+    <li><a href="/search/stocks">Accessions, Plots, and Plants</a></li>
+    <li><a href="/search/cross">Progenies, Parents, Crosses</a></li>    
     <li><a href="/breeders/search">Wizard</a></li>
     <li><a href="/search/bulk">Bulk Search</a></li>
-    <li><a href="/search/stocks">Accessions and Plots</a></li>
-    <li><a href="/search/organisms">Organisms</a></li>
-    <li><a href="/search/cross">Progenies, Parents, Crosses</a></li>
-    <li><a href="/search/trials">Field Trials</a></li>
 
     <li role="separator" class="divider"></li>
     <li><a href="/search/genotyping_trials">Genotyping Plates</a></li>
@@ -24,6 +25,7 @@ TreeImprovementBase Modifications
     <li role="separator" class="divider"></li>
     <li><a href="/tools/onto/">Ontology Browser</a></li>
     <li><a href="/search/traits">Traits</a></li>
+    <li><a href="/search/treatments">Treatments</a></li>
     <!--<li><a href="/search/markers">Markers</a></li>-->
     <li><a href="/search/images">Images</a></li>
     <li><a href="/search/people">People</a></li>
