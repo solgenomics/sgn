@@ -210,11 +210,17 @@ sub get_layout_output {
     my $trial_traits = $trial->get_traits_assayed();
     my @trial_treatment_names = map { $_->{trait_name} } @{$trial_treatments};
     my @trial_trait_names = map {$_->[1] if $_->[1] !~ m/_TREATMENT/} @{$trial_traits};
+    my %trial_trait_names_map = map { $_ => 1 } @trial_trait_names;
 
     my $t = CXGN::List::Transform->new();
     my @selected_trait_names_all = @{$t->transform($schema, 'trait_ids_2_trait_names', \@selected_traits)->{'transform'}};
-    my @selected_trait_names = uniq(());
-    
+    my @selected_trait_names = ();
+    foreach my $trait (@selected_trait_names_all) { #only select traits that are actually measured in this trial
+        if (defined($trial_trait_names_map{$trait})) {
+            push @selected_trait_names, $trait;
+        }
+    }
+    @selected_traits = @{$t->transform($schema, 'traits_2_trait_ids', \@selected_trait_names)->{'transform'}};
 
     my $trial_layout;
     try {
@@ -360,12 +366,6 @@ sub get_layout_output {
     my @exact_trait_names = sort keys %$exact_performance_hash;
     my @overall_trait_names = sort keys %overall_performance_hash;
     my @traits = (@exact_trait_names,@overall_trait_names);
-
-    print STDERR "\n=================================\n";
-    print STDERR Dumper \@traits;
-    print STDERR Dumper \@exact_trait_names;
-    print STDERR Dumper \@overall_trait_names;
-    print STDERR "\n=================================\n";
 
     if ($use_synonyms eq 'true') {
         print STDERR "Getting synonyms\n";

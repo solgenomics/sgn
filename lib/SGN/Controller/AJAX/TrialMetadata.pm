@@ -6537,7 +6537,7 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
             $parent_stock_link = qq{<a href="/family/$parent_stock_id">$parent_stock_name</a>};
         }
 
-        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>}];
+        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, $plant_id ? qq{<a href="/stock/$plant_id/view">$plant_name</a>} : '', $tissue_sample_id ? qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>} : ''];
     }
 
 
