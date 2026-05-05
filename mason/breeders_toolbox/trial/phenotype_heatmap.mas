@@ -502,7 +502,10 @@ $trial_stock_type => undef
                                     </div>
 % }
                                     <div class="checkbox">
-                                        <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> Observation Unit Name </label>
+                                        <label> <input type="checkbox" id="obs_unit_name" value="obsunit_name"> Plot Name </label>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label> <input type="checkbox" id="seedlot_name" value="seedlot_name"> Seedlot Name </label>
                                     </div>
                                     <div class="checkbox">
                                         <label> <input type="checkbox" id="plot_id" value="plot_id"> Plot ID </label>
@@ -1501,6 +1504,7 @@ function _finish() {
   jQuery("#download_field_layout_button").click( function () {
     const includeAccessionName = jQuery('#accession_name').is(':checked');
     const includeObsUnitName = jQuery('#obs_unit_name').is(':checked');
+    const includeSeedlotName = jQuery('#seedlot_name').is(':checked');
     const includePlotId = jQuery('#plot_id').is(':checked');
     const includePlotNum = jQuery('#plot_num').is(':checked');
 
@@ -1538,8 +1542,12 @@ function _finish() {
         } else {
             cellVal = '';
         }
+
         if (includeObsUnitName && plot.observationUnitName) {
             cellVal += (cellVal ? '\n' : '') + plot.observationUnitName;
+        }
+        if (includeSeedlotName && plot.seedLotName) {
+            cellVal += (cellVal ? '\n' : '') + plot.seedLotName;
         }
         if (includePlotId && plot.observationUnitDbId) {
             cellVal += (cellVal ? '\n' : '') + plot.observationUnitDbId;
