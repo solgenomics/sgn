@@ -1262,6 +1262,7 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#upload_genotyping_data_protocol_missing_button').click(function(){
+        var data_type = jQuery('#genotype_data_type_select').val();
         if (data_type == 'ssr') {
             selected = [];
             jQuery('input[name="upload_genotyping_data_protocol_select"]:checked').each(function() {
