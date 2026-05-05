@@ -1,0 +1,207 @@
+package CXGN::Stock::ParseUpload::Plugin::VectorsGeneric;
+
+use Moose::Role;
+use CXGN::File::Parse;
+use CXGN::Stock::StockLookup;
+use SGN::Model::Cvterm;
+use Data::Dumper;
+use CXGN::List::Validate;
+use CXGN::BreedersToolbox::StocksFuzzySearch;
+use CXGN::BreedersToolbox::OrganismFuzzySearch;
+
+sub _validate_with_plugin {
+    my $self = shift;
+
+    my $filename = $self->get_filename();
+    my $schema = $self->get_chado_schema();
+    my $editable_vector_stockprops = $self->get_editable_vector_props();
+    my $autogenerate_uniquename = $self->get_autogenerate_uniquename();
+
+    my @error_messages;
+    my %errors;
+
+    my $parser = CXGN::File::Parse->new(
+      file => $filename,
+      required_columns => ['uniquename'],
+      optional_columns => $editable_vector_stockprops,
+      column_aliases => {
+        'uniquename' => ['Uniquename', 'Name', 'name', 'vector_name', 'vector name'],
+        'Strain' => ['strain'],
+        'CloningOrganism' => ['cloning_organism','cloning organism'],
+        'InherentMarker' => ['inherent_marker', 'inherent marker'],
+        'Backbone' => ['backbone'],
+        'SelectionMarker' => ['selection_marker', 'selection marker'],
+        'CassetteName' => ['cassette_name','cassette name'],
+        'VectorType' => ['vectortype', 'vector_type', 'vector type'],
+        'Gene' => ['gene'],
+        'Promotors' => ['promotors'],
+        'Terminators' => ['terminators'],
+        'GenbankRecord' => ['genbank_record', 'genbank record', 'genbankrecord']
+        'PlantAntibioticResistantMarker' => ['plant_antibiotic_resistant_marker', 'plant antibiotic resistant marker'],
+        'BacterialResistantMarker' => ['bacterial_resistant_marker','bacterial resistant marker'],
+      },
+    );
+    my $parsed = $parser->parse();
+    my $parsed_errors = $parsed->{errors};
+    my $parsed_columns = $parsed->{columns};
+    my $parsed_data = $parsed->{data};
+    my $parsed_values = $parsed->{values};
+    my $additional_columns = $parsed->{additional_columns};
+
+    # return if parsing error
+    if ( $parsed_errors && scalar(@$parsed_errors) > 0 ) {
+      $errors{'error_messages'} = $parsed_errors;
+      $self->_set_parse_errors(\%errors);
+      return;
+    }
+
+    # return if unknown columns (neither required nor optional)
+    if ( $additional_columns && scalar(@$additional_columns) > 0 ) {
+      $errors{'error_messages'} = [
+        "The following columns are not recognized: " . join(', ', @$additional_columns) . ". Please check the spreadsheet format for the allowed columns."
+      ];
+      $self->_set_parse_errors(\%errors);
+      return;
+    }
+
+    # check for duplicate vector name entries
+
+
+
+
+
+
+    # Check for existing non-vector stocks
+    my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+    my $vector_list = $parsed_values->{'uniquename'};
+    my $stocks_rs = $schema->resultset("Stock::Stock")->search({ uniquename => { -ilike => $vector_list }, type_id => { '<>' => $vector_construct_type_id } });
+    my @stocks_existing;
+    while ( my $r=$stocks_rs->next ) {
+      push @stocks_existing, $r->uniquename;
+    }
+    if ( scalar(@stocks_existing) > 0 ) {
+      push @error_messages, "The following vector construct names are already used in the database (as different stock types): " . join(',', @stocks_existing);
+    }
+
+    #store any errors found in the parsed file to parse_errors accessor
+    if (scalar(@error_messages) >= 1) {
+        $errors{'error_messages'} = \@error_messages;
+        $self->_set_parse_errors(\%errors);
+        return;
+    }
+
+    # cache parsed data for _parse_with_plugin function
+    $self->_set_parsed_data($parsed);
+
+    return 1; #returns true if validation is passed
+
+}
+
+
+sub _parse_with_plugin {
+  my $self = shift;
+  my $schema = $self->get_chado_schema();
+  my $do_fuzzy_search = $self->get_do_fuzzy_search();
+  my $editable_vector_stockprops = $self->get_editable_vector_props();
+
+  my %editable_stockprops_map = map {$_ => 1} @$editable_vector_stockprops;
+
+  # Get cached parsed data from _validate_with_plugin function
+  my $parsed = $self->_parsed_data();
+  my $parsed_data = $parsed->{data};
+  my $parsed_values = $parsed->{values};
+  my $parsed_columns = $parsed->{columns};
+
+  my $vector_list = $parsed_values->{'uniquename'};
+  my %vector_lookup;
+  my $vector_rs = $schema->resultset("Stock::Stock")->search({uniquename=>{-ilike=>$vector_list}});
+  while(my $r=$vector_rs->next){
+    $vector_lookup{$r->uniquename} = $r->stock_id;
+  }
+
+  my %parsed_entries;
+  for my $row ( @$parsed_data ) {
+    my $row_num = $row->{_row};
+    my $vector_name = $row->{'uniquename'};
+    my $stock_id;
+    if(exists($vector_lookup{$vector_name})){
+      $vector_stock_id = $vector_lookup{$seen_vector_names};
+    }
+
+    my %row_info = (
+      germplasmName => $vector_name,
+      defaultDisplayName => $vector_name,
+    );
+
+    #For "updating" existing vector by adding properties.
+    if ($stock_id){
+      $row_info{stock_id} = $stock_id;
+    }
+
+    # Process the stockprops...
+    foreach my $col ( @$parsed_columns ) {
+      my $stockprops_value = $row->{$col};
+
+      # ... skipping the basic items already included in the row_info
+      next if ( $col eq 'uniquename');
+
+      # ... skip empty / blank values
+      next if !$stockprops_value;
+      next if ref($stockprops_value) eq 'ARRAY' && scalar(@$stockprops_value) == 0;
+
+      # Process the stockprop...
+      if ( exists($editable_stockprops_map{$col}) ) {
+        $row_info{other_editable_stock_props}->{$col} = $stockprops_value;
+      }
+      else {
+        $row_info{$col} = $stockprops_value;
+      }
+    }
+
+    $parsed_entries{$row_num} = \%row_info;
+  }
+
+  my $fuzzy_vector_search = CXGN::BreedersToolbox::StocksFuzzySearch->new({schema => $schema});
+  my $max_distance = 0.2;
+  my $found_vectors = [];
+  my $fuzzy_vectors = [];
+  my $absent_vectors = [];
+  my %return_data;
+
+  if ($do_fuzzy_search) {
+      my $fuzzy_search_result = $fuzzy_vector_search->get_matches($vector_list, $max_distance, 'vector_construct');
+
+      $found_vectors = $fuzzy_search_result->{'found'};
+      $fuzzy_vectors = $fuzzy_search_result->{'fuzzy'};
+      $absent_vectors = $fuzzy_search_result->{'absent'};
+
+      if ($fuzzy_search_result->{'error'}){
+          $return_data{error_string} = $fuzzy_search_result->{'error'};
+      }
+  } else {
+      my $validator = CXGN::List::Validate->new();
+      my $absent_vectors = $validator->validate($schema, 'vector_construct', $vector_list)->{'missing'};
+      my %vectors_missing_hash = map { $_ => 1 } @$absent_vectors;
+
+      foreach (@$vector_list){
+          if (!exists($vectors_missing_hash{$_})){
+              push @$found_vectors, { unique_name => $_,  matched_string => $_};
+              push @$fuzzy_vectors, { unique_name => $_,  matched_string => $_};
+          }
+      }
+  }
+
+  %return_data = (
+      parsed_data => \%parsed_entries,
+      found_accessions => $found_vectors,
+      fuzzy_accessions => $fuzzy_vectors,
+      absent_accessions => $absent_vectors,
+  );
+  print STDERR "\n\nVectorsGeneric parsed results :\n".Data::Dumper::Dumper(%return_data)."\n\n";
+
+  $self->_set_parsed_data(\%return_data);
+  return 1;
+}
+
+
+1;
