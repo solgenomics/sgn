@@ -648,7 +648,7 @@ sub anova_trial_cache_dir {
 
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
-    my $cache_dir = catdir( $c->stash->{anova_cache_dir}, ${trial_id} );
+    my $cache_dir = catdir( $c->stash->{anova_cache_dir}, 'trials', ${trial_id} );
     mkpath($cache_dir) unless -d $cache_dir;
 
     return $cache_dir;
