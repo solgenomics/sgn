@@ -289,7 +289,7 @@ sub verify_vectors_file_POST : Args(0) {
 
     my @editable_vector_props = split ',', $c->config->{editable_vector_props};
     my $parser = CXGN::Stock::Vector::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_vector_props, do_fuzzy_search=>$do_fuzzy_search, autogenerate_uniquename=>$autogenerate_uniquename);
-    $parser->load_plugin('VectorsXLS');
+    $parser->load_plugin('VectorsGeneric');
     my $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
