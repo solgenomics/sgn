@@ -693,7 +693,7 @@ export function init() {
                     jQuery("#hm_edit_plot_information").html(
                         //"<b>Selected Plot Information: </b>"
                     );
-                    jQuery("#hm_plot_name").html(replace_plot_name);
+                    jQuery("#hm_plot_name").html(`<a href="/stock/${replace_plot_id}/view">${replace_plot_name}</a>`);
                     jQuery("#hm_plot_number").html(replace_plot_number);
                     var old_plot_id = jQuery("#hm_plot_id").html(replace_plot_id);
                     var old_plot_accession = jQuery("#hm_plot_accession").html(
@@ -744,7 +744,16 @@ export function init() {
                                                 nestedUl.classList.add("hidden");
                                                 li.appendChild(nestedUl);
                                             } else {
-                                                li.textContent = `${key}: ${obj[key]}`;
+                                                if (key == "name") {
+                                                    let label = document.createTextNode(`${key}: `);
+                                                    let a = document.createElement("a");
+                                                    a.href = `/stock/${obj['stock_id']}/view`;
+                                                    a.textContent = obj[key];
+                                                    li.appendChild(label);
+                                                    li.appendChild(a);
+                                                } else {
+                                                    li.textContent = `${key}: ${obj[key]}`;
+                                                }
                                             }
 
                                             ul.appendChild(li);

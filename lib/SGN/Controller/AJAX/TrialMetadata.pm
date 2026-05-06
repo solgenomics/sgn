@@ -4404,13 +4404,14 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
       my $image_img  = $image_ob->get_image_url("medium");
       my $small_image = $image_ob->get_image_url("thumbnail");
       my $image_page  = "/image/view/$image_id";
+      my $image_page_ref = "<a href=\"$image_page\">$image_name</a>";
 
       my $colorbox =
         qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
       my $fhtml =
         qq|<tr><td width=120>|
           . $colorbox
-            . $image_name
+            . $image_page_ref
               . "</td><td>"
                 . $image_description
                   . "</td></tr>";
