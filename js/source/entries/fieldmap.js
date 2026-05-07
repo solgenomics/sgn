@@ -771,7 +771,7 @@ export function init() {
                                         }
                                     }
 
-                                    let subplot_map = ["<table style=\"border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+                                    let subplot_map = ["<table style=\"display:inline-table;border-collapse:separate;table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
 
                                     for (let subplot of Object.keys(obj["has"]).sort()) {
                                         subplot_map.push("<tr><td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
@@ -802,7 +802,7 @@ export function init() {
                                     
                                     // table will have max_row + 1 rows and max_col + 1 cols
 
-                                    let table_elems = ["<table style=\"aspect-ratio:"+(max_col+1)+"/"+(max_row+1)+"; border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+                                    let table_elems = ["<table style=\"display:inline-table;border-collapse:separate;table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
 
                                     for (let row = max_row; row >= 0; row--){
                                         table_elems.push("<tr>");
@@ -819,9 +819,9 @@ export function init() {
                                                 } else {// normal plant
                                                     let coord = "" + row + "," + col + "";
                                                     if (coord in coord_dictionary) {
-                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
+                                                        table_elems.push("<td style=\"border:1px solid black;padding:2px;border-radius:10px;text-align:center;vertical-align:middle;width:3em;aspect-ratio:1;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
                                                     } else {
-                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">empty space</td>");
+                                                        table_elems.push("<td style=\"border:1px solid black;padding:2px;border-radius:10px;text-align:center;vertical-align:middle;width:3em;aspect-ratio:1;\">empty space</td>");
                                                     }
                                                 }
                                             }

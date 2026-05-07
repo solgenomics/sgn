@@ -33,6 +33,7 @@ $transplanting_date => undef
 $harvest_date => undef
 $trial_description => undef
 $user_can_modify => undef
+$curator => undef
 $has_plant_entries => undef
 $has_subplot_entries => undef
 $has_tissue_sample_entries => undef
@@ -196,7 +197,7 @@ $project_id => undef
 % }
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, trial_name => $trial_name, info_section_title => "<h4 style='display:inline'>Experimental Design</h4>", info_section_subtitle => 'View and add experimental design information. Add plant entries and tissue sample entries.',
 buttons_html => $experimental_design_buttons,
-icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type, management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
+icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_section", has_plant_entries => $has_plant_entries, has_subplot_entries => $has_subplot_entries, has_tissue_sample_entries => $has_tissue_sample_entries, trial_stock_type => $trial_stock_type, management_factor_types => $management_factor_types, user_can_modify => $user_can_modify, curator => $curator &>
 
 <& /page/detail_page_2_col_section.mas, trial_id => $trial_id, info_section_title => "<h4 style='display:inline'>Compute New Phenotypes</h4>", info_section_subtitle => 'Compute derived traits or compute plot phenotypes from plant phenotypes.', icon_class => "glyphicon glyphicon-scale", info_section_id => "compute_derived_traits" &>
 

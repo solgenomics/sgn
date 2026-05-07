@@ -87,6 +87,10 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 	return;
     }
 
+    if ($user->check_roles("curator")) {
+        $c->stash->{curator} = 1;
+    }
+
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $trial = $c->stash->{trial};
     my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
@@ -461,7 +465,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my @management_factor_types = split ',',$field_management_factors;
         $c->stash->{management_factor_types} = \@management_factor_types;
         $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
-	$c->stash->{trial_stock_count} = $trial->get_trial_stock_count();
+	    $c->stash->{trial_stock_count} = $trial->get_trial_stock_count();
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
 
