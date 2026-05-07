@@ -257,8 +257,10 @@ detect_design <- function(data) {
     )
   } else if (grepl("rcbd|randomized complete block|randomised complete block", design_text)) {
     design_label <- "RCBD"
-    design_message <- "Detected replicated complete block layout; replicates are fitted within environment when replicate has at least two levels."
-    design_terms <- c(if (has_rep) "environment:rep_number")
+    design_message <- "Detected randomized complete block layout; blocks are fitted within environment when block has at least two levels."
+    design_terms <- c(
+      if (has_block) "environment:block_number" else if (has_rep) "environment:rep_number"
+    )
   } else if (grepl("alpha|lattice|incomplete", design_text) || block_differs_from_rep) {
     design_label <- "Incomplete block / alpha-lattice"
     design_message <- "Detected replicate and block layout; blocks are fitted within replicate and environment when those terms have at least two levels."
@@ -272,8 +274,10 @@ detect_design <- function(data) {
     design_terms <- c(if (has_block) "environment:block_number")
   } else if (has_rep) {
     design_label <- "RCBD"
-    design_message <- "Detected replicated complete block layout; replicates are fitted within environment."
-    design_terms <- c("environment:rep_number")
+    design_message <- "Detected randomized complete block layout; blocks are fitted within environment when available."
+    design_terms <- c(
+      if (has_block) "environment:block_number" else "environment:rep_number"
+    )
   } else {
     design_label <- "CRD"
     design_message <- "No usable blocking, replicate, row, or column layout detected; using CRD model."
@@ -317,7 +321,7 @@ calculate_anova <- function(data) {
   d <- prepare_design_factors(data)
   design_info <- detect_design(d)
 
-  fit <- tryCatch(lm(design_info$formula, data = d), error = function(e) e)
+  fit <- tryCatch(lm(design_info$formula, data = d, na.action = stats::na.omit), error = function(e) e)
   if (inherits(fit, "error")) {
     return(data.frame(design = design_info$design, term = "ERROR", df = NA_real_, sum_sq = NA_real_, mean_sq = NA_real_, f_value = NA_real_, p_value = NA_real_, message = fit$message))
   }
@@ -424,7 +428,7 @@ lin_error_mse <- function(data, envs, common_genotypes) {
     prepare_design_factors()
 
   design <- detect_design(d)
-  fit <- tryCatch(lm(design$formula, data = d), error = function(e) e)
+  fit <- tryCatch(lm(design$formula, data = d, na.action = stats::na.omit), error = function(e) e)
 
   if (inherits(fit, "error")) {
     return(list(mse = NA_real_, df_error = NA_real_, message = fit$message))
