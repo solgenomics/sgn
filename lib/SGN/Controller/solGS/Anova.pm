@@ -289,7 +289,7 @@ sub prepare_response {
         my $diagnostics_file = $c->stash->{anova_diagnostics_file};
 
         my $trial_id = $c->stash->{trial_id};
-        my $trial_anova_dir = catdir('anova', $trial_id);
+        my $trial_anova_dir = catdir('anova', 'trials', $trial_id);
         $anova_txt_file = $c->controller('solGS::Files')
           ->copy_to_tempfiles_subdir( $c, $anova_txt_file, $trial_anova_dir );
         $model_file = $c->controller('solGS::Files')
