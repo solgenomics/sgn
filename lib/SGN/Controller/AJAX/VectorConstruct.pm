@@ -117,19 +117,19 @@ sub create_vector_construct_POST {
     }
 
     #validate accessions/vector
-    my $validator = CXGN::List::Validate->new();
-    my @absent_accessions = @{$validator->validate($schema, 'accessions', $vector_list)->{'missing'}};
-    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
-    my $existing_vectors = '';
+#    my $validator = CXGN::List::Validate->new();
+#    my @absent_accessions = @{$validator->validate($schema, 'accessions', $vector_list)->{'missing'}};
+#    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
 
+    my $existing_vectors = '';
     my $validator2 = CXGN::List::Validate->new();
     my @absent_vectors = @{$validator2->validate($schema, 'vector_constructs', $vector_list)->{'missing'}};
     my %vectors_missing_hash = map { $_ => 1 } @absent_vectors;
 
     foreach (@$vector_list){
-        if (!exists($accessions_missing_hash{$_})){
-            $existing_vectors = $existing_vectors . $_ ."," ;
-        }
+#        if (!exists($accessions_missing_hash{$_})){
+#            $existing_vectors = $existing_vectors . $_ ."," ;
+#        }
         if (!exists($vectors_missing_hash{$_})){
             $existing_vectors = $existing_vectors . $_ ."," ;
         }
