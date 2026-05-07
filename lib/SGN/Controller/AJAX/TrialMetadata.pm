@@ -2264,7 +2264,11 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id);
+    my $parser = CXGN::Trial::ParseUpload->new(
+        chado_schema => $schema, 
+        filename => $archived_filename_with_path, 
+        trial_id => $trial_id
+    );
     $parser->load_plugin('TrialChangePlotAccessions');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
