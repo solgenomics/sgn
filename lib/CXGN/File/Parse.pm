@@ -119,6 +119,21 @@ COLUMN ARRAYS
     }
   );
 
+UNIQUE-ONLY COLUMNS
+  - Specify columns that are not allowed to have duplicate data entries
+  - By default, columns can have row values that are duplicated (appear in multiple rows)
+  - This is useful for ensuring some one-to-one data entries are caught in parsing
+  - Specify columns that should not have duplicate entries in a hash with the column name as a key
+  - For columns that can have repeated entries, just leave them out of the hash
+
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx',
+    required_columns => ['accession_name', 'species_name'],
+    unique_only_columns => {
+      'accession_name' => 1
+    }
+  );
+
 CASE SENSITIVITY
   - Column names are case-insensitive for any names provided in required_columns, optional_columns, or column_aliases (known column names)
   - If the file contains a column name in a different case than the known column name, the column name in the file
@@ -245,6 +260,12 @@ has column_arrays => (
   is => "ro"
 );
 
+# Hash of column names that must contain unique data values
+has unique_only_columns => (
+  isa => "HashRef",
+  is => "ro"
+);
+
 
 #
 # PROCESS INITIAL ARGUMENTS
@@ -298,6 +319,7 @@ sub parse {
   my $required_columns = $self->required_columns();
   my $optional_columns = $self->optional_columns();
   my $column_arrays = $self->column_arrays();
+  my $unique_only_columns = $self->unique_only_columns();
 
   # If type is not defined, use the file extension
   if ( !$type ) {
@@ -388,17 +410,29 @@ sub parse {
         }
       }
 
-      # Check the data for missing required values
+      # Check the data for missing required values and disallowed duplicates
+      my $seen = {};
       foreach my $d (@$data) {
         foreach my $c ( @{$parsed->{required_columns}} ) {
           my $v = $d->{$c};
+          my $r = $d->{_row};
           if ( !defined($v) || $v eq '' ) {
-            my $r = $d->{_row};
             push @{$parsed->{errors}}, "Required column $c does not have a value in row $r";
           }
+          if (($v ne '' && defined($v)) && $unique_only_columns->{$c} && $seen->{$c}->{$v}) {
+            push @{$parsed->{errors}}, "Column $c requires unique values, but $v on row $r appears more than once";
+          }
+          $seen->{$c}->{$v} = 1;
+        }
+        foreach my $c ( (@{$parsed->{optional_columns}}, @{$parsed->{additional_columns}}) ) {
+          my $v = $d->{$c};
+          my $r = $d->{_row};
+          if (($v ne '' && defined($v)) && $unique_only_columns->{$c} && $seen->{$c}->{$v}) {
+            push @{$parsed->{errors}}, "Column $c requires unique values, but $v on row $r appears more than once";
+          }
+          $seen->{$c}->{$v} = 1;
         }
       }
-
     }
 
     # Add columns that are arrays, as defined in the CXGN::File::Parse constructor
