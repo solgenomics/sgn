@@ -68,20 +68,23 @@ $is_dataset_owner => 0
                     </select>
                     <hr />
                     <label>Title:</label>
-                    <input id="dataset-archive-publish-article-title" class="form-control dataset-archive-publish-article-details" />
+                    <div class="input-group">
+                        <span id="dataset-archive-publish-article-title-addon" class="input-group-addon"></span>
+                        <input id="dataset-archive-publish-article-title" class="form-control dataset-archive-publish-article-details" />
+                    </div>
                     <br />
                     <label>Description:</label>
                     <textarea id="dataset-archive-publish-article-description" class="form-control dataset-archive-publish-article-details"></textarea>
                     <br />
-                    <label>Authors (one per line):</label>
-                    <textarea id="dataset-archive-publish-article-authors" class="form-control dataset-archive-publish-article-details"><% $user_name %></textarea>
+                    <label>Additional Authors (one per line):</label>
+                    <textarea id="dataset-archive-publish-article-authors" class="form-control dataset-archive-publish-article-details" placeholder="You will automatically be added as an Author"></textarea>
                     <br />
                     <p><em>The dataset metadata can be updated later on <span class="dataset-archive-publish-service-name dataset-archive-publish-article-details"></span> until a DOI is generated</em></p>
                 </li>
                 <li class="dataset-archive-publish-connected">
-                    <p>Attach the archived files to the specified Article:</p>
+                    <p>Send and attach the files to the selected <span class="dataset-archive-publish-service-name"></span> dataset.</p>
                     <button id="dataset-archive-publish-send" class="btn btn-primary btn-sm">
-                        <span class="glyphicon glyphicon-export"></span>&nbsp;&nbsp;Send Files
+                        <span class="glyphicon glyphicon-export"></span>&nbsp;&nbsp;<span id="dataset-archive-publish-send-label">Send Files</span>
                     </button>
                     <br /><br />
                     <div class="progress">
@@ -293,9 +296,11 @@ function onArticleChanged() {
                     alert(resp.error)
                 }
                 else if ( resp?.article ) {
-                    jQuery("#dataset-archive-publish-article-title").val(`[${resp.article.status.toUpperCase()}] ${resp.article.title}`);
+                    jQuery("#dataset-archive-publish-article-title").val(resp.article.title);
+                    jQuery("#dataset-archive-publish-article-title-addon").html(resp.article.status.toUpperCase());
                     jQuery("#dataset-archive-publish-article-description").val(resp.article.description);
                     jQuery("#dataset-archive-publish-article-authors").val(resp.article.authors.map((e) => e.full_name).join('\n'));
+                    jQuery("#dataset-archive-publish-send-label").html("Add files to selected dataset");
                 }
             },
             error: () => {
@@ -306,9 +311,10 @@ function onArticleChanged() {
     else {
         jQuery(".dataset-archive-publish-article-details").attr("disabled", false);
         jQuery("#dataset-archive-publish-article-title").val("");
+        jQuery("#dataset-archive-publish-article-title-addon").html("NEW");
         jQuery("#dataset-archive-publish-article-description").val("");
-        jQuery("#dataset-archive-publish-article-authors").val("<% $user_name %>");
-
+        jQuery("#dataset-archive-publish-article-authors").val("");
+        jQuery("#dataset-archive-publish-send-label").html("Create new dataset and add files");
     }
 }
 
@@ -417,26 +423,29 @@ function sendArchive() {
     // Create article first, if necessary
     if ( !article || article === '' ) {
         total = total+1;
-        _progress(1);
         _createArticle();
     }
 
     // Using exising article, send files
     else {
-        _progress(1);
-        _sendFile(0);
+        _sendFile();
     }
 
     function _createArticle() {
         const title = jQuery("#dataset-archive-publish-article-title").val();
         const description = jQuery("#dataset-archive-publish-article-description").val();
-        const authors = jQuery("#dataset-archive-publish-article-authors").val().split('\n');
+        const authors = jQuery("#dataset-archive-publish-article-authors").val();
 
-        jQuery("#dataset-archive-publish-send-status").html(`Creating ${SELECTED_SERVICE.display_name} dataset`);
+        if ( !title || title === '' ) return alert('Please provide a name for the new dataset');
+        if ( !description || description === '' ) return alert('Please provide a description for the new dataset');
+
+        _progress(`Creating new dataset: ${title}`);
+
         jQuery.ajax({
             url: `/ajax/dataset/publish/articles/new`,
             method: 'POST',
             data: {
+                dataset_id: <% $dataset_id %>,
                 service: SELECTED_SERVICE.key,
                 title,
                 description,
@@ -447,7 +456,6 @@ function sendArchive() {
                     alert("Could not create new article [" + resp.error + "]");
                 }
                 else {
-                    _progress();
                     _sendFile(0);
                 }
             },
@@ -457,15 +465,14 @@ function sendArchive() {
         });
     }
 
-    function _sendFile(index) {
+    function _sendFile(index = 0) {
         if ( index >= files.length ) {
-            jQuery("#dataset-archive-publish-send-pb").removeClass('active');
-            jQuery("#dataset-archive-publish-send-status").html('Files Sent');
+            _progress('Files Sent', false);
             return;
         }
 
         const file = files[index];
-        jQuery("#dataset-archive-publish-send-status").html(`Sending file: ${file}`);
+        _progress(`Sending file: ${file}`);
 
         jQuery.ajax({
             url: `/ajax/dataset/publish/submit`,
@@ -480,7 +487,6 @@ function sendArchive() {
                     alert("Could not submit file: " + file + " [" + resp.error + "]");
                 }
                 else {
-                    _progress();
                     _sendFile(index+1);
                 }
             },
@@ -490,15 +496,16 @@ function sendArchive() {
         });
     }
 
-    function _progress(init) {
-        if ( init ) {
-            count = init;
+    function _progress(msg, isActive=true) {
+        count = count+1;
+        const percent = (count/total)*100;
+        jQuery("#dataset-archive-publish-send-status").html(msg);
+        if ( isActive ) {
             jQuery("#dataset-archive-publish-send-pb").addClass('active');
         }
         else {
-            count = count+1;
+            jQuery("#dataset-archive-publish-send-pb").removeClass('active');
         }
-        const percent = (count/total)*100;
         jQuery("#dataset-archive-publish-send-pb").css("width", `${percent}%`);
     }
 }

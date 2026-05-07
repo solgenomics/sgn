@@ -699,7 +699,7 @@ sub publish_dataset_connection_DELETE : Path('/ajax/dataset/publish/connection/r
 }
 
 #
-# Get account articles for the user on the specified service
+# Get account articles from the user's account on the external service
 #
 sub publish_dataset_articles : Path('/ajax/dataset/publish/articles') Args(1) {
     my $self = shift;
@@ -713,7 +713,7 @@ sub publish_dataset_articles : Path('/ajax/dataset/publish/articles') Args(1) {
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} => { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
         return;
     }
     my $selected = $config->{$service};
@@ -743,7 +743,7 @@ sub publish_dataset_articles_details : Path('/ajax/dataset/publish/articles') Ar
 
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} => { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
         return;
     }
     my $selected = $config->{$service};
@@ -753,8 +753,8 @@ sub publish_dataset_articles_details : Path('/ajax/dataset/publish/articles') Ar
         $selected->{api_url} . '/account/articles/' . $article,
         "Authorization" => "Bearer " . $token
     );
-    my $article = decode_json($resp->content || {});
-    $c->stash->{rest} = { article => $article };
+    my $details = decode_json($resp->content || {});
+    $c->stash->{rest} = { article => $details };
     return;
 }
 
@@ -765,25 +765,56 @@ sub publish_dataset_articles_new : Path('/ajax/dataset/publish/articles/new') : 
 sub publish_dataset_articles_new_POST {
     my $self = shift;
     my $c = shift;
+    my $dataset_id = $c->req->body_params->{dataset_id};
     my $service = $c->req->body_params->{service};
     my $title = $c->req->body_params->{title};
     my $description = $c->req->body_params->{description};
-    my $authors = $c->req->body_params->{authors};
+    my @authors = split('\n', $c->req->body_params->{'authors'});
     my $ua = LWP::UserAgent->new();
 
     my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
     my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
     my $token = $stored->{token}->{access_token};
 
+    my $project_name = $c->get_conf('project_name');
+    my $production_url = $c->get_conf('main_production_site_url');
     my $config = $c->get_conf('dataset_archive_clients') || {};
     if ( ! exists $config->{$service} ) {
-        $c->stash->{rest} => { error => 'The selected service does not exist in the server configuration' };
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
         return;
     }
     my $selected = $config->{$service};
 
+    my @authors_hash;
+    foreach (@authors) {
+        push @authors_hash, { name => $_ };
+    }
+    my $body = {
+        title => $title,
+        description => $description,
+        authors => \@authors_hash,
+        keywords => [ "$project_name" ],
+        references => [ "$production_url/dataset/$dataset_id" ],
+        categories => [ int($selected->{category_id}) ],
+        defined_type => 'dataset'
+    };
+
     # Create Article
-    # TODO
+    my $resp = $ua->post(
+        $selected->{api_url} . '/account/articles',
+        "Authorization" => "Bearer " . $token,
+        "Content-Type" => "application/json",
+        "Content" => encode_json($body)
+    );
+    my $created = decode_json($resp->content || {});
+
+    if ( ! exists $created->{entity_id} || exists $created->{message} ) {
+        $c->stash->{rest} = { error => $created->{message} || 'No entity id returned' };
+        return;
+    }
+
+    $c->stash->{rest} = $created;
+    return;
 }
 
 #
