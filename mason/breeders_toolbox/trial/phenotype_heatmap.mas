@@ -1077,7 +1077,27 @@ jQuery(document).ready( function() {
     })
 
     jQuery("#remove_fillers").click(function() {
-        jQuery('#delete_filler_plots_confirm_message').modal("show");
+        new jQuery.ajax({
+            type: "POST",
+            url: '/ajax/breeders/trial/<% $trial_id %>/check_curator_privileges',
+            dataType: "json",
+            data: {
+                'trial_id': trial_id,
+            },
+            success: function(response) {
+                if (response.success) {
+                    jQuery('#delete_filler_plots_confirm_message').modal("show");
+
+                } else {
+                    jQuery('#working_modal').modal("hide");
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal("hide");
+                alert(response);
+            }
+        });
     });
 
     jQuery("#remove_filler_plots_dialog_submit").click(function() {
