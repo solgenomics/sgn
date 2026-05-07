@@ -31,10 +31,7 @@ sub _validate_with_plugin {
             'new_plot_name' => ['new plot name'],
             'accession_name' => ['accession name', 'accession', 'cross_unique_id', 'cross unique id', 'family_name', 'family name']
         },
-        unique_only_columns =>  {
-            'plot_name' => 1,
-            'new_plot_name' => 1
-        }
+        unique_only_columns => ['plot_name', 'new_plot_name']
     );
 
     my $parsed = $parser->parse();
