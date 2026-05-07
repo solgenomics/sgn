@@ -24,6 +24,7 @@ sub _validate_with_plugin {
         file => $filename,
         required_columns => ['uniquename'],
         optional_columns => $editable_vector_stockprops,
+        unique_only_columns => {'uniquename' => 1},
         column_aliases => {
             'uniquename' => ['Uniquename', 'Name', 'name', 'vector_name', 'vector name'],
             'Strain' => ['strain'],
@@ -61,13 +62,6 @@ sub _validate_with_plugin {
         $self->_set_parse_errors(\%errors);
         return;
     }
-
-    # check for duplicate vector name entries
-
-
-
-
-
 
     my $vector_construct_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
     my $vector_list = $parsed_values->{'uniquename'};
@@ -197,7 +191,7 @@ sub _parse_with_plugin {
 
     $self->_set_parsed_data(\%return_data);
     return 1;
-    
+
 }
 
 
