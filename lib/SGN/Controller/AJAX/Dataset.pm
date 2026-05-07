@@ -552,6 +552,7 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
 
 #
 # Get the external services that are configured on this instance for publishing datasets
+# This reads the 'dataset_archive_clients' config key and returns some of the public-facing properties
 #
 sub publish_dataset_services : Path('/ajax/dataset/publish/services') Args(0) {
     my $self = shift;
@@ -645,7 +646,8 @@ sub publish_dataset_connection_POST {
 
 #
 # Get and check the validity of the stored connection info for the specified service
-# This checks to make sure the token has not expired and returns basic profile info if it is still valid
+# This reads the stored token and profile info from the User Prefs for the specified service and
+# checks to make sure the token has not expired and returns basic profile info if it is still valid
 #
 sub publish_dataset_connection_GET : Path('/ajax/dataset/publish/connection') Args(1) {
     my $self = shift;
@@ -681,6 +683,7 @@ sub publish_dataset_connection_GET : Path('/ajax/dataset/publish/connection') Ar
 
 #
 # Remove the stored connection preferences for the specified service
+# This removes the stored token and profile info from the User Prefs for the specified service
 #
 sub publish_dataset_connection_DELETE : Path('/ajax/dataset/publish/connection/remove') Args(1) {
     my $self = shift;

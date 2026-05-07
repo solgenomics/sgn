@@ -1761,12 +1761,6 @@ sub generate_archive_files {
     # Breeder Search to find missing associated data
     my $bs = CXGN::BreederSearch->new({ dbh=>$dbh });
 
-    use Data::Dumper;
-    print STDERR "========================\n";
-    print STDERR Dumper $categories;
-    print STDERR "========================\n";
-
-
     #
     # PHENOTYPE DATA
     # Fill in missing phenotype-related data if trials are in the dataset

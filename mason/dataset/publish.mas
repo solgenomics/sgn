@@ -151,13 +151,15 @@ function displayServices(services = {}) {
 function onServiceChanged() {
     SELECTED_SERVICE = SERVICES[jQuery("#dataset-archive-publish-services").val()];
 
-    jQuery(".dataset-archive-publish-service-name").html(SELECTED_SERVICE.display_name);
-    jQuery("#dataset-archive-publish-account").attr('href', `${SELECTED_SERVICE.web_url}${SELECTED_SERVICE.user_path}`);
+    if ( SELECTED_SERVICE ) {
+        jQuery(".dataset-archive-publish-service-name").html(SELECTED_SERVICE.display_name);
+        jQuery("#dataset-archive-publish-account").attr('href', `${SELECTED_SERVICE.web_url}${SELECTED_SERVICE.user_path}`);
+    }
     updateConnection();
 }
 
 function updateConnection() {
-    if ( SELECTED_SERVICE.key ) {
+    if ( SELECTED_SERVICE && SELECTED_SERVICE.key ) {
         jQuery.ajax({
             url: `/ajax/dataset/publish/connection/${SELECTED_SERVICE.key}`,
             success: (resp) => {
@@ -183,7 +185,8 @@ function updateConnection() {
 function displayConnection(account = {}) {
     SELECTED_ACCOUNT = account;
 
-    if ( SELECTED_ACCOUNT.hasOwnProperty('token') && SELECTED_ACCOUNT.hasOwnProperty('profile') ) {
+    // A service and account have been selected
+    if ( !!SELECTED_SERVICE && SELECTED_ACCOUNT.hasOwnProperty('token') && SELECTED_ACCOUNT.hasOwnProperty('profile') ) {
         const now = new Date().getTime();
         if ( SELECTED_ACCOUNT.token.expiration > now ) {
             jQuery(".dataset-archive-publish-connected").show();
@@ -196,39 +199,50 @@ function displayConnection(account = {}) {
         }
     }
 
-    // Default to showing connect steps
-    jQuery(".dataset-archive-publish-connected").hide();
-    jQuery(".dataset-archive-publish-connect").show();
-    jQuery("#dataset-archive-publish-send").attr("disabled", true);
+    // Only a service has been selected
+    else if ( !!SELECTED_SERVICE ) {
+        jQuery(".dataset-archive-publish-connected").hide();
+        jQuery(".dataset-archive-publish-connect").show();
+        jQuery("#dataset-archive-publish-send").attr("disabled", true);
+    }
+
+    // Service not selected
+    else {
+        jQuery(".dataset-archive-publish-connected").hide();
+        jQuery(".dataset-archive-publish-connect").hide();
+        jQuery("#dataset-archive-publish-send").attr("disabled", true);
+    }
 }
 
 function connectService() {
-    jQuery("#dataset-archive-publish-connect").attr("disabled", true);
-    window.authorize_data = { service: SELECTED_SERVICE };
-    const popup = window.open(`/dataset/publish/authorize/${SELECTED_SERVICE.key}`, '_authorize', 
-        `toolbar=no,
-        location=no,
-        status=no,
-        menubar=no,
-        scrollbars=yes,
-        resizable=yes,
-        width=700, 
-        height=700`
-    );
+    if ( SELECTED_SERVICE ) {
+        jQuery("#dataset-archive-publish-connect").attr("disabled", true);
+        window.authorize_data = { service: SELECTED_SERVICE };
+        const popup = window.open(`/dataset/publish/authorize/${SELECTED_SERVICE.key}`, '_authorize', 
+            `toolbar=no,
+            location=no,
+            status=no,
+            menubar=no,
+            scrollbars=yes,
+            resizable=yes,
+            width=700, 
+            height=700`
+        );
 
-    if ( !popup ) {
-        jQuery("#dataset-archive-publish-connect").attr("disabled", false);
-        alert("You must allow popup windows in your browser to continue");
-    }
-
-    const interval = setInterval(() => {
-        if (popup.closed) {
-            clearInterval(interval);
+        if ( !popup ) {
             jQuery("#dataset-archive-publish-connect").attr("disabled", false);
-            window.authorize_data = {};
-            updateConnection();
+            alert("You must allow popup windows in your browser to continue");
         }
-    }, 500);
+
+        const interval = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(interval);
+                jQuery("#dataset-archive-publish-connect").attr("disabled", false);
+                window.authorize_data = {};
+                updateConnection();
+            }
+        }, 500);
+    }
 }
 
 function disconnectService() {
