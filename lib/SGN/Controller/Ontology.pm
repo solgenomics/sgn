@@ -119,6 +119,7 @@ sub compose_trait : Path('/tools/compose_trait') :Args(0) {
     $c->stash->{composable_cvs_allowed_combinations} = $c->config->{composable_cvs_allowed_combinations};
     $c->stash->{composable_tod_root_cvterm} = $c->config->{composable_tod_root_cvterm};
     $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
+    $c->stash->{composable_tiy_root_cvterm} = $c->config->{composable_tiy_root_cvterm};
     $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
     $c->stash->{composable_evt_root_cvterm} = $c->config->{composable_evt_root_cvterm};
     $c->stash->{composable_meta_root_cvterm} = $c->config->{composable_meta_root_cvterm};
@@ -205,6 +206,7 @@ sub compose_treatment : Path('/tools/compose_treatment') :Args(0) {
     $c->stash->{composable_cvs_allowed_combinations} = $c->config->{composable_cvs_allowed_combinations};
     $c->stash->{composable_tod_root_cvterm} = $c->config->{composable_tod_root_cvterm};
     $c->stash->{composable_toy_root_cvterm} = $c->config->{composable_toy_root_cvterm};
+    $c->stash->{composable_tiy_root_cvterm} = $c->config->{composable_tiy_root_cvterm};
     $c->stash->{composable_gen_root_cvterm} = $c->config->{composable_gen_root_cvterm};
     $c->stash->{composable_evt_root_cvterm} = $c->config->{composable_evt_root_cvterm};
     $c->stash->{composable_meta_root_cvterm} = $c->config->{composable_meta_root_cvterm};
