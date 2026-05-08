@@ -488,7 +488,7 @@ function removeIssue(key) {
             url: `/ajax/dataset/publish/issues/remove/<% $dataset_id %>/${key}`,
             success: (resp) => {
                 if ( resp?.error ) {
-                    alert(resp.error);
+                    alert(`Could not remove dataset published issues [${resp.error}]`);
                 }
                 else {
                     updateIssues();
@@ -501,34 +501,85 @@ function removeIssue(key) {
     }
 }
 
-function sendArchive() {
-    let article = jQuery("#dataset-archive-publish-articles").val()
-    const files = SELECTED_ISSUE.files || [];
-    let total = files.length+1;
-    let count = 0;
-    let subTotal = 0;
-    let subCount = 0;
+/**
+ * Submit the archived files to a new or existing dataset on the external service
+ * - This will call createArticle() to create a new article on the service, if needed
+ * - Submit each of the dataset's archived files, using submitFile() to the specified article
+ * - Upload each of the chunks for each file
+ * - Finalize the file
+ * - Update the Issues when complete to reflect the changes
+ */
+async function sendArchive() {
+    try {
+        jQuery("#dataset-archive-publish-send").attr("disabled", true);
+        let article_id = jQuery("#dataset-archive-publish-articles").val();
+        const files = SELECTED_ISSUE.files || [];
+        let total = !article_id || article_id === '' ? files.length+1 : files.length;
+        let count = 0;
 
-    // Create article first, if necessary
-    if ( !article || article === '' ) {
-        total = total+1;
-        _createArticle();
+        // Create article first, if necessary
+        if ( !article_id || article_id === '' ) {
+            const title = jQuery("#dataset-archive-publish-article-title").val();
+            progress({ msg: `Creating new dataset: ${title}`, count, total });
+            article_id = await createArticle();
+            count ++;
+        }
+
+        // Submit each of the files
+        for (const file of files) {
+            progress({ msg: `Sending file: ${file}`, count, total });
+            const { parts = {}, file_id, upload_url } = await submitFile(article_id, file);
+
+            let subTotal = Object.keys(parts).length + 1;
+            let subCount = 0;
+            subProgress({ clear: true });
+
+            // Upload each part of the file
+            const partNos = Object.keys(parts);
+            for ( const partNo of partNos ) {
+                const part = parts[partNo];
+                subProgress({ msg: `Uploading chunk: ${partNo}`, count: subCount, total: subTotal });
+                await submitPart(file, upload_url, part);
+                subCount++;
+            };
+
+            // Finalize the File
+            subProgress({ msg: `Finalizing File`, count: subCount, total: subTotal });
+            await finalizeFile(file, file_id, article_id);
+
+            // Show success for file
+            subCount++;
+            count++;
+            subProgress({ msg: '', count: subCount, total: subTotal });
+            progress({ msg: `Uploaded file: ${file}`, count, total });
+        };
+
+        // Show completed status
+        count++;
+        progress({ msg: `All Files Uploaded!`, count, total });
+        subProgress({ clear: true });
+        jQuery("#dataset-archive-publish-send").attr("disabled", false);
+        updateIssues();
     }
-
-    // Using exising article, send files
-    else {
-        _submitFile();
+    catch (err) {
+        jQuery("#dataset-archive-publish-send").attr("disabled", false);
+        fail(err);
     }
+}
 
-    function _createArticle() {
+/**
+ * Create a new article on the exernal service
+ * - This uses the user-provided title, description, and additonal authors
+ * - This will resolve with the new article id, if successful
+ */
+function createArticle() {
+    return new Promise((resolve, reject) => {
         const title = jQuery("#dataset-archive-publish-article-title").val();
         const description = jQuery("#dataset-archive-publish-article-description").val();
         const authors = jQuery("#dataset-archive-publish-article-authors").val();
 
-        if ( !title || title === '' ) return _fail('Please provide a name for the new dataset');
-        if ( !description || description === '' ) return _fail('Please provide a description for the new dataset');
-
-        _progress(`Creating new dataset: ${title}`);
+        if ( !title || title === '' ) return reject('Please provide a name for the new dataset');
+        if ( !description || description === '' ) return reject('Please provide a description for the new dataset');
 
         jQuery.ajax({
             url: `/ajax/dataset/publish/articles/new`,
@@ -542,31 +593,25 @@ function sendArchive() {
             },
             success: (resp) => {
                 if ( resp?.error || !resp?.entity_id) {
-                    _fail("Could not create new article [" + resp.error + "]");
+                    reject(`Could not create new article [${resp.error}]`);
                 }
                 else {
-                    article = resp.entity_id;
-                    _submitFile();
+                    resolve(resp.entity_id);
                 }
             },
             error: () => {
-                _fail("Could not create new article")
+                reject("Could not create new article")
             }
         });
-    }
+    });
+}
 
-    function _submitFile(index = 0) {
-        if ( index >= files.length ) {
-            _progress('Files Sent');
-            _subProgress({ clear: true });
-            updateIssues();
-            return;
-        }
-
-        const file = files[index];
-        _progress(`Sending file: ${file}`);
-        _subProgress({ clear: true });
-
+/**
+ * Submit the specified file to the specified article
+ * - This creates the file entry, but does not upload the content
+ */
+function submitFile(article, file) {
+    return new Promise((resolve, reject) => {
         jQuery.ajax({
             url: `/ajax/dataset/publish/submit`,
             method: 'POST',
@@ -579,34 +624,26 @@ function sendArchive() {
             },
             success: (resp) => {
                 if ( resp?.error ) {
-                    _fail("Could not submit file: " + file + " [" + resp.error + "]");
+                    reject(`Could not submit file: ${file} [${resp.error}]`);
                 }
                 else {
-                    subCount = 0;
-                    subTotal = Object.keys(resp?.parts || {}).length + 1;
-                    _submitPart(resp?.file, resp?.upload_url, resp?.parts, 0, () => {
-                        _finalizeFile(resp?.file, resp?.file_id, resp?.article_id, () => {
-                            _submitFile(index+1);
-                        });
-                    });
+                    resolve(resp);
                 }
             },
             error: () => {
-                _fail("Could not submit file: " + file)
+                reject(`Could not submit file: ${file}`);
             }
         });
-    }
+    });
+}
 
-    function _submitPart(file, upload_url, parts={}, index=0, callback) {
-        const keys = Object.keys(parts);
-        if ( index >= keys.length ) {
-            return callback();
-        }
-
-        _subProgress();
-        const part = parts[keys[index]];
+/**
+ * Upload the specified chunk of a file to the submitted file upload URL
+ */
+function submitPart(file, upload_url, part) {
+    return new Promise((resolve, reject) => {
         if ( part.status === 'COMPLETE' ) {
-            return _submitPart(file, upload_url, parts, index+1, callback);
+            return resolve();
         }
 
         jQuery.ajax({
@@ -624,20 +661,24 @@ function sendArchive() {
             },
             success: (resp) => {
                 if ( resp?.error ) {
-                    _fail("Could not upload file: " + file + " [" + resp.error + "]");
+                    reject(`Could not upload file: ${file} [${resp.error}]`);
                 }
                 else {
-                    _submitPart(file, upload_url, parts, index+1, callback);
+                    resolve();
                 }
             },
             error: () => {
-                _fail("Could not upload file: " + file)
+                reject(`Could not upload file: ${file}`);
             }
         });
-    }
+    });
+}
 
-    function _finalizeFile(file, file_id, article_id, callback) {
-        _subProgress({ msg: "Finalizing File" });
+/**
+ * Finalize the file upload, done after all of the parts have been uploaded
+ */
+function finalizeFile(file, file_id, article_id) {
+    return new Promise((resolve, reject) => {
         jQuery.ajax({
             url: '/ajax/dataset/publish/finalize',
             method: 'POST',
@@ -651,61 +692,74 @@ function sendArchive() {
             },
             success: (resp) => {
                 if ( resp?.error ) {
-                    _fail("Could not finalize file: " + file + " [" + resp.error + "]");
+                    reject(`Could not finalize file: ${file} [${resp.error}]`);
                 }
                 else {
-                    return callback();
+                    resolve();
                 }
             },
             error: () => {
-                _fail("Could not finalize file: " + file)
+                reject(`Could not finalize file: ${file}`);
             }
-        })
+        });
+    });
+}
+
+
+/**
+ * Set main progress and message
+ */
+function progress({ msg, count, total, clear } = {}) {
+    if ( clear ) {
+        jQuery("#dataset-archive-publish-send-pb").css("width", `0%`);
+        jQuery("#dataset-archive-publish-send-status").html("");
+        return;
     }
 
-    function _progress(msg) {
-        count++;
-        const percent = (count/total)*100;
+    const percent = (count/total)*100;
 
-        jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-danger');
-        if ( percent >= 100 ) {
-            jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-success');
-            jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-info');
-            jQuery("#dataset-archive-publish-send-pb").removeClass('active');
-        }
-        else {
-            jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-success');
-            jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-info');
-            jQuery("#dataset-archive-publish-send-pb").addClass('active');
-        }
-
-        jQuery("#dataset-archive-publish-send-pb").css("width", `${percent}%`);
-        jQuery("#dataset-archive-publish-send-status").html(msg);
-    }
-
-    function _fail(msg) {
-        jQuery("#dataset-archive-publish-send-pb").removeClass('active');
-        jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-success');
+    jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-danger');
+    if ( percent >= 100 ) {
+        jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-success');
         jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-info');
-        jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-danger');
-        jQuery("#dataset-archive-publish-send-pb").css("width", `100%`);
-        jQuery("#dataset-archive-publish-send-status").html(`<strong>(Upload Failed) ${msg}</strong>`);
+        jQuery("#dataset-archive-publish-send-pb").removeClass('active');
+    }
+    else {
+        jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-success');
+        jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-info');
+        jQuery("#dataset-archive-publish-send-pb").addClass('active');
     }
 
-    function _subProgress({ msg, clear } = {}) {
-        if ( clear ) {
-            jQuery("#dataset-archive-publish-send-subpb").css("width", `0%`);
-            jQuery("#dataset-archive-publish-send-substatus").html("");
-            return;
-        }
+    jQuery("#dataset-archive-publish-send-pb").css("width", `${percent}%`);
+    jQuery("#dataset-archive-publish-send-status").html(msg);
+}
 
-        subCount++;
-        const percent = (subCount/subTotal)*100;
+/**
+ * Set error message
+ */
+function fail(msg) {
+    jQuery("#dataset-archive-publish-send-pb").removeClass('active');
+    jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-success');
+    jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-info');
+    jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-danger');
+    jQuery("#dataset-archive-publish-send-pb").css("width", `100%`);
+    jQuery("#dataset-archive-publish-send-status").html(`<strong>(Upload Failed) ${msg}</strong>`);
+}
 
-        if ( !msg ) msg = `Uploading chunk ${subCount}`;
-        jQuery("#dataset-archive-publish-send-subpb").css("width", `${percent}%`);
-        jQuery("#dataset-archive-publish-send-substatus").html(msg);
+/**
+ * Set secondary progress and message
+ */
+function subProgress({ msg, count, total, clear } = {}) {
+    if ( clear ) {
+        jQuery("#dataset-archive-publish-send-subpb").css("width", `0%`);
+        jQuery("#dataset-archive-publish-send-substatus").html("");
+        return;
     }
+
+    const percent = (count/total)*100;
+
+    jQuery("#dataset-archive-publish-send-subpb").css("width", `${percent}%`);
+    jQuery("#dataset-archive-publish-send-substatus").html(msg);
 }
 </script>
 

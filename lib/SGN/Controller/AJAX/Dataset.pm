@@ -1030,8 +1030,6 @@ sub publish_dataset_submit_POST {
         $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
         return;
     }
-
-    $c->stash->{rest} = { success => 1 };
 }
 
 sub publish_dataset_upload : Path('/ajax/dataset/publish/upload') : ActionClass('REST') { }
