@@ -1821,7 +1821,7 @@ sub generate_archive_files {
         print STDERR "... processing genotype data\n";
     }
 
-
+    use Data::Dumper;
     print STDERR "Programs = " . Dumper $breeding_programs;
     print STDERR "Locations = " . Dumper $locations;
     print STDERR "Trials = " . Dumper $trials;
@@ -1917,7 +1917,9 @@ sub add_published {
         directory => $directory,
         files => $files,
         ts => $key*1000,
-        key => $key
+        key => $key,
+        submitted_article => {},
+        submitted_files => {}
     };
     $dataset->{published} = $published;
 
@@ -1931,6 +1933,51 @@ sub add_published {
     }
 
     return { key => $key };
+}
+
+sub update_published {
+    my $self = shift;
+    my $key = shift;
+    my $data = shift;
+    my $dataset_id = $self->sp_dataset_id();
+
+    # Get existing dataset row
+    my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $dataset_id });
+    return { error => "Dataset with id $dataset_id does not exist" } unless $row;
+
+    # Get existing published data
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
+    my $published = $dataset->{published} || {};
+
+    # Make sure key exists
+    if ( !exists $published->{$key} ) {
+        return { error => 'The specified key does not exist for this dataset' };
+    }
+
+    # Update the data in this key (allowing for nested hashes)
+    foreach my $k (keys %$data) {
+        my $v = $data->{$k};
+        if ( ref($v) eq 'HASH' ) {
+            foreach my $k2 (keys %$v) {
+                $published->{$key}->{$k}->{$k2} = $v->{$k2};
+            }
+        }
+        else {
+            $published->{$key}->{$k} = $v;
+        }
+    }
+    $dataset->{published} = $published;
+
+    # Store the updated dataset
+    eval {
+        $row->dataset(JSON::Any->encode($dataset));
+        $row->update();
+    };
+    if ($@) {
+        return { error => "Could not update the dataset published: $@" };
+    }
+
+    return $published->{$key};
 }
 
 sub remove_published {

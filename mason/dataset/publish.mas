@@ -88,11 +88,19 @@ $is_dataset_owner => 0
                     </button>
                     <br /><br />
                     <div class="progress">
-                        <div id="dataset-archive-publish-send-pb" class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" style="width: 0%;">
+                        <div id="dataset-archive-publish-send-pb" class="progress-bar progress-bar-striped" role="progressbar" style="width: 0%;">
                             <span class="sr-only">60% Complete</span>
                         </div>
                     </div>
-                    <p id="dataset-archive-publish-send-status"></p>
+                    <div class="progress">
+                        <div id="dataset-archive-publish-send-subpb" class="progress-bar progress-bar-info" role="progressbar" style="width: 0%;">
+                            <span class="sr-only">60% Complete</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; gap: 15px">
+                        <p id="dataset-archive-publish-send-status"></p>
+                        <p id="dataset-archive-publish-send-substatus" style="font-size: 95%; font-style: italic"></p>
+                    </div>
                 </li>
             </ol>
         </div>
@@ -288,6 +296,7 @@ function displayArticles(articles = []) {
 function onArticleChanged() {
     var selected = jQuery("#dataset-archive-publish-articles").val();
     if ( selected && selected !== '' ) {
+        jQuery("#dataset-archive-publish-send").attr("disabled", true);
         jQuery(".dataset-archive-publish-article-details").attr("disabled", true);
         jQuery.ajax({
             url: `/ajax/dataset/publish/articles/${SELECTED_SERVICE.key}/${selected}`,
@@ -301,6 +310,7 @@ function onArticleChanged() {
                     jQuery("#dataset-archive-publish-article-description").val(resp.article.description);
                     jQuery("#dataset-archive-publish-article-authors").val(resp.article.authors.map((e) => e.full_name).join('\n'));
                     jQuery("#dataset-archive-publish-send-label").html("Add files to selected dataset");
+                    jQuery("#dataset-archive-publish-send").attr("disabled", false);
                 }
             },
             error: () => {
@@ -309,6 +319,7 @@ function onArticleChanged() {
         });
     }
     else {
+        jQuery("#dataset-archive-publish-send").attr("disabled", false);
         jQuery(".dataset-archive-publish-article-details").attr("disabled", false);
         jQuery("#dataset-archive-publish-article-title").val("");
         jQuery("#dataset-archive-publish-article-title-addon").html("NEW");
@@ -415,10 +426,12 @@ function removeIssue(key) {
 }
 
 function sendArchive() {
-    const article = jQuery("#dataset-archive-publish-articles").val()
+    let article = jQuery("#dataset-archive-publish-articles").val()
     const files = SELECTED_ISSUE.files || [];
     let total = files.length+1;
     let count = 0;
+    let subTotal = 0;
+    let subCount = 0;
 
     // Create article first, if necessary
     if ( !article || article === '' ) {
@@ -428,7 +441,7 @@ function sendArchive() {
 
     // Using exising article, send files
     else {
-        _sendFile();
+        _submitFile();
     }
 
     function _createArticle() {
@@ -436,8 +449,8 @@ function sendArchive() {
         const description = jQuery("#dataset-archive-publish-article-description").val();
         const authors = jQuery("#dataset-archive-publish-article-authors").val();
 
-        if ( !title || title === '' ) return alert('Please provide a name for the new dataset');
-        if ( !description || description === '' ) return alert('Please provide a description for the new dataset');
+        if ( !title || title === '' ) return _fail('Please provide a name for the new dataset');
+        if ( !description || description === '' ) return _fail('Please provide a description for the new dataset');
 
         _progress(`Creating new dataset: ${title}`);
 
@@ -452,61 +465,169 @@ function sendArchive() {
                 authors
             },
             success: (resp) => {
-                if ( resp?.error ) {
-                    alert("Could not create new article [" + resp.error + "]");
+                if ( resp?.error || !resp?.entity_id) {
+                    _fail("Could not create new article [" + resp.error + "]");
                 }
                 else {
-                    _sendFile(0);
+                    article = resp.entity_id;
+                    _submitFile();
                 }
             },
             error: () => {
-                alert("Could not create new article")
+                _fail("Could not create new article")
             }
         });
     }
 
-    function _sendFile(index = 0) {
+    function _submitFile(index = 0) {
         if ( index >= files.length ) {
-            _progress('Files Sent', false);
+            _progress('Files Sent');
+            _subProgress({ clear: true });
             return;
         }
 
         const file = files[index];
         _progress(`Sending file: ${file}`);
+        _subProgress({ clear: true });
 
         jQuery.ajax({
             url: `/ajax/dataset/publish/submit`,
             method: 'POST',
             data: {
+                service: SELECTED_SERVICE.key,
+                article_id: article,
                 dataset_id: <% $dataset_id %>,
                 key: SELECTED_ISSUE.key,
                 file: file
             },
             success: (resp) => {
                 if ( resp?.error ) {
-                    alert("Could not submit file: " + file + " [" + resp.error + "]");
+                    _fail("Could not submit file: " + file + " [" + resp.error + "]");
                 }
                 else {
-                    _sendFile(index+1);
+                    subCount = 0;
+                    subTotal = Object.keys(resp?.parts || {}).length + 1;
+                    _submitPart(resp?.file, resp?.upload_url, resp?.parts, 0, () => {
+                        _finalizeFile(resp?.file, resp?.file_id, resp?.article_id, () => {
+                            _submitFile(index+1);
+                        });
+                    });
                 }
             },
             error: () => {
-                alert("Could not submit file: " + file)
+                _fail("Could not submit file: " + file)
             }
         });
     }
 
-    function _progress(msg, isActive=true) {
-        count = count+1;
-        const percent = (count/total)*100;
-        jQuery("#dataset-archive-publish-send-status").html(msg);
-        if ( isActive ) {
-            jQuery("#dataset-archive-publish-send-pb").addClass('active');
+    function _submitPart(file, upload_url, parts={}, index=0, callback) {
+        const keys = Object.keys(parts);
+        if ( index >= keys.length ) {
+            return callback();
         }
-        else {
+
+        _subProgress();
+        const part = parts[keys[index]];
+        if ( part.status === 'COMPLETE' ) {
+            return _submitPart(file, upload_url, parts, index+1, callback);
+        }
+
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/upload`,
+            method: 'POST',
+            data: {
+                service: SELECTED_SERVICE.key,
+                dataset_id: <% $dataset_id %>,
+                key: SELECTED_ISSUE.key,
+                file: file,
+                partNo: part.partNo,
+                startOffset: part.startOffset,
+                endOffset: part.endOffset,
+                uploadUrl: upload_url
+            },
+            success: (resp) => {
+                if ( resp?.error ) {
+                    _fail("Could not upload file: " + file + " [" + resp.error + "]");
+                }
+                else {
+                    _submitPart(file, upload_url, parts, index+1, callback);
+                }
+            },
+            error: () => {
+                _fail("Could not upload file: " + file)
+            }
+        });
+    }
+
+    function _finalizeFile(file, file_id, article_id, callback) {
+        _subProgress({ msg: "Finalizing File" });
+        jQuery.ajax({
+            url: '/ajax/dataset/publish/finalize',
+            method: 'POST',
+            data: {
+                service: SELECTED_SERVICE.key,
+                dataset_id: <% $dataset_id %>,
+                key: SELECTED_ISSUE.key,
+                file: file,
+                file_id: file_id,
+                article_id: article_id
+            },
+            success: (resp) => {
+                if ( resp?.error ) {
+                    _fail("Could not finalize file: " + file + " [" + resp.error + "]");
+                }
+                else {
+                    return callback();
+                }
+            },
+            error: () => {
+                _fail("Could not finalize file: " + file)
+            }
+        })
+    }
+
+    function _progress(msg) {
+        count++;
+        const percent = (count/total)*100;
+
+        jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-danger');
+        if ( percent >= 100 ) {
+            jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-success');
+            jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-info');
             jQuery("#dataset-archive-publish-send-pb").removeClass('active');
         }
+        else {
+            jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-success');
+            jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-info');
+            jQuery("#dataset-archive-publish-send-pb").addClass('active');
+        }
+
         jQuery("#dataset-archive-publish-send-pb").css("width", `${percent}%`);
+        jQuery("#dataset-archive-publish-send-status").html(msg);
+    }
+
+    function _fail(msg) {
+        jQuery("#dataset-archive-publish-send-pb").removeClass('active');
+        jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-success');
+        jQuery("#dataset-archive-publish-send-pb").removeClass('progress-bar-info');
+        jQuery("#dataset-archive-publish-send-pb").addClass('progress-bar-danger');
+        jQuery("#dataset-archive-publish-send-pb").css("width", `100%`);
+        jQuery("#dataset-archive-publish-send-status").html(`<strong>(Upload Failed) ${msg}</strong>`);
+    }
+
+    function _subProgress({ msg, clear } = {}) {
+        if ( clear ) {
+            jQuery("#dataset-archive-publish-send-subpb").css("width", `0%`);
+            jQuery("#dataset-archive-publish-send-substatus").html("");
+            return;
+        }
+
+        subCount++;
+        const percent = (subCount/subTotal)*100;
+
+        if ( !msg ) msg = `Uploading chunk ${subCount}`;
+        jQuery("#dataset-archive-publish-send-subpb").css("width", `${percent}%`);
+        jQuery("#dataset-archive-publish-send-substatus").html(msg);
     }
 }
 </script>
