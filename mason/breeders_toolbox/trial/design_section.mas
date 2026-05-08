@@ -70,7 +70,7 @@ $curator => undef
 % } elsif ($has_plant_entries && !$has_subplot_entries) {
             <p>Subplots cannot be added to trials that already contain plant entries.</p>
 % } else {
-            <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id &>     
+            <& /breeders_toolbox/trial/trial_subplots.mas, trial_id => $trial_id, curator => $curator &>     
 % if ($curator) {
             <br>
             <button class="btn btn-default" id="create_subplot_entries_button">Add subplot entries</button>
@@ -104,7 +104,7 @@ $curator => undef
            <button class="btn btn-default" id="upload_plant_entries_with_index_number_subplots_button">Upload plant entries using plant index number</button>
            <button class="btn btn-default" id="trial_upload_plants_with_num_plants_subplots_button">Upload plant entries using number of plants per subplot</button>
 % } else { # if this executes, there's definitely no plants
-            <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id &>
+            <& /breeders_toolbox/trial/trial_plants.mas, trial_id => $trial_id, curator => $curator &>
 %       if ($curator && $has_subplot_entries) {
             <p><strong>Add Plants to Subplots:</strong></p>
            <button class="btn btn-default" id="create_plant_entries_subplots_button">Add plant entries</button>

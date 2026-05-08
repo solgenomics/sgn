@@ -1,6 +1,7 @@
 
 <%args>
 $trial_id
+$curator => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.HTMLSelect" ] &>
@@ -33,6 +34,10 @@ $trial_id
                     </td>
                 </tr>
             </table>
+% if ($curator) {
+            <br>
+            <button id="subplot_select_delete_subplots" class="btn btn-danger">Delete selected subplots</button>
+% } 
         </&>
     </div>
 </div>
