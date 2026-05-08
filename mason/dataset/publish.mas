@@ -132,6 +132,10 @@ jQuery(document).ready(() => {
 });
 
 
+/**
+ * Get the available external services from the server config
+ * - Call displayServices() on success
+ */
 function updateServices() {
     jQuery.ajax({
         url: '/ajax/dataset/publish/services',
@@ -149,6 +153,9 @@ function updateServices() {
     });
 }
 
+/**
+ * Display the external services as options in the select menu
+ */
 function displayServices(services = {}) {
     SERVICES = services;
     var html = "";
@@ -159,6 +166,12 @@ function displayServices(services = {}) {
     onServiceChanged();
 }
 
+/**
+ * Handle a service change
+ * - display selected service name throughout the dialog
+ * - update the link for the user to check their account
+ * - call updateConnection() to check for already-provided user account on the service
+ */
 function onServiceChanged() {
     SELECTED_SERVICE = SERVICES[jQuery("#dataset-archive-publish-services").val()];
 
@@ -169,6 +182,10 @@ function onServiceChanged() {
     updateConnection();
 }
 
+/**
+ * Check the User Prefs on the server to see if the user has an account with the selected service
+ * - Call displayConnection()
+ */
 function updateConnection() {
     if ( SELECTED_SERVICE && SELECTED_SERVICE.key ) {
         jQuery.ajax({
@@ -193,6 +210,11 @@ function updateConnection() {
     }
 }
 
+/**
+ * Display the user's stored account with the selected service
+ * - check if provided token is still valid
+ * - toggle connection / connect steps depending on account status and selected service
+ */
 function displayConnection(account = {}) {
     SELECTED_ACCOUNT = account;
 
@@ -225,6 +247,12 @@ function displayConnection(account = {}) {
     }
 }
 
+/**
+ * Start the OAuth flow to allow the user to connect their account on the selected service
+ * - launches a pop-up window to grant access to the user's account
+ * - the pop-up will store the user's info in the User Prefs on the server
+ * - once the pop-up is closed, call updateConnection() to reflect changes
+ */
 function connectService() {
     if ( SELECTED_SERVICE ) {
         jQuery("#dataset-archive-publish-connect").attr("disabled", true);
@@ -256,6 +284,10 @@ function connectService() {
     }
 }
 
+/**
+ * Remove the selected account from the User Prefs
+ * - call updateConnection() to reflect the changes
+ */
 function disconnectService() {
     SELECTED_ACCOUNT = {};
     jQuery.ajax({
@@ -267,6 +299,10 @@ function disconnectService() {
     });
 }
 
+/**
+ * Get a list of the user's account articles
+ * - Call displayArticles() with the results
+ */
 function updateArticles() {
     jQuery.ajax({
         url: `/ajax/dataset/publish/articles/${SELECTED_SERVICE.key}`,
@@ -284,6 +320,9 @@ function updateArticles() {
     });
 }
 
+/**
+ * Display the user's account articles in the article select menu
+ */
 function displayArticles(articles = []) {
     var html = `<option value="">Create a new ${SELECTED_SERVICE.display_name} dataset</option>`;
     articles.forEach((a) => {
@@ -293,6 +332,11 @@ function displayArticles(articles = []) {
     onArticleChanged();
 }
 
+/**
+ * Handle a changed article
+ * - If a specific article is selected, fetch and display its details
+ * - If a new article is selected, clear the form
+ */
 function onArticleChanged() {
     var selected = jQuery("#dataset-archive-publish-articles").val();
     if ( selected && selected !== '' ) {
@@ -302,7 +346,7 @@ function onArticleChanged() {
             url: `/ajax/dataset/publish/articles/${SELECTED_SERVICE.key}/${selected}`,
             success: (resp) => {
                 if ( resp?.error ) {
-                    alert(resp.error)
+                    alert(`Could not get article details [${resp.error}]`);
                 }
                 else if ( resp?.article ) {
                     jQuery("#dataset-archive-publish-article-title").val(resp.article.title);
@@ -329,13 +373,16 @@ function onArticleChanged() {
     }
 }
 
+/**
+ * Get the stored published metadata for this dataset
+ * - Call displayIssues() with the results
+ */
 function updateIssues() {
     jQuery.ajax({
         url: '/ajax/dataset/publish/issues/<% $dataset_id %>',
         success: (resp) => {
-            console.log(resp);
             if ( resp?.error ) {
-                alert("Could not get the dataset published issues [" + resp.error + "]");
+                alert(`Could not get the dataset published issues [${resp.error}]`);
             }
             else {
                 displayIssues(resp?.published);
@@ -347,7 +394,13 @@ function updateIssues() {
     });
 }
 
+/**
+ * Display the stored published metadata
+ */
 function displayIssues(status = {}) {
+    console.log("DISPLAY ISSUES:");
+    console.log(status);
+
     ISSUES = status;
     const rows = [];
     if ( Object.keys(status).length > 0 ) {
@@ -357,8 +410,19 @@ function displayIssues(status = {}) {
             html += `<td><a href='/solpeople/personal-info.pl?sp_person_id=${s.user.id}'>${s.user.name}</a></td>`;
             html += `<td><ul style='padding-left: 15px'>`;
             (s.files || []).forEach((f) => {
+                console.log("--> FILE: " + f);
                 const url = `/ajax/dataset/publish/file/<% $dataset_id %>/${k}/${f}`;
-                html += `<li><a href='${url}' target='_blank'>${f}</a></li>`;
+                let isUploaded = false;
+                let isComplete = true;
+                Object.keys(s.submitted_files?.[f]?.parts || {}).forEach((pk) => {
+                    const p = s.submitted_files[f].parts[pk];
+                    isUploaded = true;
+                    if ( p.status !== 'COMPLETE' ) isUploaded = false;
+                });
+                html += `<li>`;
+                html += `<a href='${url}' target='_blank'>${f}</a>`;
+                if ( isUploaded && isComplete ) html += `&nbsp;&nbsp;<span class='glyphicon glyphicon-ok'></span>`;
+                html += `</li>`;
             });
             html += `</ul></td>`;
 % if ( $is_dataset_owner ) {
@@ -379,6 +443,10 @@ function displayIssues(status = {}) {
     }
 }
 
+/**
+ * Generate the archived files that are stored on breedbase
+ * - Call updateIssues() when finished to reflect the changes
+ */
 function generateArchive() {
     jQuery.ajax({
         url: '/ajax/dataset/publish/generate/<% $dataset_id %>',
@@ -401,11 +469,19 @@ function generateArchive() {
     });
 }
 
+/**
+ * Show the publish dialog for the specific issue
+ */
 function publishIssue(key) {
     SELECTED_ISSUE = ISSUES[key];
     jQuery("#dataset-archive-publish-dialog").modal("show");
 }
 
+/**
+ * Remove the issue from the dataset
+ * - This removes the archived files and the metadata stored with the dataset
+ * - Call updateIssues() when complete to reflect changes
+ */
 function removeIssue(key) {
     if (confirm("Are you sure you want to unlink this published metadata from the dataset?  This will remove the archived data on this server and the connection between the dataset and the external service.  This will NOT remove anything from the external service.") ) {
         jQuery.ajax({
@@ -483,6 +559,7 @@ function sendArchive() {
         if ( index >= files.length ) {
             _progress('Files Sent');
             _subProgress({ clear: true });
+            updateIssues();
             return;
         }
 
