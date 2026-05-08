@@ -61,6 +61,8 @@ $editable_stock_props_definitions
                         </div>
                         -->
                     </form>
+                    <br>
+                    <& /help/file_upload_type.mas, type => "Vectors", optional_column => 1 &>
                 </div>
             </div>
         </div>
@@ -82,7 +84,6 @@ $editable_stock_props_definitions
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Vectors may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br /><br />
                     <b>Header:</b>
                     <br>
@@ -103,7 +104,7 @@ $editable_stock_props_definitions
 
                     <b>Required Fields:</b>
                     <ul>
-                    <li>name (must be unique)</li>
+                    <li>uniquename (vector name must be unique)</li>
                     </ul>
                     <b>Optional Fields:</b>
                     <ul>
