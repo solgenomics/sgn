@@ -1007,13 +1007,25 @@ sub publish_dataset_submit_POST {
                 };
             }
 
+            # Fetch article metadata
+            my $article_resp = $ua->get(
+                $selected->{api_url} . '/account/articles/' . $article_id,
+                "Authorization" => "Bearer $token"
+            );
+            my $article = decode_json($article_resp->content || '{}');
+
             # Update the stored dataset metadata
             my $sf = {};
             $sf->{$file} = $submitted_file;
             $dataset->update_published($key, {
                 submitted_article => {
                     service => $service,
-                    article_id => $article_id
+                    article_id => $article_id,
+                    title => $article->{title},
+                    is_public => $article->{is_public},
+                    url_public_html => $article->{url_public_html},
+                    url_private_html => $article->{url_private_html},
+                    doi => $article->{doi}
                 },
                 submitted_files => $sf
             });

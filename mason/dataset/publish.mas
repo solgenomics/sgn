@@ -17,6 +17,7 @@ $is_dataset_owner => 0
             <th>Date Published</th>
             <th>User</th>
             <th>Files</th>
+            <th>Published To</th>
             <th></th>
         </tr>
     </thead>
@@ -337,30 +338,23 @@ function displayArticles(articles = []) {
  * - If a specific article is selected, fetch and display its details
  * - If a new article is selected, clear the form
  */
-function onArticleChanged() {
+async function onArticleChanged() {
     var selected = jQuery("#dataset-archive-publish-articles").val();
     if ( selected && selected !== '' ) {
         jQuery("#dataset-archive-publish-send").attr("disabled", true);
         jQuery(".dataset-archive-publish-article-details").attr("disabled", true);
-        jQuery.ajax({
-            url: `/ajax/dataset/publish/articles/${SELECTED_SERVICE.key}/${selected}`,
-            success: (resp) => {
-                if ( resp?.error ) {
-                    alert(`Could not get article details [${resp.error}]`);
-                }
-                else if ( resp?.article ) {
-                    jQuery("#dataset-archive-publish-article-title").val(resp.article.title);
-                    jQuery("#dataset-archive-publish-article-title-addon").html(resp.article.status.toUpperCase());
-                    jQuery("#dataset-archive-publish-article-description").val(resp.article.description);
-                    jQuery("#dataset-archive-publish-article-authors").val(resp.article.authors.map((e) => e.full_name).join('\n'));
-                    jQuery("#dataset-archive-publish-send-label").html("Add files to selected dataset");
-                    jQuery("#dataset-archive-publish-send").attr("disabled", false);
-                }
-            },
-            error: () => {
-                alert("Could not get article details");
-            }
-        });
+        try {
+            const details = await getArticleDetails(SELECTED_SERVICE.key, selected);
+            jQuery("#dataset-archive-publish-article-title").val(details.title);
+            jQuery("#dataset-archive-publish-article-title-addon").html(details.status.toUpperCase());
+            jQuery("#dataset-archive-publish-article-description").val(details.description);
+            jQuery("#dataset-archive-publish-article-authors").val(details.authors.map((e) => e.full_name).join('\n'));
+            jQuery("#dataset-archive-publish-send-label").html("Add files to selected dataset");
+            jQuery("#dataset-archive-publish-send").attr("disabled", false);
+        }
+        catch (err) {
+            alert(err);
+        }
     }
     else {
         jQuery("#dataset-archive-publish-send").attr("disabled", false);
@@ -371,6 +365,28 @@ function onArticleChanged() {
         jQuery("#dataset-archive-publish-article-authors").val("");
         jQuery("#dataset-archive-publish-send-label").html("Create new dataset and add files");
     }
+}
+
+/**
+ * Get the details of the specified article from the external service
+ */
+function getArticleDetails(service, article_id) {
+    return new Promise((resolve, reject) => {
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/articles/${service}/${article_id}`,
+            success: (resp) => {
+                if ( resp?.error ) {
+                    reject(`Could not get article details [${resp.error}]`);
+                }
+                else if ( resp?.article ) {
+                    resolve(resp.article);
+                }
+            },
+            error: () => {
+                reject("Could not get article details");
+            }
+        });
+    })
 }
 
 /**
@@ -397,21 +413,29 @@ function updateIssues() {
 /**
  * Display the stored published metadata
  */
-function displayIssues(status = {}) {
-    console.log("DISPLAY ISSUES:");
-    console.log(status);
-
+async function displayIssues(status = {}) {
     ISSUES = status;
+    const keys = Object.keys(ISSUES);
     const rows = [];
-    if ( Object.keys(status).length > 0 ) {
-        Object.keys(status).forEach((k) => {
-            const s = status[k];
+    if ( keys.length > 0 ) {
+        for ( const k of keys ) {
+            const s = ISSUES[k];
+            const files = s.files || [];
+            let overallUploaded = false;
+            let overallComplete = true;
+
+            // Publish date
             var html = `<td>${new Date(s.ts).toLocaleString()}</td>`;
+
+            // Publish User
             html += `<td><a href='/solpeople/personal-info.pl?sp_person_id=${s.user.id}'>${s.user.name}</a></td>`;
+
+            // File List
             html += `<td><ul style='padding-left: 15px'>`;
-            (s.files || []).forEach((f) => {
-                console.log("--> FILE: " + f);
+            for ( const f of files ) {
                 const url = `/ajax/dataset/publish/file/<% $dataset_id %>/${k}/${f}`;
+
+                // Check the status of each part of the file, to see if it's been uploaded
                 let isUploaded = false;
                 let isComplete = true;
                 Object.keys(s.submitted_files?.[f]?.parts || {}).forEach((pk) => {
@@ -419,22 +443,41 @@ function displayIssues(status = {}) {
                     isUploaded = true;
                     if ( p.status !== 'COMPLETE' ) isUploaded = false;
                 });
+
+                // Display the file name, link to download, and check if completely uploaded
                 html += `<li>`;
                 html += `<a href='${url}' target='_blank'>${f}</a>`;
-                if ( isUploaded && isComplete ) html += `&nbsp;&nbsp;<span class='glyphicon glyphicon-ok'></span>`;
+                if ( isUploaded && isComplete ) html += `&nbsp;&nbsp;<span class='glyphicon glyphicon-ok text-success'></span>`;
                 html += `</li>`;
-            });
+
+                if ( isUploaded ) overallUploaded = true;
+                if ( !isComplete ) overallComplete = false;
+            };
             html += `</ul></td>`;
+
+            // Display external reference, if published
+            if ( s.submitted_article?.article_id && s.submitted_article?.service ) {
+                html += `<td>`;
+                html += `<a href='${s.submitted_article.is_public ? s.submitted_article.url_public_html : s.submitted_article.url_private_html}' target='_blank'>${s.submitted_article.title}</a>`;
+                if ( s.submitted_article.doi && s.submitted_article.doi !== '' ) html += `<br /><a href='https://doi.org/${s.submitted_article.doi} target='_blank'>${s.submitted_article.doi}</a>`;
+                html += `</td>`;
+            }
+            else {
+                html += `<td><em>Not published</em></td>`;
+            }
+
+            // Display actions only to owner
 % if ( $is_dataset_owner ) {
             html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
-            html += `<button class='btn btn-primary btn-xs' onclick='publishIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Publish</button>`;
+            if ( !overallUploaded || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='publishIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Publish</button>`;
             html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;Remove</button>`;
             html += `</div></td>`;
 % } else {
             html += `<td></td>`;
 % }
             rows.push(html);
-        });
+        }
+
         jQuery("#dataset-publish-status").html(`<tr>${rows.join('</tr><tr>')}</tr>`);
     }
     else {
@@ -527,12 +570,15 @@ async function sendArchive() {
 
         // Submit each of the files
         for (const file of files) {
-            progress({ msg: `Sending file: ${file}`, count, total });
-            const { parts = {}, file_id, upload_url } = await submitFile(article_id, file);
-
-            let subTotal = Object.keys(parts).length + 1;
+            let subTotal = 1;
             let subCount = 0;
+
+            // Submit the file
+            progress({ msg: `Sending file: ${file}`, count, total });
             subProgress({ clear: true });
+            const { parts = {}, file_id, upload_url } = await submitFile(article_id, file);
+            subTotal = Object.keys(parts).length + 1;
+            subCount++;
 
             // Upload each part of the file
             const partNos = Object.keys(parts);
@@ -556,7 +602,7 @@ async function sendArchive() {
 
         // Show completed status
         count++;
-        progress({ msg: `All Files Uploaded!`, count, total });
+        progress({ msg: `<strong>All Files Uploaded!</strong>`, count, total });
         subProgress({ clear: true });
         jQuery("#dataset-archive-publish-send").attr("disabled", false);
         updateIssues();
