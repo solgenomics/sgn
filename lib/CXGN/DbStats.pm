@@ -110,7 +110,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
 
     my %data;
 
-    print Dumper($plots);
+    print STDERR Dumper($plots);
     foreach my $trial (@$plots) {
 	$data{$trial->[0]}->{$trial->[1]}->{plots}=$trial->[2];
     }
