@@ -8,6 +8,7 @@ use Data::Dumper;
 use CXGN::List::Validate;
 use CXGN::List::Transform;
 use CXGN::Trial;
+use CXGN::Stock::RelatedStocks;
 
 my @REQUIRED_COLUMNS = qw|plot_name accession_name|;
 my @OPTIONAL_COLUMNS = qw|new_plot_name|;
@@ -28,7 +29,11 @@ sub _validate_with_plugin {
         column_aliases => {
             'plot_name' => ['plot name'],
             'new_plot_name' => ['new plot name'],
-            'accession_name' => ['accession name', 'accession']
+            'accession_name' => ['accession name', 'accession', 'cross_unique_id', 'cross unique id', 'family_name', 'family name']
+        },
+        unique_only_columns =>  {
+            'plot_name' => 1,
+            'new_plot_name' => 1
         }
     );
 
@@ -49,11 +54,6 @@ sub _validate_with_plugin {
     }
     my $validator = CXGN::List::Validate->new();
 
-    my $validate = $validator->validate($schema, 'plots', \@old_plot_names);
-    if (scalar(@{$validate->{'missing'}}) > 0) {
-        push @error_messages, "The following plots were not found in the database: ".join(";",@{$validate->{'missing'}});
-    }
-
     my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
         trial_id => $trial_id
@@ -65,21 +65,37 @@ sub _validate_with_plugin {
             push @error_messages, "Plot $old_plot_name does not exist in this trial.";
         }
     }
- 
+
     my $transform = CXGN::List::Transform->new();
-    $validate = $transform->transform($schema, 'stocks_2_stock_ids', \@accessions);
-    if (scalar(@{$validate->{'missing'}}) > 0) {
-        push @error_messages, "The following accessions were not found in the database: ".$validate->{'missing'};
+    my $validate_plots = $transform->transform($schema, 'plots_2_plot_ids', \@old_plot_names);
+    if (scalar(@{$validate_plots->{'missing'}}) > 0) {
+        push @error_messages, "The following plots were not found in the database: ".join(";",@{$validate_plots->{'missing'}});
+    }
+
+    my @plot_ids = @{$validate_plots->{'transform'}};
+    if (scalar @plot_ids > 0) {
+        my $related_seedlots = CXGN::Stock::RelatedStocks->new({dbic_schema => $schema, stock_ids =>\@plot_ids});
+        my $seedlots = $related_seedlots->get_plots_related_seedlots();
+        if (scalar @$seedlots > 0) {
+            foreach my $seedlot (@$seedlots) {
+                push @error_messages, "Plot: $seedlot->[4] is associated with seedlot: $seedlot->[2]. Please delete seedlot transaction linked to the plot first.";
+            }
+        }
+    }
+
+    my $validate_stocks = $transform->transform($schema, 'stocks_2_stock_ids', \@accessions);
+    if (scalar(@{$validate_stocks->{'missing'}}) > 0) {
+        push @error_messages, "The following accessions were not found in the database: ".$validate_stocks->{'missing'};
     } else {
-        foreach my $accession_id (@{$validate->{'transform'}}) {
+        foreach my $accession_id (@{$validate_stocks->{'transform'}}) {
             my $accession_name = shift(@accessions);
             $parsed_accession_ids->{$accession_name} = $accession_id;
         }
     }
 
     if (scalar(@new_plot_names) > 0) {
-        $validate = $validator->validate($schema, 'new_stocks', \@new_plot_names);
-        foreach my $new_name (@{$validate->{invalid}}) { #new name is invalid if any stock, obsolete or not, is found in the db
+        my $validate_new_stocks = $validator->validate($schema, 'new_stocks', \@new_plot_names);
+        foreach my $new_name (@{$validate_new_stocks->{invalid}}) { #new name is invalid if any stock, obsolete or not, is found in the db
             push @error_messages, "New plot name $new_name already exists as a stock in the database. ";
         }
     }
@@ -117,7 +133,7 @@ sub _parse_with_plugin {
             'new_accession_name' => $row->{'accession_name'},
             'new_accession_id' => $parsed_accession_ids->{$row->{'accession_name'}}
         };
-    } 
+    }
 
     $self->_set_parsed_data($parsed_entries);
     return 1;
