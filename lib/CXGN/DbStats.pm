@@ -134,6 +134,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
     $h4->execute($start_date, $end_date);
     my $per_trait = $h4->fetchall_arrayref();
     foreach my $trial (@$per_trait) {
+	print STDERR "BP: $trial->[0] TRIAL: $trial->[1] TRAIT: $trial->[2] COUNT: $trial->[3]\n";
 	$data{$trial->[0]}->{$trial->[1]}->{per_trait}->{$trial->[2]} = $trial->[3];
     }
 
@@ -158,7 +159,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
 		    my $per_trait =  $data{$bp}->{$t}->{per_trait}->{$pt};
 		    my $plots = $data{$bp}->{$t}->{plots};
 		    my $completeness = $per_trait / $plots;
-		    print join("\t", "...", $pt, $per_trait, $plots, $completeness)."\n";
+		    print join("\t", "...", $pt,  $plots, $per_trait, $completeness)."\n";
 		}
 	    }
 

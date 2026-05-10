@@ -34,4 +34,4 @@ my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $db_stats = CXGN::DbStats->new( { dbh=> $dbh, start_date => $start_date, end_date => $end_date, include_dateless_items => 1 });
 
 
-$db_stats->phenotype_completeness_by_breeding_program_and_trial(undef, undef, undef, $opt_T);
+$db_stats->phenotype_completeness_by_breeding_program_and_trial(undef, undef, 1, $opt_T);
