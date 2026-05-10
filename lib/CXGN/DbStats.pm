@@ -140,6 +140,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
 
     #output stats
 
+    print join("\t", "breeding_program", "trial", "trait", "#plots", "#measurements", "completeness")."\n";
     foreach my $bp (keys(%data)) {
 	foreach my $t (keys(%{$data{$bp}})) {
 	    my $completeness;
@@ -151,7 +152,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
 		$completeness =  $data{$bp}->{$t}->{phenotypes} / $plotsxtraits;
 	    }
 
-	    print join("\t", $bp, $t, $data{$bp}->{$t}->{plots} || 0, $data{$bp}->{$t}->{phenotypes} || 0, $data{$bp}->{$t}->{traits} || 0, $completeness)."\n";
+	    print join("\t", $bp, $t, 'all traits', $data{$bp}->{$t}->{plots} || 0, $data{$bp}->{$t}->{phenotypes} || 0, $data{$bp}->{$t}->{traits} || 0, $completeness)."\n";
 
 	    if ($list_individual_traits) {
 		my $completeness_per_trait;
@@ -159,7 +160,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
 		    my $per_trait =  $data{$bp}->{$t}->{per_trait}->{$pt};
 		    my $plots = $data{$bp}->{$t}->{plots};
 		    my $completeness = $per_trait / $plots;
-		    print join("\t", "...", $pt,  $plots, $per_trait, $completeness)."\n";
+		    print join("\t", "...", "...", $pt,  $plots, $per_trait, 1, $completeness)."\n";
 		}
 	    }
 
