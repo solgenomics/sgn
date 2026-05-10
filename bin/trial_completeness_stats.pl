@@ -8,15 +8,15 @@ use CXGN::DB::InsertDBH;
 use CXGN::DbStats;
 
 
-our ($opt_H, $opt_D, $opt_s, $opt_e);
+our ($opt_H, $opt_D, $opt_s, $opt_e, $opt_T);
 
-getopts('H:i:tD:p:y:g:axsm:');
+getopts('H:i:D:s:e:T');
 
 my $dbhost = $opt_H;
 my $dbname = $opt_D;
 
 if (!$opt_H || !$opt_D) {
-    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), optionally -s start_date and -e end_date");
+    pod2usage(-verbose => 2, -message => "Must provide options -H (hostname), -D (database name), optionally -s start_date and -e end_date -T (include details for each trait)");
 }
 
 my $dbh = CXGN::DB::InsertDBH->new( { dbhost=>$dbhost,
@@ -34,4 +34,4 @@ my $schema= Bio::Chado::Schema->connect(  sub { $dbh->get_actual_dbh() } );
 my $db_stats = CXGN::DbStats->new( { dbh=> $dbh, start_date => $start_date, end_date => $end_date, include_dateless_items => 1 });
 
 
-$db_stats->phenotype_completeness_by_breeding_program_and_trial();
+$db_stats->phenotype_completeness_by_breeding_program_and_trial(undef, undef, undef, $opt_T);

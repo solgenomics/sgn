@@ -77,6 +77,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
     my $start_date = shift || $self->start_date();
     my $end_date = shift || $self->end_date();
     my $include_dateless_items = shift || $self->include_dateless_items();
+    my $list_individual_traits = shift;
 
     if (!defined($include_dateless_items)) { $include_dateless_items = $self->include_dateless_items(); }
 
@@ -85,19 +86,23 @@ sub phenotype_completeness_by_breeding_program_and_trial {
 	$datelessq = " trial.create_date IS NULL OR ";
     }
 
+    print STDERR "GET PLOTS PER TRIAL...\n";
     # get number of plots per trial
     #
     my $q1 = "select project.name, trial.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) join nd_experiment_project on(trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) where  ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and stock.type_id=(select cvterm_id from cvterm where name='plot') and cvterm.name='breeding_program' and trialcvterm.name not in ('genotyping_trial', 'genotyping_experiment') and length(trialprop.value)<100 and trialcvterm.cv_id=(select cv_id from cv where name='project_type') group by project.name, trial.name";
 
+    print STDERR "GET PHENOTYPES PER TRIAL...\n";
     # get number of phenotypes per trial
     my $q2 = "select project.name, trial.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) join nd_experiment_project on(trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join nd_experiment_phenotype on (nd_experiment_project.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id) join phenotype using(phenotype_id) where  ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and stock.type_id=(select cvterm_id from cvterm where name='plot') and cvterm.name='breeding_program' and trialcvterm.name not in ('genotyping_trial', 'genotyping_experiment') and trialcvterm.cv_id=(select cv_id from cv where name='project_type') group by project.name, trial.name";
 
-    # get the number of distinct phenotypes measured per trial
+    print STDERR "GET TRAITS PER TRIAL...\n";
+    # get the number of distinct traits measured per trial
     #
     my $q3 = "select project.name, trial.name, count(distinct(cvalue_id)) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) join nd_experiment_project on(trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join nd_experiment_phenotype on (nd_experiment_project.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id) join phenotype using(phenotype_id) where  ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and stock.type_id=(select cvterm_id from cvterm where name='plot') and cvterm.name='breeding_program' and trialcvterm.name not in ('genotyping_trial', 'genotyping_experiment') and trialcvterm.cv_id=(select cv_id from cv where name='project_type') group by project.name, trial.name";
 
+    print STDERR "GET NUMBER OF PHENOTYPES MEASURED PER TRAIT AND TRIAL...\n";
     # get the number of phenotypes measured per trait and trial
-        my $q4 = "select project.name, trial.name, cvalue_id, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) join nd_experiment_project on(trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join nd_experiment_phenotype on (nd_experiment_project.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id) join phenotype using(phenotype_id) where  ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and stock.type_id=(select cvterm_id from cvterm where name='plot') and cvterm.name='breeding_program' and trialcvterm.name not in ('genotyping_trial', 'genotyping_experiment') and trialcvterm.cv_id=(select cv_id from cv where name='project_type') group by project.name, trial.name, cvalue_id";
+        my $q4 = "select project.name, trial.name, trait.name, count(*) from project join project_relationship on (project.project_id=project_relationship.object_project_id) join project as trial on(subject_project_id=trial.project_id) join projectprop on(project.project_id = projectprop.project_id) join cvterm on (projectprop.type_id=cvterm.cvterm_id) join projectprop as trialprop on(trial.project_id = trialprop.project_id) join cvterm as trialcvterm on(trialprop.type_id=trialcvterm.cvterm_id) join nd_experiment_project on(trial.project_id=nd_experiment_project.project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join nd_experiment_phenotype on (nd_experiment_project.nd_experiment_id=nd_experiment_phenotype.nd_experiment_id) join phenotype using(phenotype_id) join cvterm as trait on(phenotype.cvalue_id=trait.cvterm_id) where  ( $datelessq ( trial.create_date > ? and trial.create_date < ?)) and stock.type_id=(select cvterm_id from cvterm where name='plot') and cvterm.name='breeding_program' and trialcvterm.name not in ('genotyping_trial', 'genotyping_experiment') and trialcvterm.cv_id=(select cv_id from cv where name='project_type') group by project.name, trial.name, trait.name";
 
     my $h1 = $self->dbh->prepare($q1);
     $h1->execute($start_date, $end_date);
@@ -137,7 +142,7 @@ sub phenotype_completeness_by_breeding_program_and_trial {
     foreach my $bp (keys(%data)) {
 	foreach my $t (keys(%{$data{$bp}})) {
 	    my $completeness;
-	    my $plotsxtraits = $data{$bp}->{$t}->{plots} * $data{$bp}->{$t}->{traits};
+	    my $plotsxtraits = ($data{$bp}->{$t}->{plots} || 0) * ($data{$bp}->{$t}->{traits} || 0);
 	    if ($plotsxtraits == 0) {
 		$completeness = 'NA';
 	    }
@@ -145,11 +150,16 @@ sub phenotype_completeness_by_breeding_program_and_trial {
 		$completeness =  $data{$bp}->{$t}->{phenotypes} / $plotsxtraits;
 	    }
 
-	    print join("\t", $bp, $t, $data{$bp}->{$t}->{plots}, $data{$bp}->{$t}->{phenotypes}, $data{$bp}->{$t}->{traits}, $completeness)."\n";
+	    print join("\t", $bp, $t, $data{$bp}->{$t}->{plots} || 0, $data{$bp}->{$t}->{phenotypes} || 0, $data{$bp}->{$t}->{traits} || 0, $completeness)."\n";
 
-	    my $completeness_per_trait;
-	    foreach my $pt (keys(%{$data{$bp}->{$t}->{per_trait}})) {
-		$data{$bp}->{$t}->{per_trait}->{$pt}
+	    if ($list_individual_traits) {
+		my $completeness_per_trait;
+		foreach my $pt (keys(%{$data{$bp}->{$t}->{per_trait}})) {
+		    my $per_trait =  $data{$bp}->{$t}->{per_trait}->{$pt};
+		    my $plots = $data{$bp}->{$t}->{plots};
+		    my $completeness = $per_trait / $plots;
+		    print join("\t", "...", $pt, $per_trait, $plots, $completeness)."\n";
+		}
 	    }
 
 	}
