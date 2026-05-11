@@ -1730,18 +1730,14 @@ sub get_child_analyses {
 }
 
 
-sub generate_archive_files {
+sub init_published {
     my $self = shift;
-    my $dir = shift;
-    my $editable_stock_props = shift;
-
+    my $base_directory = shift;
+    my $user_id = shift;
     my $schema = $self->schema;
     my $dbh = $schema->storage->dbh();
     my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
     my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
-
-    # Check for base directory
-    return { error => "Archived dataset base path not set" } if !defined $dir;
 
     my $categories = $self->data()->{categories};
 
@@ -1830,71 +1826,125 @@ sub generate_archive_files {
     print STDERR "Projects = " . Dumper $projects;
     print STDERR "Accessions = " . Dumper $accessions;
 
+    # Init the published metadata
+    my $data = {
+        breeding_programs => $breeding_programs,
+        locations => $locations,
+        trials => $trials,
+        protocols => $protocols,
+        projects => $projects,
+        accessions => $accessions
+    };
+    my $published = $self->add_published($user_id, $base_directory, $data);
+
+    return {
+        error => $published->{error},
+        key => $published->{key},
+        directory => $published->{directory},
+        data => $data
+    }
+}
+
+
+sub generate_archive_files {
+    my $self = shift;
+    my $key = shift;
+    my $type = shift;
+    my $ids = shift;
+    my $editable_stock_props = shift;
+
+    my $schema = $self->schema;
+    my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+    my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
+
+    # Get published metadata
+    my $published = $self->published();
+    if ( !exists $published->{$key} ) {
+        return { error => "This dataset archive has not been properly initialized" };
+    }
+    my $dir = $published->{$key}->{directory};
+
+    # Check for base directory
+    return { error => "Archived dataset base path not set" } if !defined $dir;
+    return { error => "The dataset archive directory does not exist" } if ! -d $dir;
 
     #
     # EXPORT DATA
     #
-
-    # Set export directory
-    my $ts = strftime "%Y%m%d_%H%M%S", localtime;               # Timestamp to use in directory name
-    my $output = "$dir/" . $self->sp_dataset_id . "/$ts";
-    unless (-d $output) {
-        mkpath($output) or return { error => "Couldn't mkdir $output: $!" };
-    }
-    my @files;
+    my $file_name;
 
     # Save breeding programs
-    if ( defined $breeding_programs ) {
-        my $results = $BTProjects->get_breeding_programs($breeding_programs);
+    if ( $type eq 'breeding_programs' ) {
+        $file_name = "breeding_programs.csv";
+        my $results = $BTProjects->get_breeding_programs($ids);
         my @header = ("id", "name", "description");
         my @rows = (\@header, @$results);
-        csv(in => \@rows, out => "$output/breeding_programs.csv", sep_char => ",");
-        push @files, "breeding_programs.csv";
+        csv(in => \@rows, out => "$dir/$file_name", sep_char => ",");
     }
 
     # Save locations
-    if ( defined $locations ) {
-        my $results = $BTProjects->get_locations($locations);
+    elsif ( $type eq 'locations' ) {
+        $file_name = 'locations.csv';
+        my $results = $BTProjects->get_locations($ids);
         my @header = ("id", "name", "location_type", "latitude", "longitude", "altitude", "abbreviation", "country_code", "country_name", "noaa_station_id");
         my @data;
         foreach my $r (@$results) {
             push @data, [$r->[0], $r->[1], $r->[9], $r->[2], $r->[3], $r->[4], $r->[6], $r->[7], $r->[8], $r->[10]];
         }
         my @rows = (\@header, @data);
-        csv(in => \@rows, out => "$output/locations.csv", sep_char => ",");
-        push @files, "locations.csv";
+        csv(in => \@rows, out => "$dir/$file_name", sep_char => ",");
     }
 
     # Save accessions
-    if ( defined $accessions ) {
-        my $results = $BTAccessions->export_properties($accessions, $editable_stock_props);
-        csv(in => $results, out => "$output/accessions.csv", sep_char => ",");
-        push @files, "accessions.csv";
+    elsif ( $type eq 'accessions' ) {
+        $file_name = 'accessions.csv';
+        my $results = $BTAccessions->export_properties($ids, $editable_stock_props);
+        csv(in => $results, out => "$dir/$file_name", sep_char => ",");
     }
 
     # Save trial metadata
-    if ( defined $trials ) {
+    elsif ( $type eq 'trials' ) {
+        $file_name = 'trials.csv';
         my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
             bcs_schema => $schema,
             search_type => 'MetaData',
             data_level => 'plot',
-            trial_list => $trials,
+            trial_list => $ids,
         );
         my @results = $metadata_search->get_metadata_matrix();
-        csv(in => \@results, out => "$output/trials.csv", sep_char => ",");
-        push @files, "trials.csv";
+        csv(in => \@results, out => "$dir/$file_name", sep_char => ",");
     }
 
-    return { directory => $output, files => \@files };
+    # Unsupported data type
+    else {
+        return { error => "Data type $type is not supported" };
+    }
+
+    return { directory => $dir, file => $file_name };
 }
 
 sub add_published {
     my $self = shift;
     my $sp_person_id = shift;
-    my $directory = shift;
-    my $files = shift;
+    my $base_directory = shift;
+    my $data = shift;
     my $dataset_id = $self->sp_dataset_id();
     my $key = time();
+
+    # Set output directory
+    my $output_directory = "$base_directory/" . $self->sp_dataset_id . "/$key";
+    unless (-d $output_directory) {
+        mkpath($output_directory) or return { error => "Couldn't mkdir $output_directory: $!" };
+    }
+
+    # Set files
+    my %files;
+    foreach my $t (keys %$data) {
+        $files{$t} = {
+            file => undef,
+            ids => $data->{$t}
+        };
+    }
 
     # Get user info
     my $person = $self->people_schema()->resultset("SpPerson")->find({ sp_person_id => $sp_person_id });
@@ -1910,16 +1960,16 @@ sub add_published {
 
     # Add new published data
     $published->{$key} = {
+        key => $key,
+        ts => $key*1000,
+        directory => $output_directory,
+        archived_files => \%files,
+        submitted_article => {},
+        submitted_files => {},
         user => {
             id => $sp_person_id,
             name => $person_name
         },
-        directory => $directory,
-        files => $files,
-        ts => $key*1000,
-        key => $key,
-        submitted_article => {},
-        submitted_files => {}
     };
     $dataset->{published} = $published;
 
@@ -1932,7 +1982,7 @@ sub add_published {
         return { error => "Could not add to dataset published: $@" };
     }
 
-    return { key => $key };
+    return { key => $key, directory => $output_directory };
 }
 
 sub update_published {
@@ -1959,7 +2009,15 @@ sub update_published {
         my $v = $data->{$k};
         if ( ref($v) eq 'HASH' ) {
             foreach my $k2 (keys %$v) {
-                $published->{$key}->{$k}->{$k2} = $v->{$k2};
+                my $v2 = $v->{$k2};
+                if ( ref($v2) eq 'HASH' ) {
+                    foreach my $k3 (keys %$v2) {
+                        $published->{$key}->{$k}->{$k2}->{$k3} = $v2->{$k3};
+                    }
+                }
+                else {
+                    $published->{$key}->{$k}->{$k2} = $v2;
+                }
             }
         }
         else {

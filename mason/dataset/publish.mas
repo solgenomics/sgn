@@ -29,6 +29,23 @@ $is_dataset_owner => 0
     <button id="dataset-generate-archive" class="btn btn-primary"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;Generate Archive Files</button>
 % }
 
+<div class="modal fade" id="dataset-archive-generate-dialog" name="dataset-archive-generate-dialog" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <h4 class="modal-title">Generating Archive Files</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid" id="dataset-archive-generate-dialog-content">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="dataset-archive-generate-dialog-close" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal modal-md fade" id="dataset-archive-publish-dialog" name="dataset-archive-publish-dialog" tabindex="-1" role="dialog" aria-labelledby="datasetArchivePublishDialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content ui-front">
@@ -124,7 +141,7 @@ jQuery(document).ready(() => {
     updateIssues();
     updateServices();
 
-    jQuery("#dataset-generate-archive").click(generateArchive)
+    jQuery("#dataset-generate-archive").click(initArchive)
     jQuery("#dataset-archive-publish-services").on("change", onServiceChanged);
     jQuery("#dataset-archive-publish-connect").click(connectService);
     jQuery("#dataset-archive-publish-disconnect").click(disconnectService);
@@ -323,6 +340,7 @@ function updateArticles() {
 
 /**
  * Display the user's account articles in the article select menu
+ * @param articles = Array of article metadata
  */
 function displayArticles(articles = []) {
     var html = `<option value="">Create a new ${SELECTED_SERVICE.display_name} dataset</option>`;
@@ -369,6 +387,8 @@ async function onArticleChanged() {
 
 /**
  * Get the details of the specified article from the external service
+ * @param service = key of the external service where the article is hosted
+ * @param article_id = id of the specific article
  */
 function getArticleDetails(service, article_id) {
     return new Promise((resolve, reject) => {
@@ -412,15 +432,16 @@ function updateIssues() {
 
 /**
  * Display the stored published metadata
+ * @param issues = Object of issue metadata, where the key is the issue key
  */
-async function displayIssues(status = {}) {
-    ISSUES = status;
+async function displayIssues(issues = {}) {
+    ISSUES = issues;
     const keys = Object.keys(ISSUES);
     const rows = [];
     if ( keys.length > 0 ) {
         for ( const k of keys ) {
             const s = ISSUES[k];
-            const files = s.files || [];
+            const types = Object.keys(s.archived_files || {});
             let overallUploaded = false;
             let overallComplete = true;
 
@@ -432,26 +453,29 @@ async function displayIssues(status = {}) {
 
             // File List
             html += `<td><ul style='padding-left: 15px'>`;
-            for ( const f of files ) {
-                const url = `/ajax/dataset/publish/file/<% $dataset_id %>/${k}/${f}`;
+            for ( const t of types ) {
+                const file = s.archived_files[t].file
+                if ( file ) {
+                    const url = `/ajax/dataset/publish/file/<% $dataset_id %>/${k}/${t}`;
 
-                // Check the status of each part of the file, to see if it's been uploaded
-                let isUploaded = false;
-                let isComplete = true;
-                Object.keys(s.submitted_files?.[f]?.parts || {}).forEach((pk) => {
-                    const p = s.submitted_files[f].parts[pk];
-                    isUploaded = true;
-                    if ( p.status !== 'COMPLETE' ) isUploaded = false;
-                });
+                    // Check the status of each part of the file, to see if it's been uploaded
+                    let isUploaded = false;
+                    let isComplete = true;
+                    Object.keys(s.submitted_files?.[file]?.parts || {}).forEach((pk) => {
+                        const p = s.submitted_files[file].parts[pk];
+                        isUploaded = true;
+                        if ( p.status !== 'COMPLETE' ) isUploaded = false;
+                    });
 
-                // Display the file name, link to download, and check if completely uploaded
-                html += `<li>`;
-                html += `<a href='${url}' target='_blank'>${f}</a>`;
-                if ( isUploaded && isComplete ) html += `&nbsp;&nbsp;<span class='glyphicon glyphicon-ok text-success'></span>`;
-                html += `</li>`;
+                    // Display the file name, link to download, and check if completely uploaded
+                    html += `<li>`;
+                    html += `<a href='${url}' target='_blank'>${file}</a>`;
+                    if ( isUploaded && isComplete ) html += `&nbsp;&nbsp;<span class='glyphicon glyphicon-ok text-success'></span>`;
+                    html += `</li>`;
 
-                if ( isUploaded ) overallUploaded = true;
-                if ( !isComplete ) overallComplete = false;
+                    if ( isUploaded ) overallUploaded = true;
+                    if ( !isComplete ) overallComplete = false;
+                }
             };
             html += `</ul></td>`;
 
@@ -459,7 +483,7 @@ async function displayIssues(status = {}) {
             if ( s.submitted_article?.article_id && s.submitted_article?.service ) {
                 html += `<td>`;
                 html += `<a href='${s.submitted_article.is_public ? s.submitted_article.url_public_html : s.submitted_article.url_private_html}' target='_blank'>${s.submitted_article.title}</a>`;
-                if ( s.submitted_article.doi && s.submitted_article.doi !== '' ) html += `<br /><a href='https://doi.org/${s.submitted_article.doi} target='_blank'>${s.submitted_article.doi}</a>`;
+                if ( s.submitted_article.doi && s.submitted_article.doi !== '' ) html += `<br /><a href='https://doi.org/${s.submitted_article.doi}' target='_blank'>${s.submitted_article.doi}</a>`;
                 html += `</td>`;
             }
             else {
@@ -488,29 +512,109 @@ async function displayIssues(status = {}) {
 
 /**
  * Generate the archived files that are stored on breedbase
- * - Call updateIssues() when finished to reflect the changes
+ * - Initialize a new issue for this dataset, which calculates which files need to be generated
+ * - After initialization, display the generate dialog and start to generate each file
  */
-function generateArchive() {
+function initArchive() {
+    jQuery("#dataset-archive-generate-dialog-content").html("<p>Analyzing Dataset...</p>");
+    jQuery("#dataset-archive-generate-dialog").modal("show");
+    jQuery("#dataset-archive-generate-dialog-close").attr("disabled", true);
     jQuery.ajax({
-        url: '/ajax/dataset/publish/generate/<% $dataset_id %>',
-        beforeSend: () => {
-            jQuery('#working_modal').modal('show');
-        },
-        success: (resp) => {
-            jQuery('#working_modal').modal('hide');
+        url: '/ajax/dataset/publish/init/<% $dataset_id %>',
+        success: (resp = {}) => {
             if ( resp?.error ) {
-                alert(resp.error);
+                alert(`Could not initialize dataset archive files [${resp.error}]`);
             }
             else {
-                updateIssues();
+                const { key, data } = resp;
+                displayArchiveFiles(key, data);
             }
         },
         error: () => {
-            jQuery('#working_modal').modal('hide');
-            alert("Could not publish the dataset");
+            alert(`Could not initialize dataset archive files`);
         }
     });
 }
+
+/**
+ * Display the table of archive files to generate in the modal dialog
+ * @param key = the key for the specific issue being generated
+ * @param data = Object of archive file info (where the key is the file type and the value is the IDs of the items in the file type)
+ * - This will display the generate files modal with the table of file types
+ * - This will call generateArchiveFile() in sequence for each file type
+ */
+async function displayArchiveFiles(key, data = {}) {
+    const types = Object.keys(data);
+
+    // Display the file type table
+    let html = `<p>Files to generate:</p>`;
+    html += `<table class='table table-striped'>`;
+    html += `<thead><tr><th>Data Type</th><th>Item Count</th><th>Status</th></tr></thead>`;
+    for (const t of types ) {
+        const ids = data[t];
+        if ( ids && ids.length > 0 ) {
+            html += `<tr><td>${t}</td><td>${ids.length}</td><td id='dataset-archive-generate-dialog-status-${t}'><span class='glyphicon glyphicon-option-horizontal'></span>&nbsp;&nbsp;<em>Pending...</em></td></tr>`;
+        }
+    }
+    html += `</table>`
+    jQuery("#dataset-archive-generate-dialog-content").html(html);
+
+    // Generate each file type
+    for ( const t of types ) {
+        try {
+            const ids = data[t];
+            if ( ids && ids.length > 0 ) {
+                const file = await generateArchiveFile(key, t, ids);
+                if ( file && file !== '' ) {
+                    jQuery(`#dataset-archive-generate-dialog-status-${t}`).html(`<strong><span class='glyphicon glyphicon-ok text-success'></span></strong>&nbsp;&nbsp;Created archived file: ${file}`);
+                }
+                else {
+                    jQuery(`#dataset-archive-generate-dialog-status-${t}`).html(`<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span></strong>&nbsp;&nbsp;Could not generate file`);
+                }
+            }
+        }
+        catch (err) {
+            jQuery(`#dataset-archive-generate-dialog-status-${t}`).html(`<strong><span class='glyphicon glyphicon-exclamation-sign text-danger'></span></strong>&nbsp;&nbsp;${err}`);
+        }
+    }
+
+    // Refresh the Issues
+    jQuery("#dataset-archive-generate-dialog-close").attr("disabled", false);
+    updateIssues();
+}
+
+/**
+ * Generate an archived file for a specific data type
+ * @param key = the issue key
+ * @param type = the data type
+ * @param ids = the ids of the items to include in the file
+ */
+function generateArchiveFile(key, type, ids) {
+    return new Promise((resolve, reject) => {
+        jQuery.ajax({
+            url: '/ajax/dataset/publish/generate',
+            method: 'POST',
+            data: {
+                dataset_id: <% $dataset_id %>,
+                key,
+                type,
+                ids
+            },
+            success: (resp) => {
+                if ( resp?.error ) {
+                    reject(`Could not generate ${type} file [${resp.error}]`);
+                }
+                else {
+                    resolve(resp.file);
+                }
+            },
+            error: () => {
+                reject(`Could not generate ${type} file`);
+            }
+        });
+    })
+}
+
 
 /**
  * Show the publish dialog for the specific issue
@@ -556,7 +660,13 @@ async function sendArchive() {
     try {
         jQuery("#dataset-archive-publish-send").attr("disabled", true);
         let article_id = jQuery("#dataset-archive-publish-articles").val();
-        const files = SELECTED_ISSUE.files || [];
+        const files = [];
+        for ( const t of Object.keys(SELECTED_ISSUE.archived_files || {}) ) {
+            if ( SELECTED_ISSUE.archived_files[t].file ) {
+                files.push(SELECTED_ISSUE.archived_files[t].file);
+            }
+        }
+
         let total = !article_id || article_id === '' ? files.length+1 : files.length;
         let count = 0;
 

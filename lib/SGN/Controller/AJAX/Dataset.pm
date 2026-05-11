@@ -836,13 +836,51 @@ sub publish_dataset_articles_new_POST {
 }
 
 #
-# Generate the archived files for the dataset
+# Determine what files will be generated from the dataset and initialize the published metadata
 #
-sub publish_dataset_generate : Path('/ajax/dataset/publish/generate') Args(1) {
+sub publish_dataset_init : Path('/ajax/dataset/publish/init') Args(1) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = shift;
     my $dataset_archive_path = $c->config->{dataset_archive_path};
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Login required to perform requested action." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    if ($dataset->sp_person_id() != $user_id ) {
+        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+        return;
+    }
+
+    # Calculate the files that will be archived
+    my $pub = $dataset->init_published($dataset_archive_path, $user_id);
+    $c->stash->{rest} = {
+        key => $pub->{key},
+        data => $pub->{data}
+    };
+    return;
+}
+
+#
+# Generate the specified archived file for the dataset
+#
+sub publish_dataset_generate : Path('/ajax/dataset/publish/generate') : ActionClass('REST') { }
+sub publish_dataset_generate_POST {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->body_params->{dataset_id};
+    my $key = $c->req->body_params->{key};
+    my $type = $c->req->body_params->{type};
+    my $ids = $c->req->body_params->{'ids[]'};
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
 
     my $dataset = CXGN::Dataset->new({
@@ -862,23 +900,24 @@ sub publish_dataset_generate : Path('/ajax/dataset/publish/generate') Args(1) {
         return;
     }
 
-    my $resp = $dataset->generate_archive_files($dataset_archive_path, \@editable_stock_props);
+    my $resp = $dataset->generate_archive_files($key, $type, $ids, \@editable_stock_props);
     if ( defined $resp->{error} ) {
-        print STDERR "GENERATE ARCHIVE FILES ERROR = " . Dumper $resp->{error};
-        $c->stash->{rest} = { error => "Could not generate archive files [" . $resp->{error} . "]" };
+        $c->stash->{rest} = { error => $resp->{error} };
         return;
     }
 
-    if ( defined $resp->{directory} ) {
-        $dataset->add_published($user_id, $resp->{directory}, $resp->{files});
+    if ( defined $resp->{file} ) {
+        my $af = {};
+        $af->{archived_files}->{$type}->{file} = $resp->{file};
+        $dataset->update_published($key, $af);
+
+        $c->stash->{rest} = { file => $resp->{file} };
+        return;
     }
     else {
-        $c->stash->{rest} = { error => "Could not generate archive files" };
+        $c->stash->{rest} = { error => "Could not generate archive file" };
         return;
     }
-
-    $c->stash->{rest} = { success => 1 };
-    return;
 }
 
 #
@@ -1252,7 +1291,7 @@ sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
     my $c = shift;
     my $dataset_id = shift;
     my $key = shift;
-    my $file = shift;
+    my $type = shift;
 
     my $dataset = CXGN::Dataset->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -1264,6 +1303,7 @@ sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
 
     if ( exists $published->{$key} ) {
         my $dir = $published->{$key}->{directory};
+        my $file = $published->{$key}->{archived_files}->{$type}->{file};
         my $path = "$dir/$file";
 
         if ( -f "$path" ) {
