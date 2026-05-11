@@ -244,12 +244,7 @@ function review_verification_results(doFuzzySearch, verifyResponse, vector_list_
 
     jQuery('#review_found_matches_hide').click(function(){
 
-        if ( verifyResponse.found.length >0){
-            jQuery('#review_fuzzy_matches_dialog').modal('hide');
-            alert("Remove duplicated vectors and try again!");
-            $('#add_vectors_dialog').modal("show");
-
-        }  else if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
+        if (verifyResponse.fuzzy.length > 0 && doFuzzySearch){
             jQuery('#review_fuzzy_matches_dialog').modal('show');
 
         } else {

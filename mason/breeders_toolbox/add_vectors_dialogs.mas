@@ -87,7 +87,7 @@ $editable_stock_props_definitions
                     <br /><br />
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
+                    The first row (header) must contain the uniquename column. Additional information can be included by selecting optional column(s) (see below). : 
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
