@@ -14,6 +14,7 @@ function datasetPublic(val) {
     datasets.makePublicDataset(val, () => {
         jQuery("#dataset-edit-private").show();
         jQuery("#dataset-edit-public").hide();
+        window.location.reload();
     });
 }
 
@@ -21,6 +22,7 @@ function datasetPrivate(val) {
     datasets.makePrivateDataset(val, () => {
         jQuery("#dataset-edit-private").hide();
         jQuery("#dataset-edit-public").show();
+        window.location.reload();
     });
 }
 

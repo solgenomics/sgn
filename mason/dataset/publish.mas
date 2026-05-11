@@ -2,6 +2,7 @@
 $dataset_id
 $dataset_name
 $is_dataset_owner => 0
+$is_dataset_public => 0
 </%args>
 
 <%once>
@@ -10,24 +11,50 @@ $is_dataset_owner => 0
     my $user_name = $user ? $user->get_first_name() . " " . $user->get_last_name() : "";
 </%once>
 
+<div id="dataset-archive-loading" style="margin: 50px auto; text-align: center">
+    <p><em>Loading...</em></p>
+</div>
 
-<table class="table table-hover">
-    <thead>
-        <tr>
-            <th>Date Published</th>
-            <th>User</th>
-            <th>Files</th>
-            <th>Published To</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody id="dataset-publish-status"></tbody>
-</table>
+<div id="dataset-archive-enabled" style="display: none">
+% if ( $is_dataset_public ) {
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Date Published</th>
+                <th>User</th>
+                <th>Files</th>
+                <th>Published To</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="dataset-publish-status"></tbody>
+    </table>
 
 % if ( $is_dataset_owner ) {
-    <br /><br />
-    <button id="dataset-generate-archive" class="btn btn-primary"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;Generate Archive Files</button>
+        <br /><br />
+        <button id="dataset-generate-archive" class="btn btn-primary"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;Generate Archive Files</button>
 % }
+% } else {
+    <& /generic_message.mas, message=>"<p>Dataset Publishing is only enabled on public datasets.</p><p>Change the dataset visibility to Public to enable this feature.</p>" &>
+% }
+</div>
+
+<div id="dataset-archive-disabled" style="display: none">
+    <& /generic_message.mas, message=>"<p>Dataset Publishing has not been enabled on this database.</p><p>Contact an administrator to have this feature enabled.</p>" &>
+</div>
+
+<br /><br />
+
+<&| /page/info_section.mas, id=> "publish_dataset_info", title => "Information about Publishing Datasets", collapsible=>1, collapsed=>1, hide_if_empty=>1 &>
+    <p>Dataset publishing allows the owner of a dataset to take a snapshot of the data contained within the dataset and publish it to an external service (such as FigShare), where it can be made publicly available and have a DOI assigned to it.</p>
+    <p>The steps to publish a dataset are:</p>
+    <ol>
+        <li>Make the dataset public</li>
+        <li>Generate the archived files - this creates a static snapshot of the data within the dataset at the time when the files are generated</li>
+        <li>Publish the files to an external service - this will upload the archived files to a new or existing dataset on the external service</li>
+    </ol>
+</&>
+
 
 <div class="modal fade" id="dataset-archive-generate-dialog" name="dataset-archive-generate-dialog" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-lg" role="document">
@@ -176,6 +203,18 @@ function updateServices() {
  */
 function displayServices(services = {}) {
     SERVICES = services;
+
+    if ( Object.keys(SERVICES).length > 0 ) {
+        jQuery("#dataset-archive-loading").hide();
+        jQuery("#dataset-archive-disabled").hide();
+        jQuery("#dataset-archive-enabled").show();
+    }
+    else {
+        jQuery("#dataset-archive-loading").hide();
+        jQuery("#dataset-archive-enabled").hide();
+        jQuery("#dataset-archive-disabled").show();
+    }
+
     var html = "";
     Object.keys(SERVICES).sort().forEach((key) => {
         html += `<option value='${key}'>${SERVICES[key].display_name} [${SERVICES[key].web_url}]</option>`;
@@ -499,7 +538,7 @@ async function displayIssues(issues = {}) {
             // Display actions only to owner
 % if ( $is_dataset_owner ) {
             html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
-            if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='publishIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Publish</button>`;
+            if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='uploadIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Upload</button>`;
             html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;Remove</button>`;
             html += `</div></td>`;
 % } else {
@@ -511,7 +550,7 @@ async function displayIssues(issues = {}) {
         jQuery("#dataset-publish-status").html(`<tr>${rows.join('</tr><tr>')}</tr>`);
     }
     else {
-        const html = "<tr><td colspan=4><em>This dataset has not been published</em></td></tr>";
+        const html = "<tr><td colspan=5><p style='text-align: center'><em>This dataset has not been published</em></p><br /><p>To publish this dataset, first generate a set of archived files.</p></td></tr>";
         jQuery("#dataset-publish-status").html(html);
     }
 }
@@ -623,9 +662,11 @@ function generateArchiveFile(key, type) {
 /**
  * Show the publish dialog for the specific issue
  */
-function publishIssue(key) {
-    SELECTED_ISSUE = ISSUES[key];
-    jQuery("#dataset-archive-publish-dialog").modal("show");
+function uploadIssue(key) {
+    if ( confirm("By continuing, you acknowledge that the data is this dataset can be made publicly available") ) {
+        SELECTED_ISSUE = ISSUES[key];
+        jQuery("#dataset-archive-publish-dialog").modal("show");
+    }
 }
 
 /**

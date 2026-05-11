@@ -20,7 +20,7 @@ $dataset_is_public => 0
 </%perl>
 
 <& /page/page_title.mas, title => "Dataset $dataset_name" &>
-<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|jqueryui.js jquery.js dataset jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
+<& /util/import_javascript.mas, entries => [qw|dataset|], classes => [ qw|jqueryui.js jquery.js dataset jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
 
 <div class="panel panel-default">
     <div class="panel-body" style="padding: 0">
@@ -106,7 +106,7 @@ $dataset_is_public => 0
 
 <& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Tool Compatibility</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-check", info_section_id => "dataset_tool_compatibility", dataset_id => $dataset_id, dataset_name => $dataset_name &>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Publish Dataset</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-export", info_section_id => "dataset_publish", dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner &>
+<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Publish Dataset</h4>", info_section_subtitle => '', icon_class => "glyphicon glyphicon-export", info_section_id => "dataset_publish", dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner, is_dataset_public => $dataset_is_public &>
 
 
 <script>

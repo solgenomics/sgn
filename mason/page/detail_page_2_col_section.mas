@@ -194,6 +194,7 @@ $logged_in_name => undef
 $dataset_id => undef
 $dataset_name => undef
 $is_dataset_owner => 0
+$is_dataset_public => 0
 
 
 </%args>
@@ -704,7 +705,7 @@ $is_dataset_owner => 0
     <& /dataset/tool_compatibility.mas, dataset_id => $dataset_id, dataset_name => $dataset_name &>
 % }
 % if ( $info_section_id eq 'dataset_publish') {
-    <& /dataset/publish.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner &>
+    <& /dataset/publish.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner, is_dataset_public => $is_dataset_public &>
 % }
 
 % if (!$info_section_id){

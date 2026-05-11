@@ -30,7 +30,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     LocalThis.setDropDownTraits();
                 },
                 error: function (response) {
-                    alert('Error');
+                    console.log(response);
                 }
             })
         }
@@ -47,7 +47,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     // console.log(LocalThis.traitsIds);
                 },
                 error: function (response) {
-                    alert('Error');
+                    console.log(response);
                 }
             })
         }
@@ -61,7 +61,7 @@ export function init(datasetId, datasetName, baseWidth) {
                     LocalThis.storedOutliersIds = response.outliers !== null ? response.outliers : [];
                 },
                 error: function (response) {
-                    alert('Error');
+                    console.log(response);
                 }
             })
         }
@@ -237,7 +237,7 @@ export function init(datasetId, datasetName, baseWidth) {
                         LocalThis.render();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
             }
@@ -256,7 +256,7 @@ export function init(datasetId, datasetName, baseWidth) {
                         removeRosnserTable();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
             }
@@ -277,7 +277,7 @@ export function init(datasetId, datasetName, baseWidth) {
                         removeRosnserTable();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
             }
@@ -297,7 +297,7 @@ export function init(datasetId, datasetName, baseWidth) {
                         document.getElementById("loading-spinner").style.visibility = 'hidden';
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                         document.getElementById("loading-spinner").style.visibility = 'visible';
                     }
                 })
@@ -360,7 +360,7 @@ export function init(datasetId, datasetName, baseWidth) {
                         LocalThis.render();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
 
