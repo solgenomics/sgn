@@ -16,7 +16,6 @@ $is_dataset_public => 0
 </div>
 
 <div id="dataset-archive-enabled" style="display: none">
-% if ( $is_dataset_public ) {
     <table class="table table-hover">
         <thead>
             <tr>
@@ -31,11 +30,8 @@ $is_dataset_public => 0
     </table>
 
 % if ( $is_dataset_owner ) {
-        <br /><br />
-        <button id="dataset-generate-archive" class="btn btn-primary"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;Generate Archive Files</button>
-% }
-% } else {
-    <& /generic_message.mas, message=>"<p>Dataset Publishing is only enabled on public datasets.</p><p>Change the dataset visibility to Public to enable this feature.</p>" &>
+    <br /><br />
+    <button id="dataset-generate-archive" class="btn btn-primary"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;&nbsp;Generate Archive Files</button>
 % }
 </div>
 
@@ -49,9 +45,8 @@ $is_dataset_public => 0
     <p>Dataset publishing allows the owner of a dataset to take a snapshot of the data contained within the dataset and publish it to an external service (such as FigShare), where it can be made publicly available and have a DOI assigned to it.</p>
     <p>The steps to publish a dataset are:</p>
     <ol>
-        <li>Make the dataset public</li>
         <li>Generate the archived files - this creates a static snapshot of the data within the dataset at the time when the files are generated</li>
-        <li>Publish the files to an external service - this will upload the archived files to a new or existing dataset on the external service</li>
+        <li>Upload the files to an external service - this will upload the archived files to a new or existing dataset on the external service</li>
     </ol>
 </&>
 
@@ -550,7 +545,7 @@ async function displayIssues(issues = {}) {
         jQuery("#dataset-publish-status").html(`<tr>${rows.join('</tr><tr>')}</tr>`);
     }
     else {
-        const html = "<tr><td colspan=5><p style='text-align: center'><em>This dataset has not been published</em></p><br /><p>To publish this dataset, first generate a set of archived files.</p></td></tr>";
+        const html = "<tr><td colspan=5><p style='text-align: center'><em>This dataset has not been published</em></p><br /><p style='text-align: center'>To publish this dataset, first generate a set of archived files.</p></td></tr>";
         jQuery("#dataset-publish-status").html(html);
     }
 }
@@ -663,10 +658,8 @@ function generateArchiveFile(key, type) {
  * Show the publish dialog for the specific issue
  */
 function uploadIssue(key) {
-    if ( confirm("By continuing, you acknowledge that the data is this dataset can be made publicly available") ) {
-        SELECTED_ISSUE = ISSUES[key];
-        jQuery("#dataset-archive-publish-dialog").modal("show");
-    }
+    SELECTED_ISSUE = ISSUES[key];
+    jQuery("#dataset-archive-publish-dialog").modal("show");
 }
 
 /**
@@ -702,69 +695,71 @@ function removeIssue(key) {
  * - Update the Issues when complete to reflect the changes
  */
 async function sendArchive() {
-    try {
-        jQuery("#dataset-archive-publish-send").attr("disabled", true);
-        let article_id = jQuery("#dataset-archive-publish-articles").val();
-        const types = [];
-        for ( const t of Object.keys(SELECTED_ISSUE.data || {}) ) {
-            if ( SELECTED_ISSUE.data[t].file ) {
-                types.push(t);
+    if ( confirm(`By continuing, you acknowledge that this data is allowed to be made available on ${SELECTED_SERVICE.display_name}`) ) {
+        try {
+            jQuery("#dataset-archive-publish-send").attr("disabled", true);
+            let article_id = jQuery("#dataset-archive-publish-articles").val();
+            const types = [];
+            for ( const t of Object.keys(SELECTED_ISSUE.data || {}) ) {
+                if ( SELECTED_ISSUE.data[t].file ) {
+                    types.push(t);
+                }
             }
-        }
 
-        let total = !article_id || article_id === '' ? types.length+1 : types.length;
-        let count = 0;
+            let total = !article_id || article_id === '' ? types.length+1 : types.length;
+            let count = 0;
 
-        // Create article first, if necessary
-        if ( !article_id || article_id === '' ) {
-            const title = jQuery("#dataset-archive-publish-article-title").val();
-            progress({ msg: `Creating new dataset: ${title}`, count, total });
-            article_id = await createArticle();
-            count ++;
-        }
+            // Create article first, if necessary
+            if ( !article_id || article_id === '' ) {
+                const title = jQuery("#dataset-archive-publish-article-title").val();
+                progress({ msg: `Creating new dataset: ${title}`, count, total });
+                article_id = await createArticle();
+                count ++;
+            }
 
-        // Submit each of the file types
-        for (const t of types) {
-            let subTotal = 1;
-            let subCount = 0;
+            // Submit each of the file types
+            for (const t of types) {
+                let subTotal = 1;
+                let subCount = 0;
 
-            // Submit the file
-            progress({ msg: `Sending data type: ${t}`, count, total });
-            subProgress({ clear: true });
-            const { parts = {}, file_id, upload_url } = await submitFile(article_id, t);
-            subTotal = Object.keys(parts).length + 1;
-            subCount++;
-
-            // Upload each part of the file
-            const partNos = Object.keys(parts);
-            for ( const partNo of partNos ) {
-                const part = parts[partNo];
-                subProgress({ msg: `Uploading chunk: ${partNo}`, count: subCount, total: subTotal });
-                await submitPart(t, upload_url, part);
+                // Submit the file
+                progress({ msg: `Sending data type: ${t}`, count, total });
+                subProgress({ clear: true });
+                const { parts = {}, file_id, upload_url } = await submitFile(article_id, t);
+                subTotal = Object.keys(parts).length + 1;
                 subCount++;
+
+                // Upload each part of the file
+                const partNos = Object.keys(parts);
+                for ( const partNo of partNos ) {
+                    const part = parts[partNo];
+                    subProgress({ msg: `Uploading chunk: ${partNo}`, count: subCount, total: subTotal });
+                    await submitPart(t, upload_url, part);
+                    subCount++;
+                };
+
+                // Finalize the File
+                subProgress({ msg: `Finalizing File`, count: subCount, total: subTotal });
+                await finalizeFile(t, file_id, article_id);
+
+                // Show success for file
+                subCount++;
+                count++;
+                subProgress({ msg: '', count: subCount, total: subTotal });
+                progress({ msg: `Uploaded file: ${t}`, count, total });
             };
 
-            // Finalize the File
-            subProgress({ msg: `Finalizing File`, count: subCount, total: subTotal });
-            await finalizeFile(t, file_id, article_id);
-
-            // Show success for file
-            subCount++;
+            // Show completed status
             count++;
-            subProgress({ msg: '', count: subCount, total: subTotal });
-            progress({ msg: `Uploaded file: ${t}`, count, total });
-        };
-
-        // Show completed status
-        count++;
-        progress({ msg: `<strong>All Files Uploaded!</strong>`, count, total });
-        subProgress({ clear: true });
-        jQuery("#dataset-archive-publish-send").attr("disabled", false);
-        updateIssues();
-    }
-    catch (err) {
-        jQuery("#dataset-archive-publish-send").attr("disabled", false);
-        fail(err);
+            progress({ msg: `<strong>All Files Uploaded!</strong>`, count, total });
+            subProgress({ clear: true });
+            jQuery("#dataset-archive-publish-send").attr("disabled", false);
+            updateIssues();
+        }
+        catch (err) {
+            jQuery("#dataset-archive-publish-send").attr("disabled", false);
+            fail(err);
+        }
     }
 }
 
