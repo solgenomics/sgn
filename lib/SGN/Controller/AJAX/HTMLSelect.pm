@@ -2349,10 +2349,14 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
                 $accession_list .= "</a>"
             }
         }
+        my $coords = 'NA';
+        if (defined($row) && defined($column)) {
+            $coords = "$row, $column";
+        }
 
         $accession_list .= "</td>";
 
-        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$row, $column</td><td>$rep</td><td>$block</td>$accession_list</tr>";
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$coords</td><td>$rep</td><td>$block</td>$accession_list</tr>";
     }
 
     $html .= "</tbody></table>";
@@ -2535,8 +2539,9 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
 
     while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $synonyms, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
+        $synonyms = $synonyms ? $synonyms : '';
         if ($row && $column){
-            $coordinates = "($row,$column)";
+            $coordinates = "$row, $column";
         }
         my $subplot_data = "";
         if ($subplot_id && $subplot_name) {
