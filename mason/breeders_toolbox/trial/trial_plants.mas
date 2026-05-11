@@ -184,6 +184,37 @@ jQuery(document).ready(function () {
         });
     });
 
+    jQuery('#plant_select_delete_plants').click(function() {
+        if (confirm("Are you sure you want to delete the selected plants?")) {
+            let plant_ids = jQuery('.exp_design_plant_select:checkbox:checked')
+                .map(function() {
+                    return this.id.replace('select_plant_', '');
+                })
+                .get()
+                .join('\t');
+            let trial_id = "<% $trial_id %>";
+            jQuery.ajax({
+                url : `/ajax/breeders/trial/${trial_id}/delete_plants`,
+                method : 'POST',
+                data : {
+                    plants_list : plant_ids
+                },
+                success : function(response) {
+                    if (response.error) {
+                        alert("Error: " + response.error);
+                    } else {
+                        alert("Plants deleted.");
+                        window.location.reload();
+                    }
+                },
+                error : function(response) {
+                    alert("A server error occurred, check console.");
+                }
+            });
+        } 
+        return;
+    });
+
 });
 
 </script>

@@ -5729,6 +5729,37 @@ sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args
     }
 }
 
+sub delete_trial_plants : Chained('trial') PathPart('delete_plants') : ActionClass('REST') {}
+
+sub delete_trial_plants_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $plants_liststr = $c->req->param('plants_list');
+
+    if (!$c->user() || !$c->user->check_roles("curator")) {
+        $c->stash->{rest} = {error => "Only curators can delete plants." };
+        return;
+    }
+
+    $c->stash->{rest} = {success => 1, data => $plants_liststr};
+}
+
+sub delete_trial_subplots : Chained('trial') PathPart('delete_subplots') : ActionClass('REST') {}
+
+sub delete_trial_subplots_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $subplots_liststr = $c->req->param('subplots_list');
+
+    if (!$c->user() || !$c->user->check_roles("curator")) {
+        $c->stash->{rest} = {error => "Only curators can delete subplots." };
+        return;
+    }
+
+    $c->stash->{rest} = {success => 1, data => $subplots_liststr};
+}
 
 sub update_trial_status : Chained('trial') PathPart('update_trial_status') : ActionClass('REST'){ }
 
