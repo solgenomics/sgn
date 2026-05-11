@@ -441,8 +441,8 @@ async function displayIssues(issues = {}) {
     if ( keys.length > 0 ) {
         for ( const k of keys ) {
             const s = ISSUES[k];
-            const types = Object.keys(s.archived_files || {});
-            let overallUploaded = false;
+            const types = Object.keys(s.data || {});
+            let overallSubmitted = false;
             let overallComplete = true;
 
             // Publish date
@@ -454,37 +454,43 @@ async function displayIssues(issues = {}) {
             // File List
             html += `<td><ul style='padding-left: 15px'>`;
             for ( const t of types ) {
-                const file = s.archived_files[t].file
+                const file = s.data[t].file
                 if ( file ) {
                     const url = `/ajax/dataset/publish/file/<% $dataset_id %>/${k}/${t}`;
 
-                    // Check the status of each part of the file, to see if it's been uploaded
-                    let isUploaded = false;
-                    let isComplete = true;
-                    Object.keys(s.submitted_files?.[file]?.parts || {}).forEach((pk) => {
-                        const p = s.submitted_files[file].parts[pk];
-                        isUploaded = true;
-                        if ( p.status !== 'COMPLETE' ) isUploaded = false;
-                    });
+                    // Check the status of each file, to see if it's been uploaded
+                    let isSubmitted = s.data[t].submitted?.file_id;
+                    let isComplete = s.data[t].complete === 1;
 
                     // Display the file name, link to download, and check if completely uploaded
                     html += `<li>`;
                     html += `<a href='${url}' target='_blank'>${file}</a>`;
-                    if ( isUploaded && isComplete ) html += `&nbsp;&nbsp;<span class='glyphicon glyphicon-ok text-success'></span>`;
+                    if ( isSubmitted && isComplete ) html += `&nbsp;&nbsp;<span class='glyphicon glyphicon-ok text-success'></span>`;
                     html += `</li>`;
 
-                    if ( isUploaded ) overallUploaded = true;
+                    if ( isSubmitted ) overallSubmitted = true;
                     if ( !isComplete ) overallComplete = false;
                 }
             };
             html += `</ul></td>`;
 
             // Display external reference, if published
-            if ( s.submitted_article?.article_id && s.submitted_article?.service ) {
-                html += `<td>`;
-                html += `<a href='${s.submitted_article.is_public ? s.submitted_article.url_public_html : s.submitted_article.url_private_html}' target='_blank'>${s.submitted_article.title}</a>`;
-                if ( s.submitted_article.doi && s.submitted_article.doi !== '' ) html += `<br /><a href='https://doi.org/${s.submitted_article.doi}' target='_blank'>${s.submitted_article.doi}</a>`;
-                html += `</td>`;
+            if ( s.article?.id ) {
+                html += `<td><div style="display: flex; flex-direction: column; gap: 15px">`;
+
+                // Display Public Link
+                if ( s.article.is_public ) {
+                    html += `<div><span class="label label-primary">Public</span>&nbsp;<a href='${s.article.url_public_html}' target='_blank'>${s.article.title}</a></div>`;
+                }
+
+                // Display Private Link, only to the dataset owner
+% if ( $is_dataset_owner ) {
+                    html += `<div><span class="label label-info">Preview</span>&nbsp;<a href='${s.article.url_private_html}' target='_blank'>${s.article.title}</a></div>`;
+% }
+
+                // Display DOI, if available
+                if ( s.article.doi && s.article.doi !== '' ) html += `<div><a href='https://doi.org/${s.article.doi}' target='_blank'>${s.article.doi}</a></div>`;
+                html += `</div></td>`;
             }
             else {
                 html += `<td><em>Not published</em></td>`;
@@ -493,7 +499,7 @@ async function displayIssues(issues = {}) {
             // Display actions only to owner
 % if ( $is_dataset_owner ) {
             html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
-            if ( !overallUploaded || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='publishIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Publish</button>`;
+            if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='publishIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Publish</button>`;
             html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;Remove</button>`;
             html += `</div></td>`;
 % } else {
@@ -564,7 +570,7 @@ async function displayArchiveFiles(key, data = {}) {
         try {
             const ids = data[t];
             if ( ids && ids.length > 0 ) {
-                const file = await generateArchiveFile(key, t, ids);
+                const file = await generateArchiveFile(key, t);
                 if ( file && file !== '' ) {
                     jQuery(`#dataset-archive-generate-dialog-status-${t}`).html(`<strong><span class='glyphicon glyphicon-ok text-success'></span></strong>&nbsp;&nbsp;Created archived file: ${file}`);
                 }
@@ -587,9 +593,8 @@ async function displayArchiveFiles(key, data = {}) {
  * Generate an archived file for a specific data type
  * @param key = the issue key
  * @param type = the data type
- * @param ids = the ids of the items to include in the file
  */
-function generateArchiveFile(key, type, ids) {
+function generateArchiveFile(key, type) {
     return new Promise((resolve, reject) => {
         jQuery.ajax({
             url: '/ajax/dataset/publish/generate',
@@ -597,8 +602,7 @@ function generateArchiveFile(key, type, ids) {
             data: {
                 dataset_id: <% $dataset_id %>,
                 key,
-                type,
-                ids
+                type
             },
             success: (resp) => {
                 if ( resp?.error ) {
@@ -660,14 +664,14 @@ async function sendArchive() {
     try {
         jQuery("#dataset-archive-publish-send").attr("disabled", true);
         let article_id = jQuery("#dataset-archive-publish-articles").val();
-        const files = [];
-        for ( const t of Object.keys(SELECTED_ISSUE.archived_files || {}) ) {
-            if ( SELECTED_ISSUE.archived_files[t].file ) {
-                files.push(SELECTED_ISSUE.archived_files[t].file);
+        const types = [];
+        for ( const t of Object.keys(SELECTED_ISSUE.data || {}) ) {
+            if ( SELECTED_ISSUE.data[t].file ) {
+                types.push(t);
             }
         }
 
-        let total = !article_id || article_id === '' ? files.length+1 : files.length;
+        let total = !article_id || article_id === '' ? types.length+1 : types.length;
         let count = 0;
 
         // Create article first, if necessary
@@ -678,15 +682,15 @@ async function sendArchive() {
             count ++;
         }
 
-        // Submit each of the files
-        for (const file of files) {
+        // Submit each of the file types
+        for (const t of types) {
             let subTotal = 1;
             let subCount = 0;
 
             // Submit the file
-            progress({ msg: `Sending file: ${file}`, count, total });
+            progress({ msg: `Sending data type: ${t}`, count, total });
             subProgress({ clear: true });
-            const { parts = {}, file_id, upload_url } = await submitFile(article_id, file);
+            const { parts = {}, file_id, upload_url } = await submitFile(article_id, t);
             subTotal = Object.keys(parts).length + 1;
             subCount++;
 
@@ -695,19 +699,19 @@ async function sendArchive() {
             for ( const partNo of partNos ) {
                 const part = parts[partNo];
                 subProgress({ msg: `Uploading chunk: ${partNo}`, count: subCount, total: subTotal });
-                await submitPart(file, upload_url, part);
+                await submitPart(t, upload_url, part);
                 subCount++;
             };
 
             // Finalize the File
             subProgress({ msg: `Finalizing File`, count: subCount, total: subTotal });
-            await finalizeFile(file, file_id, article_id);
+            await finalizeFile(t, file_id, article_id);
 
             // Show success for file
             subCount++;
             count++;
             subProgress({ msg: '', count: subCount, total: subTotal });
-            progress({ msg: `Uploaded file: ${file}`, count, total });
+            progress({ msg: `Uploaded file: ${t}`, count, total });
         };
 
         // Show completed status
@@ -766,7 +770,7 @@ function createArticle() {
  * Submit the specified file to the specified article
  * - This creates the file entry, but does not upload the content
  */
-function submitFile(article, file) {
+function submitFile(article, data_type) {
     return new Promise((resolve, reject) => {
         jQuery.ajax({
             url: `/ajax/dataset/publish/submit`,
@@ -776,18 +780,18 @@ function submitFile(article, file) {
                 article_id: article,
                 dataset_id: <% $dataset_id %>,
                 key: SELECTED_ISSUE.key,
-                file: file
+                type: data_type
             },
             success: (resp) => {
                 if ( resp?.error ) {
-                    reject(`Could not submit file: ${file} [${resp.error}]`);
+                    reject(`Could not submit data type: ${data_type} [${resp.error}]`);
                 }
                 else {
                     resolve(resp);
                 }
             },
             error: () => {
-                reject(`Could not submit file: ${file}`);
+                reject(`Could not submit data_type: ${data_type}`);
             }
         });
     });
@@ -796,8 +800,11 @@ function submitFile(article, file) {
 /**
  * Upload the specified chunk of a file to the submitted file upload URL
  */
-function submitPart(file, upload_url, part) {
+function submitPart(data_type, upload_url, part) {
     return new Promise((resolve, reject) => {
+        console.log("SUBMIT PART");
+        console.log(part);
+
         if ( part.status === 'COMPLETE' ) {
             return resolve();
         }
@@ -809,7 +816,7 @@ function submitPart(file, upload_url, part) {
                 service: SELECTED_SERVICE.key,
                 dataset_id: <% $dataset_id %>,
                 key: SELECTED_ISSUE.key,
-                file: file,
+                type: data_type,
                 partNo: part.partNo,
                 startOffset: part.startOffset,
                 endOffset: part.endOffset,
@@ -817,14 +824,14 @@ function submitPart(file, upload_url, part) {
             },
             success: (resp) => {
                 if ( resp?.error ) {
-                    reject(`Could not upload file: ${file} [${resp.error}]`);
+                    reject(`Could not upload file: ${data_type} [${resp.error}]`);
                 }
                 else {
                     resolve();
                 }
             },
             error: () => {
-                reject(`Could not upload file: ${file}`);
+                reject(`Could not upload file: ${data_type}`);
             }
         });
     });
@@ -833,7 +840,7 @@ function submitPart(file, upload_url, part) {
 /**
  * Finalize the file upload, done after all of the parts have been uploaded
  */
-function finalizeFile(file, file_id, article_id) {
+function finalizeFile(data_type, file_id, article_id) {
     return new Promise((resolve, reject) => {
         jQuery.ajax({
             url: '/ajax/dataset/publish/finalize',
@@ -842,20 +849,20 @@ function finalizeFile(file, file_id, article_id) {
                 service: SELECTED_SERVICE.key,
                 dataset_id: <% $dataset_id %>,
                 key: SELECTED_ISSUE.key,
-                file: file,
+                type: data_type,
                 file_id: file_id,
                 article_id: article_id
             },
             success: (resp) => {
                 if ( resp?.error ) {
-                    reject(`Could not finalize file: ${file} [${resp.error}]`);
+                    reject(`Could not finalize file: ${data_type} [${resp.error}]`);
                 }
                 else {
                     resolve();
                 }
             },
             error: () => {
-                reject(`Could not finalize file: ${file}`);
+                reject(`Could not finalize file: ${data_type}`);
             }
         });
     });

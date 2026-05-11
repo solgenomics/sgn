@@ -17,6 +17,7 @@ use LWP::UserAgent;
 use JSON qw| decode_json encode_json |;
 use Time::HiRes qw| time |;
 use Digest::MD5;
+use Try::Tiny;
 use strict;
 use warnings;
 
@@ -836,6 +837,39 @@ sub publish_dataset_articles_new_POST {
 }
 
 #
+# Shared publish dataset setup function
+# - Get the dataset
+# - Make sure the user is logged in
+# - Make sure the user is the owner of the dataset
+# Returns (error message, dataset, user_id)
+#
+sub _setup_publish {
+    my $c = shift;
+    my $dataset_id = shift;
+
+    try {
+        my $dataset = CXGN::Dataset->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_dataset_id => $dataset_id
+        });
+
+        if (!$c->user()) {
+            return ( "Login required to perform requested action." );
+        }
+
+        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        if ($dataset->sp_person_id() != $user_id ) {
+            return ( "Only the owner can publish a dataset" );
+        }
+
+        return ( undef, $dataset, $user_id );
+    } catch {
+        return ( $_ );
+    }
+}
+
+#
 # Determine what files will be generated from the dataset and initialize the published metadata
 #
 sub publish_dataset_init : Path('/ajax/dataset/publish/init') Args(1) {
@@ -844,20 +878,9 @@ sub publish_dataset_init : Path('/ajax/dataset/publish/init') Args(1) {
     my $dataset_id = shift;
     my $dataset_archive_path = $c->config->{dataset_archive_path};
 
-    my $dataset = CXGN::Dataset->new({
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_dataset_id => $dataset_id
-    });
-
-    if (!$c->user()) {
-        $c->stash->{rest} = { error => "Login required to perform requested action." };
-        return;
-    }
-
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    if ($dataset->sp_person_id() != $user_id ) {
-        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
         return;
     }
 
@@ -880,37 +903,21 @@ sub publish_dataset_generate_POST {
     my $dataset_id = $c->req->body_params->{dataset_id};
     my $key = $c->req->body_params->{key};
     my $type = $c->req->body_params->{type};
-    my $ids = $c->req->body_params->{'ids[]'};
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
 
-    my $dataset = CXGN::Dataset->new({
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_dataset_id => $dataset_id
-    });
-
-    if (!$c->user()) {
-        $c->stash->{rest} = { error => "Login required to perform requested action." };
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
         return;
     }
 
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    if ($dataset->sp_person_id() != $user_id ) {
-        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
-        return;
-    }
-
-    my $resp = $dataset->generate_archive_files($key, $type, $ids, \@editable_stock_props);
+    my $resp = $dataset->generate_archive_file($key, $type, \@editable_stock_props);
     if ( defined $resp->{error} ) {
         $c->stash->{rest} = { error => $resp->{error} };
         return;
     }
 
     if ( defined $resp->{file} ) {
-        my $af = {};
-        $af->{archived_files}->{$type}->{file} = $resp->{file};
-        $dataset->update_published($key, $af);
-
         $c->stash->{rest} = { file => $resp->{file} };
         return;
     }
@@ -931,23 +938,12 @@ sub publish_dataset_submit_POST {
     my $article_id = $c->req->body_params->{article_id};
     my $dataset_id = $c->req->body_params->{dataset_id};
     my $key = $c->req->body_params->{key};
-    my $file = $c->req->body_params->{file};
+    my $type = $c->req->body_params->{type};
     my $ua = LWP::UserAgent->new();
 
-    my $dataset = CXGN::Dataset->new({
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_dataset_id => $dataset_id
-    });
-
-    if (!$c->user()) {
-        $c->stash->{rest} = { error => "Login required to perform requested action." };
-        return;
-    }
-
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    if ($dataset->sp_person_id() != $user_id ) {
-        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
         return;
     }
 
@@ -965,6 +961,7 @@ sub publish_dataset_submit_POST {
     my $published = $dataset->published();
     if ( exists $published->{$key} ) {
         my $dir = $published->{$key}->{directory};
+        my $file = $published->{$key}->{data}->{$type}->{file};
         my $path = "$dir/$file";
 
         # File exists, submit it via API
@@ -1026,11 +1023,8 @@ sub publish_dataset_submit_POST {
 
             # Return the parts info, so each part can be uploaded separately
             my $submitted_file = {
-                file => $file,
                 file_id => $file_id,
                 upload_url => $upload_url,
-                service => $service,
-                article_id => $article_id,
                 parts => {}
             };
             foreach my $part (@$parts) {
@@ -1054,20 +1048,11 @@ sub publish_dataset_submit_POST {
             my $article = decode_json($article_resp->content || '{}');
 
             # Update the stored dataset metadata
-            my $sf = {};
-            $sf->{$file} = $submitted_file;
-            $dataset->update_published($key, {
-                submitted_article => {
-                    service => $service,
-                    article_id => $article_id,
-                    title => $article->{title},
-                    is_public => $article->{is_public},
-                    url_public_html => $article->{url_public_html},
-                    url_private_html => $article->{url_private_html},
-                    doi => $article->{doi}
-                },
-                submitted_files => $sf
-            });
+            my $md = $published->{$key};
+            $md->{data}->{$type}->{submitted} = $submitted_file;
+            $md->{article} = $article;
+            $md->{service} = $service;
+            $dataset->update_published($key, $md);
 
             $c->stash->{rest} = $submitted_file;
             return;
@@ -1083,6 +1068,9 @@ sub publish_dataset_submit_POST {
     }
 }
 
+#
+# Upload a specific part of a file to the external service
+#
 sub publish_dataset_upload : Path('/ajax/dataset/publish/upload') : ActionClass('REST') { }
 sub publish_dataset_upload_POST {
     my $self = shift;
@@ -1090,27 +1078,16 @@ sub publish_dataset_upload_POST {
     my $service = $c->req->body_params->{service};
     my $dataset_id = $c->req->body_params->{dataset_id};
     my $key = $c->req->body_params->{key};
-    my $file = $c->req->body_params->{file};
+    my $type = $c->req->body_params->{type};
     my $partNo = $c->req->body_params->{partNo};
     my $startOffset = $c->req->body_params->{startOffset};
     my $endOffset = $c->req->body_params->{endOffset};
     my $uploadUrl = $c->req->body_params->{uploadUrl};
     my $ua = LWP::UserAgent->new();
 
-    my $dataset = CXGN::Dataset->new({
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_dataset_id => $dataset_id
-    });
-
-    if (!$c->user()) {
-        $c->stash->{rest} = { error => "Login required to perform requested action." };
-        return;
-    }
-
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    if ($dataset->sp_person_id() != $user_id ) {
-        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
         return;
     }
 
@@ -1128,6 +1105,7 @@ sub publish_dataset_upload_POST {
     my $published = $dataset->published();
     if ( exists $published->{$key} ) {
         my $dir = $published->{$key}->{directory};
+        my $file = $published->{$key}->{data}->{$type}->{file};
         my $path = "$dir/$file";
 
         # File exists, upload the part via API
@@ -1156,12 +1134,9 @@ sub publish_dataset_upload_POST {
             }
 
             # Update the info in the dataset
-            my $sf = {};
-            $sf->{$file} = $published->{$key}->{submitted_files}->{$file};
-            $sf->{$file}->{parts}->{$partNo}->{status} = "COMPLETE";
-            $dataset->update_published($key, {
-                submitted_files => $sf
-            });
+            my $md = $dataset->published()->{$key};
+            $md->{data}->{$type}->{submitted}->{parts}->{$partNo}->{status} = "COMPLETE";
+            $dataset->update_published($key, $md);
 
             $c->stash->{rest} = { success => 1 };
             return;
@@ -1177,6 +1152,11 @@ sub publish_dataset_upload_POST {
     }
 }
 
+#
+# Finalize the upload for a specific file
+# - Make sure all of the parts have been completed
+# - Finalize the file upload
+#
 sub publish_dataset_finalize : Path('/ajax/dataset/publish/finalize') : ActionClass('REST') { }
 sub publish_dataset_finalize_POST {
     my $self = shift;
@@ -1184,25 +1164,14 @@ sub publish_dataset_finalize_POST {
     my $service = $c->req->body_params->{service};
     my $dataset_id = $c->req->body_params->{dataset_id};
     my $key = $c->req->body_params->{key};
-    my $file = $c->req->body_params->{file};
+    my $type = $c->req->body_params->{type};
     my $article_id = $c->req->body_params->{article_id};
     my $file_id = $c->req->body_params->{file_id};
     my $ua = LWP::UserAgent->new();
 
-    my $dataset = CXGN::Dataset->new({
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_dataset_id => $dataset_id
-    });
-
-    if (!$c->user()) {
-        $c->stash->{rest} = { error => "Login required to perform requested action." };
-        return;
-    }
-
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    if ($dataset->sp_person_id() != $user_id ) {
-        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
         return;
     }
 
@@ -1217,17 +1186,35 @@ sub publish_dataset_finalize_POST {
     }
     my $selected = $config->{$service};
 
+    # Check the status of each part and update the stored metadata
+    my $md = $dataset->published()->{$key};
+    my $parts = $md->{data}->{$type}->{submitted}->{parts};
+    my $iscomplete = 1;
+    foreach my $p (keys %$parts) {
+        if ( $parts->{$p}->{status} ne 'COMPLETE' ) {
+            $iscomplete = 0;
+        }
+    }
+    $md->{data}->{$type}->{complete} = $iscomplete;
+    $dataset->update_published($key, $md);
+
+    # Return an error if the upload was not completly successful
+    if ( !$iscomplete ) {
+        $c->stash->{rest} = { error => "The upload for $type was not complete" };
+        return;
+    }
+
     # Set the file as finished via the API
     my $finalize_resp = $ua->post(
         $selected->{api_url} . "/account/articles/$article_id/files/$file_id",
         "Authorization" => "Bearer $token"
     );
     if ( !$finalize_resp->is_success ) {
-        $c->stash->{rest} = { error => "Could not finalize the file upload for $file" };
+        $c->stash->{rest} = { error => "Could not finalize the file upload for $type" };
         return;
     }
 
-    # Store the published 
+    # File upload was successful
     $c->stash->{rest} = { success => 1 };
     return;
 }
@@ -1260,20 +1247,9 @@ sub publish_dataset_remove : Path('/ajax/dataset/publish/issues/remove') Args(2)
     my $key = shift;
     my $dataset_archive_path = $c->config->{dataset_archive_path};
 
-    my $dataset = CXGN::Dataset->new({
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_dataset_id => $dataset_id
-    });
-
-    if (!$c->user()) {
-        $c->stash->{rest} = { error => "Login required to perform requested action." };
-        return;
-    }
-
-    my $user_id = $c->user()->get_object()->get_sp_person_id();
-    if ($dataset->sp_person_id() != $user_id ) {
-        $c->stash->{rest} = { error => "Only the owner can remove published metadata" };
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
         return;
     }
 
@@ -1303,7 +1279,7 @@ sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
 
     if ( exists $published->{$key} ) {
         my $dir = $published->{$key}->{directory};
-        my $file = $published->{$key}->{archived_files}->{$type}->{file};
+        my $file = $published->{$key}->{data}->{$type}->{file};
         my $path = "$dir/$file";
 
         if ( -f "$path" ) {

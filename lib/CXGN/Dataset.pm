@@ -1729,7 +1729,12 @@ sub get_child_analyses {
     return join(" | ", @html);
 }
 
-
+#
+# Initialize a new issue of the published dataset metadata
+# - This will calculate the file types to archive and the ids of the items of each type
+# base_directory = path on the server where dataset archives are stored (read from config file)
+# user_id = sp_person_id of user publishing the dataset (should be dataset owner)
+#
 sub init_published {
     my $self = shift;
     my $base_directory = shift;
@@ -1845,8 +1850,12 @@ sub init_published {
     }
 }
 
-
-sub generate_archive_files {
+#
+# Generate an archived file for a specific data type
+# key = dataset issue key
+# type = data type to generate
+#
+sub generate_archive_file {
     my $self = shift;
     my $key = shift;
     my $type = shift;
@@ -1863,6 +1872,7 @@ sub generate_archive_files {
         return { error => "This dataset archive has not been properly initialized" };
     }
     my $dir = $published->{$key}->{directory};
+    my $ids = $published->{$key}->{data}->{$type}->{ids};
 
     # Check for base directory
     return { error => "Archived dataset base path not set" } if !defined $dir;
@@ -1920,9 +1930,20 @@ sub generate_archive_files {
         return { error => "Data type $type is not supported" };
     }
 
+    # Update the issue metadata
+    my $metadata = $self->published()->{$key};
+    $metadata->{data}->{$type}->{file} = $file_name;
+    $self->update_published($key, $metadata);
+
     return { directory => $dir, file => $file_name };
 }
 
+#
+# Add a new issue of the published dataset metadata
+# sp_person_id = user id of the user creating the issue (should be the dataset owner)
+# base_directory = path to directory on the server where archived files will be stored (in dataset and issue subfolders)
+# data = hash of data to archive (key = data type, values = ids of items for that data type)
+#
 sub add_published {
     my $self = shift;
     my $sp_person_id = shift;
@@ -1937,12 +1958,14 @@ sub add_published {
         mkpath($output_directory) or return { error => "Couldn't mkdir $output_directory: $!" };
     }
 
-    # Set files
+    # Set files data hash
     my %files;
     foreach my $t (keys %$data) {
         $files{$t} = {
             file => undef,
-            ids => $data->{$t}
+            ids => $data->{$t},
+            submitted => {},
+            complete => 0
         };
     }
 
@@ -1963,9 +1986,9 @@ sub add_published {
         key => $key,
         ts => $key*1000,
         directory => $output_directory,
-        archived_files => \%files,
-        submitted_article => {},
-        submitted_files => {},
+        data => \%files,
+        service => undef,
+        article => {},
         user => {
             id => $sp_person_id,
             name => $person_name
@@ -1985,6 +2008,11 @@ sub add_published {
     return { key => $key, directory => $output_directory };
 }
 
+#
+# Update the published metadata for a specific issue
+# key = issue key
+# data = updated metadata (this will replace the stored metadata)
+#
 sub update_published {
     my $self = shift;
     my $key = shift;
@@ -2004,27 +2032,8 @@ sub update_published {
         return { error => 'The specified key does not exist for this dataset' };
     }
 
-    # Update the data in this key (allowing for nested hashes)
-    foreach my $k (keys %$data) {
-        my $v = $data->{$k};
-        if ( ref($v) eq 'HASH' ) {
-            foreach my $k2 (keys %$v) {
-                my $v2 = $v->{$k2};
-                if ( ref($v2) eq 'HASH' ) {
-                    foreach my $k3 (keys %$v2) {
-                        $published->{$key}->{$k}->{$k2}->{$k3} = $v2->{$k3};
-                    }
-                }
-                else {
-                    $published->{$key}->{$k}->{$k2} = $v2;
-                }
-            }
-        }
-        else {
-            $published->{$key}->{$k} = $v;
-        }
-    }
-    $dataset->{published} = $published;
+    # Update the data in this key (replace with new data)
+    $dataset->{published}->{$key} = $data;
 
     # Store the updated dataset
     eval {
@@ -2035,9 +2044,14 @@ sub update_published {
         return { error => "Could not update the dataset published: $@" };
     }
 
-    return $published->{$key};
+    return $dataset->{published}->{$key};
 }
 
+#
+# Remove the published metadata for a specific issue
+# key = issue key
+# base_directory = directory path on the server where archived files are stored
+#
 sub remove_published {
     my $self = shift;
     my $key = shift;
