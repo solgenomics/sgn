@@ -43,8 +43,7 @@ sub validate {
         required_columns => [ 'observationunit_name' ],
         column_aliases => {
             'observationunit_name' => [ 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'plotName', 'subplotName', 'plantName' ]
-        },
-        unique_only_columns => [ 'observationunit_name' ]
+        }
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
@@ -99,8 +98,7 @@ sub parse {
         required_columns => [ "observationunit_name" ],
         column_aliases => {
             'observationunit_name' => [ 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'plotName', 'subplotName', 'plantName' ]
-        },
-        unique_only_columns => [ 'observationunit_name' ]
+        }
     );
     my $parsed = $parser->parse();
     my $parsed_data = $parsed->{data};
