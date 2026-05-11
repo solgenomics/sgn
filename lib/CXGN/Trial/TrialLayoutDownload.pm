@@ -161,6 +161,24 @@ has 'overall_performance_hash' => (
     is => 'rw',
 );
 
+has 'include_plot_order' => (
+    is => 'rw',
+    isa => 'Bool',
+    default => 0
+);
+
+has 'plot_order' => (
+    is => 'rw',
+    isa => 'Maybe[Str]',
+    default => undef
+);
+
+has 'plot_start' => (
+    is => 'rw',
+    isa => 'Maybe[Str]',
+    default => undef
+);
+
 sub get_layout_output {
     my $self = shift;
     my $trial_id = $self->trial_id();
@@ -346,7 +364,10 @@ sub get_layout_output {
         exact_performance_hash => $exact_performance_hash,
         overall_performance_hash => \%overall_performance_hash,
         all_stats => $all_stats,
-        trial_stock_type => $trial_stock_type
+        trial_stock_type => $trial_stock_type,
+        include_plot_order => $self->include_plot_order(),
+        plot_order => $self->plot_order(),
+        plot_start => $self->plot_start(),
     };
 
     my $layout_output;

@@ -63,7 +63,7 @@ $field_trial_is_planned_to_cross
                 <div class="form-group">
                     <label class="col-sm-3 control-label" for="edit_trial_type">Trial Type: </label>
                     <div class="col-sm-8">
-                      <div class="input-group"> 
+                      <div class="input-group">
                         <select class="form-control" id="edit_trial_type" title="type" value="<%$trial_type_id%>"></select>
                       </div>
                     </div>
@@ -101,7 +101,7 @@ $field_trial_is_planned_to_cross
                     <label class="col-sm-3 control-label" for="edit_trial_description">Description: </label>
                     <div class="col-sm-8">
                       <div class="input-group">
-                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5" maxlength="250"><% $trial_description %></textarea>
+                        <textarea class="form-control" id="edit_trial_description" title="description" rows="5"><% $trial_description %></textarea>
                       </div>
                     </div>
                 </div>
@@ -172,7 +172,7 @@ $field_trial_is_planned_to_cross
                     <div class="col-sm-8">
                       <div class="input-group">
                           <input class="form-control col-sm-8" id="edit_trial_plot_length" title="plot_length" type="text" value="<%$plot_length%>" aria-describedby="edit_plot_length_status"/>
-                          
+
                           <!-- <select class="form-control" id="edit_trial_plot_length" title="plot_length" value="<% $plot_length %>">
                               <option value="">NA</option>
                               <option value="0.1">0.1</option>

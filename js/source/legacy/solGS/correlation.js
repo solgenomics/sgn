@@ -247,7 +247,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'info': false,
       'pageLength': 5,
       'rowId': function (a) {
-        return a[5]
+        return a[6]
       }
     });
   
@@ -451,7 +451,7 @@ jQuery(document).ready(function () {
 
     var corrArgs;
     var corrPopId;
-    if (runCorrBtnId.match(/run_corr/)) {
+    if (runCorrBtnId.match(/run_correlation/)) {
         corrArgs = solGS.correlation.getPhenoCorrArgs();
         corrPopId = corrArgs.corr_pop_id;
 
@@ -480,8 +480,8 @@ jQuery(document).ready(function () {
             corrArgs["corr_table_file"] = res.corre_table_file;    
             var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
             var heatmapArgs = {
-              input_data: res.input_data,
-              output_data: res.output_data,
+              scatter_input_data: res.corr_input_data,
+              heatmap_input_data: res.corr_output_data,
               canvas: canvas,
               plot_div_id: corrPlotDivId,
               download_links: corrDownload,
@@ -530,8 +530,8 @@ jQuery(document).ready(function () {
           args["corr_table_file"] = res.corre_table_file;
           var corrDownload = solGS.correlation.createCorrDownloadLink(args);
           var heatmapArgs = {
-            input_data: res.input_data,
-            output_data: res.output_data,
+            scatter_input_data: res.corr_input_data,
+            heatmap_input_data: res.corr_output_data,
             canvas: canvas,
             plot_div_id: corrPlotDivId,
             download_links: corrDownload,

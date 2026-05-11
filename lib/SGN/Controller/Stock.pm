@@ -66,7 +66,7 @@ sub stock_search :Path('/search/stocks') Args(0) {
         onto_autocomplete_uri      => '/ajax/cvterm/autocomplete',
 	trait_db_name              => $c->get_conf('trait_ontology_db_name'),
 	breeding_programs          => breeding_programs($self->schema),
-    editable_stock_props => \@editable_stock_props
+    editable_stock_props => \@editable_stock_props,
 	);
 
 }
