@@ -127,7 +127,7 @@ sub _validate_with_plugin {
             if (!$alt){
                 push @error_messages, 'Alternate is required for all markers.';
             }
-            if ($chrom eq '' || !defined($chrom)) {
+	    if (!defined($chrom) || $chrom eq '') {
                 push @error_messages, 'Chromosome is required for all markers.';
             }
             $marker_names{$customer_snp_id} = 1;
@@ -137,13 +137,13 @@ sub _validate_with_plugin {
 
     my @file_marker_names = keys %marker_names;
 
-    if (defined $protocol_id) {
-        foreach (@file_marker_names) {
-            if (!exists($stored_marker_info{$_})) {
-                push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
-            }
-        }
-    }
+    #if (defined $protocol_id) {
+    #    foreach (@file_marker_names) {
+    #        if (!exists($stored_marker_info{$_})) {
+    #            push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
+    #        }
+    #    }
+    #}
 
     # Open GRID FILE and parse
     my $csv = Text::CSV->new({ sep_char => ',' });
