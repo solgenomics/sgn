@@ -386,8 +386,8 @@ sub verify_exif_POST {
                 }
             }
             # Get cvterm_id of recorded trait
-            my $cvterm_name = $decoded_json->{observation_variable}->{observation_variable_name};
-            my $cvterm_id = SGN::Model::Cvterm->find_trait_by_name($schema, $cvterm_name);
+            my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
+            my $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
 
             $decoded_json->{stock_name} = $stock_name;
             if ($cvterm_id) {
