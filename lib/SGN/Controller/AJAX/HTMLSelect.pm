@@ -245,6 +245,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
 
     my $trial = CXGN::Trial->new({ bcs_schema => $schema,people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id => $trial_id });
     my $data = $trial->get_treatments();
+    my @treatments = map {$_->{trait_name}} @{$data};
 
     if ($empty) {
         unshift @$data, [ 0, "None" ];
@@ -252,7 +253,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
-      choices => $data,
+      choices => \@treatments,
     );
     $c->stash->{rest} = { select => $html };
 }

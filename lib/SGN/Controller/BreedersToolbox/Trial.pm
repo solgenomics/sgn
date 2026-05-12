@@ -544,6 +544,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $timestamp_option = $c->req->param("timestamp") || 0;
     my $trait_list = $c->req->param("trait_list");
     my $include_measured = $c->req->param('include_measured') || '';
+    my $include_treatments = $c->req->param('treatments') || 'true';
     my $search_type = $c->req->param("search_type") || 'fast';
     my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
     my $plot_order = $c->req->param('plot_order');
@@ -587,12 +588,6 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         my $lt = CXGN::List::Transform->new();
         @trait_list = @{$lt->transform($schema, "traits_2_trait_ids", \@selected_trait_names)->{transform}};
     }
-
-    # my @treatment_project_ids;
-    # my $treatments = $trial->get_treatments();
-    # foreach (@$treatments){
-    #     push @treatment_project_ids, $_->[0];
-    # }
 
     if ($trait_list && $trait_list ne 'null') {
         @trait_list = @{_parse_list_from_json($trait_list)};
@@ -656,7 +651,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         data_level => $data_level,
         search_type => $search_type,
         include_timestamp => $timestamp_option,
-        #treatment_project_ids => \@treatment_project_ids,
+        include_treatments => $include_treatments,
         selected_columns => $selected_cols,
         include_measured => $include_measured,
         field_crossing_data_order => \@field_crossing_data_order,

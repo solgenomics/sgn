@@ -117,6 +117,12 @@ has 'selected_trait_ids'=> (
     isa => 'ArrayRef[Int]|Undef',
 );
 
+has 'include_treatments' => (
+    is => 'ro',
+    isa => 'Str',
+    default => 'true'
+);
+
 has 'trial_stock_type'=> (
     is => 'rw',
     isa => 'Str',
@@ -189,10 +195,32 @@ sub get_layout_output {
     my $use_synonyms = $self->use_synonyms();
     my %selected_cols = %{$self->selected_columns};
     my @selected_traits = $self->selected_trait_ids() ? @{$self->selected_trait_ids} : ();
+    my $include_treatments = $self->include_treatments();
     my %errors;
     my @error_messages;
     my $trial_stock_type = $self->trial_stock_type();
     print STDERR "TrialLayoutDownload for Trial id: ($trial_id) ".localtime()."\n";
+
+    my $trial = CXGN::Project->new({
+        bcs_schema => $schema,
+        trial_id => $trial_id
+    });
+
+    my $trial_treatments = $trial->get_treatments();
+    my $trial_traits = $trial->get_traits_assayed();
+    my @trial_treatment_names = map { $_->{trait_name} } @{$trial_treatments};
+    my @trial_trait_names = map {$_->[1] if $_->[1] !~ m/_TREATMENT/} @{$trial_traits};
+    my %trial_trait_names_map = map { $_ => 1 } @trial_trait_names;
+
+    my $t = CXGN::List::Transform->new();
+    my @selected_trait_names_all = @{$t->transform($schema, 'trait_ids_2_trait_names', \@selected_traits)->{'transform'}};
+    my @selected_trait_names = ();
+    foreach my $trait (@selected_trait_names_all) { #only select traits that are actually measured in this trial
+        if (defined($trial_trait_names_map{$trait})) {
+            push @selected_trait_names, $trait;
+        }
+    }
+    @selected_traits = @{$t->transform($schema, 'traits_2_trait_ids', \@selected_trait_names)->{'transform'}};
 
     my $trial_layout;
     try {
@@ -264,58 +292,49 @@ sub get_layout_output {
     my $exact_performance_hash;
 
     if ($data_level eq 'plots') {
-        if ($include_measured eq 'true') {
-            print STDERR "Getting exact trait values\n";
-            my $exact = CXGN::Phenotypes::Exact->new({
-                bcs_schema=>$schema,
-                trial_id=>$trial_id,
-                data_level=>'plot'
-            });
-            $exact_performance_hash = $exact->search(); #this gets treatments too!
-            #print STDERR "Exact Performance hash is ".Dumper($exact_performance_hash)."\n";
-        }
+        print STDERR "Getting exact trait values\n";
+        my $exact = CXGN::Phenotypes::Exact->new({
+            bcs_schema=>$schema,
+            trial_id=>$trial_id,
+            data_level=>'plot'
+        });
+        $exact_performance_hash = $exact->search(); #this gets treatments too!
     } elsif ($data_level eq 'plants') {
         if (!$has_plants){
             push @error_messages, "Trial does not have plants, so you should not try to download a plant level layout.";
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
-        if ($include_measured eq 'true') {
-            my $exact = CXGN::Phenotypes::Exact->new({
-                bcs_schema=>$schema,
-                trial_id=>$trial_id,
-                data_level=>'plant'
-            });
-            $exact_performance_hash = $exact->search();
-        }
+        my $exact = CXGN::Phenotypes::Exact->new({
+            bcs_schema=>$schema,
+            trial_id=>$trial_id,
+            data_level=>'plant'
+        });
+        $exact_performance_hash = $exact->search();
     } elsif ($data_level eq 'subplots') {
         if (!$has_subplots){
             push @error_messages, "Trial does not have subplots, so you should not try to download a subplot level layout.";
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
-        if ($include_measured eq 'true') {
-            my $exact = CXGN::Phenotypes::Exact->new({
-                bcs_schema=>$schema,
-                trial_id=>$trial_id,
-                data_level=>'subplot'
-            });
-            $exact_performance_hash = $exact->search();
-        }
+        my $exact = CXGN::Phenotypes::Exact->new({
+            bcs_schema=>$schema,
+            trial_id=>$trial_id,
+            data_level=>'subplot'
+        });
+        $exact_performance_hash = $exact->search();
     } elsif ($data_level eq 'field_trial_tissue_samples') {
         if (!$has_tissue_samples){
             push @error_messages, "Trial does not have tissue samples, so you should not try to download a tissue sample level layout.";
             $errors{'error_messages'} = \@error_messages;
             return \%errors;
         }
-        if ($include_measured eq 'true') {
-            my $exact = CXGN::Phenotypes::Exact->new({
-                bcs_schema=>$schema,
-                trial_id=>$trial_id,
-                data_level=>'tissue_sample'
-            });
-            $exact_performance_hash = $exact->search();
-        }
+        my $exact = CXGN::Phenotypes::Exact->new({
+            bcs_schema=>$schema,
+            trial_id=>$trial_id,
+            data_level=>'tissue_sample'
+        });
+        $exact_performance_hash = $exact->search();
     } elsif ($data_level eq 'plate') {
         #to make the download in the header for genotyping trials more easily understood, the terms change here
         if (exists($selected_cols{'plot_name'})){
@@ -329,15 +348,29 @@ sub get_layout_output {
         $selected_cols{'exported_tissue_sample_name'} = 1;
     }
 
+    # filter through exact performance hash and keep traits and treatments as requested
+    my $new_exact_hash = {};
+    my @combined_terms = (@selected_trait_names);
+    if ($include_measured eq 'true') {
+        @combined_terms = (@combined_terms, @trial_trait_names);
+    }
+    if ($include_treatments eq 'true') {
+        @combined_terms = (@combined_terms, @trial_treatment_names);
+    }
+    foreach my $term (@combined_terms) {
+        $new_exact_hash->{$term} = $exact_performance_hash->{$term};
+    }
+    $exact_performance_hash = $new_exact_hash;
+
     #combine sorted exact and overall trait names and if requested convert to synonyms
     my @exact_trait_names = sort keys %$exact_performance_hash;
     my @overall_trait_names = sort keys %overall_performance_hash;
-    my @traits = (@exact_trait_names, @overall_trait_names);
+    my @traits = (@exact_trait_names,@overall_trait_names);
 
     if ($use_synonyms eq 'true') {
         print STDERR "Getting synonyms\n";
-        my $t = CXGN::List::Transform->new();
-        my $trait_id_list = $t->transform($schema, 'traits_2_trait_ids', \@traits);
+        
+        my $trait_id_list = $t->transform($schema, 'traits_2_trait_ids', [@traits]);
         my @trait_ids = @{$trait_id_list->{'transform'}};
         my $synonym_list = $t->transform($schema, 'trait_ids_2_synonyms', $trait_id_list->{'transform'});
         my @missing = @{$synonym_list->{'missing'}};
