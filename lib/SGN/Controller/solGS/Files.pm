@@ -26,7 +26,7 @@ sub marker_effects_file {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $file_id = "${pop_id}-${trait}-GP-${protocol_id}";
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
     no warnings 'uninitialized';
 
     my $data_set_type = $c->stash->{data_set_type};
@@ -52,7 +52,7 @@ sub variance_components_file {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
     my $file_id = "${pop_id}-${trait}-GP-${protocol_id}";
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     no warnings 'uninitialized';
 
@@ -74,7 +74,7 @@ sub model_phenodata_file {
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
     my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     if ($trait_abbr) {
 	no warnings 'uninitialized';
@@ -97,7 +97,7 @@ sub model_genodata_file {
     my $trait_abbr    = $c->stash->{trait_abbr};
     my $protocol_id   = $c->stash->{genotyping_protocol_id};
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     my $id =   "${pop_id}-${trait_abbr}-GP-${protocol_id}";
     if ($trait_abbr) {
@@ -124,7 +124,7 @@ sub trait_raw_phenodata_file {
     if ($trait_abbr) {
         no warnings 'uninitialized';
 
-        my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+        my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
         my $cache_data = {key       => 'trait_raw_phenodata_' . $id,
                 file      => 'trait_raw_phenodata_' .  $id,
@@ -145,7 +145,7 @@ sub model_info_file {
     my $trait_abbr = $c->stash->{trait_abbr};
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
     my $file_id  = "${trait_id}-${pop_id}-GP-${protocol_id}";
 
     my $cache_data = { 
@@ -166,7 +166,7 @@ sub filtered_training_genotype_file {
 
     $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
     my $file_id = "${pop_id}-GP-${protocol_id}";
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     my $cache_data = { 
         key       => 'filtered_genotype_data_' . $file_id,
@@ -189,7 +189,7 @@ sub genotype_filtering_log_file {
     $file_id .=  "-${sel_pop_id}" if $sel_pop_id;
     $file_id .= "-GP-${protocol_id}";
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $tr_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $tr_pop_id);
 
     my $cache_data = { key       => 'genotype_filtering_log' . $file_id,
                        file      => 'genotype_filtering_log_' . $file_id,
@@ -209,7 +209,7 @@ sub filtered_selection_genotype_file {
     my $protocol_id = $c->stash->{genotyping_protocol_id};
     my $file_id = "${tr_pop_id}-${sel_pop_id}-GP-${protocol_id}";
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $tr_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $tr_pop_id);
 
     my $cache_data = { 
         key       => 'filtered_genotype_data_' . $file_id,
@@ -225,10 +225,10 @@ sub filtered_selection_genotype_file {
 sub formatted_phenotype_file {
     my ($self, $c, $pop_id) = @_;
 
-    $pop_id = $c->stash->{pop_id} if $pop_id;
+    $pop_id = $c->stash->{pop_id} if !$pop_id;
     $pop_id = $c->{stash}->{combo_pops_id} if !$pop_id;
         
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     my $cache_data = { 
         key       => 'formatted_phenotype_data_' . $pop_id,
@@ -250,7 +250,7 @@ sub phenotype_file_name {
        die "No population ID (pop_id) provided for phenotype file name.\n";
     }
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
     if ($pop_id =~ /list/) {
 	    $cache_dir = $c->stash->{solgs_lists_dir};
     } elsif ($pop_id =~ /dataset/) {
@@ -341,7 +341,7 @@ sub genotype_file_name {
        die "No population ID (pop_id) and/or genotype protocol id provided for genotype file name.\n";
     }
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
     if ($pop_id =~ /list/) {
 	    $cache_dir = $c->stash->{solgs_lists_dir};
     } elsif ($pop_id =~ /dataset/) {
@@ -478,7 +478,7 @@ sub validation_file {
     my $data_set_type = $c->stash->{data_set_type};
     no warnings 'uninitialized';
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
     my $cache_data = {
 	key       => 'cross_validation_' . $file_id,
 	file      => 'cross_validation_' . $file_id,
@@ -494,7 +494,7 @@ sub combined_gebvs_file {
     my ($self, $c, $identifier) = @_;
 
     my $pop_id = $c->stash->{pop_id};
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     my $cache_data = {
         key       => 'selected_traits_gebv_' . $pop_id . '_' . $identifier,
@@ -513,7 +513,7 @@ sub trait_phenotype_file {
 
     my $protocol_id = $c->stash->{genotyping_protocol_id};
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
     my $exp = "phenotype_data_${trait}_${pop_id}";
     my $file = $self->grep_file($cache_dir, $exp);
 
@@ -526,7 +526,7 @@ sub all_traits_file {
     my ($self, $c, $pop_id) = @_;
 
     $pop_id = $c->stash->{pop_id} ||  $c->stash->{training_pop_id} if !$pop_id;
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     my $cache_data = {
         key       => 'all_traits_pop' . $pop_id,
@@ -544,7 +544,7 @@ sub traits_list_file {
     my ($self, $c, $pop_id) = @_;
 
     $pop_id = $c->stash->{pop_id} || $c->stash->{training_pop_id} if !$pop_id;
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
     my $cache_data = {
         key       => 'traits_list_pop' . $pop_id,
         file      => 'traits_list_pop_' . $pop_id,
@@ -612,7 +612,7 @@ sub rrblup_training_gebvs_file {
     my $type = 'training';
     my $file_id = $self->gebvs_file_id($c, $type);
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $training_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $training_pop_id);
 
     my $cache_data = {
         key       => 'rrblup_training_gebvs_' . $file_id,
@@ -634,7 +634,7 @@ sub rrblup_training_genetic_values_file {
 
     $training_pop_id = $c->stash->{training_pop_id} if !$training_pop_id;
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $training_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $training_pop_id);
 
     my $cache_data = {
         key       => 'rrblup_training_genetic_values_' . $file_id,
@@ -655,7 +655,7 @@ sub rrblup_combined_training_gebvs_genetic_values_file {
 
     $training_pop_id = $c->stash->{training_pop_id} if !$training_pop_id;
     
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $training_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $training_pop_id);
 
     my $cache_data = {
         key  => 'rrblup_combined_training_gebvs_genetic_values_' . $file_id,
@@ -676,7 +676,7 @@ sub rrblup_selection_genetic_values_file {
     $c->stash->{training_pop_id} = $training_pop_id  if $training_pop_id;
 
     my $file_id = $self->gebvs_file_id($c, $type);
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $training_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $training_pop_id);
 
     my $cache_data = {
         key  => 'rrblup_selection_genetic_values_' . $file_id,
@@ -699,7 +699,7 @@ sub rrblup_combined_selection_gebvs_genetic_values_file {
 
     my $file_id = $self->gebvs_file_id($c, $type);
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $training_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $training_pop_id);
     my $cache_data = {
         key  => 'rrblup_combined_selection_gebvs_genetic_values_' . $file_id,
         file => 'rrblup_combined_selection_gebvs_genetic_values_' . $file_id,
@@ -744,7 +744,7 @@ sub rrblup_selection_gebvs_file {
     my $type = 'selection';
     my $file_id = $self->gebvs_file_id($c, $type);
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $training_pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $training_pop_id);
 
     my $cache_data = {
         key       => 'rrblup_selection_gebvs_' . $file_id,
@@ -782,7 +782,7 @@ sub first_stock_genotype_file {
     $protocol_id = $c->stash->{genotyping_protocol_id} if !$protocol_id;
 
     my $file_id = $pop_id . '-GP-' . $protocol_id;
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     my $cache_data = {
         key       => 'first_stock_genotype_file_'. $file_id,
@@ -823,7 +823,7 @@ sub selection_population_file {
 sub traits_acronym_file {
     my ($self, $c, $pop_id) = @_;
 
-    my $cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $pop_id);
+    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id);
 
     my $cache_data = {
         key       => 'traits_acronym_pop' . $pop_id,
@@ -850,7 +850,8 @@ sub template {
 
 sub cache_file {
     my ($self, $c, $cache_data) = @_;
-    my $cache_dir = $cache_data->{cache_dir} || $c->stash->{cache_dir} ||  $c->stash->{solgs_cache_dir};
+    my $cache_dir = catdir($cache_data->{cache_dir}, 'cache');
+    mkpath($cache_dir, 0, 755);
 
     my $file_cache  = Cache::File->new(cache_root => $cache_dir,
 				       lock_level => Cache::File::LOCK_NFS()
@@ -1061,10 +1062,11 @@ sub create_tempfile {
 
     $ext = '.' . $ext if $ext;
 
-    my ($fh, $file) = tempfile($name . "-XXXXX",
-			       SUFFIX => $ext,
-                               DIR => $dir,
-        );
+    my ($fh, $file) = tempfile(
+        $name . "-XXXXX",
+		SUFFIX => $ext,
+        DIR => $dir,
+    );
 
     $fh->close;
 
@@ -1102,6 +1104,18 @@ sub grep_file {
     return $file;
 }
 
+sub solgs_cache_dir {
+    my ($self, $c) = @_;
+
+    my $id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{pop_id};
+
+    my $cache_dir = catdir($c->stash->{solgs_dir},$id, 'cache');
+    mkpath($cache_dir, 0, 755);
+
+    $c->stash->{solgs_cache_dir} = $cache_dir;
+
+    return $cache_dir;
+}
 
 sub get_solgs_dirs {
     my ($self, $c) = @_;
@@ -1120,25 +1134,23 @@ sub get_solgs_dirs {
     );
 
     for my $analysis_type (@analysis_types) {
-        my $analysiscache_dir = catdir($cluster_shared_dir, $analysis_type, 'cache');
-        my $analysis_temp_dir  = catdir($cluster_shared_dir, $analysis_type, 'tempfiles');
+        my $analysis_dir = catdir($cluster_shared_dir, $analysis_type, 'trials');
 
-        mkpath([$analysiscache_dir, $analysis_temp_dir], 0, 755);
-        $c->stash->{"${analysis_type}_cache_dir"} = $analysiscache_dir;
-        $c->stash->{"${analysis_type}_temp_dir"} = $analysis_temp_dir;
+        mkpath($analysis_dir, 0, 755);
+        $c->stash->{"${analysis_type}_dir"} = $analysis_dir;
     }
 
     my $solgs_dir       = catdir($cluster_shared_dir, "solgs");
+    my $solgs_temp_dir   = catdir($solgs_dir, 'tempfiles');
     my $solgs_lists     = catdir($solgs_dir, 'tempfiles', 'lists');
     my $solgs_datasets  = catdir($solgs_dir, 'tempfiles', 'datasets');
 
     mkpath([$solgs_lists, $solgs_datasets], 0, 755);
     $c->stash->{solgs_lists_dir} = $solgs_lists;
     $c->stash->{solgs_datasets_dir} = $solgs_datasets;
-    $c->stash->{solgs_dir} = $solgs_dir;
 
     ### for backward compatibility with old code
-    $c->stash->{solgs_tempfiles_dir} = $c->stash->{solgs_temp_dir};
+    $c->stash->{solgs_tempfiles_dir} = $solgs_temp_dir;
 
     
 }

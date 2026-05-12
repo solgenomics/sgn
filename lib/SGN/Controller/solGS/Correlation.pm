@@ -112,12 +112,12 @@ sub cache_pheno_corr_output_files {
     my ($self, $c) = @_;
 
     my $pop_id = $c->stash->{corr_pop_id};
-    my $corre_cache_dir = $c->stash->{correlation_cache_dir};
+    my $corr_cache_dir = $self->correlation_cache_dir($c);
 
     my $table_cache_data = {key    => 'pheno_corr_table_' . $pop_id,
 		      file      => "pheno_corr_table_${pop_id}" . '.txt',
 		      stash_key => 'pheno_corr_table_file',
-		      cache_dir => $corre_cache_dir
+		      cache_dir => $corr_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file($c, $table_cache_data);
@@ -126,7 +126,7 @@ sub cache_pheno_corr_output_files {
         key  => 'pheno_corr_json_' . $pop_id,
 		file => "pheno_corr_json_${pop_id}" . '.txt',
 	    stash_key => 'pheno_corr_json_file',
-		cache_dir => $corre_cache_dir
+		cache_dir => $corr_cache_dir
     };
 
    $c->controller('solGS::Files')->cache_file($c, $json_cache_data);
@@ -135,7 +135,7 @@ sub cache_pheno_corr_output_files {
         key  => 'corr_pheno_input_data_json_' . $pop_id,
 		file => "corr_pheno_input_data_json_${pop_id}" . '.txt',
 	    stash_key => 'corr_pheno_input_data_json_file',
-		cache_dir => $corre_cache_dir
+		cache_dir => $corr_cache_dir
     };
 
    $c->controller('solGS::Files')->cache_file($c, $corr_input_data_json);
@@ -159,12 +159,12 @@ sub cache_genetic_corr_output_files {
         $identifier  =  $pop_type =~ /selection/ ? "$model_id-${corr_pop_id}-${traits_code}" :  "${corr_pop_id}-${traits_code}";
     }
 
-    my $corre_cache_dir = $c->stash->{correlation_cache_dir};
+    my $corr_cache_dir = $self->correlation_cache_dir($c);
 
     my $table_cache_data = {key    => 'genetic_corr_table_' . $identifier,
 		      file      => "genetic_corr_table_${identifier}",
 		      stash_key => 'genetic_corr_table_file',
-		      cache_dir => $corre_cache_dir
+		      cache_dir => $corr_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file($c, $table_cache_data);
@@ -173,7 +173,7 @@ sub cache_genetic_corr_output_files {
         key => 'genetic_corr_json_' . $identifier,
 		file => "genetic_corr_json_${identifier}",
 		stash_key => 'genetic_corr_json_file',
-		cache_dir => $corre_cache_dir
+		cache_dir => $corr_cache_dir
     };
 
    $c->controller('solGS::Files')->cache_file($c, $json_cache_data);
@@ -182,7 +182,7 @@ sub cache_genetic_corr_output_files {
         key  => 'corr_geno_input_data_json_' . $identifier,
 		file => "corr_geno_input_data_json_${identifier}" . '.txt',
 	    stash_key => 'corr_geno_input_data_json_file',
-		cache_dir => $corre_cache_dir
+		cache_dir => $corr_cache_dir
     };
 
    $c->controller('solGS::Files')->cache_file($c, $corr_input_data_json);
@@ -226,9 +226,9 @@ sub pheno_corr_output_files {
               $c->stash->{corr_pheno_input_data_json_file}
 	);
 
-    my $tmp_dir = $c->stash->{correlation_temp_dir};
+    my $temp_dir = $self->correlation_temp_dir($c);
     my $name = "pheno_corr_output_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, {binmode => ':utf8'}, $output_files);
 
     $c->stash->{pheno_corr_output_files} = $tempfile;
@@ -261,9 +261,9 @@ sub pheno_corr_input_files {
         $input_files .= "\t" . $metadata_file;
     }
 
-    my $tmp_dir = $c->stash->{correlation_temp_dir};
+    my $temp_dir = $self->correlation_temp_dir($c);
     my $name = "pheno_corr_input_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, {binmode => ':utf8'}, $input_files);
     $c->stash->{pheno_corr_input_files} = $tempfile;
 
@@ -282,9 +282,9 @@ sub geno_corr_output_files {
         $c->stash->{corr_geno_input_data_json_file}
 	);
 
-    my $tmp_dir = $c->stash->{correlation_temp_dir};
+    my $temp_dir = $self->correlation_temp_dir($c);
     my $name = "genetic_corr_output_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, {binmode => ':utf8'}, $output_files);
 
     $c->stash->{geno_corr_output_files} = $tempfile;
@@ -304,9 +304,9 @@ sub geno_corr_input_files {
 		      $index_file
 	);
 
-    my $tmp_dir = $c->stash->{correlation_temp_dir};
+    my $temp_dir = $self->correlation_temp_dir($c);
     my $name = "genetic_corr_input_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, {binmode => ':utf8'}, $input_files);
 
     $c->stash->{geno_corr_input_files} = $tempfile;
@@ -375,7 +375,7 @@ sub corr_r_jobs {
     $c->stash->{r_temp_file}  = "${corre_type}-${pop_id}";
     $c->stash->{r_script}     = $c->stash->{correlation_script};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{correlation_temp_dir};
+    $c->stash->{analysis_tempfiles_dir} = $self->correlation_temp_dir($c);
 
     $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
@@ -395,7 +395,7 @@ sub corr_r_jobs_file {
     $self->corr_r_jobs($c);
     my $jobs = $c->stash->{corr_r_jobs};
 
-    my $temp_dir = $c->stash->{correlation_temp_dir};
+    my $temp_dir = $self->correlation_temp_dir($c);
     my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'corre-r-jobs-file');
 
     nstore $jobs, $jobs_file
@@ -434,7 +434,7 @@ sub corr_query_jobs_file {
     my $jobs_file;
 
     if ($jobs->[0]) {
-    	my $temp_dir = $c->stash->{correlation_temp_dir};
+    	my $temp_dir = $self->correlation_temp_dir($c);
     	$jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, "${corr_type}-query-jobs-file");
 
     	nstore $jobs, $jobs_file
@@ -445,14 +445,33 @@ sub corr_query_jobs_file {
 
 }
 
+sub correlation_cache_dir {
+    my ($self, $c) = @_;
+
+    my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id};
+    my $corr_cache_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id);
+
+    return $corr_cache_dir;
+
+}
+
+
+sub correlation_temp_dir {
+    my ($self, $c) = @_;
+    my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id};
+    my $corr_temp_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'tempfiles');
+
+    mkpath($corr_temp_dir, 0, 755);
+
+    return $corr_temp_dir;
+}
+
 
 sub begin : Private {
     my ($self, $c) = @_;
 
     $c->controller('solGS::Files')->get_solgs_dirs($c);
-
 }
-
 
 
 ####

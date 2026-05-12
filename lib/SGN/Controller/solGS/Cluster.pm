@@ -200,7 +200,7 @@ sub cluster_result_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data;
 
@@ -209,7 +209,8 @@ sub cluster_result_file {
             key       => "${cluster_type}_result_json_${file_id}",
             file      => "${cluster_type}_result_json_${file_id}",
             ext       => 'json',
-            stash_key => "${cluster_type}_result_json_file"
+            stash_key => "${cluster_type}_result_json_file",
+            cache_dir => $cluster_cache_dir
         };
 
         $c->controller('solGS::Files')->cache_file( $c, $cache_json );
@@ -240,13 +241,14 @@ sub cluster_plot_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
 
     my $cache_data = {
         key       => "${cluster_type}_plot-${file_id}",
         file      => "${cluster_type}_plot-${file_id}",
         ext       => 'png',
-        stash_key => "${cluster_type}_plot_file"
+        stash_key => "${cluster_type}_plot_file",
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -259,13 +261,14 @@ sub cluster_elbow_plot_file {
     my $file_id = $c->stash->{file_id};
     $file_id =~ s/-k-\d//;
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
 
     my $cache_data = {
         key       => "${cluster_type}_elbow_plot-${file_id}",
         file      => "${cluster_type}_elbow_plot-${file_id}",
         ext       => 'png',
-        stash_key => "${cluster_type}_elbow_plot_file"
+        stash_key => "${cluster_type}_elbow_plot_file",
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -277,12 +280,13 @@ sub cluster_means_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
 
     my $cache_data = {
         key       => "${cluster_type}_means_${file_id}",
         file      => "${cluster_type}_means_${file_id}",
-        stash_key => "${cluster_type}_means_file"
+        stash_key => "${cluster_type}_means_file",
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -294,12 +298,13 @@ sub cluster_pc_scores_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
 
     my $cache_data = {
         key       => "${cluster_type}_pc_scores_${file_id}",
         file      => "${cluster_type}_pc_scores_${file_id}",
-        stash_key => "${cluster_type}_pc_scores_file"
+        stash_key => "${cluster_type}_pc_scores_file",
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -311,12 +316,13 @@ sub cluster_variances_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
 
     my $cache_data = {
         key       => "${cluster_type}_variances_${file_id}",
         file      => "${cluster_type}_variances_${file_id}",
-        stash_key => "${cluster_type}_variances_file"
+        stash_key => "${cluster_type}_variances_file",
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -327,14 +333,15 @@ sub kcluster_plot_pam_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
     my $cluster_type = $c->stash->{cluster_type};
 
     my $cache_data = {
         key       => "${cluster_type}_plot_pam_${file_id}",
         file      => "${cluster_type}_plot_pam_${file_id}",
         ext       => 'png',
-        stash_key => "${cluster_type}_plot_pam_file"
+        stash_key => "${cluster_type}_plot_pam_file",
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -345,12 +352,13 @@ sub hierarchical_result_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
 
     my $cache_data = {
         key       => "hierarchical_result_${file_id}",
         file      => "hierarchical_result_${file_id}",
-        stash_key => 'hierarchical_result_file'
+        stash_key => 'hierarchical_result_file',
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -365,12 +373,13 @@ sub cluster_options_file {
     my $file_id   = $c->stash->{file_id};
 
     my $cluster_type = $c->stash->{cluster_type};
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
 
     my $cache_data = {
         key       => "${cluster_type}_options_${file_id}",
         file      => "${cluster_type}_options_${file_id}",
-        stash_key => "${cluster_type}_options_file"
+        stash_key => "${cluster_type}_options_file",
+        cache_dir => $cluster_cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -471,7 +480,6 @@ sub cluster_output_files {
     $c->stash->{analysis_type} = $cluster_type;
     ###$c->stash->{pop_id} = $file_id;
 
-    $c->stash->{cache_dir} = $c->stash->{cluster_cache_dir};
     $c->controller('solGS::Files')->analysis_report_file($c);
     my $analysis_report_file = $c->{stash}->{"${cluster_type}_report_file"};
 
@@ -758,7 +766,7 @@ sub cluster_r_jobs {
     $self->cluster_input_files($c);
     my $input_file = $c->stash->{cluster_input_files};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{cluster_temp_dir};
+    $c->stash->{analysis_tempfiles_dir} = $self->cluster_temp_dir($c);
 
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
@@ -790,7 +798,7 @@ sub cluster_r_jobs_file {
     $self->cluster_r_jobs($c);
     my $jobs = $c->stash->{cluster_r_jobs};
 
-    my $temp_dir  = $c->stash->{cluster_temp_dir};
+    my $temp_dir  = $self->cluster_temp_dir($c);
     my $jobs_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, "${cluster_type}-r-jobs-file" );
 
@@ -810,7 +818,7 @@ sub cluster_query_jobs_file {
     $self->cluster_query_jobs($c);
     my $jobs = $c->stash->{cluster_query_jobs};
 
-    my $temp_dir  = $c->stash->{cluster_temp_dir};
+    my $temp_dir  = $self->cluster_temp_dir($c);
     my $jobs_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, "${cluster_type}-query-jobs-file" );
 
@@ -830,7 +838,7 @@ sub cluster_combine_gebvs_jobs_file {
     $c->controller('solGS::Gebvs')->combine_gebvs_jobs($c);
     my $jobs = $c->stash->{combine_gebvs_jobs};
 
-    my $temp_dir  = $c->stash->{cluster_temp_dir};
+    my $temp_dir  = $self->cluster_temp_dir($c);
     my $jobs_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, "${cluster_type}-combine-gebvs-jobs-file" );
 
@@ -841,6 +849,31 @@ sub cluster_combine_gebvs_jobs_file {
     $c->stash->{cluster_combine_gebvs_jobs_file} = $jobs_file;
 
 }
+
+sub cluster_cache_dir {
+    my ($self, $c) = @_;
+
+    my $cluster_analysis_id = $c->stash->{cluster_pop_id} || $c->stash->{trial_id};
+    my $cluster_cache_dir = catdir($c->stash->{cluster_dir}, $cluster_analysis_id);
+    print STDERR "cluster cache dir: $cluster_cache_dir\n";
+
+    return $cluster_cache_dir;
+
+}
+
+
+sub cluster_temp_dir {
+    my ($self, $c) = @_;
+
+    my $cluster_analysis_id = $c->stash->{cluster_pop_id} || $c->stash->{trial_id};
+    my $cluster_temp_dir = catdir($c->stash->{cluster_dir}, $cluster_analysis_id, 'tempfiles');
+    mkpath($cluster_temp_dir, 0, 755);
+
+    $c->stash->{cluster_temp_dir} = $cluster_temp_dir;
+
+    return $cluster_temp_dir;
+}
+
 
 sub begin : Private {
     my ( $self, $c ) = @_;
