@@ -438,7 +438,7 @@ sub _add_exact_performance_to_line {
 
     foreach my $trait (@$exact_trait_names){
         my $value = $exact_performance_hash->{$trait}->{$observationunit_name };
-        if($value) {
+        if($value || $value == 0) {
             push @$line, $value
         } else {
             push @$line, '';
