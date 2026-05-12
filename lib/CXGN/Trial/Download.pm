@@ -217,6 +217,7 @@ has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_pedigree_parents' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_intercrop_stocks' => (isa => 'Bool|Undef', is => 'ro', default => 0);
 has 'include_entry_numbers' => (isa => 'Bool|Undef', is => 'ro', default => 0);
+has 'include_trait_synonyms' => (isa => 'Bool|Undef', is => 'ro', default => 0);
 has 'exclude_phenotype_outlier' => (isa => 'Bool', is => 'ro', default => 0);
 has 'has_header' => (isa => 'Bool', is => 'ro', default => 1);
 has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
