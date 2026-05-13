@@ -20,8 +20,13 @@
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
-<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min'] &>
+<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'dataTables.colReorder-min'] &>
 
+<style>
+#stock_search_results_div th {
+    cursor: grab;
+}
+</style>
 <div class="container-fluid">
 
 <& /page/page_title.mas, title=>'Search Accessions and Trees' &>
@@ -665,6 +670,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
               d.include_obsolete = include_obsolete;
             }
         },
+        'colReorder': true,
         'dom': 'Bfrtip',
         'rowId': 'Stock Id',
         'buttons': [ 'colvis',
