@@ -20,11 +20,11 @@
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min'] &>
 
 <div class="container-fluid">
 
-<& /page/page_title.mas, title=>'Search Accessions and Plots' &>
-
+<& /page/page_title.mas, title=>'Search Accessions and Trees' &>
 
 <%perl>
 
@@ -33,6 +33,9 @@ use CXGN::Page::FormattingHelpers qw / conditional_like_input_html simple_select
 my $accession_cvterm_id;
 
 for (my $i=0; $i< scalar(@$stock_types); $i++) {
+     if ( $stock_types->[$i][1] eq "" ) {
+        $stock_types->[$i][1] = 'all';
+     }
      if ( $stock_types->[$i][1] eq "accession" ) {
      	$accession_cvterm_id = $stock_types->[$i][0];
 	last();
@@ -60,6 +63,7 @@ my $breeding_programs_select = simple_selectbox_html(
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
 
   <div id="stock_search_form" class="well well-sm">
+
 
     <&| /page/info_section.mas, title => 'Name Search', collapsible=>1, collapsed=>0 &>
 
@@ -272,6 +276,7 @@ my $breeding_programs_select = simple_selectbox_html(
                 </span>
                   <span class="input-group-btn">
                     <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add">Add</button>
+                    <button class="btn btn-sm btn-danger" id="editable_stockprop_view_column_remove">Remove</button>
                 </span>
               </div>
             </div>
@@ -282,7 +287,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <div id="stock_search_results_div">
+            <div id="stock_search_results_div" class="table-responsive" style="margin-top: 10px;">
                 <table id="stock_search_results" width="100%" class="table table-hover table-striped">
                 <thead>
                   <tr>
@@ -444,31 +449,51 @@ jQuery(document).ready(function () {
     //For adding stockprop columns to search result
     var stockprop_extra_columns_view = { 'organization':1 };
     var stockprop_extra_columns_view_array = [ 'organization' ];
+
+    function updateResultsHeader() {
+        var table_header_html =
+          '<table id="stock_search_results" class="table table-hover table-striped" width="100%">' +
+            '<thead><tr>' +
+              '<th>Stock Id</th>' +
+              '<th>Stock Name</th>' +
+              '<th>Stock Type</th>' +
+              '<th>Organism</th>' +
+              '<th>Synonyms</th>';
+        for (var i = 0; i < stockprop_extra_columns_view_array.length; i++) {
+          table_header_html += '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
+        }
+        table_header_html +=
+            '</tr></thead>' +
+          '</table>';
+        jQuery('#stock_search_results_div').html(table_header_html);
+    }
+
+    function updateResultsRows() {
+        stock_table.destroy();
+        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+    }
+
     jQuery('#editable_stockprop_view_column_add').click(function(){
         var selected_property = jQuery('#editable_stockprop_view_column_term').val();
         if (!(selected_property in stockprop_extra_columns_view)){
             stockprop_extra_columns_view[selected_property] = 1;
             stockprop_extra_columns_view_array.push(selected_property);
-
-            var table_header_html =
-              '<table id="stock_search_results" class="table table-hover table-striped" width="100%">' +
-                '<thead><tr>' +
-                  '<th>Stock Id</th>' +
-                  '<th>Stock Name</th>' +
-                  '<th>Stock Type</th>' +
-                  '<th>Organism</th>' +
-                  '<th>Synonyms</th>';
-            for (var i = 0; i < stockprop_extra_columns_view_array.length; i++) {
-              table_header_html += '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
-            }
-            table_header_html +=
-                '</tr></thead>' +
-              '</table>';
-            jQuery('#stock_search_results_div').html(table_header_html);
+            updateResultsHeader();
         }
-        stock_table.destroy();
-        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        updateResultsRows();
     });
+    jQuery('#editable_stockprop_view_column_remove').click(function(){
+        var selected_property = jQuery('#editable_stockprop_view_column_term').val();
+        if ((selected_property in stockprop_extra_columns_view)){
+          delete stockprop_extra_columns_view[selected_property];
+          var selected_index = stockprop_extra_columns_view_array.indexOf(selected_property);
+          if (selected_index !== -1) {
+            stockprop_extra_columns_view_array.splice(selected_index, 1);
+            updateResultsHeader();
+          }
+        }
+        updateResultsRows();
+    })
 
     parseArgs(editable_stockprops_search);
 
@@ -499,7 +524,9 @@ jQuery(document).ready(function () {
 
    jQuery('#submit_stock_search').click( function() {
         //stock_table.search("stock_search_results").draw();
-        _load_stock_search_results(jQuery('#stock_type_select option:selected').text(), editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        var stock_type_selected = jQuery('#stock_type_select option:selected').text();
+        stock_type_selected = stock_type_selected == "all" ? "" : stock_type_selected;
+        _load_stock_search_results(stock_type_selected, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
    });
 
    jQuery('#stock_search_form').keypress( function( e ) {
@@ -591,6 +618,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
     console.log(stock_type);
     console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
 
+    stock_type = stock_type == 'all' ? '' : stock_type;
     let is_obsolete = '';
     let include_obsolete = '';
     const obsolete_stock_search_term = jQuery("#obsolete_stock_search_term option:selected").val();
@@ -600,6 +628,8 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
         include_obsolete = 'true';
     }
 
+    var export_message = 'Stock data from ' + window.location.href;
+    var export_suffix = ' Stocks';
     stock_table = jQuery('#stock_search_results').DataTable({
         'destroy' : true,
         'searching' : false,
@@ -634,8 +664,40 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
               d.is_obsolete = is_obsolete;
               d.include_obsolete = include_obsolete;
             }
-        }
+        },
+        'dom': 'Bfrtip',
+        'rowId': 'Stock Id',
+        'buttons': [ 'colvis',
+            {
+                extend: 'excelHtml5',
+                title: document.title + export_suffix,
+                exportOptions: {
+                    columns: ':visible'
+                }
+            },
+            {
+                extend: 'csvHtml5',
+                title: document.title + export_suffix,
+                exportOptions: {
+                    columns: ':visible'
+                }
+            },
+            {
+                extend: 'pdfHtml5',
+                title: document.title + export_suffix,
+                exportOptions: {
+                    columns: ':visible'
+                },
+                orientation: 'landscape',
+                pageSize: 'LEGAL',
+            },
+            {
+                extend: 'print',
+                exportOptions: {
+                    columns: ':visible'
+                },
+            }
+        ],
     });
 }
-
 </script>
