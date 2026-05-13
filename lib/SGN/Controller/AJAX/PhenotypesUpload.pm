@@ -391,7 +391,7 @@ sub _prep_upload {
                 });
                 my $child_stocks = $plot_obj->get_child_stocks_flat_list();
                 foreach my $child (@{$child_stocks}) {
-                    next if ($child->{type} eq "accession");
+                    next if ($child->{type} eq "accession") || ($child->{type} eq "seedlot");
                     push @plots, $child->{name};
                     foreach my $trait (@traits) {
                         $parsed_data{$child->{name}}->{$trait} = $parsed_data{$plot}->{$trait};
