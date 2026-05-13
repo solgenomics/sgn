@@ -30,7 +30,7 @@ $order_properties_dialog => undef
                 </div>
             </div>
         </div>
-        <center><button class="btn btn-primary" style="margin:3px" id="order_form_link">Request Form</button></center>
+        <center><button class="btn btn-primary" style="margin:3px" id="order_form_link">Add Items</button></center>
     </div>
 </&>
 
@@ -111,9 +111,21 @@ jQuery(document).ready( function() {
             itemForm(selected_items);
             requestForm(order_properties_dialog);
             jQuery('#request_form_dialog').modal('show');
-            selected_items.length = 0;
         }
     });
+
+    jQuery(document).on('click', '.selected_item_remove', function() {
+        var name = jQuery(this).data("selected-item-name");
+        var item_index = selected_items.indexOf(name);
+        selected_items.splice(item_index,1);
+        if(selected_items.length > 0) {
+            itemForm(selected_items);
+            requestForm(order_properties_dialog);
+            jQuery('#request_form_dialog').modal('show');
+        } else {
+            jQuery('#request_form_dialog').modal('hide');
+        }
+    })
 
     jQuery('#submit_request_form_button').click(function(){
         var item_info = {};
@@ -159,7 +171,7 @@ jQuery(document).ready( function() {
             }
         });
     });
-
+    
 });
 
 function itemForm (selected_items) {
@@ -168,6 +180,7 @@ function itemForm (selected_items) {
         item = selected_items[i];
         html = html + '<tr><td>' + selected_items[i] + '</td>';
         html +=  '<td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="" placeholder=""/></td>';
+        html += '<td><span data-selected-item-name="'+selected_items[i]+'" class="selected_item_remove btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove</span></td>'
         html += '</tr>';
     };
     html = html + '</tbody></table></div>';
