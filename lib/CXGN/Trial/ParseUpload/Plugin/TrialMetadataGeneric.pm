@@ -60,7 +60,8 @@ sub _validate_with_plugin {
         column_aliases => {
             'name' => [ 'new_trial_name' ],
             'type' => [ 'trial_type' ]
-        }
+        },
+        unique_only_columns => [ 'trial_name', 'new_trial_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};
