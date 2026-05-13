@@ -86,6 +86,7 @@ jQuery(document).ready( function() {
     var order_properties_dialog = "<% $order_properties_dialog %>";
     var property_dialog_keys = order_properties_dialog.split(",");
     var selected_items = [];
+    var item;
 
     jQuery('#catalog_transgenic_lines_table').DataTable( {
         'autoWidth': false,
@@ -97,22 +98,11 @@ jQuery(document).ready( function() {
         'ajax': '/ajax/catalog/items',
     });
 
-//    jQuery(function() {
-//        jQuery('input:checkbox[name="catalog_item_select"]').on('change', function() {
-//            var item_name;
-//            var item_index;
-//            item_name = jQuery(this).val();
-//            item_index = selected_items.indexOf(item_name);
-//            jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
-//        });
-
-//    });
-
     jQuery('#order_form_link').click(function(){
         jQuery('input[name="catalog_item_select"]:checked').each(function() {
             let item_name = jQuery(this).val();
             if(!selected_items.includes(item_name)) {
-                selected_items.push(jQuery(this).val());            
+                selected_items.push(jQuery(this).val());
             }
         });
         if (selected_items.length == 0){
@@ -121,6 +111,7 @@ jQuery(document).ready( function() {
             itemForm(selected_items);
             requestForm(order_properties_dialog);
             jQuery('#request_form_dialog').modal('show');
+            selected_items.length = 0;
         }
     });
 
@@ -174,7 +165,10 @@ jQuery(document).ready( function() {
 function itemForm (selected_items) {
     var html = '<div class="well well-lg"><table class="table table-bordered" style="width: 70%;" id="item_info_table"><thead><tr><th>Accession Name</th><th>Quantity</th></tr></thead><tbody>';
     for(var i=0; i<selected_items.length; i++){
-        html = html + '<tr><td>' + selected_items[i] + '</td><td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="" placeholder=""/></td></tr>';
+        item = selected_items[i];
+        html = html + '<tr><td>' + selected_items[i] + '</td>';
+        html +=  '<td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="" placeholder=""/></td>';
+        html += '</tr>';
     };
     html = html + '</tbody></table></div>';
 
