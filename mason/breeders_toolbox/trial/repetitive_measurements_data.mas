@@ -5,6 +5,7 @@ $trial_stock_type => undef
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'] &>
 
+<script src="https://unpkg.com/d3-regression@1.3.10/dist/d3-regression.min.js"></script>
 <script>
 
 const regression = d3.regressionLinear()
