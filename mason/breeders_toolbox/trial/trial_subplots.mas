@@ -185,7 +185,7 @@ jQuery(document).ready(function () {
     }); 
 
     jQuery('#subplot_select_delete_subplots').click(function() {
-        if (confirm("Are you sure you want to delete the selected subplots?")) {
+        if (confirm("Are you sure you want to delete the selected subplots? Any child stocks, such as plants or tissue samples, will also be deleted. This action cannot be undone.")) {
             let subplot_ids = jQuery('.exp_design_subplot_select:checkbox:checked')
                 .map(function() {
                     return this.id.replace('select_subplot_', '');
@@ -199,14 +199,20 @@ jQuery(document).ready(function () {
                 data : {
                     subplots_list : subplot_ids
                 },
+                beforeSend : function() {
+                    jQuery('#working_modal').modal("show");
+                },
                 success : function(response) {
+                    jQuery('#working_modal').modal("hide");
                     if (response.error) {
                         alert("Error: " + response.error);
                     } else {
-                        alert("Found the function successfully!" + response.data);
+                        alert("Subplots deleted.");
+                        window.location.reload();
                     }
                 },
                 error : function(response) {
+                    jQuery('#working_modal').modal("hide");
                     alert("A server error occurred, check console.");
                 }
             });

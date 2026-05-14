@@ -3574,9 +3574,9 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     };
     if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $use_tissue_numbers, $user_id, $user_name, $phenotype_store_config)) {
 
-#        my $dbh = $c->dbc->dbh();
-#        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-#        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
         $c->stash->{rest} = {success => 1};
         $c->detach;;
@@ -5736,13 +5736,57 @@ sub delete_trial_plants_POST : Args(0) {
     my $c = shift;
     my $trial_id = $c->stash->{trial_id};
     my $plants_liststr = $c->req->param('plants_list');
+    my @delete_plants = split("\t", $plants_liststr);
 
     if (!$c->user() || !$c->user->check_roles("curator")) {
         $c->stash->{rest} = {error => "Only curators can delete plants." };
         return;
     }
 
-    $c->stash->{rest} = {success => 1, data => $plants_liststr};
+    my $trial = $c->stash->{trial};
+
+    my @trial_plants = @{$trial->get_plants()};
+    my %trial_plants_map = map {$_->[1] => $_->[0]} @trial_plants;
+
+    my @delete_stock_ids = ();
+    
+    my @mismatch_plants = ();
+    foreach my $plant (@delete_plants) {
+        if (!defined($trial_plants_map{$plant})) {
+            push @mismatch_plants, $plant;
+        } else {
+            push @delete_stock_ids, $trial_plants_map{$plant};
+            my $plant_obj = CXGN::Stock->new({
+                schema => $c->dbic_schema("Bio::Chado::Schema"),
+                stock_id => $trial_plants_map{$plant}
+            });
+            my @child_stocks = @{$plant_obj->get_child_stocks_flat_list()};
+            foreach my $child (@child_stocks) {
+                push @delete_stock_ids, $child->{stock_id};
+            }
+        }
+    }
+
+    if (scalar(@mismatch_plants) > 0) {
+        $c->stash->{rest} = {error => "The following plants are not found in this trial: ".join(", ", @mismatch_plants)};
+        return;
+    }
+
+    try {
+        CXGN::Stock->bulk_hard_delete($c->dbic_schema("Bio::Chado::Schema"), \@delete_stock_ids);
+    } catch {
+        $c->stash->{rest} = {error => "An error occurred deleting stocks: $_"};
+        return;
+    };
+
+    my $fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        trial_id => $trial_id
+    });
+    $fieldmap->_regenerate_trial_layout_cache();
+
+    $c->stash->{rest} = {success => 1};
+    return;
 }
 
 sub delete_trial_subplots : Chained('trial') PathPart('delete_subplots') : ActionClass('REST') {}
@@ -5752,13 +5796,58 @@ sub delete_trial_subplots_POST : Args(0) {
     my $c = shift;
     my $trial_id = $c->stash->{trial_id};
     my $subplots_liststr = $c->req->param('subplots_list');
+    my @delete_subplots = split("\t", $subplots_liststr);
 
     if (!$c->user() || !$c->user->check_roles("curator")) {
         $c->stash->{rest} = {error => "Only curators can delete subplots." };
         return;
     }
 
-    $c->stash->{rest} = {success => 1, data => $subplots_liststr};
+    my $trial = $c->stash->{trial};
+
+    my @trial_subplots = @{$trial->get_subplots()};
+    my %trial_subplots_map = map {$_->[1] => $_->[0]} @trial_subplots;
+
+    my @delete_stock_ids = ();
+    
+    my @mismatch_subplots = ();
+    foreach my $subplot (@delete_subplots) {
+        if (!defined($trial_subplots_map{$subplot})) {
+            push @mismatch_subplots, $subplot;
+        } else {
+            push @delete_stock_ids, $trial_subplots_map{$subplot};
+            my $subplot_obj = CXGN::Stock->new({
+                schema => $c->dbic_schema("Bio::Chado::Schema"),
+                stock_id => $trial_subplots_map{$subplot}
+            });
+            my @child_stocks = @{$subplot_obj->get_child_stocks_flat_list()};
+            foreach my $child (@child_stocks) {
+                push @delete_stock_ids, $child->{stock_id};
+            }
+        }
+    }
+
+    if (scalar(@mismatch_subplots) > 0) {
+        $c->stash->{rest} = {error => "The following subplots are not found in this trial: ".join(", ", @mismatch_subplots)};
+        return;
+    }
+
+    try {
+        CXGN::Stock->bulk_hard_delete($c->dbic_schema("Bio::Chado::Schema"), \@delete_stock_ids);
+    } catch {
+        $c->stash->{rest} = {error => "An error occurred deleting stocks: $_"};
+        return;
+    };
+
+    my $fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        trial_id => $trial_id
+    });
+    $fieldmap->_regenerate_trial_layout_cache();
+
+
+    $c->stash->{rest} = {success => 1};
+    return;
 }
 
 sub update_trial_status : Chained('trial') PathPart('update_trial_status') : ActionClass('REST'){ }
