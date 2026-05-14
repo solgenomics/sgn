@@ -526,6 +526,7 @@ jQuery(document).ready(function () {
                           .fadeOut(8400);
 
                         jQuery(`${canvas} .multi-spinner-container`).hide();
+                        jQuery(runKinshipBtnId).show();
                       });
                   },
                 },
@@ -546,6 +547,7 @@ jQuery(document).ready(function () {
         .fail(function () {
           jQuery(kinshipMsgDiv).html("Error occured running the kinship.").show().fadeOut(8400);
           jQuery(`${canvas} .multi-spinner-container`).hide();
+          jQuery(runKinshipBtnId).show();
         });
     }
   });
