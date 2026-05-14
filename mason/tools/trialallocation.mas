@@ -1,0 +1,405 @@
+<%doc>
+
+=head1 NAME
+
+/breeders_toolbox/trial.mas - Trial allocation page (hot-fix v13, Apr-15-2025)
+
+=head1 AUTHOR
+
+Chris Simoes - ccs263@cornell.edu
+
+=cut
+
+</%doc>
+
+<%args>
+
+</%args>
+<%init>
+my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
+</%init>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script>
+  window.trialAllocationIsCurator = <% $is_curator ? 'true' : 'false' %>;
+</script>
+
+<& /util/import_javascript.mas, classes => ['jquery', 'jszip-min', 'CXGN.BreedersToolbox.HTMLSelect'], entries => ['trialallocation' ] &>
+<& /page/page_title.mas, title=>"Trial Allocation" &>
+
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+  #pagetitle {
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+
+  #pagetitle > h3 {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding: 0;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+
+  :root {
+    --cell: 40px;
+    --gap: 2px;
+  }
+  #farm-scroll {
+    overflow: auto;
+    max-height: 70vh;
+    position: relative;
+  }
+
+  #farm-grid {
+    display: grid;
+    gap: var(--gap);
+    position: relative;
+  }
+
+  .grid-cell {
+    width: var(--cell);
+    height: var(--cell);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    box-sizing: border-box;
+    user-select: none;
+  }
+
+  .header-cell {
+    background: #f3f3f3;
+    font-weight: 700;
+    color: #555;
+    position: sticky;
+    z-index: 30;
+  }
+
+  .col-header {
+    top: 0;
+  }
+
+  .row-header {
+    left: 0;
+  }
+
+  .corner {
+    top: 0;
+    left: 0;
+    z-index: 31;
+  }
+
+  .trial-group {
+    position: absolute;
+    display: grid;
+    gap: var(--gap);
+    cursor: move;
+    z-index: 20;
+    border: 1px solid transparent;
+  }
+
+  .trial-box {
+    width: var(--cell);
+    height: var(--cell);
+    border: 1px solid #333;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: move;
+    line-height: 1;
+    white-space: pre-line;
+  }
+
+  .trial-group.selected-trial {
+    outline: 3px solid #111827;
+    outline-offset: 2px;
+    z-index: 35;
+  }
+
+  .trial-box.filler-box {
+    background: #fef3c7;
+    border: 2px solid #92400e;
+    color: #78350f;
+    cursor: pointer;
+    z-index: 18;
+  }
+
+  .trial-box.filler-applied {
+    background: #fef3c7 !important;
+    border: 2px solid #92400e;
+    color: #78350f !important;
+  }
+
+  .plot-hover-tooltip {
+    position: fixed;
+    z-index: 10000;
+    max-width: 18rem;
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.375rem;
+    background: #111827;
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    pointer-events: none;
+    white-space: normal;
+  }
+
+  .plot-hover-tooltip .tooltip-label {
+    color: #d1d5db;
+  }
+
+  .remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: #e3342f;
+    color: #fff;
+    font-size: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 25;
+  }
+
+</style>
+
+<div class="bg-white text-gray-800 font-sans p-8 space-y-12">
+
+  <&| /page/info_section.mas, id=>"trial_summary_section", title=>"1 - Trial allocation summary", collapsible=>1, collapsed=>1 &>
+    <h2 class="text-2xl font-bold mb-4">Field Layout Workflow</h2>
+    <ol class="list-decimal pl-6 space-y-2 text-gray-700">
+      <li>Select the breeding program, location, year, season, field size, and plot dimensions.</li>
+      <li>Define the trials to allocate: create new trial designs in Trial Settings or add an existing experimental trial for the selected location and year.</li>
+      <li>Build the grid, then mark unused rows or columns before placing trials so plots are not allocated in unavailable field space.</li>
+      <li>Drag each trial box from the Trials panel into the field grid. Use the direction and rotate controls beside each trial to adjust plot order before placement.</li>
+      <li>Click a placed trial to select it, then use the cursor keys to move it. Use Shift + cursor key to move five plots at a time.</li>
+      <li>Use the grid tools to place borders, define border accessions, and review plot details by moving the cursor over each plot.</li>
+      <li>Save the layout view to store the complete multi-trial arrangement for the selected location, year, and season.</li>
+      <li>Use Save Layout Trials in Database to create new trials or update coordinates for included existing trials.</li>
+      <li>Open Planting Tool, define planter settings such as rows per plot, plants per plot, spacing, and planting direction, then download the planting map Excel file or generate layout graphics.</li>
+    </ol>
+  </&>
+
+  <&| /page/info_section.mas, id=>"farm_settings_section", title=>"2 - Location settings", collapsible=>1, collapsed=>0 &>
+    <div class="space-y-4">
+      <div class="grid grid-cols-4 gap-4">
+        <label>Breeding Program
+          <select id="breeding_program_dropdown" class="w-full border rounded px-2 py-1">
+            <option value="">Select Breeding Program</option>
+          </select>
+        </label>
+        <label>Location
+          <select id="farm_dropdown" class="w-full border rounded px-2 py-1">
+            <option value="">Select Location</option>
+          </select>
+        </label>
+        <label>Year
+          <input type="number" id="layout-year" min="1961" max="2099" step="1" inputmode="numeric" class="w-full border rounded px-2 py-1" />
+        </label>
+        <label>Season
+          <select id="layout-season" class="w-full border rounded px-2 py-1">
+            <option value="">Select Season</option>
+          </select>
+        </label>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <label>Total Rows
+          <input type="number" id="farm-rows" class="w-full border rounded px-2 py-1" />
+        </label>
+        <label>Total Columns
+          <input type="number" id="farm-cols" class="w-full border rounded px-2 py-1"/>
+        </label>
+      </div>
+    </div>
+  </&>
+
+
+  <&| /page/info_section.mas, id=>"trial_settings_section", title=>"3 - Trial Settings", collapsible=>1, collapsed=>0 &>
+    <div class="mb-6 flex items-center gap-3">
+      <input type="hidden" id="num-trials" value="0" />
+      <button type="button" id="add-trial-btn" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-semibold">
+        Add Trial
+      </button>
+      <span id="trial-count-label" class="text-sm text-gray-600">No trials added yet.</span>
+    </div>
+    <div id="trial-details" class="mb-6"></div>
+  </&>
+
+  <&| /page/info_section.mas, id=>"existing_project_section", title=>"4 - Include Existing Project", collapsible=>1, collapsed=>0 &>
+    <div class="grid grid-cols-3 gap-4 items-end">
+      <label class="col-span-2">Existing experimental trial for this location/year
+        <select id="existing-trial-select" class="w-full border rounded px-2 py-1">
+          <option value="">Select location and year first</option>
+        </select>
+      </label>
+      <button type="button" id="add-existing-trial-btn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        Add Existing Trial
+      </button>
+    </div>
+  </&>
+
+  <&| /page/info_section.mas, id=>"layout_section", title=>"5 - Layout", collapsible=>1, collapsed=>0 &>
+    <label class="inline-flex items-center mb-4 space-x-2">
+      <input type="checkbox" id="edit-toggle" />
+      <span class="font-semibold ml-1">Edit unused plots</span>
+    </label>
+
+    <label class="inline-flex items-center mb-4 space-x-2 ml-4">
+      <input type="checkbox" id="border-toggle" />
+      <span class="font-semibold ml-1">Place Borders</span>
+    </label>
+
+    <label class="inline-flex items-center mb-4 ml-4">
+      <span class="font-semibold mr-2">Border accession</span>
+      <select id="border-accession" class="border rounded px-2 py-1" style="width: 16rem;">
+        <option value=""></option>
+      </select>
+    </label>
+
+    <div id="layout-hint" class="text-sm text-gray-600 mb-4">
+      Click a placed trial to select it, then use arrow keys to move it. Use Shift + arrow to move five plots.
+    </div>
+
+    <div class="mb-6">
+      <label class="block mb-2">Unused Rows (comma-separated)
+        <input id="unused-rows" class="w-full border rounded px-2 py-1" />
+      </label>
+      <label class="block">Unused Columns (comma-separated)
+        <input id="unused-cols" class="w-full border rounded px-2 py-1" />
+      </label>
+    </div>
+
+    <div id="removal-loader" class="grid-loader hidden">
+      <svg class="animate-spin h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span>Removing trial from layout...</span>
+    </div>
+
+
+    <div id="grid-loader" class="grid-loader hidden" style="pointer-events:none;">
+      <svg class="animate-spin h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span>Building grid...</span>
+    </div>
+
+    <div class="flex gap-8">
+      <div class="w-1/4">
+        <h3 class="font-semibold mb-2">Trials</h3>
+        <div id="trial-boxes" class="space-y-4"></div>
+        <button id="save-trials-db-btn" class="mt-4 w-full bg-indigo-700 text-white px-5 py-4 rounded hover:bg-indigo-800 text-base font-bold">Save Layout Trials in Database</button>
+      </div>
+
+      <div class="border p-4 rounded w-3/4 bg-green-50 relative">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h3 class="font-semibold">Location Field Grid</h3>
+          <div class="flex flex-wrap gap-2">
+            <button id="save-layout-btn" class="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm">Save Layout</button>
+            <button id="delete-layout-btn" class="<% $is_curator ? '' : 'hidden ' %>bg-red-700 text-white px-3 py-1 rounded hover:bg-red-800 text-sm">Delete View</button>
+            <button id="export-full-jpg-btn" class="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 text-sm">Export FULL Grid</button>
+            <button id="export-jpg-btn" class="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">Export View as JPG</button>
+          </div>
+        </div>
+
+        <div id="farm-scroll">
+          <div id="field-zoom-container" class="relative">
+            <div id="farm-grid"></div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label for="zoom-slider" class="block font-semibold mb-1">Zoom Field Grid</label>
+          <input type="range" id="zoom-slider" min="0.5" max="2" step="0.1" value="1" class="w-1/2" />
+        </div>
+      </div>
+    </div>
+  </&>
+
+  <&| /page/info_section.mas, id=>"planting_map_section", title=>"6 - Planting Tool", collapsible=>1, collapsed=>0 &>
+    <div class="grid grid-cols-3 gap-4">
+      <label>Rows per plot
+        <input id="planting-rows-per-plot" type="number" min="1" value="1" class="w-full border rounded px-2 py-1" />
+      </label>
+      <label>Plants per plot
+        <input id="planting-plants-per-plot" type="number" min="1" value="1" class="w-full border rounded px-2 py-1" />
+      </label>
+      <label>Plant spacing
+        <input id="planting-plant-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
+      </label>
+      <label>Row spacing
+        <input id="planting-row-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
+      </label>
+      <label>Alley between plots
+        <input id="planting-alley-spacing" type="number" min="0" step="0.01" class="w-full border rounded px-2 py-1" placeholder="cm" />
+      </label>
+      <label>Planting direction
+        <select id="planting-direction" class="w-full border rounded px-2 py-1">
+          <option value="row_col">Rows, left to right</option>
+          <option value="row_col_reverse">Rows, right to left</option>
+          <option value="serpentine">Serpentine by row</option>
+          <option value="col_row">Columns, top to bottom</option>
+        </select>
+      </label>
+      <label class="col-span-3">Planting notes
+        <input id="planting-notes" type="text" class="w-full border rounded px-2 py-1" placeholder="Optional planter instructions" />
+      </label>
+    </div>
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button id="download-planting-map-btn" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 text-sm font-semibold">Download Planting Map Excel</button>
+      <button id="generate-layout-graphics-btn" class="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 text-sm font-semibold">Generate Graphics</button>
+    </div>
+
+    <div id="layout-graphics-panel" class="hidden mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="border rounded p-4 bg-white">
+        <h3 class="font-semibold mb-3">Area by Trial</h3>
+        <canvas id="trial-area-chart" width="360" height="260" class="w-full max-w-md"></canvas>
+        <div id="trial-area-legend" class="mt-3 text-sm space-y-1"></div>
+      </div>
+      <div class="border rounded p-4 bg-white">
+        <h3 class="font-semibold mb-3">Field Area Usage</h3>
+        <canvas id="field-usage-chart" width="360" height="260" class="w-full max-w-md"></canvas>
+        <div id="field-usage-legend" class="mt-3 text-sm space-y-1"></div>
+      </div>
+    </div>
+  </&>
+
+</div>
+
+<!-- Styles for hover, borders, loader -->
+<style>
+#field-zoom-container{transform-origin:top left;transition:transform 0.2s ease-in-out;}
+#farm-grid.edit-mode .grid-cell{cursor:crosshair;}
+.grid-cell.hover-preview{outline:2px dashed #3b82f6;background-color:rgba(59,130,246,0.1);}
+.border-plot{background-color:#d1fae5 !important;font-weight:bold;color:#065f46;}
+.filler-plot{background-color:#fef3c7 !important;font-weight:bold;color:#78350f;}
+.locked-trial{cursor:not-allowed;outline:2px solid #4b5563;}
+#grid-loader{display:flex;align-items:center;gap:0.5rem;background:white;padding:0.5rem 1rem;border:1px solid #ccc;border-radius:0.375rem;font-size: 2.00rem;color:#065f46;box-shadow:0 0 4px rgba(0,0,0,0.1);margin-bottom:1rem;pointer-events:none;}
+#grid-loader.hidden{display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.animate-spin{animation:spin 1s linear infinite;}
+</style>
+
+
+<script>
+// (JavaScript identical to v12; retained for brevity)
+$(document).ready( function() {
+  var trialallocation = window.jsMod['trialallocation'].init("trialallocation");
+});
+</script>
