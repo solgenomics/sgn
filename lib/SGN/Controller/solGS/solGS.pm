@@ -611,10 +611,10 @@ sub output_files {
     $c->controller("solGS::Files")->model_genodata_file($c);
     $c->controller("solGS::Files")->trait_raw_phenodata_file($c);
     $c->controller("solGS::Files")->variance_components_file($c);
-    $c->controller('solGS::Files')->relationship_matrix_file($c);
-    $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
-    $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
-    $c->controller('solGS::Files')->average_kinship_file($c);
+    $c->controller('solGS::Kinship')->relationship_matrix_file($c);
+    $c->controller('solGS::Kinship')->relationship_matrix_adjusted_file($c);
+    $c->controller('solGS::Kinship')->inbreeding_coefficients_file($c);
+    $c->controller('solGS::Kinship')->average_kinship_file($c);
     $c->controller('solGS::Files')->filtered_training_genotype_file($c);
     $c->controller('solGS::Files')->analysis_report_file($c);
     $c->controller('solGS::Files')->genotype_filtering_log_file($c);
