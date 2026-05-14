@@ -37,7 +37,7 @@ sub run_kinship_analysis : Path('/run/kinship/analysis') Args() {
     $self->stash_kinship_pop_id( $c, $pop_id );
     my $kinship_pop_id = $c->stash->{kinship_pop_id};
 
-    my $file_id = $c->controller('solGS::Files')->kinship_file_id($c);
+    my $file_id = $self->kinship_file_id($c);
     $c->stash->{file_id} = $file_id;
 
     my $trait_id = $c->stash->{trait_id};
@@ -91,8 +91,8 @@ sub structure_kinship_response {
     my $protocol_id    = $c->stash->{genotyping_protocol_id};
     my $trait_id = $c->stash->{trait_id};
 
-    my $file_id = $c->controller('solGS::Files')->kinship_file_id($c);
-    $c->stash->{file_id} = $file_id;
+    my $file_id = $self->kinship_file_id($c);
+    # $c->stash->{file_id} = $file_id;
 
     my $kinship_files =
       $self->get_kinship_coef_files( $c, $kinship_pop_id, $protocol_id,
@@ -157,11 +157,11 @@ sub get_kinship_coef_files {
         $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
     }
 
-    $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
+    $self->relationship_matrix_adjusted_file($c);
     my $json_file_adj   = $c->stash->{relationship_matrix_adjusted_json_file};
     my $matrix_file_adj = $c->stash->{relationship_matrix_adjusted_table_file};
 
-    $c->controller('solGS::Files')->relationship_matrix_file($c);
+    $self->relationship_matrix_file($c);
     my $matrix_file_raw = $c->stash->{relationship_matrix_table_file};
     my $json_file_raw   = $c->stash->{relationship_matrix_json_file};
 
@@ -182,10 +182,10 @@ sub kinship_output_files {
     my $data_str    = $c->stash->{data_structure};
 
     $c->stash->{pop_id} = $pop_id;
-    $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
+    $self->inbreeding_coefficients_file($c);
     my $inbreeding_file = $c->stash->{inbreeding_coefficients_file};
 
-    $c->controller('solGS::Files')->average_kinship_file($c);
+    $self->average_kinship_file($c);
     my $ave_kinship_file = $c->stash->{average_kinship_file};
 
     my $coef_files = $self->get_kinship_coef_files( $c, $pop_id, $protocol_id );
@@ -195,7 +195,7 @@ sub kinship_output_files {
         $coef_files->{json_file_adj}, $coef_files->{matrix_file_adj},
         $inbreeding_file,             $ave_kinship_file );
 
-    my $tmp_dir = $c->stash->{kinship_temp_dir};
+    my $tmp_dir = $self->kinship_temp_dir($c);
     my $name    = "kinship_output_files_${pop_id}";
     my $tempfile =
       $c->controller('solGS::Files')->create_tempfile( $tmp_dir, $name );
@@ -220,7 +220,7 @@ sub kinship_input_files {
       || $c->stash->{genotype_file}
       || $c->stash->{genotype_file_name};
 
-    my $tmp_dir = $c->stash->{kinship_temp_dir};
+    my $tmp_dir = $self->kinship_temp_dir($c);
     my $name    = "kinship_input_files_${pop_id}";
     my $tempfile =
       $c->controller('solGS::Files')->create_tempfile( $tmp_dir, $name );
@@ -249,7 +249,7 @@ sub kinship_r_jobs_file {
     $self->kinship_r_jobs($c);
     my $jobs = $c->stash->{kinship_r_jobs};
 
-    my $temp_dir  = $c->stash->{kinship_temp_dir};
+    my $temp_dir  = $self->kinship_temp_dir($c);
     my $jobs_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'kinship-r-jobs-file' );
 
@@ -271,7 +271,7 @@ sub kinship_r_jobs {
     $self->kinship_input_files($c);
     my $input_file = $c->stash->{kinship_input_files};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{kinship_temp_dir};
+    $c->stash->{analysis_tempfiles_dir} = $self->kinship_temp_dir($c);
 
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
@@ -295,7 +295,7 @@ sub kinship_query_jobs_file {
     $self->kinship_query_jobs($c);
     my $jobs = $c->stash->{kinship_query_jobs};
 
-    my $temp_dir  = $c->stash->{kinship_temp_dir};
+    my $temp_dir  = $self->kinship_temp_dir($c);
     my $jobs_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'kinship-query-jobs-file' );
 
@@ -331,13 +331,13 @@ sub prep_download_kinship_files {
 
     mkpath( [$base_tmp_dir], 0, '0o755' );
 
-    $c->controller('solGS::Files')->relationship_matrix_adjusted_file($c);
+    $self->relationship_matrix_adjusted_file($c);
     my $kinship_txt_file = $c->stash->{relationship_matrix_adjusted_table_file};
 
-    $c->controller('solGS::Files')->inbreeding_coefficients_file($c);
+    $self->inbreeding_coefficients_file($c);
     my $inbreeding_file = $c->stash->{inbreeding_coefficients_file};
 
-    $c->controller('solGS::Files')->average_kinship_file($c);
+    $self->average_kinship_file($c);
     my $ave_kinship_file = $c->stash->{average_kinship_file};
 
     $c->controller('solGS::Files')
@@ -361,6 +361,140 @@ sub prep_download_kinship_files {
     $c->stash->{download_inbreeding}       = $inbreeding_file;
 
 }
+
+
+sub relationship_matrix_file {
+    my ($self, $c) = @_;
+
+    my $file_id = $self->kinship_file_id($c);
+    my $cache_dir = $self->kinship_cache_dir($c);
+
+    no warnings 'uninitialized';
+
+    my $cache_data = {
+        key    => 'relationship_matrix_table_' . $file_id ,
+		file   => 'relationship_matrix_table_' . $file_id,
+		stash_key => 'relationship_matrix_table_file',
+		cache_dir => $cache_dir,
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+   $cache_data = {
+       key    => 'relationship_matrix_json_' . $file_id ,
+       file   => 'relationship_matrix_json_' . $file_id,
+       stash_key => 'relationship_matrix_json_file',
+       cache_dir => $cache_dir,
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub relationship_matrix_adjusted_file {
+    my ($self, $c) = @_;
+
+    my $file_id = $self->kinship_file_id($c);
+    my $cache_dir = $self->kinship_cache_dir($c);
+
+    my $cache_data = {
+        key    => 'relationship_matrix_adjusted_table_' . $file_id ,
+        file      => 'relationship_matrix_adjusted_table_' . $file_id,
+        stash_key => 'relationship_matrix_adjusted_table_file',
+        cache_dir => $cache_dir,
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+    $cache_data = {
+        key    => 'relationship_matrix_adjusted_json_' . $file_id ,
+        file      => 'relationship_matrix_adjusted_json_' . $file_id,
+        stash_key => 'relationship_matrix_adjusted_json_file',
+        cache_dir => $cache_dir,
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+sub kinship_file_id {
+    my ($self, $c) = @_;
+
+    my $pop_id = $c->stash->{kinship_pop_id} || $c->stash->{training_pop_id};
+    my $protocol_id = $c->stash->{genotyping_protocol_id};
+    my $trait_abbr = $c->stash->{trait_abbr};
+
+    my $file_id =  $trait_abbr ? 
+        "${pop_id}_${trait_abbr}_GP_${protocol_id}" : 
+        "${pop_id}_GP_${protocol_id}";
+
+    return $file_id;
+}
+
+sub average_kinship_file {
+    my ($self, $c) = @_;
+
+    my $file_id = $self->kinship_file_id($c);
+    my $cache_dir = $self->kinship_cache_dir($c);
+    
+    my $cache_data = {
+        key    => 'average_kinship_file' . $file_id ,
+        file      => 'average_kinship_file_' . $file_id,
+        stash_key => 'average_kinship_file',
+        cache_dir => $cache_dir,
+    };
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub inbreeding_coefficients_file {
+    my ($self, $c) = @_;
+
+    my $file_id = $self->kinship_file_id($c);
+
+    my $cache_dir = $self->kinship_cache_dir($c);
+    no warnings 'uninitialized';
+
+    my $cache_data = {
+        key    => 'inbreeding_coefficients' . $file_id ,
+        file      => 'inbreeding_coefficients_' . $file_id,
+        stash_key => 'inbreeding_coefficients_file',
+        cache_dir => $cache_dir,
+    };
+
+
+    $c->controller('solGS::Files')->cache_file($c, $cache_data);
+
+}
+
+
+sub kinship_cache_dir {
+    my ( $self, $c ) = @_;
+
+    my $kinship_analysis_id = $c->stash->{kinship_pop_id} || $c->stash->{trial_id};
+    my $cache_dir = catdir( $c->stash->{kinship_dir}, $kinship_analysis_id);
+    mkpath( $cache_dir, 0, 755 );
+
+    return $cache_dir;
+}
+
+sub kinship_temp_dir {
+    my ($self, $c) = @_;
+
+    my $kinship_analysis_id = $c->stash->{kinship_pop_id} || $c->stash->{trial_id};
+    my $kinship_temp_dir = catdir($c->stash->{kinship_dir}, $kinship_analysis_id, 'tempfiles');
+    mkpath($kinship_temp_dir, 0, 755);
+
+    $c->stash->{kinship_temp_dir} = $kinship_temp_dir;
+
+    return $kinship_temp_dir;
+}
+
+
+
 
 sub begin : Private {
     my ( $self, $c ) = @_;
