@@ -353,8 +353,9 @@ sub nirs_instances {
 				while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
 					my $props = decode_json $props_json;
 					my $header_col_names = $props->{header_column_names};
+					my @column_headers = map { { frequency => $_ + 0 } } @{$header_col_names};
 					push @data, {
-						columnHeaders => $header_col_names,
+						columnHeaders => \@column_headers,
 						deviceSerialNumber => $device_serial_num,
 						instanceDbId => $instance_id,
 						protocolDbId => $protocol_id,
@@ -369,8 +370,9 @@ sub nirs_instances {
 			while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
 				my $props = decode_json $props_json;
 				my $header_col_names = $props->{header_column_names};
+				my @column_headers = map { { frequency => $_ + 0 } } @{$header_col_names};
 				push @data, {
-					columnHeaders => $header_col_names,
+					columnHeaders => \@column_headers,
 					deviceSerialNumber => $device_serial_num,
 					instanceDbId => $instance_id,
 					protocolDbId => $protocol_id,
@@ -386,8 +388,10 @@ sub nirs_instances {
 			while (my ($instance_id, $protocol_id, $create_date, $props_json) = $h->fetchrow_array) {
 				my $props = decode_json $props_json;
 				my $header_col_names = $props->{header_column_names};
+				my @column_headers = map { { frequency => $_ + 0 } } @{$header_col_names};
+				print STDERR "column headers: " . Dumper @column_headers;
 				push @data, {
-					columnHeaders => $header_col_names,
+					columnHeaders => \@column_headers,
 					deviceSerialNumber => $device_serial_num,
 					instanceDbId => $instance_id,
 					protocolDbId => $protocol_id,
