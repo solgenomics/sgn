@@ -212,7 +212,7 @@ sub get_order_details {
     my $item_hash = JSON::Any->jsonToObj($item_json);
     my $all_items = $item_hash->{'clone_list'};
     my $formatted_clone_list = _format_clone_list($all_items, $clone_list_format_type, $properties);
-    push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments, $order_to_id, $formatted_clone_list;
+    push @order_details, $order_id, $order_from_name, $create_date, $all_items, $order_to_name, $order_status, $comments, $order_to_id, $formatted_clone_list, $order_from_id;
 
     return \@order_details;
 

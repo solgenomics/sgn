@@ -616,15 +616,16 @@ sub update_order_POST : Args(0) {
 
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
+    my $order_result = $order_obj->get_order_details();
+    my $vendor_id = $order_result->[7];
+    my $order_from_id = $order_result->[9];
 
     if ($new_status eq 're-opened') {
         my $re_open_by_person= CXGN::People::Person->new($dbh, $user_id);
         my $re_open_name = $re_open_by_person->get_first_name()." ".$re_open_by_person->get_last_name();
         $new_status = 're-opened by'." ".$re_open_name;
 
-        my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
-        my $order_result = $order_obj->get_order_details();
-        my $vendor_id = $order_result->[7];
         if ($user_id != $vendor_id) {
             my $contact_person = CXGN::People::Person -> new($dbh, $vendor_id);
             my $contact_email = $contact_person->get_contact_email();
@@ -682,6 +683,25 @@ END_HEREDOC
         $c->stash->{rest} = {error_string => "Error updating the order",};
         return;
     }
+
+    my $requester_person = CXGN::People::Person -> new($dbh, $order_from_id);
+    my $requester_email = $requester_person->get_contact_email();
+    print STDERR "REQUESTER EMAIL =".Dumper($requester_email)."\n";
+
+    my $host = $c->config->{main_production_site_url};
+    my $project_name = $c->config->{project_name};
+    my $subject="Ordering Notification from $project_name";
+    my $body=<<END_HEREDOC;
+
+You have an order update submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    CXGN::Contact::send_email($subject,$body,$requester_email);
 
     $c->stash->{rest} = {success => "1",};
 
@@ -841,13 +861,30 @@ sub request_form_submission_POST : Args(0) {
         return;
     }
 
-    my $contact_person = CXGN::People::Person -> new($dbh, $vendor_id);
-    my $contact_email = $contact_person->get_contact_email();
+    my $vendor_person = CXGN::People::Person -> new($dbh, $vendor_id);
+    my $vendor_email = $vendor_person->get_contact_email();
+    print STDERR "VENDOR EMAIL =".Dumper($vendor_email)."\n";
+
+    my $requester_person = CXGN::People::Person -> new($dbh, $user_id);
+    my $requester_email = $requester_person->get_contact_email();
+    print STDERR "REQUESTER EMAIL =".Dumper($requester_email)."\n";
 
     my $host = $c->config->{main_production_site_url};
     my $project_name = $c->config->{project_name};
     my $subject="Ordering Notification from $project_name";
-    my $body=<<END_HEREDOC;
+    my $body1=<<END_HEREDOC;
+
+You order was submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    CXGN::Contact::send_email($subject,$body1,$requester_email);
+
+    my $body2=<<END_HEREDOC;
 
 You have an order submitted to $project_name ($host/order/stocks/view).
 Please do *NOT* reply to this message.
@@ -857,7 +894,7 @@ $project_name Team
 
 END_HEREDOC
 
-    CXGN::Contact::send_email($subject,$body,$contact_email);
+    CXGN::Contact::send_email($subject,$body2,$vendor_email);
 
     $c->stash->{rest}->{success} .= 'Your request has been submitted successfully and the vendor has been notified.';
 
