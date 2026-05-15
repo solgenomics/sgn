@@ -73,6 +73,7 @@ use File::Path qw( make_path );
 use JSON::Any;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
+use Try::Tiny;
 
 =head1 ACCESSORS
 
@@ -295,8 +296,7 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        my $logfile = $job_args->{finish_logfile};
-        $self->finish_logfile($logfile);
+        $self->finish_logfile($args->{finish_logfile});
     }
 }
 
@@ -380,6 +380,7 @@ sub read_finish_timestamp {
         @rows = read_file( $logfile, { binmode => ':utf8' } );
     }; 
     if ($@) {
+        print STDERR "Error reading logfile: $@\n";
         return "";
     }  
 
@@ -759,7 +760,7 @@ sub get_user_submitted_jobs {
     return \@user_jobs;
 }
 
-=head2 delete_dead_jobs(bcs_schema, people_schema, user_id)
+=head2 delete_dead_jobs(bcs_schema, people_schema, user_id, is_curator)
 
 Deletes dead jobs (failed or timed out) belonging to a user_id
 
@@ -770,33 +771,52 @@ sub delete_dead_jobs {
     my $bcs_schema = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $is_curator = shift;
 
     if (!$sp_person_id) {
         die "Need to supply a user id.\n";
     } 
 
-    eval {
-        my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
-        while(my $row = $rs->next()) {
-            push @job_ids, $row->sp_job_id();
-        }
-        foreach my $job_id (@job_ids){
-            my $job = $class->new({
-                people_schema => $people_schema,
-                schema => $bcs_schema,
-                sp_job_id => $job_id
-            });
-            $job->delete();
-        }
-    };
-
-    if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+    if ($is_curator) {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( {status => { in => ['failed', 'timed_out'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
+    } else {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
     }
 } 
 
-=head2 delete_jobs_older_than(bcs_schema, people_schema, user_id, time_limit)
+=head2 delete_jobs_older_than(bcs_schema, people_schema, user_id, time_limit, is_curator)
 
 Deletes jobs belonging to user_id older than the given time string.
 
@@ -808,6 +828,7 @@ sub delete_jobs_older_than {
     my $people_schema = shift;
     my $sp_person_id = shift;
     my $time_limit = shift;
+    my $is_curator = shift;
 
     if (!$sp_person_id || !$time_limit) {
         die "Need to supply a user id and a time interval.\n";
@@ -822,38 +843,64 @@ sub delete_jobs_older_than {
 
     $time_limit = $timetable->{$time_limit};
 
-    eval {
-        my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
-        while(my $row = $rs->next()) {
-            my $create_timestamp = $row->create_timestamp();
-            $create_timestamp =~ s/ /T/;
-            my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-            my $now = DateTime->now();
-            my $age = ( $now->epoch - $start_time->epoch ) / 86400;
+    if ($is_curator) {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search();
+            while(my $row = $rs->next()) {
+                my $create_timestamp = $row->create_timestamp();
+                $create_timestamp =~ s/ /T/;
+                my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+                my $now = DateTime->now();
+                my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
-            if ($age > $time_limit) {
-                push @job_ids, $row->sp_job_id();
+                if ($age > $time_limit) {
+                    push @job_ids, $row->sp_job_id();
+                }
             }
-        }
-        foreach my $job_id (@job_ids) {
-            my $job = $class->new({
-                people_schema => $people_schema,
-                schema => $bcs_schema,
-                sp_job_id => $job_id
-            });
-            $job->delete();
-        }
-    };
+            foreach my $job_id (@job_ids) {
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
+    } else {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+            while(my $row = $rs->next()) {
+                my $create_timestamp = $row->create_timestamp();
+                $create_timestamp =~ s/ /T/;
+                my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+                my $now = DateTime->now();
+                my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
-    if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+                if ($age > $time_limit) {
+                    push @job_ids, $row->sp_job_id();
+                }
+            }
+            foreach my $job_id (@job_ids) {
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
     }
 }
 
-=head2 delete_finished_jobs(bcs_schema, people_schema, user_id)
+=head2 delete_finished_jobs(bcs_schema, people_schema, user_id, is_curator)
 
-Deletes finished and canceled jobs for the given user. 
+Deletes finished and canceled jobs for the given user. All finished and canceled jobs if curator.
 
 =cut
 
@@ -862,29 +909,48 @@ sub delete_finished_jobs {
     my $bcs_schema = shift;
     my $people_schema = shift;
     my $sp_person_id = shift;
+    my $is_curator = shift;
 
     if (!$sp_person_id) {
         die "Need to supply a user id.\n";
     } 
 
-    eval {
-        my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
-        while(my $row = $rs->next()) {
-            push @job_ids, $row->sp_job_id();
-        }
-        foreach my $job_id (@job_ids){
-            my $job = $class->new({
-                people_schema => $people_schema,
-                schema => $bcs_schema,
-                sp_job_id => $job_id
-            });
-            $job->delete();
-        }
-    };
-
-    if ($@) {
-        die "Encountered an error trying to delete jobs: $@\n";
+    if ($is_curator) {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { status => { in => ['finished', 'canceled'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
+    } else {
+        try {
+            my @job_ids;
+            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+            while(my $row = $rs->next()) {
+                push @job_ids, $row->sp_job_id();
+            }
+            foreach my $job_id (@job_ids){
+                my $job = $class->new({
+                    people_schema => $people_schema,
+                    schema => $bcs_schema,
+                    sp_job_id => $job_id
+                });
+                $job->delete();
+            }
+        } catch {
+            die "Encountered an error trying to delete jobs: $_\n";
+        } ;
     }
 }
 
