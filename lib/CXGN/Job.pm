@@ -376,13 +376,12 @@ sub read_finish_timestamp {
     }
 
     my @rows;
-    eval {
+    try {
         @rows = read_file( $logfile, { binmode => ':utf8' } );
-    }; 
-    if ($@) {
-        print STDERR "Error reading logfile: $@\n";
+    } catch {
+        print STDERR "Error reading logfile: $_\n";
         return "";
-    }  
+    } ;
 
     my $db_id = $self->sp_job_id();
     my @finish_row = grep {/$db_id\s+/} @rows;
@@ -420,20 +419,20 @@ sub delete {
         die "The specified job does not exist in the database.\n";
     }
 
-    eval {
+    try {
         $row->delete();
-    };
-    if ($@) {
-        die "An error occurred deleting job from database: $@\n";
-    }
+    } catch {
+        die "An error occurred deleting job from database: $_\n";
+    } ;
     my $job_id = $self->sp_job_id();
     my @rows;
-    eval {
+    try {
         @rows = read_file( $logfile, { binmode => ':utf8' } );
-    }; 
-    if ($@) {
+    } catch {
+        print STDERR "Error reading finish logfile: $_\n";
         return "";
-    }  
+    } ;
+
     @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
     write_file($logfile,{binmode => ':utf8'},@rows);
 }
@@ -455,7 +454,7 @@ sub cancel {
 
     my $backend_id = $self->backend_id();
 
-    eval {
+    try {
         system("scancel $backend_id");
 
         $self->status('canceled');
@@ -463,10 +462,9 @@ sub cancel {
         $self->finish_timestamp($formatted_time);
         system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$logfile);
         $self->store();
-    };
-    if ($@){
-        die "Error canceling job: $@\n";
-    }
+    } catch {
+        die "Error canceling job: $_\n";
+    } ;
 }
 
 =head2 submit()
@@ -511,7 +509,7 @@ sub submit {
     # my $cxgn_tools_run_id;
     my $status;
 
-    eval {
+    try {
 
         $job = CXGN::Tools::Run->new($cxgn_tools_run_config);
         print STDERR "Submitting job: \n$cmd\n";
@@ -523,12 +521,10 @@ sub submit {
 
         $backend_id = $job->cluster_job_id();
         $status = 'submitted';
-    };
-
-    if ($@) {
+    } catch {
         $self->update_status('failed');
-        die "An error occured trying to submit a background job.\n$@\n";
-    } 
+        die "An error occured trying to submit a background job.\n$_\n";
+    } ;
 
     $self->backend_id($backend_id);
     $self->update_status($status);
@@ -546,7 +542,7 @@ Stores job data in a new db row.
 
 sub store {
     my $self = shift;
-    eval {
+    try {
         
         if ($self->has_sp_job_id()) {
             my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
@@ -593,11 +589,9 @@ sub store {
             });
             $self->sp_job_id($row->sp_job_id());
         }
-    };
-
-    if ($@) {
-        die "Error storing job in database!$@\n";
-    } 
+    } catch {
+        die "Error storing job in database!$_\n";
+    } ;
     
     return $self->sp_job_id();
 }
