@@ -111,36 +111,6 @@ sub create_vector_construct_POST {
 
     my $data = decode_json( encode("utf8", $c->req->param('data')));
 
-    foreach (@$data){
-        my $vector = $_->{uniqueName} || undef;
-        push @$vector_list, $vector;
-    }
-
-    #validate accessions/vector
-    my $validator = CXGN::List::Validate->new();
-    my @absent_accessions = @{$validator->validate($schema, 'accessions', $vector_list)->{'missing'}};
-    my %accessions_missing_hash = map { $_ => 1 } @absent_accessions;
-    my $existing_vectors = '';
-
-    my $validator2 = CXGN::List::Validate->new();
-    my @absent_vectors = @{$validator2->validate($schema, 'vector_constructs', $vector_list)->{'missing'}};
-    my %vectors_missing_hash = map { $_ => 1 } @absent_vectors;
-
-    foreach (@$vector_list){
-        if (!exists($accessions_missing_hash{$_})){
-            $existing_vectors = $existing_vectors . $_ ."," ;
-        }
-        if (!exists($vectors_missing_hash{$_})){
-            $existing_vectors = $existing_vectors . $_ ."," ;
-        }
-    }
-
-    if (length($existing_vectors) >0){
-        $status = sprintf('Existing vectors or accessions in the database: %s', $existing_vectors);
-        $c->stash->{rest} = {error=>$status};
-        return;
-    }
-
     my $type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
 
     my @added_stocks;
@@ -160,6 +130,7 @@ sub create_vector_construct_POST {
             my $terminators = $params->{Terminators} || undef;
             my $plant_antibiotic_resistant_marker = $params->{PlantAntibioticResistantMarker} || undef;
             my $bacterial_resistant_marker = $params->{BacterialResistantMarker} || undef;
+            my $stock_id = $params->{stock_id} || undef;
 
             my $stock = CXGN::Stock::Vector->new({
                 schema=>$schema,
@@ -170,6 +141,7 @@ sub create_vector_construct_POST {
                 user_name => $user_name,
                 name=>$uniquename,
                 uniquename=>$uniquename,
+                stock_id=>$stock_id,
                 Strain=>$strain,
                 Backbone=>$backbone,
                 CloningOrganism=>$cloning_organism,
@@ -289,7 +261,7 @@ sub verify_vectors_file_POST : Args(0) {
 
     my @editable_vector_props = split ',', $c->config->{editable_vector_props};
     my $parser = CXGN::Stock::Vector::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_vector_props, do_fuzzy_search=>$do_fuzzy_search, autogenerate_uniquename=>$autogenerate_uniquename);
-    $parser->load_plugin('VectorsXLS');
+    $parser->load_plugin('VectorsGeneric');
     my $parsed_data = $parser->parse();
 
     if (!$parsed_data) {
