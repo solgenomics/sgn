@@ -115,13 +115,11 @@ jQuery(document).ready( function() {
     });
 
     jQuery(document).on('click', '.selected_item_remove', function() {
+        jQuery(this).closest('tr').remove();
         var name = jQuery(this).data("selected-item-name");
         var item_index = selected_items.indexOf(name);
         selected_items.splice(item_index,1);
-        if(selected_items.length > 0) {
-            itemForm(selected_items);
-            jQuery('#request_form_dialog').modal('show');
-        } else {
+        if(selected_items.length == 0) {
             jQuery('#request_form_dialog').modal('hide');
         }
     })
@@ -146,12 +144,7 @@ jQuery(document).ready( function() {
 
         for(var i=0; i<selected_items.length; i++){
             let each_quantity = jQuery('#quantity_'+ i +'').val();
-            if (!each_quantity) {
-                alert("Quantity is required");
-                return;
-            } else {
-                item_info[selected_items[i]] = each_quantity;
-            }
+            item_info[selected_items[i]] = each_quantity;
         }
 
         const vendor_id = jQuery('#selected_vendor_id').val();

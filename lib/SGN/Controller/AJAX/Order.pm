@@ -813,6 +813,14 @@ sub request_form_submission_POST : Args(0) {
     my $vendor_id = $c->req->param('vendor_id');
     my %details;
     my @item_list;
+
+    foreach my $item (keys %$item_info) {
+        if (!$item_info->{$item}) {
+            $c->stash->{rest} = {error_string => "Please provide quantity for: $item" };
+            return;
+        }
+    }
+    
     $details{'item_info'} = $item_info;
     $details{'order_details'} = $order_details;
     push @item_list, \%details;
