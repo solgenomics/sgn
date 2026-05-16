@@ -8,7 +8,7 @@ $col2_width_class => "col-sm-11"
 $icon_class => "glyphicon glyphicon-th"
 $info_section_collapsible => 1
 $info_section_collapsed => 1
-$info_section_id => "2col_id"
+$info_section_id => undef
 $info_section_title => "A title"
 $info_section_subtitle => "A subtitle"
 $buttons_html => undef
@@ -192,6 +192,10 @@ $logged_in_name => undef
 
 
 </%args>
+
+<%init>
+my $body_content = $m->content || '';
+</%init>
 
 <& /util/import_javascript.mas,
    classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "d3.d3v4Min" ],
@@ -639,9 +643,6 @@ $logged_in_name => undef
                                 <& /breeders_toolbox/file_share/file_dump_share_files.mas &>
 % } #End manage_file_share_dump
 
-% if ($info_section_id eq 'program_location_section'){
-                                <& /breeders_toolbox/program/program_locations.mas, program_id => $program_id &>
-% } #End program_location_section
 % if ($info_section_id eq 'program_project_section'){
                                 <& /breeders_toolbox/program/program_project_section.mas, program_id => $program_id &>
 % } #End program_project_section
@@ -690,7 +691,11 @@ $logged_in_name => undef
 % } #End propagation_group_ids_in_project_section
 
 % if (!$info_section_id){
+%   if ($body_content =~ /\S/) {
+                                <% $body_content %>
+%   } else {
                                 <p>No section specified! Main content goes here!</p>
+%   }
 % }
 
                             </div>
