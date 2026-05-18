@@ -83,6 +83,7 @@ export function init() {
             for (let plot of this.plot_arr.filter((plot) => plot.type == "filler")) {
                 brapi_post_plots.push({
                     additionalInfo: {
+                        filler_plot: 1,
                         invert_row_checkmark: document.getElementById(
                             "invert_row_checkmark"
                         ).checked,

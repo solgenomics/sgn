@@ -245,6 +245,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
 
     my $trial = CXGN::Trial->new({ bcs_schema => $schema,people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id => $trial_id });
     my $data = $trial->get_treatments();
+    my @treatments = map {$_->{trait_name}} @{$data};
 
     if ($empty) {
         unshift @$data, [ 0, "None" ];
@@ -252,7 +253,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
-      choices => $data,
+      choices => \@treatments,
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -2756,7 +2757,7 @@ sub _clean_inputs {
 }
 
 
-sub get_related_attributes_select : Path('/ajax/html/select/related_attributes') Args(0) {
+sub get_transformant_related_attributes_select : Path('/ajax/html/select/transformant_related_attributes') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -2780,6 +2781,36 @@ sub get_related_attributes_select : Path('/ajax/html/select/related_attributes')
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_plot_related_attributes_select : Path('/ajax/html/select/plot_related_attributes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "related_attributes_select";
+    my $name = $c->req->param("name") || "related_attributes_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my @related_attributes;
+    push @related_attributes, ["", "Select Attribute"];
+    push @related_attributes, ['breedingProgram', 'breeding program'];
+    push @related_attributes, ['trialName', 'trial name'];
+    push @related_attributes, ['accessionName', 'accession name'];
+    push @related_attributes, ['plotNumber', 'plot number'];
+    push @related_attributes, ['blockNumber', 'block number'];
+    push @related_attributes, ['repNumber', 'rep number'];
+    push @related_attributes, ['rangeNumber', 'range number'];
+    push @related_attributes, ['rowNumber', 'row number'];
+    push @related_attributes, ['colNumber', 'col number'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@related_attributes,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 
 sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0) {
     my $self = shift;
