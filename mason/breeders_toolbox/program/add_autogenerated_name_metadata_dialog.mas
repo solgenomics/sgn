@@ -350,6 +350,7 @@ jQuery(document).ready(function(){
         jQuery('#name_type').val('');
         jQuery('#last_number').val('');
         jQuery('#number_of_attributes').val('');
+        jQuery(".modal-backdrop").remove();
         location.reload();
     });
 
@@ -361,6 +362,7 @@ jQuery(document).ready(function(){
         jQuery('#name_type').val('');
         jQuery('#last_number').val('');
         jQuery('#number_of_attributes').val('');
+        jQuery(".modal-backdrop").remove();
         location.reload();
     });
 
