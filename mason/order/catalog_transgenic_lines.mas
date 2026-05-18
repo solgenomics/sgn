@@ -220,6 +220,7 @@ function requestForm(order_properties_dialog){
         }
     }
     html = html + '<label class="col-sm-4 control-label">Send Request Form to</label><div class="col-sm-8" ><div id="vendor_list_div" name="vendor_list_div" ></div></div><br><br>';
+    html = html + '<p><center>If you would like to get notifications about your order, please include your email in your user profile.</center></p>';
 
     html = html + '</div></div></form>';
 
