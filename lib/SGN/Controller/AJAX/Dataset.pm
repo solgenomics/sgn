@@ -608,6 +608,10 @@ sub publish_dataset_connection_POST {
         }
     );
     my $token = decode_json($resp->content || '{}');
+    if ( $token->{error} ) {
+        $c->stash->{rest} = { error => $token->{error} };
+        return;
+    }
 
     # Add token expiration to token data
     my $now = time * 1000;
@@ -620,6 +624,10 @@ sub publish_dataset_connection_POST {
         "Authorization" => "Bearer " . $token->{access_token},
     );
     my $profile = decode_json($resp->content || '{}');
+    if ( $profile->{error} ) {
+        $c->stash->{rest} = { error => $profile->{error} };
+        return;
+    }
 
     # Store token and profile in User Prefs
     my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());

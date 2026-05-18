@@ -87,6 +87,7 @@ $is_dataset_public => 0
                     <a id="dataset-archive-publish-account" class="btn btn-info btn-sm" href="#" target="_blank">
                         <span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;View your <span class="dataset-archive-publish-service-name"></span> account
                     </a>
+                </li>
                 <li class="dataset-archive-publish-connect">
                     <p>Grant <% $project_name %> access to your <span class="dataset-archive-publish-service-name"></span> account</p>
                     <button id="dataset-archive-publish-connect" class="btn btn-primary btn-sm">
@@ -520,6 +521,8 @@ async function displayIssues(issues = {}) {
                 // Display Private Link, only to the dataset owner
 % if ( $is_dataset_owner ) {
                     html += `<div><span class="label label-info">Preview</span>&nbsp;<a href='${s.article.url_private_html}' target='_blank'>${s.article.title}</a></div>`;
+% } else {
+                    if ( !s.article.is_public ) html += `<em>Published to a private dataset</em>`;
 % }
 
                 // Display DOI, if available
