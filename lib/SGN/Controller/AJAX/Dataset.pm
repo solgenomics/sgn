@@ -845,39 +845,6 @@ sub publish_dataset_articles_new_POST {
 }
 
 #
-# Shared publish dataset setup function
-# - Get the dataset
-# - Make sure the user is logged in
-# - Make sure the user is the owner of the dataset
-# Returns (error message, dataset, user_id)
-#
-sub _setup_publish {
-    my $c = shift;
-    my $dataset_id = shift;
-
-    try {
-        my $dataset = CXGN::Dataset->new({
-            schema => $c->dbic_schema("Bio::Chado::Schema"),
-            people_schema => $c->dbic_schema("CXGN::People::Schema"),
-            sp_dataset_id => $dataset_id
-        });
-
-        if (!$c->user()) {
-            return ( "Login required to perform requested action." );
-        }
-
-        my $user_id = $c->user()->get_object()->get_sp_person_id();
-        if ($dataset->sp_person_id() != $user_id ) {
-            return ( "Only the owner can publish a dataset" );
-        }
-
-        return ( undef, $dataset, $user_id );
-    } catch {
-        return ( $_ );
-    }
-}
-
-#
 # Determine what files will be generated from the dataset and initialize the published metadata
 #
 sub publish_dataset_init : Path('/ajax/dataset/publish/init') Args(1) {
@@ -1311,6 +1278,39 @@ sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
     else {
         $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
         return;
+    }
+}
+
+#
+# Shared publish dataset setup function
+# - Get the dataset
+# - Make sure the user is logged in
+# - Make sure the user is the owner of the dataset
+# Returns (error message, dataset, user_id)
+#
+sub _setup_publish {
+    my $c = shift;
+    my $dataset_id = shift;
+
+    try {
+        my $dataset = CXGN::Dataset->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_dataset_id => $dataset_id
+        });
+
+        if (!$c->user()) {
+            return ( "Login required to perform requested action." );
+        }
+
+        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        if ($dataset->sp_person_id() != $user_id ) {
+            return ( "Only the owner can publish a dataset" );
+        }
+
+        return ( undef, $dataset, $user_id );
+    } catch {
+        return ( $_ );
     }
 }
 

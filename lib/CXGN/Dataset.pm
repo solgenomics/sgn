@@ -1836,6 +1836,7 @@ sub init_published {
         breeding_programs => $breeding_programs,
         locations => $locations,
         trials => $trials,
+        traits => $traits,
         protocols => $protocols,
         projects => $projects,
         accessions => $accessions
@@ -1923,6 +1924,28 @@ sub generate_archive_file {
         );
         my @results = $metadata_search->get_metadata_matrix();
         csv(in => \@results, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save trait metadata
+    elsif ( $type eq 'traits' ) {
+        $file_name = 'traits.csv';
+        my @header = ("id", "ontology_id", "name", "display_name", "synonyms", "definition");
+        my @data;
+        foreach my $id (@$ids) {
+            my $t = CXGN::Trait->new({
+                bcs_schema => $schema,
+                cvterm_id => $id
+            });
+            push @data, [
+                $t->cvterm_id(),
+                $t->db().":".$t->accession(),
+                $t->name(), $t->display_name(),
+                defined $t->synonyms() ? join(',', @{$t->synonyms()}) : '',
+                $t->definition()
+            ];
+        }
+        my @rows = (\@header, @data);
+        csv(in => \@rows, out => "$dir/$file_name", sep_char => ",");
     }
 
     # Unsupported data type
