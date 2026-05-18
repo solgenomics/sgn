@@ -63,6 +63,7 @@ use CXGN::Genotype::Search;
 use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayoutSearch;
 use CXGN::Trait;
 use POSIX qw(strftime);
 use File::Path qw(mkpath rmtree);
@@ -1751,6 +1752,7 @@ sub init_published {
     my $locations = $categories->{locations};
     my $trials = $categories->{trials};
     my $traits = $categories->{traits};
+    my $observation_units = $categories->{plots};
 
     # Genotype Categories
     my $protocols = $categories->{genotyping_protocols};
@@ -1811,6 +1813,21 @@ sub init_published {
             my @ids = map { $_->[0] } @{$results->{results}};
             $accessions = \@ids;
         }
+
+        # Get observation units (get stock ids of plots, plants, etc in trials)
+        # unless plots are explicitly defined in the dataset
+        if ( !defined $observation_units ) {
+            my $layout_search = CXGN::Trial::TrialLayoutSearch->new({
+                bcs_schema => $schema,
+                data_level => "all",
+                trial_list => $trials,
+                include_observations => 0,
+            });
+            my ($data) = $layout_search->search();
+            my @ids = map { $_->{obsunit_stock_id} } @$data;
+            $observation_units = \@ids;
+        }
+
     }
 
 
@@ -1837,6 +1854,7 @@ sub init_published {
         locations => $locations,
         trials => $trials,
         traits => $traits,
+        observation_units => $observation_units,
         protocols => $protocols,
         projects => $projects,
         accessions => $accessions
@@ -1946,6 +1964,13 @@ sub generate_archive_file {
         }
         my @rows = (\@header, @data);
         csv(in => \@rows, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save trait observations
+    elsif ( $type eq 'observation_units' ) {
+        $file_name = 'observations.csv';
+        my $data = $self->retrieve_phenotypes();
+        csv(in => $data, out => "$dir/$file_name", sep_char => ",");
     }
 
     # Unsupported data type

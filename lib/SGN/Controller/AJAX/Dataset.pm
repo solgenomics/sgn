@@ -862,6 +862,7 @@ sub publish_dataset_init : Path('/ajax/dataset/publish/init') Args(1) {
     # Calculate the files that will be archived
     my $pub = $dataset->init_published($dataset_archive_path, $user_id);
     $c->stash->{rest} = {
+        error => $pub->{error},
         key => $pub->{key},
         data => $pub->{data}
     };
