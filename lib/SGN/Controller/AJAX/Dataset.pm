@@ -821,7 +821,11 @@ sub publish_dataset_articles_new_POST {
         description => $description,
         authors => \@authors_hash,
         keywords => [ "$project_name" ],
-        references => [ "$production_url/dataset/$dataset_id" ],
+        related_materials => [{
+            identifier => "$production_url/dataset/$dataset_id",
+            title => "$project_name Dataset [" . $dataset->name() . "]",
+            identifier_type => "URL"
+        }],
         categories => [ int($selected->{category_id}) ],
         defined_type => 'dataset'
     };
