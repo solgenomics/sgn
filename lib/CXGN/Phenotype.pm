@@ -124,7 +124,7 @@ A string with the operator name. This value is read from the fieldbook operator 
 =cut
 
 has 'operator' => (
-    isa => 'Str',
+    isa => 'Str|Undef',
     is => 'rw',
     );
 
