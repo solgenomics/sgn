@@ -24,7 +24,7 @@ sub _validate_with_plugin {
         file => $filename,
         required_columns => ['uniquename'],
         optional_columns => $editable_vector_stockprops,
-        unique_only_columns => {'uniquename' => 1},
+        unique_only_columns => {'uniquename'},
         column_aliases => {
             'uniquename' => ['Uniquename', 'Name', 'name', 'vector_name', 'vector name'],
             'Strain' => ['strain'],
