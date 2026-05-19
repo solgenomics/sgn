@@ -1836,14 +1836,30 @@ sub init_published {
     # GENOTYPE DATA
     # Get all genotype-related data if genotyping_protocols or genotyping_projects are in the dataset
     #
-    if ( exists $categories->{genotying_protocols} || exists $categories->{genotyping_projects} ) {
-        print STDERR "... processing genotype data\n";
+    if ( defined $protocols && !defined $accessions ) {
+        my $results = $bs->metadata_query(
+            [ 'genotyping_protocols', 'accessions' ],
+            { 'accessions' => { 'genotyping_protocols' => "'" . join("', '", @$protocols) . "'" } },
+            { 'genotyping_protocols' => 0 }
+        );
+        my @ids = map { $_->[0] } @{$results->{results}};
+        $accessions = \@ids;
+    }
+    if ( defined $projects && !defined $accessions ) {
+        my $results = $bs->metadata_query(
+            [ 'genotyping_projects', 'accessions' ],
+            { 'accessions' => { 'genotyping_projects' => "'" . join("', '", @$projects) . "'" } },
+            { 'genotyping_projects' => 0 }
+        );
+        my @ids = map { $_->[0] } @{$results->{results}};
+        $accessions = \@ids;
     }
 
     use Data::Dumper;
     print STDERR "Programs = " . Dumper $breeding_programs;
     print STDERR "Locations = " . Dumper $locations;
     print STDERR "Trials = " . Dumper $trials;
+    print STDERR "Obs Units = " . Dumper $observation_units;
     print STDERR "Traits = " . Dumper $traits;
     print STDERR "Protocols = " . Dumper $protocols;
     print STDERR "Projects = " . Dumper $projects;
@@ -1983,16 +1999,32 @@ sub generate_archive_file {
 
     # Save genotyping protocol
     elsif ( $type eq 'protocols' ) {
-        $file_name = 'protocols.vcf';
+        $file_name = 'genotyping_protocols.vcf';
         my $geno = CXGN::Genotype::DownloadFactory->instantiate('VCF', {
             bcs_schema => $schema,
             people_schema => $self->people_schema(),
             cache_root_dir => $cache_file_path,
             protocol_id_list => $ids,
+            accession_list => $published->{$key}->{data}->{accessions}->{ids},
             return_only_first_genotypeprop_for_stock => 0,
         });
         my $src = $geno->download($cluster_shared_tempdir, $backend, $cluster_host, $web_cluster_queue, $basepath);
-        copy($src, "$dir/$file_name") or return { error => "Could not copy protocols.vcf file [$!]" };
+        copy($src, "$dir/$file_name") or return { error => "Could not copy $file_name file [$!]" };
+    }
+
+    # Save genotyping projects
+    elsif ( $type eq 'projects' ) {
+        $file_name = 'genotyping_projects.vcf';
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate('VCF', {
+            bcs_schema => $schema,
+            people_schema => $self->people_schema(),
+            cache_root_dir => $cache_file_path,
+            genotype_data_project_list => $ids,
+            accession_list => $published->{$key}->{data}->{accessions}->{ids},
+            return_only_first_genotypeprop_for_stock => 0,
+        });
+        my $src = $geno->download($cluster_shared_tempdir, $backend, $cluster_host, $web_cluster_queue, $basepath);
+        copy($src, "$dir/$file_name") or return { error => "Could not copy $file_name file [$!]" };
     }
 
     # Unsupported data type
