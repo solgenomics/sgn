@@ -55,14 +55,18 @@ sub patch {
 
     # Create the root cvterm
     # next available dbxref accession in time ontology is '0000481'
-    my $dbxref_accession = 481;
+    # but this accession is already used in other databases that have 
+    # non-standardized time units. So we jump ahead to 5000.
+    my $dbxref_accession = 5000;
     my $time_in_years_rs = $schema->resultset("Cv::Cvterm")->create_with({
         name => "time in years",
-        definition=> "Time in years",
         cv => 'cxgn_time_ontology',
         db => 'TIME',
         dbxref => sprintf("%07d", $dbxref_accession)
     });
+    # Manually add definition after creation
+    $time_in_years_rs->update( { definition => "Time in years" } ) ;
+
     # Link root cvterm to the time ontology
     $schema->resultset("Cv::CvtermRelationship")->find_or_create({
             subject_id => $time_in_years_rs->cvterm_id(),
