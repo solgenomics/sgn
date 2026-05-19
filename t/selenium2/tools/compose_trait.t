@@ -39,7 +39,7 @@ $w->while_logged_in_as("curator", sub {
     ok( wait_for sub { $d->find_element("//option[\@title='alanine|CHEBI:16449']")->click() }, 'select attribute');
     ok( wait_for sub { $d->find_element("//option[\@title='apical branching|CO_334:0000086']")->click() }, 'select trait');
     ok( wait_for sub { $d->find_element("//option[\@title='month 6|TIME:0000065']")->click() }, 'select month');
-    ok( wait_for sub { $d->find_element("//option[\@title='year 11|TIME:0000492']")->click() }, 'select year');
+    ok( wait_for sub { $d->find_element("//option[\@title='year 11|TIME:0005011']")->click() }, 'select year');
     my $trait_name = "apical branching|alanine|month 6|year 11"; 
 
     # select final trait
@@ -71,7 +71,7 @@ $w->while_logged_in_as("curator", sub {
     ok( wait_for sub { $d->find_element_by_link_text("CHEBI:16449") }, 'locate attribute component');
     ok( wait_for sub { $d->find_element_by_link_text("CO_334:0000086") }, 'locate trait component');
     ok( wait_for sub { $d->find_element_by_link_text("TIME:0000065") }, 'locate month component');
-    ok( wait_for sub { $d->find_element_by_link_text("TIME:0000492") }, 'locate year component');
+    ok( wait_for sub { $d->find_element_by_link_text("TIME:0005011") }, 'locate year component');
 
 });
 
