@@ -684,11 +684,11 @@ sub search {
     my $organism_query = "SELECT op.organism_id, cvterm.name, op.value, op.rank
 FROM organismprop AS op
 LEFT JOIN cvterm ON (op.type_id = cvterm.cvterm_id)
-WHERE op.organism_id IN (SELECT DISTINCT(organism_id) FROM stock WHERE stock_id IN ($id_ph))
+WHERE op.organism_id IN (SELECT DISTINCT(organism_id) FROM stock WHERE stock_id = ANY (?))
 AND cvterm.name IN ('species authority', 'subtaxa', 'subtaxa authority')
 ORDER BY organism_id ASC;";
     my $organism_sth = $schema->storage()->dbh()->prepare($organism_query);
-    $organism_sth->execute(@result_stock_ids);
+    $organism_sth->execute(\@result_stock_ids);
 
     # Parse organism properties into hash $organism_props->organism_id->prop_type (cvterm name)->prop values (array)
     my %organism_props;
@@ -726,9 +726,9 @@ ORDER BY organism_id ASC;";
         LEFT JOIN stock family ON (family_rel.object_id = family.stock_id)
         LEFT JOIN stockprop on(stock.stock_id=stockprop.stock_id)
 	LEFT JOIN cvterm ON(stockprop.type_id=cvterm.cvterm_id)
-        WHERE stock.stock_id IN ($id_ph);";
+        WHERE stock.stock_id = ANY (?);";
     my $sth = $schema->storage()->dbh()->prepare($stock_query);
-    $sth->execute(@result_stock_ids);
+    $sth->execute(\@result_stock_ids);
 
     # Add additional organism and stock properties to the result hash for each stock
 
