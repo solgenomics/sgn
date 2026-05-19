@@ -883,7 +883,6 @@ sub publish_dataset_generate_POST {
     my $dataset_id = $c->req->body_params->{dataset_id};
     my $key = $c->req->body_params->{key};
     my $type = $c->req->body_params->{type};
-    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
 
     my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
     if ( $error ) {
@@ -891,7 +890,16 @@ sub publish_dataset_generate_POST {
         return;
     }
 
-    my $resp = $dataset->generate_archive_file($key, $type, \@editable_stock_props);
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $resp = $dataset->generate_archive_file($key, $type, {
+        editable_stock_props => \@editable_stock_props,
+        cache_file_path => $c->config->{cache_file_path},
+        cluster_shared_tempdir => $c->config->{cluster_shared_tempdir},
+        backend => $c->config->{backend},
+        cluster_host => $c->config->{cluster_host},
+        web_cluster_queue => $c->config->{web_cluster_queue},
+        basepath => $c->config->{basepath}
+    });
     if ( defined $resp->{error} ) {
         $c->stash->{rest} = { error => $resp->{error} };
         return;

@@ -337,7 +337,8 @@ sub export_properties {
     while (my @results = $h->fetchrow_array()) {
         # print STDERR "RETRIEVED: ".join(",", @results)."\n";
         my $original_date_format = $results[2];
-        my $create_date = Time::Piece->strptime($original_date_format, "%Y-%m-%d %H:%M:%S");
+        my @parts = split(/\.[0-9]+$/, $original_date_format); # remove fractional seconds at the end of the timestamp
+        my $create_date = Time::Piece->strptime($parts[0], "%Y-%m-%d %H:%M:%S");
         my $download_date_format = $create_date->strftime("%Y-%B-%d");
 
         splice(@results,2,1,$download_date_format);

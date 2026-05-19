@@ -68,6 +68,7 @@ use CXGN::Trait;
 use POSIX qw(strftime);
 use File::Path qw(mkpath rmtree);
 use File::Basename;
+use File::Copy;
 use Text::CSV qw(csv);
 
 =head2 people_schema()
@@ -1873,13 +1874,20 @@ sub init_published {
 # Generate an archived file for a specific data type
 # key = dataset issue key
 # type = data type to generate
+# params = other params, specific to each data type
 #
 sub generate_archive_file {
     my $self = shift;
     my $key = shift;
     my $type = shift;
-    my $ids = shift;
-    my $editable_stock_props = shift;
+    my $params = shift;
+    my $editable_stock_props = $params->{editable_stock_props};
+    my $cache_file_path = $params->{cache_file_path};
+    my $cluster_shared_tempdir = $params->{cluster_shared_tempdir};
+    my $backend = $params->{backend};
+    my $cluster_host = $params->{cluster_host};
+    my $web_cluster_queue = $params->{web_cluster_queue};
+    my $basepath = $params->{basepath};
 
     my $schema = $self->schema;
     my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
@@ -1971,6 +1979,20 @@ sub generate_archive_file {
         $file_name = 'observations.csv';
         my $data = $self->retrieve_phenotypes();
         csv(in => $data, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save genotyping protocol
+    elsif ( $type eq 'protocols' ) {
+        $file_name = 'protocols.vcf';
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate('VCF', {
+            bcs_schema => $schema,
+            people_schema => $self->people_schema(),
+            cache_root_dir => $cache_file_path,
+            protocol_id_list => $ids,
+            return_only_first_genotypeprop_for_stock => 0,
+        });
+        my $src = $geno->download($cluster_shared_tempdir, $backend, $cluster_host, $web_cluster_queue, $basepath);
+        copy($src, "$dir/$file_name") or return { error => "Could not copy protocols.vcf file [$!]" };
     }
 
     # Unsupported data type
