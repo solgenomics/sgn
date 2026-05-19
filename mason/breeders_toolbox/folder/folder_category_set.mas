@@ -21,6 +21,24 @@ my @folder_types = (
 
 </%init>
 
+<style>
+    .folder {
+        display: flex;
+        margin-top: 10px;
+    }
+    .folder-name {
+        display: flex;
+        justify-content: right;
+        align-items: center;
+    }
+    .folder-inputs {
+        margin-left: 10px;
+        display: flex;
+        justify-content: left;
+        align-items: center;
+    }
+</style>
+
 <div class="modal fade" id="edit_folder_category_dialog" name="edit_folder_category_dialog" tabindex="-1" role="dialog" aria-labelledby="editFolderCategoryDialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -34,11 +52,11 @@ my @folder_types = (
                     <form class="form-horizontal" role="form" method="post" id="edit_folder_category_dialog_form" name="edit_folder_category_dialog_form">
 
 % foreach my $folder_type ( @folder_types ) {
-                        <div class="row" style="display: flex; margin-top: 10px">
-                            <div class="col-xs-7" style="display: flex; justify-content: right; align-items: center">
+                        <div class="row folder">
+                            <div class="col-xs-7 folder-name">
                                 <span><b>Folder for <% $folder_type->{'name'} %>:</b></span>
                             </div>
-                            <div class="col-xs-5" style="margin-left: 10px; display: flex; justify-content: leftt; align-items: center">
+                            <div class="col-xs-5 folder-inputs">
 % if ($folder_type->{'enabled'}) {
                                 <input name="edit_folder_for_<% $folder_type->{'var'} %>" id="edit_folder_for_<% $folder_type->{'var'} %>" type="checkbox" checked disabled/>
 % } else {
