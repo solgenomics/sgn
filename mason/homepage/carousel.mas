@@ -23,7 +23,7 @@ my $jbrowse_lodgepole_pine_url = "$jbrowse_url/$jbrowse_path?assembly=Lodgepole%
       <div class="item">
         <div style="background:url(/img/BFF-AFIRMS_g128d_progeny_trial_swan_hills_timeau.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-            <a href="/folder/195" target="_blank" style="color: #00426c">
+            <a href="/projects/resilient_forests" target="_blank" style="color: #00426c">
                     <h3>RESFOR</h3>
                     <p>Resilient Forests (RES-FOR): Climate, Pests & Policy – Genomic Applications.</p>
             </a>
@@ -31,13 +31,13 @@ my $jbrowse_lodgepole_pine_url = "$jbrowse_url/$jbrowse_path?assembly=Lodgepole%
 
           <div class="carousel-sgn-links">
             <ul class="sgn_sm_list">
-              <a href='/folder/195#trials'><li>Browse the progeny trials</li></a>
+              <a href='/breeders/trial/194'><li>G128A Projeny Trial</li></a>
             </ul>
           </div>
         </div>
       </div>
 
-      <!-- USA Seedlings -->
+      <!-- USA Seedlings
       <div class="item">
         <div style="background:url(/img/BFF-AFIRMS_usa_seedlings_carousel.png) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
@@ -54,22 +54,22 @@ my $jbrowse_lodgepole_pine_url = "$jbrowse_url/$jbrowse_path?assembly=Lodgepole%
             </ul>
           </div>
         </div>
-      </div>
+      </div>  -->
 
       <!-- Lodgepole pine reference genome -->
       <div class="item">
         <div style="background:url(/img/BFF-AFIRMS_greenhouse_pine_trial.jpg) center center; background-size:cover;" class="slider-size">
           <div class="carousel-sgn-caption" style="opacity: 0.95; background-color: #efefef">
-            <a href="/folder/196/" target="_blank" style="color: #00426c">
+            <a href="/projects/lodgepole_pine_reference_genome" target="_blank" style="color: #00426c">
                     <h3>Lodgepole Pine Reference Genome</h3>
-                    <p>The new Lodgepole pine assembly (v3) and annotations are now available.</p>
+                    <p>The new Lodgepole pine assembly (v1) and annotations are now available.</p>
             </a>
           </div>
 
           <div class="carousel-sgn-links">
             <ul class="sgn_sm_list">
-              <a href='<% $jbrowse_lodgepole_pine_url %>'><li>Browse the lodgepole pine genome</li></a>
-              <a href="https://bff-afirms-compute.ales.ualberta.ca/data/genomes/lodgepole_pine/"><li>Download the data</li></a>
+              <a href='/jbrowse'><li>Browse the lodgepole pine genome</li></a>
+              <a href="/jbrowse/data/lodgepole_pine/v1/"><li>Download the data</li></a>
             </ul>
           </div>
         </div>
@@ -97,8 +97,8 @@ my $jbrowse_lodgepole_pine_url = "$jbrowse_url/$jbrowse_path?assembly=Lodgepole%
 
 <ul id="btn_carousel_indicators" class="nav nav-pills nav-justified sgn_carousel_button_group">
     <li class="active"><a data-target="#myCarousel" data-slide-to="0">Resilient Forests</a></li>
-    <li class="active"><a data-target="#myCarousel" data-slide-to="1">USA Seedlings</a></li>
-    <li class="active"><a data-target="#myCarousel" data-slide-to="2">Lodgepole Pine Reference Genome</a></li>    
+    <!--<li class="active"><a data-target="#myCarousel" data-slide-to="1">USA Seedlings</a></li>-->
+    <li class="active"><a data-target="#myCarousel" data-slide-to="1">Lodgepole Pine Reference Genome</a></li>    
 </ul>
 
 <style>

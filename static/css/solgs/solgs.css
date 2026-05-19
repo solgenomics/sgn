@@ -27,6 +27,11 @@
     background: #5cb85c;
 }
 
+a.menu_click_dropdown.dropdown-toggle.button.btn,
+a.navbar-brand.sgn_brand_name.button.btn {
+    background: transparent;
+}
+
 .button:hover {
     background-color: #c6e6c6;
 }
