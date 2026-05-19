@@ -5,7 +5,39 @@ $folder_for_trials => undef
 $folder_for_crosses => undef
 $folder_for_genotyping_trials => undef
 $folder_for_genotyping_projects => undef
+$folder_for_tracking_activities => undef
+$folder_for_transformations => undef
 </%args>
+
+<%init>
+my @folder_types = (
+    { 'var' => 'trials', 'name' => 'Trials',              'enabled' => $folder_for_trials},
+    { 'var' => 'crosses', 'name' => 'Crosses',             'enabled' => $folder_for_crosses},
+    { 'var' => 'genotyping_projects', 'name' => 'Genotyping Projects', 'enabled' => $folder_for_genotyping_projects},
+    { 'var' => 'genotyping_trials', 'name' => 'Genotyping Trials',   'enabled' => $folder_for_genotyping_trials},
+    { 'var' => 'tracking_activities', 'name' => 'Tracking Activities', 'enabled' => $folder_for_tracking_activities},
+    { 'var' => 'transformations', 'name' => 'Transformations',     'enabled' => $folder_for_transformations},
+);
+
+</%init>
+
+<style>
+    .folder {
+        display: flex;
+        margin-top: 10px;
+    }
+    .folder-name {
+        display: flex;
+        justify-content: right;
+        align-items: center;
+    }
+    .folder-inputs {
+        margin-left: 10px;
+        display: flex;
+        justify-content: left;
+        align-items: center;
+    }
+</style>
 
 <div class="modal fade" id="edit_folder_category_dialog" name="edit_folder_category_dialog" tabindex="-1" role="dialog" aria-labelledby="editFolderCategoryDialog">
     <div class="modal-dialog" role="document">
@@ -18,46 +50,21 @@ $folder_for_genotyping_projects => undef
                 <div class="container-fluid">
 
                     <form class="form-horizontal" role="form" method="post" id="edit_folder_category_dialog_form" name="edit_folder_category_dialog_form">
-                        <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Trials:</label>
-                            <div class="col-sm-7" >
-% if($folder_for_trials) {
-                                <span class="glyphicon glyphicon-ok"></span>
+
+% foreach my $folder_type ( @folder_types ) {
+                        <div class="row folder">
+                            <div class="col-xs-7 folder-name">
+                                <span><b>Folder for <% $folder_type->{'name'} %>:</b></span>
+                            </div>
+                            <div class="col-xs-5 folder-inputs">
+% if ($folder_type->{'enabled'}) {
+                                <input name="edit_folder_for_<% $folder_type->{'var'} %>" id="edit_folder_for_<% $folder_type->{'var'} %>" type="checkbox" checked disabled/>
 % } else {
-                                <input name="edit_folder_for_trials" id="edit_folder_for_trials" type="checkbox"/>
+                                <input name="edit_folder_for_<% $folder_type->{'var'} %>" id="edit_folder_for_<% $folder_type->{'var'} %>" type="checkbox"/>
 % }
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Crosses:</label>
-                            <div class="col-sm-7" >
-% if($folder_for_crosses){
-                                <span class="glyphicon glyphicon-ok"></span>
-% } else {
-                                <input name="edit_folder_for_crosses" id="edit_folder_for_crosses" type="checkbox"/>
 % }
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Genotyping Plates:</label>
-                            <div class="col-sm-7" >
-% if ($folder_for_genotyping_trials) {
-                                <span class="glyphicon glyphicon-ok"></span>
-% } else {
-                                <input name="edit_folder_for_genotyping_trials" id="edit_folder_for_genotyping_trials" type="checkbox"/>
-% }
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-sm-5 control-label">Folder for Genotyping Projects:</label>
-                            <div class="col-sm-7" >
-% if ($folder_for_genotyping_projects) {
-                                <span class="glyphicon glyphicon-ok"></span>
-% } else {
-                                <input name="edit_folder_for_genotyping_projects" id="edit_folder_for_genotyping_projects" type="checkbox"/>
-% }
-                            </div>
-                        </div>
                     </form><br/>
 
                 </div>
@@ -90,11 +97,15 @@ function save_folder_categories() {
     var previous_folder_for_crosses = "<% $folder_for_crosses %>";
     var previous_folder_for_genotyping_trials = "<% $folder_for_genotyping_trials %>";
     var previous_folder_for_genotyping_projects = "<% $folder_for_genotyping_projects %>";
+    var previous_folder_for_tracking_activities = "<% $folder_for_tracking_activities %>";
+    var previous_folder_for_transformations = "<% $folder_for_transformations %>";
 
     var folder_for_trials = jQuery('#edit_folder_for_trials').is(":checked");
     var folder_for_crosses = jQuery('#edit_folder_for_crosses').is(":checked");
     var folder_for_genotyping_trials = jQuery('#edit_folder_for_genotyping_trials').is(":checked");
     var folder_for_genotyping_projects = jQuery('#edit_folder_for_genotyping_projects').is(":checked");
+    var folder_for_tracking_activities = jQuery('#edit_folder_for_tracking_activities').is(":checked");
+    var folder_for_transformations = jQuery('#edit_folder_for_transformations').is(":checked");
 
     if (previous_folder_for_trials == 1) {
         folder_for_trials = true ;
@@ -112,6 +123,14 @@ function save_folder_categories() {
         folder_for_genotyping_projects = true;
     }
 
+    if (previous_folder_for_tracking_activities == 1) {
+        folder_for_tracking_activities = true;
+    }
+
+    if (previous_folder_for_transformations == 1) {
+        folder_for_transformations = true;
+    }
+
     jQuery.ajax( {
         url: '/ajax/folder/'+<% $folder_id %>+'/categories',
         data: {
@@ -119,6 +138,8 @@ function save_folder_categories() {
           'folder_for_crosses' : folder_for_crosses,
           'folder_for_genotyping_trials' : folder_for_genotyping_trials,
           'folder_for_genotyping_projects' : folder_for_genotyping_projects,
+          'folder_for_tracking_activities' : folder_for_tracking_activities,
+          'folder_for_transformations' : folder_for_transformations,
         },
         success: function(response) {
             if (response.error){
