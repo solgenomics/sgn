@@ -23,10 +23,18 @@
 <& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'dataTables.colReorder-min'] &>
 
 <style>
+#stock_search_results_div {
+  margin-top: 10px;
+}
 #stock_search_results_div th {
     cursor: grab;
 }
+#stock_search_results_length {
+  padding: 4px;
+  margin-right: 4px;
+}
 </style>
+
 <div class="container-fluid">
 
 <& /page/page_title.mas, title=>'Search Accessions and Trees' &>
@@ -62,7 +70,6 @@ my $breeding_programs_select = simple_selectbox_html(
     choices => $breeding_programs,
     id      => "breeding_program" ,
 );
-
 </%perl>
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
@@ -292,7 +299,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="panel panel-default">
         <div class="panel-body">
-            <div id="stock_search_results_div" class="table-responsive" style="margin-top: 10px;">
+            <div id="stock_search_results_div" class="table-responsive">
                 <table id="stock_search_results" width="100%" class="table table-hover table-striped">
                 <thead>
                   <tr>
@@ -422,7 +429,6 @@ jQuery(document).ready(function () {
         delete editable_stockprops_search[jQuery(this).data('property')];
         _draw_editable_stockprops_search_fields();
     });
-
     jQuery(document).on("keyup", 'input[name="editable_stockprop_search_inputs"]', function(){
         //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
         editable_stockprops_search[jQuery(this).data('property')]["value"] = jQuery(this).val();
@@ -530,7 +536,6 @@ jQuery(document).ready(function () {
    jQuery('#submit_stock_search').click( function() {
         //stock_table.search("stock_search_results").draw();
         var stock_type_selected = jQuery('#stock_type_select option:selected').text();
-        stock_type_selected = stock_type_selected == "all" ? "" : stock_type_selected;
         _load_stock_search_results(stock_type_selected, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
    });
 
@@ -645,7 +650,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
           [10,20,50,100,1000,10000,1000000000000000],
           [10,20,50,100,1000,10000,'All']
         ],
-        'iDisplayLength': 10000,
+        'iDisplayLength': 100,
         'fixedFooter' : true,
         'scrollX' : true,
         'scrollY' : '350px',
@@ -668,10 +673,21 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
               d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
               d.is_obsolete = is_obsolete;
               d.include_obsolete = include_obsolete;
-            }
+            },
+            beforeSend: function() {
+              jQuery("#working_modal").modal("show");
+            },
+            dataSrc: function ( json ) {
+                jQuery("#working_modal").modal("hide");
+                return json.data;
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving search results: ", response);
+            },
         },
         'colReorder': true,
-        'dom': 'Bfrtip',
+        'dom': 'lBfrtip',
         'rowId': 'Stock Id',
         'buttons': [ 'colvis',
             {
