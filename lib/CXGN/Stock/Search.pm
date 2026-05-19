@@ -366,7 +366,7 @@ sub search {
         $and_conditions->{'me.organism_id'} = $organism_id;
     }
 
-    if ($stock_type_name){
+    if ($stock_type_name && $stock_type_name ne 'all'){
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $stock_type_name, 'stock_type')->cvterm_id();
     }
 

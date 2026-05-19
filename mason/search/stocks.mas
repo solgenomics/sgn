@@ -628,7 +628,6 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
     console.log(stock_type);
     console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
 
-    stock_type = stock_type == 'all' ? '' : stock_type;
     let is_obsolete = '';
     let include_obsolete = '';
     const obsolete_stock_search_term = jQuery("#obsolete_stock_search_term option:selected").val();
