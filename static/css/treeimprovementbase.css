@@ -216,6 +216,7 @@ html, body, #outercontainer {
 #pagefooter {
     flex-shrink: 1;
     margin-bottom: 0;
+    min-height: 80px;
 }
 
 /*
