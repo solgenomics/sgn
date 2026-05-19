@@ -587,7 +587,7 @@ function initArchive() {
  * - This will call generateArchiveFile() in sequence for each file type
  */
 async function displayArchiveFiles(key, data = {}) {
-    const types = Object.keys(data);
+    const types = Object.keys(data).sort();
 
     // Display the file type table
     let html = `<p>Files to generate:</p>`;
