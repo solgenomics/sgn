@@ -14,7 +14,9 @@
 
 <& header/body.mas &>
 
-<!-- START CONTENT WRAPPER -->
+<!-- START CONTENT FLEX -->
+<div class="content-flex">
+  <!-- START CONTENT WRAPPER -->
   <div id="wrapper" class="container-fluid">
     <div id="main_row" class="row">
       <div class="col-md-1 col-lg-1 col-xl-2">

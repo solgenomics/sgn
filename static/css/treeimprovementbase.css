@@ -196,18 +196,27 @@ html, body, #outercontainer {
     height: 100%;
 }
 
+.content-flex {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
 #wrapper {
     margin: 0;
     display: grid;
     grid-template-rows: auto 1fr auto;
 
-    /* Ensure footer is always at the bottom */
-    min-height: 100%;
-
     /* Space for nav bar */
     padding-top: 50px;
+
+    flex-grow: 1;
 }
 
+#pagefooter {
+    flex-shrink: 1;
+    margin-bottom: 0;
+}
 
 /*
 -------------------------------------------------------------------------------

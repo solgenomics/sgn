@@ -6,9 +6,10 @@
 </%init>
 
 <!-- testing -->
-<!-- BEGIN SITE SPECIFIC FOOTER. -->
+</div> <!-- END CONTENT WRAPPER -->
 
-<div id="pagefooter" class="navbar navbar-default" style="margin-top: var(--padding-xl); padding-top: var(--padding-lg);margin-bottom:0px;">
+<!-- BEGIN SITE SPECIFIC FOOTER. -->
+<div id="pagefooter" class="navbar navbar-default">
     <div class="container-fluid">
       <div class="row">
           <div class="col-sm-4" style="text-align:center; margin-top: 0px">
@@ -30,8 +31,7 @@
     </div>
 
 </div>
-</div> <!-- END CONTENT WRAPPER -->
-
+</div> <!-- END CONTENT FLEX -->
 
 <!-- <script> -->
 <!-- (function(d, s, id) { -->
