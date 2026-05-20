@@ -2,12 +2,15 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 12.7 (Debian 12.7-1.pgdg100+1)
--- Dumped by pg_dump version 12.20 (Debian 12.20-1.pgdg110+1)
+\restrict wShTz6uqJ50Y2HNUD4ZtHTaqeIXlQxXa76afvBPchWL95TpgONlrZAXTLuDdz9Q
+
+-- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
+-- Dumped by pg_dump version 18.3 (Debian 18.3-1.pgdg11+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -1717,7 +1720,7 @@ UNION ALL
   WHERE (fs.pub_id = s.pub_id);
 
 
-ALTER TABLE public.gffatts OWNER TO postgres;
+ALTER VIEW public.gffatts OWNER TO postgres;
 
 --
 -- Name: gfffeatureatts(integer); Type: FUNCTION; Schema: public; Owner: postgres
@@ -5230,7 +5233,7 @@ CREATE SEQUENCE annotation.annotation_annot_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.annotation_annot_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.annotation_annot_id_seq OWNER TO postgres;
 
 --
 -- Name: annotation_annot_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5268,7 +5271,7 @@ CREATE SEQUENCE annotation.comment_comment_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.comment_comment_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.comment_comment_id_seq OWNER TO postgres;
 
 --
 -- Name: comment_comment_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5306,7 +5309,7 @@ CREATE SEQUENCE annotation.comp_analysis_ca_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.comp_analysis_ca_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.comp_analysis_ca_id_seq OWNER TO postgres;
 
 --
 -- Name: comp_analysis_ca_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5339,7 +5342,7 @@ CREATE SEQUENCE annotation.dblist_db_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.dblist_db_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.dblist_db_id_seq OWNER TO postgres;
 
 --
 -- Name: dblist_db_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5376,7 +5379,7 @@ CREATE SEQUENCE annotation.dbxref_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.dbxref_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.dbxref_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: dbxref_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5420,7 +5423,7 @@ CREATE SEQUENCE annotation.feature_set_f_set_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.feature_set_f_set_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.feature_set_f_set_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_set_f_set_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5455,7 +5458,7 @@ CREATE SEQUENCE annotation.feature_span_f_span_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.feature_span_f_span_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.feature_span_f_span_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_span_f_span_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5488,7 +5491,7 @@ CREATE SEQUENCE annotation.organism_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.organism_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.organism_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: organism_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5523,7 +5526,7 @@ CREATE SEQUENCE annotation.output_output_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.output_output_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.output_output_id_seq OWNER TO postgres;
 
 --
 -- Name: output_output_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5556,7 +5559,7 @@ CREATE SEQUENCE annotation.person_person_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.person_person_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.person_person_id_seq OWNER TO postgres;
 
 --
 -- Name: person_person_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5589,7 +5592,7 @@ CREATE SEQUENCE annotation.program_program_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.program_program_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.program_program_id_seq OWNER TO postgres;
 
 --
 -- Name: program_program_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5626,7 +5629,7 @@ CREATE SEQUENCE annotation.property_property_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.property_property_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.property_property_id_seq OWNER TO postgres;
 
 --
 -- Name: property_property_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5661,7 +5664,7 @@ CREATE SEQUENCE annotation.result_set_r_set_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.result_set_r_set_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.result_set_r_set_id_seq OWNER TO postgres;
 
 --
 -- Name: result_set_r_set_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5697,7 +5700,7 @@ CREATE SEQUENCE annotation.result_span_r_span_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.result_span_r_span_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.result_span_r_span_id_seq OWNER TO postgres;
 
 --
 -- Name: result_span_r_span_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5756,7 +5759,7 @@ CREATE SEQUENCE annotation.seq_error_seq_err_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.seq_error_seq_err_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.seq_error_seq_err_id_seq OWNER TO postgres;
 
 --
 -- Name: seq_error_seq_err_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5799,7 +5802,7 @@ CREATE SEQUENCE annotation.seq_relationship_seq_rel_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.seq_relationship_seq_rel_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.seq_relationship_seq_rel_id_seq OWNER TO postgres;
 
 --
 -- Name: seq_relationship_seq_rel_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5820,7 +5823,7 @@ CREATE SEQUENCE annotation.seq_seq_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.seq_seq_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.seq_seq_id_seq OWNER TO postgres;
 
 --
 -- Name: seq_seq_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5856,7 +5859,7 @@ CREATE SEQUENCE annotation.synonym_synonym_id_seq
     CACHE 1;
 
 
-ALTER TABLE annotation.synonym_synonym_id_seq OWNER TO postgres;
+ALTER SEQUENCE annotation.synonym_synonym_id_seq OWNER TO postgres;
 
 --
 -- Name: synonym_synonym_id_seq; Type: SEQUENCE OWNED BY; Schema: annotation; Owner: postgres
@@ -5897,7 +5900,7 @@ CREATE SEQUENCE audit.cv_audit_cv_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cv_audit_cv_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cv_audit_cv_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cv_audit_cv_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -5938,7 +5941,7 @@ CREATE SEQUENCE audit.cvprop_audit_cvprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cvprop_audit_cvprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cvprop_audit_cvprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cvprop_audit_cvprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -5979,7 +5982,7 @@ CREATE SEQUENCE audit.cvterm_audit_cvterm_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cvterm_audit_cvterm_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cvterm_audit_cvterm_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cvterm_audit_cvterm_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6020,7 +6023,7 @@ CREATE SEQUENCE audit.cvterm_dbxref_audit_cvterm_dbxref_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cvterm_dbxref_audit_cvterm_dbxref_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cvterm_dbxref_audit_cvterm_dbxref_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cvterm_dbxref_audit_cvterm_dbxref_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6061,7 +6064,7 @@ CREATE SEQUENCE audit.cvterm_relationship_audit_cvterm_relationship_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cvterm_relationship_audit_cvterm_relationship_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cvterm_relationship_audit_cvterm_relationship_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cvterm_relationship_audit_cvterm_relationship_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6102,7 +6105,7 @@ CREATE SEQUENCE audit.cvtermpath_audit_cvtermpath_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cvtermpath_audit_cvtermpath_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cvtermpath_audit_cvtermpath_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cvtermpath_audit_cvtermpath_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6143,7 +6146,7 @@ CREATE SEQUENCE audit.cvtermprop_audit_cvtermprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cvtermprop_audit_cvtermprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cvtermprop_audit_cvtermprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cvtermprop_audit_cvtermprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6184,7 +6187,7 @@ CREATE SEQUENCE audit.cvtermsynonym_audit_cvtermsynonym_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.cvtermsynonym_audit_cvtermsynonym_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.cvtermsynonym_audit_cvtermsynonym_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: cvtermsynonym_audit_cvtermsynonym_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6225,7 +6228,7 @@ CREATE SEQUENCE audit.db_audit_db_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.db_audit_db_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.db_audit_db_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: db_audit_db_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6266,7 +6269,7 @@ CREATE SEQUENCE audit.dbxref_audit_dbxref_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.dbxref_audit_dbxref_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.dbxref_audit_dbxref_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: dbxref_audit_dbxref_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6307,7 +6310,7 @@ CREATE SEQUENCE audit.dbxrefprop_audit_dbxrefprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.dbxrefprop_audit_dbxrefprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.dbxrefprop_audit_dbxrefprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: dbxrefprop_audit_dbxrefprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6348,7 +6351,7 @@ CREATE SEQUENCE audit.genotype_audit_genotype_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.genotype_audit_genotype_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.genotype_audit_genotype_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: genotype_audit_genotype_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6389,7 +6392,7 @@ CREATE SEQUENCE audit.list_audit_list_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.list_audit_list_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.list_audit_list_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: list_audit_list_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6430,7 +6433,7 @@ CREATE SEQUENCE audit.list_item_audit_list_item_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.list_item_audit_list_item_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.list_item_audit_list_item_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: list_item_audit_list_item_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6471,7 +6474,7 @@ CREATE SEQUENCE audit.nd_experiment_audit_nd_experiment_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_audit_nd_experiment_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_audit_nd_experiment_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_audit_nd_experiment_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6492,7 +6495,7 @@ CREATE TABLE audit.nd_experiment_contact_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_contact_audit_id integer NOT NULL,
+    nd_experiment_contact_audit_id integer CONSTRAINT nd_experiment_contact_audit_nd_experiment_contact_audi_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6512,7 +6515,7 @@ CREATE SEQUENCE audit.nd_experiment_contact_audit_nd_experiment_contact_audit_id
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_contact_audit_nd_experiment_contact_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_contact_audit_nd_experiment_contact_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_contact_audit_nd_experiment_contact_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6533,7 +6536,7 @@ CREATE TABLE audit.nd_experiment_dbxref_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_dbxref_audit_id integer NOT NULL,
+    nd_experiment_dbxref_audit_id integer CONSTRAINT nd_experiment_dbxref_audit_nd_experiment_dbxref_audit__not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6553,7 +6556,7 @@ CREATE SEQUENCE audit.nd_experiment_dbxref_audit_nd_experiment_dbxref_audit_id_s
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_dbxref_audit_nd_experiment_dbxref_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_dbxref_audit_nd_experiment_dbxref_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_dbxref_audit_nd_experiment_dbxref_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6574,7 +6577,7 @@ CREATE TABLE audit.nd_experiment_genotype_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_genotype_audit_id integer NOT NULL,
+    nd_experiment_genotype_audit_id integer CONSTRAINT nd_experiment_genotype_audi_nd_experiment_genotype_aud_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6594,7 +6597,7 @@ CREATE SEQUENCE audit.nd_experiment_genotype_audit_nd_experiment_genotype_audit_
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_genotype_audit_nd_experiment_genotype_audit_i_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_genotype_audit_nd_experiment_genotype_audit_i_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_genotype_audit_nd_experiment_genotype_audit_i_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6615,7 +6618,7 @@ CREATE TABLE audit.nd_experiment_phenotype_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_phenotype_audit_id integer NOT NULL,
+    nd_experiment_phenotype_audit_id integer CONSTRAINT nd_experiment_phenotype_aud_nd_experiment_phenotype_au_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6635,7 +6638,7 @@ CREATE SEQUENCE audit.nd_experiment_phenotype_audit_nd_experiment_phenotype_audi
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_phenotype_audit_nd_experiment_phenotype_audit_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_phenotype_audit_nd_experiment_phenotype_audit_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_phenotype_audit_nd_experiment_phenotype_audit_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6656,7 +6659,7 @@ CREATE TABLE audit.nd_experiment_project_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_project_audit_id integer NOT NULL,
+    nd_experiment_project_audit_id integer CONSTRAINT nd_experiment_project_audit_nd_experiment_project_audi_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6676,7 +6679,7 @@ CREATE SEQUENCE audit.nd_experiment_project_audit_nd_experiment_project_audit_id
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_project_audit_nd_experiment_project_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_project_audit_nd_experiment_project_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_project_audit_nd_experiment_project_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6697,7 +6700,7 @@ CREATE TABLE audit.nd_experiment_protocol_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_protocol_audit_id integer NOT NULL,
+    nd_experiment_protocol_audit_id integer CONSTRAINT nd_experiment_protocol_audi_nd_experiment_protocol_aud_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6717,7 +6720,7 @@ CREATE SEQUENCE audit.nd_experiment_protocol_audit_nd_experiment_protocol_audit_
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_protocol_audit_nd_experiment_protocol_audit_i_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_protocol_audit_nd_experiment_protocol_audit_i_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_protocol_audit_nd_experiment_protocol_audit_i_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6758,7 +6761,7 @@ CREATE SEQUENCE audit.nd_experiment_pub_audit_nd_experiment_pub_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_pub_audit_nd_experiment_pub_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_pub_audit_nd_experiment_pub_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_pub_audit_nd_experiment_pub_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6799,7 +6802,7 @@ CREATE SEQUENCE audit.nd_experiment_stock_audit_nd_experiment_stock_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_stock_audit_nd_experiment_stock_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_stock_audit_nd_experiment_stock_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_stock_audit_nd_experiment_stock_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6820,7 +6823,7 @@ CREATE TABLE audit.nd_experiment_stock_dbxref_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_stock_dbxref_audit_id integer NOT NULL,
+    nd_experiment_stock_dbxref_audit_id integer CONSTRAINT nd_experiment_stock_dbxref__nd_experiment_stock_dbxref_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6840,7 +6843,7 @@ CREATE SEQUENCE audit.nd_experiment_stock_dbxref_au_nd_experiment_stock_dbxref_a
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_stock_dbxref_au_nd_experiment_stock_dbxref_au_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_stock_dbxref_au_nd_experiment_stock_dbxref_au_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_stock_dbxref_au_nd_experiment_stock_dbxref_au_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6861,7 +6864,7 @@ CREATE TABLE audit.nd_experiment_stockprop_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_experiment_stockprop_audit_id integer NOT NULL,
+    nd_experiment_stockprop_audit_id integer CONSTRAINT nd_experiment_stockprop_aud_nd_experiment_stockprop_au_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -6881,7 +6884,7 @@ CREATE SEQUENCE audit.nd_experiment_stockprop_audit_nd_experiment_stockprop_audi
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experiment_stockprop_audit_nd_experiment_stockprop_audit_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experiment_stockprop_audit_nd_experiment_stockprop_audit_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_stockprop_audit_nd_experiment_stockprop_audit_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6922,7 +6925,7 @@ CREATE SEQUENCE audit.nd_experimentprop_audit_nd_experimentprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_experimentprop_audit_nd_experimentprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_experimentprop_audit_nd_experimentprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_experimentprop_audit_nd_experimentprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -6963,7 +6966,7 @@ CREATE SEQUENCE audit.nd_geolocation_audit_nd_geolocation_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_geolocation_audit_nd_geolocation_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_geolocation_audit_nd_geolocation_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_geolocation_audit_nd_geolocation_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7004,7 +7007,7 @@ CREATE SEQUENCE audit.nd_geolocationprop_audit_nd_geolocationprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_geolocationprop_audit_nd_geolocationprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_geolocationprop_audit_nd_geolocationprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_geolocationprop_audit_nd_geolocationprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7045,7 +7048,7 @@ CREATE SEQUENCE audit.nd_protocol_audit_nd_protocol_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_protocol_audit_nd_protocol_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_protocol_audit_nd_protocol_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_protocol_audit_nd_protocol_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7086,7 +7089,7 @@ CREATE SEQUENCE audit.nd_protocol_reagent_audit_nd_protocol_reagent_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_protocol_reagent_audit_nd_protocol_reagent_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_protocol_reagent_audit_nd_protocol_reagent_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_protocol_reagent_audit_nd_protocol_reagent_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7127,7 +7130,7 @@ CREATE SEQUENCE audit.nd_protocolprop_audit_nd_protocolprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_protocolprop_audit_nd_protocolprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_protocolprop_audit_nd_protocolprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_protocolprop_audit_nd_protocolprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7168,7 +7171,7 @@ CREATE SEQUENCE audit.nd_reagent_audit_nd_reagent_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_reagent_audit_nd_reagent_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_reagent_audit_nd_reagent_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_reagent_audit_nd_reagent_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7189,7 +7192,7 @@ CREATE TABLE audit.nd_reagent_relationship_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    nd_reagent_relationship_audit_id integer NOT NULL,
+    nd_reagent_relationship_audit_id integer CONSTRAINT nd_reagent_relationship_aud_nd_reagent_relationship_au_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -7209,7 +7212,7 @@ CREATE SEQUENCE audit.nd_reagent_relationship_audit_nd_reagent_relationship_audi
     CACHE 1;
 
 
-ALTER TABLE audit.nd_reagent_relationship_audit_nd_reagent_relationship_audit_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_reagent_relationship_audit_nd_reagent_relationship_audit_seq OWNER TO web_usr;
 
 --
 -- Name: nd_reagent_relationship_audit_nd_reagent_relationship_audit_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7250,7 +7253,7 @@ CREATE SEQUENCE audit.nd_reagentprop_audit_nd_reagentprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.nd_reagentprop_audit_nd_reagentprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.nd_reagentprop_audit_nd_reagentprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: nd_reagentprop_audit_nd_reagentprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7291,7 +7294,7 @@ CREATE SEQUENCE audit.organism_audit_organism_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.organism_audit_organism_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.organism_audit_organism_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: organism_audit_organism_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7332,7 +7335,7 @@ CREATE SEQUENCE audit.organism_dbxref_audit_organism_dbxref_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.organism_dbxref_audit_organism_dbxref_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.organism_dbxref_audit_organism_dbxref_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: organism_dbxref_audit_organism_dbxref_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7353,7 +7356,7 @@ CREATE TABLE audit.organism_relationship_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    organism_relationship_audit_id integer NOT NULL,
+    organism_relationship_audit_id integer CONSTRAINT organism_relationship_audit_organism_relationship_audi_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -7373,7 +7376,7 @@ CREATE SEQUENCE audit.organism_relationship_audit_organism_relationship_audit_id
     CACHE 1;
 
 
-ALTER TABLE audit.organism_relationship_audit_organism_relationship_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.organism_relationship_audit_organism_relationship_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: organism_relationship_audit_organism_relationship_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7414,7 +7417,7 @@ CREATE SEQUENCE audit.organismpath_audit_organismpath_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.organismpath_audit_organismpath_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.organismpath_audit_organismpath_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: organismpath_audit_organismpath_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7455,7 +7458,7 @@ CREATE SEQUENCE audit.organismprop_audit_organismprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.organismprop_audit_organismprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.organismprop_audit_organismprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: organismprop_audit_organismprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7496,7 +7499,7 @@ CREATE SEQUENCE audit.phenotype_audit_phenotype_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.phenotype_audit_phenotype_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.phenotype_audit_phenotype_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: phenotype_audit_phenotype_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7537,7 +7540,7 @@ CREATE SEQUENCE audit.phenotype_cvterm_audit_phenotype_cvterm_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.phenotype_cvterm_audit_phenotype_cvterm_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.phenotype_cvterm_audit_phenotype_cvterm_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: phenotype_cvterm_audit_phenotype_cvterm_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7578,7 +7581,7 @@ CREATE SEQUENCE audit.phenotypeprop_audit_phenotypeprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.phenotypeprop_audit_phenotypeprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.phenotypeprop_audit_phenotypeprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: phenotypeprop_audit_phenotypeprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7619,7 +7622,7 @@ CREATE SEQUENCE audit.project_audit_project_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.project_audit_project_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.project_audit_project_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: project_audit_project_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7660,7 +7663,7 @@ CREATE SEQUENCE audit.project_contact_audit_project_contact_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.project_contact_audit_project_contact_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.project_contact_audit_project_contact_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: project_contact_audit_project_contact_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7701,7 +7704,7 @@ CREATE SEQUENCE audit.project_pub_audit_project_pub_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.project_pub_audit_project_pub_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.project_pub_audit_project_pub_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: project_pub_audit_project_pub_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7722,7 +7725,7 @@ CREATE TABLE audit.project_relationship_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    project_relationship_audit_id integer NOT NULL,
+    project_relationship_audit_id integer CONSTRAINT project_relationship_audit_project_relationship_audit__not_null NOT NULL,
     is_undo boolean
 );
 
@@ -7742,7 +7745,7 @@ CREATE SEQUENCE audit.project_relationship_audit_project_relationship_audit_id_s
     CACHE 1;
 
 
-ALTER TABLE audit.project_relationship_audit_project_relationship_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.project_relationship_audit_project_relationship_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: project_relationship_audit_project_relationship_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7783,7 +7786,7 @@ CREATE SEQUENCE audit.projectprop_audit_projectprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.projectprop_audit_projectprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.projectprop_audit_projectprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: projectprop_audit_projectprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7824,7 +7827,7 @@ CREATE SEQUENCE audit.pub_audit_pub_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.pub_audit_pub_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.pub_audit_pub_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: pub_audit_pub_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7865,7 +7868,7 @@ CREATE SEQUENCE audit.pub_dbxref_audit_pub_dbxref_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.pub_dbxref_audit_pub_dbxref_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.pub_dbxref_audit_pub_dbxref_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: pub_dbxref_audit_pub_dbxref_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7906,7 +7909,7 @@ CREATE SEQUENCE audit.pub_relationship_audit_pub_relationship_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.pub_relationship_audit_pub_relationship_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.pub_relationship_audit_pub_relationship_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: pub_relationship_audit_pub_relationship_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7947,7 +7950,7 @@ CREATE SEQUENCE audit.pubabstract_audit_pubabstract_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.pubabstract_audit_pubabstract_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.pubabstract_audit_pubabstract_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: pubabstract_audit_pubabstract_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -7988,7 +7991,7 @@ CREATE SEQUENCE audit.pubauthor_audit_pubauthor_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.pubauthor_audit_pubauthor_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.pubauthor_audit_pubauthor_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: pubauthor_audit_pubauthor_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8029,7 +8032,7 @@ CREATE SEQUENCE audit.pubprop_audit_pubprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.pubprop_audit_pubprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.pubprop_audit_pubprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: pubprop_audit_pubprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8070,7 +8073,7 @@ CREATE SEQUENCE audit.sp_dataset_audit_sp_dataset_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_dataset_audit_sp_dataset_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_dataset_audit_sp_dataset_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_dataset_audit_sp_dataset_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8111,7 +8114,7 @@ CREATE SEQUENCE audit.sp_order_audit_sp_order_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_order_audit_sp_order_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_order_audit_sp_order_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_order_audit_sp_order_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8152,7 +8155,7 @@ CREATE SEQUENCE audit.sp_orderprop_audit_sp_orderprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_orderprop_audit_sp_orderprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_orderprop_audit_sp_orderprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_orderprop_audit_sp_orderprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8193,7 +8196,7 @@ CREATE SEQUENCE audit.sp_organization_audit_sp_organization_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_organization_audit_sp_organization_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_organization_audit_sp_organization_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_organization_audit_sp_organization_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8234,7 +8237,7 @@ CREATE SEQUENCE audit.sp_person_audit_sp_person_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_person_audit_sp_person_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_person_audit_sp_person_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_person_audit_sp_person_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8275,7 +8278,7 @@ CREATE SEQUENCE audit.sp_person_roles_audit_sp_person_roles_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_person_roles_audit_sp_person_roles_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_person_roles_audit_sp_person_roles_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_person_roles_audit_sp_person_roles_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8316,7 +8319,7 @@ CREATE SEQUENCE audit.sp_roles_audit_sp_roles_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_roles_audit_sp_roles_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_roles_audit_sp_roles_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_roles_audit_sp_roles_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8357,7 +8360,7 @@ CREATE SEQUENCE audit.sp_token_audit_sp_token_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.sp_token_audit_sp_token_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.sp_token_audit_sp_token_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: sp_token_audit_sp_token_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8398,7 +8401,7 @@ CREATE SEQUENCE audit.stock_audit_stock_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_audit_stock_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_audit_stock_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_audit_stock_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8439,7 +8442,7 @@ CREATE SEQUENCE audit.stock_cvterm_audit_stock_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_cvterm_audit_stock_cvterm_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_cvterm_audit_stock_cvterm_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_cvterm_audit_stock_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8480,7 +8483,7 @@ CREATE SEQUENCE audit.stock_cvtermprop_audit_stock_cvtermprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_cvtermprop_audit_stock_cvtermprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_cvtermprop_audit_stock_cvtermprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_cvtermprop_audit_stock_cvtermprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8521,7 +8524,7 @@ CREATE SEQUENCE audit.stock_dbxref_audit_stock_dbxref_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_dbxref_audit_stock_dbxref_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_dbxref_audit_stock_dbxref_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_dbxref_audit_stock_dbxref_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8562,7 +8565,7 @@ CREATE SEQUENCE audit.stock_dbxrefprop_audit_stock_dbxrefprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_dbxrefprop_audit_stock_dbxrefprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_dbxrefprop_audit_stock_dbxrefprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_dbxrefprop_audit_stock_dbxrefprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8603,7 +8606,7 @@ CREATE SEQUENCE audit.stock_genotype_audit_stock_genotype_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_genotype_audit_stock_genotype_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_genotype_audit_stock_genotype_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_genotype_audit_stock_genotype_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8644,7 +8647,7 @@ CREATE SEQUENCE audit.stock_pub_audit_stock_pub_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_pub_audit_stock_pub_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_pub_audit_stock_pub_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_pub_audit_stock_pub_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8685,7 +8688,7 @@ CREATE SEQUENCE audit.stock_relationship_audit_stock_relationship_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stock_relationship_audit_stock_relationship_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_relationship_audit_stock_relationship_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stock_relationship_audit_stock_relationship_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8706,7 +8709,7 @@ CREATE TABLE audit.stock_relationship_cvterm_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    stock_relationship_cvterm_audit_id integer NOT NULL,
+    stock_relationship_cvterm_audit_id integer CONSTRAINT stock_relationship_cvterm_a_stock_relationship_cvterm__not_null NOT NULL,
     is_undo boolean
 );
 
@@ -8726,7 +8729,7 @@ CREATE SEQUENCE audit.stock_relationship_cvterm_aud_stock_relationship_cvterm_au
     CACHE 1;
 
 
-ALTER TABLE audit.stock_relationship_cvterm_aud_stock_relationship_cvterm_aud_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_relationship_cvterm_aud_stock_relationship_cvterm_aud_seq OWNER TO web_usr;
 
 --
 -- Name: stock_relationship_cvterm_aud_stock_relationship_cvterm_aud_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8747,7 +8750,7 @@ CREATE TABLE audit.stock_relationship_pub_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    stock_relationship_pub_audit_id integer NOT NULL,
+    stock_relationship_pub_audit_id integer CONSTRAINT stock_relationship_pub_audi_stock_relationship_pub_aud_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -8767,7 +8770,7 @@ CREATE SEQUENCE audit.stock_relationship_pub_audit_stock_relationship_pub_audit_
     CACHE 1;
 
 
-ALTER TABLE audit.stock_relationship_pub_audit_stock_relationship_pub_audit_i_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stock_relationship_pub_audit_stock_relationship_pub_audit_i_seq OWNER TO web_usr;
 
 --
 -- Name: stock_relationship_pub_audit_stock_relationship_pub_audit_i_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8808,7 +8811,7 @@ CREATE SEQUENCE audit.stockcollection_audit_stockcollection_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stockcollection_audit_stockcollection_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stockcollection_audit_stockcollection_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stockcollection_audit_stockcollection_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8829,7 +8832,7 @@ CREATE TABLE audit.stockcollection_stock_audit (
     before jsonb,
     after jsonb,
     transactioncode character varying(40),
-    stockcollection_stock_audit_id integer NOT NULL,
+    stockcollection_stock_audit_id integer CONSTRAINT stockcollection_stock_audit_stockcollection_stock_audi_not_null NOT NULL,
     is_undo boolean
 );
 
@@ -8849,7 +8852,7 @@ CREATE SEQUENCE audit.stockcollection_stock_audit_stockcollection_stock_audit_id
     CACHE 1;
 
 
-ALTER TABLE audit.stockcollection_stock_audit_stockcollection_stock_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stockcollection_stock_audit_stockcollection_stock_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stockcollection_stock_audit_stockcollection_stock_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8890,7 +8893,7 @@ CREATE SEQUENCE audit.stockcollectionprop_audit_stockcollectionprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stockcollectionprop_audit_stockcollectionprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stockcollectionprop_audit_stockcollectionprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stockcollectionprop_audit_stockcollectionprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8931,7 +8934,7 @@ CREATE SEQUENCE audit.stockprop_audit_stockprop_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stockprop_audit_stockprop_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stockprop_audit_stockprop_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stockprop_audit_stockprop_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -8972,7 +8975,7 @@ CREATE SEQUENCE audit.stockprop_pub_audit_stockprop_pub_audit_id_seq
     CACHE 1;
 
 
-ALTER TABLE audit.stockprop_pub_audit_stockprop_pub_audit_id_seq OWNER TO web_usr;
+ALTER SEQUENCE audit.stockprop_pub_audit_stockprop_pub_audit_id_seq OWNER TO web_usr;
 
 --
 -- Name: stockprop_pub_audit_stockprop_pub_audit_id_seq; Type: SEQUENCE OWNED BY; Schema: audit; Owner: web_usr
@@ -9015,7 +9018,7 @@ CREATE SEQUENCE biosource.bs_protocol_protocol_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_protocol_protocol_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_protocol_protocol_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_protocol_protocol_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9057,7 +9060,7 @@ CREATE SEQUENCE biosource.bs_protocol_pub_protocol_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_protocol_pub_protocol_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_protocol_pub_protocol_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_protocol_pub_protocol_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9126,7 +9129,7 @@ CREATE SEQUENCE biosource.bs_protocol_step_dbxref_protocol_step_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_protocol_step_dbxref_protocol_step_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_protocol_step_dbxref_protocol_step_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_protocol_step_dbxref_protocol_step_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9147,7 +9150,7 @@ CREATE SEQUENCE biosource.bs_protocol_step_protocol_step_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_protocol_step_protocol_step_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_protocol_step_protocol_step_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_protocol_step_protocol_step_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9217,7 +9220,7 @@ CREATE SEQUENCE biosource.bs_sample_cvterm_sample_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_cvterm_sample_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_cvterm_sample_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_cvterm_sample_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9259,7 +9262,7 @@ CREATE SEQUENCE biosource.bs_sample_dbxref_sample_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_dbxref_sample_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_dbxref_sample_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_dbxref_sample_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9327,7 +9330,7 @@ CREATE SEQUENCE biosource.bs_sample_element_cvterm_sample_element_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_element_cvterm_sample_element_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_element_cvterm_sample_element_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_element_cvterm_sample_element_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9369,7 +9372,7 @@ CREATE SEQUENCE biosource.bs_sample_element_dbxref_sample_element_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_element_dbxref_sample_element_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_element_dbxref_sample_element_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_element_dbxref_sample_element_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9411,7 +9414,7 @@ CREATE SEQUENCE biosource.bs_sample_element_file_sample_element_file_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_element_file_sample_element_file_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_element_file_sample_element_file_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_element_file_sample_element_file_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9454,7 +9457,7 @@ CREATE SEQUENCE biosource.bs_sample_element_relation_sample_element_relation_id_
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_element_relation_sample_element_relation_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_element_relation_sample_element_relation_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_element_relation_sample_element_relation_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9475,7 +9478,7 @@ CREATE SEQUENCE biosource.bs_sample_element_sample_element_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_element_sample_element_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_element_sample_element_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_element_sample_element_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9517,7 +9520,7 @@ CREATE SEQUENCE biosource.bs_sample_file_sample_file_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_file_sample_file_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_file_sample_file_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_file_sample_file_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9559,7 +9562,7 @@ CREATE SEQUENCE biosource.bs_sample_pub_sample_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_pub_sample_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_pub_sample_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_pub_sample_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9604,7 +9607,7 @@ CREATE SEQUENCE biosource.bs_sample_relationship_sample_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_relationship_sample_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_relationship_sample_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_relationship_sample_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9625,7 +9628,7 @@ CREATE SEQUENCE biosource.bs_sample_sample_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_sample_sample_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_sample_sample_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_sample_sample_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9692,7 +9695,7 @@ CREATE SEQUENCE biosource.bs_tool_pub_tool_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_tool_pub_tool_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_tool_pub_tool_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_tool_pub_tool_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9713,7 +9716,7 @@ CREATE SEQUENCE biosource.bs_tool_tool_id_seq
     CACHE 1;
 
 
-ALTER TABLE biosource.bs_tool_tool_id_seq OWNER TO postgres;
+ALTER SEQUENCE biosource.bs_tool_tool_id_seq OWNER TO postgres;
 
 --
 -- Name: bs_tool_tool_id_seq; Type: SEQUENCE OWNED BY; Schema: biosource; Owner: postgres
@@ -9758,7 +9761,7 @@ CREATE SEQUENCE gem.ge_cluster_analysis_cluster_analysis_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_cluster_analysis_cluster_analysis_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_cluster_analysis_cluster_analysis_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_cluster_analysis_cluster_analysis_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -9800,7 +9803,7 @@ CREATE SEQUENCE gem.ge_cluster_member_cluster_member_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_cluster_member_cluster_member_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_cluster_member_cluster_member_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_cluster_member_cluster_member_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -9843,7 +9846,7 @@ CREATE SEQUENCE gem.ge_cluster_profile_cluster_profile_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_cluster_profile_cluster_profile_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_cluster_profile_cluster_profile_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_cluster_profile_cluster_profile_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -9886,7 +9889,7 @@ CREATE SEQUENCE gem.ge_correlation_analysis_correlation_analysis_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_correlation_analysis_correlation_analysis_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_correlation_analysis_correlation_analysis_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_correlation_analysis_correlation_analysis_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -9925,7 +9928,7 @@ CREATE SEQUENCE gem.ge_correlation_member_correlation_member_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_correlation_member_correlation_member_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_correlation_member_correlation_member_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_correlation_member_correlation_member_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -9970,7 +9973,7 @@ CREATE SEQUENCE gem.ge_data_analysis_process_data_analysis_process_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_data_analysis_process_data_analysis_process_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_data_analysis_process_data_analysis_process_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_data_analysis_process_data_analysis_process_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10014,7 +10017,7 @@ CREATE SEQUENCE gem.ge_diff_expression_diff_expression_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_diff_expression_diff_expression_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_diff_expression_diff_expression_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_diff_expression_diff_expression_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10053,7 +10056,7 @@ COMMENT ON TABLE gem.ge_experiment IS 'gem.ge_experiment store data about a sing
 --
 
 CREATE TABLE gem.ge_experiment_analysis_group (
-    experiment_analysis_group_id integer NOT NULL,
+    experiment_analysis_group_id integer CONSTRAINT ge_experiment_analysis_grou_experiment_analysis_group__not_null NOT NULL,
     group_name character varying(250),
     group_description text,
     metadata_id bigint
@@ -10081,7 +10084,7 @@ CREATE SEQUENCE gem.ge_experiment_analysis_group_experiment_analysis_group_id_se
     CACHE 1;
 
 
-ALTER TABLE gem.ge_experiment_analysis_group_experiment_analysis_group_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_experiment_analysis_group_experiment_analysis_group_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_experiment_analysis_group_experiment_analysis_group_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10095,7 +10098,7 @@ ALTER SEQUENCE gem.ge_experiment_analysis_group_experiment_analysis_group_id_seq
 --
 
 CREATE TABLE gem.ge_experiment_analysis_member (
-    experiment_analysis_member_id integer NOT NULL,
+    experiment_analysis_member_id integer CONSTRAINT ge_experiment_analysis_memb_experiment_analysis_member_not_null NOT NULL,
     experiment_analysis_group_id integer,
     experiment_id integer,
     metadata_id bigint
@@ -10116,7 +10119,7 @@ CREATE SEQUENCE gem.ge_experiment_analysis_member_experiment_analysis_member_id_
     CACHE 1;
 
 
-ALTER TABLE gem.ge_experiment_analysis_member_experiment_analysis_member_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_experiment_analysis_member_experiment_analysis_member_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_experiment_analysis_member_experiment_analysis_member_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10158,7 +10161,7 @@ CREATE SEQUENCE gem.ge_experiment_dbxref_experiment_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_experiment_dbxref_experiment_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_experiment_dbxref_experiment_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_experiment_dbxref_experiment_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10179,7 +10182,7 @@ CREATE SEQUENCE gem.ge_experiment_experiment_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_experiment_experiment_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_experiment_experiment_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_experiment_experiment_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10208,7 +10211,7 @@ ALTER TABLE gem.ge_experimental_design OWNER TO postgres;
 --
 
 CREATE TABLE gem.ge_experimental_design_dbxref (
-    experimental_design_dbxref_id integer NOT NULL,
+    experimental_design_dbxref_id integer CONSTRAINT ge_experimental_design_dbxr_experimental_design_dbxref_not_null NOT NULL,
     experimental_design_id integer,
     dbxref_id bigint,
     metadata_id bigint
@@ -10236,7 +10239,7 @@ CREATE SEQUENCE gem.ge_experimental_design_dbxref_experimental_design_dbxref_id_
     CACHE 1;
 
 
-ALTER TABLE gem.ge_experimental_design_dbxref_experimental_design_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_experimental_design_dbxref_experimental_design_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_experimental_design_dbxref_experimental_design_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10257,7 +10260,7 @@ CREATE SEQUENCE gem.ge_experimental_design_experimental_design_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_experimental_design_experimental_design_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_experimental_design_experimental_design_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_experimental_design_experimental_design_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10299,7 +10302,7 @@ CREATE SEQUENCE gem.ge_experimental_design_pub_experimental_design_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_experimental_design_pub_experimental_design_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_experimental_design_pub_experimental_design_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_experimental_design_pub_experimental_design_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10313,7 +10316,7 @@ ALTER SEQUENCE gem.ge_experimental_design_pub_experimental_design_pub_id_seq OWN
 --
 
 CREATE TABLE gem.ge_expression_by_experiment (
-    expression_by_experiment_id bigint NOT NULL,
+    expression_by_experiment_id bigint CONSTRAINT ge_expression_by_experiment_expression_by_experiment_i_not_null NOT NULL,
     experiment_id integer,
     template_id bigint,
     replicates_used integer,
@@ -10347,7 +10350,7 @@ CREATE SEQUENCE gem.ge_expression_by_experiment_expression_by_experiment_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_expression_by_experiment_expression_by_experiment_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_expression_by_experiment_expression_by_experiment_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_expression_by_experiment_expression_by_experiment_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10391,7 +10394,7 @@ CREATE SEQUENCE gem.ge_fluorescanning_fluorescanning_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_fluorescanning_fluorescanning_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_fluorescanning_fluorescanning_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_fluorescanning_fluorescanning_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10435,7 +10438,7 @@ CREATE SEQUENCE gem.ge_hybridization_hybridization_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_hybridization_hybridization_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_hybridization_hybridization_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_hybridization_hybridization_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10500,7 +10503,7 @@ CREATE SEQUENCE gem.ge_platform_dbxref_platform_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_platform_dbxref_platform_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_platform_dbxref_platform_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_platform_dbxref_platform_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10542,7 +10545,7 @@ CREATE SEQUENCE gem.ge_platform_design_platform_design_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_platform_design_platform_design_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_platform_design_platform_design_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_platform_design_platform_design_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10563,7 +10566,7 @@ CREATE SEQUENCE gem.ge_platform_platform_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_platform_platform_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_platform_platform_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_platform_platform_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10605,7 +10608,7 @@ CREATE SEQUENCE gem.ge_platform_pub_platform_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_platform_pub_platform_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_platform_pub_platform_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_platform_pub_platform_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10679,7 +10682,7 @@ CREATE SEQUENCE gem.ge_probe_expression_probe_expression_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_probe_expression_probe_expression_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_probe_expression_probe_expression_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_probe_expression_probe_expression_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10700,7 +10703,7 @@ CREATE SEQUENCE gem.ge_probe_probe_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_probe_probe_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_probe_probe_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_probe_probe_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10764,7 +10767,7 @@ CREATE SEQUENCE gem.ge_probe_spot_coordinate_probe_spot_coordinate_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_probe_spot_coordinate_probe_spot_coordinate_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_probe_spot_coordinate_probe_spot_coordinate_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_probe_spot_coordinate_probe_spot_coordinate_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10785,7 +10788,7 @@ CREATE SEQUENCE gem.ge_probe_spot_probe_spot_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_probe_spot_probe_spot_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_probe_spot_probe_spot_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_probe_spot_probe_spot_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10833,7 +10836,7 @@ CREATE SEQUENCE gem.ge_profile_element_profile_element_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_profile_element_profile_element_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_profile_element_profile_element_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_profile_element_profile_element_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10896,7 +10899,7 @@ CREATE SEQUENCE gem.ge_target_dbxref_target_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_target_dbxref_target_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_target_dbxref_target_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_target_dbxref_target_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10941,7 +10944,7 @@ CREATE SEQUENCE gem.ge_target_element_target_element_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_target_element_target_element_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_target_element_target_element_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_target_element_target_element_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -10962,7 +10965,7 @@ CREATE SEQUENCE gem.ge_target_target_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_target_target_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_target_target_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_target_target_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -11004,7 +11007,7 @@ CREATE SEQUENCE gem.ge_technology_type_technology_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_technology_type_technology_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_technology_type_technology_type_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_technology_type_technology_type_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -11068,7 +11071,7 @@ CREATE SEQUENCE gem.ge_template_dbiref_template_dbiref_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_template_dbiref_template_dbiref_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_template_dbiref_template_dbiref_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_template_dbiref_template_dbiref_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -11110,7 +11113,7 @@ CREATE SEQUENCE gem.ge_template_dbxref_template_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_template_dbxref_template_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_template_dbxref_template_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_template_dbxref_template_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -11124,7 +11127,7 @@ ALTER SEQUENCE gem.ge_template_dbxref_template_dbxref_id_seq OWNED BY gem.ge_tem
 --
 
 CREATE TABLE gem.ge_template_diff_expression (
-    template_diff_expression_id bigint NOT NULL,
+    template_diff_expression_id bigint CONSTRAINT ge_template_diff_expression_template_diff_expression_i_not_null NOT NULL,
     diff_expression_id integer,
     template_id bigint,
     stat_value double precision,
@@ -11155,7 +11158,7 @@ CREATE SEQUENCE gem.ge_template_diff_expression_template_diff_expression_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_template_diff_expression_template_diff_expression_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_template_diff_expression_template_diff_expression_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_template_diff_expression_template_diff_expression_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -11203,7 +11206,7 @@ CREATE SEQUENCE gem.ge_template_expression_template_expression_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_template_expression_template_expression_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_template_expression_template_expression_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_template_expression_template_expression_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -11224,7 +11227,7 @@ CREATE SEQUENCE gem.ge_template_template_id_seq
     CACHE 1;
 
 
-ALTER TABLE gem.ge_template_template_id_seq OWNER TO postgres;
+ALTER SEQUENCE gem.ge_template_template_id_seq OWNER TO postgres;
 
 --
 -- Name: ge_template_template_id_seq; Type: SEQUENCE OWNED BY; Schema: gem; Owner: postgres
@@ -11260,7 +11263,7 @@ CREATE SEQUENCE genomic.blast_defline_blast_defline_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.blast_defline_blast_defline_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.blast_defline_blast_defline_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_defline_blast_defline_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11300,7 +11303,7 @@ CREATE SEQUENCE genomic.blast_hit_blast_hit_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.blast_hit_blast_hit_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.blast_hit_blast_hit_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_hit_blast_hit_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11338,7 +11341,7 @@ CREATE SEQUENCE genomic.blast_query_blast_query_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.blast_query_blast_query_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.blast_query_blast_query_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_query_blast_query_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11378,7 +11381,7 @@ CREATE SEQUENCE genomic.chromat_chromat_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.chromat_chromat_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.chromat_chromat_id_seq OWNER TO postgres;
 
 --
 -- Name: chromat_chromat_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11418,7 +11421,7 @@ CREATE SEQUENCE genomic.clone_clone_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.clone_clone_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.clone_clone_id_seq OWNER TO postgres;
 
 --
 -- Name: clone_clone_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11472,7 +11475,7 @@ CREATE SEQUENCE genomic.clone_feature_clone_feature_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.clone_feature_clone_feature_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.clone_feature_clone_feature_id_seq OWNER TO postgres;
 
 --
 -- Name: clone_feature_clone_feature_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11506,7 +11509,7 @@ CREATE SEQUENCE genomic.clone_type_clone_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.clone_type_clone_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.clone_type_clone_type_id_seq OWNER TO postgres;
 
 --
 -- Name: clone_type_clone_type_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11542,7 +11545,7 @@ CREATE SEQUENCE genomic.genbank_submission_genbank_submission_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.genbank_submission_genbank_submission_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.genbank_submission_genbank_submission_id_seq OWNER TO postgres;
 
 --
 -- Name: genbank_submission_genbank_submission_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11583,7 +11586,7 @@ CREATE SEQUENCE genomic.gss_gss_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.gss_gss_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.gss_gss_id_seq OWNER TO postgres;
 
 --
 -- Name: gss_gss_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11619,7 +11622,7 @@ CREATE SEQUENCE genomic.gss_submitted_to_genbank_gss_submitted_to_genbank_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.gss_submitted_to_genbank_gss_submitted_to_genbank_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.gss_submitted_to_genbank_gss_submitted_to_genbank_id_seq OWNER TO postgres;
 
 --
 -- Name: gss_submitted_to_genbank_gss_submitted_to_genbank_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11679,7 +11682,7 @@ CREATE SEQUENCE genomic.library_annotation_db_library_annotation_db_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.library_annotation_db_library_annotation_db_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.library_annotation_db_library_annotation_db_id_seq OWNER TO postgres;
 
 --
 -- Name: library_annotation_db_library_annotation_db_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11700,7 +11703,7 @@ CREATE SEQUENCE genomic.library_library_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.library_library_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.library_library_id_seq OWNER TO postgres;
 
 --
 -- Name: library_library_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11714,7 +11717,7 @@ ALTER SEQUENCE genomic.library_library_id_seq OWNED BY genomic.library.library_i
 --
 
 CREATE TABLE genomic.library_shortname_abbreviation (
-    library_shortname_abbreviation_id integer NOT NULL,
+    library_shortname_abbreviation_id integer CONSTRAINT library_shortname_abbreviat_library_shortname_abbrevia_not_null NOT NULL,
     library_id integer,
     abbreviation character varying(10)
 );
@@ -11741,7 +11744,7 @@ CREATE SEQUENCE genomic.library_shortname_abbreviatio_library_shortname_abbrevia
     CACHE 1;
 
 
-ALTER TABLE genomic.library_shortname_abbreviatio_library_shortname_abbreviatio_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.library_shortname_abbreviatio_library_shortname_abbreviatio_seq OWNER TO postgres;
 
 --
 -- Name: library_shortname_abbreviatio_library_shortname_abbreviatio_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11785,7 +11788,7 @@ CREATE SEQUENCE genomic.qc_report_qc_report_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.qc_report_qc_report_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.qc_report_qc_report_id_seq OWNER TO postgres;
 
 --
 -- Name: qc_report_qc_report_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11819,7 +11822,7 @@ CREATE SEQUENCE genomic.query_source_type_query_source_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.query_source_type_query_source_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.query_source_type_query_source_type_id_seq OWNER TO postgres;
 
 --
 -- Name: query_source_type_query_source_type_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11852,7 +11855,7 @@ CREATE SEQUENCE genomic.read_class_read_class_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.read_class_read_class_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.read_class_read_class_id_seq OWNER TO postgres;
 
 --
 -- Name: read_class_read_class_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11885,7 +11888,7 @@ CREATE SEQUENCE genomic.sequencing_primer_sequencing_primer_id_seq
     CACHE 1;
 
 
-ALTER TABLE genomic.sequencing_primer_sequencing_primer_id_seq OWNER TO postgres;
+ALTER SEQUENCE genomic.sequencing_primer_sequencing_primer_id_seq OWNER TO postgres;
 
 --
 -- Name: sequencing_primer_sequencing_primer_id_seq; Type: SEQUENCE OWNED BY; Schema: genomic; Owner: postgres
@@ -11939,7 +11942,7 @@ CREATE SEQUENCE insitu.experiment_experiment_id_seq
     CACHE 1;
 
 
-ALTER TABLE insitu.experiment_experiment_id_seq OWNER TO postgres;
+ALTER SEQUENCE insitu.experiment_experiment_id_seq OWNER TO postgres;
 
 --
 -- Name: experiment_experiment_id_seq; Type: SEQUENCE OWNED BY; Schema: insitu; Owner: postgres
@@ -11977,7 +11980,7 @@ CREATE SEQUENCE insitu.experiment_image_experiment_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE insitu.experiment_image_experiment_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE insitu.experiment_image_experiment_image_id_seq OWNER TO postgres;
 
 --
 -- Name: experiment_image_experiment_image_id_seq; Type: SEQUENCE OWNED BY; Schema: insitu; Owner: postgres
@@ -12015,7 +12018,7 @@ CREATE SEQUENCE insitu.experiment_tag_experiment_tag_id_seq
     CACHE 1;
 
 
-ALTER TABLE insitu.experiment_tag_experiment_tag_id_seq OWNER TO postgres;
+ALTER SEQUENCE insitu.experiment_tag_experiment_tag_id_seq OWNER TO postgres;
 
 --
 -- Name: experiment_tag_experiment_tag_id_seq; Type: SEQUENCE OWNED BY; Schema: insitu; Owner: postgres
@@ -12063,7 +12066,7 @@ CREATE SEQUENCE insitu.is_organism_is_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE insitu.is_organism_is_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE insitu.is_organism_is_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: is_organism_is_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: insitu; Owner: postgres
@@ -12109,7 +12112,7 @@ CREATE SEQUENCE insitu.probe_probe_id_seq
     CACHE 1;
 
 
-ALTER TABLE insitu.probe_probe_id_seq OWNER TO postgres;
+ALTER SEQUENCE insitu.probe_probe_id_seq OWNER TO postgres;
 
 --
 -- Name: probe_probe_id_seq; Type: SEQUENCE OWNED BY; Schema: insitu; Owner: postgres
@@ -12156,7 +12159,7 @@ CREATE SEQUENCE insitu.tag_tag_id_seq
     CACHE 1;
 
 
-ALTER TABLE insitu.tag_tag_id_seq OWNER TO postgres;
+ALTER SEQUENCE insitu.tag_tag_id_seq OWNER TO postgres;
 
 --
 -- Name: tag_tag_id_seq; Type: SEQUENCE OWNED BY; Schema: insitu; Owner: postgres
@@ -12192,7 +12195,7 @@ CREATE SEQUENCE metadata.attribution_attribution_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.attribution_attribution_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.attribution_attribution_id_seq OWNER TO postgres;
 
 --
 -- Name: attribution_attribution_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12229,7 +12232,7 @@ CREATE SEQUENCE metadata.attribution_to_attribution_to_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.attribution_to_attribution_to_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.attribution_to_attribution_to_id_seq OWNER TO postgres;
 
 --
 -- Name: attribution_to_attribution_to_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12263,7 +12266,7 @@ CREATE SEQUENCE metadata.comments_comment_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.comments_comment_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.comments_comment_id_seq OWNER TO postgres;
 
 --
 -- Name: comments_comment_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12306,7 +12309,7 @@ CREATE SEQUENCE metadata.md_dbipath_dbipath_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_dbipath_dbipath_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_dbipath_dbipath_id_seq OWNER TO postgres;
 
 --
 -- Name: md_dbipath_dbipath_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12348,7 +12351,7 @@ CREATE SEQUENCE metadata.md_dbiref_dbiref_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_dbiref_dbiref_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_dbiref_dbiref_id_seq OWNER TO postgres;
 
 --
 -- Name: md_dbiref_dbiref_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12390,7 +12393,7 @@ CREATE SEQUENCE metadata.md_dbversion_dbversion_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_dbversion_dbversion_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_dbversion_dbversion_id_seq OWNER TO postgres;
 
 --
 -- Name: md_dbversion_dbversion_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12438,7 +12441,7 @@ CREATE SEQUENCE metadata.md_files_file_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_files_file_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_files_file_id_seq OWNER TO postgres;
 
 --
 -- Name: md_files_file_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12480,7 +12483,7 @@ CREATE SEQUENCE metadata.md_groupmembers_groupmember_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_groupmembers_groupmember_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_groupmembers_groupmember_id_seq OWNER TO postgres;
 
 --
 -- Name: md_groupmembers_groupmember_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12523,7 +12526,7 @@ CREATE SEQUENCE metadata.md_groups_group_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_groups_group_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_groups_group_id_seq OWNER TO postgres;
 
 --
 -- Name: md_groups_group_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12579,7 +12582,7 @@ CREATE SEQUENCE metadata.md_image_cvterm_md_image_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_image_cvterm_md_image_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_image_cvterm_md_image_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: md_image_cvterm_md_image_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12600,7 +12603,7 @@ CREATE SEQUENCE metadata.md_image_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_image_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_image_image_id_seq OWNER TO postgres;
 
 --
 -- Name: md_image_image_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12636,7 +12639,7 @@ CREATE SEQUENCE metadata.md_image_organism_md_image_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_image_organism_md_image_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_image_organism_md_image_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: md_image_organism_md_image_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12652,7 +12655,7 @@ ALTER SEQUENCE metadata.md_image_organism_md_image_organism_id_seq OWNED BY meta
 CREATE TABLE metadata.md_json (
     json_id integer NOT NULL,
     json_type character varying(250),
-    json jsonb
+    "json" jsonb
 );
 
 
@@ -12678,7 +12681,7 @@ CREATE SEQUENCE metadata.md_json_json_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_json_json_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_json_json_id_seq OWNER TO postgres;
 
 --
 -- Name: md_json_json_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12726,7 +12729,7 @@ CREATE SEQUENCE metadata.md_metadata_metadata_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_metadata_metadata_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_metadata_metadata_id_seq OWNER TO postgres;
 
 --
 -- Name: md_metadata_metadata_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12781,7 +12784,7 @@ CREATE SEQUENCE metadata.md_tag_image_tag_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_tag_image_tag_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_tag_image_tag_image_id_seq OWNER TO postgres;
 
 --
 -- Name: md_tag_image_tag_image_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12802,7 +12805,7 @@ CREATE SEQUENCE metadata.md_tag_tag_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.md_tag_tag_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.md_tag_tag_id_seq OWNER TO postgres;
 
 --
 -- Name: md_tag_tag_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12836,7 +12839,7 @@ CREATE SEQUENCE metadata.roles_role_id_seq
     CACHE 1;
 
 
-ALTER TABLE metadata.roles_role_id_seq OWNER TO postgres;
+ALTER SEQUENCE metadata.roles_role_id_seq OWNER TO postgres;
 
 --
 -- Name: roles_role_id_seq; Type: SEQUENCE OWNED BY; Schema: metadata; Owner: postgres
@@ -12873,7 +12876,7 @@ CREATE SEQUENCE pheno_population.data_points_dp_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.data_points_dp_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.data_points_dp_id_seq OWNER TO postgres;
 
 --
 -- Name: data_points_dp_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -12908,7 +12911,7 @@ CREATE SEQUENCE pheno_population.genotypes_gen_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.genotypes_gen_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.genotypes_gen_id_seq OWNER TO postgres;
 
 --
 -- Name: genotypes_gen_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -12944,7 +12947,7 @@ CREATE SEQUENCE pheno_population.images_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.images_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.images_image_id_seq OWNER TO postgres;
 
 --
 -- Name: images_image_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -12980,7 +12983,7 @@ CREATE SEQUENCE pheno_population.locations_loc_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.locations_loc_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.locations_loc_id_seq OWNER TO postgres;
 
 --
 -- Name: locations_loc_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -13013,7 +13016,7 @@ CREATE SEQUENCE pheno_population.organs_organ_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.organs_organ_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.organs_organ_id_seq OWNER TO postgres;
 
 --
 -- Name: organs_organ_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -13048,7 +13051,7 @@ CREATE SEQUENCE pheno_population.plants_plant_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.plants_plant_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.plants_plant_id_seq OWNER TO postgres;
 
 --
 -- Name: plants_plant_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -13082,7 +13085,7 @@ CREATE SEQUENCE pheno_population.populations_pop_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.populations_pop_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.populations_pop_id_seq OWNER TO postgres;
 
 --
 -- Name: populations_pop_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -13119,7 +13122,7 @@ CREATE SEQUENCE pheno_population.properties_prop_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.properties_prop_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.properties_prop_id_seq OWNER TO postgres;
 
 --
 -- Name: properties_prop_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -13156,7 +13159,7 @@ CREATE SEQUENCE pheno_population.samples_sample_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.samples_sample_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.samples_sample_id_seq OWNER TO postgres;
 
 --
 -- Name: samples_sample_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -13191,7 +13194,7 @@ CREATE SEQUENCE pheno_population.sources_source_id_seq
     CACHE 1;
 
 
-ALTER TABLE pheno_population.sources_source_id_seq OWNER TO postgres;
+ALTER SEQUENCE pheno_population.sources_source_id_seq OWNER TO postgres;
 
 --
 -- Name: sources_source_id_seq; Type: SEQUENCE OWNED BY; Schema: pheno_population; Owner: postgres
@@ -13256,7 +13259,7 @@ CREATE SEQUENCE phenome.allele_alias_allele_alias_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.allele_alias_allele_alias_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.allele_alias_allele_alias_id_seq OWNER TO postgres;
 
 --
 -- Name: allele_alias_allele_alias_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13277,7 +13280,7 @@ CREATE SEQUENCE phenome.allele_allele_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.allele_allele_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.allele_allele_id_seq OWNER TO postgres;
 
 --
 -- Name: allele_allele_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13315,7 +13318,7 @@ CREATE SEQUENCE phenome.allele_dbxref_allele_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.allele_dbxref_allele_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.allele_dbxref_allele_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: allele_dbxref_allele_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13359,7 +13362,7 @@ CREATE SEQUENCE phenome.allele_history_allele_history_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.allele_history_allele_history_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.allele_history_allele_history_id_seq OWNER TO postgres;
 
 --
 -- Name: allele_history_allele_history_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13392,7 +13395,7 @@ CREATE SEQUENCE phenome.cross_type_cross_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.cross_type_cross_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.cross_type_cross_type_id_seq OWNER TO postgres;
 
 --
 -- Name: cross_type_cross_type_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13442,7 +13445,7 @@ CREATE SEQUENCE phenome.dbxref_type_dbxref_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.dbxref_type_dbxref_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.dbxref_type_dbxref_type_id_seq OWNER TO postgres;
 
 --
 -- Name: dbxref_type_dbxref_type_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13482,7 +13485,7 @@ CREATE SEQUENCE phenome.genotype_experiment_genotype_experiment_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.genotype_experiment_genotype_experiment_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.genotype_experiment_genotype_experiment_id_seq OWNER TO postgres;
 
 --
 -- Name: genotype_experiment_genotype_experiment_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13525,7 +13528,7 @@ CREATE SEQUENCE phenome.genotype_genotype_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.genotype_genotype_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.genotype_genotype_id_seq OWNER TO postgres;
 
 --
 -- Name: genotype_genotype_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13642,7 +13645,7 @@ CREATE SEQUENCE phenome.genotype_region_genotype_region_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.genotype_region_genotype_region_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.genotype_region_genotype_region_id_seq OWNER TO postgres;
 
 --
 -- Name: genotype_region_genotype_region_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13683,7 +13686,7 @@ CREATE SEQUENCE phenome.germplasm_germplasm_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.germplasm_germplasm_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.germplasm_germplasm_id_seq OWNER TO postgres;
 
 --
 -- Name: germplasm_germplasm_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13744,7 +13747,7 @@ CREATE SEQUENCE phenome.individual_alias_individual_alias_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_alias_individual_alias_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_alias_individual_alias_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_alias_individual_alias_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13782,7 +13785,7 @@ CREATE SEQUENCE phenome.individual_allele_individual_allele_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_allele_individual_allele_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_allele_individual_allele_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_allele_individual_allele_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13813,7 +13816,7 @@ ALTER TABLE phenome.individual_dbxref OWNER TO postgres;
 --
 
 CREATE TABLE phenome.individual_dbxref_evidence (
-    individual_dbxref_evidence_id integer NOT NULL,
+    individual_dbxref_evidence_id integer CONSTRAINT individual_dbxref_evidence_individual_dbxref_evidence__not_null NOT NULL,
     individual_dbxref_id integer,
     relationship_type integer,
     evidence_code integer,
@@ -13835,7 +13838,7 @@ ALTER TABLE phenome.individual_dbxref_evidence OWNER TO postgres;
 --
 
 CREATE TABLE phenome.individual_dbxref_evidence_history (
-    individual_dbxref_evidence_history_id integer NOT NULL,
+    individual_dbxref_evidence_history_id integer CONSTRAINT individual_dbxref_evidence__individual_dbxref_evidence_not_null NOT NULL,
     individual_dbxref_evidence_id integer,
     individual_dbxref_id integer,
     relationship_type integer,
@@ -13865,7 +13868,7 @@ CREATE SEQUENCE phenome.individual_dbxref_evidence_hi_individual_dbxref_evidence
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_dbxref_evidence_hi_individual_dbxref_evidence_hi_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_dbxref_evidence_hi_individual_dbxref_evidence_hi_seq OWNER TO postgres;
 
 --
 -- Name: individual_dbxref_evidence_hi_individual_dbxref_evidence_hi_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13886,7 +13889,7 @@ CREATE SEQUENCE phenome.individual_dbxref_evidence_individual_dbxref_evidence_id
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_dbxref_evidence_individual_dbxref_evidence_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_dbxref_evidence_individual_dbxref_evidence_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_dbxref_evidence_individual_dbxref_evidence_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13907,7 +13910,7 @@ CREATE SEQUENCE phenome.individual_dbxref_individual_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_dbxref_individual_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_dbxref_individual_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_dbxref_individual_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13947,7 +13950,7 @@ CREATE SEQUENCE phenome.individual_history_individual_history_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_history_individual_history_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_history_individual_history_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_history_individual_history_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -13985,7 +13988,7 @@ CREATE SEQUENCE phenome.individual_image_individual_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_image_individual_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_image_individual_image_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_image_individual_image_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14006,7 +14009,7 @@ CREATE SEQUENCE phenome.individual_individual_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_individual_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_individual_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_individual_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14044,7 +14047,7 @@ CREATE SEQUENCE phenome.individual_locus_individual_locus_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.individual_locus_individual_locus_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.individual_locus_individual_locus_id_seq OWNER TO postgres;
 
 --
 -- Name: individual_locus_individual_locus_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14079,7 +14082,7 @@ CREATE SEQUENCE phenome.is_public_is_public_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.is_public_is_public_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.is_public_is_public_id_seq OWNER TO postgres;
 
 --
 -- Name: is_public_is_public_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14148,7 +14151,7 @@ CREATE SEQUENCE phenome.locus2locus_locus2locus_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus2locus_locus2locus_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus2locus_locus2locus_id_seq OWNER TO postgres;
 
 --
 -- Name: locus2locus_locus2locus_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14187,7 +14190,7 @@ CREATE SEQUENCE phenome.locus_alias_locus_alias_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_alias_locus_alias_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_alias_locus_alias_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_alias_locus_alias_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14240,7 +14243,7 @@ ALTER TABLE phenome.locus_dbxref_evidence OWNER TO postgres;
 --
 
 CREATE TABLE phenome.locus_dbxref_evidence_history (
-    locus_dbxref_evidence_history_id integer NOT NULL,
+    locus_dbxref_evidence_history_id integer CONSTRAINT locus_dbxref_evidence_histo_locus_dbxref_evidence_hist_not_null NOT NULL,
     locus_dbxref_evidence_id integer,
     locus_dbxref_id integer,
     relationship_type integer,
@@ -14270,7 +14273,7 @@ CREATE SEQUENCE phenome.locus_dbxref_evidence_history_locus_dbxref_evidence_hist
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_dbxref_evidence_history_locus_dbxref_evidence_history_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_dbxref_evidence_history_locus_dbxref_evidence_history_seq OWNER TO postgres;
 
 --
 -- Name: locus_dbxref_evidence_history_locus_dbxref_evidence_history_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14291,7 +14294,7 @@ CREATE SEQUENCE phenome.locus_dbxref_evidence_locus_dbxref_evidence_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_dbxref_evidence_locus_dbxref_evidence_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_dbxref_evidence_locus_dbxref_evidence_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_dbxref_evidence_locus_dbxref_evidence_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14312,13 +14315,49 @@ CREATE SEQUENCE phenome.locus_dbxref_locus_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_dbxref_locus_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_dbxref_locus_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_dbxref_locus_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
 --
 
 ALTER SEQUENCE phenome.locus_dbxref_locus_dbxref_id_seq OWNED BY phenome.locus_dbxref.locus_dbxref_id;
+
+
+--
+-- Name: locus_geno_marker; Type: TABLE; Schema: phenome; Owner: postgres
+--
+
+CREATE TABLE phenome.locus_geno_marker (
+    locus_geno_marker_id integer NOT NULL,
+    nd_protocol_id integer,
+    marker_name text,
+    locus_id integer
+);
+
+
+ALTER TABLE phenome.locus_geno_marker OWNER TO postgres;
+
+--
+-- Name: locus_geno_marker_locus_geno_marker_id_seq; Type: SEQUENCE; Schema: phenome; Owner: postgres
+--
+
+CREATE SEQUENCE phenome.locus_geno_marker_locus_geno_marker_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE phenome.locus_geno_marker_locus_geno_marker_id_seq OWNER TO postgres;
+
+--
+-- Name: locus_geno_marker_locus_geno_marker_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
+--
+
+ALTER SEQUENCE phenome.locus_geno_marker_locus_geno_marker_id_seq OWNED BY phenome.locus_geno_marker.locus_geno_marker_id;
 
 
 --
@@ -14358,7 +14397,7 @@ CREATE SEQUENCE phenome.locus_history_locus_history_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_history_locus_history_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_history_locus_history_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_history_locus_history_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14397,7 +14436,7 @@ CREATE SEQUENCE phenome.locus_image_locus_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_image_locus_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_image_locus_image_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_image_locus_image_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14418,7 +14457,7 @@ CREATE SEQUENCE phenome.locus_locus_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_locus_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_locus_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_locus_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14456,7 +14495,7 @@ CREATE SEQUENCE phenome.locus_marker_locus_marker_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_marker_locus_marker_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_marker_locus_marker_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_marker_locus_marker_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14494,7 +14533,7 @@ CREATE SEQUENCE phenome.locus_owner_locus_owner_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_owner_locus_owner_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_owner_locus_owner_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_owner_locus_owner_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14560,7 +14599,7 @@ CREATE SEQUENCE phenome.locus_registry_locus_registry_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_registry_locus_registry_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_registry_locus_registry_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_registry_locus_registry_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14598,7 +14637,7 @@ CREATE SEQUENCE phenome.locus_unigene_locus_unigene_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locus_unigene_locus_unigene_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locus_unigene_locus_unigene_id_seq OWNER TO postgres;
 
 --
 -- Name: locus_unigene_locus_unigene_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14636,7 +14675,7 @@ CREATE SEQUENCE phenome.locusgroup_locusgroup_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locusgroup_locusgroup_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locusgroup_locusgroup_id_seq OWNER TO postgres;
 
 --
 -- Name: locusgroup_locusgroup_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14678,7 +14717,7 @@ CREATE SEQUENCE phenome.locusgroup_member_locusgroup_member_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.locusgroup_member_locusgroup_member_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.locusgroup_member_locusgroup_member_id_seq OWNER TO postgres;
 
 --
 -- Name: locusgroup_member_locusgroup_member_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14712,7 +14751,7 @@ CREATE SEQUENCE phenome.nd_experiment_md_files_nd_experiment_md_files_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.nd_experiment_md_files_nd_experiment_md_files_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.nd_experiment_md_files_nd_experiment_md_files_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_md_files_nd_experiment_md_files_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14747,7 +14786,7 @@ CREATE SEQUENCE phenome.nd_experiment_md_images_nd_experiment_md_images_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.nd_experiment_md_images_nd_experiment_md_images_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.nd_experiment_md_images_nd_experiment_md_images_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_md_images_nd_experiment_md_images_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14782,7 +14821,7 @@ CREATE SEQUENCE phenome.nd_experiment_md_json_nd_experiment_md_json_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.nd_experiment_md_json_nd_experiment_md_json_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.nd_experiment_md_json_nd_experiment_md_json_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_md_json_nd_experiment_md_json_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14816,7 +14855,7 @@ CREATE SEQUENCE phenome.phenotype_user_trait_phenotype_user_trait_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.phenotype_user_trait_phenotype_user_trait_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.phenotype_user_trait_phenotype_user_trait_id_seq OWNER TO postgres;
 
 --
 -- Name: phenotype_user_trait_phenotype_user_trait_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14858,7 +14897,7 @@ CREATE SEQUENCE phenome.polymorphic_fragment_polymorphic_fragment_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.polymorphic_fragment_polymorphic_fragment_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.polymorphic_fragment_polymorphic_fragment_id_seq OWNER TO postgres;
 
 --
 -- Name: polymorphic_fragment_polymorphic_fragment_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14924,7 +14963,7 @@ CREATE SEQUENCE phenome.population_dbxref_population_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.population_dbxref_population_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.population_dbxref_population_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: population_dbxref_population_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14945,7 +14984,7 @@ CREATE SEQUENCE phenome.population_population_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.population_population_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.population_population_id_seq OWNER TO postgres;
 
 --
 -- Name: population_population_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -14981,7 +15020,7 @@ CREATE SEQUENCE phenome.project_md_image_project_md_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.project_md_image_project_md_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.project_md_image_project_md_image_id_seq OWNER TO postgres;
 
 --
 -- Name: project_md_image_project_md_image_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15017,7 +15056,7 @@ CREATE SEQUENCE phenome.project_owner_project_owner_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.project_owner_project_owner_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.project_owner_project_owner_id_seq OWNER TO postgres;
 
 --
 -- Name: project_owner_project_owner_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15056,7 +15095,7 @@ CREATE SEQUENCE phenome.pub_curator_pub_curator_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.pub_curator_pub_curator_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.pub_curator_pub_curator_id_seq OWNER TO postgres;
 
 --
 -- Name: pub_curator_pub_curator_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15098,7 +15137,7 @@ CREATE SEQUENCE phenome.registry_registry_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.registry_registry_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.registry_registry_id_seq OWNER TO postgres;
 
 --
 -- Name: registry_registry_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15133,13 +15172,48 @@ CREATE SEQUENCE phenome.stock_allele_stock_allele_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.stock_allele_stock_allele_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.stock_allele_stock_allele_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_allele_stock_allele_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
 --
 
 ALTER SEQUENCE phenome.stock_allele_stock_allele_id_seq OWNED BY phenome.stock_allele.stock_allele_id;
+
+
+--
+-- Name: stock_file; Type: TABLE; Schema: phenome; Owner: postgres
+--
+
+CREATE TABLE phenome.stock_file (
+    stock_file_id integer NOT NULL,
+    stock_id integer NOT NULL,
+    file_id integer NOT NULL
+);
+
+
+ALTER TABLE phenome.stock_file OWNER TO postgres;
+
+--
+-- Name: stock_file_stock_file_id_seq; Type: SEQUENCE; Schema: phenome; Owner: postgres
+--
+
+CREATE SEQUENCE phenome.stock_file_stock_file_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE phenome.stock_file_stock_file_id_seq OWNER TO postgres;
+
+--
+-- Name: stock_file_stock_file_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
+--
+
+ALTER SEQUENCE phenome.stock_file_stock_file_id_seq OWNED BY phenome.stock_file.stock_file_id;
 
 
 --
@@ -15169,7 +15243,7 @@ CREATE SEQUENCE phenome.stock_image_stock_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.stock_image_stock_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.stock_image_stock_image_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_image_stock_image_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15204,7 +15278,7 @@ CREATE SEQUENCE phenome.stock_owner_stock_owner_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.stock_owner_stock_owner_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.stock_owner_stock_owner_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_owner_stock_owner_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15243,7 +15317,7 @@ CREATE SEQUENCE phenome.tomato_il_bin_il_bin_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.tomato_il_bin_il_bin_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.tomato_il_bin_il_bin_id_seq OWNER TO postgres;
 
 --
 -- Name: tomato_il_bin_il_bin_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15295,7 +15369,7 @@ CREATE SEQUENCE phenome.tomato_term2term_tomato_term2term_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.tomato_term2term_tomato_term2term_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.tomato_term2term_tomato_term2term_id_seq OWNER TO postgres;
 
 --
 -- Name: tomato_term2term_tomato_term2term_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15316,7 +15390,7 @@ CREATE SEQUENCE phenome.tomato_term_tomato_term_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.tomato_term_tomato_term_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.tomato_term_tomato_term_id_seq OWNER TO postgres;
 
 --
 -- Name: tomato_term_tomato_term_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15349,7 +15423,7 @@ CREATE SEQUENCE phenome.unit_unit_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.unit_unit_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.unit_unit_id_seq OWNER TO postgres;
 
 --
 -- Name: unit_unit_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15400,7 +15474,7 @@ CREATE SEQUENCE phenome.user_trait_unit_user_trait_unit_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.user_trait_unit_user_trait_unit_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.user_trait_unit_user_trait_unit_id_seq OWNER TO postgres;
 
 --
 -- Name: user_trait_unit_user_trait_unit_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15421,7 +15495,7 @@ CREATE SEQUENCE phenome.user_trait_user_trait_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.user_trait_user_trait_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.user_trait_user_trait_id_seq OWNER TO postgres;
 
 --
 -- Name: user_trait_user_trait_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15457,7 +15531,7 @@ CREATE SEQUENCE phenome.variant_variant_id_seq
     CACHE 1;
 
 
-ALTER TABLE phenome.variant_variant_id_seq OWNER TO postgres;
+ALTER SEQUENCE phenome.variant_variant_id_seq OWNER TO postgres;
 
 --
 -- Name: variant_variant_id_seq; Type: SEQUENCE OWNED BY; Schema: phenome; Owner: postgres
@@ -15492,7 +15566,7 @@ CREATE SEQUENCE physical.ba_plausibility_bap_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.ba_plausibility_bap_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.ba_plausibility_bap_id_seq OWNER TO postgres;
 
 --
 -- Name: ba_plausibility_bap_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15527,7 +15601,7 @@ CREATE SEQUENCE physical.bac_associations_bac_assoc_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.bac_associations_bac_assoc_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.bac_associations_bac_assoc_id_seq OWNER TO postgres;
 
 --
 -- Name: bac_associations_bac_assoc_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15566,7 +15640,7 @@ CREATE SEQUENCE physical.bac_consensus_sequences_consensus_seq_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.bac_consensus_sequences_consensus_seq_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.bac_consensus_sequences_consensus_seq_id_seq OWNER TO postgres;
 
 --
 -- Name: bac_consensus_sequences_consensus_seq_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15600,7 +15674,7 @@ CREATE SEQUENCE physical.bac_contigs_bac_contig_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.bac_contigs_bac_contig_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.bac_contigs_bac_contig_id_seq OWNER TO postgres;
 
 --
 -- Name: bac_contigs_bac_contig_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15636,7 +15710,7 @@ CREATE SEQUENCE physical.bac_end_sequences_end_seq_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.bac_end_sequences_end_seq_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.bac_end_sequences_end_seq_id_seq OWNER TO postgres;
 
 --
 -- Name: bac_end_sequences_end_seq_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15703,7 +15777,7 @@ CREATE SEQUENCE physical.bacs_bac_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.bacs_bac_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.bacs_bac_id_seq OWNER TO postgres;
 
 --
 -- Name: bacs_bac_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15745,7 +15819,7 @@ CREATE SEQUENCE physical.computational_associations_computational_assoc_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.computational_associations_computational_assoc_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.computational_associations_computational_assoc_id_seq OWNER TO postgres;
 
 --
 -- Name: computational_associations_computational_assoc_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15779,7 +15853,7 @@ CREATE SEQUENCE physical.contig_sizes_contig_size_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.contig_sizes_contig_size_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.contig_sizes_contig_size_id_seq OWNER TO postgres;
 
 --
 -- Name: contig_sizes_contig_size_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15813,7 +15887,7 @@ CREATE SEQUENCE physical.deprecated_probes_dp_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.deprecated_probes_dp_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.deprecated_probes_dp_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_probes_dp_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15856,7 +15930,7 @@ CREATE SEQUENCE physical.fpc_data_fpc_datum_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.fpc_data_fpc_datum_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.fpc_data_fpc_datum_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_data_fpc_datum_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15893,7 +15967,7 @@ CREATE SEQUENCE physical.fpc_version_fpc_version_seq
     CACHE 1;
 
 
-ALTER TABLE physical.fpc_version_fpc_version_seq OWNER TO postgres;
+ALTER SEQUENCE physical.fpc_version_fpc_version_seq OWNER TO postgres;
 
 --
 -- Name: fpc_version_fpc_version_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15930,7 +16004,7 @@ CREATE SEQUENCE physical.manual_associations_manual_assoc_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.manual_associations_manual_assoc_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.manual_associations_manual_assoc_id_seq OWNER TO postgres;
 
 --
 -- Name: manual_associations_manual_assoc_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -15965,7 +16039,7 @@ CREATE SEQUENCE physical.oa_plausibility_oap_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.oa_plausibility_oap_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.oa_plausibility_oap_id_seq OWNER TO postgres;
 
 --
 -- Name: oa_plausibility_oap_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16001,7 +16075,7 @@ CREATE SEQUENCE physical.overgo_associations_overgo_assoc_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.overgo_associations_overgo_assoc_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.overgo_associations_overgo_assoc_id_seq OWNER TO postgres;
 
 --
 -- Name: overgo_associations_overgo_assoc_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16038,7 +16112,7 @@ CREATE SEQUENCE physical.overgo_plates_plate_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.overgo_plates_plate_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.overgo_plates_plate_id_seq OWNER TO postgres;
 
 --
 -- Name: overgo_plates_plate_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16073,7 +16147,7 @@ CREATE SEQUENCE physical.overgo_results_result_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.overgo_results_result_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.overgo_results_result_id_seq OWNER TO postgres;
 
 --
 -- Name: overgo_results_result_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16109,7 +16183,7 @@ CREATE SEQUENCE physical.overgo_version_overgo_version_seq
     CACHE 1;
 
 
-ALTER TABLE physical.overgo_version_overgo_version_seq OWNER TO postgres;
+ALTER SEQUENCE physical.overgo_version_overgo_version_seq OWNER TO postgres;
 
 --
 -- Name: overgo_version_overgo_version_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16171,7 +16245,7 @@ CREATE SEQUENCE physical.probe_markers_overgo_probe_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.probe_markers_overgo_probe_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.probe_markers_overgo_probe_id_seq OWNER TO postgres;
 
 --
 -- Name: probe_markers_overgo_probe_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16205,7 +16279,7 @@ CREATE SEQUENCE physical.species_species_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.species_species_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.species_species_id_seq OWNER TO postgres;
 
 --
 -- Name: species_species_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16239,7 +16313,7 @@ CREATE SEQUENCE physical.tentative_association_conflict_groups_tacg_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.tentative_association_conflict_groups_tacg_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.tentative_association_conflict_groups_tacg_id_seq OWNER TO postgres;
 
 --
 -- Name: tentative_association_conflict_groups_tacg_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16274,7 +16348,7 @@ CREATE SEQUENCE physical.tentative_overgo_associations_tentative_assoc_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.tentative_overgo_associations_tentative_assoc_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.tentative_overgo_associations_tentative_assoc_id_seq OWNER TO postgres;
 
 --
 -- Name: tentative_overgo_associations_tentative_assoc_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16308,7 +16382,7 @@ CREATE SEQUENCE physical.users_user_id_seq
     CACHE 1;
 
 
-ALTER TABLE physical.users_user_id_seq OWNER TO postgres;
+ALTER SEQUENCE physical.users_user_id_seq OWNER TO postgres;
 
 --
 -- Name: users_user_id_seq; Type: SEQUENCE OWNED BY; Schema: physical; Owner: postgres
@@ -16384,16 +16458,64 @@ COMMENT ON COLUMN public.stock.type_id IS 'The type_id foreign key links to a co
 --
 
 CREATE VIEW public.accessions AS
- SELECT stock.stock_id AS accession_id,
-    stock.uniquename AS accession_name
+ SELECT stock_id AS accession_id,
+    uniquename AS accession_name
    FROM public.stock
-  WHERE ((stock.type_id = ( SELECT cvterm.cvterm_id
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
-          WHERE ((cvterm.name)::text = 'accession'::text))) AND (stock.is_obsolete = false))
-  GROUP BY stock.stock_id, stock.uniquename;
+          WHERE ((cvterm.name)::text = 'accession'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, uniquename;
 
 
-ALTER TABLE public.accessions OWNER TO web_usr;
+ALTER VIEW public.accessions OWNER TO web_usr;
+
+--
+-- Name: accessions_ids; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.accessions_ids AS
+ SELECT stock_id AS accessions_id_id,
+    stock_id AS accessions_id_name
+   FROM public.stock
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'accession'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, uniquename;
+
+
+ALTER VIEW public.accessions_ids OWNER TO web_usr;
+
+--
+-- Name: accessions_idsxorganisms; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.accessions_idsxorganisms AS
+ SELECT stock_id AS accessions_id_id,
+    organism_id
+   FROM public.stock s
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'accession'::text)))
+  GROUP BY stock_id, organism_id;
+
+
+ALTER VIEW public.accessions_idsxorganisms OWNER TO web_usr;
+
+--
+-- Name: accessionsxaccessions_ids; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.accessionsxaccessions_ids AS
+ SELECT stock_id AS accession_id,
+    stock_id AS accessions_id_id
+   FROM public.stock
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'accession'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, stock_id;
+
+
+ALTER VIEW public.accessionsxaccessions_ids OWNER TO web_usr;
 
 --
 -- Name: nd_experiment_phenotype; Type: TABLE; Schema: public; Owner: postgres
@@ -16648,20 +16770,20 @@ CREATE MATERIALIZED VIEW public.materialized_phenoview AS
   WITH NO DATA;
 
 
-ALTER TABLE public.materialized_phenoview OWNER TO web_usr;
+ALTER MATERIALIZED VIEW public.materialized_phenoview OWNER TO web_usr;
 
 --
 -- Name: accessionsxbreeding_programs; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.accessionsxbreeding_programs AS
- SELECT materialized_phenoview.accession_id,
-    materialized_phenoview.breeding_program_id
+ SELECT accession_id,
+    breeding_program_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.accession_id, materialized_phenoview.breeding_program_id;
+  GROUP BY accession_id, breeding_program_id;
 
 
-ALTER TABLE public.accessionsxbreeding_programs OWNER TO web_usr;
+ALTER VIEW public.accessionsxbreeding_programs OWNER TO web_usr;
 
 --
 -- Name: genotype; Type: TABLE; Schema: public; Owner: postgres
@@ -16814,46 +16936,62 @@ UNION
   WITH NO DATA;
 
 
-ALTER TABLE public.materialized_genoview OWNER TO web_usr;
+ALTER MATERIALIZED VIEW public.materialized_genoview OWNER TO web_usr;
 
 --
 -- Name: accessionsxgenotyping_projects; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.accessionsxgenotyping_projects AS
- SELECT materialized_genoview.accession_id,
-    materialized_genoview.genotyping_project_id
+ SELECT accession_id,
+    genotyping_project_id
    FROM public.materialized_genoview
-  GROUP BY materialized_genoview.accession_id, materialized_genoview.genotyping_project_id;
+  GROUP BY accession_id, genotyping_project_id;
 
 
-ALTER TABLE public.accessionsxgenotyping_projects OWNER TO web_usr;
+ALTER VIEW public.accessionsxgenotyping_projects OWNER TO web_usr;
 
 --
 -- Name: accessionsxgenotyping_protocols; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.accessionsxgenotyping_protocols AS
- SELECT materialized_genoview.accession_id,
-    materialized_genoview.genotyping_protocol_id
+ SELECT accession_id,
+    genotyping_protocol_id
    FROM public.materialized_genoview
-  GROUP BY materialized_genoview.accession_id, materialized_genoview.genotyping_protocol_id;
+  GROUP BY accession_id, genotyping_protocol_id;
 
 
-ALTER TABLE public.accessionsxgenotyping_protocols OWNER TO web_usr;
+ALTER VIEW public.accessionsxgenotyping_protocols OWNER TO web_usr;
 
 --
 -- Name: accessionsxlocations; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.accessionsxlocations AS
- SELECT materialized_phenoview.accession_id,
-    materialized_phenoview.location_id
+ SELECT accession_id,
+    location_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.accession_id, materialized_phenoview.location_id;
+  GROUP BY accession_id, location_id;
 
 
-ALTER TABLE public.accessionsxlocations OWNER TO web_usr;
+ALTER VIEW public.accessionsxlocations OWNER TO web_usr;
+
+--
+-- Name: accessionsxorganisms; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.accessionsxorganisms AS
+ SELECT stock_id AS accession_id,
+    organism_id
+   FROM public.stock s
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'accession'::text)))
+  GROUP BY stock_id, organism_id;
+
+
+ALTER VIEW public.accessionsxorganisms OWNER TO web_usr;
 
 --
 -- Name: accessionsxplants; Type: VIEW; Schema: public; Owner: web_usr
@@ -16869,7 +17007,7 @@ CREATE VIEW public.accessionsxplants AS
   GROUP BY materialized_phenoview.accession_id, stock.stock_id;
 
 
-ALTER TABLE public.accessionsxplants OWNER TO web_usr;
+ALTER VIEW public.accessionsxplants OWNER TO web_usr;
 
 --
 -- Name: accessionsxplots; Type: VIEW; Schema: public; Owner: web_usr
@@ -16885,7 +17023,7 @@ CREATE VIEW public.accessionsxplots AS
   GROUP BY materialized_phenoview.accession_id, stock.stock_id;
 
 
-ALTER TABLE public.accessionsxplots OWNER TO web_usr;
+ALTER VIEW public.accessionsxplots OWNER TO web_usr;
 
 --
 -- Name: accessionsxseedlots; Type: VIEW; Schema: public; Owner: web_usr
@@ -16904,7 +17042,23 @@ CREATE VIEW public.accessionsxseedlots AS
   GROUP BY materialized_phenoview.accession_id, stock.stock_id;
 
 
-ALTER TABLE public.accessionsxseedlots OWNER TO web_usr;
+ALTER VIEW public.accessionsxseedlots OWNER TO web_usr;
+
+--
+-- Name: accessionsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.accessionsxsubplots AS
+ SELECT materialized_phenoview.accession_id,
+    stock.stock_id AS subplot_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+  GROUP BY materialized_phenoview.accession_id, stock.stock_id;
+
+
+ALTER VIEW public.accessionsxsubplots OWNER TO web_usr;
 
 --
 -- Name: accessionsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
@@ -16920,7 +17074,7 @@ CREATE VIEW public.accessionsxtissue_sample AS
   GROUP BY materialized_phenoview.accession_id, stock.stock_id;
 
 
-ALTER TABLE public.accessionsxtissue_sample OWNER TO web_usr;
+ALTER VIEW public.accessionsxtissue_sample OWNER TO web_usr;
 
 --
 -- Name: cvterm_relationship; Type: TABLE; Schema: public; Owner: postgres
@@ -16994,20 +17148,20 @@ CREATE VIEW public.accessionsxtrait_components AS
   GROUP BY materialized_phenoview.accession_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.accessionsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.accessionsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: accessionsxtraits; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.accessionsxtraits AS
- SELECT materialized_phenoview.accession_id,
-    materialized_phenoview.trait_id
+ SELECT accession_id,
+    trait_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.accession_id, materialized_phenoview.trait_id;
+  GROUP BY accession_id, trait_id;
 
 
-ALTER TABLE public.accessionsxtraits OWNER TO web_usr;
+ALTER VIEW public.accessionsxtraits OWNER TO web_usr;
 
 --
 -- Name: accessionsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -17023,7 +17177,7 @@ CREATE VIEW public.accessionsxtrial_designs AS
   GROUP BY materialized_phenoview.accession_id, trialdesign.value;
 
 
-ALTER TABLE public.accessionsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.accessionsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: cv; Type: TABLE; Schema: public; Owner: postgres
@@ -17081,33 +17235,33 @@ CREATE VIEW public.accessionsxtrial_types AS
   GROUP BY materialized_phenoview.accession_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.accessionsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.accessionsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: accessionsxtrials; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.accessionsxtrials AS
- SELECT materialized_phenoview.accession_id,
-    materialized_phenoview.trial_id
+ SELECT accession_id,
+    trial_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.accession_id, materialized_phenoview.trial_id;
+  GROUP BY accession_id, trial_id;
 
 
-ALTER TABLE public.accessionsxtrials OWNER TO web_usr;
+ALTER VIEW public.accessionsxtrials OWNER TO web_usr;
 
 --
 -- Name: accessionsxyears; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.accessionsxyears AS
- SELECT materialized_phenoview.accession_id,
-    materialized_phenoview.year_id
+ SELECT accession_id,
+    year_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.accession_id, materialized_phenoview.year_id;
+  GROUP BY accession_id, year_id;
 
 
-ALTER TABLE public.accessionsxyears OWNER TO web_usr;
+ALTER VIEW public.accessionsxyears OWNER TO web_usr;
 
 --
 -- Name: all_gs_traits; Type: MATERIALIZED VIEW; Schema: public; Owner: web_usr
@@ -17122,7 +17276,7 @@ CREATE MATERIALIZED VIEW public.all_gs_traits AS
   WITH NO DATA;
 
 
-ALTER TABLE public.all_gs_traits OWNER TO web_usr;
+ALTER MATERIALIZED VIEW public.all_gs_traits OWNER TO web_usr;
 
 --
 -- Name: analysis; Type: TABLE; Schema: public; Owner: postgres
@@ -17156,7 +17310,7 @@ CREATE SEQUENCE public.analysis_analysis_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.analysis_analysis_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.analysis_analysis_id_seq OWNER TO postgres;
 
 --
 -- Name: analysis_analysis_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -17194,7 +17348,7 @@ CREATE SEQUENCE public.analysisfeature_analysisfeature_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.analysisfeature_analysisfeature_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.analysisfeature_analysisfeature_id_seq OWNER TO postgres;
 
 --
 -- Name: analysisfeature_analysisfeature_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -17229,7 +17383,7 @@ CREATE SEQUENCE public.analysisprop_analysisprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.analysisprop_analysisprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.analysisprop_analysisprop_id_seq OWNER TO postgres;
 
 --
 -- Name: analysisprop_analysisprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -17588,7 +17742,7 @@ CREATE SEQUENCE public.ara_users_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.ara_users_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.ara_users_id_seq OWNER TO postgres;
 
 --
 -- Name: ara_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -17628,7 +17782,7 @@ CREATE SEQUENCE public.blastwatch_queries_blastwatch_queries_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.blastwatch_queries_blastwatch_queries_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.blastwatch_queries_blastwatch_queries_id_seq OWNER TO postgres;
 
 --
 -- Name: blastwatch_queries_blastwatch_queries_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -17667,7 +17821,7 @@ CREATE SEQUENCE public.blastwatch_results_blastwatch_results_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.blastwatch_results_blastwatch_results_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.blastwatch_results_blastwatch_results_id_seq OWNER TO postgres;
 
 --
 -- Name: blastwatch_results_blastwatch_results_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -17691,7 +17845,7 @@ CREATE VIEW public.breeding_programs AS
   GROUP BY project.project_id, project.name;
 
 
-ALTER TABLE public.breeding_programs OWNER TO web_usr;
+ALTER VIEW public.breeding_programs OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxgenotyping_projects; Type: VIEW; Schema: public; Owner: web_usr
@@ -17708,7 +17862,7 @@ CREATE VIEW public.breeding_programsxgenotyping_projects AS
           WHERE ((cvterm.name)::text = 'design'::text))) AND (projectprop.value = 'genotype_data_project'::text));
 
 
-ALTER TABLE public.breeding_programsxgenotyping_projects OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxgenotyping_projects OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxgenotyping_protocols; Type: VIEW; Schema: public; Owner: web_usr
@@ -17722,20 +17876,35 @@ CREATE VIEW public.breeding_programsxgenotyping_protocols AS
   GROUP BY materialized_phenoview.breeding_program_id, materialized_genoview.genotyping_protocol_id;
 
 
-ALTER TABLE public.breeding_programsxgenotyping_protocols OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxgenotyping_protocols OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxlocations; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.breeding_programsxlocations AS
- SELECT materialized_phenoview.breeding_program_id,
-    materialized_phenoview.location_id
+ SELECT breeding_program_id,
+    location_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.breeding_program_id, materialized_phenoview.location_id;
+  GROUP BY breeding_program_id, location_id;
 
 
-ALTER TABLE public.breeding_programsxlocations OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxlocations OWNER TO web_usr;
+
+--
+-- Name: breeding_programsxorganisms; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.breeding_programsxorganisms AS
+ SELECT s.organism_id,
+    materialized_phenoview.breeding_program_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock s ON ((s.stock_id = materialized_phenoview.accession_id)))
+  WHERE ((s.organism_id IS NOT NULL) AND (materialized_phenoview.breeding_program_id IS NOT NULL))
+  GROUP BY s.organism_id, materialized_phenoview.breeding_program_id;
+
+
+ALTER VIEW public.breeding_programsxorganisms OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxplants; Type: VIEW; Schema: public; Owner: web_usr
@@ -17751,7 +17920,7 @@ CREATE VIEW public.breeding_programsxplants AS
   GROUP BY materialized_phenoview.breeding_program_id, stock.stock_id;
 
 
-ALTER TABLE public.breeding_programsxplants OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxplants OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxplots; Type: VIEW; Schema: public; Owner: web_usr
@@ -17767,7 +17936,7 @@ CREATE VIEW public.breeding_programsxplots AS
   GROUP BY materialized_phenoview.breeding_program_id, stock.stock_id;
 
 
-ALTER TABLE public.breeding_programsxplots OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxplots OWNER TO web_usr;
 
 --
 -- Name: nd_experiment; Type: TABLE; Schema: public; Owner: postgres
@@ -17799,7 +17968,23 @@ CREATE VIEW public.breeding_programsxseedlots AS
   GROUP BY materialized_phenoview.breeding_program_id, nd_experiment_stock.stock_id;
 
 
-ALTER TABLE public.breeding_programsxseedlots OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxseedlots OWNER TO web_usr;
+
+--
+-- Name: breeding_programsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.breeding_programsxsubplots AS
+ SELECT materialized_phenoview.breeding_program_id,
+    stock.stock_id AS subplot_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+  GROUP BY materialized_phenoview.breeding_program_id, stock.stock_id;
+
+
+ALTER VIEW public.breeding_programsxsubplots OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
@@ -17815,7 +18000,7 @@ CREATE VIEW public.breeding_programsxtissue_sample AS
   GROUP BY materialized_phenoview.breeding_program_id, stock.stock_id;
 
 
-ALTER TABLE public.breeding_programsxtissue_sample OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxtissue_sample OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -17833,20 +18018,20 @@ CREATE VIEW public.breeding_programsxtrait_components AS
   GROUP BY materialized_phenoview.breeding_program_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.breeding_programsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxtraits; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.breeding_programsxtraits AS
- SELECT materialized_phenoview.breeding_program_id,
-    materialized_phenoview.trait_id
+ SELECT breeding_program_id,
+    trait_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.breeding_program_id, materialized_phenoview.trait_id;
+  GROUP BY breeding_program_id, trait_id;
 
 
-ALTER TABLE public.breeding_programsxtraits OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxtraits OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -17862,7 +18047,7 @@ CREATE VIEW public.breeding_programsxtrial_designs AS
   GROUP BY materialized_phenoview.breeding_program_id, trialdesign.value;
 
 
-ALTER TABLE public.breeding_programsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -17880,33 +18065,33 @@ CREATE VIEW public.breeding_programsxtrial_types AS
   GROUP BY materialized_phenoview.breeding_program_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.breeding_programsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxtrials; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.breeding_programsxtrials AS
- SELECT materialized_phenoview.breeding_program_id,
-    materialized_phenoview.trial_id
+ SELECT breeding_program_id,
+    trial_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.breeding_program_id, materialized_phenoview.trial_id;
+  GROUP BY breeding_program_id, trial_id;
 
 
-ALTER TABLE public.breeding_programsxtrials OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxtrials OWNER TO web_usr;
 
 --
 -- Name: breeding_programsxyears; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.breeding_programsxyears AS
- SELECT materialized_phenoview.breeding_program_id,
-    materialized_phenoview.year_id
+ SELECT breeding_program_id,
+    year_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.breeding_program_id, materialized_phenoview.year_id;
+  GROUP BY breeding_program_id, year_id;
 
 
-ALTER TABLE public.breeding_programsxyears OWNER TO web_usr;
+ALTER VIEW public.breeding_programsxyears OWNER TO web_usr;
 
 --
 -- Name: bug; Type: TABLE; Schema: public; Owner: postgres
@@ -17942,7 +18127,7 @@ CREATE SEQUENCE public.bug_bug_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.bug_bug_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.bug_bug_id_seq OWNER TO postgres;
 
 --
 -- Name: bug_bug_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -17963,7 +18148,7 @@ CREATE SEQUENCE public.composed_trait_ids
     CACHE 1;
 
 
-ALTER TABLE public.composed_trait_ids OWNER TO web_usr;
+ALTER SEQUENCE public.composed_trait_ids OWNER TO web_usr;
 
 --
 -- Name: contact; Type: TABLE; Schema: public; Owner: postgres
@@ -18005,7 +18190,7 @@ CREATE SEQUENCE public.contact_contact_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.contact_contact_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.contact_contact_id_seq OWNER TO postgres;
 
 --
 -- Name: contact_contact_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18061,7 +18246,7 @@ CREATE SEQUENCE public.contact_relationship_contact_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.contact_relationship_contact_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.contact_relationship_contact_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: contact_relationship_contact_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18082,7 +18267,7 @@ CREATE SEQUENCE public.cv_cv_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cv_cv_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cv_cv_id_seq OWNER TO postgres;
 
 --
 -- Name: cv_cv_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18150,7 +18335,7 @@ CREATE SEQUENCE public.cvprop_cvprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cvprop_cvprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cvprop_cvprop_id_seq OWNER TO postgres;
 
 --
 -- Name: cvprop_cvprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18171,7 +18356,7 @@ CREATE SEQUENCE public.cvterm_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cvterm_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cvterm_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: cvterm_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18237,7 +18422,7 @@ CREATE SEQUENCE public.cvterm_dbxref_cvterm_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cvterm_dbxref_cvterm_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cvterm_dbxref_cvterm_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: cvterm_dbxref_cvterm_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18258,7 +18443,7 @@ CREATE SEQUENCE public.cvterm_relationship_cvterm_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cvterm_relationship_cvterm_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cvterm_relationship_cvterm_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: cvterm_relationship_cvterm_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18333,7 +18518,7 @@ CREATE SEQUENCE public.cvtermpath_cvtermpath_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cvtermpath_cvtermpath_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cvtermpath_cvtermpath_id_seq OWNER TO postgres;
 
 --
 -- Name: cvtermpath_cvtermpath_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18401,7 +18586,7 @@ CREATE SEQUENCE public.cvtermprop_cvtermprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cvtermprop_cvtermprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cvtermprop_cvtermprop_id_seq OWNER TO postgres;
 
 --
 -- Name: cvtermprop_cvtermprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18455,7 +18640,7 @@ CREATE SEQUENCE public.cvtermsynonym_cvtermsynonym_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cvtermsynonym_cvtermsynonym_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cvtermsynonym_cvtermsynonym_id_seq OWNER TO postgres;
 
 --
 -- Name: cvtermsynonym_cvtermsynonym_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18495,7 +18680,7 @@ CREATE SEQUENCE public.cxgn_bac_pipeline_genbank_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cxgn_bac_pipeline_genbank_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cxgn_bac_pipeline_genbank_log_id_seq OWNER TO postgres;
 
 --
 -- Name: cxgn_bac_pipeline_genbank_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18535,7 +18720,7 @@ CREATE SEQUENCE public.cxgn_bac_pipeline_loading_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cxgn_bac_pipeline_loading_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cxgn_bac_pipeline_loading_log_id_seq OWNER TO postgres;
 
 --
 -- Name: cxgn_bac_pipeline_loading_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18575,7 +18760,7 @@ CREATE SEQUENCE public.cxgn_bac_pipeline_processing_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cxgn_bac_pipeline_processing_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cxgn_bac_pipeline_processing_log_id_seq OWNER TO postgres;
 
 --
 -- Name: cxgn_bac_pipeline_processing_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18615,7 +18800,7 @@ CREATE SEQUENCE public.cxgn_indexedlog_test_feel_free_to_delete_me_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.cxgn_indexedlog_test_feel_free_to_delete_me_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.cxgn_indexedlog_test_feel_free_to_delete_me_id_seq OWNER TO postgres;
 
 --
 -- Name: cxgn_indexedlog_test_feel_free_to_delete_me_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18636,7 +18821,7 @@ CREATE SEQUENCE public.db_db_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.db_db_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.db_db_id_seq OWNER TO postgres;
 
 --
 -- Name: db_db_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18657,7 +18842,7 @@ CREATE SEQUENCE public.dbxref_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.dbxref_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.dbxref_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: dbxref_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18700,7 +18885,7 @@ CREATE SEQUENCE public.dbxrefprop_dbxrefprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.dbxrefprop_dbxrefprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.dbxrefprop_dbxrefprop_id_seq OWNER TO postgres;
 
 --
 -- Name: dbxrefprop_dbxrefprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18754,7 +18939,7 @@ CREATE SEQUENCE public.environment_cvterm_environment_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.environment_cvterm_environment_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.environment_cvterm_environment_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: environment_cvterm_environment_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18775,7 +18960,7 @@ CREATE SEQUENCE public.environment_environment_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.environment_environment_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.environment_environment_id_seq OWNER TO postgres;
 
 --
 -- Name: environment_environment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18809,7 +18994,7 @@ CREATE SEQUENCE public.enzyme_restriction_sites_enzyme_restriction_sites_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.enzyme_restriction_sites_enzyme_restriction_sites_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.enzyme_restriction_sites_enzyme_restriction_sites_id_seq OWNER TO postgres;
 
 --
 -- Name: enzyme_restriction_sites_enzyme_restriction_sites_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18842,19 +19027,19 @@ ALTER TABLE sgn.family OWNER TO postgres;
 --
 
 CREATE VIEW public.family AS
- SELECT family.family_id,
-    family.family_build_id,
-    family.family_annotation,
-    family.tree_log_file_location,
-    family.tree_file_location,
-    family.tree_taxa_number,
-    family.tree_overlap_length,
-    family.family_nr,
-    family.member_count
+ SELECT family_id,
+    family_build_id,
+    family_annotation,
+    tree_log_file_location,
+    tree_file_location,
+    tree_taxa_number,
+    tree_overlap_length,
+    family_nr,
+    member_count
    FROM sgn.family;
 
 
-ALTER TABLE public.family OWNER TO postgres;
+ALTER VIEW public.family OWNER TO postgres;
 
 --
 -- Name: family_build; Type: TABLE; Schema: sgn; Owner: postgres
@@ -18877,16 +19062,16 @@ ALTER TABLE sgn.family_build OWNER TO postgres;
 --
 
 CREATE VIEW public.family_build AS
- SELECT family_build.family_build_id,
-    family_build.group_id,
-    family_build.build_nr,
-    family_build.i_value,
-    family_build.build_date,
-    family_build.status
+ SELECT family_build_id,
+    group_id,
+    build_nr,
+    i_value,
+    build_date,
+    status
    FROM sgn.family_build;
 
 
-ALTER TABLE public.family_build OWNER TO postgres;
+ALTER VIEW public.family_build OWNER TO postgres;
 
 --
 -- Name: family_member; Type: TABLE; Schema: sgn; Owner: postgres
@@ -18910,17 +19095,17 @@ ALTER TABLE sgn.family_member OWNER TO postgres;
 --
 
 CREATE VIEW public.family_member AS
- SELECT family_member.family_member_id,
-    family_member.cds_id,
-    family_member.organism_group_id,
-    family_member.family_id,
-    family_member.database_name,
-    family_member.sequence_name,
-    family_member.alignment_seq
+ SELECT family_member_id,
+    cds_id,
+    organism_group_id,
+    family_id,
+    database_name,
+    sequence_name,
+    alignment_seq
    FROM sgn.family_member;
 
 
-ALTER TABLE public.family_member OWNER TO postgres;
+ALTER VIEW public.family_member OWNER TO postgres;
 
 --
 -- Name: feature_cvterm_dbxref; Type: TABLE; Schema: public; Owner: postgres
@@ -18954,7 +19139,7 @@ CREATE SEQUENCE public.feature_cvterm_dbxref_feature_cvterm_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_cvterm_dbxref_feature_cvterm_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_cvterm_dbxref_feature_cvterm_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_cvterm_dbxref_feature_cvterm_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -18975,7 +19160,7 @@ CREATE SEQUENCE public.feature_cvterm_feature_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_cvterm_feature_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_cvterm_feature_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_cvterm_feature_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19020,7 +19205,7 @@ CREATE SEQUENCE public.feature_cvterm_pub_feature_cvterm_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_cvterm_pub_feature_cvterm_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_cvterm_pub_feature_cvterm_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_cvterm_pub_feature_cvterm_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19097,7 +19282,7 @@ CREATE SEQUENCE public.feature_cvtermprop_feature_cvtermprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_cvtermprop_feature_cvtermprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_cvtermprop_feature_cvtermprop_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_cvtermprop_feature_cvtermprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19118,7 +19303,7 @@ CREATE SEQUENCE public.feature_dbxref_feature_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_dbxref_feature_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_dbxref_feature_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_dbxref_feature_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19139,7 +19324,7 @@ CREATE SEQUENCE public.feature_feature_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_feature_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_feature_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_feature_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19202,7 +19387,7 @@ CREATE SEQUENCE public.feature_genotype_feature_genotype_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_genotype_feature_genotype_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_genotype_feature_genotype_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_genotype_feature_genotype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19223,7 +19408,7 @@ CREATE SEQUENCE public.feature_pub_feature_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_pub_feature_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_pub_feature_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_pub_feature_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19310,7 +19495,7 @@ CREATE SEQUENCE public.feature_relationship_feature_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_relationship_feature_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_relationship_feature_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_relationship_feature_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19351,7 +19536,7 @@ CREATE SEQUENCE public.feature_relationship_pub_feature_relationship_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_relationship_pub_feature_relationship_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_relationship_pub_feature_relationship_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_relationship_pub_feature_relationship_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19430,7 +19615,7 @@ CREATE SEQUENCE public.feature_relationshipprop_feature_relationshipprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_relationshipprop_feature_relationshipprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_relationshipprop_feature_relationshipprop_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_relationshipprop_feature_relationshipprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19444,8 +19629,8 @@ ALTER SEQUENCE public.feature_relationshipprop_feature_relationshipprop_id_seq O
 --
 
 CREATE TABLE public.feature_relationshipprop_pub (
-    feature_relationshipprop_pub_id integer NOT NULL,
-    feature_relationshipprop_id integer NOT NULL,
+    feature_relationshipprop_pub_id integer CONSTRAINT feature_relationshipprop_pu_feature_relationshipprop_p_not_null NOT NULL,
+    feature_relationshipprop_id integer CONSTRAINT feature_relationshipprop_pu_feature_relationshipprop_i_not_null NOT NULL,
     pub_id integer NOT NULL
 );
 
@@ -19471,7 +19656,7 @@ CREATE SEQUENCE public.feature_relationshipprop_pub_feature_relationshipprop_pub
     CACHE 1;
 
 
-ALTER TABLE public.feature_relationshipprop_pub_feature_relationshipprop_pub_i_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_relationshipprop_pub_feature_relationshipprop_pub_i_seq OWNER TO postgres;
 
 --
 -- Name: feature_relationshipprop_pub_feature_relationshipprop_pub_i_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19492,7 +19677,7 @@ CREATE SEQUENCE public.feature_synonym_feature_synonym_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_synonym_feature_synonym_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_synonym_feature_synonym_id_seq OWNER TO postgres;
 
 --
 -- Name: feature_synonym_feature_synonym_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19513,7 +19698,7 @@ CREATE SEQUENCE public.feature_uniquename_seq
     CACHE 1;
 
 
-ALTER TABLE public.feature_uniquename_seq OWNER TO postgres;
+ALTER SEQUENCE public.feature_uniquename_seq OWNER TO postgres;
 
 --
 -- Name: featureloc_featureloc_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -19527,7 +19712,7 @@ CREATE SEQUENCE public.featureloc_featureloc_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.featureloc_featureloc_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.featureloc_featureloc_id_seq OWNER TO postgres;
 
 --
 -- Name: featureloc_featureloc_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19568,7 +19753,7 @@ CREATE SEQUENCE public.featureloc_pub_featureloc_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.featureloc_pub_featureloc_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.featureloc_pub_featureloc_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: featureloc_pub_featureloc_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19589,7 +19774,7 @@ CREATE SEQUENCE public.featureprop_featureprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.featureprop_featureprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.featureprop_featureprop_id_seq OWNER TO postgres;
 
 --
 -- Name: featureprop_featureprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19609,7 +19794,7 @@ CREATE TABLE public.featureprop_json (
     nd_protocol_id bigint,
     start_pos bigint,
     end_pos bigint,
-    json jsonb
+    "json" jsonb
 );
 
 
@@ -19628,7 +19813,7 @@ CREATE SEQUENCE public.featureprop_json_featureprop_json_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.featureprop_json_featureprop_json_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.featureprop_json_featureprop_json_id_seq OWNER TO postgres;
 
 --
 -- Name: featureprop_json_featureprop_json_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19669,7 +19854,7 @@ CREATE SEQUENCE public.featureprop_pub_featureprop_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.featureprop_pub_featureprop_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.featureprop_pub_featureprop_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: featureprop_pub_featureprop_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19688,7 +19873,7 @@ CREATE TABLE public.forward_amplicon_sequence_information (
     plant_number integer,
     ending text,
     cxgn_production_visible boolean,
-    forward_amplicon_sequence_information_id integer NOT NULL
+    forward_amplicon_sequence_information_id integer CONSTRAINT forward_amplicon_sequence_i_forward_amplicon_sequence__not_null NOT NULL
 );
 
 
@@ -19706,7 +19891,7 @@ CREATE SEQUENCE public.forward_amplicon_sequence_inf_forward_amplicon_sequence_i
     CACHE 1;
 
 
-ALTER TABLE public.forward_amplicon_sequence_inf_forward_amplicon_sequence_inf_seq OWNER TO postgres;
+ALTER SEQUENCE public.forward_amplicon_sequence_inf_forward_amplicon_sequence_inf_seq OWNER TO postgres;
 
 --
 -- Name: forward_amplicon_sequence_inf_forward_amplicon_sequence_inf_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19723,7 +19908,7 @@ CREATE TABLE public.forward_amplicon_sequence_markers (
     marker_name text,
     ending text,
     cxgn_production_visible boolean,
-    forward_amplicon_sequence_markers_id integer NOT NULL
+    forward_amplicon_sequence_markers_id integer CONSTRAINT forward_amplicon_sequence_m_forward_amplicon_sequence__not_null NOT NULL
 );
 
 
@@ -19741,7 +19926,7 @@ CREATE SEQUENCE public.forward_amplicon_sequence_mar_forward_amplicon_sequence_m
     CACHE 1;
 
 
-ALTER TABLE public.forward_amplicon_sequence_mar_forward_amplicon_sequence_mar_seq OWNER TO postgres;
+ALTER SEQUENCE public.forward_amplicon_sequence_mar_forward_amplicon_sequence_mar_seq OWNER TO postgres;
 
 --
 -- Name: forward_amplicon_sequence_mar_forward_amplicon_sequence_mar_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19786,7 +19971,7 @@ CREATE SEQUENCE public.fpc_band_fpc_band_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.fpc_band_fpc_band_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.fpc_band_fpc_band_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_band_fpc_band_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19836,7 +20021,7 @@ CREATE SEQUENCE public.fpc_build_fpc_build_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.fpc_build_fpc_build_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.fpc_build_fpc_build_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_build_fpc_build_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19877,7 +20062,7 @@ CREATE SEQUENCE public.fpc_build_fpc_fingerprint_fpc_build_fpc_fingerprint_id_se
     CACHE 1;
 
 
-ALTER TABLE public.fpc_build_fpc_fingerprint_fpc_build_fpc_fingerprint_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.fpc_build_fpc_fingerprint_fpc_build_fpc_fingerprint_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_build_fpc_fingerprint_fpc_build_fpc_fingerprint_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19939,7 +20124,7 @@ CREATE SEQUENCE public.fpc_contig_clone_fpc_contig_clone_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.fpc_contig_clone_fpc_contig_clone_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.fpc_contig_clone_fpc_contig_clone_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_contig_clone_fpc_contig_clone_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -19960,7 +20145,7 @@ CREATE SEQUENCE public.fpc_contig_fpc_contig_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.fpc_contig_fpc_contig_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.fpc_contig_fpc_contig_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_contig_fpc_contig_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -20002,7 +20187,7 @@ CREATE SEQUENCE public.fpc_fingerprint_fpc_fingerprint_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.fpc_fingerprint_fpc_fingerprint_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.fpc_fingerprint_fpc_fingerprint_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_fingerprint_fpc_fingerprint_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -20042,7 +20227,7 @@ CREATE SEQUENCE public.fpc_series_fpc_series_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.fpc_series_fpc_series_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.fpc_series_fpc_series_id_seq OWNER TO postgres;
 
 --
 -- Name: fpc_series_fpc_series_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -20063,7 +20248,7 @@ CREATE SEQUENCE public.genotype_genotype_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.genotype_genotype_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.genotype_genotype_id_seq OWNER TO postgres;
 
 --
 -- Name: genotype_genotype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -20099,7 +20284,7 @@ CREATE SEQUENCE public.genotypeprop_genotypeprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.genotypeprop_genotypeprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.genotypeprop_genotypeprop_id_seq OWNER TO postgres;
 
 --
 -- Name: genotypeprop_genotypeprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -20122,20 +20307,20 @@ CREATE VIEW public.genotyping_projects AS
           WHERE ((cvterm.name)::text = 'design'::text))) AND (projectprop.value = 'genotype_data_project'::text));
 
 
-ALTER TABLE public.genotyping_projects OWNER TO web_usr;
+ALTER VIEW public.genotyping_projects OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxgenotyping_protocols; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.genotyping_projectsxgenotyping_protocols AS
- SELECT materialized_genoview.genotyping_project_id,
-    materialized_genoview.genotyping_protocol_id
+ SELECT genotyping_project_id,
+    genotyping_protocol_id
    FROM public.materialized_genoview
-  GROUP BY materialized_genoview.genotyping_project_id, materialized_genoview.genotyping_protocol_id;
+  GROUP BY genotyping_project_id, genotyping_protocol_id;
 
 
-ALTER TABLE public.genotyping_projectsxgenotyping_protocols OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxgenotyping_protocols OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxlocations; Type: VIEW; Schema: public; Owner: web_usr
@@ -20149,7 +20334,21 @@ CREATE VIEW public.genotyping_projectsxlocations AS
   GROUP BY materialized_genoview.genotyping_project_id, materialized_phenoview.location_id;
 
 
-ALTER TABLE public.genotyping_projectsxlocations OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxlocations OWNER TO web_usr;
+
+--
+-- Name: genotyping_projectsxorganisms; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.genotyping_projectsxorganisms AS
+ SELECT s.organism_id,
+    materialized_genoview.genotyping_project_id
+   FROM (public.materialized_genoview
+     JOIN public.stock s ON ((s.stock_id = materialized_genoview.accession_id)))
+  GROUP BY s.organism_id, materialized_genoview.genotyping_project_id;
+
+
+ALTER VIEW public.genotyping_projectsxorganisms OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxplants; Type: VIEW; Schema: public; Owner: web_usr
@@ -20166,7 +20365,7 @@ CREATE VIEW public.genotyping_projectsxplants AS
   GROUP BY materialized_genoview.genotyping_project_id, stock.stock_id;
 
 
-ALTER TABLE public.genotyping_projectsxplants OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxplants OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxplots; Type: VIEW; Schema: public; Owner: web_usr
@@ -20183,7 +20382,7 @@ CREATE VIEW public.genotyping_projectsxplots AS
   GROUP BY materialized_genoview.genotyping_project_id, stock.stock_id;
 
 
-ALTER TABLE public.genotyping_projectsxplots OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxplots OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxseedlots; Type: VIEW; Schema: public; Owner: web_usr
@@ -20202,24 +20401,24 @@ CREATE VIEW public.genotyping_projectsxseedlots AS
   GROUP BY materialized_genoview.genotyping_project_id, stock.stock_id;
 
 
-ALTER TABLE public.genotyping_projectsxseedlots OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxseedlots OWNER TO web_usr;
 
 --
--- Name: genotyping_projectsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
+-- Name: genotyping_projectsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
 --
 
-CREATE VIEW public.genotyping_projectsxtissue_sample AS
+CREATE VIEW public.genotyping_projectsxsubplots AS
  SELECT materialized_genoview.genotyping_project_id,
-    stock.stock_id AS tissue_sample_id
+    stock.stock_id AS subplot_id
    FROM ((public.materialized_genoview
      JOIN public.materialized_phenoview USING (accession_id))
      JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
-          WHERE ((cvterm.name)::text = 'tissue_sample'::text))))))
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
   GROUP BY materialized_genoview.genotyping_project_id, stock.stock_id;
 
 
-ALTER TABLE public.genotyping_projectsxtissue_sample OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxsubplots OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -20238,7 +20437,7 @@ CREATE VIEW public.genotyping_projectsxtrait_components AS
   GROUP BY materialized_genoview.genotyping_project_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.genotyping_projectsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxtraits; Type: VIEW; Schema: public; Owner: web_usr
@@ -20252,7 +20451,7 @@ CREATE VIEW public.genotyping_projectsxtraits AS
   GROUP BY materialized_genoview.genotyping_project_id, materialized_phenoview.trait_id;
 
 
-ALTER TABLE public.genotyping_projectsxtraits OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxtraits OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -20269,7 +20468,7 @@ CREATE VIEW public.genotyping_projectsxtrial_designs AS
   GROUP BY materialized_genoview.genotyping_project_id, trialdesign.value;
 
 
-ALTER TABLE public.genotyping_projectsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -20288,7 +20487,7 @@ CREATE VIEW public.genotyping_projectsxtrial_types AS
   GROUP BY materialized_genoview.genotyping_project_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.genotyping_projectsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxtrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -20302,42 +20501,42 @@ CREATE VIEW public.genotyping_projectsxtrials AS
   GROUP BY materialized_genoview.genotyping_project_id, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.genotyping_projectsxtrials OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxtrials OWNER TO web_usr;
 
 --
 -- Name: genotyping_projectsxyears; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.genotyping_projectsxyears AS
- SELECT projectprop.project_id AS genotyping_project_id,
-    projectprop.value AS year_id
+ SELECT project_id AS genotyping_project_id,
+    value AS year_id
    FROM public.projectprop
-  WHERE ((projectprop.project_id IN ( SELECT projectprop_1.project_id
+  WHERE ((project_id IN ( SELECT projectprop_1.project_id
            FROM public.projectprop projectprop_1
           WHERE ((projectprop_1.type_id = ( SELECT cvterm.cvterm_id
                    FROM public.cvterm
-                  WHERE ((cvterm.name)::text = 'design'::text))) AND (projectprop_1.value = 'genotype_data_project'::text)))) AND (projectprop.type_id = ( SELECT cvterm.cvterm_id
+                  WHERE ((cvterm.name)::text = 'design'::text))) AND (projectprop_1.value = 'genotype_data_project'::text)))) AND (type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
           WHERE ((cvterm.name)::text = 'project year'::text))));
 
 
-ALTER TABLE public.genotyping_projectsxyears OWNER TO web_usr;
+ALTER VIEW public.genotyping_projectsxyears OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocols; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.genotyping_protocols AS
- SELECT nd_protocol.nd_protocol_id AS genotyping_protocol_id,
-    nd_protocol.name AS genotyping_protocol_name
+ SELECT nd_protocol_id AS genotyping_protocol_id,
+    name AS genotyping_protocol_name
    FROM public.nd_protocol
-  WHERE (nd_protocol.type_id = ( SELECT cvterm.cvterm_id
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
           WHERE ((cvterm.name)::text = 'genotyping_experiment'::text)))
-  GROUP BY nd_protocol.nd_protocol_id, nd_protocol.name;
+  GROUP BY nd_protocol_id, name;
 
 
-ALTER TABLE public.genotyping_protocols OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocols OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxlocations; Type: VIEW; Schema: public; Owner: web_usr
@@ -20351,7 +20550,21 @@ CREATE VIEW public.genotyping_protocolsxlocations AS
   GROUP BY materialized_genoview.genotyping_protocol_id, materialized_phenoview.location_id;
 
 
-ALTER TABLE public.genotyping_protocolsxlocations OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxlocations OWNER TO web_usr;
+
+--
+-- Name: genotyping_protocolsxorganisms; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.genotyping_protocolsxorganisms AS
+ SELECT s.organism_id,
+    materialized_genoview.genotyping_protocol_id
+   FROM (public.materialized_genoview
+     JOIN public.stock s ON ((s.stock_id = materialized_genoview.accession_id)))
+  GROUP BY s.organism_id, materialized_genoview.genotyping_protocol_id;
+
+
+ALTER VIEW public.genotyping_protocolsxorganisms OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxplants; Type: VIEW; Schema: public; Owner: web_usr
@@ -20368,7 +20581,7 @@ CREATE VIEW public.genotyping_protocolsxplants AS
   GROUP BY materialized_genoview.genotyping_protocol_id, stock.stock_id;
 
 
-ALTER TABLE public.genotyping_protocolsxplants OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxplants OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxplots; Type: VIEW; Schema: public; Owner: web_usr
@@ -20385,7 +20598,7 @@ CREATE VIEW public.genotyping_protocolsxplots AS
   GROUP BY materialized_genoview.genotyping_protocol_id, stock.stock_id;
 
 
-ALTER TABLE public.genotyping_protocolsxplots OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxplots OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxseedlots; Type: VIEW; Schema: public; Owner: web_usr
@@ -20404,24 +20617,45 @@ CREATE VIEW public.genotyping_protocolsxseedlots AS
   GROUP BY materialized_genoview.genotyping_protocol_id, stock.stock_id;
 
 
-ALTER TABLE public.genotyping_protocolsxseedlots OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxseedlots OWNER TO web_usr;
+
+--
+-- Name: genotyping_protocolsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.genotyping_protocolsxsubplots AS
+ SELECT materialized_genoview.genotyping_protocol_id,
+    stock.stock_id AS subplot_id
+   FROM ((public.materialized_genoview
+     JOIN public.materialized_phenoview USING (accession_id))
+     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+  GROUP BY materialized_genoview.genotyping_protocol_id, stock.stock_id;
+
+
+ALTER VIEW public.genotyping_protocolsxsubplots OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.genotyping_protocolsxtissue_sample AS
- SELECT materialized_genoview.genotyping_protocol_id,
-    stock.stock_id AS tissue_sample_id
-   FROM ((public.materialized_genoview
-     JOIN public.materialized_phenoview USING (accession_id))
-     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+ SELECT nep.nd_protocol_id AS genotyping_protocol_id,
+    s.stock_id AS tissue_sample_id
+   FROM (((public.nd_experiment_protocol nep
+     JOIN public.nd_experiment ne ON ((ne.nd_experiment_id = nep.nd_experiment_id)))
+     JOIN public.nd_experiment_stock nes ON ((nes.nd_experiment_id = nep.nd_experiment_id)))
+     JOIN public.stock s ON ((s.stock_id = nes.stock_id)))
+  WHERE ((ne.type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
-          WHERE ((cvterm.name)::text = 'tissue_sample'::text))))))
-  GROUP BY materialized_genoview.genotyping_protocol_id, stock.stock_id;
+          WHERE ((cvterm.name)::text = 'genotyping_experiment'::text))) AND (s.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'tissue_sample'::text))))
+  GROUP BY nep.nd_protocol_id, s.stock_id;
 
 
-ALTER TABLE public.genotyping_protocolsxtissue_sample OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxtissue_sample OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -20440,7 +20674,7 @@ CREATE VIEW public.genotyping_protocolsxtrait_components AS
   GROUP BY materialized_genoview.genotyping_protocol_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.genotyping_protocolsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxtraits; Type: VIEW; Schema: public; Owner: web_usr
@@ -20454,7 +20688,7 @@ CREATE VIEW public.genotyping_protocolsxtraits AS
   GROUP BY materialized_genoview.genotyping_protocol_id, materialized_phenoview.trait_id;
 
 
-ALTER TABLE public.genotyping_protocolsxtraits OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxtraits OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -20471,7 +20705,7 @@ CREATE VIEW public.genotyping_protocolsxtrial_designs AS
   GROUP BY materialized_genoview.genotyping_protocol_id, trialdesign.value;
 
 
-ALTER TABLE public.genotyping_protocolsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -20490,7 +20724,7 @@ CREATE VIEW public.genotyping_protocolsxtrial_types AS
   GROUP BY materialized_genoview.genotyping_protocol_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.genotyping_protocolsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxtrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -20504,7 +20738,7 @@ CREATE VIEW public.genotyping_protocolsxtrials AS
   GROUP BY materialized_genoview.genotyping_protocol_id, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.genotyping_protocolsxtrials OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxtrials OWNER TO web_usr;
 
 --
 -- Name: genotyping_protocolsxyears; Type: VIEW; Schema: public; Owner: web_usr
@@ -20518,7 +20752,7 @@ CREATE VIEW public.genotyping_protocolsxyears AS
   GROUP BY materialized_genoview.genotyping_protocol_id, materialized_phenoview.year_id;
 
 
-ALTER TABLE public.genotyping_protocolsxyears OWNER TO web_usr;
+ALTER VIEW public.genotyping_protocolsxyears OWNER TO web_usr;
 
 --
 -- Name: gff3atts; Type: VIEW; Schema: public; Owner: postgres
@@ -20594,7 +20828,7 @@ UNION ALL
    FROM public.feature;
 
 
-ALTER TABLE public.gff3atts OWNER TO postgres;
+ALTER VIEW public.gff3atts OWNER TO postgres;
 
 --
 -- Name: gff3view; Type: VIEW; Schema: public; Owner: postgres
@@ -20626,7 +20860,7 @@ CREATE VIEW public.gff3view AS
      LEFT JOIN public.analysisfeature af ON ((f.feature_id = af.feature_id)));
 
 
-ALTER TABLE public.gff3view OWNER TO postgres;
+ALTER VIEW public.gff3view OWNER TO postgres;
 
 --
 -- Name: gff_meta; Type: TABLE; Schema: public; Owner: postgres
@@ -20666,7 +20900,7 @@ CREATE SEQUENCE public.glossary_glossary_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.glossary_glossary_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.glossary_glossary_id_seq OWNER TO postgres;
 
 --
 -- Name: glossary_glossary_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -20706,7 +20940,7 @@ CREATE SEQUENCE public.itag_loading_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.itag_loading_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.itag_loading_log_id_seq OWNER TO postgres;
 
 --
 -- Name: itag_loading_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -20778,13 +21012,28 @@ COMMENT ON COLUMN public.nd_geolocation.altitude IS 'The altitude (elevation) of
 --
 
 CREATE VIEW public.locations AS
- SELECT nd_geolocation.nd_geolocation_id AS location_id,
-    nd_geolocation.description AS location_name
+ SELECT nd_geolocation_id AS location_id,
+    description AS location_name
    FROM public.nd_geolocation
-  GROUP BY nd_geolocation.nd_geolocation_id, nd_geolocation.description;
+  GROUP BY nd_geolocation_id, description;
 
 
-ALTER TABLE public.locations OWNER TO web_usr;
+ALTER VIEW public.locations OWNER TO web_usr;
+
+--
+-- Name: locationsxorganisms; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.locationsxorganisms AS
+ SELECT s.organism_id,
+    materialized_phenoview.location_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock s ON ((s.stock_id = materialized_phenoview.accession_id)))
+  WHERE ((s.organism_id IS NOT NULL) AND (materialized_phenoview.location_id IS NOT NULL))
+  GROUP BY s.organism_id, materialized_phenoview.location_id;
+
+
+ALTER VIEW public.locationsxorganisms OWNER TO web_usr;
 
 --
 -- Name: locationsxplants; Type: VIEW; Schema: public; Owner: web_usr
@@ -20800,7 +21049,7 @@ CREATE VIEW public.locationsxplants AS
   GROUP BY materialized_phenoview.location_id, stock.stock_id;
 
 
-ALTER TABLE public.locationsxplants OWNER TO web_usr;
+ALTER VIEW public.locationsxplants OWNER TO web_usr;
 
 --
 -- Name: locationsxplots; Type: VIEW; Schema: public; Owner: web_usr
@@ -20816,7 +21065,7 @@ CREATE VIEW public.locationsxplots AS
   GROUP BY materialized_phenoview.location_id, stock.stock_id;
 
 
-ALTER TABLE public.locationsxplots OWNER TO web_usr;
+ALTER VIEW public.locationsxplots OWNER TO web_usr;
 
 --
 -- Name: locationsxseedlots; Type: VIEW; Schema: public; Owner: web_usr
@@ -20833,7 +21082,23 @@ CREATE VIEW public.locationsxseedlots AS
   GROUP BY nd_experiment.nd_geolocation_id, nd_experiment_stock.stock_id;
 
 
-ALTER TABLE public.locationsxseedlots OWNER TO web_usr;
+ALTER VIEW public.locationsxseedlots OWNER TO web_usr;
+
+--
+-- Name: locationsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.locationsxsubplots AS
+ SELECT materialized_phenoview.location_id,
+    stock.stock_id AS subplot_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+  GROUP BY materialized_phenoview.location_id, stock.stock_id;
+
+
+ALTER VIEW public.locationsxsubplots OWNER TO web_usr;
 
 --
 -- Name: locationsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
@@ -20849,7 +21114,7 @@ CREATE VIEW public.locationsxtissue_sample AS
   GROUP BY materialized_phenoview.location_id, stock.stock_id;
 
 
-ALTER TABLE public.locationsxtissue_sample OWNER TO web_usr;
+ALTER VIEW public.locationsxtissue_sample OWNER TO web_usr;
 
 --
 -- Name: locationsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -20867,20 +21132,20 @@ CREATE VIEW public.locationsxtrait_components AS
   GROUP BY materialized_phenoview.location_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.locationsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.locationsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: locationsxtraits; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.locationsxtraits AS
- SELECT materialized_phenoview.location_id,
-    materialized_phenoview.trait_id
+ SELECT location_id,
+    trait_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.location_id, materialized_phenoview.trait_id;
+  GROUP BY location_id, trait_id;
 
 
-ALTER TABLE public.locationsxtraits OWNER TO web_usr;
+ALTER VIEW public.locationsxtraits OWNER TO web_usr;
 
 --
 -- Name: locationsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -20896,7 +21161,7 @@ CREATE VIEW public.locationsxtrial_designs AS
   GROUP BY materialized_phenoview.location_id, trialdesign.value;
 
 
-ALTER TABLE public.locationsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.locationsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: locationsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -20914,33 +21179,33 @@ CREATE VIEW public.locationsxtrial_types AS
   GROUP BY materialized_phenoview.location_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.locationsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.locationsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: locationsxtrials; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.locationsxtrials AS
- SELECT materialized_phenoview.location_id,
-    materialized_phenoview.trial_id
+ SELECT location_id,
+    trial_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.location_id, materialized_phenoview.trial_id;
+  GROUP BY location_id, trial_id;
 
 
-ALTER TABLE public.locationsxtrials OWNER TO web_usr;
+ALTER VIEW public.locationsxtrials OWNER TO web_usr;
 
 --
 -- Name: locationsxyears; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.locationsxyears AS
- SELECT materialized_phenoview.location_id,
-    materialized_phenoview.year_id
+ SELECT location_id,
+    year_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.location_id, materialized_phenoview.year_id;
+  GROUP BY location_id, year_id;
 
 
-ALTER TABLE public.locationsxyears OWNER TO web_usr;
+ALTER VIEW public.locationsxyears OWNER TO web_usr;
 
 --
 -- Name: marker_names; Type: TABLE; Schema: public; Owner: postgres
@@ -20959,21 +21224,21 @@ ALTER TABLE public.marker_names OWNER TO postgres;
 --
 
 CREATE MATERIALIZED VIEW public.materialized_markerview AS
- SELECT (x.column1)::integer AS nd_protocol_id,
-    x.column2 AS species_name,
-    x.column3 AS reference_genome_name,
-    x.column4 AS marker_name,
-    x.column5 AS chrom,
-    (x.column6)::numeric AS pos,
-    x.column7 AS ref,
-    x.column8 AS alt,
-    x.column9 AS variant_name
+ SELECT (column1)::integer AS nd_protocol_id,
+    column2 AS species_name,
+    column3 AS reference_genome_name,
+    column4 AS marker_name,
+    column5 AS chrom,
+    (column6)::numeric AS pos,
+    column7 AS ref,
+    column8 AS alt,
+    column9 AS variant_name
    FROM ( VALUES (NULL::text,NULL::text,NULL::text,NULL::text,NULL::text,NULL::text,NULL::text,NULL::text,NULL::text)) x
   WHERE false
   WITH NO DATA;
 
 
-ALTER TABLE public.materialized_markerview OWNER TO web_usr;
+ALTER MATERIALIZED VIEW public.materialized_markerview OWNER TO web_usr;
 
 --
 -- Name: phenotypeprop; Type: TABLE; Schema: public; Owner: postgres
@@ -21054,7 +21319,7 @@ CREATE MATERIALIZED VIEW public.materialized_phenotype_jsonb_table AS
     field_size.value AS field_size,
     field_trial_is_planned_to_be_genotyped.value AS field_trial_is_planned_to_be_genotyped,
     field_trial_is_planned_to_cross.value AS field_trial_is_planned_to_cross,
-    breeding_program.project_id AS breeding_program_id,
+    max(breeding_program.project_id) AS breeding_program_id,
     breeding_program.name AS breeding_program_name,
     breeding_program.description AS breeding_program_description,
     year.value AS year,
@@ -21132,86 +21397,88 @@ CREATE MATERIALIZED VIEW public.materialized_phenotype_jsonb_table AS
      LEFT JOIN public.project_relationship folder_rel ON (((project.project_id = folder_rel.subject_project_id) AND (folder_rel.type_id = 76504))))
      LEFT JOIN public.project folder ON ((folder.project_id = folder_rel.object_project_id)))
   WHERE ((nd_experiment.type_id = ANY (ARRAY[76441, 76477, 76391, 78141])) AND (design.value <> 'genotype_data_project'::text) AND (design.value <> 'treatment'::text))
-  GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_cvterm.name, germplasm.uniquename, germplasm.stock_id, rep.value, block_number.value, plot_number.value, row_number.value, col_number.value, plant_number.value, is_a_control.value, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, year.value, design.value, location_id.value, planting_date.value, harvest_date.value, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, folder.project_id, folder.name, folder.description, seedplot_planted.value, seedlot.stock_id, seedlot.uniquename, seedlot_current_weight.value, seedlot_current_count.value, seedlot_seedlot_box.value
+  GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_cvterm.name, germplasm.uniquename, germplasm.stock_id, rep.value, block_number.value, plot_number.value, row_number.value, col_number.value, plant_number.value, is_a_control.value, project.project_id, project.name, project.description, breeding_program.name, breeding_program.description, year.value, design.value, location_id.value, planting_date.value, harvest_date.value, plot_width.value, plot_length.value, field_size.value, field_trial_is_planned_to_be_genotyped.value, field_trial_is_planned_to_cross.value, folder.project_id, folder.name, folder.description, seedplot_planted.value, seedlot.stock_id, seedlot.uniquename, seedlot_current_weight.value, seedlot_current_count.value, seedlot_seedlot_box.value
   ORDER BY project.project_id, observationunit.uniquename
   WITH NO DATA;
 
 
-ALTER TABLE public.materialized_phenotype_jsonb_table OWNER TO web_usr;
+ALTER MATERIALIZED VIEW public.materialized_phenotype_jsonb_table OWNER TO web_usr;
 
 --
 -- Name: materialized_stockprop; Type: MATERIALIZED VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE MATERIALIZED VIEW public.materialized_stockprop AS
- SELECT crosstab.stock_id,
-    crosstab.uniquename,
-    crosstab.stock_type_id,
-    crosstab.stock_type_name,
-    crosstab.organism_id,
-    crosstab.block,
-    crosstab.col_number,
-    crosstab.igd_synonym,
-    crosstab."is a control",
-    crosstab.location_code,
-    crosstab.organization,
-    crosstab.plant_index_number,
-    crosstab.subplot_index_number,
-    crosstab.tissue_sample_index_number,
-    crosstab."plot number",
-    crosstab.plot_geo_json,
-    crosstab.range,
-    crosstab.replicate,
-    crosstab.row_number,
-    crosstab.stock_synonym,
-    crosstab."T1",
-    crosstab."T2",
-    crosstab.transgenic,
-    crosstab.variety,
-    crosstab.notes,
-    crosstab.state,
-    crosstab."accession number",
-    crosstab."PUI",
-    crosstab.donor,
-    crosstab."donor institute",
-    crosstab."donor PUI",
-    crosstab."seed source",
-    crosstab."institute code",
-    crosstab."institute name",
-    crosstab."biological status of accession code",
-    crosstab."country of origin",
-    crosstab."type of germplasm storage code",
-    crosstab."entry number",
-    crosstab."acquisition date",
-    crosstab.current_count,
-    crosstab.current_weight_gram,
-    crosstab.crossing_metadata_jsonb,
-    crosstab.ploidy_level,
-    crosstab.genome_structure,
-    crosstab.introgression_parent,
-    crosstab.introgression_backcross_parent,
-    crosstab.introgression_map_version,
-    crosstab.introgression_chromosome,
-    crosstab.introgression_start_position_bp,
-    crosstab.introgression_end_position_bp,
-    crosstab.is_blank,
-    crosstab.concentration,
-    crosstab.volume,
-    crosstab.extraction,
-    crosstab.dna_person,
-    crosstab.tissue_type,
-    crosstab.seedlot_quality,
-    crosstab."SelectionMarker",
-    crosstab."CloningOrganism",
-    crosstab."CassetteName",
-    crosstab."Strain",
-    crosstab."InherentMarker",
-    crosstab."Backbone",
-    crosstab."VectorType",
-    crosstab."Gene",
-    crosstab."Promotors",
-    crosstab."Terminators",
-    crosstab.ncbi_taxonomy_id
+ SELECT stock_id,
+    uniquename,
+    stock_type_id,
+    stock_type_name,
+    organism_id,
+    block,
+    col_number,
+    igd_synonym,
+    "is a control",
+    location_code,
+    organization,
+    plant_index_number,
+    subplot_index_number,
+    tissue_sample_index_number,
+    "plot number",
+    plot_geo_json,
+    range,
+    replicate,
+    row_number,
+    stock_synonym,
+    "T1",
+    "T2",
+    transgenic,
+    variety,
+    notes,
+    state,
+    "accession number",
+    "PUI",
+    donor,
+    "donor institute",
+    "donor PUI",
+    "seed source",
+    "institute code",
+    "institute name",
+    "biological status of accession code",
+    "country of origin",
+    "type of germplasm storage code",
+    "entry number",
+    "acquisition date",
+    current_count,
+    current_weight_gram,
+    crossing_metadata_jsonb,
+    ploidy_level,
+    genome_structure,
+    introgression_parent,
+    introgression_backcross_parent,
+    introgression_map_version,
+    introgression_chromosome,
+    introgression_start_position_bp,
+    introgression_end_position_bp,
+    is_blank,
+    concentration,
+    volume,
+    extraction,
+    dna_person,
+    tissue_type,
+    seedlot_quality,
+    "SelectionMarker",
+    "CloningOrganism",
+    "CassetteName",
+    "Strain",
+    "InherentMarker",
+    "Backbone",
+    "VectorType",
+    "Gene",
+    "Promotors",
+    "Terminators",
+    "PlantAntibioticResistantMarker",
+    "BacterialResistantMarker",
+    ncbi_taxonomy_id
    FROM sgn.crosstab('SELECT stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id, jsonb_object_agg(stockprop.value, stockprop.rank) FROM public.stockprop JOIN public.stock USING(stock_id) JOIN public.cvterm as stock_cvterm ON (stock_cvterm.cvterm_id=stock.type_id) GROUP BY (stockprop.stock_id, stock.uniquename, stock.type_id, stock_cvterm.name, stock.organism_id, stockprop.type_id) ORDER by stockprop.stock_id ASC'::text, 'SELECT type_id FROM (VALUES
     (''76460''),
     (''76517''),
@@ -21275,11 +21542,13 @@ CREATE MATERIALIZED VIEW public.materialized_stockprop AS
     (''78290''),
     (''78291''),
     (''78292''),
-    (''77614'')) AS t (type_id);'::text) crosstab(stock_id integer, uniquename text, stock_type_id integer, stock_type_name text, organism_id integer, block json, col_number jsonb, igd_synonym jsonb, "is a control" jsonb, location_code jsonb, organization jsonb, plant_index_number jsonb, subplot_index_number jsonb, tissue_sample_index_number jsonb, "plot number" jsonb, plot_geo_json jsonb, range jsonb, replicate jsonb, row_number jsonb, stock_synonym jsonb, "T1" jsonb, "T2" jsonb, transgenic jsonb, variety jsonb, notes jsonb, state jsonb, "accession number" jsonb, "PUI" jsonb, donor jsonb, "donor institute" jsonb, "donor PUI" jsonb, "seed source" jsonb, "institute code" jsonb, "institute name" jsonb, "biological status of accession code" jsonb, "country of origin" jsonb, "type of germplasm storage code" jsonb, "entry number" jsonb, "acquisition date" jsonb, current_count jsonb, current_weight_gram jsonb, crossing_metadata_jsonb jsonb, ploidy_level jsonb, genome_structure jsonb, introgression_parent jsonb, introgression_backcross_parent jsonb, introgression_map_version jsonb, introgression_chromosome jsonb, introgression_start_position_bp jsonb, introgression_end_position_bp jsonb, is_blank jsonb, concentration jsonb, volume jsonb, extraction jsonb, dna_person jsonb, tissue_type jsonb, seedlot_quality jsonb, "SelectionMarker" jsonb, "CloningOrganism" jsonb, "CassetteName" jsonb, "Strain" jsonb, "InherentMarker" jsonb, "Backbone" jsonb, "VectorType" jsonb, "Gene" jsonb, "Promotors" jsonb, "Terminators" jsonb, ncbi_taxonomy_id jsonb)
+    (''78298''),
+    (''78299''),
+    (''77614'')) AS t (type_id);'::text) crosstab(stock_id integer, uniquename text, stock_type_id integer, stock_type_name text, organism_id integer, block json, col_number jsonb, igd_synonym jsonb, "is a control" jsonb, location_code jsonb, organization jsonb, plant_index_number jsonb, subplot_index_number jsonb, tissue_sample_index_number jsonb, "plot number" jsonb, plot_geo_json jsonb, range jsonb, replicate jsonb, row_number jsonb, stock_synonym jsonb, "T1" jsonb, "T2" jsonb, transgenic jsonb, variety jsonb, notes jsonb, state jsonb, "accession number" jsonb, "PUI" jsonb, donor jsonb, "donor institute" jsonb, "donor PUI" jsonb, "seed source" jsonb, "institute code" jsonb, "institute name" jsonb, "biological status of accession code" jsonb, "country of origin" jsonb, "type of germplasm storage code" jsonb, "entry number" jsonb, "acquisition date" jsonb, current_count jsonb, current_weight_gram jsonb, crossing_metadata_jsonb jsonb, ploidy_level jsonb, genome_structure jsonb, introgression_parent jsonb, introgression_backcross_parent jsonb, introgression_map_version jsonb, introgression_chromosome jsonb, introgression_start_position_bp jsonb, introgression_end_position_bp jsonb, is_blank jsonb, concentration jsonb, volume jsonb, extraction jsonb, dna_person jsonb, tissue_type jsonb, seedlot_quality jsonb, "SelectionMarker" jsonb, "CloningOrganism" jsonb, "CassetteName" jsonb, "Strain" jsonb, "InherentMarker" jsonb, "Backbone" jsonb, "VectorType" jsonb, "Gene" jsonb, "Promotors" jsonb, "Terminators" jsonb, "PlantAntibioticResistantMarker" jsonb, "BacterialResistantMarker" jsonb, ncbi_taxonomy_id jsonb)
   WITH NO DATA;
 
 
-ALTER TABLE public.materialized_stockprop OWNER TO web_usr;
+ALTER MATERIALIZED VIEW public.materialized_stockprop OWNER TO web_usr;
 
 --
 -- Name: materialized_view; Type: TABLE; Schema: public; Owner: postgres
@@ -21312,7 +21581,7 @@ CREATE SEQUENCE public.materialized_view_materialized_view_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.materialized_view_materialized_view_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.materialized_view_materialized_view_id_seq OWNER TO postgres;
 
 --
 -- Name: materialized_view_materialized_view_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21349,7 +21618,7 @@ CREATE SEQUENCE public.matviews_mv_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.matviews_mv_id_seq OWNER TO web_usr;
+ALTER SEQUENCE public.matviews_mv_id_seq OWNER TO web_usr;
 
 --
 -- Name: matviews_mv_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: web_usr
@@ -21383,7 +21652,7 @@ CREATE SEQUENCE public.nd_experiment_contact_nd_experiment_contact_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_contact_nd_experiment_contact_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_contact_nd_experiment_contact_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_contact_nd_experiment_contact_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21424,7 +21693,7 @@ CREATE SEQUENCE public.nd_experiment_dbxref_nd_experiment_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_dbxref_nd_experiment_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_dbxref_nd_experiment_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_dbxref_nd_experiment_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21445,7 +21714,7 @@ CREATE SEQUENCE public.nd_experiment_genotype_nd_experiment_genotype_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_genotype_nd_experiment_genotype_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_genotype_nd_experiment_genotype_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_genotype_nd_experiment_genotype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21466,7 +21735,7 @@ CREATE SEQUENCE public.nd_experiment_nd_experiment_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_nd_experiment_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_nd_experiment_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_nd_experiment_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21487,7 +21756,7 @@ CREATE SEQUENCE public.nd_experiment_phenotype_nd_experiment_phenotype_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_phenotype_nd_experiment_phenotype_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_phenotype_nd_experiment_phenotype_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_phenotype_nd_experiment_phenotype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21508,7 +21777,7 @@ CREATE SEQUENCE public.nd_experiment_project_nd_experiment_project_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_project_nd_experiment_project_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_project_nd_experiment_project_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_project_nd_experiment_project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21529,7 +21798,7 @@ CREATE SEQUENCE public.nd_experiment_protocol_nd_experiment_protocol_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_protocol_nd_experiment_protocol_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_protocol_nd_experiment_protocol_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_protocol_nd_experiment_protocol_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21570,7 +21839,7 @@ CREATE SEQUENCE public.nd_experiment_pub_nd_experiment_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_pub_nd_experiment_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_pub_nd_experiment_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_pub_nd_experiment_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21584,7 +21853,7 @@ ALTER SEQUENCE public.nd_experiment_pub_nd_experiment_pub_id_seq OWNED BY public
 --
 
 CREATE TABLE public.nd_experiment_stock_dbxref (
-    nd_experiment_stock_dbxref_id integer NOT NULL,
+    nd_experiment_stock_dbxref_id integer CONSTRAINT nd_experiment_stock_dbxref_nd_experiment_stock_dbxref__not_null NOT NULL,
     nd_experiment_stock_id integer NOT NULL,
     dbxref_id integer NOT NULL
 );
@@ -21611,7 +21880,7 @@ CREATE SEQUENCE public.nd_experiment_stock_dbxref_nd_experiment_stock_dbxref_id_
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_stock_dbxref_nd_experiment_stock_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_stock_dbxref_nd_experiment_stock_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_stock_dbxref_nd_experiment_stock_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21632,7 +21901,7 @@ CREATE SEQUENCE public.nd_experiment_stock_nd_experiment_stock_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_stock_nd_experiment_stock_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_stock_nd_experiment_stock_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_stock_nd_experiment_stock_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21703,7 +21972,7 @@ CREATE SEQUENCE public.nd_experiment_stockprop_nd_experiment_stockprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experiment_stockprop_nd_experiment_stockprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experiment_stockprop_nd_experiment_stockprop_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experiment_stockprop_nd_experiment_stockprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21739,7 +22008,7 @@ CREATE SEQUENCE public.nd_experimentprop_nd_experimentprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_experimentprop_nd_experimentprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_experimentprop_nd_experimentprop_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_experimentprop_nd_experimentprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21775,7 +22044,7 @@ CREATE SEQUENCE public.nd_geolocation_dbxref_nd_geolocation_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_geolocation_dbxref_nd_geolocation_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_geolocation_dbxref_nd_geolocation_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_geolocation_dbxref_nd_geolocation_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21796,7 +22065,7 @@ CREATE SEQUENCE public.nd_geolocation_nd_geolocation_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_geolocation_nd_geolocation_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_geolocation_nd_geolocation_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_geolocation_nd_geolocation_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21860,7 +22129,7 @@ CREATE SEQUENCE public.nd_geolocationprop_nd_geolocationprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_geolocationprop_nd_geolocationprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_geolocationprop_nd_geolocationprop_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_geolocationprop_nd_geolocationprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21881,7 +22150,7 @@ CREATE SEQUENCE public.nd_protocol_nd_protocol_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_protocol_nd_protocol_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_protocol_nd_protocol_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_protocol_nd_protocol_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21916,7 +22185,7 @@ CREATE SEQUENCE public.nd_protocol_reagent_nd_protocol_reagent_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_protocol_reagent_nd_protocol_reagent_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_protocol_reagent_nd_protocol_reagent_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_protocol_reagent_nd_protocol_reagent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -21987,7 +22256,7 @@ CREATE SEQUENCE public.nd_protocolprop_nd_protocolprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_protocolprop_nd_protocolprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_protocolprop_nd_protocolprop_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_protocolprop_nd_protocolprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22050,7 +22319,7 @@ CREATE SEQUENCE public.nd_reagent_nd_reagent_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_reagent_nd_reagent_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_reagent_nd_reagent_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_reagent_nd_reagent_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22113,7 +22382,7 @@ CREATE SEQUENCE public.nd_reagent_relationship_nd_reagent_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_reagent_relationship_nd_reagent_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_reagent_relationship_nd_reagent_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_reagent_relationship_nd_reagent_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22149,7 +22418,7 @@ CREATE SEQUENCE public.nd_reagentprop_nd_reagentprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.nd_reagentprop_nd_reagentprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.nd_reagentprop_nd_reagentprop_id_seq OWNER TO postgres;
 
 --
 -- Name: nd_reagentprop_nd_reagentprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22225,7 +22494,7 @@ CREATE SEQUENCE public.organism_dbxref_organism_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.organism_dbxref_organism_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.organism_dbxref_organism_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: organism_dbxref_organism_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22246,7 +22515,7 @@ CREATE SEQUENCE public.organism_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.organism_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.organism_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: organism_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22281,7 +22550,7 @@ CREATE SEQUENCE public.organism_relationship_organism_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.organism_relationship_organism_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.organism_relationship_organism_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: organism_relationship_organism_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22317,7 +22586,7 @@ CREATE SEQUENCE public.organismpath_organismpath_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.organismpath_organismpath_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.organismpath_organismpath_id_seq OWNER TO postgres;
 
 --
 -- Name: organismpath_organismpath_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22360,7 +22629,7 @@ CREATE SEQUENCE public.organismprop_organismprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.organismprop_organismprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.organismprop_organismprop_id_seq OWNER TO postgres;
 
 --
 -- Name: organismprop_organismprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22368,6 +22637,187 @@ ALTER TABLE public.organismprop_organismprop_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE public.organismprop_organismprop_id_seq OWNED BY public.organismprop.organismprop_id;
 
+
+--
+-- Name: organisms; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organisms AS
+ SELECT organism_id,
+    species AS organism_name
+   FROM public.organism
+  GROUP BY organism_id, species;
+
+
+ALTER VIEW public.organisms OWNER TO web_usr;
+
+--
+-- Name: organismsxplants; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxplants AS
+SELECT
+    NULL::integer AS organism_id,
+    NULL::integer AS plant_id;
+
+
+ALTER VIEW public.organismsxplants OWNER TO web_usr;
+
+--
+-- Name: organismsxplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxplots AS
+SELECT
+    NULL::integer AS organism_id,
+    NULL::integer AS plot_id;
+
+
+ALTER VIEW public.organismsxplots OWNER TO web_usr;
+
+--
+-- Name: organismsxseedlots; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.organismsxseedlots AS
+ SELECT s.organism_id,
+    s2.stock_id AS seedlot_id
+   FROM ((public.stock s
+     JOIN public.stock_relationship sr ON ((sr.subject_id = s.stock_id)))
+     JOIN public.stock s2 ON ((s2.stock_id = sr.object_id)))
+  WHERE ((sr.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'collection_of'::text))) AND (s2.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'seedlot'::text))))
+  GROUP BY s.organism_id, s2.stock_id;
+
+
+ALTER VIEW public.organismsxseedlots OWNER TO postgres;
+
+--
+-- Name: organismsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxsubplots AS
+SELECT
+    NULL::integer AS organism_id,
+    NULL::integer AS subplot_id;
+
+
+ALTER VIEW public.organismsxsubplots OWNER TO web_usr;
+
+--
+-- Name: organismsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxtissue_sample AS
+SELECT
+    NULL::integer AS organism_id,
+    NULL::integer AS tissue_sample_id;
+
+
+ALTER VIEW public.organismsxtissue_sample OWNER TO web_usr;
+
+--
+-- Name: organismsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxtrait_components AS
+ SELECT s.organism_id,
+    trait_component.cvterm_id AS trait_component_id
+   FROM ((((public.materialized_phenoview
+     JOIN public.stock s ON ((s.stock_id = materialized_phenoview.accession_id)))
+     JOIN public.cvterm trait ON ((materialized_phenoview.trait_id = trait.cvterm_id)))
+     JOIN public.cvterm_relationship ON (((trait.cvterm_id = cvterm_relationship.object_id) AND (cvterm_relationship.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'contains'::text))))))
+     JOIN public.cvterm trait_component ON ((cvterm_relationship.subject_id = trait_component.cvterm_id)))
+  GROUP BY s.organism_id, trait_component.cvterm_id;
+
+
+ALTER VIEW public.organismsxtrait_components OWNER TO web_usr;
+
+--
+-- Name: organismsxtraits; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxtraits AS
+ SELECT s.organism_id,
+    p.cvalue_id AS trait_id
+   FROM (((public.stock s
+     JOIN public.nd_experiment_stock nes ON ((nes.stock_id = s.stock_id)))
+     JOIN public.nd_experiment_phenotype nep ON ((nep.nd_experiment_id = nes.nd_experiment_id)))
+     JOIN public.phenotype p ON ((p.phenotype_id = nep.phenotype_id)))
+  GROUP BY s.organism_id, p.cvalue_id;
+
+
+ALTER VIEW public.organismsxtraits OWNER TO web_usr;
+
+--
+-- Name: organismsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxtrial_designs AS
+ SELECT s.organism_id,
+    trialdesign.value AS trial_design_id
+   FROM ((public.materialized_phenoview
+     JOIN public.projectprop trialdesign ON (((materialized_phenoview.trial_id = trialdesign.project_id) AND (trialdesign.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'design'::text))))))
+     JOIN public.stock s ON ((s.stock_id = materialized_phenoview.accession_id)))
+  GROUP BY s.organism_id, trialdesign.value;
+
+
+ALTER VIEW public.organismsxtrial_designs OWNER TO web_usr;
+
+--
+-- Name: organismsxtrial_types; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.organismsxtrial_types AS
+ SELECT s.organism_id,
+    trialterm.cvterm_id AS trial_type_id
+   FROM (((public.materialized_phenoview
+     JOIN public.projectprop trialprop ON (((materialized_phenoview.trial_id = trialprop.project_id) AND (trialprop.type_id IN ( SELECT cvterm.cvterm_id
+           FROM (public.cvterm
+             JOIN public.cv USING (cv_id))
+          WHERE ((cv.name)::text = 'project_type'::text))))))
+     JOIN public.cvterm trialterm ON ((trialprop.type_id = trialterm.cvterm_id)))
+     JOIN public.stock s ON ((s.stock_id = materialized_phenoview.accession_id)))
+  GROUP BY s.organism_id, trialterm.cvterm_id;
+
+
+ALTER VIEW public.organismsxtrial_types OWNER TO postgres;
+
+--
+-- Name: organismsxtrials; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.organismsxtrials AS
+ SELECT s.organism_id,
+    materialized_phenoview.trial_id
+   FROM (public.materialized_phenoview
+     LEFT JOIN public.stock s ON ((s.stock_id = materialized_phenoview.accession_id)))
+  GROUP BY s.organism_id, materialized_phenoview.trial_id;
+
+
+ALTER VIEW public.organismsxtrials OWNER TO web_usr;
+
+--
+-- Name: organismsxyears; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.organismsxyears AS
+ SELECT s.organism_id,
+    materialized_phenoview.year_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock s ON ((s.stock_id = materialized_phenoview.accession_id)))
+  WHERE ((s.organism_id IS NOT NULL) AND (materialized_phenoview.year_id IS NOT NULL))
+  GROUP BY s.organism_id, materialized_phenoview.year_id;
+
+
+ALTER VIEW public.organismsxyears OWNER TO postgres;
 
 --
 -- Name: phendesc; Type: TABLE; Schema: public; Owner: postgres
@@ -22404,7 +22854,7 @@ CREATE SEQUENCE public.phendesc_phendesc_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phendesc_phendesc_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phendesc_phendesc_id_seq OWNER TO postgres;
 
 --
 -- Name: phendesc_phendesc_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22444,7 +22894,7 @@ COMMENT ON TABLE public.phenotype_comparison IS 'Comparison of phenotypes e.g., 
 --
 
 CREATE TABLE public.phenotype_comparison_cvterm (
-    phenotype_comparison_cvterm_id integer NOT NULL,
+    phenotype_comparison_cvterm_id integer CONSTRAINT phenotype_comparison_cvterm_phenotype_comparison_cvter_not_null NOT NULL,
     phenotype_comparison_id integer NOT NULL,
     cvterm_id integer NOT NULL,
     pub_id integer NOT NULL,
@@ -22466,7 +22916,7 @@ CREATE SEQUENCE public.phenotype_comparison_cvterm_phenotype_comparison_cvterm_i
     CACHE 1;
 
 
-ALTER TABLE public.phenotype_comparison_cvterm_phenotype_comparison_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phenotype_comparison_cvterm_phenotype_comparison_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: phenotype_comparison_cvterm_phenotype_comparison_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22487,7 +22937,7 @@ CREATE SEQUENCE public.phenotype_comparison_phenotype_comparison_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phenotype_comparison_phenotype_comparison_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phenotype_comparison_phenotype_comparison_id_seq OWNER TO postgres;
 
 --
 -- Name: phenotype_comparison_phenotype_comparison_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22522,7 +22972,7 @@ CREATE SEQUENCE public.phenotype_cvterm_phenotype_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phenotype_cvterm_phenotype_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phenotype_cvterm_phenotype_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: phenotype_cvterm_phenotype_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22543,7 +22993,7 @@ CREATE SEQUENCE public.phenotype_phenotype_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phenotype_phenotype_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phenotype_phenotype_id_seq OWNER TO postgres;
 
 --
 -- Name: phenotype_phenotype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22564,7 +23014,7 @@ CREATE SEQUENCE public.phenotypeprop_phenotypeprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phenotypeprop_phenotypeprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phenotypeprop_phenotypeprop_id_seq OWNER TO postgres;
 
 --
 -- Name: phenotypeprop_phenotypeprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22608,7 +23058,7 @@ CREATE SEQUENCE public.phenstatement_phenstatement_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phenstatement_phenstatement_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phenstatement_phenstatement_id_seq OWNER TO postgres;
 
 --
 -- Name: phenstatement_phenstatement_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22699,7 +23149,7 @@ CREATE SEQUENCE public.phylonode_dbxref_phylonode_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylonode_dbxref_phylonode_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylonode_dbxref_phylonode_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: phylonode_dbxref_phylonode_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22747,7 +23197,7 @@ CREATE SEQUENCE public.phylonode_organism_phylonode_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylonode_organism_phylonode_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylonode_organism_phylonode_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: phylonode_organism_phylonode_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22768,7 +23218,7 @@ CREATE SEQUENCE public.phylonode_phylonode_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylonode_phylonode_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylonode_phylonode_id_seq OWNER TO postgres;
 
 --
 -- Name: phylonode_phylonode_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22802,7 +23252,7 @@ CREATE SEQUENCE public.phylonode_pub_phylonode_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylonode_pub_phylonode_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylonode_pub_phylonode_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: phylonode_pub_phylonode_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22849,7 +23299,7 @@ CREATE SEQUENCE public.phylonode_relationship_phylonode_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylonode_relationship_phylonode_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylonode_relationship_phylonode_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: phylonode_relationship_phylonode_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22892,7 +23342,7 @@ CREATE SEQUENCE public.phylonodeprop_phylonodeprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylonodeprop_phylonodeprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylonodeprop_phylonodeprop_id_seq OWNER TO postgres;
 
 --
 -- Name: phylonodeprop_phylonodeprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22943,7 +23393,7 @@ CREATE SEQUENCE public.phylotree_phylotree_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylotree_phylotree_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylotree_phylotree_id_seq OWNER TO postgres;
 
 --
 -- Name: phylotree_phylotree_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22984,7 +23434,7 @@ CREATE SEQUENCE public.phylotree_pub_phylotree_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.phylotree_pub_phylotree_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.phylotree_pub_phylotree_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: phylotree_pub_phylotree_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -22998,16 +23448,16 @@ ALTER SEQUENCE public.phylotree_pub_phylotree_pub_id_seq OWNED BY public.phylotr
 --
 
 CREATE VIEW public.plants AS
- SELECT stock.stock_id AS plant_id,
-    stock.uniquename AS plant_name
+ SELECT stock_id AS plant_id,
+    uniquename AS plant_name
    FROM public.stock
-  WHERE ((stock.type_id = ( SELECT cvterm.cvterm_id
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
-          WHERE ((cvterm.name)::text = 'plant'::text))) AND (stock.is_obsolete = false))
-  GROUP BY stock.stock_id, stock.uniquename;
+          WHERE ((cvterm.name)::text = 'plant'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, uniquename;
 
 
-ALTER TABLE public.plants OWNER TO web_usr;
+ALTER VIEW public.plants OWNER TO web_usr;
 
 --
 -- Name: plantsxplots; Type: VIEW; Schema: public; Owner: web_usr
@@ -23027,7 +23477,7 @@ CREATE VIEW public.plantsxplots AS
   GROUP BY plant.stock_id, plot.stock_id;
 
 
-ALTER TABLE public.plantsxplots OWNER TO web_usr;
+ALTER VIEW public.plantsxplots OWNER TO web_usr;
 
 --
 -- Name: plantsxseedlots; Type: VIEW; Schema: public; Owner: web_usr
@@ -23043,23 +23493,43 @@ CREATE VIEW public.plantsxseedlots AS
   GROUP BY stock.stock_id, materialized_phenoview.seedlot_id;
 
 
-ALTER TABLE public.plantsxseedlots OWNER TO web_usr;
+ALTER VIEW public.plantsxseedlots OWNER TO web_usr;
+
+--
+-- Name: plantsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.plantsxsubplots AS
+ SELECT plant.stock_id AS plant_id,
+    plot.stock_id AS subplot_id
+   FROM (((public.materialized_phenoview
+     JOIN public.stock plot ON (((materialized_phenoview.stock_id = plot.stock_id) AND (plot.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+     JOIN public.stock_relationship plant_relationship ON ((plot.stock_id = plant_relationship.subject_id)))
+     JOIN public.stock plant ON (((plant_relationship.object_id = plant.stock_id) AND (plant.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'plant'::text))))))
+  GROUP BY plant.stock_id, plot.stock_id;
+
+
+ALTER VIEW public.plantsxsubplots OWNER TO web_usr;
 
 --
 -- Name: tissue_sample; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.tissue_sample AS
- SELECT stock.stock_id AS tissue_sample_id,
-    stock.uniquename AS tissue_sample_name
+ SELECT stock_id AS tissue_sample_id,
+    uniquename AS tissue_sample_name
    FROM public.stock
-  WHERE ((stock.type_id = ( SELECT cvterm.cvterm_id
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
-          WHERE ((cvterm.name)::text = 'tissue_sample'::text))) AND (stock.is_obsolete = false))
-  GROUP BY stock.stock_id, stock.uniquename;
+          WHERE ((cvterm.name)::text = 'tissue_sample'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, uniquename;
 
 
-ALTER TABLE public.tissue_sample OWNER TO web_usr;
+ALTER VIEW public.tissue_sample OWNER TO web_usr;
 
 --
 -- Name: plantsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
@@ -23077,7 +23547,7 @@ CREATE VIEW public.plantsxtissue_sample AS
   GROUP BY ts.tissue_sample_id, so.stock_id;
 
 
-ALTER TABLE public.plantsxtissue_sample OWNER TO web_usr;
+ALTER VIEW public.plantsxtissue_sample OWNER TO web_usr;
 
 --
 -- Name: plantsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -23098,7 +23568,7 @@ CREATE VIEW public.plantsxtrait_components AS
   GROUP BY stock.stock_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.plantsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.plantsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: plantsxtraits; Type: VIEW; Schema: public; Owner: web_usr
@@ -23114,7 +23584,7 @@ CREATE VIEW public.plantsxtraits AS
   GROUP BY stock.stock_id, materialized_phenoview.trait_id;
 
 
-ALTER TABLE public.plantsxtraits OWNER TO web_usr;
+ALTER VIEW public.plantsxtraits OWNER TO web_usr;
 
 --
 -- Name: plantsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -23133,7 +23603,7 @@ CREATE VIEW public.plantsxtrial_designs AS
   GROUP BY stock.stock_id, trialdesign.value;
 
 
-ALTER TABLE public.plantsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.plantsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: plantsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -23154,7 +23624,7 @@ CREATE VIEW public.plantsxtrial_types AS
   GROUP BY stock.stock_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.plantsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.plantsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: plantsxtrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -23170,7 +23640,7 @@ CREATE VIEW public.plantsxtrials AS
   GROUP BY stock.stock_id, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.plantsxtrials OWNER TO web_usr;
+ALTER VIEW public.plantsxtrials OWNER TO web_usr;
 
 --
 -- Name: plantsxyears; Type: VIEW; Schema: public; Owner: web_usr
@@ -23186,23 +23656,23 @@ CREATE VIEW public.plantsxyears AS
   GROUP BY stock.stock_id, materialized_phenoview.year_id;
 
 
-ALTER TABLE public.plantsxyears OWNER TO web_usr;
+ALTER VIEW public.plantsxyears OWNER TO web_usr;
 
 --
 -- Name: plots; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.plots AS
- SELECT stock.stock_id AS plot_id,
-    stock.uniquename AS plot_name
+ SELECT stock_id AS plot_id,
+    uniquename AS plot_name
    FROM public.stock
-  WHERE ((stock.type_id = ( SELECT cvterm.cvterm_id
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
-          WHERE ((cvterm.name)::text = 'plot'::text))) AND (stock.is_obsolete = false))
-  GROUP BY stock.stock_id, stock.uniquename;
+          WHERE ((cvterm.name)::text = 'plot'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, uniquename;
 
 
-ALTER TABLE public.plots OWNER TO web_usr;
+ALTER VIEW public.plots OWNER TO web_usr;
 
 --
 -- Name: plotsxseedlots; Type: VIEW; Schema: public; Owner: web_usr
@@ -23218,7 +23688,25 @@ CREATE VIEW public.plotsxseedlots AS
   GROUP BY stock.stock_id, materialized_phenoview.seedlot_id;
 
 
-ALTER TABLE public.plotsxseedlots OWNER TO web_usr;
+ALTER VIEW public.plotsxseedlots OWNER TO web_usr;
+
+--
+-- Name: plotsxsubplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.plotsxsubplots AS
+ SELECT sr.object_id AS subplot_id,
+    s.stock_id AS plot_id
+   FROM (public.stock_relationship sr
+     JOIN public.stock s ON ((s.stock_id = sr.subject_id)))
+  WHERE ((sr.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot_of'::text))) AND (s.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'plot'::text))));
+
+
+ALTER VIEW public.plotsxsubplots OWNER TO web_usr;
 
 --
 -- Name: plotsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
@@ -23236,7 +23724,7 @@ CREATE VIEW public.plotsxtissue_sample AS
   GROUP BY ts.tissue_sample_id, so.stock_id;
 
 
-ALTER TABLE public.plotsxtissue_sample OWNER TO web_usr;
+ALTER VIEW public.plotsxtissue_sample OWNER TO web_usr;
 
 --
 -- Name: plotsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -23257,7 +23745,7 @@ CREATE VIEW public.plotsxtrait_components AS
   GROUP BY stock.stock_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.plotsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.plotsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: plotsxtraits; Type: VIEW; Schema: public; Owner: web_usr
@@ -23273,7 +23761,7 @@ CREATE VIEW public.plotsxtraits AS
   GROUP BY stock.stock_id, materialized_phenoview.trait_id;
 
 
-ALTER TABLE public.plotsxtraits OWNER TO web_usr;
+ALTER VIEW public.plotsxtraits OWNER TO web_usr;
 
 --
 -- Name: plotsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -23294,7 +23782,7 @@ CREATE VIEW public.plotsxtrial_types AS
   GROUP BY stock.stock_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.plotsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.plotsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: plotsxtrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -23310,7 +23798,7 @@ CREATE VIEW public.plotsxtrials AS
   GROUP BY stock.stock_id, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.plotsxtrials OWNER TO web_usr;
+ALTER VIEW public.plotsxtrials OWNER TO web_usr;
 
 --
 -- Name: plotsxyears; Type: VIEW; Schema: public; Owner: web_usr
@@ -23326,7 +23814,7 @@ CREATE VIEW public.plotsxyears AS
   GROUP BY stock.stock_id, materialized_phenoview.year_id;
 
 
-ALTER TABLE public.plotsxyears OWNER TO web_usr;
+ALTER VIEW public.plotsxyears OWNER TO web_usr;
 
 --
 -- Name: project_contact; Type: TABLE; Schema: public; Owner: postgres
@@ -23360,7 +23848,7 @@ CREATE SEQUENCE public.project_contact_project_contact_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.project_contact_project_contact_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.project_contact_project_contact_id_seq OWNER TO postgres;
 
 --
 -- Name: project_contact_project_contact_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23396,7 +23884,7 @@ CREATE SEQUENCE public.project_dbxref_project_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.project_dbxref_project_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.project_dbxref_project_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: project_dbxref_project_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23417,7 +23905,7 @@ CREATE SEQUENCE public.project_project_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.project_project_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.project_project_id_seq OWNER TO postgres;
 
 --
 -- Name: project_project_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23458,7 +23946,7 @@ CREATE SEQUENCE public.project_pub_project_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.project_pub_project_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.project_pub_project_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: project_pub_project_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23479,7 +23967,7 @@ CREATE SEQUENCE public.project_relationship_project_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.project_relationship_project_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.project_relationship_project_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: project_relationship_project_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23500,7 +23988,7 @@ CREATE SEQUENCE public.projectprop_projectprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.projectprop_projectprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.projectprop_projectprop_id_seq OWNER TO postgres;
 
 --
 -- Name: projectprop_projectprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23543,7 +24031,7 @@ CREATE SEQUENCE public.pub_dbxref_pub_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pub_dbxref_pub_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.pub_dbxref_pub_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: pub_dbxref_pub_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23564,7 +24052,7 @@ CREATE SEQUENCE public.pub_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pub_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.pub_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: pub_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23610,7 +24098,7 @@ CREATE SEQUENCE public.pub_relationship_pub_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pub_relationship_pub_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.pub_relationship_pub_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: pub_relationship_pub_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23645,7 +24133,7 @@ CREATE SEQUENCE public.pubabstract_pubabstract_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pubabstract_pubabstract_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.pubabstract_pubabstract_id_seq OWNER TO postgres;
 
 --
 -- Name: pubabstract_pubabstract_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23718,7 +24206,7 @@ CREATE SEQUENCE public.pubauthor_pubauthor_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pubauthor_pubauthor_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.pubauthor_pubauthor_id_seq OWNER TO postgres;
 
 --
 -- Name: pubauthor_pubauthor_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23761,7 +24249,7 @@ CREATE SEQUENCE public.pubprop_pubprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.pubprop_pubprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.pubprop_pubprop_id_seq OWNER TO postgres;
 
 --
 -- Name: pubprop_pubprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23802,7 +24290,7 @@ CREATE SEQUENCE public.resource_file_resource_file_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.resource_file_resource_file_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.resource_file_resource_file_id_seq OWNER TO postgres;
 
 --
 -- Name: resource_file_resource_file_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -23816,16 +24304,16 @@ ALTER SEQUENCE public.resource_file_resource_file_id_seq OWNED BY public.resourc
 --
 
 CREATE VIEW public.seedlots AS
- SELECT stock.stock_id AS seedlot_id,
-    stock.uniquename AS seedlot_name
+ SELECT stock_id AS seedlot_id,
+    uniquename AS seedlot_name
    FROM public.stock
-  WHERE ((stock.type_id = ( SELECT cvterm.cvterm_id
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
-          WHERE ((cvterm.name)::text = 'seedlot'::text))) AND (stock.is_obsolete = false))
-  GROUP BY stock.stock_id, stock.uniquename;
+          WHERE ((cvterm.name)::text = 'seedlot'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, uniquename;
 
 
-ALTER TABLE public.seedlots OWNER TO web_usr;
+ALTER VIEW public.seedlots OWNER TO web_usr;
 
 --
 -- Name: seedlotsxtrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -23843,20 +24331,20 @@ CREATE VIEW public.seedlotsxtrait_components AS
   GROUP BY materialized_phenoview.seedlot_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.seedlotsxtrait_components OWNER TO web_usr;
+ALTER VIEW public.seedlotsxtrait_components OWNER TO web_usr;
 
 --
 -- Name: seedlotsxtraits; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.seedlotsxtraits AS
- SELECT materialized_phenoview.seedlot_id,
-    materialized_phenoview.trait_id
+ SELECT seedlot_id,
+    trait_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.seedlot_id, materialized_phenoview.trait_id;
+  GROUP BY seedlot_id, trait_id;
 
 
-ALTER TABLE public.seedlotsxtraits OWNER TO web_usr;
+ALTER VIEW public.seedlotsxtraits OWNER TO web_usr;
 
 --
 -- Name: seedlotsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -23872,7 +24360,7 @@ CREATE VIEW public.seedlotsxtrial_designs AS
   GROUP BY materialized_phenoview.seedlot_id, trialdesign.value;
 
 
-ALTER TABLE public.seedlotsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.seedlotsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: seedlotsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -23890,33 +24378,33 @@ CREATE VIEW public.seedlotsxtrial_types AS
   GROUP BY materialized_phenoview.seedlot_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.seedlotsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.seedlotsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: seedlotsxtrials; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.seedlotsxtrials AS
- SELECT materialized_phenoview.seedlot_id,
-    materialized_phenoview.trial_id
+ SELECT seedlot_id,
+    trial_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.seedlot_id, materialized_phenoview.trial_id;
+  GROUP BY seedlot_id, trial_id;
 
 
-ALTER TABLE public.seedlotsxtrials OWNER TO web_usr;
+ALTER VIEW public.seedlotsxtrials OWNER TO web_usr;
 
 --
 -- Name: seedlotsxyears; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.seedlotsxyears AS
- SELECT materialized_phenoview.seedlot_id,
-    materialized_phenoview.year_id
+ SELECT seedlot_id,
+    year_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.seedlot_id, materialized_phenoview.year_id;
+  GROUP BY seedlot_id, year_id;
 
 
-ALTER TABLE public.seedlotsxyears OWNER TO web_usr;
+ALTER VIEW public.seedlotsxyears OWNER TO web_usr;
 
 --
 -- Name: signalp; Type: TABLE; Schema: public; Owner: postgres
@@ -23961,7 +24449,7 @@ CREATE SEQUENCE public.signalp_signalp_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.signalp_signalp_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.signalp_signalp_id_seq OWNER TO postgres;
 
 --
 -- Name: signalp_signalp_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24005,7 +24493,7 @@ CREATE SEQUENCE public.stock_cvterm_stock_cvterm_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_cvterm_stock_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_cvterm_stock_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_cvterm_stock_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24082,7 +24570,7 @@ CREATE SEQUENCE public.stock_cvtermprop_stock_cvtermprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_cvtermprop_stock_cvtermprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_cvtermprop_stock_cvtermprop_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_cvtermprop_stock_cvtermprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24131,7 +24619,7 @@ CREATE SEQUENCE public.stock_dbxref_stock_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_dbxref_stock_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_dbxref_stock_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_dbxref_stock_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24178,7 +24666,7 @@ CREATE SEQUENCE public.stock_dbxrefprop_stock_dbxrefprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_dbxrefprop_stock_dbxrefprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_dbxrefprop_stock_dbxrefprop_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_dbxrefprop_stock_dbxrefprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24220,7 +24708,7 @@ CREATE SEQUENCE public.stock_genotype_stock_genotype_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_genotype_stock_genotype_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_genotype_stock_genotype_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_genotype_stock_genotype_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24261,7 +24749,7 @@ CREATE SEQUENCE public.stock_pub_stock_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_pub_stock_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_pub_stock_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_pub_stock_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24303,7 +24791,7 @@ CREATE SEQUENCE public.stock_relationship_cvterm_stock_relationship_cvterm_id_se
     CACHE 1;
 
 
-ALTER TABLE public.stock_relationship_cvterm_stock_relationship_cvterm_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_relationship_cvterm_stock_relationship_cvterm_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_relationship_cvterm_stock_relationship_cvterm_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24344,7 +24832,7 @@ CREATE SEQUENCE public.stock_relationship_pub_stock_relationship_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_relationship_pub_stock_relationship_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_relationship_pub_stock_relationship_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_relationship_pub_stock_relationship_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24365,7 +24853,7 @@ CREATE SEQUENCE public.stock_relationship_stock_relationship_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_relationship_stock_relationship_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_relationship_stock_relationship_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_relationship_stock_relationship_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24386,7 +24874,7 @@ CREATE SEQUENCE public.stock_stock_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stock_stock_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stock_stock_id_seq OWNER TO postgres;
 
 --
 -- Name: stock_stock_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24478,7 +24966,7 @@ CREATE SEQUENCE public.stockcollection_stock_stockcollection_stock_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stockcollection_stock_stockcollection_stock_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stockcollection_stock_stockcollection_stock_id_seq OWNER TO postgres;
 
 --
 -- Name: stockcollection_stock_stockcollection_stock_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24499,7 +24987,7 @@ CREATE SEQUENCE public.stockcollection_stockcollection_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stockcollection_stockcollection_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stockcollection_stockcollection_id_seq OWNER TO postgres;
 
 --
 -- Name: stockcollection_stockcollection_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24551,7 +25039,7 @@ CREATE SEQUENCE public.stockcollectionprop_stockcollectionprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stockcollectionprop_stockcollectionprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stockcollectionprop_stockcollectionprop_id_seq OWNER TO postgres;
 
 --
 -- Name: stockcollectionprop_stockcollectionprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24592,7 +25080,7 @@ CREATE SEQUENCE public.stockprop_pub_stockprop_pub_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stockprop_pub_stockprop_pub_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stockprop_pub_stockprop_pub_id_seq OWNER TO postgres;
 
 --
 -- Name: stockprop_pub_stockprop_pub_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24613,7 +25101,7 @@ CREATE SEQUENCE public.stockprop_stockprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.stockprop_stockprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.stockprop_stockprop_id_seq OWNER TO postgres;
 
 --
 -- Name: stockprop_stockprop_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24621,6 +25109,112 @@ ALTER TABLE public.stockprop_stockprop_id_seq OWNER TO postgres;
 
 ALTER SEQUENCE public.stockprop_stockprop_id_seq OWNED BY public.stockprop.stockprop_id;
 
+
+--
+-- Name: subplots; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.subplots AS
+ SELECT stock_id AS subplot_id,
+    uniquename AS subplot_name
+   FROM public.stock
+  WHERE ((type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))) AND (is_obsolete = false))
+  GROUP BY stock_id, uniquename;
+
+
+ALTER VIEW public.subplots OWNER TO web_usr;
+
+--
+-- Name: subplotsxtissue_sample; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.subplotsxtissue_sample AS
+ SELECT ts.tissue_sample_id,
+    so.stock_id AS subplot_id
+   FROM ((public.tissue_sample ts
+     JOIN public.stock_relationship sr ON ((sr.subject_id = ts.tissue_sample_id)))
+     JOIN public.stock so ON ((so.stock_id = sr.object_id)))
+  WHERE (so.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text)))
+  GROUP BY ts.tissue_sample_id, so.stock_id;
+
+
+ALTER VIEW public.subplotsxtissue_sample OWNER TO web_usr;
+
+--
+-- Name: subplotsxtraits; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.subplotsxtraits AS
+ SELECT sr.object_id AS subplot_id,
+    p.cvalue_id AS trait_id
+   FROM (((public.stock_relationship sr
+     JOIN public.nd_experiment_stock nes ON ((nes.stock_id = sr.object_id)))
+     JOIN public.nd_experiment_phenotype nep ON ((nep.nd_experiment_id = nes.nd_experiment_id)))
+     JOIN public.phenotype p ON ((p.phenotype_id = nep.phenotype_id)))
+  WHERE (sr.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot_of'::text)))
+  GROUP BY sr.object_id, p.cvalue_id;
+
+
+ALTER VIEW public.subplotsxtraits OWNER TO web_usr;
+
+--
+-- Name: subplotsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.subplotsxtrial_types AS
+ SELECT stock.stock_id AS subplot_id,
+    trialterm.cvterm_id AS trial_type_id
+   FROM (((public.materialized_phenoview
+     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+     JOIN public.projectprop trialprop ON (((materialized_phenoview.trial_id = trialprop.project_id) AND (trialprop.type_id IN ( SELECT cvterm.cvterm_id
+           FROM (public.cvterm
+             JOIN public.cv USING (cv_id))
+          WHERE ((cv.name)::text = 'project_type'::text))))))
+     JOIN public.cvterm trialterm ON ((trialprop.type_id = trialterm.cvterm_id)))
+  GROUP BY stock.stock_id, trialterm.cvterm_id;
+
+
+ALTER VIEW public.subplotsxtrial_types OWNER TO web_usr;
+
+--
+-- Name: subplotsxtrials; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.subplotsxtrials AS
+ SELECT stock.stock_id AS subplot_id,
+    materialized_phenoview.trial_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+  GROUP BY stock.stock_id, materialized_phenoview.trial_id;
+
+
+ALTER VIEW public.subplotsxtrials OWNER TO web_usr;
+
+--
+-- Name: subplotsxyears; Type: VIEW; Schema: public; Owner: web_usr
+--
+
+CREATE VIEW public.subplotsxyears AS
+ SELECT stock.stock_id AS subplot_id,
+    materialized_phenoview.year_id
+   FROM (public.materialized_phenoview
+     JOIN public.stock ON (((materialized_phenoview.stock_id = stock.stock_id) AND (stock.type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text))))))
+  GROUP BY stock.stock_id, materialized_phenoview.year_id;
+
+
+ALTER VIEW public.subplotsxyears OWNER TO web_usr;
 
 --
 -- Name: synonym_synonym_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -24634,7 +25228,7 @@ CREATE SEQUENCE public.synonym_synonym_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.synonym_synonym_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.synonym_synonym_id_seq OWNER TO postgres;
 
 --
 -- Name: synonym_synonym_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24673,7 +25267,7 @@ CREATE SEQUENCE public.tableinfo_tableinfo_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.tableinfo_tableinfo_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.tableinfo_tableinfo_id_seq OWNER TO postgres;
 
 --
 -- Name: tableinfo_tableinfo_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24696,7 +25290,7 @@ CREATE VIEW public.tissue_samplexseedlots AS
   GROUP BY stock.stock_id, materialized_phenoview.seedlot_id;
 
 
-ALTER TABLE public.tissue_samplexseedlots OWNER TO web_usr;
+ALTER VIEW public.tissue_samplexseedlots OWNER TO web_usr;
 
 --
 -- Name: tissue_samplextrait_components; Type: VIEW; Schema: public; Owner: web_usr
@@ -24717,7 +25311,7 @@ CREATE VIEW public.tissue_samplextrait_components AS
   GROUP BY stock.stock_id, trait_component.cvterm_id;
 
 
-ALTER TABLE public.tissue_samplextrait_components OWNER TO web_usr;
+ALTER VIEW public.tissue_samplextrait_components OWNER TO web_usr;
 
 --
 -- Name: tissue_samplextraits; Type: VIEW; Schema: public; Owner: web_usr
@@ -24733,7 +25327,7 @@ CREATE VIEW public.tissue_samplextraits AS
   GROUP BY stock.stock_id, materialized_phenoview.trait_id;
 
 
-ALTER TABLE public.tissue_samplextraits OWNER TO web_usr;
+ALTER VIEW public.tissue_samplextraits OWNER TO web_usr;
 
 --
 -- Name: tissue_samplextrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -24753,7 +25347,7 @@ CREATE VIEW public.tissue_samplextrial_designs AS
   GROUP BY stock.stock_id, projectprop.value;
 
 
-ALTER TABLE public.tissue_samplextrial_designs OWNER TO web_usr;
+ALTER VIEW public.tissue_samplextrial_designs OWNER TO web_usr;
 
 --
 -- Name: tissue_samplextrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -24774,7 +25368,7 @@ CREATE VIEW public.tissue_samplextrial_types AS
   GROUP BY stock.stock_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.tissue_samplextrial_types OWNER TO web_usr;
+ALTER VIEW public.tissue_samplextrial_types OWNER TO web_usr;
 
 --
 -- Name: tissue_samplextrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -24790,7 +25384,7 @@ CREATE VIEW public.tissue_samplextrials AS
   GROUP BY stock.stock_id, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.tissue_samplextrials OWNER TO web_usr;
+ALTER VIEW public.tissue_samplextrials OWNER TO web_usr;
 
 --
 -- Name: tissue_samplexyears; Type: VIEW; Schema: public; Owner: web_usr
@@ -24806,7 +25400,7 @@ CREATE VIEW public.tissue_samplexyears AS
   GROUP BY stock.stock_id, materialized_phenoview.year_id;
 
 
-ALTER TABLE public.tissue_samplexyears OWNER TO web_usr;
+ALTER VIEW public.tissue_samplexyears OWNER TO web_usr;
 
 --
 -- Name: tmp_cds_handler; Type: TABLE; Schema: public; Owner: postgres
@@ -24837,7 +25431,7 @@ CREATE SEQUENCE public.tmp_cds_handler_cds_row_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.tmp_cds_handler_cds_row_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.tmp_cds_handler_cds_row_id_seq OWNER TO postgres;
 
 --
 -- Name: tmp_cds_handler_cds_row_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24872,7 +25466,7 @@ CREATE SEQUENCE public.tmp_cds_handler_relationship_rel_row_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.tmp_cds_handler_relationship_rel_row_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.tmp_cds_handler_relationship_rel_row_id_seq OWNER TO postgres;
 
 --
 -- Name: tmp_cds_handler_relationship_rel_row_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -24916,7 +25510,7 @@ CREATE VIEW public.trait_components AS
   ORDER BY (((((cvterm.name)::text || '|'::text) || (db.name)::text) || ':'::text) || (dbxref.accession)::text), cvterm.cvterm_id;
 
 
-ALTER TABLE public.trait_components OWNER TO web_usr;
+ALTER VIEW public.trait_components OWNER TO web_usr;
 
 --
 -- Name: trait_componentsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -24937,7 +25531,7 @@ CREATE VIEW public.trait_componentsxtrial_designs AS
   GROUP BY trait_component.cvterm_id, trialdesign.value;
 
 
-ALTER TABLE public.trait_componentsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.trait_componentsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: trait_componentsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -24960,7 +25554,7 @@ CREATE VIEW public.trait_componentsxtrial_types AS
   GROUP BY trait_component.cvterm_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.trait_componentsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.trait_componentsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: trait_componentsxtrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -24978,7 +25572,7 @@ CREATE VIEW public.trait_componentsxtrials AS
   GROUP BY trait_component.cvterm_id, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.trait_componentsxtrials OWNER TO web_usr;
+ALTER VIEW public.trait_componentsxtrials OWNER TO web_usr;
 
 --
 -- Name: trait_componentsxyears; Type: VIEW; Schema: public; Owner: web_usr
@@ -24996,7 +25590,7 @@ CREATE VIEW public.trait_componentsxyears AS
   GROUP BY trait_component.cvterm_id, materialized_phenoview.year_id;
 
 
-ALTER TABLE public.trait_componentsxyears OWNER TO web_usr;
+ALTER VIEW public.trait_componentsxyears OWNER TO web_usr;
 
 --
 -- Name: traits; Type: VIEW; Schema: public; Owner: web_usr
@@ -25005,35 +25599,33 @@ ALTER TABLE public.trait_componentsxyears OWNER TO web_usr;
 CREATE VIEW public.traits AS
  SELECT cvterm.cvterm_id AS trait_id,
     (((((cvterm.name)::text || '|'::text) || (db.name)::text) || ':'::text) || (dbxref.accession)::text) AS trait_name
-   FROM (((((public.cv
-     JOIN public.cvprop ON (((cv.cv_id = cvprop.cv_id) AND (cvprop.type_id IN ( SELECT cvterm_1.cvterm_id
-           FROM public.cvterm cvterm_1
-          WHERE ((cvterm_1.name)::text = 'trait_ontology'::text))))))
-     JOIN public.cvterm ON ((cvprop.cv_id = cvterm.cv_id)))
+   FROM (((public.cvterm
      JOIN public.dbxref USING (dbxref_id))
      JOIN public.db ON ((dbxref.db_id = db.db_id)))
-     LEFT JOIN public.cvterm_relationship is_variable ON (((cvterm.cvterm_id = is_variable.subject_id) AND (is_variable.type_id = ( SELECT cvterm_1.cvterm_id
+     LEFT JOIN public.cvterm_relationship is_variable ON (((cvterm.cvterm_id = is_variable.subject_id) AND (is_variable.type_id IN ( SELECT cvterm_1.cvterm_id
            FROM public.cvterm cvterm_1
-          WHERE ((cvterm_1.name)::text = 'VARIABLE_OF'::text))))))
-  WHERE (is_variable.subject_id IS NOT NULL)
-  GROUP BY cvterm.cvterm_id, (((((cvterm.name)::text || '|'::text) || (db.name)::text) || ':'::text) || (dbxref.accession)::text)
+          WHERE (((cvterm_1.name)::text = 'VARIABLE_OF'::text) AND (cvterm_1.is_relationshiptype = 1)))))))
+  WHERE ((cvterm.cvterm_id IN ( SELECT cvterm.cvterm_id
+           FROM public.cvprop
+          WHERE (cvprop.type_id IN ( SELECT cvterm_1.cvterm_id
+                   FROM public.cvterm cvterm_1
+                  WHERE ((cvterm_1.name)::text = 'trait_ontology'::text))))) AND (is_variable.subject_id IS NOT NULL))
 UNION
  SELECT cvterm.cvterm_id AS trait_id,
     (((((cvterm.name)::text || '|'::text) || (db.name)::text) || ':'::text) || (dbxref.accession)::text) AS trait_name
-   FROM (((((public.cv
-     JOIN public.cvprop ON (((cv.cv_id = cvprop.cv_id) AND (cvprop.type_id IN ( SELECT cvterm_1.cvterm_id
-           FROM public.cvterm cvterm_1
-          WHERE ((cvterm_1.name)::text = 'composed_trait_ontology'::text))))))
-     JOIN public.cvterm ON ((cvprop.cv_id = cvterm.cv_id)))
+   FROM (((public.cvterm
      JOIN public.dbxref USING (dbxref_id))
      JOIN public.db ON ((dbxref.db_id = db.db_id)))
      LEFT JOIN public.cvterm_relationship is_subject ON ((cvterm.cvterm_id = is_subject.subject_id)))
-  WHERE (is_subject.subject_id IS NOT NULL)
-  GROUP BY cvterm.cvterm_id, (((((cvterm.name)::text || '|'::text) || (db.name)::text) || ':'::text) || (dbxref.accession)::text)
+  WHERE ((cvterm.cvterm_id IN ( SELECT cvterm.cvterm_id
+           FROM public.cvprop
+          WHERE (cvprop.type_id IN ( SELECT cvterm_1.cvterm_id
+                   FROM public.cvterm cvterm_1
+                  WHERE ((cvterm_1.name)::text = 'composed_trait_ontology'::text))))) AND (is_subject.subject_id IS NOT NULL))
   ORDER BY 2;
 
 
-ALTER TABLE public.traits OWNER TO web_usr;
+ALTER VIEW public.traits OWNER TO web_usr;
 
 --
 -- Name: traitsxtrial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -25049,7 +25641,7 @@ CREATE VIEW public.traitsxtrial_designs AS
   GROUP BY materialized_phenoview.trait_id, trialdesign.value;
 
 
-ALTER TABLE public.traitsxtrial_designs OWNER TO web_usr;
+ALTER VIEW public.traitsxtrial_designs OWNER TO web_usr;
 
 --
 -- Name: traitsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -25067,33 +25659,35 @@ CREATE VIEW public.traitsxtrial_types AS
   GROUP BY materialized_phenoview.trait_id, trialterm.cvterm_id;
 
 
-ALTER TABLE public.traitsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.traitsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: traitsxtrials; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.traitsxtrials AS
- SELECT materialized_phenoview.trait_id,
-    materialized_phenoview.trial_id
-   FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.trait_id, materialized_phenoview.trial_id;
+ SELECT p.cvalue_id AS trait_id,
+    nep.project_id AS trial_id
+   FROM ((public.nd_experiment_project nep
+     JOIN public.nd_experiment_phenotype nep2 ON ((nep2.nd_experiment_id = nep.nd_experiment_id)))
+     JOIN public.phenotype p ON ((p.phenotype_id = nep2.phenotype_id)))
+  GROUP BY p.cvalue_id, nep.project_id;
 
 
-ALTER TABLE public.traitsxtrials OWNER TO web_usr;
+ALTER VIEW public.traitsxtrials OWNER TO web_usr;
 
 --
 -- Name: traitsxyears; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.traitsxyears AS
- SELECT materialized_phenoview.trait_id,
-    materialized_phenoview.year_id
+ SELECT trait_id,
+    year_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.trait_id, materialized_phenoview.year_id;
+  GROUP BY trait_id, year_id;
 
 
-ALTER TABLE public.traitsxyears OWNER TO web_usr;
+ALTER VIEW public.traitsxyears OWNER TO web_usr;
 
 --
 -- Name: trial_designs; Type: VIEW; Schema: public; Owner: web_usr
@@ -25105,10 +25699,10 @@ CREATE VIEW public.trial_designs AS
    FROM (public.projectprop
      JOIN public.cvterm ON ((projectprop.type_id = cvterm.cvterm_id)))
   WHERE ((cvterm.name)::text = 'design'::text)
-  GROUP BY projectprop.value;
+  GROUP BY projectprop.value, projectprop.value;
 
 
-ALTER TABLE public.trial_designs OWNER TO web_usr;
+ALTER VIEW public.trial_designs OWNER TO web_usr;
 
 --
 -- Name: trial_designsxtrial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -25129,7 +25723,7 @@ CREATE VIEW public.trial_designsxtrial_types AS
   GROUP BY trialdesign.value, trialterm.cvterm_id;
 
 
-ALTER TABLE public.trial_designsxtrial_types OWNER TO web_usr;
+ALTER VIEW public.trial_designsxtrial_types OWNER TO web_usr;
 
 --
 -- Name: trial_designsxtrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -25145,7 +25739,7 @@ CREATE VIEW public.trial_designsxtrials AS
   GROUP BY trialdesign.value, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.trial_designsxtrials OWNER TO web_usr;
+ALTER VIEW public.trial_designsxtrials OWNER TO web_usr;
 
 --
 -- Name: trial_designsxyears; Type: VIEW; Schema: public; Owner: web_usr
@@ -25161,7 +25755,7 @@ CREATE VIEW public.trial_designsxyears AS
   GROUP BY trialdesign.value, materialized_phenoview.year_id;
 
 
-ALTER TABLE public.trial_designsxyears OWNER TO web_usr;
+ALTER VIEW public.trial_designsxyears OWNER TO web_usr;
 
 --
 -- Name: trial_types; Type: VIEW; Schema: public; Owner: web_usr
@@ -25173,7 +25767,7 @@ SELECT
     NULL::character varying(1024) AS trial_type_name;
 
 
-ALTER TABLE public.trial_types OWNER TO web_usr;
+ALTER VIEW public.trial_types OWNER TO web_usr;
 
 --
 -- Name: trial_typesxtrials; Type: VIEW; Schema: public; Owner: web_usr
@@ -25191,7 +25785,7 @@ CREATE VIEW public.trial_typesxtrials AS
   GROUP BY trialterm.cvterm_id, materialized_phenoview.trial_id;
 
 
-ALTER TABLE public.trial_typesxtrials OWNER TO web_usr;
+ALTER VIEW public.trial_typesxtrials OWNER TO web_usr;
 
 --
 -- Name: trial_typesxyears; Type: VIEW; Schema: public; Owner: web_usr
@@ -25209,7 +25803,7 @@ CREATE VIEW public.trial_typesxyears AS
   GROUP BY trialterm.cvterm_id, materialized_phenoview.year_id;
 
 
-ALTER TABLE public.trial_typesxyears OWNER TO web_usr;
+ALTER VIEW public.trial_typesxyears OWNER TO web_usr;
 
 --
 -- Name: trials; Type: VIEW; Schema: public; Owner: web_usr
@@ -25230,20 +25824,20 @@ CREATE VIEW public.trials AS
   GROUP BY trial.project_id, trial.name;
 
 
-ALTER TABLE public.trials OWNER TO web_usr;
+ALTER VIEW public.trials OWNER TO web_usr;
 
 --
 -- Name: trialsxyears; Type: VIEW; Schema: public; Owner: web_usr
 --
 
 CREATE VIEW public.trialsxyears AS
- SELECT materialized_phenoview.trial_id,
-    materialized_phenoview.year_id
+ SELECT trial_id,
+    year_id
    FROM public.materialized_phenoview
-  GROUP BY materialized_phenoview.trial_id, materialized_phenoview.year_id;
+  GROUP BY trial_id, year_id;
 
 
-ALTER TABLE public.trialsxyears OWNER TO web_usr;
+ALTER VIEW public.trialsxyears OWNER TO web_usr;
 
 --
 -- Name: unigene_dbxref; Type: TABLE; Schema: public; Owner: postgres
@@ -25270,7 +25864,7 @@ CREATE SEQUENCE public.unigene_dbxref_unigene_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.unigene_dbxref_unigene_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE public.unigene_dbxref_unigene_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: unigene_dbxref_unigene_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
@@ -25329,16 +25923,16 @@ ALTER TABLE public.unigene_signalp OWNER TO postgres;
 --
 
 CREATE VIEW public.years AS
- SELECT projectprop.value AS year_id,
-    projectprop.value AS year_name
+ SELECT value AS year_id,
+    value AS year_name
    FROM public.projectprop
-  WHERE (projectprop.type_id = ( SELECT cvterm.cvterm_id
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
            FROM public.cvterm
           WHERE ((cvterm.name)::text = 'project year'::text)))
-  GROUP BY projectprop.value;
+  GROUP BY value;
 
 
-ALTER TABLE public.years OWNER TO web_usr;
+ALTER VIEW public.years OWNER TO web_usr;
 
 --
 -- Name: accession; Type: TABLE; Schema: sgn; Owner: postgres
@@ -25368,7 +25962,7 @@ CREATE SEQUENCE sgn.accession_accession_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.accession_accession_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.accession_accession_id_seq OWNER TO postgres;
 
 --
 -- Name: accession_accession_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25402,7 +25996,7 @@ CREATE SEQUENCE sgn.accession_names_accession_name_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.accession_names_accession_name_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.accession_names_accession_name_id_seq OWNER TO postgres;
 
 --
 -- Name: accession_names_accession_name_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25438,7 +26032,7 @@ CREATE SEQUENCE sgn.annotation_target_type_annotation_target_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.annotation_target_type_annotation_target_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.annotation_target_type_annotation_target_type_id_seq OWNER TO postgres;
 
 --
 -- Name: annotation_target_type_annotation_target_type_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25472,7 +26066,7 @@ CREATE SEQUENCE sgn.authors_author_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.authors_author_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.authors_author_id_seq OWNER TO postgres;
 
 --
 -- Name: authors_author_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25512,7 +26106,7 @@ CREATE SEQUENCE sgn.blast_annotations_blast_annotation_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_annotations_blast_annotation_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_annotations_blast_annotation_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_annotations_blast_annotation_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25610,7 +26204,7 @@ CREATE SEQUENCE sgn.blast_db_blast_db_group_blast_db_blast_db_group_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_db_blast_db_group_blast_db_blast_db_group_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_db_blast_db_group_blast_db_blast_db_group_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_db_blast_db_group_blast_db_blast_db_group_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25631,7 +26225,7 @@ CREATE SEQUENCE sgn.blast_db_blast_db_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_db_blast_db_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_db_blast_db_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_db_blast_db_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25665,7 +26259,7 @@ CREATE SEQUENCE sgn.blast_db_group_blast_db_group_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_db_group_blast_db_group_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_db_group_blast_db_group_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_db_group_blast_db_group_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25699,7 +26293,7 @@ CREATE SEQUENCE sgn.blast_db_organism_blast_db_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_db_organism_blast_db_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_db_organism_blast_db_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_db_organism_blast_db_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25736,7 +26330,7 @@ CREATE SEQUENCE sgn.blast_defline_defline_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_defline_defline_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_defline_defline_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_defline_defline_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25776,7 +26370,7 @@ CREATE SEQUENCE sgn.blast_hits_blast_hit_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_hits_blast_hit_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_hits_blast_hit_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_hits_blast_hit_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25812,7 +26406,7 @@ CREATE SEQUENCE sgn.blast_targets_blast_target_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.blast_targets_blast_target_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.blast_targets_blast_target_id_seq OWNER TO postgres;
 
 --
 -- Name: blast_targets_blast_target_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25858,7 +26452,7 @@ CREATE SEQUENCE sgn.cds_cds_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.cds_cds_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.cds_cds_id_seq OWNER TO postgres;
 
 --
 -- Name: cds_cds_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25925,7 +26519,7 @@ CREATE SEQUENCE sgn.chadoprop_chadoprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.chadoprop_chadoprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.chadoprop_chadoprop_id_seq OWNER TO postgres;
 
 --
 -- Name: chadoprop_chadoprop_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25960,7 +26554,7 @@ CREATE SEQUENCE sgn.clone_clone_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.clone_clone_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.clone_clone_id_seq OWNER TO postgres;
 
 --
 -- Name: clone_clone_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -25994,7 +26588,7 @@ CREATE SEQUENCE sgn.cloning_vector_cloning_vector_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.cloning_vector_cloning_vector_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.cloning_vector_cloning_vector_id_seq OWNER TO postgres;
 
 --
 -- Name: cloning_vector_cloning_vector_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26027,7 +26621,7 @@ CREATE SEQUENCE sgn.common_name_common_name_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.common_name_common_name_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.common_name_common_name_id_seq OWNER TO postgres;
 
 --
 -- Name: common_name_common_name_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26063,7 +26657,7 @@ CREATE SEQUENCE sgn.common_nameprop_common_nameprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.common_nameprop_common_nameprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.common_nameprop_common_nameprop_id_seq OWNER TO postgres;
 
 --
 -- Name: common_nameprop_common_nameprop_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26084,7 +26678,7 @@ CREATE SEQUENCE sgn.composed_trait_ids
     CACHE 1;
 
 
-ALTER TABLE sgn.composed_trait_ids OWNER TO web_usr;
+ALTER SEQUENCE sgn.composed_trait_ids OWNER TO web_usr;
 
 --
 -- Name: cos_markers; Type: TABLE; Schema: sgn; Owner: postgres
@@ -26124,7 +26718,7 @@ CREATE SEQUENCE sgn.cos_markers_cos_marker_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.cos_markers_cos_marker_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.cos_markers_cos_marker_id_seq OWNER TO postgres;
 
 --
 -- Name: cos_markers_cos_marker_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26166,7 +26760,7 @@ CREATE SEQUENCE sgn.cosii_ortholog_cosii_unigene_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.cosii_ortholog_cosii_unigene_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.cosii_ortholog_cosii_unigene_id_seq OWNER TO postgres;
 
 --
 -- Name: cosii_ortholog_cosii_unigene_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26201,7 +26795,7 @@ CREATE SEQUENCE sgn.deprecated_linkage_groups_lg_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_linkage_groups_lg_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_linkage_groups_lg_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_linkage_groups_lg_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26235,7 +26829,7 @@ CREATE SEQUENCE sgn.deprecated_map_cross_map_cross_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_map_cross_map_cross_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_map_cross_map_cross_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_map_cross_map_cross_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26272,7 +26866,7 @@ CREATE SEQUENCE sgn.deprecated_mapdata_loc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_mapdata_loc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_mapdata_loc_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_mapdata_loc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26319,7 +26913,7 @@ CREATE SEQUENCE sgn.deprecated_maps_map_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_maps_map_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_maps_map_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_maps_map_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26354,7 +26948,7 @@ CREATE SEQUENCE sgn.deprecated_marker_confidences_confidence_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_marker_confidences_confidence_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_marker_confidences_confidence_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_marker_confidences_confidence_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26392,7 +26986,7 @@ CREATE SEQUENCE sgn.deprecated_marker_locations_marker_location_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_marker_locations_marker_location_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_marker_locations_marker_location_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_marker_locations_marker_location_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26427,7 +27021,7 @@ CREATE SEQUENCE sgn.deprecated_marker_types_marker_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_marker_types_marker_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_marker_types_marker_type_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_marker_types_marker_type_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26461,7 +27055,7 @@ CREATE SEQUENCE sgn.deprecated_markers_marker_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.deprecated_markers_marker_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.deprecated_markers_marker_id_seq OWNER TO postgres;
 
 --
 -- Name: deprecated_markers_marker_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26497,7 +27091,7 @@ CREATE SEQUENCE sgn.derived_from_source_derived_from_source_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.derived_from_source_derived_from_source_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.derived_from_source_derived_from_source_id_seq OWNER TO postgres;
 
 --
 -- Name: derived_from_source_derived_from_source_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26536,7 +27130,7 @@ CREATE SEQUENCE sgn.domain_domain_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.domain_domain_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.domain_domain_id_seq OWNER TO postgres;
 
 --
 -- Name: domain_domain_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26577,7 +27171,7 @@ CREATE SEQUENCE sgn.domain_match_domain_match_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.domain_match_domain_match_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.domain_match_domain_match_id_seq OWNER TO postgres;
 
 --
 -- Name: domain_match_domain_match_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26611,7 +27205,7 @@ CREATE SEQUENCE sgn.enzyme_restriction_sites_enzyme_restriction_sites_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.enzyme_restriction_sites_enzyme_restriction_sites_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.enzyme_restriction_sites_enzyme_restriction_sites_id_seq OWNER TO postgres;
 
 --
 -- Name: enzyme_restriction_sites_enzyme_restriction_sites_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26644,7 +27238,7 @@ CREATE SEQUENCE sgn.enzymes_enzyme_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.enzymes_enzyme_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.enzymes_enzyme_id_seq OWNER TO postgres;
 
 --
 -- Name: enzymes_enzyme_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26700,7 +27294,7 @@ CREATE SEQUENCE sgn.est_dbxref_est_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.est_dbxref_est_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.est_dbxref_est_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: est_dbxref_est_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26721,7 +27315,7 @@ CREATE SEQUENCE sgn.est_est_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.est_est_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.est_est_id_seq OWNER TO postgres;
 
 --
 -- Name: est_est_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26755,7 +27349,7 @@ CREATE SEQUENCE sgn.ests_mapped_by_clone_embc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.ests_mapped_by_clone_embc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.ests_mapped_by_clone_embc_id_seq OWNER TO postgres;
 
 --
 -- Name: ests_mapped_by_clone_embc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26789,7 +27383,7 @@ CREATE SEQUENCE sgn.experiment_type_experiment_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.experiment_type_experiment_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.experiment_type_experiment_type_id_seq OWNER TO postgres;
 
 --
 -- Name: experiment_type_experiment_type_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26834,7 +27428,7 @@ CREATE SEQUENCE sgn.facility_facility_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.facility_facility_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.facility_facility_id_seq OWNER TO postgres;
 
 --
 -- Name: facility_facility_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26855,7 +27449,7 @@ CREATE SEQUENCE sgn.family_build_family_build_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.family_build_family_build_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.family_build_family_build_id_seq OWNER TO postgres;
 
 --
 -- Name: family_build_family_build_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26876,7 +27470,7 @@ CREATE SEQUENCE sgn.family_family_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.family_family_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.family_family_id_seq OWNER TO postgres;
 
 --
 -- Name: family_family_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26897,7 +27491,7 @@ CREATE SEQUENCE sgn.family_member_family_member_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.family_member_family_member_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.family_member_family_member_id_seq OWNER TO postgres;
 
 --
 -- Name: family_member_family_member_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26933,7 +27527,7 @@ CREATE SEQUENCE sgn.family_tree_family_tree_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.family_tree_family_tree_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.family_tree_family_tree_id_seq OWNER TO postgres;
 
 --
 -- Name: family_tree_family_tree_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -26979,7 +27573,7 @@ CREATE SEQUENCE sgn.fish_experimenter_fish_experimenter_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.fish_experimenter_fish_experimenter_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.fish_experimenter_fish_experimenter_id_seq OWNER TO postgres;
 
 --
 -- Name: fish_experimenter_fish_experimenter_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27013,7 +27607,7 @@ CREATE SEQUENCE sgn.fish_file_fish_file_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.fish_file_fish_file_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.fish_file_fish_file_id_seq OWNER TO postgres;
 
 --
 -- Name: fish_file_fish_file_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27132,7 +27726,7 @@ CREATE SEQUENCE sgn.fish_result_fish_result_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.fish_result_fish_result_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.fish_result_fish_result_id_seq OWNER TO postgres;
 
 --
 -- Name: fish_result_fish_result_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27166,7 +27760,7 @@ CREATE SEQUENCE sgn.fish_result_image_fish_result_image_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.fish_result_image_fish_result_image_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.fish_result_image_fish_result_image_id_seq OWNER TO postgres;
 
 --
 -- Name: fish_result_image_fish_result_image_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27201,7 +27795,7 @@ CREATE SEQUENCE sgn.go_go_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.go_go_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.go_go_id_seq OWNER TO postgres;
 
 --
 -- Name: go_go_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27237,7 +27831,7 @@ CREATE SEQUENCE sgn.group_linkage_group_linkage_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.group_linkage_group_linkage_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.group_linkage_group_linkage_id_seq OWNER TO postgres;
 
 --
 -- Name: group_linkage_group_linkage_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27271,7 +27865,7 @@ CREATE SEQUENCE sgn.groups_group_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.groups_group_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.groups_group_id_seq OWNER TO postgres;
 
 --
 -- Name: groups_group_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27307,7 +27901,7 @@ CREATE SEQUENCE sgn.id_linkage_id_linkage_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.id_linkage_id_linkage_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.id_linkage_id_linkage_id_seq OWNER TO postgres;
 
 --
 -- Name: id_linkage_id_linkage_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27376,7 +27970,7 @@ CREATE SEQUENCE sgn.interpro_go_interpro_go_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.interpro_go_interpro_go_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.interpro_go_interpro_go_id_seq OWNER TO postgres;
 
 --
 -- Name: interpro_go_interpro_go_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27397,7 +27991,7 @@ CREATE SEQUENCE sgn.interpro_interpro_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.interpro_interpro_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.interpro_interpro_id_seq OWNER TO postgres;
 
 --
 -- Name: interpro_interpro_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27455,7 +28049,7 @@ CREATE SEQUENCE sgn.library_library_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.library_library_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.library_library_id_seq OWNER TO postgres;
 
 --
 -- Name: library_library_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27492,7 +28086,7 @@ CREATE SEQUENCE sgn.linkage_group_lg_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.linkage_group_lg_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.linkage_group_lg_id_seq OWNER TO postgres;
 
 --
 -- Name: linkage_group_lg_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27526,7 +28120,7 @@ CREATE SEQUENCE sgn.loc_types_loc_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.loc_types_loc_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.loc_types_loc_type_id_seq OWNER TO postgres;
 
 --
 -- Name: loc_types_loc_type_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27565,7 +28159,7 @@ CREATE SEQUENCE sgn.manual_annotations_manual_annotations_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.manual_annotations_manual_annotations_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.manual_annotations_manual_annotations_id_seq OWNER TO postgres;
 
 --
 -- Name: manual_annotations_manual_annotations_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27598,7 +28192,7 @@ CREATE SEQUENCE sgn.manual_censor_reasons_censor_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.manual_censor_reasons_censor_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.manual_censor_reasons_censor_id_seq OWNER TO postgres;
 
 --
 -- Name: manual_censor_reasons_censor_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27644,7 +28238,7 @@ CREATE SEQUENCE sgn.map_map_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.map_map_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.map_map_id_seq OWNER TO postgres;
 
 --
 -- Name: map_map_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27683,7 +28277,7 @@ CREATE SEQUENCE sgn.map_version_map_version_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.map_version_map_version_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.map_version_map_version_id_seq OWNER TO postgres;
 
 --
 -- Name: map_version_map_version_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27730,7 +28324,7 @@ CREATE SEQUENCE sgn.marker_alias_alias_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_alias_alias_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_alias_alias_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_alias_alias_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27764,7 +28358,7 @@ CREATE SEQUENCE sgn.marker_collectible_marker_collectible_dummy_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_collectible_marker_collectible_dummy_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_collectible_marker_collectible_dummy_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_collectible_marker_collectible_dummy_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27798,7 +28392,7 @@ CREATE SEQUENCE sgn.marker_collection_mc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_collection_mc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_collection_mc_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_collection_mc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27831,7 +28425,7 @@ CREATE SEQUENCE sgn.marker_confidence_confidence_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_confidence_confidence_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_confidence_confidence_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_confidence_confidence_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27866,7 +28460,7 @@ CREATE SEQUENCE sgn.marker_derived_from_marker_derived_dummy_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_derived_from_marker_derived_dummy_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_derived_from_marker_derived_dummy_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_derived_from_marker_derived_dummy_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27907,7 +28501,7 @@ CREATE SEQUENCE sgn.marker_experiment_marker_experiment_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_experiment_marker_experiment_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_experiment_marker_experiment_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_experiment_marker_experiment_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27947,7 +28541,7 @@ CREATE SEQUENCE sgn.marker_location_location_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_location_location_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_location_location_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_location_location_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -27968,7 +28562,7 @@ CREATE SEQUENCE sgn.marker_marker_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.marker_marker_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.marker_marker_id_seq OWNER TO postgres;
 
 --
 -- Name: marker_marker_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28004,7 +28598,7 @@ CREATE VIEW sgn.marker_to_map AS
   WHERE (map_version.current_version = true);
 
 
-ALTER TABLE sgn.marker_to_map OWNER TO postgres;
+ALTER VIEW sgn.marker_to_map OWNER TO postgres;
 
 --
 -- Name: metadata; Type: TABLE; Schema: sgn; Owner: postgres
@@ -28036,7 +28630,7 @@ CREATE SEQUENCE sgn.metadata_metadata_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.metadata_metadata_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.metadata_metadata_id_seq OWNER TO postgres;
 
 --
 -- Name: metadata_metadata_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28074,7 +28668,7 @@ CREATE SEQUENCE sgn.microarray_microarray_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.microarray_microarray_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.microarray_microarray_id_seq OWNER TO postgres;
 
 --
 -- Name: microarray_microarray_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28109,7 +28703,7 @@ CREATE SEQUENCE sgn.misc_misc_unique_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.misc_misc_unique_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.misc_misc_unique_id_seq OWNER TO postgres;
 
 --
 -- Name: misc_misc_unique_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28155,7 +28749,7 @@ CREATE SEQUENCE sgn.organism_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.organism_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.organism_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: organism_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28203,7 +28797,7 @@ CREATE SEQUENCE sgn.organismgroup_member_organismgroup_member_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.organismgroup_member_organismgroup_member_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.organismgroup_member_organismgroup_member_id_seq OWNER TO postgres;
 
 --
 -- Name: organismgroup_member_organismgroup_member_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28224,7 +28818,7 @@ CREATE SEQUENCE sgn.organismgroup_organismgroup_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.organismgroup_organismgroup_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.organismgroup_organismgroup_id_seq OWNER TO postgres;
 
 --
 -- Name: organismgroup_organismgroup_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28259,7 +28853,7 @@ CREATE SEQUENCE sgn.p_markers_pid_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.p_markers_pid_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.p_markers_pid_seq OWNER TO postgres;
 
 --
 -- Name: p_markers_pid_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28295,7 +28889,7 @@ CREATE SEQUENCE sgn.pcr_exp_accession_pcr_exp_accession_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.pcr_exp_accession_pcr_exp_accession_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.pcr_exp_accession_pcr_exp_accession_id_seq OWNER TO postgres;
 
 --
 -- Name: pcr_exp_accession_pcr_exp_accession_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28343,7 +28937,7 @@ CREATE SEQUENCE sgn.pcr_experiment_pcr_experiment_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.pcr_experiment_pcr_experiment_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.pcr_experiment_pcr_experiment_id_seq OWNER TO postgres;
 
 --
 -- Name: pcr_experiment_pcr_experiment_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28378,7 +28972,7 @@ CREATE SEQUENCE sgn.pcr_experiment_sequence_pcr_experiment_sequence_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.pcr_experiment_sequence_pcr_experiment_sequence_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.pcr_experiment_sequence_pcr_experiment_sequence_id_seq OWNER TO postgres;
 
 --
 -- Name: pcr_experiment_sequence_pcr_experiment_sequence_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28418,7 +29012,7 @@ CREATE SEQUENCE sgn.pcr_product_pcr_product_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.pcr_product_pcr_product_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.pcr_product_pcr_product_id_seq OWNER TO postgres;
 
 --
 -- Name: pcr_product_pcr_product_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28459,7 +29053,7 @@ CREATE SEQUENCE sgn.primer_unigene_match_primer_unigene_match_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.primer_unigene_match_primer_unigene_match_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.primer_unigene_match_primer_unigene_match_id_seq OWNER TO postgres;
 
 --
 -- Name: primer_unigene_match_primer_unigene_match_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28505,7 +29099,7 @@ CREATE SEQUENCE sgn.qc_report_qc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.qc_report_qc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.qc_report_qc_id_seq OWNER TO postgres;
 
 --
 -- Name: qc_report_qc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28556,7 +29150,7 @@ CREATE SEQUENCE sgn.rflp_markers_rflp_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.rflp_markers_rflp_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.rflp_markers_rflp_id_seq OWNER TO postgres;
 
 --
 -- Name: rflp_markers_rflp_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28589,7 +29183,7 @@ CREATE SEQUENCE sgn.rflp_sequences_seq_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.rflp_sequences_seq_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.rflp_sequences_seq_id_seq OWNER TO postgres;
 
 --
 -- Name: rflp_sequences_seq_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28627,7 +29221,7 @@ CREATE SEQUENCE sgn.rflp_unigene_associations_rflp_unigene_assoc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.rflp_unigene_associations_rflp_unigene_assoc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.rflp_unigene_associations_rflp_unigene_assoc_id_seq OWNER TO postgres;
 
 --
 -- Name: rflp_unigene_associations_rflp_unigene_assoc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28670,7 +29264,7 @@ CREATE SEQUENCE sgn.seqread_read_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.seqread_read_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.seqread_read_id_seq OWNER TO postgres;
 
 --
 -- Name: seqread_read_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28703,7 +29297,7 @@ CREATE SEQUENCE sgn.sequence_sequence_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.sequence_sequence_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.sequence_sequence_id_seq OWNER TO postgres;
 
 --
 -- Name: sequence_sequence_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28757,7 +29351,7 @@ CREATE SEQUENCE sgn.snp_file_snp_file_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.snp_file_snp_file_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.snp_file_snp_file_id_seq OWNER TO postgres;
 
 --
 -- Name: snp_file_snp_file_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28778,7 +29372,7 @@ CREATE SEQUENCE sgn.snp_snp_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.snp_snp_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.snp_snp_id_seq OWNER TO postgres;
 
 --
 -- Name: snp_snp_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28814,7 +29408,7 @@ CREATE SEQUENCE sgn.snpprop_snpprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.snpprop_snpprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.snpprop_snpprop_id_seq OWNER TO postgres;
 
 --
 -- Name: snpprop_snpprop_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28876,7 +29470,7 @@ CREATE SEQUENCE sgn.ssr_primer_unigene_matches_ssr_primer_unigene_match_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.ssr_primer_unigene_matches_ssr_primer_unigene_match_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.ssr_primer_unigene_matches_ssr_primer_unigene_match_id_seq OWNER TO postgres;
 
 --
 -- Name: ssr_primer_unigene_matches_ssr_primer_unigene_match_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28912,7 +29506,7 @@ CREATE SEQUENCE sgn.ssr_repeats_repeat_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.ssr_repeats_repeat_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.ssr_repeats_repeat_id_seq OWNER TO postgres;
 
 --
 -- Name: ssr_repeats_repeat_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28933,7 +29527,7 @@ CREATE SEQUENCE sgn.ssr_ssr_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.ssr_ssr_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.ssr_ssr_id_seq OWNER TO postgres;
 
 --
 -- Name: ssr_ssr_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -28976,7 +29570,7 @@ CREATE SEQUENCE sgn.submit_user_submit_user_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.submit_user_submit_user_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.submit_user_submit_user_id_seq OWNER TO postgres;
 
 --
 -- Name: submit_user_submit_user_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29010,7 +29604,7 @@ CREATE SEQUENCE sgn.taxonomy_tax_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.taxonomy_tax_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.taxonomy_tax_id_seq OWNER TO postgres;
 
 --
 -- Name: taxonomy_tax_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29044,7 +29638,7 @@ CREATE SEQUENCE sgn.temp_caps_correspondence_tcc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.temp_caps_correspondence_tcc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.temp_caps_correspondence_tcc_id_seq OWNER TO postgres;
 
 --
 -- Name: temp_caps_correspondence_tcc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29078,7 +29672,7 @@ CREATE SEQUENCE sgn.temp_map_correspondence_tmc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.temp_map_correspondence_tmc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.temp_map_correspondence_tmc_id_seq OWNER TO postgres;
 
 --
 -- Name: temp_map_correspondence_tmc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29112,7 +29706,7 @@ CREATE SEQUENCE sgn.temp_marker_correspondence_tmc_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.temp_marker_correspondence_tmc_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.temp_marker_correspondence_tmc_id_seq OWNER TO postgres;
 
 --
 -- Name: temp_marker_correspondence_tmc_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29145,7 +29739,7 @@ CREATE SEQUENCE sgn.tigrtc_index_tcindex_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.tigrtc_index_tcindex_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.tigrtc_index_tcindex_id_seq OWNER TO postgres;
 
 --
 -- Name: tigrtc_index_tcindex_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29180,7 +29774,7 @@ CREATE SEQUENCE sgn.tigrtc_membership_tigrtc_membership_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.tigrtc_membership_tigrtc_membership_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.tigrtc_membership_tigrtc_membership_id_seq OWNER TO postgres;
 
 --
 -- Name: tigrtc_membership_tigrtc_membership_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29215,7 +29809,7 @@ CREATE SEQUENCE sgn.tigrtc_tracking_tigrtc_tracking_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.tigrtc_tracking_tigrtc_tracking_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.tigrtc_tracking_tigrtc_tracking_id_seq OWNER TO postgres;
 
 --
 -- Name: tigrtc_tracking_tigrtc_tracking_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29267,7 +29861,7 @@ CREATE SEQUENCE sgn.tm_markers_tm_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.tm_markers_tm_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.tm_markers_tm_id_seq OWNER TO postgres;
 
 --
 -- Name: tm_markers_tm_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29304,7 +29898,7 @@ CREATE SEQUENCE sgn.trim_feature_feature_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.trim_feature_feature_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.trim_feature_feature_id_seq OWNER TO postgres;
 
 --
 -- Name: trim_feature_feature_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29337,7 +29931,7 @@ CREATE SEQUENCE sgn.trim_feature_types_trim_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.trim_feature_types_trim_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.trim_feature_types_trim_type_id_seq OWNER TO postgres;
 
 --
 -- Name: trim_feature_types_trim_type_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29370,7 +29964,7 @@ CREATE SEQUENCE sgn.types_type_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.types_type_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.types_type_id_seq OWNER TO postgres;
 
 --
 -- Name: types_type_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29434,7 +30028,7 @@ CREATE SEQUENCE sgn.unigene_build_unigene_build_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.unigene_build_unigene_build_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.unigene_build_unigene_build_id_seq OWNER TO postgres;
 
 --
 -- Name: unigene_build_unigene_build_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29468,7 +30062,7 @@ CREATE SEQUENCE sgn.unigene_consensi_consensi_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.unigene_consensi_consensi_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.unigene_consensi_consensi_id_seq OWNER TO postgres;
 
 --
 -- Name: unigene_consensi_consensi_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29507,7 +30101,7 @@ CREATE SEQUENCE sgn.unigene_member_unigene_member_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.unigene_member_unigene_member_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.unigene_member_unigene_member_id_seq OWNER TO postgres;
 
 --
 -- Name: unigene_member_unigene_member_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29528,7 +30122,7 @@ CREATE SEQUENCE sgn.unigene_unigene_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn.unigene_unigene_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn.unigene_unigene_id_seq OWNER TO postgres;
 
 --
 -- Name: unigene_unigene_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn; Owner: postgres
@@ -29567,7 +30161,7 @@ CREATE SEQUENCE sgn_people.bac_status_bac_status_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.bac_status_bac_status_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.bac_status_bac_status_id_seq OWNER TO postgres;
 
 --
 -- Name: bac_status_bac_status_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29606,7 +30200,7 @@ CREATE SEQUENCE sgn_people.bac_status_log_bac_status_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.bac_status_log_bac_status_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.bac_status_log_bac_status_log_id_seq OWNER TO postgres;
 
 --
 -- Name: bac_status_log_bac_status_log_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29620,7 +30214,7 @@ ALTER SEQUENCE sgn_people.bac_status_log_bac_status_log_id_seq OWNED BY sgn_peop
 --
 
 CREATE TABLE sgn_people.clone_il_mapping_bin_log (
-    sp_clone_il_mapping_bin_log_id integer NOT NULL,
+    sp_clone_il_mapping_bin_log_id integer CONSTRAINT clone_il_mapping_bin_log_sp_clone_il_mapping_bin_log_i_not_null NOT NULL,
     genotype_region_id integer,
     sp_person_id integer,
     clone_id integer,
@@ -29652,7 +30246,7 @@ CREATE SEQUENCE sgn_people.clone_il_mapping_bin_log_sp_clone_il_mapping_bin_log_
     CACHE 1;
 
 
-ALTER TABLE sgn_people.clone_il_mapping_bin_log_sp_clone_il_mapping_bin_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.clone_il_mapping_bin_log_sp_clone_il_mapping_bin_log_id_seq OWNER TO postgres;
 
 --
 -- Name: clone_il_mapping_bin_log_sp_clone_il_mapping_bin_log_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29697,7 +30291,7 @@ CREATE SEQUENCE sgn_people.clone_validation_log_clone_validation_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.clone_validation_log_clone_validation_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.clone_validation_log_clone_validation_log_id_seq OWNER TO postgres;
 
 --
 -- Name: clone_validation_log_clone_validation_log_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29742,7 +30336,7 @@ CREATE SEQUENCE sgn_people.clone_verification_log_clone_verification_log_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.clone_verification_log_clone_verification_log_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.clone_verification_log_clone_verification_log_id_seq OWNER TO postgres;
 
 --
 -- Name: clone_verification_log_clone_verification_log_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29780,7 +30374,7 @@ CREATE SEQUENCE sgn_people.forum_post_forum_post_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.forum_post_forum_post_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.forum_post_forum_post_id_seq OWNER TO postgres;
 
 --
 -- Name: forum_post_forum_post_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29821,7 +30415,7 @@ CREATE SEQUENCE sgn_people.forum_topic_forum_topic_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.forum_topic_forum_topic_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.forum_topic_forum_topic_id_seq OWNER TO postgres;
 
 --
 -- Name: forum_topic_forum_topic_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29877,7 +30471,7 @@ CREATE SEQUENCE sgn_people.list_dbxref_list_dbxref_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.list_dbxref_list_dbxref_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.list_dbxref_list_dbxref_id_seq OWNER TO postgres;
 
 --
 -- Name: list_dbxref_list_dbxref_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29911,7 +30505,7 @@ CREATE SEQUENCE sgn_people.list_item_list_item_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.list_item_list_item_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.list_item_list_item_id_seq OWNER TO postgres;
 
 --
 -- Name: list_item_list_item_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29932,7 +30526,7 @@ CREATE SEQUENCE sgn_people.list_list_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.list_list_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.list_list_id_seq OWNER TO postgres;
 
 --
 -- Name: list_list_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29969,7 +30563,7 @@ CREATE SEQUENCE sgn_people.listprop_listprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.listprop_listprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.listprop_listprop_id_seq OWNER TO postgres;
 
 --
 -- Name: listprop_listprop_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -29983,7 +30577,7 @@ ALTER SEQUENCE sgn_people.listprop_listprop_id_seq OWNED BY sgn_people.listprop.
 --
 
 CREATE TABLE sgn_people.sp_clone_il_mapping_segment_log (
-    sp_clone_il_mapping_segment_log_id integer NOT NULL,
+    sp_clone_il_mapping_segment_log_id integer CONSTRAINT sp_clone_il_mapping_segment_sp_clone_il_mapping_segmen_not_null NOT NULL,
     individual_id integer,
     sp_person_id integer,
     clone_id integer,
@@ -30013,7 +30607,7 @@ CREATE SEQUENCE sgn_people.sp_clone_il_mapping_segment_l_sp_clone_il_mapping_seg
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_clone_il_mapping_segment_l_sp_clone_il_mapping_segment_l_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_clone_il_mapping_segment_l_sp_clone_il_mapping_segment_l_seq OWNER TO postgres;
 
 --
 -- Name: sp_clone_il_mapping_segment_l_sp_clone_il_mapping_segment_l_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30051,7 +30645,7 @@ CREATE SEQUENCE sgn_people.sp_dataset_sp_dataset_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_dataset_sp_dataset_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_dataset_sp_dataset_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_dataset_sp_dataset_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30098,13 +30692,53 @@ CREATE SEQUENCE sgn_people.sp_group_sp_group_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_group_sp_group_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_group_sp_group_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_group_sp_group_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
 --
 
 ALTER SEQUENCE sgn_people.sp_group_sp_group_id_seq OWNED BY sgn_people.sp_group.sp_group_id;
+
+
+--
+-- Name: sp_job; Type: TABLE; Schema: sgn_people; Owner: postgres
+--
+
+CREATE TABLE sgn_people.sp_job (
+    sp_job_id integer NOT NULL,
+    sp_person_id bigint,
+    backend_id character varying(255),
+    status character varying(100),
+    create_timestamp timestamp(0) with time zone DEFAULT now(),
+    finish_timestamp timestamp(0) with time zone,
+    type_id bigint,
+    args jsonb
+);
+
+
+ALTER TABLE sgn_people.sp_job OWNER TO postgres;
+
+--
+-- Name: sp_job_sp_job_id_seq; Type: SEQUENCE; Schema: sgn_people; Owner: postgres
+--
+
+CREATE SEQUENCE sgn_people.sp_job_sp_job_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE sgn_people.sp_job_sp_job_id_seq OWNER TO postgres;
+
+--
+-- Name: sp_job_sp_job_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
+--
+
+ALTER SEQUENCE sgn_people.sp_job_sp_job_id_seq OWNED BY sgn_people.sp_job.sp_job_id;
 
 
 --
@@ -30138,7 +30772,7 @@ CREATE SEQUENCE sgn_people.sp_login_old_sp_login_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_login_old_sp_login_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_login_old_sp_login_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_login_old_sp_login_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30177,7 +30811,7 @@ CREATE SEQUENCE sgn_people.sp_order_sp_order_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_order_sp_order_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_order_sp_order_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_order_sp_order_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30214,7 +30848,7 @@ CREATE SEQUENCE sgn_people.sp_orderprop_sp_orderprop_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_orderprop_sp_orderprop_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_orderprop_sp_orderprop_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_orderprop_sp_orderprop_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30247,7 +30881,7 @@ CREATE SEQUENCE sgn_people.sp_organisms_organism_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_organisms_organism_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_organisms_organism_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_organisms_organism_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30305,7 +30939,7 @@ CREATE SEQUENCE sgn_people.sp_organization_person_sp_organization_person_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_organization_person_sp_organization_person_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_organization_person_sp_organization_person_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_organization_person_sp_organization_person_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30326,7 +30960,7 @@ CREATE SEQUENCE sgn_people.sp_organization_sp_organization_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_organization_sp_organization_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_organization_sp_organization_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_organization_sp_organization_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30365,7 +30999,7 @@ CREATE SEQUENCE sgn_people.sp_papers_sp_paper_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_papers_sp_paper_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_papers_sp_paper_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_papers_sp_paper_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30443,7 +31077,7 @@ CREATE SEQUENCE sgn_people.sp_person_organisms_sp_person_organisms_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_person_organisms_sp_person_organisms_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_person_organisms_sp_person_organisms_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_person_organisms_sp_person_organisms_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30477,7 +31111,7 @@ CREATE SEQUENCE sgn_people.sp_person_roles_sp_person_role_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_person_roles_sp_person_role_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_person_roles_sp_person_role_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_person_roles_sp_person_role_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30498,7 +31132,7 @@ CREATE SEQUENCE sgn_people.sp_person_sp_person_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_person_sp_person_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_person_sp_person_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_person_sp_person_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30525,7 +31159,7 @@ ALTER TABLE sgn_people.sp_project OWNER TO postgres;
 --
 
 CREATE TABLE sgn_people.sp_project_il_mapping_clone_log (
-    sp_project_il_mapping_clone_log_id integer NOT NULL,
+    sp_project_il_mapping_clone_log_id integer CONSTRAINT sp_project_il_mapping_clone_sp_project_il_mapping_clon_not_null NOT NULL,
     sp_project_id integer,
     sp_person_id integer,
     clone_id integer,
@@ -30555,7 +31189,7 @@ CREATE SEQUENCE sgn_people.sp_project_il_mapping_clone_l_sp_project_il_mapping_c
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_project_il_mapping_clone_l_sp_project_il_mapping_clone_l_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_project_il_mapping_clone_l_sp_project_il_mapping_clone_l_seq OWNER TO postgres;
 
 --
 -- Name: sp_project_il_mapping_clone_l_sp_project_il_mapping_clone_l_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30589,7 +31223,7 @@ CREATE SEQUENCE sgn_people.sp_project_organization_sp_project_organization_id_se
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_project_organization_sp_project_organization_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_project_organization_sp_project_organization_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_project_organization_sp_project_organization_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30625,7 +31259,7 @@ CREATE SEQUENCE sgn_people.sp_project_person_sp_project_person_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_project_person_sp_project_person_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_project_person_sp_project_person_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_project_person_sp_project_person_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30646,7 +31280,7 @@ CREATE SEQUENCE sgn_people.sp_project_sp_project_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_project_sp_project_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_project_sp_project_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_project_sp_project_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30679,7 +31313,7 @@ CREATE SEQUENCE sgn_people.sp_roles_sp_role_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_roles_sp_role_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_roles_sp_role_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_roles_sp_role_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30716,7 +31350,7 @@ CREATE SEQUENCE sgn_people.sp_token_sp_token_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.sp_token_sp_token_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.sp_token_sp_token_id_seq OWNER TO postgres;
 
 --
 -- Name: sp_token_sp_token_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30782,7 +31416,7 @@ CREATE SEQUENCE sgn_people.user_map_data_user_map_data_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.user_map_data_user_map_data_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.user_map_data_user_map_data_id_seq OWNER TO postgres;
 
 --
 -- Name: user_map_data_user_map_data_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30803,7 +31437,7 @@ CREATE SEQUENCE sgn_people.user_map_user_map_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_people.user_map_user_map_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_people.user_map_user_map_id_seq OWNER TO postgres;
 
 --
 -- Name: user_map_user_map_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_people; Owner: postgres
@@ -30848,7 +31482,7 @@ CREATE SEQUENCE sgn_submit.facility_facility_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_submit.facility_facility_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_submit.facility_facility_id_seq OWNER TO postgres;
 
 --
 -- Name: facility_facility_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_submit; Owner: postgres
@@ -30902,7 +31536,7 @@ CREATE SEQUENCE sgn_submit.library_library_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_submit.library_library_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_submit.library_library_id_seq OWNER TO postgres;
 
 --
 -- Name: library_library_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_submit; Owner: postgres
@@ -30941,7 +31575,7 @@ CREATE SEQUENCE sgn_submit.seqread_submit_read_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_submit.seqread_submit_read_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_submit.seqread_submit_read_id_seq OWNER TO postgres;
 
 --
 -- Name: seqread_submit_read_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_submit; Owner: postgres
@@ -30984,7 +31618,7 @@ CREATE SEQUENCE sgn_submit.submit_user_submit_user_id_seq
     CACHE 1;
 
 
-ALTER TABLE sgn_submit.submit_user_submit_user_id_seq OWNER TO postgres;
+ALTER SEQUENCE sgn_submit.submit_user_submit_user_id_seq OWNER TO postgres;
 
 --
 -- Name: submit_user_submit_user_id_seq; Type: SEQUENCE OWNED BY; Schema: sgn_submit; Owner: postgres
@@ -31017,7 +31651,7 @@ CREATE SEQUENCE tomato_gff.fattribute_fattribute_id_seq
     CACHE 1;
 
 
-ALTER TABLE tomato_gff.fattribute_fattribute_id_seq OWNER TO postgres;
+ALTER SEQUENCE tomato_gff.fattribute_fattribute_id_seq OWNER TO postgres;
 
 --
 -- Name: fattribute_fattribute_id_seq; Type: SEQUENCE OWNED BY; Schema: tomato_gff; Owner: postgres
@@ -31075,7 +31709,7 @@ CREATE SEQUENCE tomato_gff.fdata_fid_seq
     CACHE 1;
 
 
-ALTER TABLE tomato_gff.fdata_fid_seq OWNER TO postgres;
+ALTER SEQUENCE tomato_gff.fdata_fid_seq OWNER TO postgres;
 
 --
 -- Name: fdata_fid_seq; Type: SEQUENCE OWNED BY; Schema: tomato_gff; Owner: postgres
@@ -31122,7 +31756,7 @@ CREATE SEQUENCE tomato_gff.fgroup_gid_seq
     CACHE 1;
 
 
-ALTER TABLE tomato_gff.fgroup_gid_seq OWNER TO postgres;
+ALTER SEQUENCE tomato_gff.fgroup_gid_seq OWNER TO postgres;
 
 --
 -- Name: fgroup_gid_seq; Type: SEQUENCE OWNED BY; Schema: tomato_gff; Owner: postgres
@@ -31168,7 +31802,7 @@ CREATE SEQUENCE tomato_gff.ftype_ftypeid_seq
     CACHE 1;
 
 
-ALTER TABLE tomato_gff.ftype_ftypeid_seq OWNER TO postgres;
+ALTER SEQUENCE tomato_gff.ftype_ftypeid_seq OWNER TO postgres;
 
 --
 -- Name: ftype_ftypeid_seq; Type: SEQUENCE OWNED BY; Schema: tomato_gff; Owner: postgres
@@ -32725,6 +33359,13 @@ ALTER TABLE ONLY phenome.locus_dbxref_evidence_history ALTER COLUMN locus_dbxref
 
 
 --
+-- Name: locus_geno_marker locus_geno_marker_id; Type: DEFAULT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.locus_geno_marker ALTER COLUMN locus_geno_marker_id SET DEFAULT nextval('phenome.locus_geno_marker_locus_geno_marker_id_seq'::regclass);
+
+
+--
 -- Name: locus_history locus_history_id; Type: DEFAULT; Schema: phenome; Owner: postgres
 --
 
@@ -32869,6 +33510,13 @@ ALTER TABLE ONLY phenome.registry ALTER COLUMN registry_id SET DEFAULT nextval('
 --
 
 ALTER TABLE ONLY phenome.stock_allele ALTER COLUMN stock_allele_id SET DEFAULT nextval('phenome.stock_allele_stock_allele_id_seq'::regclass);
+
+
+--
+-- Name: stock_file stock_file_id; Type: DEFAULT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.stock_file ALTER COLUMN stock_file_id SET DEFAULT nextval('phenome.stock_file_stock_file_id_seq'::regclass);
 
 
 --
@@ -34881,6 +35529,13 @@ ALTER TABLE ONLY sgn_people.sp_group ALTER COLUMN sp_group_id SET DEFAULT nextva
 
 
 --
+-- Name: sp_job sp_job_id; Type: DEFAULT; Schema: sgn_people; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn_people.sp_job ALTER COLUMN sp_job_id SET DEFAULT nextval('sgn_people.sp_job_sp_job_id_seq'::regclass);
+
+
+--
 -- Name: sp_login_old sp_login_id; Type: DEFAULT; Schema: sgn_people; Owner: postgres
 --
 
@@ -35211,6 +35866,9 @@ COPY annotation.synonym (synonym_id, name, table_name, table_id) FROM stdin;
 --
 
 COPY audit.cv_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, cv_audit_id, is_undo) FROM stdin;
+2026-03-02 13:48:05.432101-07	INSERT	postgres	\N	\N	{"name": "job_type", "cv_id": 72, "definition": null}	2026-03-02 13:48:05.432101-0749810	1	f
+2026-03-02 13:48:14.052751-07	INSERT	postgres	\N	\N	{"name": "experiment_treatment", "cv_id": 73, "definition": "Experimental treatments applied to some of the stocks in a project. Distinct from management factors/management regimes."}	2026-03-02 13:48:14.052751-0749931	2	f
+2026-03-02 13:48:14.052751-07	INSERT	postgres	\N	\N	{"name": "composed_experiment_treatment", "cv_id": 74, "definition": ""}	2026-03-02 13:48:14.052751-0749931	3	f
 \.
 
 
@@ -35219,6 +35877,8 @@ COPY audit.cv_audit (audit_ts, operation, username, logged_in_user, before, afte
 --
 
 COPY audit.cvprop_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, cvprop_audit_id, is_undo) FROM stdin;
+2026-03-02 13:48:14.076571-07	INSERT	postgres	\N	\N	{"rank": 0, "cv_id": 73, "value": null, "type_id": 78395, "cvprop_id": 7}	2026-03-02 13:48:14.076571-0749936	1	f
+2026-03-02 13:48:14.07835-07	INSERT	postgres	\N	\N	{"rank": 0, "cv_id": 74, "value": null, "type_id": 78396, "cvprop_id": 8}	2026-03-02 13:48:14.07835-0749937	2	f
 \.
 
 
@@ -35227,19 +35887,62 @@ COPY audit.cvprop_audit (audit_ts, operation, username, logged_in_user, before, 
 --
 
 COPY audit.cvterm_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, cvterm_audit_id, is_undo) FROM stdin;
-2024-12-17 13:57:20.292834+00	INSERT	postgres	\N	\N	{"name": "prcomp", "cv_id": 67, "cvterm_id": 78347, "dbxref_id": 213506, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2024-12-17 13:57:20.292834+002689474	1	f
-2024-12-19 12:21:01.9544+00	DELETE	postgres	\N	{"name": "VARIABLE_OF", "cv_id": 68, "cvterm_id": 78325, "dbxref_id": 213484, "definition": null, "is_obsolete": 0, "is_relationshiptype": 1}	\N	2024-12-19 12:21:01.9544+002742619	2	f
-2025-01-02 14:57:47.609594+00	INSERT	postgres	\N	\N	{"name": "autogenerated_name_metadata", "cv_id": 38, "cvterm_id": 78348, "dbxref_id": 213507, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.609594+002916837	3	f
-2025-01-02 14:57:47.620599+00	INSERT	postgres	\N	\N	{"name": "autogenerated_name_format", "cv_id": 38, "cvterm_id": 78349, "dbxref_id": 213508, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.620599+002916839	4	f
-2025-01-02 14:57:47.629745+00	INSERT	postgres	\N	\N	{"name": "default_plant_material", "cv_id": 38, "cvterm_id": 78350, "dbxref_id": 213509, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.629745+002916841	5	f
-2025-01-02 14:57:47.639544+00	INSERT	postgres	\N	\N	{"name": "tracking_transformation_json", "cv_id": 46, "cvterm_id": 78351, "dbxref_id": 213510, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.639544+002916843	6	f
-2025-01-02 14:57:47.648879+00	INSERT	postgres	\N	\N	{"name": "completed_metadata", "cv_id": 46, "cvterm_id": 78352, "dbxref_id": 213511, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.648879+002916845	7	f
-2025-01-02 14:57:47.65825+00	INSERT	postgres	\N	\N	{"name": "progress_of", "cv_id": 52, "cvterm_id": 78353, "dbxref_id": 213512, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.65825+002916847	8	f
-2025-01-02 14:57:48.139958+00	INSERT	postgres	\N	\N	{"name": "member_type", "cv_id": 46, "cvterm_id": 78354, "dbxref_id": 213513, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:48.139958+002916852	9	f
-2025-03-25 13:50:34.06996+00	INSERT	postgres	\N	\N	{"name": "validated_phenotype", "cv_id": 38, "cvterm_id": 78355, "dbxref_id": 213514, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:34.06996+003439397	10	f
-2025-03-25 13:50:34.580905+00	INSERT	postgres	\N	\N	{"name": "selected_display_image", "cv_id": 46, "cvterm_id": 78356, "dbxref_id": 213515, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:34.580905+003439402	11	f
-2025-03-25 13:50:35.539414+00	INSERT	postgres	\N	\N	{"name": "analysis_result", "cv_id": 36, "cvterm_id": 78357, "dbxref_id": 213516, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:35.539414+003439410	12	f
-2025-03-25 13:50:36.479554+00	INSERT	postgres	\N	\N	{"name": "material_type", "cv_id": 46, "cvterm_id": 78358, "dbxref_id": 213517, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:36.479554+003439418	13	f
+2024-12-17 06:57:20.292834-07	INSERT	postgres	\N	\N	{"name": "prcomp", "cv_id": 67, "cvterm_id": 78347, "dbxref_id": 213506, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2024-12-17 13:57:20.292834+002689474	1	f
+2024-12-19 05:21:01.9544-07	DELETE	postgres	\N	{"name": "VARIABLE_OF", "cv_id": 68, "cvterm_id": 78325, "dbxref_id": 213484, "definition": null, "is_obsolete": 0, "is_relationshiptype": 1}	\N	2024-12-19 12:21:01.9544+002742619	2	f
+2025-01-02 07:57:47.609594-07	INSERT	postgres	\N	\N	{"name": "autogenerated_name_metadata", "cv_id": 38, "cvterm_id": 78348, "dbxref_id": 213507, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.609594+002916837	3	f
+2025-01-02 07:57:47.620599-07	INSERT	postgres	\N	\N	{"name": "autogenerated_name_format", "cv_id": 38, "cvterm_id": 78349, "dbxref_id": 213508, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.620599+002916839	4	f
+2025-01-02 07:57:47.629745-07	INSERT	postgres	\N	\N	{"name": "default_plant_material", "cv_id": 38, "cvterm_id": 78350, "dbxref_id": 213509, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.629745+002916841	5	f
+2025-01-02 07:57:47.639544-07	INSERT	postgres	\N	\N	{"name": "tracking_transformation_json", "cv_id": 46, "cvterm_id": 78351, "dbxref_id": 213510, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.639544+002916843	6	f
+2025-01-02 07:57:47.648879-07	INSERT	postgres	\N	\N	{"name": "completed_metadata", "cv_id": 46, "cvterm_id": 78352, "dbxref_id": 213511, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.648879+002916845	7	f
+2025-01-02 07:57:47.65825-07	INSERT	postgres	\N	\N	{"name": "progress_of", "cv_id": 52, "cvterm_id": 78353, "dbxref_id": 213512, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:47.65825+002916847	8	f
+2025-01-02 07:57:48.139958-07	INSERT	postgres	\N	\N	{"name": "member_type", "cv_id": 46, "cvterm_id": 78354, "dbxref_id": 213513, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-01-02 14:57:48.139958+002916852	9	f
+2025-03-25 07:50:34.06996-06	INSERT	postgres	\N	\N	{"name": "validated_phenotype", "cv_id": 38, "cvterm_id": 78355, "dbxref_id": 213514, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:34.06996+003439397	10	f
+2025-03-25 07:50:34.580905-06	INSERT	postgres	\N	\N	{"name": "selected_display_image", "cv_id": 46, "cvterm_id": 78356, "dbxref_id": 213515, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:34.580905+003439402	11	f
+2025-03-25 07:50:35.539414-06	INSERT	postgres	\N	\N	{"name": "analysis_result", "cv_id": 36, "cvterm_id": 78357, "dbxref_id": 213516, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:35.539414+003439410	12	f
+2025-03-25 07:50:36.479554-06	INSERT	postgres	\N	\N	{"name": "material_type", "cv_id": 46, "cvterm_id": 78358, "dbxref_id": 213517, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2025-03-25 13:50:36.479554+003439418	13	f
+2026-03-02 13:48:05.441429-07	INSERT	postgres	\N	\N	{"name": "download", "cv_id": 72, "cvterm_id": 78359, "dbxref_id": 213518, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.441429-0749812	14	f
+2026-03-02 13:48:05.449808-07	INSERT	postgres	\N	\N	{"name": "upload", "cv_id": 72, "cvterm_id": 78360, "dbxref_id": 213519, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.449808-0749814	15	f
+2026-03-02 13:48:05.456345-07	INSERT	postgres	\N	\N	{"name": "report", "cv_id": 72, "cvterm_id": 78361, "dbxref_id": 213520, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.456345-0749816	16	f
+2026-03-02 13:48:05.462916-07	INSERT	postgres	\N	\N	{"name": "search", "cv_id": 72, "cvterm_id": 78362, "dbxref_id": 213521, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.462916-0749818	17	f
+2026-03-02 13:48:05.469386-07	INSERT	postgres	\N	\N	{"name": "cluster_analysis", "cv_id": 72, "cvterm_id": 78363, "dbxref_id": 213522, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.469386-0749820	18	f
+2026-03-02 13:48:05.475598-07	INSERT	postgres	\N	\N	{"name": "training_model", "cv_id": 72, "cvterm_id": 78364, "dbxref_id": 213523, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.475598-0749822	19	f
+2026-03-02 13:48:05.481842-07	INSERT	postgres	\N	\N	{"name": "selection_prediction", "cv_id": 72, "cvterm_id": 78365, "dbxref_id": 213524, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.481842-0749824	20	f
+2026-03-02 13:48:05.487955-07	INSERT	postgres	\N	\N	{"name": "multiple_models", "cv_id": 72, "cvterm_id": 78366, "dbxref_id": 213525, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.487955-0749826	21	f
+2026-03-02 13:48:05.493407-07	INSERT	postgres	\N	\N	{"name": "training_dataset", "cv_id": 72, "cvterm_id": 78367, "dbxref_id": 213526, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.493407-0749828	22	f
+2026-03-02 13:48:05.499433-07	INSERT	postgres	\N	\N	{"name": "kinship_analysis", "cv_id": 72, "cvterm_id": 78368, "dbxref_id": 213527, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.499433-0749830	23	f
+2026-03-02 13:48:05.505107-07	INSERT	postgres	\N	\N	{"name": "heritability_analysis", "cv_id": 72, "cvterm_id": 78369, "dbxref_id": 213528, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.505107-0749832	24	f
+2026-03-02 13:48:05.510971-07	INSERT	postgres	\N	\N	{"name": "solGWAS_analysis", "cv_id": 72, "cvterm_id": 78370, "dbxref_id": 213529, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.510971-0749834	25	f
+2026-03-02 13:48:05.517207-07	INSERT	postgres	\N	\N	{"name": "spatial_analysis", "cv_id": 72, "cvterm_id": 78371, "dbxref_id": 213530, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.517207-0749836	26	f
+2026-03-02 13:48:05.523183-07	INSERT	postgres	\N	\N	{"name": "pca_analysis", "cv_id": 72, "cvterm_id": 78372, "dbxref_id": 213531, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.523183-0749838	27	f
+2026-03-02 13:48:05.528882-07	INSERT	postgres	\N	\N	{"name": "stability_analysis", "cv_id": 72, "cvterm_id": 78373, "dbxref_id": 213532, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.528882-0749840	28	f
+2026-03-02 13:48:05.534966-07	INSERT	postgres	\N	\N	{"name": "mixed_model_analysis", "cv_id": 72, "cvterm_id": 78374, "dbxref_id": 213533, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.534966-0749842	29	f
+2026-03-02 13:48:05.54111-07	INSERT	postgres	\N	\N	{"name": "nirs_analysis", "cv_id": 72, "cvterm_id": 78375, "dbxref_id": 213534, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.54111-0749844	30	f
+2026-03-02 13:48:05.546791-07	INSERT	postgres	\N	\N	{"name": "tool_compatibility", "cv_id": 72, "cvterm_id": 78376, "dbxref_id": 213535, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.546791-0749846	31	f
+2026-03-02 13:48:05.552807-07	INSERT	postgres	\N	\N	{"name": "genomic_prediction", "cv_id": 72, "cvterm_id": 78377, "dbxref_id": 213536, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.552807-0749848	32	f
+2026-03-02 13:48:05.558776-07	INSERT	postgres	\N	\N	{"name": "sequence_analysis", "cv_id": 72, "cvterm_id": 78378, "dbxref_id": 213537, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.558776-0749850	33	f
+2026-03-02 13:48:05.977046-07	INSERT	postgres	\N	\N	{"name": "metadata_ontology", "cv_id": 63, "cvterm_id": 78379, "dbxref_id": 213538, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:05.977046-0749856	34	f
+2026-03-02 13:48:06.425493-07	INSERT	postgres	\N	\N	{"name": "obsoleted_stocks", "cv_id": 45, "cvterm_id": 78380, "dbxref_id": 213539, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:06.425493-0749861	35	f
+2026-03-02 13:48:06.834603-07	INSERT	postgres	\N	\N	{"name": "biochem_ontology", "cv_id": 63, "cvterm_id": 78381, "dbxref_id": 213540, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:06.834603-0749866	36	f
+2026-03-02 13:48:07.262269-07	INSERT	postgres	\N	\N	{"name": "is_a_transformation_control", "cv_id": 46, "cvterm_id": 78382, "dbxref_id": 213541, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:07.262269-0749871	37	f
+2026-03-02 13:48:07.269744-07	INSERT	postgres	\N	\N	{"name": "control_of", "cv_id": 37, "cvterm_id": 78383, "dbxref_id": 213542, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:07.269744-0749873	38	f
+2026-03-02 13:48:07.677676-07	INSERT	postgres	\N	\N	{"name": "spatial_model_SpATS", "cv_id": 67, "cvterm_id": 78384, "dbxref_id": 213543, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:07.677676-0749878	39	f
+2026-03-02 13:48:07.686163-07	INSERT	postgres	\N	\N	{"name": "Adjusted Means from Spatial Correction using SpATS R", "cv_id": 68, "cvterm_id": 78385, "dbxref_id": 213544, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:07.686163-0749880	40	f
+2026-03-02 13:48:07.692177-07	INSERT	postgres	\N	\N	{"name": "spatially_corrected_trait_adjustments_json", "cv_id": 38, "cvterm_id": 78386, "dbxref_id": 213545, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:07.692177-0749882	41	f
+2026-03-02 13:48:08.0888-07	INSERT	postgres	\N	\N	{"name": "trait_repeat_type", "cv_id": 48, "cvterm_id": 78387, "dbxref_id": 213546, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:08.0888-0749886	42	f
+2026-03-02 13:48:08.781134-07	INSERT	postgres	\N	\N	{"name": "locus", "cv_id": 45, "cvterm_id": 78388, "dbxref_id": 213547, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:08.781134-0749891	43	f
+2026-03-02 13:48:09.443109-07	INSERT	postgres	\N	\N	{"name": "VARIABLE_OF", "cv_id": 1, "cvterm_id": 78389, "dbxref_id": 213548, "definition": null, "is_obsolete": 0, "is_relationshiptype": 1}	2026-03-02 13:48:09.443109-0749895	44	f
+2026-03-02 13:48:09.443109-07	INSERT	postgres	\N	\N	{"name": "method_of", "cv_id": 1, "cvterm_id": 78390, "dbxref_id": 213549, "definition": null, "is_obsolete": 0, "is_relationshiptype": 1}	2026-03-02 13:48:09.443109-0749895	45	f
+2026-03-02 13:48:09.443109-07	INSERT	postgres	\N	\N	{"name": "scale_of", "cv_id": 1, "cvterm_id": 78391, "dbxref_id": 213550, "definition": null, "is_obsolete": 0, "is_relationshiptype": 1}	2026-03-02 13:48:09.443109-0749895	46	f
+2026-03-02 13:48:11.713079-07	INSERT	postgres	\N	\N	{"name": "vectorviewer_data", "cv_id": 46, "cvterm_id": 78392, "dbxref_id": 213551, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:11.713079-0749910	47	f
+2026-03-02 13:48:12.135366-07	INSERT	postgres	\N	\N	{"name": "number_of_insertions", "cv_id": 46, "cvterm_id": 78393, "dbxref_id": 213552, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:12.135366-0749915	48	f
+2026-03-02 13:48:12.951551-07	INSERT	postgres	\N	\N	{"name": "management_regime", "cv_id": 38, "cvterm_id": 78394, "dbxref_id": 213553, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:12.951551-0749923	49	f
+2026-03-02 13:48:14.0679-07	INSERT	postgres	\N	\N	{"name": "experiment_treatment_ontology", "cv_id": 63, "cvterm_id": 78395, "dbxref_id": 213554, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:14.0679-0749933	50	f
+2026-03-02 13:48:14.075232-07	INSERT	postgres	\N	\N	{"name": "composed_experiment_treatment_ontology", "cv_id": 63, "cvterm_id": 78396, "dbxref_id": 213555, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:14.075232-0749935	51	f
+2026-03-02 13:48:14.086659-07	INSERT	postgres	\N	\N	{"name": "Experimental treatment ontology", "cv_id": 73, "cvterm_id": 78397, "dbxref_id": 213556, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:14.086659-0749940	52	f
+2026-03-02 13:48:14.093502-07	INSERT	postgres	\N	\N	{"name": "Legacy experiment treatment", "cv_id": 73, "cvterm_id": 78398, "dbxref_id": 213557, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:14.093502-0749942	53	f
+2026-03-02 13:48:14.101094-07	INSERT	postgres	\N	\N	{"name": "Composed experimental treatment ontology", "cv_id": 74, "cvterm_id": 78399, "dbxref_id": 213558, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:14.101094-0749945	54	f
+2026-03-02 13:48:15.92704-07	INSERT	postgres	\N	\N	{"name": "accessions_ids", "cv_id": 45, "cvterm_id": 78400, "dbxref_id": 213559, "definition": "accessions_ids for lists", "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:15.92704-0749951	55	f
+2026-03-02 13:48:17.145965-07	INSERT	postgres	\N	\N	{"name": "derived_from", "cv_id": 37, "cvterm_id": 78401, "dbxref_id": 213560, "definition": null, "is_obsolete": 0, "is_relationshiptype": 0}	2026-03-02 13:48:17.145965-0749963	56	f
 \.
 
 
@@ -35256,16 +35959,284 @@ COPY audit.cvterm_dbxref_audit (audit_ts, operation, username, logged_in_user, b
 --
 
 COPY audit.cvterm_relationship_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, cvterm_relationship_audit_id, is_undo) FROM stdin;
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78315, "cvterm_relationship_id": 111084}	{"type_id": 76849, "object_id": 78320, "subject_id": 78315, "cvterm_relationship_id": 111084}	2024-12-19 12:19:56.004544+002742618	1	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78316, "cvterm_relationship_id": 111085}	{"type_id": 76849, "object_id": 78320, "subject_id": 78316, "cvterm_relationship_id": 111085}	2024-12-19 12:19:56.004544+002742618	2	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78323, "cvterm_relationship_id": 111086}	{"type_id": 76849, "object_id": 78320, "subject_id": 78323, "cvterm_relationship_id": 111086}	2024-12-19 12:19:56.004544+002742618	3	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78321, "cvterm_relationship_id": 111087}	{"type_id": 76849, "object_id": 78320, "subject_id": 78321, "cvterm_relationship_id": 111087}	2024-12-19 12:19:56.004544+002742618	4	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78318, "cvterm_relationship_id": 111088}	{"type_id": 76849, "object_id": 78320, "subject_id": 78318, "cvterm_relationship_id": 111088}	2024-12-19 12:19:56.004544+002742618	5	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78322, "cvterm_relationship_id": 111089}	{"type_id": 76849, "object_id": 78320, "subject_id": 78322, "cvterm_relationship_id": 111089}	2024-12-19 12:19:56.004544+002742618	6	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78324, "cvterm_relationship_id": 111091}	{"type_id": 76849, "object_id": 78320, "subject_id": 78324, "cvterm_relationship_id": 111091}	2024-12-19 12:19:56.004544+002742618	7	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78319, "cvterm_relationship_id": 111092}	{"type_id": 76849, "object_id": 78320, "subject_id": 78319, "cvterm_relationship_id": 111092}	2024-12-19 12:19:56.004544+002742618	8	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78317, "cvterm_relationship_id": 111093}	{"type_id": 76849, "object_id": 78320, "subject_id": 78317, "cvterm_relationship_id": 111093}	2024-12-19 12:19:56.004544+002742618	9	f
-2024-12-19 12:19:56.004544+00	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78314, "cvterm_relationship_id": 111094}	{"type_id": 76849, "object_id": 78320, "subject_id": 78314, "cvterm_relationship_id": 111094}	2024-12-19 12:19:56.004544+002742618	10	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78315, "cvterm_relationship_id": 111084}	{"type_id": 76849, "object_id": 78320, "subject_id": 78315, "cvterm_relationship_id": 111084}	2024-12-19 12:19:56.004544+002742618	1	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78316, "cvterm_relationship_id": 111085}	{"type_id": 76849, "object_id": 78320, "subject_id": 78316, "cvterm_relationship_id": 111085}	2024-12-19 12:19:56.004544+002742618	2	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78323, "cvterm_relationship_id": 111086}	{"type_id": 76849, "object_id": 78320, "subject_id": 78323, "cvterm_relationship_id": 111086}	2024-12-19 12:19:56.004544+002742618	3	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78321, "cvterm_relationship_id": 111087}	{"type_id": 76849, "object_id": 78320, "subject_id": 78321, "cvterm_relationship_id": 111087}	2024-12-19 12:19:56.004544+002742618	4	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78318, "cvterm_relationship_id": 111088}	{"type_id": 76849, "object_id": 78320, "subject_id": 78318, "cvterm_relationship_id": 111088}	2024-12-19 12:19:56.004544+002742618	5	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78322, "cvterm_relationship_id": 111089}	{"type_id": 76849, "object_id": 78320, "subject_id": 78322, "cvterm_relationship_id": 111089}	2024-12-19 12:19:56.004544+002742618	6	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78324, "cvterm_relationship_id": 111091}	{"type_id": 76849, "object_id": 78320, "subject_id": 78324, "cvterm_relationship_id": 111091}	2024-12-19 12:19:56.004544+002742618	7	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78319, "cvterm_relationship_id": 111092}	{"type_id": 76849, "object_id": 78320, "subject_id": 78319, "cvterm_relationship_id": 111092}	2024-12-19 12:19:56.004544+002742618	8	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78317, "cvterm_relationship_id": 111093}	{"type_id": 76849, "object_id": 78320, "subject_id": 78317, "cvterm_relationship_id": 111093}	2024-12-19 12:19:56.004544+002742618	9	f
+2024-12-19 05:19:56.004544-07	UPDATE	postgres	\N	{"type_id": 78325, "object_id": 78320, "subject_id": 78314, "cvterm_relationship_id": 111094}	{"type_id": 76849, "object_id": 78320, "subject_id": 78314, "cvterm_relationship_id": 111094}	2024-12-19 12:19:56.004544+002742618	10	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76708, "subject_id": 76782, "cvterm_relationship_id": 110590}	{"type_id": 78389, "object_id": 76708, "subject_id": 76782, "cvterm_relationship_id": 110590}	2026-03-02 13:48:10.404881-0749902	11	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76681, "subject_id": 70666, "cvterm_relationship_id": 110424}	{"type_id": 78389, "object_id": 76681, "subject_id": 70666, "cvterm_relationship_id": 110424}	2026-03-02 13:48:10.404881-0749902	12	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76552, "subject_id": 76826, "cvterm_relationship_id": 110278}	{"type_id": 78389, "object_id": 76552, "subject_id": 76826, "cvterm_relationship_id": 110278}	2026-03-02 13:48:10.404881-0749902	13	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76603, "subject_id": 76717, "cvterm_relationship_id": 110570}	{"type_id": 78389, "object_id": 76603, "subject_id": 76717, "cvterm_relationship_id": 110570}	2026-03-02 13:48:10.404881-0749902	14	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76581, "subject_id": 70742, "cvterm_relationship_id": 110258}	{"type_id": 78389, "object_id": 76581, "subject_id": 70742, "cvterm_relationship_id": 110258}	2026-03-02 13:48:10.404881-0749902	15	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76613, "subject_id": 76702, "cvterm_relationship_id": 110311}	{"type_id": 78389, "object_id": 76613, "subject_id": 76702, "cvterm_relationship_id": 110311}	2026-03-02 13:48:10.404881-0749902	16	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76845, "subject_id": 76670, "cvterm_relationship_id": 110213}	{"type_id": 78389, "object_id": 76845, "subject_id": 76670, "cvterm_relationship_id": 110213}	2026-03-02 13:48:10.404881-0749902	17	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76762, "subject_id": 76633, "cvterm_relationship_id": 110406}	{"type_id": 78389, "object_id": 76762, "subject_id": 76633, "cvterm_relationship_id": 110406}	2026-03-02 13:48:10.404881-0749902	18	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76797, "subject_id": 70746, "cvterm_relationship_id": 110195}	{"type_id": 78389, "object_id": 76797, "subject_id": 70746, "cvterm_relationship_id": 110195}	2026-03-02 13:48:10.404881-0749902	19	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76822, "subject_id": 76735, "cvterm_relationship_id": 110543}	{"type_id": 78389, "object_id": 76822, "subject_id": 76735, "cvterm_relationship_id": 110543}	2026-03-02 13:48:10.404881-0749902	20	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70774, "subject_id": 76810, "cvterm_relationship_id": 110302}	{"type_id": 78389, "object_id": 70774, "subject_id": 76810, "cvterm_relationship_id": 110302}	2026-03-02 13:48:10.404881-0749902	21	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70673, "subject_id": 76559, "cvterm_relationship_id": 110274}	{"type_id": 78389, "object_id": 70673, "subject_id": 76559, "cvterm_relationship_id": 110274}	2026-03-02 13:48:10.404881-0749902	22	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76540, "subject_id": 70722, "cvterm_relationship_id": 110307}	{"type_id": 78389, "object_id": 76540, "subject_id": 70722, "cvterm_relationship_id": 110307}	2026-03-02 13:48:10.404881-0749902	23	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76832, "subject_id": 76659, "cvterm_relationship_id": 110397}	{"type_id": 78389, "object_id": 76832, "subject_id": 76659, "cvterm_relationship_id": 110397}	2026-03-02 13:48:10.404881-0749902	24	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76736, "subject_id": 76737, "cvterm_relationship_id": 110494}	{"type_id": 78389, "object_id": 76736, "subject_id": 76737, "cvterm_relationship_id": 110494}	2026-03-02 13:48:10.404881-0749902	25	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76546, "subject_id": 76580, "cvterm_relationship_id": 110556}	{"type_id": 78389, "object_id": 76546, "subject_id": 76580, "cvterm_relationship_id": 110556}	2026-03-02 13:48:10.404881-0749902	26	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76629, "subject_id": 70736, "cvterm_relationship_id": 110259}	{"type_id": 78389, "object_id": 76629, "subject_id": 70736, "cvterm_relationship_id": 110259}	2026-03-02 13:48:10.404881-0749902	27	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76556, "subject_id": 76621, "cvterm_relationship_id": 110221}	{"type_id": 78389, "object_id": 76556, "subject_id": 76621, "cvterm_relationship_id": 110221}	2026-03-02 13:48:10.404881-0749902	28	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 76595, "cvterm_relationship_id": 110444}	{"type_id": 78389, "object_id": 76627, "subject_id": 76595, "cvterm_relationship_id": 110444}	2026-03-02 13:48:10.404881-0749902	29	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76562, "subject_id": 70764, "cvterm_relationship_id": 110234}	{"type_id": 78389, "object_id": 76562, "subject_id": 70764, "cvterm_relationship_id": 110234}	2026-03-02 13:48:10.404881-0749902	30	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76582, "subject_id": 70669, "cvterm_relationship_id": 110316}	{"type_id": 78389, "object_id": 76582, "subject_id": 70669, "cvterm_relationship_id": 110316}	2026-03-02 13:48:10.404881-0749902	31	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76822, "subject_id": 76842, "cvterm_relationship_id": 110326}	{"type_id": 78389, "object_id": 76822, "subject_id": 76842, "cvterm_relationship_id": 110326}	2026-03-02 13:48:10.404881-0749902	32	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76577, "subject_id": 70688, "cvterm_relationship_id": 110250}	{"type_id": 78389, "object_id": 76577, "subject_id": 70688, "cvterm_relationship_id": 110250}	2026-03-02 13:48:10.404881-0749902	33	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76801, "subject_id": 76760, "cvterm_relationship_id": 110246}	{"type_id": 78389, "object_id": 76801, "subject_id": 76760, "cvterm_relationship_id": 110246}	2026-03-02 13:48:10.404881-0749902	34	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76628, "subject_id": 76714, "cvterm_relationship_id": 110209}	{"type_id": 78389, "object_id": 76628, "subject_id": 76714, "cvterm_relationship_id": 110209}	2026-03-02 13:48:10.404881-0749902	35	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76640, "subject_id": 76615, "cvterm_relationship_id": 110199}	{"type_id": 78389, "object_id": 76640, "subject_id": 76615, "cvterm_relationship_id": 110199}	2026-03-02 13:48:10.404881-0749902	36	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76668, "subject_id": 70686, "cvterm_relationship_id": 110534}	{"type_id": 78389, "object_id": 76668, "subject_id": 70686, "cvterm_relationship_id": 110534}	2026-03-02 13:48:10.404881-0749902	37	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 76815, "cvterm_relationship_id": 110426}	{"type_id": 78389, "object_id": 76627, "subject_id": 76815, "cvterm_relationship_id": 110426}	2026-03-02 13:48:10.404881-0749902	38	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78319, "cvterm_relationship_id": 111092}	{"type_id": 78389, "object_id": 78320, "subject_id": 78319, "cvterm_relationship_id": 111092}	2026-03-02 13:48:10.404881-0749902	39	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76681, "subject_id": 76671, "cvterm_relationship_id": 110576}	{"type_id": 78389, "object_id": 76681, "subject_id": 76671, "cvterm_relationship_id": 110576}	2026-03-02 13:48:10.404881-0749902	40	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76681, "subject_id": 76547, "cvterm_relationship_id": 110503}	{"type_id": 78389, "object_id": 76681, "subject_id": 76547, "cvterm_relationship_id": 110503}	2026-03-02 13:48:10.404881-0749902	41	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76791, "subject_id": 70696, "cvterm_relationship_id": 110463}	{"type_id": 78389, "object_id": 76791, "subject_id": 70696, "cvterm_relationship_id": 110463}	2026-03-02 13:48:10.404881-0749902	42	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70714, "subject_id": 76747, "cvterm_relationship_id": 110547}	{"type_id": 78389, "object_id": 70714, "subject_id": 76747, "cvterm_relationship_id": 110547}	2026-03-02 13:48:10.404881-0749902	43	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70767, "subject_id": 76847, "cvterm_relationship_id": 110257}	{"type_id": 78389, "object_id": 70767, "subject_id": 76847, "cvterm_relationship_id": 110257}	2026-03-02 13:48:10.404881-0749902	44	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76801, "subject_id": 76542, "cvterm_relationship_id": 110301}	{"type_id": 78389, "object_id": 76801, "subject_id": 76542, "cvterm_relationship_id": 110301}	2026-03-02 13:48:10.404881-0749902	45	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76546, "subject_id": 76647, "cvterm_relationship_id": 110523}	{"type_id": 78389, "object_id": 76546, "subject_id": 76647, "cvterm_relationship_id": 110523}	2026-03-02 13:48:10.404881-0749902	46	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76823, "subject_id": 70772, "cvterm_relationship_id": 110396}	{"type_id": 78389, "object_id": 76823, "subject_id": 70772, "cvterm_relationship_id": 110396}	2026-03-02 13:48:10.404881-0749902	47	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76606, "subject_id": 70706, "cvterm_relationship_id": 110347}	{"type_id": 78389, "object_id": 76606, "subject_id": 70706, "cvterm_relationship_id": 110347}	2026-03-02 13:48:10.404881-0749902	48	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76584, "subject_id": 76728, "cvterm_relationship_id": 110435}	{"type_id": 78389, "object_id": 76584, "subject_id": 76728, "cvterm_relationship_id": 110435}	2026-03-02 13:48:10.404881-0749902	49	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76832, "subject_id": 76536, "cvterm_relationship_id": 110245}	{"type_id": 78389, "object_id": 76832, "subject_id": 76536, "cvterm_relationship_id": 110245}	2026-03-02 13:48:10.404881-0749902	50	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77549, "cvterm_relationship_id": 110986}	{"type_id": 78389, "object_id": 77547, "subject_id": 77549, "cvterm_relationship_id": 110986}	2026-03-02 13:48:10.404881-0749902	51	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76711, "subject_id": 76679, "cvterm_relationship_id": 110455}	{"type_id": 78389, "object_id": 76711, "subject_id": 76679, "cvterm_relationship_id": 110455}	2026-03-02 13:48:10.404881-0749902	52	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76734, "subject_id": 70744, "cvterm_relationship_id": 110441}	{"type_id": 78389, "object_id": 76734, "subject_id": 70744, "cvterm_relationship_id": 110441}	2026-03-02 13:48:10.404881-0749902	53	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 76643, "cvterm_relationship_id": 110593}	{"type_id": 78389, "object_id": 76627, "subject_id": 76643, "cvterm_relationship_id": 110593}	2026-03-02 13:48:10.404881-0749902	54	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76632, "subject_id": 76776, "cvterm_relationship_id": 110572}	{"type_id": 78389, "object_id": 76632, "subject_id": 76776, "cvterm_relationship_id": 110572}	2026-03-02 13:48:10.404881-0749902	55	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76762, "subject_id": 76678, "cvterm_relationship_id": 110401}	{"type_id": 78389, "object_id": 76762, "subject_id": 76678, "cvterm_relationship_id": 110401}	2026-03-02 13:48:10.404881-0749902	56	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76784, "subject_id": 76673, "cvterm_relationship_id": 110233}	{"type_id": 78389, "object_id": 76784, "subject_id": 76673, "cvterm_relationship_id": 110233}	2026-03-02 13:48:10.404881-0749902	57	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77559, "cvterm_relationship_id": 111036}	{"type_id": 78389, "object_id": 77547, "subject_id": 77559, "cvterm_relationship_id": 111036}	2026-03-02 13:48:10.404881-0749902	58	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76772, "subject_id": 70711, "cvterm_relationship_id": 110489}	{"type_id": 78389, "object_id": 76772, "subject_id": 70711, "cvterm_relationship_id": 110489}	2026-03-02 13:48:10.404881-0749902	59	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76757, "subject_id": 70687, "cvterm_relationship_id": 110477}	{"type_id": 78389, "object_id": 76757, "subject_id": 70687, "cvterm_relationship_id": 110477}	2026-03-02 13:48:10.404881-0749902	60	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76811, "subject_id": 70775, "cvterm_relationship_id": 110353}	{"type_id": 78389, "object_id": 76811, "subject_id": 70775, "cvterm_relationship_id": 110353}	2026-03-02 13:48:10.404881-0749902	61	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76655, "subject_id": 76753, "cvterm_relationship_id": 110305}	{"type_id": 78389, "object_id": 76655, "subject_id": 76753, "cvterm_relationship_id": 110305}	2026-03-02 13:48:10.404881-0749902	62	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76591, "subject_id": 76796, "cvterm_relationship_id": 110294}	{"type_id": 78389, "object_id": 76591, "subject_id": 76796, "cvterm_relationship_id": 110294}	2026-03-02 13:48:10.404881-0749902	63	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70762, "subject_id": 76634, "cvterm_relationship_id": 110451}	{"type_id": 78389, "object_id": 70762, "subject_id": 76634, "cvterm_relationship_id": 110451}	2026-03-02 13:48:10.404881-0749902	64	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76609, "subject_id": 76636, "cvterm_relationship_id": 110192}	{"type_id": 78389, "object_id": 76609, "subject_id": 76636, "cvterm_relationship_id": 110192}	2026-03-02 13:48:10.404881-0749902	65	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77557, "cvterm_relationship_id": 111026}	{"type_id": 78389, "object_id": 77547, "subject_id": 77557, "cvterm_relationship_id": 111026}	2026-03-02 13:48:10.404881-0749902	66	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76657, "subject_id": 70694, "cvterm_relationship_id": 110341}	{"type_id": 78389, "object_id": 76657, "subject_id": 70694, "cvterm_relationship_id": 110341}	2026-03-02 13:48:10.404881-0749902	67	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78315, "cvterm_relationship_id": 111084}	{"type_id": 78389, "object_id": 78320, "subject_id": 78315, "cvterm_relationship_id": 111084}	2026-03-02 13:48:10.404881-0749902	68	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70731, "subject_id": 76658, "cvterm_relationship_id": 110419}	{"type_id": 78389, "object_id": 70731, "subject_id": 76658, "cvterm_relationship_id": 110419}	2026-03-02 13:48:10.404881-0749902	69	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76543, "subject_id": 70682, "cvterm_relationship_id": 110196}	{"type_id": 78389, "object_id": 76543, "subject_id": 70682, "cvterm_relationship_id": 110196}	2026-03-02 13:48:10.404881-0749902	70	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76650, "subject_id": 76738, "cvterm_relationship_id": 110232}	{"type_id": 78389, "object_id": 76650, "subject_id": 76738, "cvterm_relationship_id": 110232}	2026-03-02 13:48:10.404881-0749902	71	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76550, "subject_id": 76775, "cvterm_relationship_id": 110320}	{"type_id": 78389, "object_id": 76550, "subject_id": 76775, "cvterm_relationship_id": 110320}	2026-03-02 13:48:10.404881-0749902	72	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70671, "subject_id": 76618, "cvterm_relationship_id": 110549}	{"type_id": 78389, "object_id": 70671, "subject_id": 76618, "cvterm_relationship_id": 110549}	2026-03-02 13:48:10.404881-0749902	73	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76572, "subject_id": 76723, "cvterm_relationship_id": 110498}	{"type_id": 78389, "object_id": 76572, "subject_id": 76723, "cvterm_relationship_id": 110498}	2026-03-02 13:48:10.404881-0749902	74	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70774, "subject_id": 76667, "cvterm_relationship_id": 110194}	{"type_id": 78389, "object_id": 70774, "subject_id": 76667, "cvterm_relationship_id": 110194}	2026-03-02 13:48:10.404881-0749902	75	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76554, "subject_id": 76642, "cvterm_relationship_id": 110201}	{"type_id": 78389, "object_id": 76554, "subject_id": 76642, "cvterm_relationship_id": 110201}	2026-03-02 13:48:10.404881-0749902	76	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76677, "subject_id": 70659, "cvterm_relationship_id": 110586}	{"type_id": 78389, "object_id": 76677, "subject_id": 70659, "cvterm_relationship_id": 110586}	2026-03-02 13:48:10.404881-0749902	77	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76585, "subject_id": 70781, "cvterm_relationship_id": 110422}	{"type_id": 78389, "object_id": 76585, "subject_id": 70781, "cvterm_relationship_id": 110422}	2026-03-02 13:48:10.404881-0749902	78	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76695, "subject_id": 70715, "cvterm_relationship_id": 110378}	{"type_id": 78389, "object_id": 76695, "subject_id": 70715, "cvterm_relationship_id": 110378}	2026-03-02 13:48:10.404881-0749902	79	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77551, "cvterm_relationship_id": 110996}	{"type_id": 78389, "object_id": 77547, "subject_id": 77551, "cvterm_relationship_id": 110996}	2026-03-02 13:48:10.404881-0749902	80	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77556, "cvterm_relationship_id": 111021}	{"type_id": 78389, "object_id": 77547, "subject_id": 77556, "cvterm_relationship_id": 111021}	2026-03-02 13:48:10.404881-0749902	81	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76612, "subject_id": 76575, "cvterm_relationship_id": 110578}	{"type_id": 78389, "object_id": 76612, "subject_id": 76575, "cvterm_relationship_id": 110578}	2026-03-02 13:48:10.404881-0749902	82	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76649, "subject_id": 70726, "cvterm_relationship_id": 110544}	{"type_id": 78389, "object_id": 76649, "subject_id": 70726, "cvterm_relationship_id": 110544}	2026-03-02 13:48:10.404881-0749902	83	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70729, "subject_id": 76611, "cvterm_relationship_id": 110357}	{"type_id": 78389, "object_id": 70729, "subject_id": 76611, "cvterm_relationship_id": 110357}	2026-03-02 13:48:10.404881-0749902	84	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70762, "subject_id": 76740, "cvterm_relationship_id": 110398}	{"type_id": 78389, "object_id": 70762, "subject_id": 76740, "cvterm_relationship_id": 110398}	2026-03-02 13:48:10.404881-0749902	85	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76806, "subject_id": 76779, "cvterm_relationship_id": 110207}	{"type_id": 78389, "object_id": 76806, "subject_id": 76779, "cvterm_relationship_id": 110207}	2026-03-02 13:48:10.404881-0749902	86	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76764, "subject_id": 76600, "cvterm_relationship_id": 110198}	{"type_id": 78389, "object_id": 76764, "subject_id": 76600, "cvterm_relationship_id": 110198}	2026-03-02 13:48:10.404881-0749902	87	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76691, "subject_id": 70661, "cvterm_relationship_id": 110527}	{"type_id": 78389, "object_id": 76691, "subject_id": 70661, "cvterm_relationship_id": 110527}	2026-03-02 13:48:10.404881-0749902	88	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 76598, "cvterm_relationship_id": 110400}	{"type_id": 78389, "object_id": 76627, "subject_id": 76598, "cvterm_relationship_id": 110400}	2026-03-02 13:48:10.404881-0749902	89	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76689, "subject_id": 76565, "cvterm_relationship_id": 110591}	{"type_id": 78389, "object_id": 76689, "subject_id": 76565, "cvterm_relationship_id": 110591}	2026-03-02 13:48:10.404881-0749902	90	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76836, "subject_id": 76538, "cvterm_relationship_id": 110227}	{"type_id": 78389, "object_id": 76836, "subject_id": 76538, "cvterm_relationship_id": 110227}	2026-03-02 13:48:10.404881-0749902	91	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78322, "cvterm_relationship_id": 111089}	{"type_id": 78389, "object_id": 78320, "subject_id": 78322, "cvterm_relationship_id": 111089}	2026-03-02 13:48:10.404881-0749902	92	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70673, "subject_id": 76665, "cvterm_relationship_id": 110379}	{"type_id": 78389, "object_id": 70673, "subject_id": 76665, "cvterm_relationship_id": 110379}	2026-03-02 13:48:10.404881-0749902	93	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78323, "cvterm_relationship_id": 111086}	{"type_id": 78389, "object_id": 78320, "subject_id": 78323, "cvterm_relationship_id": 111086}	2026-03-02 13:48:10.404881-0749902	94	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70714, "subject_id": 76838, "cvterm_relationship_id": 110315}	{"type_id": 78389, "object_id": 70714, "subject_id": 76838, "cvterm_relationship_id": 110315}	2026-03-02 13:48:10.404881-0749902	95	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76809, "subject_id": 76816, "cvterm_relationship_id": 110267}	{"type_id": 78389, "object_id": 76809, "subject_id": 76816, "cvterm_relationship_id": 110267}	2026-03-02 13:48:10.404881-0749902	96	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76817, "subject_id": 70730, "cvterm_relationship_id": 110592}	{"type_id": 78389, "object_id": 76817, "subject_id": 70730, "cvterm_relationship_id": 110592}	2026-03-02 13:48:10.404881-0749902	97	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76814, "subject_id": 70689, "cvterm_relationship_id": 110545}	{"type_id": 78389, "object_id": 76814, "subject_id": 70689, "cvterm_relationship_id": 110545}	2026-03-02 13:48:10.404881-0749902	98	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76770, "subject_id": 76646, "cvterm_relationship_id": 110279}	{"type_id": 78389, "object_id": 76770, "subject_id": 76646, "cvterm_relationship_id": 110279}	2026-03-02 13:48:10.404881-0749902	99	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76736, "subject_id": 76825, "cvterm_relationship_id": 110468}	{"type_id": 78389, "object_id": 76736, "subject_id": 76825, "cvterm_relationship_id": 110468}	2026-03-02 13:48:10.404881-0749902	100	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76736, "subject_id": 76560, "cvterm_relationship_id": 110465}	{"type_id": 78389, "object_id": 76736, "subject_id": 76560, "cvterm_relationship_id": 110465}	2026-03-02 13:48:10.404881-0749902	101	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76603, "subject_id": 70718, "cvterm_relationship_id": 110212}	{"type_id": 78389, "object_id": 76603, "subject_id": 70718, "cvterm_relationship_id": 110212}	2026-03-02 13:48:10.404881-0749902	102	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76801, "subject_id": 76725, "cvterm_relationship_id": 110402}	{"type_id": 78389, "object_id": 76801, "subject_id": 76725, "cvterm_relationship_id": 110402}	2026-03-02 13:48:10.404881-0749902	103	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76696, "subject_id": 76620, "cvterm_relationship_id": 110291}	{"type_id": 78389, "object_id": 76696, "subject_id": 76620, "cvterm_relationship_id": 110291}	2026-03-02 13:48:10.404881-0749902	104	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76840, "subject_id": 76592, "cvterm_relationship_id": 110459}	{"type_id": 78389, "object_id": 76840, "subject_id": 76592, "cvterm_relationship_id": 110459}	2026-03-02 13:48:10.404881-0749902	105	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76813, "subject_id": 70725, "cvterm_relationship_id": 110386}	{"type_id": 78389, "object_id": 76813, "subject_id": 70725, "cvterm_relationship_id": 110386}	2026-03-02 13:48:10.404881-0749902	106	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76733, "subject_id": 70664, "cvterm_relationship_id": 110336}	{"type_id": 78389, "object_id": 76733, "subject_id": 70664, "cvterm_relationship_id": 110336}	2026-03-02 13:48:10.404881-0749902	107	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76741, "subject_id": 76739, "cvterm_relationship_id": 110189}	{"type_id": 78389, "object_id": 76741, "subject_id": 76739, "cvterm_relationship_id": 110189}	2026-03-02 13:48:10.404881-0749902	108	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76657, "subject_id": 70755, "cvterm_relationship_id": 110564}	{"type_id": 78389, "object_id": 76657, "subject_id": 70755, "cvterm_relationship_id": 110564}	2026-03-02 13:48:10.404881-0749902	109	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 76819, "cvterm_relationship_id": 110356}	{"type_id": 78389, "object_id": 76627, "subject_id": 76819, "cvterm_relationship_id": 110356}	2026-03-02 13:48:10.404881-0749902	110	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76736, "subject_id": 76692, "cvterm_relationship_id": 110517}	{"type_id": 78389, "object_id": 76736, "subject_id": 76692, "cvterm_relationship_id": 110517}	2026-03-02 13:48:10.404881-0749902	111	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77552, "cvterm_relationship_id": 111001}	{"type_id": 78389, "object_id": 77547, "subject_id": 77552, "cvterm_relationship_id": 111001}	2026-03-02 13:48:10.404881-0749902	112	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76545, "subject_id": 76567, "cvterm_relationship_id": 110369}	{"type_id": 78389, "object_id": 76545, "subject_id": 76567, "cvterm_relationship_id": 110369}	2026-03-02 13:48:10.404881-0749902	113	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76709, "subject_id": 70667, "cvterm_relationship_id": 110269}	{"type_id": 78389, "object_id": 76709, "subject_id": 70667, "cvterm_relationship_id": 110269}	2026-03-02 13:48:10.404881-0749902	114	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76707, "subject_id": 76648, "cvterm_relationship_id": 110309}	{"type_id": 78389, "object_id": 76707, "subject_id": 76648, "cvterm_relationship_id": 110309}	2026-03-02 13:48:10.404881-0749902	115	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70671, "subject_id": 76715, "cvterm_relationship_id": 110538}	{"type_id": 78389, "object_id": 70671, "subject_id": 76715, "cvterm_relationship_id": 110538}	2026-03-02 13:48:10.404881-0749902	116	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70731, "subject_id": 76802, "cvterm_relationship_id": 110535}	{"type_id": 78389, "object_id": 70731, "subject_id": 76802, "cvterm_relationship_id": 110535}	2026-03-02 13:48:10.404881-0749902	117	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77555, "cvterm_relationship_id": 111016}	{"type_id": 78389, "object_id": 77547, "subject_id": 77555, "cvterm_relationship_id": 111016}	2026-03-02 13:48:10.404881-0749902	118	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76683, "subject_id": 70685, "cvterm_relationship_id": 110565}	{"type_id": 78389, "object_id": 76683, "subject_id": 70685, "cvterm_relationship_id": 110565}	2026-03-02 13:48:10.404881-0749902	119	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76641, "subject_id": 70724, "cvterm_relationship_id": 110507}	{"type_id": 78389, "object_id": 76641, "subject_id": 70724, "cvterm_relationship_id": 110507}	2026-03-02 13:48:10.404881-0749902	120	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76793, "subject_id": 76697, "cvterm_relationship_id": 110283}	{"type_id": 78389, "object_id": 76793, "subject_id": 76697, "cvterm_relationship_id": 110283}	2026-03-02 13:48:10.404881-0749902	121	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76795, "subject_id": 70737, "cvterm_relationship_id": 110418}	{"type_id": 78389, "object_id": 76795, "subject_id": 70737, "cvterm_relationship_id": 110418}	2026-03-02 13:48:10.404881-0749902	122	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76672, "subject_id": 70676, "cvterm_relationship_id": 110241}	{"type_id": 78389, "object_id": 76672, "subject_id": 70676, "cvterm_relationship_id": 110241}	2026-03-02 13:48:10.404881-0749902	123	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78317, "cvterm_relationship_id": 111093}	{"type_id": 78389, "object_id": 78320, "subject_id": 78317, "cvterm_relationship_id": 111093}	2026-03-02 13:48:10.404881-0749902	124	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76836, "subject_id": 70684, "cvterm_relationship_id": 110240}	{"type_id": 78389, "object_id": 76836, "subject_id": 70684, "cvterm_relationship_id": 110240}	2026-03-02 13:48:10.404881-0749902	125	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76759, "subject_id": 76752, "cvterm_relationship_id": 110519}	{"type_id": 78389, "object_id": 76759, "subject_id": 76752, "cvterm_relationship_id": 110519}	2026-03-02 13:48:10.404881-0749902	126	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76644, "subject_id": 76755, "cvterm_relationship_id": 110265}	{"type_id": 78389, "object_id": 76644, "subject_id": 76755, "cvterm_relationship_id": 110265}	2026-03-02 13:48:10.404881-0749902	127	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76550, "subject_id": 70699, "cvterm_relationship_id": 110442}	{"type_id": 78389, "object_id": 76550, "subject_id": 70699, "cvterm_relationship_id": 110442}	2026-03-02 13:48:10.404881-0749902	128	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76588, "subject_id": 70677, "cvterm_relationship_id": 110203}	{"type_id": 78389, "object_id": 76588, "subject_id": 70677, "cvterm_relationship_id": 110203}	2026-03-02 13:48:10.404881-0749902	129	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76729, "subject_id": 76594, "cvterm_relationship_id": 110355}	{"type_id": 78389, "object_id": 76729, "subject_id": 76594, "cvterm_relationship_id": 110355}	2026-03-02 13:48:10.404881-0749902	130	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76763, "subject_id": 76687, "cvterm_relationship_id": 110303}	{"type_id": 78389, "object_id": 76763, "subject_id": 76687, "cvterm_relationship_id": 110303}	2026-03-02 13:48:10.404881-0749902	131	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76589, "subject_id": 76786, "cvterm_relationship_id": 110512}	{"type_id": 78389, "object_id": 76589, "subject_id": 76786, "cvterm_relationship_id": 110512}	2026-03-02 13:48:10.404881-0749902	132	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70720, "subject_id": 76660, "cvterm_relationship_id": 110458}	{"type_id": 78389, "object_id": 70720, "subject_id": 76660, "cvterm_relationship_id": 110458}	2026-03-02 13:48:10.404881-0749902	133	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70673, "subject_id": 76812, "cvterm_relationship_id": 110460}	{"type_id": 78389, "object_id": 70673, "subject_id": 76812, "cvterm_relationship_id": 110460}	2026-03-02 13:48:10.404881-0749902	134	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76833, "subject_id": 70709, "cvterm_relationship_id": 110202}	{"type_id": 78389, "object_id": 76833, "subject_id": 70709, "cvterm_relationship_id": 110202}	2026-03-02 13:48:10.404881-0749902	135	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76539, "subject_id": 70663, "cvterm_relationship_id": 110490}	{"type_id": 78389, "object_id": 76539, "subject_id": 70663, "cvterm_relationship_id": 110490}	2026-03-02 13:48:10.404881-0749902	136	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76655, "subject_id": 76685, "cvterm_relationship_id": 110408}	{"type_id": 78389, "object_id": 76655, "subject_id": 76685, "cvterm_relationship_id": 110408}	2026-03-02 13:48:10.404881-0749902	137	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76640, "subject_id": 70681, "cvterm_relationship_id": 110568}	{"type_id": 78389, "object_id": 76640, "subject_id": 70681, "cvterm_relationship_id": 110568}	2026-03-02 13:48:10.404881-0749902	138	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70707, "subject_id": 76701, "cvterm_relationship_id": 110558}	{"type_id": 78389, "object_id": 70707, "subject_id": 76701, "cvterm_relationship_id": 110558}	2026-03-02 13:48:10.404881-0749902	139	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76586, "subject_id": 70773, "cvterm_relationship_id": 110525}	{"type_id": 78389, "object_id": 76586, "subject_id": 70773, "cvterm_relationship_id": 110525}	2026-03-02 13:48:10.404881-0749902	140	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76626, "subject_id": 76675, "cvterm_relationship_id": 110425}	{"type_id": 78389, "object_id": 76626, "subject_id": 76675, "cvterm_relationship_id": 110425}	2026-03-02 13:48:10.404881-0749902	141	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76569, "subject_id": 76848, "cvterm_relationship_id": 110528}	{"type_id": 78389, "object_id": 76569, "subject_id": 76848, "cvterm_relationship_id": 110528}	2026-03-02 13:48:10.404881-0749902	142	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76771, "subject_id": 76820, "cvterm_relationship_id": 110540}	{"type_id": 78389, "object_id": 76771, "subject_id": 76820, "cvterm_relationship_id": 110540}	2026-03-02 13:48:10.404881-0749902	143	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70731, "subject_id": 76743, "cvterm_relationship_id": 110350}	{"type_id": 78389, "object_id": 70731, "subject_id": 76743, "cvterm_relationship_id": 110350}	2026-03-02 13:48:10.404881-0749902	144	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76829, "subject_id": 70675, "cvterm_relationship_id": 110548}	{"type_id": 78389, "object_id": 76829, "subject_id": 70675, "cvterm_relationship_id": 110548}	2026-03-02 13:48:10.404881-0749902	145	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76583, "subject_id": 70770, "cvterm_relationship_id": 110438}	{"type_id": 78389, "object_id": 76583, "subject_id": 70770, "cvterm_relationship_id": 110438}	2026-03-02 13:48:10.404881-0749902	146	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76762, "subject_id": 70741, "cvterm_relationship_id": 110536}	{"type_id": 78389, "object_id": 76762, "subject_id": 70741, "cvterm_relationship_id": 110536}	2026-03-02 13:48:10.404881-0749902	147	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76704, "subject_id": 70759, "cvterm_relationship_id": 110440}	{"type_id": 78389, "object_id": 76704, "subject_id": 70759, "cvterm_relationship_id": 110440}	2026-03-02 13:48:10.404881-0749902	148	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76846, "subject_id": 76669, "cvterm_relationship_id": 110359}	{"type_id": 78389, "object_id": 76846, "subject_id": 76669, "cvterm_relationship_id": 110359}	2026-03-02 13:48:10.404881-0749902	149	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76681, "subject_id": 76827, "cvterm_relationship_id": 110184}	{"type_id": 78389, "object_id": 76681, "subject_id": 76827, "cvterm_relationship_id": 110184}	2026-03-02 13:48:10.404881-0749902	150	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70774, "subject_id": 76630, "cvterm_relationship_id": 110542}	{"type_id": 78389, "object_id": 70774, "subject_id": 76630, "cvterm_relationship_id": 110542}	2026-03-02 13:48:10.404881-0749902	151	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76666, "subject_id": 70753, "cvterm_relationship_id": 110464}	{"type_id": 78389, "object_id": 76666, "subject_id": 70753, "cvterm_relationship_id": 110464}	2026-03-02 13:48:10.404881-0749902	152	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76794, "subject_id": 76756, "cvterm_relationship_id": 110557}	{"type_id": 78389, "object_id": 76794, "subject_id": 76756, "cvterm_relationship_id": 110557}	2026-03-02 13:48:10.404881-0749902	153	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70707, "subject_id": 76619, "cvterm_relationship_id": 110500}	{"type_id": 78389, "object_id": 70707, "subject_id": 76619, "cvterm_relationship_id": 110500}	2026-03-02 13:48:10.404881-0749902	154	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76561, "subject_id": 70752, "cvterm_relationship_id": 110230}	{"type_id": 78389, "object_id": 76561, "subject_id": 70752, "cvterm_relationship_id": 110230}	2026-03-02 13:48:10.404881-0749902	155	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76781, "subject_id": 76688, "cvterm_relationship_id": 110375}	{"type_id": 78389, "object_id": 76781, "subject_id": 76688, "cvterm_relationship_id": 110375}	2026-03-02 13:48:10.404881-0749902	156	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76824, "subject_id": 76792, "cvterm_relationship_id": 110288}	{"type_id": 78389, "object_id": 76824, "subject_id": 76792, "cvterm_relationship_id": 110288}	2026-03-02 13:48:10.404881-0749902	157	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76839, "subject_id": 70780, "cvterm_relationship_id": 110364}	{"type_id": 78389, "object_id": 76839, "subject_id": 70780, "cvterm_relationship_id": 110364}	2026-03-02 13:48:10.404881-0749902	158	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76724, "subject_id": 76693, "cvterm_relationship_id": 110518}	{"type_id": 78389, "object_id": 76724, "subject_id": 76693, "cvterm_relationship_id": 110518}	2026-03-02 13:48:10.404881-0749902	159	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76778, "subject_id": 70660, "cvterm_relationship_id": 110235}	{"type_id": 78389, "object_id": 76778, "subject_id": 70660, "cvterm_relationship_id": 110235}	2026-03-02 13:48:10.404881-0749902	160	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76640, "subject_id": 70691, "cvterm_relationship_id": 110345}	{"type_id": 78389, "object_id": 76640, "subject_id": 70691, "cvterm_relationship_id": 110345}	2026-03-02 13:48:10.404881-0749902	161	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76566, "subject_id": 70768, "cvterm_relationship_id": 110238}	{"type_id": 78389, "object_id": 76566, "subject_id": 70768, "cvterm_relationship_id": 110238}	2026-03-02 13:48:10.404881-0749902	162	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76840, "subject_id": 70771, "cvterm_relationship_id": 110530}	{"type_id": 78389, "object_id": 76840, "subject_id": 70771, "cvterm_relationship_id": 110530}	2026-03-02 13:48:10.404881-0749902	163	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76651, "subject_id": 76745, "cvterm_relationship_id": 110256}	{"type_id": 78389, "object_id": 76651, "subject_id": 76745, "cvterm_relationship_id": 110256}	2026-03-02 13:48:10.404881-0749902	164	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76789, "subject_id": 70690, "cvterm_relationship_id": 110372}	{"type_id": 78389, "object_id": 76789, "subject_id": 70690, "cvterm_relationship_id": 110372}	2026-03-02 13:48:10.404881-0749902	165	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76676, "subject_id": 76652, "cvterm_relationship_id": 110456}	{"type_id": 78389, "object_id": 76676, "subject_id": 76652, "cvterm_relationship_id": 110456}	2026-03-02 13:48:10.404881-0749902	166	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76640, "subject_id": 76587, "cvterm_relationship_id": 110323}	{"type_id": 78389, "object_id": 76640, "subject_id": 76587, "cvterm_relationship_id": 110323}	2026-03-02 13:48:10.404881-0749902	167	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76686, "subject_id": 70712, "cvterm_relationship_id": 110253}	{"type_id": 78389, "object_id": 76686, "subject_id": 70712, "cvterm_relationship_id": 110253}	2026-03-02 13:48:10.404881-0749902	168	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76563, "subject_id": 70728, "cvterm_relationship_id": 110562}	{"type_id": 78389, "object_id": 76563, "subject_id": 70728, "cvterm_relationship_id": 110562}	2026-03-02 13:48:10.404881-0749902	169	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76837, "subject_id": 70679, "cvterm_relationship_id": 110282}	{"type_id": 78389, "object_id": 76837, "subject_id": 70679, "cvterm_relationship_id": 110282}	2026-03-02 13:48:10.404881-0749902	170	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76616, "subject_id": 70693, "cvterm_relationship_id": 110228}	{"type_id": 78389, "object_id": 76616, "subject_id": 70693, "cvterm_relationship_id": 110228}	2026-03-02 13:48:10.404881-0749902	171	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70707, "subject_id": 76785, "cvterm_relationship_id": 110190}	{"type_id": 78389, "object_id": 70707, "subject_id": 76785, "cvterm_relationship_id": 110190}	2026-03-02 13:48:10.404881-0749902	172	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76690, "subject_id": 70695, "cvterm_relationship_id": 110431}	{"type_id": 78389, "object_id": 76690, "subject_id": 70695, "cvterm_relationship_id": 110431}	2026-03-02 13:48:10.404881-0749902	173	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76553, "subject_id": 76645, "cvterm_relationship_id": 110374}	{"type_id": 78389, "object_id": 76553, "subject_id": 76645, "cvterm_relationship_id": 110374}	2026-03-02 13:48:10.404881-0749902	174	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 70705, "cvterm_relationship_id": 110298}	{"type_id": 78389, "object_id": 76627, "subject_id": 70705, "cvterm_relationship_id": 110298}	2026-03-02 13:48:10.404881-0749902	175	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76610, "subject_id": 76831, "cvterm_relationship_id": 110560}	{"type_id": 78389, "object_id": 76610, "subject_id": 76831, "cvterm_relationship_id": 110560}	2026-03-02 13:48:10.404881-0749902	176	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76790, "subject_id": 70749, "cvterm_relationship_id": 110360}	{"type_id": 78389, "object_id": 76790, "subject_id": 70749, "cvterm_relationship_id": 110360}	2026-03-02 13:48:10.404881-0749902	177	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76601, "subject_id": 70732, "cvterm_relationship_id": 110344}	{"type_id": 78389, "object_id": 76601, "subject_id": 70732, "cvterm_relationship_id": 110344}	2026-03-02 13:48:10.404881-0749902	178	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76742, "subject_id": 70721, "cvterm_relationship_id": 110310}	{"type_id": 78389, "object_id": 76742, "subject_id": 70721, "cvterm_relationship_id": 110310}	2026-03-02 13:48:10.404881-0749902	179	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70774, "subject_id": 76694, "cvterm_relationship_id": 110595}	{"type_id": 78389, "object_id": 70774, "subject_id": 76694, "cvterm_relationship_id": 110595}	2026-03-02 13:48:10.404881-0749902	180	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76640, "subject_id": 70727, "cvterm_relationship_id": 110363}	{"type_id": 78389, "object_id": 76640, "subject_id": 70727, "cvterm_relationship_id": 110363}	2026-03-02 13:48:10.404881-0749902	181	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70673, "subject_id": 76605, "cvterm_relationship_id": 110510}	{"type_id": 78389, "object_id": 70673, "subject_id": 76605, "cvterm_relationship_id": 110510}	2026-03-02 13:48:10.404881-0749902	182	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76602, "subject_id": 70740, "cvterm_relationship_id": 110555}	{"type_id": 78389, "object_id": 76602, "subject_id": 70740, "cvterm_relationship_id": 110555}	2026-03-02 13:48:10.404881-0749902	183	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76758, "subject_id": 70748, "cvterm_relationship_id": 110270}	{"type_id": 78389, "object_id": 76758, "subject_id": 70748, "cvterm_relationship_id": 110270}	2026-03-02 13:48:10.404881-0749902	184	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78321, "cvterm_relationship_id": 111087}	{"type_id": 78389, "object_id": 78320, "subject_id": 78321, "cvterm_relationship_id": 111087}	2026-03-02 13:48:10.404881-0749902	185	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77548, "cvterm_relationship_id": 110981}	{"type_id": 78389, "object_id": 77547, "subject_id": 77548, "cvterm_relationship_id": 110981}	2026-03-02 13:48:10.404881-0749902	186	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76726, "subject_id": 76799, "cvterm_relationship_id": 110501}	{"type_id": 78389, "object_id": 76726, "subject_id": 76799, "cvterm_relationship_id": 110501}	2026-03-02 13:48:10.404881-0749902	187	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70729, "subject_id": 76573, "cvterm_relationship_id": 110321}	{"type_id": 78389, "object_id": 70729, "subject_id": 76573, "cvterm_relationship_id": 110321}	2026-03-02 13:48:10.404881-0749902	188	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76656, "subject_id": 70701, "cvterm_relationship_id": 110575}	{"type_id": 78389, "object_id": 76656, "subject_id": 70701, "cvterm_relationship_id": 110575}	2026-03-02 13:48:10.404881-0749902	189	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76821, "subject_id": 76777, "cvterm_relationship_id": 110484}	{"type_id": 78389, "object_id": 76821, "subject_id": 76777, "cvterm_relationship_id": 110484}	2026-03-02 13:48:10.404881-0749902	190	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76541, "subject_id": 70723, "cvterm_relationship_id": 110457}	{"type_id": 78389, "object_id": 76541, "subject_id": 70723, "cvterm_relationship_id": 110457}	2026-03-02 13:48:10.404881-0749902	191	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78318, "cvterm_relationship_id": 111088}	{"type_id": 78389, "object_id": 78320, "subject_id": 78318, "cvterm_relationship_id": 111088}	2026-03-02 13:48:10.404881-0749902	192	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76721, "subject_id": 76555, "cvterm_relationship_id": 110263}	{"type_id": 78389, "object_id": 76721, "subject_id": 76555, "cvterm_relationship_id": 110263}	2026-03-02 13:48:10.404881-0749902	193	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76795, "subject_id": 70763, "cvterm_relationship_id": 110485}	{"type_id": 78389, "object_id": 76795, "subject_id": 70763, "cvterm_relationship_id": 110485}	2026-03-02 13:48:10.404881-0749902	194	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76807, "subject_id": 70698, "cvterm_relationship_id": 110216}	{"type_id": 78389, "object_id": 76807, "subject_id": 70698, "cvterm_relationship_id": 110216}	2026-03-02 13:48:10.404881-0749902	195	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76546, "subject_id": 76535, "cvterm_relationship_id": 110567}	{"type_id": 78389, "object_id": 76546, "subject_id": 76535, "cvterm_relationship_id": 110567}	2026-03-02 13:48:10.404881-0749902	196	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70767, "subject_id": 76576, "cvterm_relationship_id": 110404}	{"type_id": 78389, "object_id": 70767, "subject_id": 76576, "cvterm_relationship_id": 110404}	2026-03-02 13:48:10.404881-0749902	197	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76703, "subject_id": 70779, "cvterm_relationship_id": 110205}	{"type_id": 78389, "object_id": 76703, "subject_id": 70779, "cvterm_relationship_id": 110205}	2026-03-02 13:48:10.404881-0749902	198	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76800, "subject_id": 70769, "cvterm_relationship_id": 110366}	{"type_id": 78389, "object_id": 76800, "subject_id": 70769, "cvterm_relationship_id": 110366}	2026-03-02 13:48:10.404881-0749902	199	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 76614, "cvterm_relationship_id": 110318}	{"type_id": 78389, "object_id": 76627, "subject_id": 76614, "cvterm_relationship_id": 110318}	2026-03-02 13:48:10.404881-0749902	200	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76788, "subject_id": 76830, "cvterm_relationship_id": 110551}	{"type_id": 78389, "object_id": 76788, "subject_id": 76830, "cvterm_relationship_id": 110551}	2026-03-02 13:48:10.404881-0749902	201	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76736, "subject_id": 76622, "cvterm_relationship_id": 110248}	{"type_id": 78389, "object_id": 76736, "subject_id": 76622, "cvterm_relationship_id": 110248}	2026-03-02 13:48:10.404881-0749902	202	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76767, "subject_id": 70672, "cvterm_relationship_id": 110338}	{"type_id": 78389, "object_id": 76767, "subject_id": 70672, "cvterm_relationship_id": 110338}	2026-03-02 13:48:10.404881-0749902	203	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70762, "subject_id": 76804, "cvterm_relationship_id": 110361}	{"type_id": 78389, "object_id": 70762, "subject_id": 76804, "cvterm_relationship_id": 110361}	2026-03-02 13:48:10.404881-0749902	204	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78314, "cvterm_relationship_id": 111094}	{"type_id": 78389, "object_id": 78320, "subject_id": 78314, "cvterm_relationship_id": 111094}	2026-03-02 13:48:10.404881-0749902	205	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76736, "subject_id": 76549, "cvterm_relationship_id": 110521}	{"type_id": 78389, "object_id": 76736, "subject_id": 76549, "cvterm_relationship_id": 110521}	2026-03-02 13:48:10.404881-0749902	206	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76730, "subject_id": 76654, "cvterm_relationship_id": 110520}	{"type_id": 78389, "object_id": 76730, "subject_id": 76654, "cvterm_relationship_id": 110520}	2026-03-02 13:48:10.404881-0749902	207	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70731, "subject_id": 76844, "cvterm_relationship_id": 110340}	{"type_id": 78389, "object_id": 70731, "subject_id": 76844, "cvterm_relationship_id": 110340}	2026-03-02 13:48:10.404881-0749902	208	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76674, "subject_id": 76834, "cvterm_relationship_id": 110405}	{"type_id": 78389, "object_id": 76674, "subject_id": 76834, "cvterm_relationship_id": 110405}	2026-03-02 13:48:10.404881-0749902	209	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76653, "subject_id": 70668, "cvterm_relationship_id": 110327}	{"type_id": 78389, "object_id": 76653, "subject_id": 70668, "cvterm_relationship_id": 110327}	2026-03-02 13:48:10.404881-0749902	210	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77554, "cvterm_relationship_id": 111011}	{"type_id": 78389, "object_id": 77547, "subject_id": 77554, "cvterm_relationship_id": 111011}	2026-03-02 13:48:10.404881-0749902	211	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76639, "subject_id": 76604, "cvterm_relationship_id": 110351}	{"type_id": 78389, "object_id": 76639, "subject_id": 76604, "cvterm_relationship_id": 110351}	2026-03-02 13:48:10.404881-0749902	212	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76712, "subject_id": 76558, "cvterm_relationship_id": 110284}	{"type_id": 78389, "object_id": 76712, "subject_id": 76558, "cvterm_relationship_id": 110284}	2026-03-02 13:48:10.404881-0749902	213	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76840, "subject_id": 76808, "cvterm_relationship_id": 110262}	{"type_id": 78389, "object_id": 76840, "subject_id": 76808, "cvterm_relationship_id": 110262}	2026-03-02 13:48:10.404881-0749902	214	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70729, "subject_id": 76599, "cvterm_relationship_id": 110333}	{"type_id": 78389, "object_id": 70729, "subject_id": 76599, "cvterm_relationship_id": 110333}	2026-03-02 13:48:10.404881-0749902	215	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70671, "subject_id": 76841, "cvterm_relationship_id": 110186}	{"type_id": 78389, "object_id": 70671, "subject_id": 76841, "cvterm_relationship_id": 110186}	2026-03-02 13:48:10.404881-0749902	216	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76843, "subject_id": 70761, "cvterm_relationship_id": 110585}	{"type_id": 78389, "object_id": 76843, "subject_id": 70761, "cvterm_relationship_id": 110585}	2026-03-02 13:48:10.404881-0749902	217	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76625, "subject_id": 70757, "cvterm_relationship_id": 110335}	{"type_id": 78389, "object_id": 76625, "subject_id": 70757, "cvterm_relationship_id": 110335}	2026-03-02 13:48:10.404881-0749902	218	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76710, "subject_id": 76624, "cvterm_relationship_id": 110383}	{"type_id": 78389, "object_id": 76710, "subject_id": 76624, "cvterm_relationship_id": 110383}	2026-03-02 13:48:10.404881-0749902	219	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77553, "cvterm_relationship_id": 111006}	{"type_id": 78389, "object_id": 77547, "subject_id": 77553, "cvterm_relationship_id": 111006}	2026-03-02 13:48:10.404881-0749902	220	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70673, "subject_id": 76662, "cvterm_relationship_id": 110289}	{"type_id": 78389, "object_id": 70673, "subject_id": 76662, "cvterm_relationship_id": 110289}	2026-03-02 13:48:10.404881-0749902	221	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76631, "subject_id": 70747, "cvterm_relationship_id": 110200}	{"type_id": 78389, "object_id": 76631, "subject_id": 70747, "cvterm_relationship_id": 110200}	2026-03-02 13:48:10.404881-0749902	222	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76608, "subject_id": 70670, "cvterm_relationship_id": 110218}	{"type_id": 78389, "object_id": 76608, "subject_id": 70670, "cvterm_relationship_id": 110218}	2026-03-02 13:48:10.404881-0749902	223	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70714, "subject_id": 76578, "cvterm_relationship_id": 110244}	{"type_id": 78389, "object_id": 70714, "subject_id": 76578, "cvterm_relationship_id": 110244}	2026-03-02 13:48:10.404881-0749902	224	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76719, "subject_id": 76544, "cvterm_relationship_id": 110330}	{"type_id": 78389, "object_id": 76719, "subject_id": 76544, "cvterm_relationship_id": 110330}	2026-03-02 13:48:10.404881-0749902	225	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76663, "subject_id": 70662, "cvterm_relationship_id": 110249}	{"type_id": 78389, "object_id": 76663, "subject_id": 70662, "cvterm_relationship_id": 110249}	2026-03-02 13:48:10.404881-0749902	226	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76579, "subject_id": 76590, "cvterm_relationship_id": 110437}	{"type_id": 78389, "object_id": 76579, "subject_id": 76590, "cvterm_relationship_id": 110437}	2026-03-02 13:48:10.404881-0749902	227	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70762, "subject_id": 76731, "cvterm_relationship_id": 110428}	{"type_id": 78389, "object_id": 70762, "subject_id": 76731, "cvterm_relationship_id": 110428}	2026-03-02 13:48:10.404881-0749902	228	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76727, "subject_id": 76783, "cvterm_relationship_id": 110292}	{"type_id": 78389, "object_id": 76727, "subject_id": 76783, "cvterm_relationship_id": 110292}	2026-03-02 13:48:10.404881-0749902	229	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78324, "cvterm_relationship_id": 111091}	{"type_id": 78389, "object_id": 78320, "subject_id": 78324, "cvterm_relationship_id": 111091}	2026-03-02 13:48:10.404881-0749902	230	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76684, "subject_id": 70734, "cvterm_relationship_id": 110594}	{"type_id": 78389, "object_id": 76684, "subject_id": 70734, "cvterm_relationship_id": 110594}	2026-03-02 13:48:10.404881-0749902	231	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76749, "subject_id": 76551, "cvterm_relationship_id": 110579}	{"type_id": 78389, "object_id": 76749, "subject_id": 76551, "cvterm_relationship_id": 110579}	2026-03-02 13:48:10.404881-0749902	232	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76681, "subject_id": 76761, "cvterm_relationship_id": 110429}	{"type_id": 78389, "object_id": 76681, "subject_id": 76761, "cvterm_relationship_id": 110429}	2026-03-02 13:48:10.404881-0749902	233	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70671, "subject_id": 76574, "cvterm_relationship_id": 110509}	{"type_id": 78389, "object_id": 70671, "subject_id": 76574, "cvterm_relationship_id": 110509}	2026-03-02 13:48:10.404881-0749902	234	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70714, "subject_id": 76773, "cvterm_relationship_id": 110554}	{"type_id": 78389, "object_id": 70714, "subject_id": 76773, "cvterm_relationship_id": 110554}	2026-03-02 13:48:10.404881-0749902	235	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76803, "subject_id": 76718, "cvterm_relationship_id": 110452}	{"type_id": 78389, "object_id": 76803, "subject_id": 76718, "cvterm_relationship_id": 110452}	2026-03-02 13:48:10.404881-0749902	236	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 78320, "subject_id": 78316, "cvterm_relationship_id": 111085}	{"type_id": 78389, "object_id": 78320, "subject_id": 78316, "cvterm_relationship_id": 111085}	2026-03-02 13:48:10.404881-0749902	237	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76818, "subject_id": 76780, "cvterm_relationship_id": 110251}	{"type_id": 78389, "object_id": 76818, "subject_id": 76780, "cvterm_relationship_id": 110251}	2026-03-02 13:48:10.404881-0749902	238	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76770, "subject_id": 70713, "cvterm_relationship_id": 110499}	{"type_id": 78389, "object_id": 76770, "subject_id": 70713, "cvterm_relationship_id": 110499}	2026-03-02 13:48:10.404881-0749902	239	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76774, "subject_id": 76638, "cvterm_relationship_id": 110319}	{"type_id": 78389, "object_id": 76774, "subject_id": 76638, "cvterm_relationship_id": 110319}	2026-03-02 13:48:10.404881-0749902	240	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70708, "subject_id": 76748, "cvterm_relationship_id": 110255}	{"type_id": 78389, "object_id": 70708, "subject_id": 76748, "cvterm_relationship_id": 110255}	2026-03-02 13:48:10.404881-0749902	241	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77558, "cvterm_relationship_id": 111031}	{"type_id": 78389, "object_id": 77547, "subject_id": 77558, "cvterm_relationship_id": 111031}	2026-03-02 13:48:10.404881-0749902	242	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76710, "subject_id": 70743, "cvterm_relationship_id": 110448}	{"type_id": 78389, "object_id": 76710, "subject_id": 70743, "cvterm_relationship_id": 110448}	2026-03-02 13:48:10.404881-0749902	243	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76661, "subject_id": 76682, "cvterm_relationship_id": 110515}	{"type_id": 78389, "object_id": 76661, "subject_id": 76682, "cvterm_relationship_id": 110515}	2026-03-02 13:48:10.404881-0749902	244	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76607, "subject_id": 70745, "cvterm_relationship_id": 110365}	{"type_id": 78389, "object_id": 76607, "subject_id": 70745, "cvterm_relationship_id": 110365}	2026-03-02 13:48:10.404881-0749902	245	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76754, "subject_id": 70702, "cvterm_relationship_id": 110588}	{"type_id": 78389, "object_id": 76754, "subject_id": 70702, "cvterm_relationship_id": 110588}	2026-03-02 13:48:10.404881-0749902	246	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76751, "subject_id": 70754, "cvterm_relationship_id": 110313}	{"type_id": 78389, "object_id": 76751, "subject_id": 70754, "cvterm_relationship_id": 110313}	2026-03-02 13:48:10.404881-0749902	247	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76722, "subject_id": 76744, "cvterm_relationship_id": 110469}	{"type_id": 78389, "object_id": 76722, "subject_id": 76744, "cvterm_relationship_id": 110469}	2026-03-02 13:48:10.404881-0749902	248	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76596, "subject_id": 70704, "cvterm_relationship_id": 110420}	{"type_id": 78389, "object_id": 76596, "subject_id": 70704, "cvterm_relationship_id": 110420}	2026-03-02 13:48:10.404881-0749902	249	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70707, "subject_id": 76705, "cvterm_relationship_id": 110362}	{"type_id": 78389, "object_id": 70707, "subject_id": 76705, "cvterm_relationship_id": 110362}	2026-03-02 13:48:10.404881-0749902	250	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76700, "subject_id": 70733, "cvterm_relationship_id": 110394}	{"type_id": 78389, "object_id": 76700, "subject_id": 70733, "cvterm_relationship_id": 110394}	2026-03-02 13:48:10.404881-0749902	251	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76765, "subject_id": 76537, "cvterm_relationship_id": 110342}	{"type_id": 78389, "object_id": 76765, "subject_id": 76537, "cvterm_relationship_id": 110342}	2026-03-02 13:48:10.404881-0749902	252	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76768, "subject_id": 70710, "cvterm_relationship_id": 110220}	{"type_id": 78389, "object_id": 76768, "subject_id": 70710, "cvterm_relationship_id": 110220}	2026-03-02 13:48:10.404881-0749902	253	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76568, "subject_id": 76828, "cvterm_relationship_id": 110511}	{"type_id": 78389, "object_id": 76568, "subject_id": 76828, "cvterm_relationship_id": 110511}	2026-03-02 13:48:10.404881-0749902	254	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76727, "subject_id": 70751, "cvterm_relationship_id": 110297}	{"type_id": 78389, "object_id": 76727, "subject_id": 70751, "cvterm_relationship_id": 110297}	2026-03-02 13:48:10.404881-0749902	255	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76626, "subject_id": 70765, "cvterm_relationship_id": 110295}	{"type_id": 78389, "object_id": 76626, "subject_id": 70765, "cvterm_relationship_id": 110295}	2026-03-02 13:48:10.404881-0749902	256	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76623, "subject_id": 70665, "cvterm_relationship_id": 110403}	{"type_id": 78389, "object_id": 76623, "subject_id": 70665, "cvterm_relationship_id": 110403}	2026-03-02 13:48:10.404881-0749902	257	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76597, "subject_id": 76835, "cvterm_relationship_id": 110443}	{"type_id": 78389, "object_id": 76597, "subject_id": 76835, "cvterm_relationship_id": 110443}	2026-03-02 13:48:10.404881-0749902	258	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76805, "subject_id": 76570, "cvterm_relationship_id": 110225}	{"type_id": 78389, "object_id": 76805, "subject_id": 76570, "cvterm_relationship_id": 110225}	2026-03-02 13:48:10.404881-0749902	259	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76768, "subject_id": 76716, "cvterm_relationship_id": 110491}	{"type_id": 78389, "object_id": 76768, "subject_id": 76716, "cvterm_relationship_id": 110491}	2026-03-02 13:48:10.404881-0749902	260	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76766, "subject_id": 70692, "cvterm_relationship_id": 110306}	{"type_id": 78389, "object_id": 76766, "subject_id": 70692, "cvterm_relationship_id": 110306}	2026-03-02 13:48:10.404881-0749902	261	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76627, "subject_id": 76548, "cvterm_relationship_id": 110376}	{"type_id": 78389, "object_id": 76627, "subject_id": 76548, "cvterm_relationship_id": 110376}	2026-03-02 13:48:10.404881-0749902	262	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76713, "subject_id": 70717, "cvterm_relationship_id": 110188}	{"type_id": 78389, "object_id": 76713, "subject_id": 70717, "cvterm_relationship_id": 110188}	2026-03-02 13:48:10.404881-0749902	263	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76720, "subject_id": 70697, "cvterm_relationship_id": 110436}	{"type_id": 78389, "object_id": 76720, "subject_id": 70697, "cvterm_relationship_id": 110436}	2026-03-02 13:48:10.404881-0749902	264	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76593, "subject_id": 70700, "cvterm_relationship_id": 110219}	{"type_id": 78389, "object_id": 76593, "subject_id": 70700, "cvterm_relationship_id": 110219}	2026-03-02 13:48:10.404881-0749902	265	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76680, "subject_id": 70674, "cvterm_relationship_id": 110582}	{"type_id": 78389, "object_id": 76680, "subject_id": 70674, "cvterm_relationship_id": 110582}	2026-03-02 13:48:10.404881-0749902	266	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76699, "subject_id": 70758, "cvterm_relationship_id": 110529}	{"type_id": 78389, "object_id": 76699, "subject_id": 70758, "cvterm_relationship_id": 110529}	2026-03-02 13:48:10.404881-0749902	267	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76787, "subject_id": 70703, "cvterm_relationship_id": 110513}	{"type_id": 78389, "object_id": 76787, "subject_id": 70703, "cvterm_relationship_id": 110513}	2026-03-02 13:48:10.404881-0749902	268	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70762, "subject_id": 76732, "cvterm_relationship_id": 110334}	{"type_id": 78389, "object_id": 70762, "subject_id": 76732, "cvterm_relationship_id": 110334}	2026-03-02 13:48:10.404881-0749902	269	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76557, "subject_id": 76664, "cvterm_relationship_id": 110208}	{"type_id": 78389, "object_id": 76557, "subject_id": 76664, "cvterm_relationship_id": 110208}	2026-03-02 13:48:10.404881-0749902	270	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76798, "subject_id": 76750, "cvterm_relationship_id": 110505}	{"type_id": 78389, "object_id": 76798, "subject_id": 76750, "cvterm_relationship_id": 110505}	2026-03-02 13:48:10.404881-0749902	271	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 77547, "subject_id": 77550, "cvterm_relationship_id": 110991}	{"type_id": 78389, "object_id": 77547, "subject_id": 77550, "cvterm_relationship_id": 110991}	2026-03-02 13:48:10.404881-0749902	272	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76769, "subject_id": 70739, "cvterm_relationship_id": 110277}	{"type_id": 78389, "object_id": 76769, "subject_id": 70739, "cvterm_relationship_id": 110277}	2026-03-02 13:48:10.404881-0749902	273	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76571, "subject_id": 70680, "cvterm_relationship_id": 110266}	{"type_id": 78389, "object_id": 76571, "subject_id": 70680, "cvterm_relationship_id": 110266}	2026-03-02 13:48:10.404881-0749902	274	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 70729, "subject_id": 76635, "cvterm_relationship_id": 110447}	{"type_id": 78389, "object_id": 70729, "subject_id": 76635, "cvterm_relationship_id": 110447}	2026-03-02 13:48:10.404881-0749902	275	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76706, "subject_id": 70778, "cvterm_relationship_id": 110495}	{"type_id": 78389, "object_id": 76706, "subject_id": 70778, "cvterm_relationship_id": 110495}	2026-03-02 13:48:10.404881-0749902	276	f
+2026-03-02 13:48:10.404881-07	UPDATE	postgres	\N	{"type_id": 76849, "object_id": 76637, "subject_id": 76746, "cvterm_relationship_id": 110482}	{"type_id": 78389, "object_id": 76637, "subject_id": 76746, "cvterm_relationship_id": 110482}	2026-03-02 13:48:10.404881-0749902	277	f
+2026-03-02 13:48:14.105202-07	INSERT	postgres	\N	\N	{"type_id": 10, "object_id": 78397, "subject_id": 78398, "cvterm_relationship_id": 111095}	2026-03-02 13:48:14.105202-0749946	278	f
 \.
 
 
@@ -35298,6 +36269,8 @@ COPY audit.cvtermsynonym_audit (audit_ts, operation, username, logged_in_user, b
 --
 
 COPY audit.db_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, db_audit_id, is_undo) FROM stdin;
+2026-03-02 13:48:14.082396-07	INSERT	postgres	\N	\N	{"url": null, "name": "EXPERIMENT_TREATMENT", "db_id": 307, "urlprefix": null, "description": null}	2026-03-02 13:48:14.082396-0749938	1	f
+2026-03-02 13:48:14.097266-07	INSERT	postgres	\N	\N	{"url": null, "name": "COMP_EXP_TREATMENT", "db_id": 308, "urlprefix": null, "description": null}	2026-03-02 13:48:14.097266-0749943	2	f
 \.
 
 
@@ -35306,18 +36279,61 @@ COPY audit.db_audit (audit_ts, operation, username, logged_in_user, before, afte
 --
 
 COPY audit.dbxref_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, dbxref_audit_id, is_undo) FROM stdin;
-2024-12-17 13:57:20.277821+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:prcomp", "dbxref_id": 213506, "description": null}	2024-12-17 13:57:20.277821+002689473	1	f
-2025-01-02 14:57:47.599346+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:autogenerated_name_metadata", "dbxref_id": 213507, "description": null}	2025-01-02 14:57:47.599346+002916836	2	f
-2025-01-02 14:57:47.617887+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:autogenerated_name_format", "dbxref_id": 213508, "description": null}	2025-01-02 14:57:47.617887+002916838	3	f
-2025-01-02 14:57:47.627157+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:default_plant_material", "dbxref_id": 213509, "description": null}	2025-01-02 14:57:47.627157+002916840	4	f
-2025-01-02 14:57:47.636773+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:tracking_transformation_json", "dbxref_id": 213510, "description": null}	2025-01-02 14:57:47.636773+002916842	5	f
-2025-01-02 14:57:47.646229+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:completed_metadata", "dbxref_id": 213511, "description": null}	2025-01-02 14:57:47.646229+002916844	6	f
-2025-01-02 14:57:47.655629+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:progress_of", "dbxref_id": 213512, "description": null}	2025-01-02 14:57:47.655629+002916846	7	f
-2025-01-02 14:57:48.126266+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:member_type", "dbxref_id": 213513, "description": null}	2025-01-02 14:57:48.126266+002916851	8	f
-2025-03-25 13:50:34.061155+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:validated_phenotype", "dbxref_id": 213514, "description": null}	2025-03-25 13:50:34.061155+003439396	9	f
-2025-03-25 13:50:34.574791+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:selected_display_image", "dbxref_id": 213515, "description": null}	2025-03-25 13:50:34.574791+003439401	10	f
-2025-03-25 13:50:35.534051+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:analysis_result", "dbxref_id": 213516, "description": null}	2025-03-25 13:50:35.534051+003439409	11	f
-2025-03-25 13:50:36.473627+00	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:material_type", "dbxref_id": 213517, "description": null}	2025-03-25 13:50:36.473627+003439417	12	f
+2024-12-17 06:57:20.277821-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:prcomp", "dbxref_id": 213506, "description": null}	2024-12-17 13:57:20.277821+002689473	1	f
+2025-01-02 07:57:47.599346-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:autogenerated_name_metadata", "dbxref_id": 213507, "description": null}	2025-01-02 14:57:47.599346+002916836	2	f
+2025-01-02 07:57:47.617887-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:autogenerated_name_format", "dbxref_id": 213508, "description": null}	2025-01-02 14:57:47.617887+002916838	3	f
+2025-01-02 07:57:47.627157-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:default_plant_material", "dbxref_id": 213509, "description": null}	2025-01-02 14:57:47.627157+002916840	4	f
+2025-01-02 07:57:47.636773-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:tracking_transformation_json", "dbxref_id": 213510, "description": null}	2025-01-02 14:57:47.636773+002916842	5	f
+2025-01-02 07:57:47.646229-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:completed_metadata", "dbxref_id": 213511, "description": null}	2025-01-02 14:57:47.646229+002916844	6	f
+2025-01-02 07:57:47.655629-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:progress_of", "dbxref_id": 213512, "description": null}	2025-01-02 14:57:47.655629+002916846	7	f
+2025-01-02 07:57:48.126266-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:member_type", "dbxref_id": 213513, "description": null}	2025-01-02 14:57:48.126266+002916851	8	f
+2025-03-25 07:50:34.061155-06	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:validated_phenotype", "dbxref_id": 213514, "description": null}	2025-03-25 13:50:34.061155+003439396	9	f
+2025-03-25 07:50:34.574791-06	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:selected_display_image", "dbxref_id": 213515, "description": null}	2025-03-25 13:50:34.574791+003439401	10	f
+2025-03-25 07:50:35.534051-06	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:analysis_result", "dbxref_id": 213516, "description": null}	2025-03-25 13:50:35.534051+003439409	11	f
+2025-03-25 07:50:36.473627-06	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:material_type", "dbxref_id": 213517, "description": null}	2025-03-25 13:50:36.473627+003439417	12	f
+2026-03-02 13:48:05.439468-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:download", "dbxref_id": 213518, "description": null}	2026-03-02 13:48:05.439468-0749811	13	f
+2026-03-02 13:48:05.448157-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:upload", "dbxref_id": 213519, "description": null}	2026-03-02 13:48:05.448157-0749813	14	f
+2026-03-02 13:48:05.454909-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:report", "dbxref_id": 213520, "description": null}	2026-03-02 13:48:05.454909-0749815	15	f
+2026-03-02 13:48:05.461511-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:search", "dbxref_id": 213521, "description": null}	2026-03-02 13:48:05.461511-0749817	16	f
+2026-03-02 13:48:05.468066-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:cluster_analysis", "dbxref_id": 213522, "description": null}	2026-03-02 13:48:05.468066-0749819	17	f
+2026-03-02 13:48:05.47438-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:training_model", "dbxref_id": 213523, "description": null}	2026-03-02 13:48:05.47438-0749821	18	f
+2026-03-02 13:48:05.480634-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:selection_prediction", "dbxref_id": 213524, "description": null}	2026-03-02 13:48:05.480634-0749823	19	f
+2026-03-02 13:48:05.486735-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:multiple_models", "dbxref_id": 213525, "description": null}	2026-03-02 13:48:05.486735-0749825	20	f
+2026-03-02 13:48:05.492342-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:training_dataset", "dbxref_id": 213526, "description": null}	2026-03-02 13:48:05.492342-0749827	21	f
+2026-03-02 13:48:05.498213-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:kinship_analysis", "dbxref_id": 213527, "description": null}	2026-03-02 13:48:05.498213-0749829	22	f
+2026-03-02 13:48:05.504006-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:heritability_analysis", "dbxref_id": 213528, "description": null}	2026-03-02 13:48:05.504006-0749831	23	f
+2026-03-02 13:48:05.509778-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:solGWAS_analysis", "dbxref_id": 213529, "description": null}	2026-03-02 13:48:05.509778-0749833	24	f
+2026-03-02 13:48:05.516061-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:spatial_analysis", "dbxref_id": 213530, "description": null}	2026-03-02 13:48:05.516061-0749835	25	f
+2026-03-02 13:48:05.521972-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:pca_analysis", "dbxref_id": 213531, "description": null}	2026-03-02 13:48:05.521972-0749837	26	f
+2026-03-02 13:48:05.527735-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:stability_analysis", "dbxref_id": 213532, "description": null}	2026-03-02 13:48:05.527735-0749839	27	f
+2026-03-02 13:48:05.533849-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:mixed_model_analysis", "dbxref_id": 213533, "description": null}	2026-03-02 13:48:05.533849-0749841	28	f
+2026-03-02 13:48:05.539921-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:nirs_analysis", "dbxref_id": 213534, "description": null}	2026-03-02 13:48:05.539921-0749843	29	f
+2026-03-02 13:48:05.545619-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:tool_compatibility", "dbxref_id": 213535, "description": null}	2026-03-02 13:48:05.545619-0749845	30	f
+2026-03-02 13:48:05.55162-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:genomic_prediction", "dbxref_id": 213536, "description": null}	2026-03-02 13:48:05.55162-0749847	31	f
+2026-03-02 13:48:05.557446-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:sequence_analysis", "dbxref_id": 213537, "description": null}	2026-03-02 13:48:05.557446-0749849	32	f
+2026-03-02 13:48:05.974088-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:metadata_ontology", "dbxref_id": 213538, "description": null}	2026-03-02 13:48:05.974088-0749855	33	f
+2026-03-02 13:48:06.414472-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:obsoleted_stocks", "dbxref_id": 213539, "description": null}	2026-03-02 13:48:06.414472-0749860	34	f
+2026-03-02 13:48:06.823402-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:biochem_ontology", "dbxref_id": 213540, "description": null}	2026-03-02 13:48:06.823402-0749865	35	f
+2026-03-02 13:48:07.258658-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:is_a_transformation_control", "dbxref_id": 213541, "description": null}	2026-03-02 13:48:07.258658-0749870	36	f
+2026-03-02 13:48:07.268086-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:control_of", "dbxref_id": 213542, "description": null}	2026-03-02 13:48:07.268086-0749872	37	f
+2026-03-02 13:48:07.674051-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:spatial_model_SpATS", "dbxref_id": 213543, "description": null}	2026-03-02 13:48:07.674051-0749877	38	f
+2026-03-02 13:48:07.684578-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:Adjusted Means from Spatial Correction using SpATS R", "dbxref_id": 213544, "description": null}	2026-03-02 13:48:07.684578-0749879	39	f
+2026-03-02 13:48:07.690874-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:spatially_corrected_trait_adjustments_json", "dbxref_id": 213545, "description": null}	2026-03-02 13:48:07.690874-0749881	40	f
+2026-03-02 13:48:08.0888-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:trait_repeat_type", "dbxref_id": 213546, "description": null}	2026-03-02 13:48:08.0888-0749886	41	f
+2026-03-02 13:48:08.777143-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:locus", "dbxref_id": 213547, "description": null}	2026-03-02 13:48:08.777143-0749890	42	f
+2026-03-02 13:48:09.443109-07	INSERT	postgres	\N	\N	{"db_id": 1, "version": "", "accession": "VARIABLE_OF", "dbxref_id": 213548, "description": null}	2026-03-02 13:48:09.443109-0749895	43	f
+2026-03-02 13:48:09.443109-07	INSERT	postgres	\N	\N	{"db_id": 1, "version": "", "accession": "method_of", "dbxref_id": 213549, "description": null}	2026-03-02 13:48:09.443109-0749895	44	f
+2026-03-02 13:48:09.443109-07	INSERT	postgres	\N	\N	{"db_id": 1, "version": "", "accession": "scale_of", "dbxref_id": 213550, "description": null}	2026-03-02 13:48:09.443109-0749895	45	f
+2026-03-02 13:48:11.709362-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:vectorviewer_data", "dbxref_id": 213551, "description": null}	2026-03-02 13:48:11.709362-0749909	46	f
+2026-03-02 13:48:12.123019-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:number_of_insertions", "dbxref_id": 213552, "description": null}	2026-03-02 13:48:12.123019-0749914	47	f
+2026-03-02 13:48:12.947389-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:management_regime", "dbxref_id": 213553, "description": null}	2026-03-02 13:48:12.947389-0749922	48	f
+2026-03-02 13:48:14.065866-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:experiment_treatment_ontology", "dbxref_id": 213554, "description": null}	2026-03-02 13:48:14.065866-0749932	49	f
+2026-03-02 13:48:14.073585-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:composed_experiment_treatment_ontology", "dbxref_id": 213555, "description": null}	2026-03-02 13:48:14.073585-0749934	50	f
+2026-03-02 13:48:14.085194-07	INSERT	postgres	\N	\N	{"db_id": 307, "version": "", "accession": "0000000", "dbxref_id": 213556, "description": null}	2026-03-02 13:48:14.085194-0749939	51	f
+2026-03-02 13:48:14.092232-07	INSERT	postgres	\N	\N	{"db_id": 307, "version": "", "accession": "0000001", "dbxref_id": 213557, "description": null}	2026-03-02 13:48:14.092232-0749941	52	f
+2026-03-02 13:48:14.099814-07	INSERT	postgres	\N	\N	{"db_id": 308, "version": "", "accession": "0000000", "dbxref_id": 213558, "description": null}	2026-03-02 13:48:14.099814-0749944	53	f
+2026-03-02 13:48:15.92704-07	INSERT	postgres	\N	\N	{"db_id": 273, "version": "", "accession": "accessions_ids", "dbxref_id": 213559, "description": null}	2026-03-02 13:48:15.92704-0749951	54	f
+2026-03-02 13:48:17.134714-07	INSERT	postgres	\N	\N	{"db_id": 2, "version": "", "accession": "autocreated:derived_from", "dbxref_id": 213560, "description": null}	2026-03-02 13:48:17.134714-0749961	55	f
 \.
 
 
@@ -35342,6 +36358,21 @@ COPY audit.genotype_audit (audit_ts, operation, username, logged_in_user, before
 --
 
 COPY audit.list_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, list_audit_id, is_undo) FROM stdin;
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "test_stocks", "owner": 41, "list_id": 3, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "test_stocks", "owner": 41, "list_id": 3, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	1	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "test_list", "owner": 40, "list_id": 4, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "test_list", "owner": 40, "list_id": 4, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	2	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "accessions_for_solgs_tests", "owner": 41, "list_id": 5, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "accessions_for_solgs_tests", "owner": 41, "list_id": 5, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	3	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "accessions_for_trial2", "owner": 41, "list_id": 6, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "accessions_for_trial2", "owner": 41, "list_id": 6, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	4	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "selection_acc", "owner": 41, "list_id": 7, "sent_by": null, "type_id": null, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "selection_acc", "owner": 41, "list_id": 7, "sent_by": null, "type_id": null, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	5	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "johndoe_1_public", "owner": 40, "list_id": 808, "sent_by": null, "type_id": null, "is_public": true, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "johndoe_1_public", "owner": 40, "list_id": 808, "sent_by": null, "type_id": null, "is_public": true, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	6	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "janedoe_1_public", "owner": 41, "list_id": 809, "sent_by": null, "type_id": null, "is_public": true, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "janedoe_1_public", "owner": 41, "list_id": 809, "sent_by": null, "type_id": null, "is_public": true, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	7	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "johndoe_1_private", "owner": 40, "list_id": 810, "sent_by": null, "type_id": null, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "johndoe_1_private", "owner": 40, "list_id": 810, "sent_by": null, "type_id": null, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	8	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "janedoe_1_private", "owner": 41, "list_id": 811, "sent_by": null, "type_id": null, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "janedoe_1_private", "owner": 41, "list_id": 811, "sent_by": null, "type_id": null, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	9	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "trial2 NaCRRI plots", "owner": 40, "list_id": 8, "sent_by": null, "type_id": 76450, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "trial2 NaCRRI plots", "owner": 40, "list_id": 8, "sent_by": null, "type_id": 76450, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	10	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "trial2 NaCRRI clones", "owner": 40, "list_id": 9, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "trial2 NaCRRI clones", "owner": 40, "list_id": 9, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	11	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "Trials list", "owner": 40, "list_id": 10, "sent_by": null, "type_id": 76453, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "Trials list", "owner": 40, "list_id": 10, "sent_by": null, "type_id": 76453, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	12	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "accessions2add", "owner": 40, "list_id": 11, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "accessions2add", "owner": 40, "list_id": 11, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	13	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "desynonymize_test_list", "owner": 41, "list_id": 12, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "desynonymize_test_list", "owner": 41, "list_id": 12, "sent_by": null, "type_id": 76451, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	14	f
+2026-03-02 13:48:04.086685-07	UPDATE	postgres	\N	{"name": "traits", "owner": 41, "list_id": 13, "sent_by": null, "type_id": 76455, "is_public": false, "is_hotlist": false, "create_date": "2023-10-12T02:25:25.069359", "description": null, "modified_date": null}	{"name": "traits", "owner": 41, "list_id": 13, "sent_by": null, "type_id": 76455, "is_public": false, "is_hotlist": false, "create_date": "0001-01-01T00:00:00", "description": null, "modified_date": "0001-01-01T00:00:00"}	2026-03-02 13:48:04.086685-0749772	15	f
 \.
 
 
@@ -35718,7 +36749,7 @@ COPY audit.sp_person_roles_audit (audit_ts, operation, username, logged_in_user,
 --
 
 COPY audit.sp_roles_audit (audit_ts, operation, username, logged_in_user, before, after, transactioncode, sp_roles_audit_id, is_undo) FROM stdin;
-2025-03-25 13:50:33.580129+00	INSERT	postgres	\N	\N	{"name": "breeder", "sp_role_id": 8}	2025-03-25 13:50:33.580129+003439392	1	f
+2025-03-25 07:50:33.580129-06	INSERT	postgres	\N	\N	{"name": "breeder", "sp_role_id": 8}	2025-03-25 13:50:33.580129+003439392	1	f
 \.
 
 
@@ -36620,6 +37651,7 @@ COPY metadata.md_dbversion (dbversion_id, patch_name, patch_description, metadat
 95	LinkPlantEntriesToProject	This patch updates the way that plant entries were being created and stored. Previously, plant entries were not linked directly to the project they are in. This made uploading of phenotypes slow because of additional searches to go from plant to plot to project. Now the connnection of plant to project is available.\n	106
 96	AddPlantOfCvterm	This patch will find_or_create a cvterm name of vector, which is a new stock type\n	107
 97	PlantEntriesInheritPlotProperties	This patch updates the way that plant entries were being created and stored. Previously, plant entries did not inherit plot properties (block, replicate, plot number), as well as a relationship to the accession. Now they are created with these associations.\n	108
+313	UpdateListTypeLocusCvterms	This patch adds locus and locus_alleles list type\n	324
 98	RenameObsoleteStocks	This patch renames obsolete stocks by adding _OBSOLETED and a timestamp to the end of the uniquename and name. This then allows new stocks to be added with the same name as the obsoleted stock.\n	109
 99	AddNdprotocolDescriptionChado	patch for adding descriotion column to chado table nd_protocol. This change will go into Chado version 1.4. DO NOT ALTER CHADO TABLES WITHOUT COORDINATING FIRST WITH GMOD!\n	110
 100	RedefineStockViews	This patch updates the materialized view that stores traits\n	111
@@ -36824,6 +37856,31 @@ COPY metadata.md_dbversion (dbversion_id, patch_name, patch_description, metadat
 299	AddAnalysisResultStockType	Description of this patch goes here\n	310
 300	UpdateMaterializedPhenoviewTissueSample	This patch updates the materialized_phenoview by adding tissue sample to the view\n	311
 301	AddMaterialTypeCvterm	This patch adds the 'material_type' stock_property cvterm\n	312
+302	SetListTimestampsForTests	This patch sets the created/modified dates of lists used for testing\n	313
+303	AddFilesStockLinkingTable	Adds the linking table between files and stock to Phenome\n	314
+304	AddOrganismsToMaterializedview	This patch updates the materialized_phenoview by adding tissue sample to the view\n	315
+305	CreateFuzzyExtensionAndIndexes	This patch creates the extension pg_trgm for use of the similarity function for fuzzy search, as well as GIN index and btree index on LOWER(uniquename) on the stock table.\n	316
+306	AddJobsTable	Adds sp_job table to sgn_people for submitted job tracking\n	317
+307	AddMetadataOnto	This patch adds the 'metadata_ontology' composable_cvtypes cvterm\n	318
+308	AddObsoletedStocksListTypeCvterm	This patch adds the 'obsoleted_stocks' list_types cvterm\n	319
+309	AddBiochemOnto	This patch adds the 'biochem_ontology' composable_cvtypes cvterm\n	320
+310	AddControlRelatedCvterms	This patch adds the 'control_of' stock_relationship cvterm and is_a_transformation_control stock_property cvterm\n	321
+311	AddSpATSSpatialModelType	This patch adds the 'spatial_model_SpATS' protocol_type cvterm as well as a corresponding cvterm for the SGNStatistics_ontology\n	322
+312	AddTraitPropRepeatType	Description of this patch goes here\n	323
+314	AddVariableOfRel	This patch adds the following cvterms to the relationship ontology: VARIABLE_OF, method_of, scale_of\n	325
+315	UpdateTraitsView	This patch updates the public.traits view\n	326
+316	UpdateVariableOfTypeId	This patch updates cvterm_relationship.type_id = VARIABLE_OF from the cv.name = relationship ontology\n	327
+317	AddVectorStockPropsToMatviewStockprop3	 This patch changes the rank from being stored as a string to being stored as a number.	328
+318	AddVectorViewerCvterms	This patch adds cvterms for standard process interactive drone imagery\n	329
+319	AddNumberOfInsertionsCvterm	This patch adds the 'number_of_insertions' stock_property cvterm\n	330
+320	AddLocusGenoMarkerTable	This patch creates the phenome.locus_geno_marker table\n	331
+321	AddManagementRegimeProjectProp	Adds a projectprop to store project management data. Replaces field management factors, which were deprecated and separated into treatments and management regimes.\n	332
+322	AddSubplotToMatview	This patch updates the materialized_phenoview by adding tissue sample to the view\n	333
+323	CreateExperimentTreatmentCV	Creates a controlled vocabulary for experimental treatments. Paired with an ontology that tracks experimental treatments like traits. \n	335
+324	AddAccessionIdCvterm	Adds the cvterm "accessions_ids" under cv "list_types", linked to dbxref "local:accessions_ids".\n	336
+325	AddAccessionIdSearch	This patch updates the materialized_phenoview by adding tissue sample to the view\n	337
+326	FixTissueSampleSearch	This patch updates the materialized_phenoview by adding tissue sample to the view\n	338
+327	AddDerivedAccessionRelatedCvterms	This patch adds the 'derived_from' stock_relationship cvterm\n	339
 \.
 
 
@@ -36833,6 +37890,7 @@ COPY metadata.md_dbversion (dbversion_id, patch_name, patch_description, metadat
 
 COPY metadata.md_files (file_id, basename, dirname, filetype, alt_filename, comment, md5checksum, metadata_id, urlsource, urlsource_md5checksum) FROM stdin;
 5	2017-04-21_21:11:28_cass_phenotypes_updated.xls	/data/prod/archive/40/spreadsheet_phenotype_upload	spreadsheet phenotype file	\N	\N	d54e546f7942d1bf7ad48bcea9948960	62	\N	\N
+6	none	.	treatment project conversion patch	\N	\N	\N	334	\N	\N
 \.
 
 
@@ -36880,7 +37938,7 @@ COPY metadata.md_image_organism (md_image_organism_id, image_id, organism_id, sp
 -- Data for Name: md_json; Type: TABLE DATA; Schema: metadata; Owner: postgres
 --
 
-COPY metadata.md_json (json_id, json_type, json) FROM stdin;
+COPY metadata.md_json (json_id, json_type, "json") FROM stdin;
 \.
 
 
@@ -36889,316 +37947,343 @@ COPY metadata.md_json (json_id, json_type, json) FROM stdin;
 --
 
 COPY metadata.md_metadata (metadata_id, create_date, create_person_id, modified_date, modified_person_id, modification_note, previous_metadata_id, obsolete, obsolete_note, permission_id) FROM stdin;
-17	2014-01-03 17:44:29.059282+00	40	\N	\N	\N	\N	0	\N	\N
-18	2014-01-03 22:13:32.335503+00	40	\N	\N	\N	\N	1	\N	\N
-29	2015-02-04 20:06:40.169408+00	41	\N	\N	\N	\N	0	\N	\N
-30	2015-02-06 16:07:45.355755+00	41	\N	\N	\N	\N	0	\N	\N
-31	2015-02-06 20:07:38.136354+00	41	\N	\N	\N	\N	0	\N	\N
-1	2011-12-20 17:58:26.736933+00	41	\N	\N	\N	\N	0	\N	\N
-2	2011-12-20 17:59:02.671505+00	41	\N	\N	\N	\N	0	\N	\N
-3	2011-12-20 17:59:19.844545+00	41	\N	\N	\N	\N	0	\N	\N
-4	2012-01-19 20:46:35.153106+00	41	\N	\N	\N	\N	0	\N	\N
-5	2012-01-23 17:25:06.637079+00	41	\N	\N	\N	\N	0	\N	\N
-6	2012-06-28 20:34:36.265863+00	41	\N	\N	\N	\N	0	\N	\N
-7	2012-06-28 20:35:00.551065+00	41	\N	\N	\N	\N	0	\N	\N
-8	2012-06-28 20:36:04.901638+00	41	\N	\N	\N	\N	0	\N	\N
-9	2012-06-28 20:36:30.035938+00	41	\N	\N	\N	\N	0	\N	\N
-12	2013-10-09 14:47:20.320423+00	41	\N	\N	\N	\N	0	\N	\N
-13	2013-10-09 14:49:37.243178+00	41	\N	\N	\N	\N	0	\N	\N
-14	2013-10-09 14:49:49.683672+00	41	\N	\N	\N	\N	0	\N	\N
-15	2013-10-09 14:50:09.982246+00	41	\N	\N	\N	\N	0	\N	\N
-16	2013-10-09 14:50:46.875676+00	41	\N	\N	\N	\N	0	\N	\N
-19	2014-01-10 23:11:16.337745+00	41	\N	\N	\N	\N	0	\N	\N
-20	2014-02-13 00:42:52.573584+00	41	\N	\N	\N	\N	0	\N	\N
-21	2014-12-19 14:12:05.270521+00	41	\N	\N	\N	\N	0	\N	\N
-22	2014-12-19 14:14:21.150006+00	41	\N	\N	\N	\N	0	\N	\N
-23	2014-12-19 14:14:53.610443+00	41	\N	\N	\N	\N	0	\N	\N
-24	2014-12-19 14:15:25.567852+00	41	\N	\N	\N	\N	0	\N	\N
-25	2014-12-19 14:16:05.753633+00	41	\N	\N	\N	\N	0	\N	\N
-26	2014-12-19 14:16:25.843792+00	41	\N	\N	\N	\N	0	\N	\N
-27	2014-12-19 14:26:02.50047+00	41	\N	\N	\N	\N	0	\N	\N
-28	2014-12-19 21:22:22.583344+00	41	\N	\N	\N	\N	0	\N	\N
-32	2015-06-02 12:16:04.529974+00	41	\N	\N	\N	\N	0	\N	\N
-33	2016-02-04 18:58:52.339025+00	41	\N	\N	\N	\N	0	\N	\N
-34	2016-02-04 18:59:53.76135+00	41	\N	\N	\N	\N	0	\N	\N
-35	2016-02-04 19:00:26.992463+00	41	\N	\N	\N	\N	0	\N	\N
-36	2016-02-04 19:00:53.818881+00	41	\N	\N	\N	\N	0	\N	\N
-37	2016-02-17 20:34:04.967354+00	40	\N	\N	\N	\N	0	\N	\N
-38	2016-02-25 21:29:32.465167+00	40	\N	\N	\N	\N	0	\N	\N
-39	2016-03-07 17:28:59.083711+00	41	\N	\N	\N	\N	0	\N	\N
-40	2016-03-07 17:29:05.349106+00	41	\N	\N	\N	\N	0	\N	\N
-41	2016-03-07 17:30:33.01634+00	41	\N	\N	\N	\N	0	\N	\N
-42	2016-03-07 17:30:48.618187+00	41	\N	\N	\N	\N	0	\N	\N
-43	2016-03-07 17:30:59.870503+00	41	\N	\N	\N	\N	0	\N	\N
-44	2016-03-08 02:08:23.919972+00	41	\N	\N	\N	\N	0	\N	\N
-45	2016-03-08 03:35:28.565872+00	41	\N	\N	\N	\N	0	\N	\N
-46	2016-05-09 17:54:13.75916+00	41	\N	\N	\N	\N	0	\N	\N
-47	2016-05-09 21:49:25.421545+00	41	\N	\N	\N	\N	0	\N	\N
-48	2016-05-12 21:14:24.101559+00	41	\N	\N	\N	\N	0	\N	\N
-49	2016-08-02 16:57:34.432201+00	40	\N	\N	\N	\N	0	\N	\N
-50	2016-08-02 16:57:57.411613+00	40	\N	\N	\N	\N	0	\N	\N
-51	2016-08-04 15:35:21.249132+00	40	\N	\N	\N	\N	0	\N	\N
-52	2016-10-12 17:29:59.74206+00	41	\N	\N	\N	\N	0	\N	\N
-53	2016-10-17 17:51:17.740278+00	41	\N	\N	\N	\N	0	\N	\N
-54	2016-11-11 14:47:39.732402+00	41	\N	\N	\N	\N	0	\N	\N
-55	2017-01-04 15:25:47.878796+00	41	\N	\N	\N	\N	0	\N	\N
-56	2017-02-20 21:54:13.041208+00	41	\N	\N	\N	\N	0	\N	\N
-57	2017-03-28 18:48:59.237899+00	41	\N	\N	\N	\N	0	\N	\N
-58	2017-04-21 20:38:42.140825+00	40	\N	\N	\N	\N	0	\N	\N
-59	2017-04-21 20:38:47.264129+00	40	\N	\N	\N	\N	0	\N	\N
-60	2017-04-21 20:40:28.934828+00	40	\N	\N	\N	\N	0	\N	\N
-61	2017-04-21 20:40:54.719142+00	40	\N	\N	\N	\N	0	\N	\N
-62	2017-04-21 21:12:02.017627+00	40	\N	\N	\N	\N	0	\N	\N
-63	2017-05-08 16:12:57.002519+00	41	\N	\N	\N	\N	0	\N	\N
-64	2017-05-31 14:08:18.88001+00	41	\N	\N	\N	\N	0	\N	\N
-65	2017-06-08 16:11:32.805234+00	41	\N	\N	\N	\N	0	\N	\N
-66	2017-06-08 16:53:22.864556+00	41	\N	\N	\N	\N	0	\N	\N
-67	2017-06-30 13:41:36.162383+00	41	\N	\N	\N	\N	0	\N	\N
-68	2017-06-30 13:41:47.39034+00	41	\N	\N	\N	\N	0	\N	\N
-69	2017-07-17 17:31:42.837473+00	41	\N	\N	\N	\N	0	\N	\N
-70	2017-07-27 19:09:24.635054+00	41	\N	\N	\N	\N	0	\N	\N
-71	2017-07-27 19:09:56.99407+00	41	\N	\N	\N	\N	0	\N	\N
-72	2017-08-16 18:07:04.409576+00	41	\N	\N	\N	\N	0	\N	\N
-73	2017-08-16 18:07:17.022312+00	41	\N	\N	\N	\N	0	\N	\N
-74	2017-08-16 18:07:38.778388+00	41	\N	\N	\N	\N	0	\N	\N
-75	2017-09-01 17:08:01.703879+00	41	\N	\N	\N	\N	0	\N	\N
-76	2017-09-18 15:42:28.250977+00	41	\N	\N	\N	\N	0	\N	\N
-77	2017-09-18 15:43:58.719398+00	41	\N	\N	\N	\N	0	\N	\N
-78	2017-10-10 15:10:41.4496+00	41	\N	\N	\N	\N	0	\N	\N
-79	2017-10-10 15:10:52.863376+00	41	\N	\N	\N	\N	0	\N	\N
-80	2017-10-10 15:11:22.791118+00	41	\N	\N	\N	\N	0	\N	\N
-81	2017-10-10 15:13:14.819036+00	41	\N	\N	\N	\N	0	\N	\N
-82	2017-10-10 15:13:30.873535+00	41	\N	\N	\N	\N	0	\N	\N
-83	2017-10-10 15:17:59.09749+00	41	\N	\N	\N	\N	0	\N	\N
-84	2017-10-10 18:46:10.177605+00	41	\N	\N	\N	\N	0	\N	\N
-85	2017-10-28 09:27:19.914912+00	41	\N	\N	\N	\N	0	\N	\N
-86	2017-10-28 09:27:31.016472+00	41	\N	\N	\N	\N	0	\N	\N
-87	2018-03-15 18:22:23.716655+00	41	\N	\N	\N	\N	0	\N	\N
-88	2018-03-15 18:22:38.694441+00	41	\N	\N	\N	\N	0	\N	\N
-89	2018-03-15 18:22:50.086659+00	41	\N	\N	\N	\N	0	\N	\N
-90	2018-03-15 18:23:18.356881+00	41	\N	\N	\N	\N	0	\N	\N
-91	2018-03-15 18:23:27.198638+00	41	\N	\N	\N	\N	0	\N	\N
-92	2018-03-15 18:23:42.849766+00	41	\N	\N	\N	\N	0	\N	\N
-93	2018-03-15 18:23:53.182309+00	41	\N	\N	\N	\N	0	\N	\N
-94	2018-03-15 18:24:08.119533+00	41	\N	\N	\N	\N	0	\N	\N
-95	2018-03-15 18:24:20.893402+00	41	\N	\N	\N	\N	0	\N	\N
-96	2018-03-15 18:24:30.449553+00	41	\N	\N	\N	\N	0	\N	\N
-97	2018-03-15 18:24:48.650789+00	41	\N	\N	\N	\N	0	\N	\N
-98	2018-03-15 18:25:52.818933+00	41	\N	\N	\N	\N	0	\N	\N
-99	2018-03-15 18:27:22.075265+00	41	\N	\N	\N	\N	0	\N	\N
-100	2018-03-15 18:27:31.137628+00	41	\N	\N	\N	\N	0	\N	\N
-101	2018-03-15 18:27:34.05858+00	41	\N	\N	\N	\N	0	\N	\N
-102	2018-03-15 18:27:35.098042+00	41	\N	\N	\N	\N	0	\N	\N
-103	2018-03-15 18:27:36.863938+00	41	\N	\N	\N	\N	0	\N	\N
-104	2018-03-15 18:27:44.327055+00	41	\N	\N	\N	\N	0	\N	\N
-105	2018-03-15 18:27:47.338533+00	41	\N	\N	\N	\N	0	\N	\N
-106	2018-03-15 18:27:50.954148+00	41	\N	\N	\N	\N	0	\N	\N
-107	2018-03-15 18:27:54.330223+00	41	\N	\N	\N	\N	0	\N	\N
-108	2018-03-15 18:28:04.11018+00	41	\N	\N	\N	\N	0	\N	\N
-109	2018-03-15 18:28:07.980957+00	41	\N	\N	\N	\N	0	\N	\N
-110	2018-03-15 18:28:09.301863+00	41	\N	\N	\N	\N	0	\N	\N
-111	2018-03-15 18:28:10.524295+00	41	\N	\N	\N	\N	0	\N	\N
-112	2018-03-15 18:28:12.704359+00	41	\N	\N	\N	\N	0	\N	\N
-113	2018-03-15 18:28:14.967406+00	41	\N	\N	\N	\N	0	\N	\N
-114	2018-03-15 18:28:17.296695+00	41	\N	\N	\N	\N	0	\N	\N
-115	2018-03-15 18:28:19.55644+00	41	\N	\N	\N	\N	0	\N	\N
-116	2018-03-15 18:33:22.456325+00	41	\N	\N	\N	\N	0	\N	\N
-117	2018-03-15 18:34:21.334624+00	41	\N	\N	\N	\N	0	\N	\N
-118	2018-03-15 18:35:12.538822+00	41	\N	\N	\N	\N	0	\N	\N
-119	2018-03-15 18:36:00.770895+00	41	\N	\N	\N	\N	0	\N	\N
-120	2018-03-15 18:36:49.307398+00	41	\N	\N	\N	\N	0	\N	\N
-121	2018-03-15 18:39:49.100827+00	41	\N	\N	\N	\N	0	\N	\N
-122	2018-03-15 18:40:54.965061+00	41	\N	\N	\N	\N	0	\N	\N
-123	2018-03-15 18:41:46.412116+00	41	\N	\N	\N	\N	0	\N	\N
-124	2018-03-15 18:42:55.118412+00	41	\N	\N	\N	\N	0	\N	\N
-125	2018-03-15 18:43:42.52683+00	41	\N	\N	\N	\N	0	\N	\N
-126	2018-03-15 18:44:43.779954+00	41	\N	\N	\N	\N	0	\N	\N
-127	2018-03-15 18:46:05.081789+00	41	\N	\N	\N	\N	0	\N	\N
-128	2018-03-15 18:47:06.79931+00	41	\N	\N	\N	\N	0	\N	\N
-129	2018-03-15 18:47:49.912357+00	41	\N	\N	\N	\N	0	\N	\N
-130	2018-03-15 18:48:31.490473+00	41	\N	\N	\N	\N	0	\N	\N
-131	2018-03-15 18:49:17.403215+00	41	\N	\N	\N	\N	0	\N	\N
-132	2018-03-15 18:50:01.866697+00	41	\N	\N	\N	\N	0	\N	\N
-133	2018-03-15 18:52:01.920667+00	41	\N	\N	\N	\N	0	\N	\N
-134	2018-03-15 18:56:21.786723+00	41	\N	\N	\N	\N	0	\N	\N
-135	2018-03-15 18:57:23.524967+00	41	\N	\N	\N	\N	0	\N	\N
-136	2018-03-15 18:59:13.473233+00	41	\N	\N	\N	\N	0	\N	\N
-137	2018-08-07 19:33:30.680892+00	41	\N	\N	\N	\N	0	\N	\N
-138	2018-08-07 19:33:32.459585+00	41	\N	\N	\N	\N	0	\N	\N
-139	2018-08-07 19:33:34.412633+00	41	\N	\N	\N	\N	0	\N	\N
-140	2018-08-07 19:33:36.167087+00	41	\N	\N	\N	\N	0	\N	\N
-141	2018-08-07 19:33:37.222176+00	41	\N	\N	\N	\N	0	\N	\N
-142	2018-08-07 19:33:38.900354+00	41	\N	\N	\N	\N	0	\N	\N
-143	2018-08-07 19:33:41.547063+00	41	\N	\N	\N	\N	0	\N	\N
-144	2018-08-07 19:33:44.11407+00	41	\N	\N	\N	\N	0	\N	\N
-145	2018-08-07 19:33:45.851851+00	41	\N	\N	\N	\N	0	\N	\N
-146	2018-08-07 19:33:47.617691+00	41	\N	\N	\N	\N	0	\N	\N
-147	2018-08-07 19:33:50.103259+00	41	\N	\N	\N	\N	0	\N	\N
-148	2018-08-07 19:33:52.612056+00	41	\N	\N	\N	\N	0	\N	\N
-149	2018-08-07 19:33:55.128981+00	41	\N	\N	\N	\N	0	\N	\N
-150	2018-08-19 22:28:38.254282+00	41	\N	\N	\N	\N	0	\N	\N
-151	2018-08-19 22:28:41.219338+00	41	\N	\N	\N	\N	0	\N	\N
-152	2018-10-17 19:34:10.537627+00	41	\N	\N	\N	\N	0	\N	\N
-153	2018-10-17 19:34:11.840185+00	41	\N	\N	\N	\N	0	\N	\N
-154	2018-10-17 19:34:13.089358+00	41	\N	\N	\N	\N	0	\N	\N
-155	2018-10-17 19:34:15.04039+00	41	\N	\N	\N	\N	0	\N	\N
-156	2018-10-17 19:34:17.251416+00	41	\N	\N	\N	\N	0	\N	\N
-157	2018-10-17 19:34:19.268252+00	41	\N	\N	\N	\N	0	\N	\N
-158	2019-04-03 19:07:52.723312+00	41	\N	\N	\N	\N	0	\N	\N
-159	2019-04-03 19:07:53.774721+00	41	\N	\N	\N	\N	0	\N	\N
-160	2019-04-03 19:07:55.444201+00	41	\N	\N	\N	\N	0	\N	\N
-161	2019-04-03 19:07:57.201098+00	41	\N	\N	\N	\N	0	\N	\N
-162	2019-04-03 19:07:58.878388+00	41	\N	\N	\N	\N	0	\N	\N
-163	2019-06-05 21:33:52.895902+00	41	\N	\N	\N	\N	0	\N	\N
-164	2019-06-05 21:33:54.076159+00	41	\N	\N	\N	\N	0	\N	\N
-165	2019-08-06 16:35:16.339494+00	41	\N	\N	\N	\N	0	\N	\N
-166	2019-08-06 16:35:17.89881+00	41	\N	\N	\N	\N	0	\N	\N
-167	2019-08-06 16:35:19.280207+00	41	\N	\N	\N	\N	0	\N	\N
-168	2019-08-06 16:35:21.282284+00	41	\N	\N	\N	\N	0	\N	\N
-169	2019-08-06 16:35:22.148169+00	41	\N	\N	\N	\N	0	\N	\N
-170	2019-08-07 22:56:34.894513+00	41	\N	\N	\N	\N	0	\N	\N
-171	2020-01-22 20:12:16.928502+00	41	\N	\N	\N	\N	0	\N	\N
-172	2020-01-22 20:12:29.485024+00	41	\N	\N	\N	\N	0	\N	\N
-173	2020-01-22 20:12:31.038054+00	41	\N	\N	\N	\N	0	\N	\N
-174	2020-01-22 20:12:33.972515+00	41	\N	\N	\N	\N	0	\N	\N
-175	2020-01-22 20:12:36.71407+00	41	\N	\N	\N	\N	0	\N	\N
-176	2020-01-22 20:12:39.453074+00	41	\N	\N	\N	\N	0	\N	\N
-177	2020-01-22 20:12:42.868603+00	41	\N	\N	\N	\N	0	\N	\N
-178	2020-01-22 20:12:45.743603+00	41	\N	\N	\N	\N	0	\N	\N
-179	2020-01-22 20:12:48.129976+00	41	\N	\N	\N	\N	0	\N	\N
-180	2020-02-21 19:26:14.344237+00	41	\N	\N	\N	\N	0	\N	\N
-181	2020-02-21 19:26:16.286043+00	41	\N	\N	\N	\N	0	\N	\N
-182	2020-02-21 19:26:18.454662+00	41	\N	\N	\N	\N	0	\N	\N
-183	2020-04-09 13:22:22.418349+00	41	\N	\N	\N	\N	0	\N	\N
-184	2020-04-09 13:22:24.149656+00	41	\N	\N	\N	\N	0	\N	\N
-185	2020-04-09 13:22:28.130221+00	41	\N	\N	\N	\N	0	\N	\N
-186	2020-04-09 13:22:32.010266+00	41	\N	\N	\N	\N	0	\N	\N
-187	2020-04-09 13:22:34.336056+00	41	\N	\N	\N	\N	0	\N	\N
-188	2020-04-09 13:22:39.158713+00	41	\N	\N	\N	\N	0	\N	\N
-189	2020-06-12 20:26:36.993727+00	41	\N	\N	\N	\N	0	\N	\N
-190	2020-06-12 20:26:38.755021+00	41	\N	\N	\N	\N	0	\N	\N
-191	2020-06-12 20:26:43.691404+00	41	\N	\N	\N	\N	0	\N	\N
-192	2020-06-12 20:26:45.533921+00	41	\N	\N	\N	\N	0	\N	\N
-193	2020-06-12 20:26:48.197957+00	41	\N	\N	\N	\N	0	\N	\N
-194	2020-06-12 20:26:51.886815+00	41	\N	\N	\N	\N	0	\N	\N
-195	2020-06-27 16:44:08.895665+00	41	\N	\N	\N	\N	0	\N	\N
-196	2020-06-27 16:44:36.077826+00	41	\N	\N	\N	\N	0	\N	\N
-197	2020-06-27 16:45:22.718711+00	41	\N	\N	\N	\N	0	\N	\N
-198	2020-07-30 17:43:52.584809+00	41	\N	\N	\N	\N	0	\N	\N
-199	2020-07-30 17:43:55.591838+00	41	\N	\N	\N	\N	0	\N	\N
-200	2020-08-21 02:56:27.339518+00	41	\N	\N	\N	\N	0	\N	\N
-201	2020-08-21 02:56:28.830477+00	41	\N	\N	\N	\N	0	\N	\N
-202	2020-08-21 02:56:31.137185+00	41	\N	\N	\N	\N	0	\N	\N
-203	2020-09-04 21:12:51.94749+00	41	\N	\N	\N	\N	0	\N	\N
-204	2020-09-04 21:13:32.195896+00	41	\N	\N	\N	\N	0	\N	\N
-205	2020-09-14 15:41:49.728975+00	41	\N	\N	\N	\N	0	\N	\N
-206	2020-09-17 22:17:30.445775+00	41	\N	\N	\N	\N	0	\N	\N
-207	2020-09-17 22:17:43.703611+00	41	\N	\N	\N	\N	0	\N	\N
-208	2020-09-23 17:36:25.21148+00	41	\N	\N	\N	\N	0	\N	\N
-209	2020-10-03 22:04:09.879429+00	41	\N	\N	\N	\N	0	\N	\N
-210	2020-10-30 02:06:37.774722+00	41	\N	\N	\N	\N	0	\N	\N
-211	2020-10-30 02:07:00.112768+00	41	\N	\N	\N	\N	0	\N	\N
-212	2020-10-30 02:07:17.78852+00	41	\N	\N	\N	\N	0	\N	\N
-213	2021-06-30 21:53:36.074079+00	41	\N	\N	\N	\N	0	\N	\N
-214	2021-06-30 21:53:37.178907+00	41	\N	\N	\N	\N	0	\N	\N
-215	2021-06-30 21:53:38.730214+00	41	\N	\N	\N	\N	0	\N	\N
-216	2021-06-30 21:53:39.69192+00	41	\N	\N	\N	\N	0	\N	\N
-217	2021-06-30 21:53:40.316625+00	41	\N	\N	\N	\N	0	\N	\N
-218	2021-06-30 21:53:45.574544+00	41	\N	\N	\N	\N	0	\N	\N
-219	2021-06-30 21:53:46.992639+00	41	\N	\N	\N	\N	0	\N	\N
-220	2021-06-30 21:53:48.64999+00	41	\N	\N	\N	\N	0	\N	\N
-221	2021-06-30 21:53:50.269552+00	41	\N	\N	\N	\N	0	\N	\N
-222	2021-06-30 21:53:51.954108+00	41	\N	\N	\N	\N	0	\N	\N
-223	2021-06-30 21:53:53.571315+00	41	\N	\N	\N	\N	0	\N	\N
-224	2021-06-30 21:53:54.993173+00	41	\N	\N	\N	\N	0	\N	\N
-225	2021-06-30 21:53:55.650178+00	41	\N	\N	\N	\N	0	\N	\N
-226	2021-06-30 21:53:56.633128+00	41	\N	\N	\N	\N	0	\N	\N
-227	2021-06-30 21:53:57.355831+00	41	\N	\N	\N	\N	0	\N	\N
-228	2021-06-30 21:53:58.285948+00	41	\N	\N	\N	\N	0	\N	\N
-229	2021-06-30 21:53:59.405401+00	41	\N	\N	\N	\N	0	\N	\N
-230	2021-06-30 21:54:00.539285+00	41	\N	\N	\N	\N	0	\N	\N
-231	2021-06-30 21:54:01.575561+00	41	\N	\N	\N	\N	0	\N	\N
-232	2021-06-30 21:54:02.296014+00	41	\N	\N	\N	\N	0	\N	\N
-233	2021-06-30 21:54:03.506797+00	41	\N	\N	\N	\N	0	\N	\N
-234	2021-06-30 21:54:04.249792+00	41	\N	\N	\N	\N	0	\N	\N
-235	2021-06-30 21:54:04.852728+00	41	\N	\N	\N	\N	0	\N	\N
-236	2021-06-30 21:54:06.525751+00	41	\N	\N	\N	\N	0	\N	\N
-237	2021-06-30 21:54:07.859277+00	41	\N	\N	\N	\N	0	\N	\N
-238	2021-06-30 21:54:09.179136+00	41	\N	\N	\N	\N	0	\N	\N
-239	2021-06-30 21:54:10.400149+00	41	\N	\N	\N	\N	0	\N	\N
-240	2021-06-30 21:54:11.594453+00	41	\N	\N	\N	\N	0	\N	\N
-241	2021-06-30 21:54:12.625372+00	41	\N	\N	\N	\N	0	\N	\N
-242	2021-06-30 21:54:14.053852+00	41	\N	\N	\N	\N	0	\N	\N
-243	2021-06-30 21:54:14.789393+00	41	\N	\N	\N	\N	0	\N	\N
-244	2022-03-09 20:17:12.53019+00	41	\N	\N	\N	\N	0	\N	\N
-245	2022-03-09 20:17:13.221485+00	41	\N	\N	\N	\N	0	\N	\N
-246	2022-03-09 20:17:13.906099+00	41	\N	\N	\N	\N	0	\N	\N
-247	2022-03-09 20:17:14.552214+00	41	\N	\N	\N	\N	0	\N	\N
-248	2022-03-09 20:17:15.447919+00	41	\N	\N	\N	\N	0	\N	\N
-249	2022-03-09 20:17:16.380613+00	41	\N	\N	\N	\N	0	\N	\N
-250	2022-03-09 20:17:17.342918+00	41	\N	\N	\N	\N	0	\N	\N
-251	2022-03-09 20:17:18.865359+00	41	\N	\N	\N	\N	0	\N	\N
-252	2022-03-09 20:17:20.381542+00	41	\N	\N	\N	\N	0	\N	\N
-253	2022-03-09 20:17:21.782111+00	41	\N	\N	\N	\N	0	\N	\N
-254	2022-03-09 20:17:22.795421+00	41	\N	\N	\N	\N	0	\N	\N
-255	2022-03-09 20:17:24.187078+00	41	\N	\N	\N	\N	0	\N	\N
-256	2022-03-09 20:17:25.846525+00	41	\N	\N	\N	\N	0	\N	\N
-257	2022-03-09 20:17:27.300732+00	41	\N	\N	\N	\N	0	\N	\N
-258	2022-03-09 20:17:27.980606+00	41	\N	\N	\N	\N	0	\N	\N
-259	2023-06-30 14:43:04.21707+00	41	\N	\N	\N	\N	0	\N	\N
-260	2023-06-30 14:43:04.451821+00	41	\N	\N	\N	\N	0	\N	\N
-261	2023-06-30 14:43:05.757752+00	41	\N	\N	\N	\N	0	\N	\N
-262	2023-06-30 14:43:05.993801+00	41	\N	\N	\N	\N	0	\N	\N
-263	2023-06-30 14:43:06.324401+00	41	\N	\N	\N	\N	0	\N	\N
-264	2023-06-30 14:43:06.677565+00	41	\N	\N	\N	\N	0	\N	\N
-265	2023-06-30 14:43:07.035888+00	41	\N	\N	\N	\N	0	\N	\N
-266	2023-06-30 14:43:07.39564+00	41	\N	\N	\N	\N	0	\N	\N
-267	2023-06-30 14:43:07.756665+00	41	\N	\N	\N	\N	0	\N	\N
-268	2023-06-30 14:43:08.578488+00	41	\N	\N	\N	\N	0	\N	\N
-269	2023-06-30 14:43:08.930679+00	41	\N	\N	\N	\N	0	\N	\N
-270	2023-06-30 14:43:09.285796+00	41	\N	\N	\N	\N	0	\N	\N
-271	2023-06-30 14:43:09.847818+00	41	\N	\N	\N	\N	0	\N	\N
-272	2023-06-30 14:43:10.302698+00	41	\N	\N	\N	\N	0	\N	\N
-273	2023-06-30 14:43:10.657386+00	41	\N	\N	\N	\N	0	\N	\N
-274	2023-10-12 02:25:17.45577+00	41	\N	\N	\N	\N	0	\N	\N
-275	2023-10-12 02:25:17.970584+00	41	\N	\N	\N	\N	0	\N	\N
-276	2023-10-12 02:25:18.523491+00	41	\N	\N	\N	\N	0	\N	\N
-277	2023-10-12 02:25:19.394231+00	41	\N	\N	\N	\N	0	\N	\N
-278	2023-10-12 02:25:20.400082+00	41	\N	\N	\N	\N	0	\N	\N
-279	2023-10-12 02:25:21.10823+00	41	\N	\N	\N	\N	0	\N	\N
-280	2023-10-12 02:25:21.687409+00	41	\N	\N	\N	\N	0	\N	\N
-281	2023-10-12 02:25:22.283202+00	41	\N	\N	\N	\N	0	\N	\N
-282	2023-10-12 02:25:22.844239+00	41	\N	\N	\N	\N	0	\N	\N
-283	2023-10-12 02:25:23.406806+00	41	\N	\N	\N	\N	0	\N	\N
-284	2023-10-12 02:25:23.976199+00	41	\N	\N	\N	\N	0	\N	\N
-285	2023-10-12 02:25:24.514473+00	41	\N	\N	\N	\N	0	\N	\N
-286	2023-10-12 02:25:25.052292+00	41	\N	\N	\N	\N	0	\N	\N
-287	2023-10-12 02:25:25.606742+00	41	\N	\N	\N	\N	0	\N	\N
-288	2023-10-12 02:25:26.193329+00	41	\N	\N	\N	\N	0	\N	\N
-289	2023-10-12 02:25:26.785689+00	41	\N	\N	\N	\N	0	\N	\N
-290	2023-10-12 02:25:27.319444+00	41	\N	\N	\N	\N	0	\N	\N
-291	2023-10-12 02:25:27.875339+00	41	\N	\N	\N	\N	0	\N	\N
-292	2023-10-12 02:25:28.760042+00	41	\N	\N	\N	\N	0	\N	\N
-293	2024-12-17 13:57:12.926246+00	40	\N	\N	\N	\N	0	\N	\N
-294	2024-12-17 13:57:13.419244+00	40	\N	\N	\N	\N	0	\N	\N
-295	2024-12-17 13:57:13.894166+00	40	\N	\N	\N	\N	0	\N	\N
-296	2024-12-17 13:57:14.229536+00	40	\N	\N	\N	\N	0	\N	\N
-297	2024-12-17 13:57:14.699599+00	40	\N	\N	\N	\N	0	\N	\N
-298	2024-12-17 13:57:15.404042+00	40	\N	\N	\N	\N	0	\N	\N
-299	2024-12-17 13:57:16.554768+00	40	\N	\N	\N	\N	0	\N	\N
-300	2024-12-17 13:57:17.030854+00	40	\N	\N	\N	\N	0	\N	\N
-301	2024-12-17 13:57:17.566196+00	40	\N	\N	\N	\N	0	\N	\N
-302	2024-12-17 13:57:18.411818+00	40	\N	\N	\N	\N	0	\N	\N
-303	2024-12-17 13:57:20.255804+00	40	\N	\N	\N	\N	0	\N	\N
-304	2025-01-02 14:57:47.579387+00	40	\N	\N	\N	\N	0	\N	\N
-305	2025-01-02 14:57:48.104508+00	40	\N	\N	\N	\N	0	\N	\N
-306	2025-03-25 13:50:33.579321+00	40	\N	\N	\N	\N	0	\N	\N
-307	2025-03-25 13:50:34.01642+00	40	\N	\N	\N	\N	0	\N	\N
-308	2025-03-25 13:50:34.532584+00	40	\N	\N	\N	\N	0	\N	\N
-309	2025-03-25 13:50:34.872711+00	40	\N	\N	\N	\N	0	\N	\N
-310	2025-03-25 13:50:35.496086+00	40	\N	\N	\N	\N	0	\N	\N
-311	2025-03-25 13:50:35.829602+00	40	\N	\N	\N	\N	0	\N	\N
-312	2025-03-25 13:50:36.434487+00	40	\N	\N	\N	\N	0	\N	\N
+17	2014-01-03 10:44:29.059282-07	40	\N	\N	\N	\N	0	\N	\N
+18	2014-01-03 15:13:32.335503-07	40	\N	\N	\N	\N	1	\N	\N
+29	2015-02-04 13:06:40.169408-07	41	\N	\N	\N	\N	0	\N	\N
+30	2015-02-06 09:07:45.355755-07	41	\N	\N	\N	\N	0	\N	\N
+31	2015-02-06 13:07:38.136354-07	41	\N	\N	\N	\N	0	\N	\N
+1	2011-12-20 10:58:26.736933-07	41	\N	\N	\N	\N	0	\N	\N
+2	2011-12-20 10:59:02.671505-07	41	\N	\N	\N	\N	0	\N	\N
+3	2011-12-20 10:59:19.844545-07	41	\N	\N	\N	\N	0	\N	\N
+4	2012-01-19 13:46:35.153106-07	41	\N	\N	\N	\N	0	\N	\N
+5	2012-01-23 10:25:06.637079-07	41	\N	\N	\N	\N	0	\N	\N
+6	2012-06-28 14:34:36.265863-06	41	\N	\N	\N	\N	0	\N	\N
+7	2012-06-28 14:35:00.551065-06	41	\N	\N	\N	\N	0	\N	\N
+8	2012-06-28 14:36:04.901638-06	41	\N	\N	\N	\N	0	\N	\N
+9	2012-06-28 14:36:30.035938-06	41	\N	\N	\N	\N	0	\N	\N
+12	2013-10-09 08:47:20.320423-06	41	\N	\N	\N	\N	0	\N	\N
+13	2013-10-09 08:49:37.243178-06	41	\N	\N	\N	\N	0	\N	\N
+14	2013-10-09 08:49:49.683672-06	41	\N	\N	\N	\N	0	\N	\N
+15	2013-10-09 08:50:09.982246-06	41	\N	\N	\N	\N	0	\N	\N
+16	2013-10-09 08:50:46.875676-06	41	\N	\N	\N	\N	0	\N	\N
+19	2014-01-10 16:11:16.337745-07	41	\N	\N	\N	\N	0	\N	\N
+20	2014-02-12 17:42:52.573584-07	41	\N	\N	\N	\N	0	\N	\N
+21	2014-12-19 07:12:05.270521-07	41	\N	\N	\N	\N	0	\N	\N
+22	2014-12-19 07:14:21.150006-07	41	\N	\N	\N	\N	0	\N	\N
+23	2014-12-19 07:14:53.610443-07	41	\N	\N	\N	\N	0	\N	\N
+24	2014-12-19 07:15:25.567852-07	41	\N	\N	\N	\N	0	\N	\N
+25	2014-12-19 07:16:05.753633-07	41	\N	\N	\N	\N	0	\N	\N
+26	2014-12-19 07:16:25.843792-07	41	\N	\N	\N	\N	0	\N	\N
+27	2014-12-19 07:26:02.50047-07	41	\N	\N	\N	\N	0	\N	\N
+28	2014-12-19 14:22:22.583344-07	41	\N	\N	\N	\N	0	\N	\N
+32	2015-06-02 06:16:04.529974-06	41	\N	\N	\N	\N	0	\N	\N
+33	2016-02-04 11:58:52.339025-07	41	\N	\N	\N	\N	0	\N	\N
+34	2016-02-04 11:59:53.76135-07	41	\N	\N	\N	\N	0	\N	\N
+35	2016-02-04 12:00:26.992463-07	41	\N	\N	\N	\N	0	\N	\N
+36	2016-02-04 12:00:53.818881-07	41	\N	\N	\N	\N	0	\N	\N
+37	2016-02-17 13:34:04.967354-07	40	\N	\N	\N	\N	0	\N	\N
+38	2016-02-25 14:29:32.465167-07	40	\N	\N	\N	\N	0	\N	\N
+39	2016-03-07 10:28:59.083711-07	41	\N	\N	\N	\N	0	\N	\N
+40	2016-03-07 10:29:05.349106-07	41	\N	\N	\N	\N	0	\N	\N
+41	2016-03-07 10:30:33.01634-07	41	\N	\N	\N	\N	0	\N	\N
+42	2016-03-07 10:30:48.618187-07	41	\N	\N	\N	\N	0	\N	\N
+43	2016-03-07 10:30:59.870503-07	41	\N	\N	\N	\N	0	\N	\N
+44	2016-03-07 19:08:23.919972-07	41	\N	\N	\N	\N	0	\N	\N
+45	2016-03-07 20:35:28.565872-07	41	\N	\N	\N	\N	0	\N	\N
+46	2016-05-09 11:54:13.75916-06	41	\N	\N	\N	\N	0	\N	\N
+47	2016-05-09 15:49:25.421545-06	41	\N	\N	\N	\N	0	\N	\N
+48	2016-05-12 15:14:24.101559-06	41	\N	\N	\N	\N	0	\N	\N
+49	2016-08-02 10:57:34.432201-06	40	\N	\N	\N	\N	0	\N	\N
+50	2016-08-02 10:57:57.411613-06	40	\N	\N	\N	\N	0	\N	\N
+51	2016-08-04 09:35:21.249132-06	40	\N	\N	\N	\N	0	\N	\N
+52	2016-10-12 11:29:59.74206-06	41	\N	\N	\N	\N	0	\N	\N
+53	2016-10-17 11:51:17.740278-06	41	\N	\N	\N	\N	0	\N	\N
+54	2016-11-11 07:47:39.732402-07	41	\N	\N	\N	\N	0	\N	\N
+55	2017-01-04 08:25:47.878796-07	41	\N	\N	\N	\N	0	\N	\N
+56	2017-02-20 14:54:13.041208-07	41	\N	\N	\N	\N	0	\N	\N
+57	2017-03-28 12:48:59.237899-06	41	\N	\N	\N	\N	0	\N	\N
+58	2017-04-21 14:38:42.140825-06	40	\N	\N	\N	\N	0	\N	\N
+59	2017-04-21 14:38:47.264129-06	40	\N	\N	\N	\N	0	\N	\N
+60	2017-04-21 14:40:28.934828-06	40	\N	\N	\N	\N	0	\N	\N
+61	2017-04-21 14:40:54.719142-06	40	\N	\N	\N	\N	0	\N	\N
+62	2017-04-21 15:12:02.017627-06	40	\N	\N	\N	\N	0	\N	\N
+63	2017-05-08 10:12:57.002519-06	41	\N	\N	\N	\N	0	\N	\N
+64	2017-05-31 08:08:18.88001-06	41	\N	\N	\N	\N	0	\N	\N
+65	2017-06-08 10:11:32.805234-06	41	\N	\N	\N	\N	0	\N	\N
+66	2017-06-08 10:53:22.864556-06	41	\N	\N	\N	\N	0	\N	\N
+67	2017-06-30 07:41:36.162383-06	41	\N	\N	\N	\N	0	\N	\N
+68	2017-06-30 07:41:47.39034-06	41	\N	\N	\N	\N	0	\N	\N
+69	2017-07-17 11:31:42.837473-06	41	\N	\N	\N	\N	0	\N	\N
+70	2017-07-27 13:09:24.635054-06	41	\N	\N	\N	\N	0	\N	\N
+71	2017-07-27 13:09:56.99407-06	41	\N	\N	\N	\N	0	\N	\N
+72	2017-08-16 12:07:04.409576-06	41	\N	\N	\N	\N	0	\N	\N
+73	2017-08-16 12:07:17.022312-06	41	\N	\N	\N	\N	0	\N	\N
+74	2017-08-16 12:07:38.778388-06	41	\N	\N	\N	\N	0	\N	\N
+75	2017-09-01 11:08:01.703879-06	41	\N	\N	\N	\N	0	\N	\N
+76	2017-09-18 09:42:28.250977-06	41	\N	\N	\N	\N	0	\N	\N
+77	2017-09-18 09:43:58.719398-06	41	\N	\N	\N	\N	0	\N	\N
+78	2017-10-10 09:10:41.4496-06	41	\N	\N	\N	\N	0	\N	\N
+79	2017-10-10 09:10:52.863376-06	41	\N	\N	\N	\N	0	\N	\N
+80	2017-10-10 09:11:22.791118-06	41	\N	\N	\N	\N	0	\N	\N
+81	2017-10-10 09:13:14.819036-06	41	\N	\N	\N	\N	0	\N	\N
+82	2017-10-10 09:13:30.873535-06	41	\N	\N	\N	\N	0	\N	\N
+83	2017-10-10 09:17:59.09749-06	41	\N	\N	\N	\N	0	\N	\N
+84	2017-10-10 12:46:10.177605-06	41	\N	\N	\N	\N	0	\N	\N
+85	2017-10-28 03:27:19.914912-06	41	\N	\N	\N	\N	0	\N	\N
+86	2017-10-28 03:27:31.016472-06	41	\N	\N	\N	\N	0	\N	\N
+87	2018-03-15 12:22:23.716655-06	41	\N	\N	\N	\N	0	\N	\N
+88	2018-03-15 12:22:38.694441-06	41	\N	\N	\N	\N	0	\N	\N
+89	2018-03-15 12:22:50.086659-06	41	\N	\N	\N	\N	0	\N	\N
+90	2018-03-15 12:23:18.356881-06	41	\N	\N	\N	\N	0	\N	\N
+91	2018-03-15 12:23:27.198638-06	41	\N	\N	\N	\N	0	\N	\N
+92	2018-03-15 12:23:42.849766-06	41	\N	\N	\N	\N	0	\N	\N
+93	2018-03-15 12:23:53.182309-06	41	\N	\N	\N	\N	0	\N	\N
+94	2018-03-15 12:24:08.119533-06	41	\N	\N	\N	\N	0	\N	\N
+95	2018-03-15 12:24:20.893402-06	41	\N	\N	\N	\N	0	\N	\N
+96	2018-03-15 12:24:30.449553-06	41	\N	\N	\N	\N	0	\N	\N
+97	2018-03-15 12:24:48.650789-06	41	\N	\N	\N	\N	0	\N	\N
+98	2018-03-15 12:25:52.818933-06	41	\N	\N	\N	\N	0	\N	\N
+99	2018-03-15 12:27:22.075265-06	41	\N	\N	\N	\N	0	\N	\N
+100	2018-03-15 12:27:31.137628-06	41	\N	\N	\N	\N	0	\N	\N
+101	2018-03-15 12:27:34.05858-06	41	\N	\N	\N	\N	0	\N	\N
+102	2018-03-15 12:27:35.098042-06	41	\N	\N	\N	\N	0	\N	\N
+103	2018-03-15 12:27:36.863938-06	41	\N	\N	\N	\N	0	\N	\N
+104	2018-03-15 12:27:44.327055-06	41	\N	\N	\N	\N	0	\N	\N
+105	2018-03-15 12:27:47.338533-06	41	\N	\N	\N	\N	0	\N	\N
+106	2018-03-15 12:27:50.954148-06	41	\N	\N	\N	\N	0	\N	\N
+107	2018-03-15 12:27:54.330223-06	41	\N	\N	\N	\N	0	\N	\N
+108	2018-03-15 12:28:04.11018-06	41	\N	\N	\N	\N	0	\N	\N
+109	2018-03-15 12:28:07.980957-06	41	\N	\N	\N	\N	0	\N	\N
+110	2018-03-15 12:28:09.301863-06	41	\N	\N	\N	\N	0	\N	\N
+111	2018-03-15 12:28:10.524295-06	41	\N	\N	\N	\N	0	\N	\N
+112	2018-03-15 12:28:12.704359-06	41	\N	\N	\N	\N	0	\N	\N
+113	2018-03-15 12:28:14.967406-06	41	\N	\N	\N	\N	0	\N	\N
+114	2018-03-15 12:28:17.296695-06	41	\N	\N	\N	\N	0	\N	\N
+115	2018-03-15 12:28:19.55644-06	41	\N	\N	\N	\N	0	\N	\N
+116	2018-03-15 12:33:22.456325-06	41	\N	\N	\N	\N	0	\N	\N
+117	2018-03-15 12:34:21.334624-06	41	\N	\N	\N	\N	0	\N	\N
+118	2018-03-15 12:35:12.538822-06	41	\N	\N	\N	\N	0	\N	\N
+119	2018-03-15 12:36:00.770895-06	41	\N	\N	\N	\N	0	\N	\N
+120	2018-03-15 12:36:49.307398-06	41	\N	\N	\N	\N	0	\N	\N
+121	2018-03-15 12:39:49.100827-06	41	\N	\N	\N	\N	0	\N	\N
+122	2018-03-15 12:40:54.965061-06	41	\N	\N	\N	\N	0	\N	\N
+123	2018-03-15 12:41:46.412116-06	41	\N	\N	\N	\N	0	\N	\N
+124	2018-03-15 12:42:55.118412-06	41	\N	\N	\N	\N	0	\N	\N
+125	2018-03-15 12:43:42.52683-06	41	\N	\N	\N	\N	0	\N	\N
+126	2018-03-15 12:44:43.779954-06	41	\N	\N	\N	\N	0	\N	\N
+127	2018-03-15 12:46:05.081789-06	41	\N	\N	\N	\N	0	\N	\N
+128	2018-03-15 12:47:06.79931-06	41	\N	\N	\N	\N	0	\N	\N
+129	2018-03-15 12:47:49.912357-06	41	\N	\N	\N	\N	0	\N	\N
+130	2018-03-15 12:48:31.490473-06	41	\N	\N	\N	\N	0	\N	\N
+131	2018-03-15 12:49:17.403215-06	41	\N	\N	\N	\N	0	\N	\N
+132	2018-03-15 12:50:01.866697-06	41	\N	\N	\N	\N	0	\N	\N
+133	2018-03-15 12:52:01.920667-06	41	\N	\N	\N	\N	0	\N	\N
+134	2018-03-15 12:56:21.786723-06	41	\N	\N	\N	\N	0	\N	\N
+135	2018-03-15 12:57:23.524967-06	41	\N	\N	\N	\N	0	\N	\N
+136	2018-03-15 12:59:13.473233-06	41	\N	\N	\N	\N	0	\N	\N
+137	2018-08-07 13:33:30.680892-06	41	\N	\N	\N	\N	0	\N	\N
+138	2018-08-07 13:33:32.459585-06	41	\N	\N	\N	\N	0	\N	\N
+139	2018-08-07 13:33:34.412633-06	41	\N	\N	\N	\N	0	\N	\N
+140	2018-08-07 13:33:36.167087-06	41	\N	\N	\N	\N	0	\N	\N
+141	2018-08-07 13:33:37.222176-06	41	\N	\N	\N	\N	0	\N	\N
+142	2018-08-07 13:33:38.900354-06	41	\N	\N	\N	\N	0	\N	\N
+143	2018-08-07 13:33:41.547063-06	41	\N	\N	\N	\N	0	\N	\N
+144	2018-08-07 13:33:44.11407-06	41	\N	\N	\N	\N	0	\N	\N
+145	2018-08-07 13:33:45.851851-06	41	\N	\N	\N	\N	0	\N	\N
+146	2018-08-07 13:33:47.617691-06	41	\N	\N	\N	\N	0	\N	\N
+147	2018-08-07 13:33:50.103259-06	41	\N	\N	\N	\N	0	\N	\N
+148	2018-08-07 13:33:52.612056-06	41	\N	\N	\N	\N	0	\N	\N
+149	2018-08-07 13:33:55.128981-06	41	\N	\N	\N	\N	0	\N	\N
+150	2018-08-19 16:28:38.254282-06	41	\N	\N	\N	\N	0	\N	\N
+151	2018-08-19 16:28:41.219338-06	41	\N	\N	\N	\N	0	\N	\N
+152	2018-10-17 13:34:10.537627-06	41	\N	\N	\N	\N	0	\N	\N
+153	2018-10-17 13:34:11.840185-06	41	\N	\N	\N	\N	0	\N	\N
+154	2018-10-17 13:34:13.089358-06	41	\N	\N	\N	\N	0	\N	\N
+155	2018-10-17 13:34:15.04039-06	41	\N	\N	\N	\N	0	\N	\N
+156	2018-10-17 13:34:17.251416-06	41	\N	\N	\N	\N	0	\N	\N
+157	2018-10-17 13:34:19.268252-06	41	\N	\N	\N	\N	0	\N	\N
+158	2019-04-03 13:07:52.723312-06	41	\N	\N	\N	\N	0	\N	\N
+159	2019-04-03 13:07:53.774721-06	41	\N	\N	\N	\N	0	\N	\N
+160	2019-04-03 13:07:55.444201-06	41	\N	\N	\N	\N	0	\N	\N
+161	2019-04-03 13:07:57.201098-06	41	\N	\N	\N	\N	0	\N	\N
+162	2019-04-03 13:07:58.878388-06	41	\N	\N	\N	\N	0	\N	\N
+163	2019-06-05 15:33:52.895902-06	41	\N	\N	\N	\N	0	\N	\N
+164	2019-06-05 15:33:54.076159-06	41	\N	\N	\N	\N	0	\N	\N
+165	2019-08-06 10:35:16.339494-06	41	\N	\N	\N	\N	0	\N	\N
+166	2019-08-06 10:35:17.89881-06	41	\N	\N	\N	\N	0	\N	\N
+167	2019-08-06 10:35:19.280207-06	41	\N	\N	\N	\N	0	\N	\N
+168	2019-08-06 10:35:21.282284-06	41	\N	\N	\N	\N	0	\N	\N
+169	2019-08-06 10:35:22.148169-06	41	\N	\N	\N	\N	0	\N	\N
+170	2019-08-07 16:56:34.894513-06	41	\N	\N	\N	\N	0	\N	\N
+171	2020-01-22 13:12:16.928502-07	41	\N	\N	\N	\N	0	\N	\N
+172	2020-01-22 13:12:29.485024-07	41	\N	\N	\N	\N	0	\N	\N
+173	2020-01-22 13:12:31.038054-07	41	\N	\N	\N	\N	0	\N	\N
+174	2020-01-22 13:12:33.972515-07	41	\N	\N	\N	\N	0	\N	\N
+175	2020-01-22 13:12:36.71407-07	41	\N	\N	\N	\N	0	\N	\N
+176	2020-01-22 13:12:39.453074-07	41	\N	\N	\N	\N	0	\N	\N
+177	2020-01-22 13:12:42.868603-07	41	\N	\N	\N	\N	0	\N	\N
+178	2020-01-22 13:12:45.743603-07	41	\N	\N	\N	\N	0	\N	\N
+179	2020-01-22 13:12:48.129976-07	41	\N	\N	\N	\N	0	\N	\N
+180	2020-02-21 12:26:14.344237-07	41	\N	\N	\N	\N	0	\N	\N
+181	2020-02-21 12:26:16.286043-07	41	\N	\N	\N	\N	0	\N	\N
+182	2020-02-21 12:26:18.454662-07	41	\N	\N	\N	\N	0	\N	\N
+183	2020-04-09 07:22:22.418349-06	41	\N	\N	\N	\N	0	\N	\N
+184	2020-04-09 07:22:24.149656-06	41	\N	\N	\N	\N	0	\N	\N
+185	2020-04-09 07:22:28.130221-06	41	\N	\N	\N	\N	0	\N	\N
+186	2020-04-09 07:22:32.010266-06	41	\N	\N	\N	\N	0	\N	\N
+187	2020-04-09 07:22:34.336056-06	41	\N	\N	\N	\N	0	\N	\N
+188	2020-04-09 07:22:39.158713-06	41	\N	\N	\N	\N	0	\N	\N
+189	2020-06-12 14:26:36.993727-06	41	\N	\N	\N	\N	0	\N	\N
+190	2020-06-12 14:26:38.755021-06	41	\N	\N	\N	\N	0	\N	\N
+191	2020-06-12 14:26:43.691404-06	41	\N	\N	\N	\N	0	\N	\N
+192	2020-06-12 14:26:45.533921-06	41	\N	\N	\N	\N	0	\N	\N
+193	2020-06-12 14:26:48.197957-06	41	\N	\N	\N	\N	0	\N	\N
+194	2020-06-12 14:26:51.886815-06	41	\N	\N	\N	\N	0	\N	\N
+195	2020-06-27 10:44:08.895665-06	41	\N	\N	\N	\N	0	\N	\N
+196	2020-06-27 10:44:36.077826-06	41	\N	\N	\N	\N	0	\N	\N
+197	2020-06-27 10:45:22.718711-06	41	\N	\N	\N	\N	0	\N	\N
+198	2020-07-30 11:43:52.584809-06	41	\N	\N	\N	\N	0	\N	\N
+199	2020-07-30 11:43:55.591838-06	41	\N	\N	\N	\N	0	\N	\N
+200	2020-08-20 20:56:27.339518-06	41	\N	\N	\N	\N	0	\N	\N
+201	2020-08-20 20:56:28.830477-06	41	\N	\N	\N	\N	0	\N	\N
+202	2020-08-20 20:56:31.137185-06	41	\N	\N	\N	\N	0	\N	\N
+203	2020-09-04 15:12:51.94749-06	41	\N	\N	\N	\N	0	\N	\N
+204	2020-09-04 15:13:32.195896-06	41	\N	\N	\N	\N	0	\N	\N
+205	2020-09-14 09:41:49.728975-06	41	\N	\N	\N	\N	0	\N	\N
+206	2020-09-17 16:17:30.445775-06	41	\N	\N	\N	\N	0	\N	\N
+207	2020-09-17 16:17:43.703611-06	41	\N	\N	\N	\N	0	\N	\N
+208	2020-09-23 11:36:25.21148-06	41	\N	\N	\N	\N	0	\N	\N
+209	2020-10-03 16:04:09.879429-06	41	\N	\N	\N	\N	0	\N	\N
+210	2020-10-29 20:06:37.774722-06	41	\N	\N	\N	\N	0	\N	\N
+211	2020-10-29 20:07:00.112768-06	41	\N	\N	\N	\N	0	\N	\N
+212	2020-10-29 20:07:17.78852-06	41	\N	\N	\N	\N	0	\N	\N
+213	2021-06-30 15:53:36.074079-06	41	\N	\N	\N	\N	0	\N	\N
+214	2021-06-30 15:53:37.178907-06	41	\N	\N	\N	\N	0	\N	\N
+215	2021-06-30 15:53:38.730214-06	41	\N	\N	\N	\N	0	\N	\N
+216	2021-06-30 15:53:39.69192-06	41	\N	\N	\N	\N	0	\N	\N
+217	2021-06-30 15:53:40.316625-06	41	\N	\N	\N	\N	0	\N	\N
+218	2021-06-30 15:53:45.574544-06	41	\N	\N	\N	\N	0	\N	\N
+219	2021-06-30 15:53:46.992639-06	41	\N	\N	\N	\N	0	\N	\N
+220	2021-06-30 15:53:48.64999-06	41	\N	\N	\N	\N	0	\N	\N
+221	2021-06-30 15:53:50.269552-06	41	\N	\N	\N	\N	0	\N	\N
+222	2021-06-30 15:53:51.954108-06	41	\N	\N	\N	\N	0	\N	\N
+223	2021-06-30 15:53:53.571315-06	41	\N	\N	\N	\N	0	\N	\N
+224	2021-06-30 15:53:54.993173-06	41	\N	\N	\N	\N	0	\N	\N
+225	2021-06-30 15:53:55.650178-06	41	\N	\N	\N	\N	0	\N	\N
+226	2021-06-30 15:53:56.633128-06	41	\N	\N	\N	\N	0	\N	\N
+227	2021-06-30 15:53:57.355831-06	41	\N	\N	\N	\N	0	\N	\N
+228	2021-06-30 15:53:58.285948-06	41	\N	\N	\N	\N	0	\N	\N
+229	2021-06-30 15:53:59.405401-06	41	\N	\N	\N	\N	0	\N	\N
+230	2021-06-30 15:54:00.539285-06	41	\N	\N	\N	\N	0	\N	\N
+231	2021-06-30 15:54:01.575561-06	41	\N	\N	\N	\N	0	\N	\N
+232	2021-06-30 15:54:02.296014-06	41	\N	\N	\N	\N	0	\N	\N
+233	2021-06-30 15:54:03.506797-06	41	\N	\N	\N	\N	0	\N	\N
+234	2021-06-30 15:54:04.249792-06	41	\N	\N	\N	\N	0	\N	\N
+235	2021-06-30 15:54:04.852728-06	41	\N	\N	\N	\N	0	\N	\N
+236	2021-06-30 15:54:06.525751-06	41	\N	\N	\N	\N	0	\N	\N
+237	2021-06-30 15:54:07.859277-06	41	\N	\N	\N	\N	0	\N	\N
+238	2021-06-30 15:54:09.179136-06	41	\N	\N	\N	\N	0	\N	\N
+239	2021-06-30 15:54:10.400149-06	41	\N	\N	\N	\N	0	\N	\N
+240	2021-06-30 15:54:11.594453-06	41	\N	\N	\N	\N	0	\N	\N
+241	2021-06-30 15:54:12.625372-06	41	\N	\N	\N	\N	0	\N	\N
+242	2021-06-30 15:54:14.053852-06	41	\N	\N	\N	\N	0	\N	\N
+243	2021-06-30 15:54:14.789393-06	41	\N	\N	\N	\N	0	\N	\N
+244	2022-03-09 13:17:12.53019-07	41	\N	\N	\N	\N	0	\N	\N
+245	2022-03-09 13:17:13.221485-07	41	\N	\N	\N	\N	0	\N	\N
+246	2022-03-09 13:17:13.906099-07	41	\N	\N	\N	\N	0	\N	\N
+247	2022-03-09 13:17:14.552214-07	41	\N	\N	\N	\N	0	\N	\N
+248	2022-03-09 13:17:15.447919-07	41	\N	\N	\N	\N	0	\N	\N
+249	2022-03-09 13:17:16.380613-07	41	\N	\N	\N	\N	0	\N	\N
+250	2022-03-09 13:17:17.342918-07	41	\N	\N	\N	\N	0	\N	\N
+251	2022-03-09 13:17:18.865359-07	41	\N	\N	\N	\N	0	\N	\N
+252	2022-03-09 13:17:20.381542-07	41	\N	\N	\N	\N	0	\N	\N
+253	2022-03-09 13:17:21.782111-07	41	\N	\N	\N	\N	0	\N	\N
+254	2022-03-09 13:17:22.795421-07	41	\N	\N	\N	\N	0	\N	\N
+255	2022-03-09 13:17:24.187078-07	41	\N	\N	\N	\N	0	\N	\N
+256	2022-03-09 13:17:25.846525-07	41	\N	\N	\N	\N	0	\N	\N
+257	2022-03-09 13:17:27.300732-07	41	\N	\N	\N	\N	0	\N	\N
+258	2022-03-09 13:17:27.980606-07	41	\N	\N	\N	\N	0	\N	\N
+259	2023-06-30 08:43:04.21707-06	41	\N	\N	\N	\N	0	\N	\N
+260	2023-06-30 08:43:04.451821-06	41	\N	\N	\N	\N	0	\N	\N
+261	2023-06-30 08:43:05.757752-06	41	\N	\N	\N	\N	0	\N	\N
+262	2023-06-30 08:43:05.993801-06	41	\N	\N	\N	\N	0	\N	\N
+263	2023-06-30 08:43:06.324401-06	41	\N	\N	\N	\N	0	\N	\N
+264	2023-06-30 08:43:06.677565-06	41	\N	\N	\N	\N	0	\N	\N
+265	2023-06-30 08:43:07.035888-06	41	\N	\N	\N	\N	0	\N	\N
+266	2023-06-30 08:43:07.39564-06	41	\N	\N	\N	\N	0	\N	\N
+267	2023-06-30 08:43:07.756665-06	41	\N	\N	\N	\N	0	\N	\N
+268	2023-06-30 08:43:08.578488-06	41	\N	\N	\N	\N	0	\N	\N
+269	2023-06-30 08:43:08.930679-06	41	\N	\N	\N	\N	0	\N	\N
+270	2023-06-30 08:43:09.285796-06	41	\N	\N	\N	\N	0	\N	\N
+271	2023-06-30 08:43:09.847818-06	41	\N	\N	\N	\N	0	\N	\N
+272	2023-06-30 08:43:10.302698-06	41	\N	\N	\N	\N	0	\N	\N
+273	2023-06-30 08:43:10.657386-06	41	\N	\N	\N	\N	0	\N	\N
+274	2023-10-11 20:25:17.45577-06	41	\N	\N	\N	\N	0	\N	\N
+275	2023-10-11 20:25:17.970584-06	41	\N	\N	\N	\N	0	\N	\N
+276	2023-10-11 20:25:18.523491-06	41	\N	\N	\N	\N	0	\N	\N
+277	2023-10-11 20:25:19.394231-06	41	\N	\N	\N	\N	0	\N	\N
+278	2023-10-11 20:25:20.400082-06	41	\N	\N	\N	\N	0	\N	\N
+279	2023-10-11 20:25:21.10823-06	41	\N	\N	\N	\N	0	\N	\N
+280	2023-10-11 20:25:21.687409-06	41	\N	\N	\N	\N	0	\N	\N
+281	2023-10-11 20:25:22.283202-06	41	\N	\N	\N	\N	0	\N	\N
+282	2023-10-11 20:25:22.844239-06	41	\N	\N	\N	\N	0	\N	\N
+283	2023-10-11 20:25:23.406806-06	41	\N	\N	\N	\N	0	\N	\N
+284	2023-10-11 20:25:23.976199-06	41	\N	\N	\N	\N	0	\N	\N
+285	2023-10-11 20:25:24.514473-06	41	\N	\N	\N	\N	0	\N	\N
+286	2023-10-11 20:25:25.052292-06	41	\N	\N	\N	\N	0	\N	\N
+287	2023-10-11 20:25:25.606742-06	41	\N	\N	\N	\N	0	\N	\N
+288	2023-10-11 20:25:26.193329-06	41	\N	\N	\N	\N	0	\N	\N
+289	2023-10-11 20:25:26.785689-06	41	\N	\N	\N	\N	0	\N	\N
+290	2023-10-11 20:25:27.319444-06	41	\N	\N	\N	\N	0	\N	\N
+291	2023-10-11 20:25:27.875339-06	41	\N	\N	\N	\N	0	\N	\N
+292	2023-10-11 20:25:28.760042-06	41	\N	\N	\N	\N	0	\N	\N
+293	2024-12-17 06:57:12.926246-07	40	\N	\N	\N	\N	0	\N	\N
+294	2024-12-17 06:57:13.419244-07	40	\N	\N	\N	\N	0	\N	\N
+295	2024-12-17 06:57:13.894166-07	40	\N	\N	\N	\N	0	\N	\N
+296	2024-12-17 06:57:14.229536-07	40	\N	\N	\N	\N	0	\N	\N
+297	2024-12-17 06:57:14.699599-07	40	\N	\N	\N	\N	0	\N	\N
+298	2024-12-17 06:57:15.404042-07	40	\N	\N	\N	\N	0	\N	\N
+299	2024-12-17 06:57:16.554768-07	40	\N	\N	\N	\N	0	\N	\N
+300	2024-12-17 06:57:17.030854-07	40	\N	\N	\N	\N	0	\N	\N
+301	2024-12-17 06:57:17.566196-07	40	\N	\N	\N	\N	0	\N	\N
+302	2024-12-17 06:57:18.411818-07	40	\N	\N	\N	\N	0	\N	\N
+303	2024-12-17 06:57:20.255804-07	40	\N	\N	\N	\N	0	\N	\N
+304	2025-01-02 07:57:47.579387-07	40	\N	\N	\N	\N	0	\N	\N
+305	2025-01-02 07:57:48.104508-07	40	\N	\N	\N	\N	0	\N	\N
+306	2025-03-25 07:50:33.579321-06	40	\N	\N	\N	\N	0	\N	\N
+307	2025-03-25 07:50:34.01642-06	40	\N	\N	\N	\N	0	\N	\N
+308	2025-03-25 07:50:34.532584-06	40	\N	\N	\N	\N	0	\N	\N
+309	2025-03-25 07:50:34.872711-06	40	\N	\N	\N	\N	0	\N	\N
+310	2025-03-25 07:50:35.496086-06	40	\N	\N	\N	\N	0	\N	\N
+311	2025-03-25 07:50:35.829602-06	40	\N	\N	\N	\N	0	\N	\N
+312	2025-03-25 07:50:36.434487-06	40	\N	\N	\N	\N	0	\N	\N
+313	2026-03-02 13:48:04.071398-07	41	\N	\N	\N	\N	0	\N	\N
+314	2026-03-02 13:48:04.354939-07	41	\N	\N	\N	\N	0	\N	\N
+315	2026-03-02 13:48:04.619811-07	41	\N	\N	\N	\N	0	\N	\N
+316	2026-03-02 13:48:05.025573-07	41	\N	\N	\N	\N	0	\N	\N
+317	2026-03-02 13:48:05.411863-07	41	\N	\N	\N	\N	0	\N	\N
+318	2026-03-02 13:48:05.950241-07	41	\N	\N	\N	\N	0	\N	\N
+319	2026-03-02 13:48:06.388837-07	41	\N	\N	\N	\N	0	\N	\N
+320	2026-03-02 13:48:06.800029-07	41	\N	\N	\N	\N	0	\N	\N
+321	2026-03-02 13:48:07.236784-07	41	\N	\N	\N	\N	0	\N	\N
+322	2026-03-02 13:48:07.651647-07	41	\N	\N	\N	\N	0	\N	\N
+323	2026-03-02 13:48:08.069456-07	41	\N	\N	\N	\N	0	\N	\N
+324	2026-03-02 13:48:08.753563-07	41	\N	\N	\N	\N	0	\N	\N
+325	2026-03-02 13:48:09.427083-07	41	\N	\N	\N	\N	0	\N	\N
+326	2026-03-02 13:48:09.720947-07	41	\N	\N	\N	\N	0	\N	\N
+327	2026-03-02 13:48:10.388803-07	41	\N	\N	\N	\N	0	\N	\N
+328	2026-03-02 13:48:11.176384-07	41	\N	\N	\N	\N	0	\N	\N
+329	2026-03-02 13:48:11.687821-07	41	\N	\N	\N	\N	0	\N	\N
+330	2026-03-02 13:48:12.097049-07	41	\N	\N	\N	\N	0	\N	\N
+331	2026-03-02 13:48:12.519101-07	41	\N	\N	\N	\N	0	\N	\N
+332	2026-03-02 13:48:12.922886-07	41	\N	\N	\N	\N	0	\N	\N
+333	2026-03-02 13:48:13.218881-07	41	\N	\N	\N	\N	0	\N	\N
+334	2026-03-02 13:48:15.280325-07	41	\N	\N	\N	\N	0	\N	\N
+335	2026-03-02 13:48:14.035978-07	41	\N	\N	\N	\N	0	\N	\N
+336	2026-03-02 13:48:15.912625-07	41	\N	\N	\N	\N	0	\N	\N
+337	2026-03-02 13:48:16.189019-07	41	\N	\N	\N	\N	0	\N	\N
+338	2026-03-02 13:48:16.591657-07	41	\N	\N	\N	\N	0	\N	\N
+339	2026-03-02 13:48:17.108915-07	41	\N	\N	\N	\N	0	\N	\N
 \.
 
 
@@ -37311,7 +38396,7 @@ COPY pheno_population.sources (source_id, author, location, source_date) FROM st
 --
 
 COPY phenome.allele (allele_id, locus_id, allele_symbol, allele_name, mode_of_inheritance, allele_synonym, allele_phenotype, allele_notes, obsolete, sp_person_id, create_date, modified_date, updated_by, is_default, sequence) FROM stdin;
-1	3	TEST2	\N	\N	\N	\N	\N	f	\N	2014-01-06 22:08:44.862552+00	\N	\N	t	\N
+1	3	TEST2	\N	\N	\N	\N	\N	f	\N	2014-01-06 15:08:44.862552-07	\N	\N	t	\N
 \.
 
 
@@ -37472,8 +38557,8 @@ COPY phenome.is_public (is_public_id, population_id, is_public, owner_id) FROM s
 --
 
 COPY phenome.locus (locus_id, locus_name, locus_symbol, original_symbol, gene_activity, locus_notes, obsolete, sp_person_id, create_date, modified_date, description, linkage_group, lg_arm, common_name_id, updated_by, locus, organism_id) FROM stdin;
-2	test	T1	\N	testblablabla	\N	f	\N	2014-01-06 21:25:00.611864+00	2014-01-06 21:47:23.803621+00	\N	\N	\N	1	40	test	\N
-3	test2	test2	\N	test	\N	f	\N	2014-01-06 22:08:44.539434+00	\N	\N	\N	\N	1	\N	test2	\N
+2	test	T1	\N	testblablabla	\N	f	\N	2014-01-06 14:25:00.611864-07	2014-01-06 14:47:23.803621-07	\N	\N	\N	1	40	test	\N
+3	test2	test2	\N	test	\N	f	\N	2014-01-06 15:08:44.539434-07	\N	\N	\N	\N	1	\N	test2	\N
 \.
 
 
@@ -37490,7 +38575,7 @@ COPY phenome.locus2locus (locus2locus_id, subject_id, object_id, relationship_id
 --
 
 COPY phenome.locus_alias (locus_alias_id, alias, locus_id, preferred, obsolete, sp_person_id, create_date, modified_date) FROM stdin;
-1	test2	3	t	f	\N	2014-01-06 22:08:44.829283+00	\N
+1	test2	3	t	f	\N	2014-01-06 15:08:44.829283-07	\N
 \.
 
 
@@ -37519,13 +38604,21 @@ COPY phenome.locus_dbxref_evidence_history (locus_dbxref_evidence_history_id, lo
 
 
 --
+-- Data for Name: locus_geno_marker; Type: TABLE DATA; Schema: phenome; Owner: postgres
+--
+
+COPY phenome.locus_geno_marker (locus_geno_marker_id, nd_protocol_id, marker_name, locus_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: locus_history; Type: TABLE DATA; Schema: phenome; Owner: postgres
 --
 
 COPY phenome.locus_history (locus_history_id, locus_id, locus_name, locus_symbol, original_symbol, gene_activity, locus_description, locus_notes, linkage_group, lg_arm, sp_person_id, updated_by, obsolete, create_date) FROM stdin;
-1	2	test	T1	\N	\N	\N	\N	\N	\N	\N	40	f	2014-01-06 21:31:44.678775+00
-2	2	test	T1	\N	\N	\N	\N	\N	\N	\N	40	f	2014-01-06 21:35:55.408797+00
-3	2	test	T1	\N	\N	\N	\N	\N	\N	\N	40	f	2014-01-06 21:47:23.801806+00
+1	2	test	T1	\N	\N	\N	\N	\N	\N	\N	40	f	2014-01-06 14:31:44.678775-07
+2	2	test	T1	\N	\N	\N	\N	\N	\N	\N	40	f	2014-01-06 14:35:55.408797-07
+3	2	test	T1	\N	\N	\N	\N	\N	\N	\N	40	f	2014-01-06 14:47:23.801806-07
 \.
 
 
@@ -37550,7 +38643,7 @@ COPY phenome.locus_marker (locus_marker_id, locus_id, marker_id, obsolete, sp_pe
 --
 
 COPY phenome.locus_owner (locus_owner_id, locus_id, sp_person_id, granted_by, obsolete, create_date, modified_date) FROM stdin;
-1	3	40	\N	f	2014-01-06 22:08:44.546768+00	\N
+1	3	40	\N	f	2014-01-06 15:08:44.546768-07	\N
 \.
 
 
@@ -41210,6 +42303,14 @@ COPY phenome.stock_allele (stock_allele_id, stock_id, allele_id, metadata_id) FR
 
 
 --
+-- Data for Name: stock_file; Type: TABLE DATA; Schema: phenome; Owner: postgres
+--
+
+COPY phenome.stock_file (stock_file_id, stock_id, file_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: stock_image; Type: TABLE DATA; Schema: phenome; Owner: postgres
 --
 
@@ -42229,6 +43330,9 @@ COPY public.cv (cv_id, name, definition) FROM stdin;
 69	sequence_metadata_types	\N
 70	sp_order_property	\N
 71	list_properties	\N
+72	job_type	\N
+73	experiment_treatment	Experimental treatments applied to some of the stocks in a project. Distinct from management factors/management regimes.
+74	composed_experiment_treatment	
 \.
 
 
@@ -42243,6 +43347,8 @@ COPY public.cvprop (cvprop_id, cv_id, type_id, value, rank) FROM stdin;
 4	59	77543	\N	0
 5	16	77540	\N	0
 6	62	77546	\N	0
+7	73	78395	\N	0
+8	74	78396	\N	0
 \.
 
 
@@ -50965,6 +52071,49 @@ COPY public.cvterm (cvterm_id, cv_id, name, definition, dbxref_id, is_obsolete, 
 78356	46	selected_display_image	\N	213515	0	0
 78357	36	analysis_result	\N	213516	0	0
 78358	46	material_type	\N	213517	0	0
+78359	72	download	\N	213518	0	0
+78360	72	upload	\N	213519	0	0
+78361	72	report	\N	213520	0	0
+78362	72	search	\N	213521	0	0
+78363	72	cluster_analysis	\N	213522	0	0
+78364	72	training_model	\N	213523	0	0
+78365	72	selection_prediction	\N	213524	0	0
+78366	72	multiple_models	\N	213525	0	0
+78367	72	training_dataset	\N	213526	0	0
+78368	72	kinship_analysis	\N	213527	0	0
+78369	72	heritability_analysis	\N	213528	0	0
+78370	72	solGWAS_analysis	\N	213529	0	0
+78371	72	spatial_analysis	\N	213530	0	0
+78372	72	pca_analysis	\N	213531	0	0
+78373	72	stability_analysis	\N	213532	0	0
+78374	72	mixed_model_analysis	\N	213533	0	0
+78375	72	nirs_analysis	\N	213534	0	0
+78376	72	tool_compatibility	\N	213535	0	0
+78377	72	genomic_prediction	\N	213536	0	0
+78378	72	sequence_analysis	\N	213537	0	0
+78379	63	metadata_ontology	\N	213538	0	0
+78380	45	obsoleted_stocks	\N	213539	0	0
+78381	63	biochem_ontology	\N	213540	0	0
+78382	46	is_a_transformation_control	\N	213541	0	0
+78383	37	control_of	\N	213542	0	0
+78384	67	spatial_model_SpATS	\N	213543	0	0
+78385	68	Adjusted Means from Spatial Correction using SpATS R	\N	213544	0	0
+78386	38	spatially_corrected_trait_adjustments_json	\N	213545	0	0
+78387	48	trait_repeat_type	\N	213546	0	0
+78388	45	locus	\N	213547	0	0
+78389	1	VARIABLE_OF	\N	213548	0	1
+78390	1	method_of	\N	213549	0	1
+78391	1	scale_of	\N	213550	0	1
+78392	46	vectorviewer_data	\N	213551	0	0
+78393	46	number_of_insertions	\N	213552	0	0
+78394	38	management_regime	\N	213553	0	0
+78395	63	experiment_treatment_ontology	\N	213554	0	0
+78396	63	composed_experiment_treatment_ontology	\N	213555	0	0
+78397	73	Experimental treatment ontology	\N	213556	0	0
+78398	73	Legacy experiment treatment	\N	213557	0	0
+78399	74	Composed experimental treatment ontology	\N	213558	0	0
+78400	45	accessions_ids	accessions_ids for lists	213559	0	0
+78401	37	derived_from	\N	213560	0	0
 \.
 
 
@@ -72741,209 +73890,83 @@ COPY public.cvterm_relationship (cvterm_relationship_id, type_id, subject_id, ob
 110181	10	76154	74887
 110182	14	76257	76047
 110183	14	75705	75228
-110184	76849	76827	76681
 110185	10	76818	70678
-110186	76849	76841	70671
 110187	10	76845	70678
-110188	76849	70717	76713
-110189	76849	76739	76741
-110190	76849	76785	70707
 110191	10	76695	70776
-110192	76849	76636	76609
 110193	10	76627	70683
-110194	76849	76667	70774
-110195	76849	70746	76797
-110196	76849	70682	76543
 110197	10	76700	70776
-110198	76849	76600	76764
-110199	76849	76615	76640
-110200	76849	70747	76631
-110201	76849	76642	76554
-110202	76849	70709	76833
-110203	76849	70677	76588
 110204	10	76583	70776
-110205	76849	70779	76703
 110206	10	76569	70750
-110207	76849	76779	76806
-110208	76849	76664	76557
-110209	76849	76714	76628
 110210	10	76791	70756
 110211	10	76730	70678
-110212	76849	70718	76603
-110213	76849	76670	76845
 110214	10	76703	70756
 110215	10	76784	70678
-110216	76849	70698	76807
 110217	10	76765	70750
-110218	76849	70670	76608
-110219	76849	70700	76593
-110220	76849	70710	76768
-110221	76849	76621	76556
 110222	10	76807	70776
 110223	10	76597	70776
 110224	10	76781	70750
-110225	76849	76570	76805
 110226	10	76554	70776
-110227	76849	76538	76836
-110228	76849	70693	76616
 110229	10	76684	70776
-110230	76849	70752	76561
 110231	10	76651	70776
-110232	76849	76738	76650
-110233	76849	76673	76784
-110234	76849	70764	76562
-110235	76849	70660	76778
 110236	10	76727	70776
 110237	10	76540	70776
-110238	76849	70768	76566
 110239	10	76543	70750
-110240	76849	70684	76836
-110241	76849	70676	76672
 110242	10	76584	70776
 110243	10	76691	70776
-110244	76849	76578	70714
-110245	76849	76536	76832
-110246	76849	76760	76801
 110247	10	76734	70750
-110248	76849	76622	76736
-110249	76849	70662	76663
-110250	76849	70688	76577
-110251	76849	76780	76818
 110252	10	76690	70750
-110253	76849	70712	76686
 110254	10	76751	70750
-110255	76849	76748	70708
-110256	76849	76745	76651
-110257	76849	76847	70767
-110258	76849	70742	76581
-110259	76849	70736	76629
 110260	10	76759	70750
 110261	10	76823	70776
-110262	76849	76808	76840
-110263	76849	76555	76721
 110264	10	76581	70776
-110265	76849	76755	76644
-110266	76849	70680	76571
-110267	76849	76816	76809
 110268	10	76601	70750
-110269	76849	70667	76709
-110270	76849	70748	76758
 110271	10	76794	70750
 110272	10	76631	70776
 110273	10	76711	70776
-110274	76849	76559	70673
 110275	10	76833	70750
 110276	10	76632	70776
-110277	76849	70739	76769
-110278	76849	76826	76552
-110279	76849	76646	76770
 110280	10	76539	70750
 110281	10	76726	70750
-110282	76849	70679	76837
-110283	76849	76697	76793
-110284	76849	76558	76712
 110285	10	76672	70750
 110286	10	76586	70678
 110287	10	76572	70678
-110288	76849	76792	76824
-110289	76849	76662	70673
 110290	10	76801	70678
-110291	76849	76620	76696
-110292	76849	76783	76727
 110293	10	76795	70776
-110294	76849	76796	76591
-110295	76849	70765	76626
 110296	10	76722	70756
-110297	76849	70751	76727
-110298	76849	70705	76627
 110299	10	76681	70678
 110300	10	76607	70776
-110301	76849	76542	76801
-110302	76849	76810	70774
-110303	76849	76687	76763
 110304	10	76729	70678
-110305	76849	76753	76655
-110306	76849	70692	76766
-110307	76849	70722	76540
 110308	10	76839	70756
-110309	76849	76648	76707
-110310	76849	70721	76742
-110311	76849	76702	76613
 110312	10	76769	70750
-110313	76849	70754	76751
 110314	10	76689	70678
-110315	76849	76838	70714
-110316	76849	70669	76582
 110317	10	76787	70776
-110318	76849	76614	76627
-110319	76849	76638	76774
-110320	76849	76775	76550
-110321	76849	76573	70729
 110322	10	76803	70750
-110323	76849	76587	76640
 110324	10	76606	70678
 110325	10	76666	70776
-110326	76849	76842	76822
-110327	76849	70668	76653
 110328	10	76629	70750
 110329	10	76840	70750
-110330	76849	76544	76719
 110331	10	76698	70776
 110332	10	76712	70756
-110333	76849	76599	70729
-110334	76849	76732	70762
-110335	76849	70757	76625
-110336	76849	70664	76733
 110337	10	76674	70678
-110338	76849	70672	76767
 110339	10	76793	70776
-110340	76849	76844	70731
-110341	76849	70694	76657
-110342	76849	76537	76765
 110343	10	76713	70776
-110344	76849	70732	76601
-110345	76849	70691	76640
 110346	10	76741	70750
-110347	76849	70706	76606
 110348	10	76707	70678
 110349	10	76552	70776
-110350	76849	76743	70731
-110351	76849	76604	76639
 110352	10	76824	70678
-110353	76849	70775	76811
 110354	10	76774	70776
-110355	76849	76594	76729
-110356	76849	76819	76627
-110357	76849	76611	70729
 110358	10	76657	70750
-110359	76849	76669	76846
-110360	76849	70749	76790
-110361	76849	76804	70762
-110362	76849	76705	70707
-110363	76849	70727	76640
-110364	76849	70780	76839
-110365	76849	70745	76607
-110366	76849	70769	76800
 110367	10	76616	70776
 110368	10	76708	70776
-110369	76849	76567	76545
 110370	10	76608	70776
 110371	10	76721	70678
-110372	76849	70690	76789
 110373	10	76566	70756
-110374	76849	76645	76553
-110375	76849	76688	76781
-110376	76849	76548	76627
 110377	10	76736	70678
-110378	76849	70715	76695
-110379	76849	76665	70673
 110380	10	76800	70776
 110381	10	76719	70776
 110382	10	76591	70678
-110383	76849	76624	76710
 110384	10	76699	70756
 110385	10	76628	70776
-110386	76849	70725	76813
 110387	10	76637	70776
 110388	10	76798	70776
 110389	10	76709	70776
@@ -72951,21 +73974,9 @@ COPY public.cvterm_relationship (cvterm_relationship_id, type_id, subject_id, ob
 110391	10	76811	70678
 110392	10	76749	70750
 110393	10	76589	70678
-110394	76849	70733	76700
 110395	10	76788	70756
-110396	76849	70772	76823
-110397	76849	76659	76832
-110398	76849	76740	70762
 110399	10	76836	70776
-110400	76849	76598	76627
-110401	76849	76678	76762
-110402	76849	76725	76801
-110403	76849	70665	76623
-110404	76849	76576	70767
-110405	76849	76834	76674
-110406	76849	76633	76762
 110407	10	76762	70750
-110408	76849	76685	76655
 110409	10	76602	70678
 110410	10	76612	70678
 110411	10	76680	70678
@@ -72975,58 +73986,24 @@ COPY public.cvterm_relationship (cvterm_relationship_id, type_id, subject_id, ob
 110415	10	76733	70756
 110416	10	76772	70750
 110417	10	76814	70776
-110418	76849	70737	76795
-110419	76849	76658	70731
-110420	76849	70704	76596
 110421	10	76757	70776
-110422	76849	70781	76585
 110423	10	76545	70678
-110424	76849	70666	76681
-110425	76849	76675	76626
-110426	76849	76815	76627
 110427	10	76556	70776
-110428	76849	76731	70762
-110429	76849	76761	76681
 110430	10	76644	70678
-110431	76849	70695	76690
 110432	10	76610	70678
 110433	10	76568	70750
 110434	10	76640	70678
-110435	76849	76728	76584
-110436	76849	70697	76720
-110437	76849	76590	76579
-110438	76849	70770	76583
 110439	10	76625	70776
-110440	76849	70759	76704
-110441	76849	70744	76734
-110442	76849	70699	76550
-110443	76849	76835	76597
-110444	76849	76595	76627
 110445	10	76655	70678
 110446	10	76585	70678
-110447	76849	76635	70729
-110448	76849	70743	76710
 110449	10	76649	70776
 110450	10	76677	70683
-110451	76849	76634	70762
-110452	76849	76718	76803
 110453	10	76553	70776
 110454	10	76770	70776
-110455	76849	76679	76711
-110456	76849	76652	76676
-110457	76849	70723	76541
-110458	76849	76660	70720
-110459	76849	76592	76840
-110460	76849	76812	70673
 110461	10	76696	70678
 110462	10	76790	70678
-110463	76849	70696	76791
-110464	76849	70753	76666
-110465	76849	76560	76736
 110466	10	76768	70776
 110467	10	76704	70776
-110468	76849	76825	76736
-110469	76849	76744	76722
 110470	10	76822	70776
 110471	10	76813	70678
 110472	10	76639	70776
@@ -73034,125 +74011,52 @@ COPY public.cvterm_relationship (cvterm_relationship_id, type_id, subject_id, ob
 110474	10	76829	70678
 110475	10	76577	70750
 110476	10	76541	70756
-110477	76849	70687	76757
 110478	10	76763	70776
 110479	10	76754	70776
 110480	10	76832	70756
 110481	10	76609	70776
-110482	76849	76746	76637
 110483	10	76563	70750
-110484	76849	76777	76821
-110485	76849	70763	76795
 110486	10	76546	70678
 110487	10	76550	70776
 110488	10	76843	70750
-110489	76849	70711	76772
-110490	76849	70663	76539
-110491	76849	76716	76768
 110492	10	76623	70776
 110493	10	76613	70776
-110494	76849	76737	76736
-110495	76849	70778	76706
 110496	10	76650	70678
 110497	10	76758	70750
-110498	76849	76723	76572
-110499	76849	70713	76770
-110500	76849	76619	70707
-110501	76849	76799	76726
 110502	10	76742	70776
-110503	76849	76547	76681
 110504	10	76710	70776
-110505	76849	76750	76798
 110506	10	76766	70683
-110507	76849	70724	76641
 110508	10	76663	70776
-110509	76849	76574	70671
-110510	76849	76605	70673
-110511	76849	76828	76568
-110512	76849	76786	76589
-110513	76849	70703	76787
 110514	10	76789	70756
-110515	76849	76682	76661
 110516	10	76579	70756
-110517	76849	76692	76736
-110518	76849	76693	76724
-110519	76849	76752	76759
-110520	76849	76654	76730
-110521	76849	76549	76736
 110522	10	76846	70678
-110523	76849	76647	76546
 110524	10	76596	70776
-110525	76849	70773	76586
 110526	10	76683	70776
-110527	76849	70661	76691
-110528	76849	76848	76569
-110529	76849	70758	76699
-110530	76849	70771	76840
 110531	10	76724	70776
 110532	10	76806	70678
 110533	10	76668	70750
-110534	76849	70686	76668
-110535	76849	76802	70731
-110536	76849	70741	76762
 110537	10	76767	70678
-110538	76849	76715	70671
 110539	10	76557	70756
-110540	76849	76820	76771
 110541	10	76656	70735
-110542	76849	76630	70774
-110543	76849	76735	76822
-110544	76849	70726	76649
-110545	76849	70689	76814
 110546	10	76588	70750
-110547	76849	76747	70714
-110548	76849	70675	76829
-110549	76849	76618	70671
 110550	10	76562	70776
-110551	76849	76830	76788
 110552	10	76676	70750
 110553	10	76817	70678
-110554	76849	76773	70714
-110555	76849	70740	76602
-110556	76849	76580	76546
-110557	76849	76756	76794
-110558	76849	76701	70707
 110559	10	76797	70750
-110560	76849	76831	76610
 110561	10	76706	70776
-110562	76849	70728	76563
 110563	10	76626	70678
-110564	76849	70755	76657
-110565	76849	70685	76683
 110566	10	76561	70750
-110567	76849	76535	76546
-110568	76849	70681	76640
 110569	10	76686	70678
-110570	76849	76717	76603
 110571	10	76720	70750
-110572	76849	76776	76632
 110573	10	76778	70750
 110574	10	76582	70750
-110575	76849	70701	76656
-110576	76849	76671	76681
 110577	10	76661	70776
-110578	76849	76575	76612
-110579	76849	76551	76749
 110580	10	76771	70678
 110581	10	76837	70776
-110582	76849	70674	76680
 110583	10	76821	70750
 110584	10	76764	70776
-110585	76849	70761	76843
-110586	76849	70659	76677
 110587	10	76603	70776
-110588	76849	70702	76754
 110589	10	76809	70678
-110590	76849	76782	76708
-110591	76849	76565	76689
-110592	76849	70730	76817
-110593	76849	76643	76627
-110594	76849	70734	76684
-110595	76849	76694	70774
 110596	10	77176	77177
 110597	10	77175	77169
 110598	10	77170	77177
@@ -73623,34 +74527,280 @@ COPY public.cvterm_relationship (cvterm_relationship_id, type_id, subject_id, ob
 111075	10	78218	78156
 111076	10	78219	78156
 111077	10	78215	78156
-110981	76849	77548	77547
-110986	76849	77549	77547
-110991	76849	77550	77547
-110996	76849	77551	77547
-111001	76849	77552	77547
-111006	76849	77553	77547
-111011	76849	77554	77547
-111016	76849	77555	77547
-111021	76849	77556	77547
-111026	76849	77557	77547
-111031	76849	77558	77547
-111036	76849	77559	77547
 111079	10	78277	78156
 111080	10	78279	78156
 111081	10	78280	78156
 111082	10	78278	78156
 111083	10	78276	78156
 111090	10	78320	78156
-111084	76849	78315	78320
-111085	76849	78316	78320
-111086	76849	78323	78320
-111087	76849	78321	78320
-111088	76849	78318	78320
-111089	76849	78322	78320
-111091	76849	78324	78320
-111092	76849	78319	78320
-111093	76849	78317	78320
-111094	76849	78314	78320
+110590	78389	76782	76708
+110424	78389	70666	76681
+110278	78389	76826	76552
+110570	78389	76717	76603
+110258	78389	70742	76581
+110311	78389	76702	76613
+110213	78389	76670	76845
+110406	78389	76633	76762
+110195	78389	70746	76797
+110543	78389	76735	76822
+110302	78389	76810	70774
+110274	78389	76559	70673
+110307	78389	70722	76540
+110397	78389	76659	76832
+110494	78389	76737	76736
+110556	78389	76580	76546
+110259	78389	70736	76629
+110221	78389	76621	76556
+110444	78389	76595	76627
+110234	78389	70764	76562
+110316	78389	70669	76582
+110326	78389	76842	76822
+110250	78389	70688	76577
+110246	78389	76760	76801
+110209	78389	76714	76628
+110199	78389	76615	76640
+110534	78389	70686	76668
+110426	78389	76815	76627
+111092	78389	78319	78320
+110576	78389	76671	76681
+110503	78389	76547	76681
+110463	78389	70696	76791
+110547	78389	76747	70714
+110257	78389	76847	70767
+110301	78389	76542	76801
+110523	78389	76647	76546
+110396	78389	70772	76823
+110347	78389	70706	76606
+110435	78389	76728	76584
+110245	78389	76536	76832
+110986	78389	77549	77547
+110455	78389	76679	76711
+110441	78389	70744	76734
+110593	78389	76643	76627
+110572	78389	76776	76632
+110401	78389	76678	76762
+110233	78389	76673	76784
+111036	78389	77559	77547
+110489	78389	70711	76772
+110477	78389	70687	76757
+110353	78389	70775	76811
+110305	78389	76753	76655
+110294	78389	76796	76591
+110451	78389	76634	70762
+110192	78389	76636	76609
+111026	78389	77557	77547
+110341	78389	70694	76657
+111084	78389	78315	78320
+110419	78389	76658	70731
+110196	78389	70682	76543
+110232	78389	76738	76650
+110320	78389	76775	76550
+110549	78389	76618	70671
+110498	78389	76723	76572
+110194	78389	76667	70774
+110201	78389	76642	76554
+110586	78389	70659	76677
+110422	78389	70781	76585
+110378	78389	70715	76695
+110996	78389	77551	77547
+111021	78389	77556	77547
+110578	78389	76575	76612
+110544	78389	70726	76649
+110357	78389	76611	70729
+110398	78389	76740	70762
+110207	78389	76779	76806
+110198	78389	76600	76764
+110527	78389	70661	76691
+110400	78389	76598	76627
+110591	78389	76565	76689
+110227	78389	76538	76836
+111089	78389	78322	78320
+110379	78389	76665	70673
+111086	78389	78323	78320
+110315	78389	76838	70714
+110267	78389	76816	76809
+110592	78389	70730	76817
+110545	78389	70689	76814
+110279	78389	76646	76770
+110468	78389	76825	76736
+110465	78389	76560	76736
+110212	78389	70718	76603
+110402	78389	76725	76801
+110291	78389	76620	76696
+110459	78389	76592	76840
+110386	78389	70725	76813
+110336	78389	70664	76733
+110189	78389	76739	76741
+110564	78389	70755	76657
+110356	78389	76819	76627
+110517	78389	76692	76736
+111001	78389	77552	77547
+110369	78389	76567	76545
+110269	78389	70667	76709
+110309	78389	76648	76707
+110538	78389	76715	70671
+110535	78389	76802	70731
+111016	78389	77555	77547
+110565	78389	70685	76683
+110507	78389	70724	76641
+110283	78389	76697	76793
+110418	78389	70737	76795
+110241	78389	70676	76672
+111093	78389	78317	78320
+110240	78389	70684	76836
+110519	78389	76752	76759
+110265	78389	76755	76644
+110442	78389	70699	76550
+110203	78389	70677	76588
+110355	78389	76594	76729
+110303	78389	76687	76763
+110512	78389	76786	76589
+110458	78389	76660	70720
+110460	78389	76812	70673
+110202	78389	70709	76833
+110490	78389	70663	76539
+110408	78389	76685	76655
+110568	78389	70681	76640
+110558	78389	76701	70707
+110525	78389	70773	76586
+110425	78389	76675	76626
+110528	78389	76848	76569
+110540	78389	76820	76771
+110350	78389	76743	70731
+110548	78389	70675	76829
+110438	78389	70770	76583
+110536	78389	70741	76762
+110440	78389	70759	76704
+110359	78389	76669	76846
+110184	78389	76827	76681
+110542	78389	76630	70774
+110464	78389	70753	76666
+110557	78389	76756	76794
+110500	78389	76619	70707
+110230	78389	70752	76561
+110375	78389	76688	76781
+110288	78389	76792	76824
+110364	78389	70780	76839
+110518	78389	76693	76724
+110235	78389	70660	76778
+110345	78389	70691	76640
+110238	78389	70768	76566
+110530	78389	70771	76840
+110256	78389	76745	76651
+110372	78389	70690	76789
+110456	78389	76652	76676
+110323	78389	76587	76640
+110253	78389	70712	76686
+110562	78389	70728	76563
+110282	78389	70679	76837
+110228	78389	70693	76616
+110190	78389	76785	70707
+110431	78389	70695	76690
+110374	78389	76645	76553
+110298	78389	70705	76627
+110560	78389	76831	76610
+110360	78389	70749	76790
+110344	78389	70732	76601
+110310	78389	70721	76742
+110595	78389	76694	70774
+110363	78389	70727	76640
+110510	78389	76605	70673
+110555	78389	70740	76602
+110270	78389	70748	76758
+111087	78389	78321	78320
+110981	78389	77548	77547
+110501	78389	76799	76726
+110321	78389	76573	70729
+110575	78389	70701	76656
+110484	78389	76777	76821
+110457	78389	70723	76541
+111088	78389	78318	78320
+110263	78389	76555	76721
+110485	78389	70763	76795
+110216	78389	70698	76807
+110567	78389	76535	76546
+110404	78389	76576	70767
+110205	78389	70779	76703
+110366	78389	70769	76800
+110318	78389	76614	76627
+110551	78389	76830	76788
+110248	78389	76622	76736
+110338	78389	70672	76767
+110361	78389	76804	70762
+111094	78389	78314	78320
+110521	78389	76549	76736
+110520	78389	76654	76730
+110340	78389	76844	70731
+110405	78389	76834	76674
+110327	78389	70668	76653
+111011	78389	77554	77547
+110351	78389	76604	76639
+110284	78389	76558	76712
+110262	78389	76808	76840
+110333	78389	76599	70729
+110186	78389	76841	70671
+110585	78389	70761	76843
+110335	78389	70757	76625
+110383	78389	76624	76710
+111006	78389	77553	77547
+110289	78389	76662	70673
+110200	78389	70747	76631
+110218	78389	70670	76608
+110244	78389	76578	70714
+110330	78389	76544	76719
+110249	78389	70662	76663
+110437	78389	76590	76579
+110428	78389	76731	70762
+110292	78389	76783	76727
+111091	78389	78324	78320
+110594	78389	70734	76684
+110579	78389	76551	76749
+110429	78389	76761	76681
+110509	78389	76574	70671
+110554	78389	76773	70714
+110452	78389	76718	76803
+111085	78389	78316	78320
+110251	78389	76780	76818
+110499	78389	70713	76770
+110319	78389	76638	76774
+110255	78389	76748	70708
+111031	78389	77558	77547
+110448	78389	70743	76710
+110515	78389	76682	76661
+110365	78389	70745	76607
+110588	78389	70702	76754
+110313	78389	70754	76751
+110469	78389	76744	76722
+110420	78389	70704	76596
+110362	78389	76705	70707
+110394	78389	70733	76700
+110342	78389	76537	76765
+110220	78389	70710	76768
+110511	78389	76828	76568
+110297	78389	70751	76727
+110295	78389	70765	76626
+110403	78389	70665	76623
+110443	78389	76835	76597
+110225	78389	76570	76805
+110491	78389	76716	76768
+110306	78389	70692	76766
+110376	78389	76548	76627
+110188	78389	70717	76713
+110436	78389	70697	76720
+110219	78389	70700	76593
+110582	78389	70674	76680
+110529	78389	70758	76699
+110513	78389	70703	76787
+110334	78389	76732	70762
+110208	78389	76664	76557
+110505	78389	76750	76798
+110991	78389	77550	77547
+110277	78389	70739	76769
+110266	78389	70680	76571
+110447	78389	76635	70729
+110495	78389	70778	76706
+110482	78389	76746	76637
+111095	10	78398	78397
 \.
 
 
@@ -79142,6 +80292,8 @@ COPY public.db (db_id, name, description, urlprefix, url) FROM stdin;
 305	COMP	\N	\N	\N
 186	CO_334	\N	\N	\N
 306	SGNSTAT	\N	\N	\N
+307	EXPERIMENT_TREATMENT	\N	\N	\N
+308	COMP_EXP_TREATMENT	\N	\N	\N
 \.
 
 
@@ -139488,6 +140640,7 @@ COPY public.dbxref (dbxref_id, db_id, accession, version, description) FROM stdi
 212999	2	autocreated:observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3		\N
 213000	2	autocreated:observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_thresholded_tgi_mask_channel_3		\N
 213001	2	autocreated:observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_1		\N
+213518	2	autocreated:download		\N
 213002	2	autocreated:observation_unit_polygon_fourier_transform_hpf30_bgr_denoised_background_removed_vari_mask_channel_1		\N
 213003	2	autocreated:observation_unit_polygon_fourier_transform_hpf40_bgr_denoised_background_removed_vari_mask_channel_1		\N
 213004	2	autocreated:observation_unit_polygon_fourier_transform_hpf20_bgr_denoised_background_removed_vari_mask_channel_2		\N
@@ -139805,6 +140958,7 @@ COPY public.dbxref (dbxref_id, db_id, accession, version, description) FROM stdi
 213316	2	autocreated:tissue_culture_data_json		\N
 213317	2	autocreated:drone_run_experiment		\N
 213318	2	autocreated:standard_process_interactive_match_temporary_drone_imagery		\N
+213519	2	autocreated:upload		\N
 213319	2	autocreated:standard_process_interactive_align_temporary_drone_imagery		\N
 213320	2	autocreated:sommer_grm_temporal_random_regression_dap_genetic_blups		\N
 213321	2	autocreated:sommer_grm_temporal_random_regression_gdd_genetic_blups		\N
@@ -140002,6 +141156,47 @@ COPY public.dbxref (dbxref_id, db_id, accession, version, description) FROM stdi
 213515	2	autocreated:selected_display_image		\N
 213516	2	autocreated:analysis_result		\N
 213517	2	autocreated:material_type		\N
+213520	2	autocreated:report		\N
+213521	2	autocreated:search		\N
+213522	2	autocreated:cluster_analysis		\N
+213523	2	autocreated:training_model		\N
+213524	2	autocreated:selection_prediction		\N
+213525	2	autocreated:multiple_models		\N
+213526	2	autocreated:training_dataset		\N
+213527	2	autocreated:kinship_analysis		\N
+213528	2	autocreated:heritability_analysis		\N
+213529	2	autocreated:solGWAS_analysis		\N
+213530	2	autocreated:spatial_analysis		\N
+213531	2	autocreated:pca_analysis		\N
+213532	2	autocreated:stability_analysis		\N
+213533	2	autocreated:mixed_model_analysis		\N
+213534	2	autocreated:nirs_analysis		\N
+213535	2	autocreated:tool_compatibility		\N
+213536	2	autocreated:genomic_prediction		\N
+213537	2	autocreated:sequence_analysis		\N
+213538	2	autocreated:metadata_ontology		\N
+213539	2	autocreated:obsoleted_stocks		\N
+213540	2	autocreated:biochem_ontology		\N
+213541	2	autocreated:is_a_transformation_control		\N
+213542	2	autocreated:control_of		\N
+213543	2	autocreated:spatial_model_SpATS		\N
+213544	2	autocreated:Adjusted Means from Spatial Correction using SpATS R		\N
+213545	2	autocreated:spatially_corrected_trait_adjustments_json		\N
+213546	2	autocreated:trait_repeat_type		\N
+213547	2	autocreated:locus		\N
+213548	1	VARIABLE_OF		\N
+213549	1	method_of		\N
+213550	1	scale_of		\N
+213551	2	autocreated:vectorviewer_data		\N
+213552	2	autocreated:number_of_insertions		\N
+213553	2	autocreated:management_regime		\N
+213554	2	autocreated:experiment_treatment_ontology		\N
+213555	2	autocreated:composed_experiment_treatment_ontology		\N
+213556	307	0000000		\N
+213557	307	0000001		\N
+213558	308	0000000		\N
+213559	273	accessions_ids		\N
+213560	2	autocreated:derived_from		\N
 \.
 
 
@@ -140169,7 +141364,7 @@ COPY public.featureprop (featureprop_id, feature_id, type_id, value, rank) FROM 
 -- Data for Name: featureprop_json; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.featureprop_json (featureprop_json_id, feature_id, type_id, nd_protocol_id, start_pos, end_pos, json) FROM stdin;
+COPY public.featureprop_json (featureprop_json_id, feature_id, type_id, nd_protocol_id, start_pos, end_pos, "json") FROM stdin;
 \.
 
 
@@ -141384,10 +142579,10 @@ COPY public.materialized_view (materialized_view_id, last_update, refresh_time, 
 --
 
 COPY public.matviews (mv_id, mv_name, mv_dependents, currently_refreshing, last_refresh, refresh_start) FROM stdin;
-2	materialized_genoview	{accessionsXgenotyping_protocols,breeding_programsXgenotyping_protocols,genotyping_protocolsXlocations,genotyping_protocolsXplants,genotyping_protocolsXplots,genotyping_protocolsXtraits,genotyping_protocolsXtrials,genotyping_protocolsXtrial_designs,genotyping_protocolsXtrial_types,genotyping_protocolsXyears}	f	2020-08-21 02:56:31.414015+00	\N
-1	materialized_phenoview	{accessionsXbreeding_programs,accessionsXlocations,accessionsXplants,accessionsXplots,accessionsXseedlots,accessionsXtrait_components,accessionsXtraits,accessionsXtrials,accessionsXtrial_designs,accessionsXtrial_types,accessionsXyears,breeding_programsXgenotyping_protocols,breeding_programsXlocations,breeding_programsXplants,breeding_programsXplots,breeding_programsXseedlots,breeding_programsXtrait_components,breeding_programsXtraits,breeding_programsXtrials,breeding_programsXtrial_designs,breeding_programsXtrial_types,breeding_programsXyears,genotyping_protocolsXlocations,genotyping_protocolsXplants,genotyping_protocolsXplots,genotyping_protocolsXseedlots,genotyping_protocolsXtrait_components,genotyping_protocolsXtraits,genotyping_protocolsXtrials,genotyping_protocolsXtrial_designs,genotyping_protocolsXtrial_types,genotyping_protocolsXyears,locationsXplants,locationsXplots,locationsXseedlots,locationsXtrait_components,locationsXtraits,locationsXtrials,locationsXtrial_designs,locationsXtrial_types,locationsXyears,plantsXplots,plantsXseedlots,plantsXtrait_components,plantsXtraits,plantsXtrials,plantsXtrial_designs,plantsXtrial_types,plantsXyears,plotsXseedlots,plotsXtrait_components,plotsXtraits,plotsXtrials,plotsXtrial_designs,plotsXtrial_types,plotsXyears,seedlotsXtrait_components,seedlotsXtraits,seedlotsXtrial_designs,seedlotsXtrial_types,seedlotsXtrials,seedlotsXyears,trait_componentsXtraits,trait_componentsXtrial_designs,trait_componentsXtrial_types,trait_componentsXtrials,trait_componentsXyears,traitsXtrials,traitsXtrial_designs,traitsXtrial_types,traitsXyears,trial_designsXtrials,trial_typesXtrials,trialsXyears,trial_designsXtrial_types,trial_designsXyears,trial_typesXyears}	f	2020-08-21 02:56:31.414015+00	\N
-161	materialized_stockprop	\N	\N	\N	\N
-162	materialized_phenotype_jsonb_table	\N	\N	\N	\N
+161	materialized_stockprop	\N	f	\N	\N
+162	materialized_phenotype_jsonb_table	\N	f	\N	\N
+1	materialized_phenoview	{accessionsXbreeding_programs,accessionsXlocations,accessionsXplants,accessionsXplots,accessionsXseedlots,accessionsXtrait_components,accessionsXtraits,accessionsXtrials,accessionsXtrial_designs,accessionsXtrial_types,accessionsXyears,breeding_programsXgenotyping_protocols,breeding_programsXlocations,breeding_programsXplants,breeding_programsXplots,breeding_programsXseedlots,breeding_programsXtrait_components,breeding_programsXtraits,breeding_programsXtrials,breeding_programsXtrial_designs,breeding_programsXtrial_types,breeding_programsXyears,genotyping_protocolsXlocations,genotyping_protocolsXplants,genotyping_protocolsXplots,genotyping_protocolsXseedlots,genotyping_protocolsXtrait_components,genotyping_protocolsXtraits,genotyping_protocolsXtrials,genotyping_protocolsXtrial_designs,genotyping_protocolsXtrial_types,genotyping_protocolsXyears,locationsXplants,locationsXplots,locationsXseedlots,locationsXtrait_components,locationsXtraits,locationsXtrials,locationsXtrial_designs,locationsXtrial_types,locationsXyears,plantsXplots,plantsXseedlots,plantsXtrait_components,plantsXtraits,plantsXtrials,plantsXtrial_designs,plantsXtrial_types,plantsXyears,plotsXseedlots,plotsXtrait_components,plotsXtraits,plotsXtrials,plotsXtrial_designs,plotsXtrial_types,plotsXyears,seedlotsXtrait_components,seedlotsXtraits,seedlotsXtrial_designs,seedlotsXtrial_types,seedlotsXtrials,seedlotsXyears,trait_componentsXtraits,trait_componentsXtrial_designs,trait_componentsXtrial_types,trait_componentsXtrials,trait_componentsXyears,traitsXtrials,traitsXtrial_designs,traitsXtrial_types,traitsXyears,trial_designsXtrials,trial_typesXtrials,trialsXyears,trial_designsXtrial_types,trial_designsXyears,trial_typesXyears}	f	2026-03-02 13:48:17.233075-07	2026-03-02 13:48:17.204007-07
+2	materialized_genoview	{accessionsXgenotyping_protocols,breeding_programsXgenotyping_protocols,genotyping_protocolsXlocations,genotyping_protocolsXplants,genotyping_protocolsXplots,genotyping_protocolsXtraits,genotyping_protocolsXtrials,genotyping_protocolsXtrial_designs,genotyping_protocolsXtrial_types,genotyping_protocolsXyears}	f	2026-03-02 13:48:17.243251-07	2026-03-02 13:48:17.233351-07
 \.
 
 
@@ -187589,21 +188784,21 @@ COPY sgn_people.forum_topic (forum_topic_id, person_id, topic_name, parent_topic
 --
 
 COPY sgn_people.list (list_id, is_hotlist, sent_by, name, description, owner, type_id, is_public, create_date, modified_date) FROM stdin;
-3	f	\N	test_stocks	\N	41	76451	f	2023-10-12 02:25:25.069359	\N
-4	f	\N	test_list	\N	40	76451	f	2023-10-12 02:25:25.069359	\N
-5	f	\N	accessions_for_solgs_tests	\N	41	76451	f	2023-10-12 02:25:25.069359	\N
-6	f	\N	accessions_for_trial2	\N	41	76451	f	2023-10-12 02:25:25.069359	\N
-7	f	\N	selection_acc	\N	41	\N	f	2023-10-12 02:25:25.069359	\N
-808	f	\N	johndoe_1_public	\N	40	\N	t	2023-10-12 02:25:25.069359	\N
-809	f	\N	janedoe_1_public	\N	41	\N	t	2023-10-12 02:25:25.069359	\N
-810	f	\N	johndoe_1_private	\N	40	\N	f	2023-10-12 02:25:25.069359	\N
-811	f	\N	janedoe_1_private	\N	41	\N	f	2023-10-12 02:25:25.069359	\N
-8	f	\N	trial2 NaCRRI plots	\N	40	76450	f	2023-10-12 02:25:25.069359	\N
-9	f	\N	trial2 NaCRRI clones	\N	40	76451	f	2023-10-12 02:25:25.069359	\N
-10	f	\N	Trials list	\N	40	76453	f	2023-10-12 02:25:25.069359	\N
-11	f	\N	accessions2add	\N	40	76451	f	2023-10-12 02:25:25.069359	\N
-12	f	\N	desynonymize_test_list	\N	41	76451	f	2023-10-12 02:25:25.069359	\N
-13	f	\N	traits	\N	41	76455	f	2023-10-12 02:25:25.069359	\N
+3	f	\N	test_stocks	\N	41	76451	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+4	f	\N	test_list	\N	40	76451	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+5	f	\N	accessions_for_solgs_tests	\N	41	76451	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+6	f	\N	accessions_for_trial2	\N	41	76451	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+7	f	\N	selection_acc	\N	41	\N	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+808	f	\N	johndoe_1_public	\N	40	\N	t	0001-01-01 00:00:00	0001-01-01 00:00:00
+809	f	\N	janedoe_1_public	\N	41	\N	t	0001-01-01 00:00:00	0001-01-01 00:00:00
+810	f	\N	johndoe_1_private	\N	40	\N	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+811	f	\N	janedoe_1_private	\N	41	\N	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+8	f	\N	trial2 NaCRRI plots	\N	40	76450	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+9	f	\N	trial2 NaCRRI clones	\N	40	76451	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+10	f	\N	Trials list	\N	40	76453	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+11	f	\N	accessions2add	\N	40	76451	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+12	f	\N	desynonymize_test_list	\N	41	76451	f	0001-01-01 00:00:00	0001-01-01 00:00:00
+13	f	\N	traits	\N	41	76455	f	0001-01-01 00:00:00	0001-01-01 00:00:00
 \.
 
 
@@ -189022,6 +190217,14 @@ COPY sgn_people.sp_group_member (sp_person_id, sp_group_id, status) FROM stdin;
 
 
 --
+-- Data for Name: sp_job; Type: TABLE DATA; Schema: sgn_people; Owner: postgres
+--
+
+COPY sgn_people.sp_job (sp_job_id, sp_person_id, backend_id, status, create_timestamp, finish_timestamp, type_id, args) FROM stdin;
+\.
+
+
+--
 -- Data for Name: sp_login_old; Type: TABLE DATA; Schema: sgn_people; Owner: postgres
 --
 
@@ -189400,21 +190603,21 @@ SELECT pg_catalog.setval('annotation.synonym_synonym_id_seq', 1, false);
 -- Name: cv_audit_cv_audit_id_seq; Type: SEQUENCE SET; Schema: audit; Owner: web_usr
 --
 
-SELECT pg_catalog.setval('audit.cv_audit_cv_audit_id_seq', 1, false);
+SELECT pg_catalog.setval('audit.cv_audit_cv_audit_id_seq', 3, true);
 
 
 --
 -- Name: cvprop_audit_cvprop_audit_id_seq; Type: SEQUENCE SET; Schema: audit; Owner: web_usr
 --
 
-SELECT pg_catalog.setval('audit.cvprop_audit_cvprop_audit_id_seq', 1, false);
+SELECT pg_catalog.setval('audit.cvprop_audit_cvprop_audit_id_seq', 2, true);
 
 
 --
 -- Name: cvterm_audit_cvterm_audit_id_seq; Type: SEQUENCE SET; Schema: audit; Owner: web_usr
 --
 
-SELECT pg_catalog.setval('audit.cvterm_audit_cvterm_audit_id_seq', 13, true);
+SELECT pg_catalog.setval('audit.cvterm_audit_cvterm_audit_id_seq', 56, true);
 
 
 --
@@ -189428,7 +190631,7 @@ SELECT pg_catalog.setval('audit.cvterm_dbxref_audit_cvterm_dbxref_audit_id_seq',
 -- Name: cvterm_relationship_audit_cvterm_relationship_audit_id_seq; Type: SEQUENCE SET; Schema: audit; Owner: web_usr
 --
 
-SELECT pg_catalog.setval('audit.cvterm_relationship_audit_cvterm_relationship_audit_id_seq', 10, true);
+SELECT pg_catalog.setval('audit.cvterm_relationship_audit_cvterm_relationship_audit_id_seq', 278, true);
 
 
 --
@@ -189456,14 +190659,14 @@ SELECT pg_catalog.setval('audit.cvtermsynonym_audit_cvtermsynonym_audit_id_seq',
 -- Name: db_audit_db_audit_id_seq; Type: SEQUENCE SET; Schema: audit; Owner: web_usr
 --
 
-SELECT pg_catalog.setval('audit.db_audit_db_audit_id_seq', 1, false);
+SELECT pg_catalog.setval('audit.db_audit_db_audit_id_seq', 2, true);
 
 
 --
 -- Name: dbxref_audit_dbxref_audit_id_seq; Type: SEQUENCE SET; Schema: audit; Owner: web_usr
 --
 
-SELECT pg_catalog.setval('audit.dbxref_audit_dbxref_audit_id_seq', 12, true);
+SELECT pg_catalog.setval('audit.dbxref_audit_dbxref_audit_id_seq', 55, true);
 
 
 --
@@ -189484,7 +190687,7 @@ SELECT pg_catalog.setval('audit.genotype_audit_genotype_audit_id_seq', 1, false)
 -- Name: list_audit_list_audit_id_seq; Type: SEQUENCE SET; Schema: audit; Owner: web_usr
 --
 
-SELECT pg_catalog.setval('audit.list_audit_list_audit_id_seq', 1, false);
+SELECT pg_catalog.setval('audit.list_audit_list_audit_id_seq', 15, true);
 
 
 --
@@ -190492,14 +191695,14 @@ SELECT pg_catalog.setval('metadata.md_dbiref_dbiref_id_seq', 1, false);
 -- Name: md_dbversion_dbversion_id_seq; Type: SEQUENCE SET; Schema: metadata; Owner: postgres
 --
 
-SELECT pg_catalog.setval('metadata.md_dbversion_dbversion_id_seq', 301, true);
+SELECT pg_catalog.setval('metadata.md_dbversion_dbversion_id_seq', 327, true);
 
 
 --
 -- Name: md_files_file_id_seq; Type: SEQUENCE SET; Schema: metadata; Owner: postgres
 --
 
-SELECT pg_catalog.setval('metadata.md_files_file_id_seq', 5, true);
+SELECT pg_catalog.setval('metadata.md_files_file_id_seq', 6, true);
 
 
 --
@@ -190548,7 +191751,7 @@ SELECT pg_catalog.setval('metadata.md_json_json_id_seq', 1, false);
 -- Name: md_metadata_metadata_id_seq; Type: SEQUENCE SET; Schema: metadata; Owner: postgres
 --
 
-SELECT pg_catalog.setval('metadata.md_metadata_metadata_id_seq', 312, true);
+SELECT pg_catalog.setval('metadata.md_metadata_metadata_id_seq', 339, true);
 
 
 --
@@ -190818,6 +192021,13 @@ SELECT pg_catalog.setval('phenome.locus_dbxref_locus_dbxref_id_seq', 1, false);
 
 
 --
+-- Name: locus_geno_marker_locus_geno_marker_id_seq; Type: SEQUENCE SET; Schema: phenome; Owner: postgres
+--
+
+SELECT pg_catalog.setval('phenome.locus_geno_marker_locus_geno_marker_id_seq', 1, false);
+
+
+--
 -- Name: locus_history_locus_history_id_seq; Type: SEQUENCE SET; Schema: phenome; Owner: postgres
 --
 
@@ -190962,6 +192172,13 @@ SELECT pg_catalog.setval('phenome.registry_registry_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('phenome.stock_allele_stock_allele_id_seq', 1, false);
+
+
+--
+-- Name: stock_file_stock_file_id_seq; Type: SEQUENCE SET; Schema: phenome; Owner: postgres
+--
+
+SELECT pg_catalog.setval('phenome.stock_file_stock_file_id_seq', 1, false);
 
 
 --
@@ -191255,21 +192472,21 @@ SELECT pg_catalog.setval('public.contact_relationship_contact_relationship_id_se
 -- Name: cv_cv_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cv_cv_id_seq', 71, true);
+SELECT pg_catalog.setval('public.cv_cv_id_seq', 74, true);
 
 
 --
 -- Name: cvprop_cvprop_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cvprop_cvprop_id_seq', 6, true);
+SELECT pg_catalog.setval('public.cvprop_cvprop_id_seq', 8, true);
 
 
 --
 -- Name: cvterm_cvterm_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cvterm_cvterm_id_seq', 78358, true);
+SELECT pg_catalog.setval('public.cvterm_cvterm_id_seq', 78401, true);
 
 
 --
@@ -191283,7 +192500,7 @@ SELECT pg_catalog.setval('public.cvterm_dbxref_cvterm_dbxref_id_seq', 125383, tr
 -- Name: cvterm_relationship_cvterm_relationship_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cvterm_relationship_cvterm_relationship_id_seq', 111094, true);
+SELECT pg_catalog.setval('public.cvterm_relationship_cvterm_relationship_id_seq', 111095, true);
 
 
 --
@@ -191339,14 +192556,14 @@ SELECT pg_catalog.setval('public.cxgn_indexedlog_test_feel_free_to_delete_me_id_
 -- Name: db_db_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.db_db_id_seq', 306, true);
+SELECT pg_catalog.setval('public.db_db_id_seq', 308, true);
 
 
 --
 -- Name: dbxref_dbxref_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.dbxref_dbxref_id_seq', 213517, true);
+SELECT pg_catalog.setval('public.dbxref_dbxref_id_seq', 213560, true);
 
 
 --
@@ -192992,6 +194209,13 @@ SELECT pg_catalog.setval('sgn_people.sp_dataset_sp_dataset_id_seq', 1, true);
 --
 
 SELECT pg_catalog.setval('sgn_people.sp_group_sp_group_id_seq', 1, false);
+
+
+--
+-- Name: sp_job_sp_job_id_seq; Type: SEQUENCE SET; Schema: sgn_people; Owner: postgres
+--
+
+SELECT pg_catalog.setval('sgn_people.sp_job_sp_job_id_seq', 1, false);
 
 
 --
@@ -195145,6 +196369,14 @@ ALTER TABLE ONLY phenome.locus_dbxref
 
 
 --
+-- Name: locus_geno_marker locus_geno_marker_pkey; Type: CONSTRAINT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.locus_geno_marker
+    ADD CONSTRAINT locus_geno_marker_pkey PRIMARY KEY (locus_geno_marker_id);
+
+
+--
 -- Name: locus_history locus_history_pkey; Type: CONSTRAINT; Schema: phenome; Owner: postgres
 --
 
@@ -195382,6 +196614,14 @@ ALTER TABLE ONLY phenome.registry
 
 ALTER TABLE ONLY phenome.stock_allele
     ADD CONSTRAINT stock_allele_pkey PRIMARY KEY (stock_allele_id);
+
+
+--
+-- Name: stock_file stock_file_pkey; Type: CONSTRAINT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.stock_file
+    ADD CONSTRAINT stock_file_pkey PRIMARY KEY (stock_file_id);
 
 
 --
@@ -198793,6 +200033,14 @@ ALTER TABLE ONLY sgn_people.sp_group
 
 
 --
+-- Name: sp_job sp_job_pkey; Type: CONSTRAINT; Schema: sgn_people; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn_people.sp_job
+    ADD CONSTRAINT sp_job_pkey PRIMARY KEY (sp_job_id);
+
+
+--
 -- Name: sp_login_old sp_login_pkey; Type: CONSTRAINT; Schema: sgn_people; Owner: postgres
 --
 
@@ -200864,6 +202112,13 @@ CREATE INDEX genotypeprop_idx2 ON public.genotypeprop USING btree (type_id);
 
 
 --
+-- Name: gin_trgm_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX gin_trgm_idx ON public.stock USING gin (lower(uniquename) public.gin_trgm_ops);
+
+
+--
 -- Name: itag_loading_log_key; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -201589,6 +202844,13 @@ CREATE INDEX stock_relationship_pub_idx1 ON public.stock_relationship_pub USING 
 --
 
 CREATE INDEX stock_relationship_pub_idx2 ON public.stock_relationship_pub USING btree (pub_id);
+
+
+--
+-- Name: stock_type_id_lower_uniquename_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX stock_type_id_lower_uniquename_idx ON public.stock USING btree (type_id, lower(uniquename));
 
 
 --
@@ -202677,6 +203939,62 @@ CREATE UNIQUE INDEX ftype_ftype_idx ON tomato_gff.ftype USING btree (fmethod, fs
 
 
 --
+-- Name: organismsxplants _RETURN; Type: RULE; Schema: public; Owner: web_usr
+--
+
+CREATE OR REPLACE VIEW public.organismsxplants AS
+ SELECT organism_id,
+    stock_id AS plant_id
+   FROM public.stock s
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'plant'::text)))
+  GROUP BY stock_id;
+
+
+--
+-- Name: organismsxplots _RETURN; Type: RULE; Schema: public; Owner: web_usr
+--
+
+CREATE OR REPLACE VIEW public.organismsxplots AS
+ SELECT organism_id,
+    stock_id AS plot_id
+   FROM public.stock s
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'plot'::text)))
+  GROUP BY stock_id;
+
+
+--
+-- Name: organismsxsubplots _RETURN; Type: RULE; Schema: public; Owner: web_usr
+--
+
+CREATE OR REPLACE VIEW public.organismsxsubplots AS
+ SELECT organism_id,
+    stock_id AS subplot_id
+   FROM public.stock s
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'subplot'::text)))
+  GROUP BY stock_id;
+
+
+--
+-- Name: organismsxtissue_sample _RETURN; Type: RULE; Schema: public; Owner: web_usr
+--
+
+CREATE OR REPLACE VIEW public.organismsxtissue_sample AS
+ SELECT organism_id,
+    stock_id AS tissue_sample_id
+   FROM public.stock s
+  WHERE (type_id = ( SELECT cvterm.cvterm_id
+           FROM public.cvterm
+          WHERE ((cvterm.name)::text = 'tissue_sample'::text)))
+  GROUP BY stock_id;
+
+
+--
 -- Name: trial_types _RETURN; Type: RULE; Schema: public; Owner: web_usr
 --
 
@@ -203294,18 +204612,18 @@ ALTER TABLE ONLY annotation.annotation
 
 
 --
--- Name: comp_analysis person_id_fk; Type: FK CONSTRAINT; Schema: annotation; Owner: postgres
---
-
-ALTER TABLE ONLY annotation.comp_analysis
-    ADD CONSTRAINT person_id_fk FOREIGN KEY (person_id) REFERENCES sgn_people.sp_person(sp_person_id);
-
-
---
 -- Name: comment person_id_fk; Type: FK CONSTRAINT; Schema: annotation; Owner: postgres
 --
 
 ALTER TABLE ONLY annotation.comment
+    ADD CONSTRAINT person_id_fk FOREIGN KEY (person_id) REFERENCES sgn_people.sp_person(sp_person_id);
+
+
+--
+-- Name: comp_analysis person_id_fk; Type: FK CONSTRAINT; Schema: annotation; Owner: postgres
+--
+
+ALTER TABLE ONLY annotation.comp_analysis
     ADD CONSTRAINT person_id_fk FOREIGN KEY (person_id) REFERENCES sgn_people.sp_person(sp_person_id);
 
 
@@ -205830,6 +207148,22 @@ ALTER TABLE ONLY phenome.locus_dbxref
 
 
 --
+-- Name: locus_geno_marker locus_geno_marker_locus_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.locus_geno_marker
+    ADD CONSTRAINT locus_geno_marker_locus_id_fkey FOREIGN KEY (locus_id) REFERENCES phenome.locus(locus_id);
+
+
+--
+-- Name: locus_geno_marker locus_geno_marker_nd_protocol_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.locus_geno_marker
+    ADD CONSTRAINT locus_geno_marker_nd_protocol_id_fkey FOREIGN KEY (nd_protocol_id) REFERENCES public.nd_protocol(nd_protocol_id);
+
+
+--
 -- Name: locus_history locus_history_locus_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
 --
 
@@ -206374,6 +207708,22 @@ ALTER TABLE ONLY phenome.stock_allele
 
 
 --
+-- Name: stock_file stock_file_file_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.stock_file
+    ADD CONSTRAINT stock_file_file_id_fkey FOREIGN KEY (file_id) REFERENCES metadata.md_files(file_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: stock_file stock_file_stock_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.stock_file
+    ADD CONSTRAINT stock_file_stock_id_fkey FOREIGN KEY (stock_id) REFERENCES public.stock(stock_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: stock_image stock_image_image_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
 --
 
@@ -206382,19 +207732,19 @@ ALTER TABLE ONLY phenome.stock_image
 
 
 --
--- Name: stock_image stock_image_metadata_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
---
-
-ALTER TABLE ONLY phenome.stock_image
-    ADD CONSTRAINT stock_image_metadata_id_fkey FOREIGN KEY (metadata_id) REFERENCES metadata.md_metadata(metadata_id);
-
-
---
 -- Name: stock_allele stock_image_metadata_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
 --
 
 ALTER TABLE ONLY phenome.stock_allele
     ADD CONSTRAINT stock_image_metadata_id_fkey FOREIGN KEY (metadata_id) REFERENCES metadata.md_metadata(metadata_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: stock_image stock_image_metadata_id_fkey; Type: FK CONSTRAINT; Schema: phenome; Owner: postgres
+--
+
+ALTER TABLE ONLY phenome.stock_image
+    ADD CONSTRAINT stock_image_metadata_id_fkey FOREIGN KEY (metadata_id) REFERENCES metadata.md_metadata(metadata_id);
 
 
 --
@@ -208702,19 +210052,19 @@ ALTER TABLE ONLY sgn.accession
 
 
 --
--- Name: pcr_exp_accession accession_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
---
-
-ALTER TABLE ONLY sgn.pcr_exp_accession
-    ADD CONSTRAINT accession_id_fk FOREIGN KEY (accession_id) REFERENCES sgn.accession(accession_id) MATCH FULL;
-
-
---
 -- Name: accession_names accession_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
 --
 
 ALTER TABLE ONLY sgn.accession_names
     ADD CONSTRAINT accession_id_fk FOREIGN KEY (accession_id) REFERENCES sgn.accession(accession_id);
+
+
+--
+-- Name: pcr_exp_accession accession_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn.pcr_exp_accession
+    ADD CONSTRAINT accession_id_fk FOREIGN KEY (accession_id) REFERENCES sgn.accession(accession_id) MATCH FULL;
 
 
 --
@@ -208814,19 +210164,19 @@ ALTER TABLE ONLY sgn.chadoprop
 
 
 --
--- Name: seqread clone_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
---
-
-ALTER TABLE ONLY sgn.seqread
-    ADD CONSTRAINT clone_id_fk FOREIGN KEY (clone_id) REFERENCES sgn.clone(clone_id);
-
-
---
 -- Name: ests_mapped_by_clone clone_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
 --
 
 ALTER TABLE ONLY sgn.ests_mapped_by_clone
     ADD CONSTRAINT clone_id_fk FOREIGN KEY (clone_id) REFERENCES genomic.clone(clone_id);
+
+
+--
+-- Name: seqread clone_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn.seqread
+    ADD CONSTRAINT clone_id_fk FOREIGN KEY (clone_id) REFERENCES sgn.clone(clone_id);
 
 
 --
@@ -209118,6 +210468,14 @@ ALTER TABLE ONLY sgn.map
 
 
 --
+-- Name: deprecated_linkage_groups map_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn.deprecated_linkage_groups
+    ADD CONSTRAINT map_id_fk FOREIGN KEY (map_id) REFERENCES sgn.deprecated_maps(map_id) MATCH FULL;
+
+
+--
 -- Name: deprecated_map_cross map_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
 --
 
@@ -209130,14 +210488,6 @@ ALTER TABLE ONLY sgn.deprecated_map_cross
 --
 
 ALTER TABLE ONLY sgn.deprecated_mapdata
-    ADD CONSTRAINT map_id_fk FOREIGN KEY (map_id) REFERENCES sgn.deprecated_maps(map_id) MATCH FULL;
-
-
---
--- Name: deprecated_linkage_groups map_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
---
-
-ALTER TABLE ONLY sgn.deprecated_linkage_groups
     ADD CONSTRAINT map_id_fk FOREIGN KEY (map_id) REFERENCES sgn.deprecated_maps(map_id) MATCH FULL;
 
 
@@ -209302,14 +210652,6 @@ ALTER TABLE ONLY sgn.marker_experiment
 
 
 --
--- Name: deprecated_marker_locations marker_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
---
-
-ALTER TABLE ONLY sgn.deprecated_marker_locations
-    ADD CONSTRAINT marker_id_fk FOREIGN KEY (marker_id) REFERENCES sgn.deprecated_markers(marker_id) MATCH FULL;
-
-
---
 -- Name: cos_markers marker_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
 --
 
@@ -209326,6 +210668,14 @@ ALTER TABLE ONLY sgn.cosii_ortholog
 
 
 --
+-- Name: deprecated_marker_locations marker_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn.deprecated_marker_locations
+    ADD CONSTRAINT marker_id_fk FOREIGN KEY (marker_id) REFERENCES sgn.deprecated_markers(marker_id) MATCH FULL;
+
+
+--
 -- Name: ests_mapped_by_clone marker_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
 --
 
@@ -209339,6 +210689,14 @@ ALTER TABLE ONLY sgn.ests_mapped_by_clone
 
 ALTER TABLE ONLY sgn.p_markers
     ADD CONSTRAINT marker_id_fk FOREIGN KEY (marker_id) REFERENCES sgn.marker(marker_id);
+
+
+--
+-- Name: pcr_experiment marker_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn.pcr_experiment
+    ADD CONSTRAINT marker_id_fk FOREIGN KEY (marker_id) REFERENCES sgn.marker(marker_id) MATCH FULL;
 
 
 --
@@ -209379,14 +210737,6 @@ ALTER TABLE ONLY sgn.ssr_repeats
 
 ALTER TABLE ONLY sgn.tm_markers
     ADD CONSTRAINT marker_id_fk FOREIGN KEY (marker_id) REFERENCES sgn.marker(marker_id);
-
-
---
--- Name: pcr_experiment marker_id_fk; Type: FK CONSTRAINT; Schema: sgn; Owner: postgres
---
-
-ALTER TABLE ONLY sgn.pcr_experiment
-    ADD CONSTRAINT marker_id_fk FOREIGN KEY (marker_id) REFERENCES sgn.marker(marker_id) MATCH FULL;
 
 
 --
@@ -210006,6 +211356,14 @@ ALTER TABLE ONLY sgn_people.sp_organization_person
 
 
 --
+-- Name: sp_papers person_id_fk; Type: FK CONSTRAINT; Schema: sgn_people; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn_people.sp_papers
+    ADD CONSTRAINT person_id_fk FOREIGN KEY (person_id) REFERENCES sgn_people.sp_person(sp_person_id);
+
+
+--
 -- Name: sp_person_organisms person_id_fk; Type: FK CONSTRAINT; Schema: sgn_people; Owner: postgres
 --
 
@@ -210019,14 +211377,6 @@ ALTER TABLE ONLY sgn_people.sp_person_organisms
 
 ALTER TABLE ONLY sgn_people.sp_project_person
     ADD CONSTRAINT person_id_fk FOREIGN KEY (sp_person_id) REFERENCES sgn_people.sp_person(sp_person_id);
-
-
---
--- Name: sp_papers person_id_fk; Type: FK CONSTRAINT; Schema: sgn_people; Owner: postgres
---
-
-ALTER TABLE ONLY sgn_people.sp_papers
-    ADD CONSTRAINT person_id_fk FOREIGN KEY (person_id) REFERENCES sgn_people.sp_person(sp_person_id);
 
 
 --
@@ -210075,6 +211425,22 @@ ALTER TABLE ONLY sgn_people.sp_group_member
 
 ALTER TABLE ONLY sgn_people.sp_group_member
     ADD CONSTRAINT sp_group_member_sp_person_id_fkey FOREIGN KEY (sp_person_id) REFERENCES sgn_people.sp_person(sp_person_id) ON DELETE CASCADE;
+
+
+--
+-- Name: sp_job sp_job_sp_person_id_fkey; Type: FK CONSTRAINT; Schema: sgn_people; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn_people.sp_job
+    ADD CONSTRAINT sp_job_sp_person_id_fkey FOREIGN KEY (sp_person_id) REFERENCES sgn_people.sp_person(sp_person_id);
+
+
+--
+-- Name: sp_job sp_job_type_id_fkey; Type: FK CONSTRAINT; Schema: sgn_people; Owner: postgres
+--
+
+ALTER TABLE ONLY sgn_people.sp_job
+    ADD CONSTRAINT sp_job_type_id_fkey FOREIGN KEY (type_id) REFERENCES public.cvterm(cvterm_id);
 
 
 --
@@ -210301,7 +211667,7 @@ GRANT USAGE ON SCHEMA physical TO web_usr;
 
 
 --
--- Name: SCHEMA public; Type: ACL; Schema: -; Owner: postgres
+-- Name: SCHEMA public; Type: ACL; Schema: -; Owner: pg_database_owner
 --
 
 GRANT USAGE ON SCHEMA public TO web_usr;
@@ -212179,6 +213545,20 @@ GRANT ALL ON SEQUENCE phenome.locus_dbxref_locus_dbxref_id_seq TO web_usr;
 
 
 --
+-- Name: TABLE locus_geno_marker; Type: ACL; Schema: phenome; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE phenome.locus_geno_marker TO web_usr;
+
+
+--
+-- Name: SEQUENCE locus_geno_marker_locus_geno_marker_id_seq; Type: ACL; Schema: phenome; Owner: postgres
+--
+
+GRANT USAGE ON SEQUENCE phenome.locus_geno_marker_locus_geno_marker_id_seq TO web_usr;
+
+
+--
 -- Name: TABLE locus_history; Type: ACL; Schema: phenome; Owner: postgres
 --
 
@@ -212477,6 +213857,20 @@ GRANT ALL ON TABLE phenome.stock_allele TO web_usr;
 --
 
 GRANT SELECT,USAGE ON SEQUENCE phenome.stock_allele_stock_allele_id_seq TO web_usr;
+
+
+--
+-- Name: TABLE stock_file; Type: ACL; Schema: phenome; Owner: postgres
+--
+
+GRANT SELECT,INSERT,UPDATE ON TABLE phenome.stock_file TO web_usr;
+
+
+--
+-- Name: SEQUENCE stock_file_stock_file_id_seq; Type: ACL; Schema: phenome; Owner: postgres
+--
+
+GRANT USAGE ON SEQUENCE phenome.stock_file_stock_file_id_seq TO web_usr;
 
 
 --
@@ -216651,6 +218045,20 @@ GRANT SELECT,USAGE ON SEQUENCE sgn_people.sp_group_sp_group_id_seq TO web_usr;
 
 
 --
+-- Name: TABLE sp_job; Type: ACL; Schema: sgn_people; Owner: postgres
+--
+
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE sgn_people.sp_job TO web_usr;
+
+
+--
+-- Name: SEQUENCE sp_job_sp_job_id_seq; Type: ACL; Schema: sgn_people; Owner: postgres
+--
+
+GRANT USAGE ON SEQUENCE sgn_people.sp_job_sp_job_id_seq TO web_usr;
+
+
+--
 -- Name: TABLE sp_login_old; Type: ACL; Schema: sgn_people; Owner: postgres
 --
 
@@ -217046,4 +218454,6 @@ REFRESH MATERIALIZED VIEW public.materialized_stockprop;
 --
 -- PostgreSQL database dump complete
 --
+
+\unrestrict wShTz6uqJ50Y2HNUD4ZtHTaqeIXlQxXa76afvBPchWL95TpgONlrZAXTLuDdz9Q
 

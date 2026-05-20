@@ -59,9 +59,7 @@ module.exports = {
     // Chunks and Minimization settings
     optimization: {
         minimize: true,
-        namedChunks: true,
         minimizer: [new TerserPlugin({
-            'sourceMap': true,
             'parallel': 4,
         })],
         runtimeChunk: {

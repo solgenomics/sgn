@@ -7,34 +7,63 @@ $preferred_species => undef
 $editable_stock_props => {}
 </%args>
 
-      <div style="border:0px solid;text-align:center;">
-            <!-- span style="font-face:arial;font-size:48pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span -->
-	    <img src="/img/Breedbase_HighRes.png" width="400" />
-      </div>
+<%perl>
+  my $template = $c->state;
+  use Data::Dumper;
+</%perl>
 
-      <div>
-	<h3>What is Breedbase?</h3>
+<div style="text-align: center">
+    <h1 style="text-align: center">Best Future Forests</h1>
+    <p style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold)">Advanced Forest Genomics and Integrative Resource Management System</p>
+</div>
+
+<!-- <div class="row">
+  <div class="col-sm-4" style="text-align: center">
+    <img src="/img/BFF-AFIRMS_logo_HiRes.png" style="max-width: 400px; width: 100%; margin-bottom: var(--padding-xl)">
+  </div>
+  <div class="col-sm-8">
+    <p style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold)">Best Future Forests: Advanced Forest Genomics and Integrative Resource Management System (BFF-AFIRMS)</p>
+    <p>BFF-AFIRMS is a transformative initiative aimed at digitalizing forest resource management and tree improvement in Alberta, Canada.</p>
+    <p>The project seeks to integrate high-throughput genotyping, predictive analytics, and decision-making science to ensure responsible stewardship of forest genetic resources in the face of climate challenges, and the growing demand for sustainable forest ecosystems and products.</p>
+    <p>BFF-AFIRMS is a joint effort across the Government of Alberta (GoA), forest industry partners of Tree Improvement of Alberta, University of Alberta (UofA, CA), and Oklahoma State University (USA).</p>
+  </div>
+</div> -->
+
+<& homepage/carousel.mas &>
+
+<div>
+
+	<h3>What is Best Future Forests?</h3>
+
+    <p>A transformative initiative aimed at digitalizing forest resource management and tree improvement in Alberta, Canada.</p>
+    <p>The project seeks to integrate high-throughput genotyping, predictive analytics, and decision-making science to ensure responsible stewardship of forest genetic resources in the face of climate challenges, and the growing demand for sustainable forest ecosystems and products.</p>
+    <p>This is a joint effort across the Government of Alberta (GoA), forest industry partners of Tree Improvement of Alberta, University of Alberta (UofA, CA), and Oklahoma State University (USA).</p>
+
+	<h3>How can I use the database?</h3>
+
+  Best Future Forests is a comprehensive breeding management and analysis software, that only requires a browser.
+  It can be used to design field layouts, collect phenotypic information using tablets, support the collection of genotyping
+  samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses
+  and predictions. Best Future Forests supports the <a href="https://brapi.org/specification">BrAPI</a> standard.
+
+  <h3>What is Breedbase?</h3>
 	Breedbase is a comprehensive breeding management and analysis software. It can be used to design field layouts, collect phenotypic information using tablets, support the collection of genotyping samples in a field, store large amounts of high density genotypic information, and provide Genomic Selection related analyses and predictions. Breedbase supports the BrAPI standard.
-	<h3>How can I use Breedbase?</h3>
-	Breedbase is a web application that only requires a browser. To get your Breedbase instance, contact the <a href="/contact/form">Breedbase development team</a>.
-	<h3>What crops are using Breedbase?</h3>
-	There are a number of instances running for diverse crops, including Cassava (<a href="https://cassavabase.org/">https://cassavabase.org</a>), sweet potato (<a href="https://sweetpotatobase.org/">https://sweetpotatobase.org</a>), banana (<a href="https://musabase.org/">https://musabase.org</a>), rice (<a href="https://ricebase.org/">https://ricebase.org</a>), tomato and other Solanaceae (<a href="https://solgenomics.net">https://solgenomics.net/</a>) and many others.
-      </div>
 
-      <h3>How can I learn more about Breedbase?</h3>
+  <h3>How can I learn more?</h3>
 
-      You can watch the Breedbase workshops on <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A">Youtube</a>, covering topics such as ontologies, trial design, data collection using fieldbook, data analysis, and genomic selection. 
-      
-      
+  See the <a href="/about">About</a> page for more information including tutorials and manuals.
+
+</div>
+
 <div class="container-fluid">
   <div class="row">
     <div class="col-sm-6 col-md-6 col-lg-6">
     </div>
-      
+
       <div class="col-sm-6 col-md-6 col-lg-6">
-        
+
       </div>
-      
+
   </div>
 </div>
 

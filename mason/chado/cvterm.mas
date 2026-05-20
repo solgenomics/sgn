@@ -237,7 +237,6 @@ my $edit_privs = $curator ;
 
 % my $props_subtitle = $allow_edits ? "[<a id=\"cvterm_add_props\" href=\"javascript:cvtermprops_addPropDialog()\">Add...</a>]" : "";
 
-% if ($is_variable) {
 <&| /page/info_section.mas, title => "Variable Properties" , collapsible=> 1, is_subsection => 1, subtitle=>$props_subtitle &>
       <& /chado/cvtermprops.mas,
        cv_name    => 'trait_property',
@@ -249,12 +248,6 @@ my $edit_privs = $curator ;
 	subset     => \@editable_cvterm_props,
 	editable   => \@editable_cvterm_props  &>
 </&>
-
-% }
-% else {
-
-
-%}
 
 <div id="cvterm_id" style="display:none" ><% $cvterm_name %>|<% $accession %></div>
 

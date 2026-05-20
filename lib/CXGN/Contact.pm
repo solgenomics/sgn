@@ -123,12 +123,13 @@ sub send_email {
 
         print STDERR "MAIL = " . Dumper( \%mail );
 
-        if ( sendmail(%mail) ) {
-            print STDERR "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";
-        }
-        else {
-            print STDERR "CXGN::Contact: UNABLE TO SEND EMAIL NOTIFICATION\n";
-        }
+        print STDERR "CXGN::Contact: UNABLE TO SEND EMAIL NOTIFICATION\n";
+        # if ( sendmail(%mail) ) {
+        #     print STDERR "CXGN::Contact: Email notification sent from $mailfrom to $mailto.\n";
+        # }
+        # else {
+        #     print STDERR "CXGN::Contact: UNABLE TO SEND EMAIL NOTIFICATION\n";
+        # }
     }
 
     return 1;

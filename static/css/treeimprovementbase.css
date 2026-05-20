@@ -1,0 +1,822 @@
+:root {
+
+    /* Background */
+    --background-color: #fff; /* White */
+
+    /* Border */
+    --border-color: var(--gray-300);
+    --border-radius: 5px;
+
+    /* Boostrap Breakpoints */
+    --bs-sm:  576px;
+    --bs-md:  768px;
+    --bs-lg:  992px;
+    --bs-xl:  1200px;
+    --bs-xxl: 1400px;
+
+    /* Button */
+    --button-background:       none;
+    --button-box-shadow:       var(--shadow-color) 0 1px 2px 0, var(--shadow-color) 0 1px 3px 0;
+
+    --button-background-color: var(--gray-200);
+    --button-text-color:       var(--text-color-primary);
+    --button-border-color:     var(--gray-300);
+
+    --button-hover-background:   linear-gradient( to bottom right, var(--gray-200), var(--gray-400) );
+    --button-hover-border-color: var(--gray-500);
+    --button-hover-box-shadow:   var(--shadow-color) 0 2px 4px 0;
+
+    /* Button Primary */
+    --button-primary-background-color: var(--green-600);
+    --button-primary-text-color:       var(--text-color-light);
+    --button-primary-border-color:     var(--green-600);
+
+    --button-primary-hover-background: linear-gradient( to bottom right, var(--green-600), var(--gray-700) );
+    --button-primary-hover-border-color: var(--green-800);
+    --button-primary-hover-box-shadow:   var(--shadow-color) 0 2px 4px 0;
+
+    /* Button Danger */
+    --button-danger-background-color: var(--red-500);
+    --button-danger-text-color:       var(--text-color-light);
+    --button-danger-border-color:     var(--red-500);
+
+    --button-danger-hover-background: linear-gradient( to bottom right, var(--red-500), var(--red-600) );
+    --button-danger-hover-border-color: var(--red-700);
+    --button-danger-hover-box-shadow:   var(--shadow-color) 0 2px 4px 0;
+
+    /* Filter */
+    --filter-light:            brightness(0) invert(1);
+    --filter-dark:             invert(12%) sepia(0%) saturate(167%) hue-rotate(206deg) brightness(92%) contrast(77%);
+
+    /* Font */
+    --font-family-base: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --line-height-base: 1.5;
+    --letter-spacing-base: -.011em;
+
+    /* Font  Size */
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-xxl: 24px;
+
+    /* Font Weight */
+    --font-weight-light:      300;
+    --font-weight-medium:     400;
+    --font-weight-bold:       600;
+    --font-weight-extra-bold: 700;
+
+    /* Footer */
+    --footer-height:           90px;
+    --footer-arrow-height:     30px;
+    --footer-collapsed-height: 38px;
+    --footer-box-shadow:       0px -2px 4px var(--shadow-color);
+
+    /* Glyphicons */
+    --icon-xs: 2em;
+    --icon-sm: 2.5em;
+    --icon-md: 3.5em;
+    --icon-cross-color: #b58921;
+    --icon-trial-color: #197a19;
+    --icon-settings-color: var(--gray-900);
+
+    /* Mathesar Gray: https://mathesar.org */
+    --gray-50:  #faf8f5;
+    --gray-100: #f2f0eb;
+    --gray-200: #e6e3db;
+    --gray-300: #d4d0c4;
+    --gray-400: #b8b3a3;
+    --gray-500: #938e7e;
+    --gray-600: #5d5850;
+    --gray-700: #3a342e;
+    --gray-800: #221e1a;
+    --gray-900: #171312;
+
+    /* Greens: https://coolors.co/ffffff-ccecd9-99d9b3-66c68c-33b366-00a040-008234-006528-00471c-002910 */
+    --green-100: #CCECD9; /* Honeydew */
+    --green-200: #99D9B3; /* Celadon */
+    --green-300: #66C68C; /* Emerald */
+    --green-400: #33B366; /* Jade */
+    --green-500: #00A040; /* Pigment Green */
+    --green-600: #008234; /* Forest Green */
+    --green-700: #006528; /* Dartmouth Green */
+    --green-800: #00471C; /* Pakistan Green */
+    --green-900: #002910; /* Dark Green */
+
+    /* Reds: https://coolors.co/edcccc-e6a1a1-df7676-d84b4b-d12020-a71818-7d1010-530808-290000 */
+    --red-100: #edccccff;
+    --red-200: #e6a1a1ff;
+    --red-300: #df7676ff;
+    --red-400: #d84b4bff;
+    --red-500: #d12020ff;
+    --red-600: #a71818ff;
+    --red-700: #7d1010ff;
+    --red-800: #530808ff;
+    --red-900: #290000ff;
+
+    /* Icons */
+    --icon-width: 24px;
+
+    /* Main Panel */
+    --main-panel-height: calc(100vh - var(--footer-height) - (var(--padding-lg) * 1));
+
+    /* Navbar Height */
+    --navbar-height: 60px;
+
+    /* Padding */
+    --padding-sm: 4px;
+    --padding-md: 6px;
+    --padding-lg: 10px;
+    --padding-xl: 24px;
+
+    /* Text */
+    --text-color:           #171717;
+    --text-color-primary:     var(--gray-700);
+    --text-color-secondary:   var(--gray-600);
+    /* --text-color-tertiary:    red; */
+    --text-color-light:        var(--gray-100);
+    --text-hover-shadow:      0.25px 0.25px 0px;
+
+    /* Screen */
+    --min-screen-width: 480px;
+
+    /* Shadows */
+    --shadow-color: rgba(0, 0, 0, .1);
+
+    /* Sidebar */
+    --sidebar-width:                 160px;
+    --sidebar-collapsed-width:       50px;
+    --sidebar-logo-height:           116px; /* Specific to the logo used */
+    --sidebar-collapsed-logo-height: 60px;
+    --sidebar-box-shadow-outer:      5px 5px 10px rgba(0,0,0,.35);
+    --sidebar-box-shadow-inner:      inset -5px 5px 10px rgba(0, 0, 0, 0.15), inset 5px 5px 10px rgba(0, 0, 0, 0.15);
+
+    /* Sidebar Extended */
+    --sidebar-extended-width:        220px;
+
+    /* Wells */
+    --well-box-shadow: var(--button-box-shadow);
+    --well-background-color: var(--gray-100);
+    --well-border-color: var(--gray-500);
+    --well-border: 1px solid var(--well-border-color);
+
+}
+
+/*
+-------------------------------------------------------------------------------
+Default Classes
+-------------------------------------------------------------------------------
+*/
+
+body {
+    background-color: var(--background-color);
+    color:            var(--text-color-primary);
+}
+
+body, a, th, td, span {
+    font-family:      var(--font-family-base);
+    font-size:        var(--font-size-md);
+    line-height:      var(--line-height-base);
+    font-weight:      var(--font-weight-medium);
+}
+
+h1,h2,h3,h4,h5,h6 {
+    font-family:      var(--font-family);
+}
+
+#wrapper {
+    min-height: 80vh;
+    margin: 0;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+}
+
+
+/*
+-------------------------------------------------------------------------------
+Barcodes
+-------------------------------------------------------------------------------
+*/
+
+.barcode_label {
+    width: 100%;
+    display: inline-block;
+    word-wrap: break-word;
+}
+
+.barcode_qr {
+    height: 150px;
+}
+
+/*
+-------------------------------------------------------------------------------
+Bootstrap
+-------------------------------------------------------------------------------
+*/
+
+.row {
+    margin-right: 0px;
+    margin-left: 0px;
+}
+
+.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9 {
+    padding-right:0px;
+    padding-left: 0px;
+    /* TBD: Verify */
+    /* display: contents; */
+}
+
+.control-value {
+    padding-top: 7px;
+}
+
+.label {
+    font-size: 50%;
+}
+
+/*
+-------------------------------------------------------------------------------
+Buttons
+-------------------------------------------------------------------------------
+*/
+
+.btn, button.modesel {
+    background:       var(--button-background);
+    background-color: var(--button-background-color);
+    color:            var(--button-text-color);
+    border:           1px solid var(--button-border-color);
+    box-shadow:       var(--button-box-shadow);
+    margin-right:     var(--padding-sm);
+}
+
+a.btn {
+    color: var(--button-text-color);
+}
+
+.btn-primary {
+    background:       var(--button-background);
+    background-color: var(--button-primary-background-color);
+    color:            var(--button-primary-text-color);
+    border:           1px solid var(--button-primary-border-color);
+    box-shadow:       var(--button-box-shadow);
+}
+
+.btn:hover,
+button.modesel:hover,
+button.modesel_hi:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background:       var(--button-hover-background);
+    border-color:     var(--button-hover-border-color);
+    box-shadow:       var(--button-hover-box-shadow);
+    color:            var(--button-text-color);
+    text-shadow:      var(--text-hover-shadow);
+}
+
+.btn-primary:hover {
+    background:       var(--button-primary-hover-background);
+    border-color:     var(--button-primary-hover-border-color);
+    box-shadow:       var(--button-primary-hover-box-shadow);
+    color:            var(--button-primary-text-color);
+}
+
+a.btn-primary {
+    color: var(--button-primary-text-color);
+}
+
+.btn-xs {
+    font-size:        var(--font-size-xs);
+}
+
+.btn-sm {
+    font-size:        var(--font-size-sm);
+}
+
+.btn-group {
+    display: inline-flex;
+}
+
+.btn-color {
+    background-color: var(--green-500);
+    border:           1px solid var(--green-600);
+    color:            var(--text-color-light);
+}
+
+.btn-color:hover {
+    background:       linear-gradient( to bottom right, var(--green-600), var(--green-800) );
+    color:            var(--text-color-light);
+}
+
+button.modesel_hi {
+    background-color: var(--green-600);
+    color:            var(--text-color-light);
+    border-color:     var(--green-800);
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius:    var(--border-radius);
+    padding:          0px;
+}
+
+.btn-danger {
+    background:       var(--button-background);
+    background-color: var(--button-danger-background-color);
+    color:            var(--button-danger-text-color);
+    border:           1px solid var(--button-danger-border-color);
+}
+
+.btn-danger:hover {
+    background:       var(--button-danger-hover-background);
+    border-color:     var(--button-danger-hover-border-color);
+    box-shadow:       var(--button-danger-hover-box-shadow);
+    color:            var(--button-danger-text-color);
+}
+
+/* Buttons that dismiss dialogs */
+/* button[data-dismiss] {
+    background-color: var(--gray-200);
+    color:            var(--text-color-primary);
+    border-color:     var(--gray-300);
+}
+
+button[data-dismiss]:hover {
+    background: none;
+    background-color: var(--gray-300);
+    border-color:     var(--gray-400);
+    color:            var(--text-color-primary);
+} */
+
+
+.new-list-button, .add-to-list-button {
+    font-size: var(--font-size-xs);
+    margin-left: var(--padding-sm);
+}
+
+.add-to-list-button, .new-list-button {
+    margin-left: 0px;
+}
+
+.button-keycloak {
+    background-color: #737373;
+    color: white;
+}
+.button-keycloak:hover {
+    background:       linear-gradient( to bottom right, #737373, #252525 );
+    color:            var(--text-color-light);
+}
+
+.button-google {
+    background-color: #efefef
+}
+
+.button-google:hover {
+    background:       linear-gradient( to bottom right, #efefef, #b9b8b8 );
+}
+
+
+/*
+-------------------------------------------------------------------------------
+Dropdown Menu
+-------------------------------------------------------------------------------
+*/
+
+.dropdown-menu li a:hover {
+    text-shadow: var(--text-hover-shadow);
+}
+
+.dropdown ul li:hover {
+    color: var(--text-color-primary);
+    text-shadow: var(--text-hover-shadow);
+    background-color: var(--gray-300);
+}
+
+.menu_click_dropdown:hover {
+    text-shadow: var(--text-hover-shadow);
+}
+
+.button-dropdown {
+    color: var(--text-color-secondary);
+    min-width: 100%;
+    font-size: var(--font-size-md);
+}
+
+.button-dropdown-item {
+    padding-left: var(--padding-lg); padding-right: var(--padding-lg)
+}
+
+/*
+-------------------------------------------------------------------------------
+Forms
+-------------------------------------------------------------------------------
+*/
+
+#quick_create_account_input_form td {
+    padding-bottom: var(--padding-lg);
+}
+
+.form-horizontal .form-group {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.form-group label {
+    white-space: break-spaces;
+}
+
+
+
+/*
+-------------------------------------------------------------------------------
+Icons
+-------------------------------------------------------------------------------
+*/
+
+.icon-info {
+    font-size: var(--icon-md);
+}
+
+.icon-cross {
+    color: var(--icon-cross-color);
+}
+
+.icon-trial {
+    color: var(--icon-trial-color);
+}
+
+.icon-settings {
+    color: var(--icon-settings-color);
+}
+
+/*
+-------------------------------------------------------------------------------
+iframe
+-------------------------------------------------------------------------------
+*/
+
+iframe {
+    width:            100%;
+    height:           calc(100% - var(--padding-large));
+    border:           0px;
+}
+
+.jbrowse-iframe {
+    min-height: 360px;
+    resize: vertical;
+}
+
+/*
+-------------------------------------------------------------------------------
+Info Sections
+-------------------------------------------------------------------------------
+*/
+
+div.infosectioncontent {
+    margin: 0px;
+    /* display: flex; */
+}
+
+td.infosectionsubtitle {
+    text-align: left;
+    padding-left: 22px;
+    text-wrap: auto;
+    display: inline-block;
+    width: 100%;
+}
+
+.infosectionhead {
+    margin-bottom: 0px;
+}
+
+.infosectionhead-no-icon {
+    margin-bottom: var(--padding-lg);
+    margin-top: var(--padding-lg);
+}
+
+.col-sm-12 {
+    min-width: var(--min-screen-width);
+}
+
+.panel-default {
+    margin-top: var(--padding-lg);
+    margin-bottom: 0px;
+    border: 1px solid var(--gray-500);
+    padding: var(--padding-xl);
+}
+
+#stock_details .panel-default {
+    border-width: 0px;
+    padding: 0px;
+}
+
+.panel-flush {
+    margin-top: var(--padding-lg);
+    margin-bottom: var(--padding-lg);
+    border-width: 0px;
+}
+
+.panel-buttons {
+    padding: var(--padding-lg);
+}
+
+.panel-buttons-flush {
+    padding: var(--padding-lg);
+    padding-left: 0px;
+}
+
+.well {
+    padding: var(--padding-xl);
+    /* display: table; */
+    /* width: 100%; */
+    box-shadow: var(--well-box-shadow);
+    background-color: var(--well-background-color);
+    border: var(--well-border);
+    border-radius: var(--border-radius);
+}
+
+/*
+-------------------------------------------------------------------------------
+Horizontal Rule
+-------------------------------------------------------------------------------
+*/
+
+hr {
+    height: 1px;
+    background-color: var(--well-border-color);
+    border: none;
+}
+
+/*
+-------------------------------------------------------------------------------
+Input
+-------------------------------------------------------------------------------
+*/
+
+input {
+    background-color: var(--gray-50);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-400);
+    outline: none;
+}
+
+input:focus, input:active {
+    box-shadow: 0 0 0 2px var(--gray-600);
+}
+
+/*
+-------------------------------------------------------------------------------
+JQuery
+-------------------------------------------------------------------------------
+*/
+
+
+.ui-autocomplete {
+    max-height: 480px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 2147483647 !important;
+}
+
+/* IE 6 doesn't support max-height
+* we use height instead, but this forces the menu to always be this tall
+*/
+* html .ui-autocomplete {
+  height: 480px;
+}
+
+/*
+-------------------------------------------------------------------------------
+Logo
+-------------------------------------------------------------------------------
+*/
+
+.index_logo_hires {
+    max-width: 200px;
+}
+
+/*
+-------------------------------------------------------------------------------
+Miscellaneous
+-------------------------------------------------------------------------------
+*/
+
+.compose-trait-col {
+    padding: var(--padding-lg);
+}
+
+#stock_image {
+    max-height: 200px;
+}
+
+.stock-owner {
+    background-color: var(--green-200);
+    padding-top: var(--padding-sm);
+    padding-bottom: var(--padding-sm);
+    padding-left: var(--padding-lg);
+    padding-right: var(--padding-lg);
+    border-radius: var(--border-radius);
+    font-weight: var(--font-weight-bold);
+}
+
+.stock-prop {
+    border-radius:var(--border-radius);
+    color:var(--text-color-primary);
+    border-style:solid;
+    border:1px;
+    padding:var(--padding-sm);
+    padding-right:var(--padding-lg);
+    padding-left:var(--padding-lg);
+    margin:6px;
+    background-color: var(--gray-200);
+    font-size: var(--font-size-sm);
+}
+
+.stock-prop-row {
+    padding-top: var(--padding-sm);
+    padding-bottom: var(--padding-sm);
+}
+
+.trial-details-col1 .table tbody tr td {
+    white-space: normal;
+}
+
+.trial-details-col2 {
+    padding-left: var(--padding-xl);
+}
+
+
+@media only screen and (max-width: 768px) {
+    .trial-details-col2 {
+        padding-left: 0px;
+        padding-top: var(--padding-xl);
+    }
+}
+
+/*
+-------------------------------------------------------------------------------
+Modal
+-------------------------------------------------------------------------------
+*/
+
+.modal {
+    min-width: var(--min-screen-width);
+}
+
+/*
+-------------------------------------------------------------------------------
+Navbar
+-------------------------------------------------------------------------------
+*/
+
+.navbar, .navbar-nav, .navbar-header {
+    min-height: var(--navbar-height);
+    background-color: var(--well-background-color);
+}
+
+.navbar-default {
+    box-shadow: var(--button-box-shadow);
+}
+
+.navbar-default .navbar-nav>li>a {
+    padding: 20px 20px;
+    color: var(--text-color-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.navbar-nav>li {
+    min-height: var(--navbar-height);
+}
+
+.navbar-nav .dropdown-menu {
+    background-color: var(--well-background-color);
+    box-shadow: var(--sidebar-box-shadow-outer);
+}
+
+.navbar-toggle {
+    color: var(--text-color-primary);
+    width: 40px;
+    padding: 4px;
+    font-size: var(--font-size-lg);
+}
+
+.navbar-toggle, .navbar-form {
+    margin-top: 12px;
+}
+
+#login_button_html_div {
+    margin-top: 4px;
+}
+
+#login_button_html_div .btn {
+    height: 34px;
+}
+
+.navbar-brand, .menu_click_dropdown {
+    min-height: var(--navbar-height);
+    border: none;
+    background-color: var(--well-background-color);
+    box-shadow: none;
+    font-size: var(--font-size-md);
+}
+
+.navbar-default .navbar-nav>li>a.btn:hover {
+    background: linear-gradient( to bottom right, var(--gray-200), var(--gray-300) );
+}
+
+/*
+-------------------------------------------------------------------------------
+Table
+-------------------------------------------------------------------------------
+*/
+
+.table {
+    border-spacing: 0px;
+    border-collapse: separate;
+    border: var(--well-border);
+    margin-bottom: 0px;
+    border-radius: var(--border-radius);
+}
+
+.table tbody tr td, .table tbody tr th {
+    /*word-break: break-word;*/
+    padding: var(--padding-sm);
+    white-space: nowrap;
+}
+
+.table.dataTable {
+    overflow: auto;
+    display: flow;
+}
+
+.table-flow-scroll {
+    display: flow;
+    overflow: auto;
+    /* TBD: Investigate this */
+    /*width: 100%;*/
+}
+
+.borderless {
+    border-width: 0px;
+}
+
+/*.table>tbody>tr>td, */
+
+/*
+-------------------------------------------------------------------------------
+Wizard
+-------------------------------------------------------------------------------
+*/
+
+div.wizard-panel {
+    padding: var(--padding-lg);
+    margin: var(--padding-lg);
+}
+
+.wizard-list-name {
+    text-align: left;
+    background-color: white;
+}
+
+.wizard-list-name:hover {
+    background: rgb(247, 247, 247);
+}
+
+.wizard-list-add {
+    background:       var(--button-background);
+    background-color: var(--button-primary-background-color);
+    color:            var(--button-primary-text-color);
+    border:           1px solid var(--button-primary-border-color);
+    box-shadow:       var(--button-box-shadow);
+    margin-right:     0px;
+}
+
+.wizard-list-add:hover {
+    background:       var(--button-primary-hover-background);
+    border-color:     var(--button-primary-hover-border-color);
+    box-shadow:       var(--button-primary-hover-box-shadow);
+    color:            var(--button-primary-text-color);
+}
+
+.wizard-count-selected, .wizard-count-all, .wizard-btn-tag {
+    font-size: var(--font-size-xs);
+}
+
+/*
+-------------------------------------------------------------------------------
+Dynamic Sizing
+-------------------------------------------------------------------------------
+*/
+
+/* Bootstrap breakpoint: < medium */
+@media only screen and (max-width: 768px) {
+}
+
+/* Bootstrap breakpoint: > medium */
+@media only screen and (min-width: 768px) {
+}
+
+/* Bootstrap breakpoint: < small */
+@media only screen and (max-width: 576px) {
+}

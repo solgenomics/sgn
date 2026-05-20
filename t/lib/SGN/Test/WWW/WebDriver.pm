@@ -61,16 +61,32 @@ use Try::Tiny;
 use Test::More;
 use File::Spec::Functions;
 use Selenium::Remote::Driver;
+use Selenium::Waiter qw(wait_until);
 
 has 'host' => ( is => 'rw',
 	      isa => 'Str',
 		default => sub { $ENV{SGN_TEST_SERVER} },
     );
 
+# Configurable implicit wait
+has 'implicit_wait' => ( is => 'rw', default => 45000 );
+
 has 'driver' => ( is => 'rw',
-		  isa => 'Selenium::Remote::Driver',
-		  default => sub { Selenium::Remote::Driver->new('base_url' => $ENV{SGN_TEST_SERVER}, 'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost') },
+          isa => 'Selenium::Remote::Driver',
+          lazy => 1,
+          builder => '_build_driver',
     );
+
+sub _build_driver {
+    my $self = shift;
+    my $driver = Selenium::Remote::Driver->new(
+        'base_url' => $ENV{SGN_TEST_SERVER},
+        'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
+    );
+    $driver->set_timeout('implicit', $self->implicit_wait);
+    $driver->set_timeout('page load', $self->implicit_wait);
+    return $driver;
+}
 
 has 'user_data' => ( is => 'rw',
 		     isa => 'Ref',
@@ -112,6 +128,8 @@ sub login {
     $password_field->send_keys($password);
     my $login_button = $d->find_element("submit_password", "id");
     $login_button->click();
+
+    sleep(2); # Determined empirically, prevents an "error has occurred" alert
 }
 
 sub logout { 
@@ -204,10 +222,27 @@ sub download_linked_file {
 
 }
 
+=item set_value_ok($self, $name, $method, $test_name, $value)
+Uses JavaScript to set the value of an input element more reliably
+than sending keys.
+=cut
+sub set_value_ok {
+    my ($self, $name, $method, $test_name, $value) = @_;
 
+    my $element = $self->find_element_ok($name, $method, $test_name);
+    $self->driver->execute_script("arguments[0].value = arguments[1];", $element, $value);
+    $self->driver->execute_script("arguments[0].dispatchEvent(new Event('change'));", $element);
+
+    return $element;
+}
+
+=item wait_for_working_dialog($self, $max, $id)
+Waits for a working dialog to disappear.  The default id is "working_modal".
+=cut
 sub wait_for_working_dialog {
     my $self = shift;
     my $max = shift || 300;
+    my $id = shift || "working_modal";
 
     sleep(3);
 
@@ -215,13 +250,48 @@ sub wait_for_working_dialog {
     my $count = 0;
     print STDERR "... waiting for working dialog ...\n";
     while ( !$is_hidden && $count < $max ) {
-        my $wd = $self->find_element("working_modal", "id");
+        my $wd = $self->find_element($id, "id");
         $is_hidden = $wd->is_hidden();
         $count++;
         sleep(1);
     }
     print STDERR "... working dialog dismissed ...\n";
 }
+
+=item wait_for_spinner($self, $name, $method)
+Waits for an element to appear and disappear.
+=cut
+sub wait_for_spinner {
+    my $self = shift;
+    my ($name, $method) = @_;
+
+    wait_until {
+        print STDERR "Waiting for spinner to appear...\n";
+        $self->driver->find_element($name, $method)->is_displayed();
+    } and wait_until {
+        print STDERR "Waiting for spinner to disappear...\n";
+        $self->driver->find_element($name, $method)->is_hidden();
+    };
+}
+
+=item wait_for_alert_dismissed($self)
+Waits for an alert to disappear.
+=cut
+sub wait_for_alert_dismissed {
+    my $self = shift;
+    wait_until {
+        my $alert_text;
+
+        try {
+            $alert_text = $self->driver->get_alert_text();
+        } catch {
+            $alert_text = undef;
+        }
+
+        return !defined $alert_text;
+    }
+}
+
 
 1;
    

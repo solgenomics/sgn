@@ -11,15 +11,20 @@
 
 <script defer="defer">
   jQuery(document).ready(function() {
-    
+
+    jQuery("#quick_search_input").autocomplete({
+        source: '/ajax/stock/stock_autocomplete',
+      });
+
+
     jQuery('#quick_search_icon').click(function () {
-      
+
       //open the search box
       if (jQuery('#quick_search_input').attr("placeholder") == "") {
         jQuery('#quick_search_input').attr("placeholder","Search");
-        
+
         jQuery('#quick_search_icon').addClass("input-group-addon");
-        
+
         jQuery('#advanced_search_li').css("display","table-cell");
         jQuery('#quick_search_input').css("display","table-cell");
         jQuery('#quick_search_input').css("width","0px");
@@ -51,7 +56,7 @@
         } //close search_val else
       }
     });
-    
+
   });
 </script>
 % }

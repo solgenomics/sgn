@@ -9,11 +9,11 @@ const {
 	import_regex,
 	src_path_to_JSAN,
 	isChildOf } = require("./utils.js");
-	
+
 module.exports = function() {
 	this.cacheable();
-	const callback = this.async();	
-	const options = loaderUtils.getOptions(this);
+	const callback = this.async();
+	const options = this.getOptions();
 	var rpath = this.resourcePath;
 	fs.readFile(rpath, function read(err, data) {
 	    if (err) {

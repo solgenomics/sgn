@@ -52,3 +52,4 @@ docs/*
 !docs/r_markdown_docs/
 !docs/r_markdown_docs/**
 .idea/
+db/delete_nd_experiment_ids

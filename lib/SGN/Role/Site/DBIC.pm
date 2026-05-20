@@ -29,7 +29,7 @@ requires
 sub dbic_schema {
     my ( $class, $schema_name, $profile_name, $sp_person_id) = @_;
     #my $self = shift;
-    print STDERR "sp_person_id passed to DBIC Schema: $sp_person_id \n";
+    #print STDERR "sp_person_id passed to DBIC Schema: $sp_person_id \n";
     $class = ref $class if ref $class;
     $schema_name or croak "must provide a schema package name to dbic_schema";
     #Class::MOP::load_class( $schema_name );
