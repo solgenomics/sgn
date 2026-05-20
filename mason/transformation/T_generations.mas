@@ -1,0 +1,38 @@
+
+<%args>
+$stock_id
+</%args>
+
+<div style="overflow:scroll">
+    <table class="table table-hover table-bordered" id="T_generations_table">
+        <thead>
+            <tr>
+                <th>T0</th>
+                <th>T1</th>
+                <th>T1 with T-DNA</th>
+                <th>T1 without T-DNA</th>
+            </tr>
+        </thead>
+
+    </table>
+</div>
+
+
+<style>
+    .table th {
+        white-space: nowrap;
+    }
+</style>
+
+
+<script>
+
+jQuery(document).ready(function(){
+    const stock_id = "<%$stock_id%>";
+
+    jQuery('#T_generation_section_onswitch').click( function() {
+    });
+});
+
+
+</script>
