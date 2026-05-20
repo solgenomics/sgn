@@ -370,7 +370,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $start_date = $c->req->param('start_date');
     my $end_date = $c->req->param('end_date');
     my $include_dateless_items = $c->req->param('include_dateless_items');
-    my $split_by_treatments = $c->req->param('split_by_treatments');
+    my $group_by_treatments = $c->req->param('group_by_treatments');
+    my $group_by_accession = $c->req->param('group_by_accession');
     my $select_clause_additional = '';
     my $group_by_additional = '';
     my $order_by_additional = '';
@@ -378,17 +379,36 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $rel_type_id;
     my $total_complete_number;
     # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
+    my $stocks_per_accession;
     if ($display eq 'plots') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-        my $plots = $c->stash->{trial}->get_plots();
-        $total_complete_number = scalar (@$plots);
+        if ($group_by_accession) {
+            $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+            $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+            $select_clause_additional = ', accession.uniquename, accession.stock_id';
+            $group_by_additional = ', accession.stock_id, accession.uniquename';
+            $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
+            $order_by_additional = ' , accession.uniquename DESC';
+        } else {
+            $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
+            $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+            my $plots = $c->stash->{trial}->get_plots();
+            $total_complete_number = scalar (@$plots);
+        }
     }
     if ($display eq 'plants') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-        my $plants = $c->stash->{trial}->get_plants();
-        $total_complete_number = scalar (@$plants);
+        if ($group_by_accession) {
+            $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+            $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+            $select_clause_additional = ', accession.uniquename, accession.stock_id';
+            $group_by_additional = ', accession.stock_id, accession.uniquename';
+            $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
+            $order_by_additional = ' , accession.uniquename DESC';
+        } else {
+            $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+            $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+            my $plants = $c->stash->{trial}->get_plants();
+            $total_complete_number = scalar (@$plants);
+        }
     }
     if ($display eq 'subplots') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id();
@@ -397,35 +417,19 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         $total_complete_number = scalar (@$subplots);
     }
     if ($display eq 'tissue_samples') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
-        my $subplots = $c->stash->{trial}->get_subplots();
-        $total_complete_number = scalar (@$subplots);
-    }
-    my $stocks_per_accession;
-    if ($display eq 'plots_accession') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-        $select_clause_additional = ', accession.uniquename, accession.stock_id';
-        $group_by_additional = ', accession.stock_id, accession.uniquename';
-        $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
-        $order_by_additional = ' , accession.uniquename DESC';
-    }
-    if ($display eq 'plants_accession') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
-        $select_clause_additional = ', accession.uniquename, accession.stock_id';
-        $group_by_additional = ', accession.stock_id, accession.uniquename';
-        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
-        $order_by_additional = ' , accession.uniquename DESC';
-    }
-    if ($display eq 'tissue_samples_accession') {
-        $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
-        $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
-        $select_clause_additional = ', accession.uniquename, accession.stock_id';
-        $group_by_additional = ', accession.stock_id, accession.uniquename';
-        $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
-        $order_by_additional = ' , accession.uniquename DESC';
+        if ($group_by_accession) {
+            $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+            $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+            $select_clause_additional = ', accession.uniquename, accession.stock_id';
+            $group_by_additional = ', accession.stock_id, accession.uniquename';
+            $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
+            $order_by_additional = ' , accession.uniquename DESC';
+        } else {
+            $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+            $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+            my $subplots = $c->stash->{trial}->get_subplots();
+            $total_complete_number = scalar (@$subplots);
+        }
     }
     if ($display eq 'analysis_instance') {
         $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'analysis_instance', 'stock_type')->cvterm_id();
@@ -435,7 +439,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $treatment_select = '';
     my $treatment_with = '';
     my $treatment_join = '';
-    if ($split_by_treatments) {
+    if ($group_by_treatments) {
         $treatment_with = "WITH treatment_by_stock AS (
             SELECT
                 nes.stock_id AS stock_id,
@@ -572,7 +576,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
-        if ($split_by_treatments) {
+        if ($group_by_treatments) {
             if ($select_clause_additional) {
                 push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
             }
@@ -646,7 +650,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
-        if ($split_by_treatments) {
+        if ($group_by_treatments) {
             if ($select_clause_additional) {
                 push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
             }
