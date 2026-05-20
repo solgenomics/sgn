@@ -82,7 +82,7 @@ sub add_stockprop_POST {
 
 	my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id } );
 
-    if ($stock && $prop && $prop_type) {
+    if ($stock && defined $prop && $prop_type) {
 
         my $message = '';
         if ($prop_type eq 'stock_synonym') {
