@@ -33,7 +33,8 @@ sub _validate_with_plugin {
             'Category' => [ 'Categories' ],
             'Reference' => [ 'References' ]
         },
-        column_arrays => [ 'Allele', 'Category', 'Reference' ]
+        column_arrays => [ 'Allele', 'Category', 'Reference' ],
+        unique_only_columns => [ 'Marker', 'Alias', 'Allele' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};

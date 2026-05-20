@@ -365,7 +365,7 @@ sub store_observation_variable_trait_method_scale {
     my $new_scale_name = shift;
     my $new_scale_definition = shift;
     my $new_scale_format = shift;
-    my $new_scale_minumum = shift;
+    my $new_scale_minimum = shift;
     my $new_scale_maximum = shift;
     my $new_scale_default = shift;
     my $new_scale_categories = shift;
@@ -549,19 +549,19 @@ sub store_observation_variable_trait_method_scale {
             my $scale_minimum_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trait_minimum', 'trait_property')->cvterm_id();
 
             my @cvtermprops;
-            if ($new_scale_format) {
+            if (defined $new_scale_format && length $new_scale_format) {
                 push @cvtermprops, {type_id => $scale_format_cvterm_id, value => $new_scale_format};
             }
-            if ($new_scale_minumum) {
-                push @cvtermprops, {type_id => $scale_minimum_cvterm_id, value => $new_scale_minumum};
+            if (defined $new_scale_minimum && length $new_scale_minimum) {
+                push @cvtermprops, {type_id => $scale_minimum_cvterm_id, value => $new_scale_minimum};
             }
-            if ($new_scale_maximum) {
+            if (defined $new_scale_maximum && length $new_scale_maximum) {
                 push @cvtermprops, {type_id => $scale_maximum_cvterm_id, value => $new_scale_maximum};
             }
-            if ($new_scale_default) {
+            if (defined $new_scale_default && length $new_scale_default) {
                 push @cvtermprops, {type_id => $scale_default_cvterm_id, value => $new_scale_default};
             }
-            if ($new_scale_categories) {
+            if (defined $new_scale_categories && length $new_scale_categories) {
                 push @cvtermprops, {type_id => $scale_categories_cvterm_id, value => $new_scale_categories};
             }
 

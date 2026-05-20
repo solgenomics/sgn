@@ -27,13 +27,12 @@ my $data_level = 'plots';
 my $selected_columns = encode_json {'plot_name'=>1,'block_number'=>1,'plot_number'=>1,'rep_number'=>1,'row_number'=>1,'col_number'=>1,'accession_name'=>1,'is_a_control'=>1,'pedigree'=>1,'location_name'=>1,'trial_name'=>1,'year'=>1,'synonyms'=>1,'tier'=>1,'seedlot_name'=>1,'seed_transaction_operator'=>1,'num_seed_per_plot'=>1};
 my $trait_list = 13;
 
-$mech->post_ok('http://localhost:3010/ajax/fieldbook/create', ['trial_id'=>$trial_id, 'data_level'=>$data_level, 'selected_columns'=>$selected_columns, 'trait_list'=>$trait_list] );
+$mech->post_ok('http://localhost:3010/ajax/fieldbook/create', ['trial_id'=>$trial_id, 'data_level'=>$data_level, 'selected_columns'=>$selected_columns, 'trait_list'=>$trait_list, 'include_measured' => 'false', 'treatments' => 'false'] );
 $response = decode_json $mech->content;
 print STDERR Dumper $response;
 my $file_name = $response->{file};
 
 my $contents = ReadData ($file_name);
-#print STDERR Dumper $contents;
 
 my $cells = $contents->[1]->{cell};
 print STDERR Dumper $cells;

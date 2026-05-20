@@ -30,7 +30,7 @@ it under the same terms as Perl itself.
 
 =cut
 
-package UpdateMaterializedPhenoviewIntercrop;
+package UpdateTraitsViewForMultipleTraitOntologies;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';

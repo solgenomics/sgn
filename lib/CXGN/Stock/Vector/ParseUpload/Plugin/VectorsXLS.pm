@@ -9,6 +9,10 @@ use Data::Dumper;
 use CXGN::List::Validate;
 use CXGN::BreedersToolbox::StocksFuzzySearch;
 
+#
+# DEPRECATED: This plugin has been replaced by the VectorGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 
