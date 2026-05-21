@@ -4,16 +4,15 @@ $stock_id
 </%args>
 
 <div style="overflow:scroll">
-    <table class="table table-hover table-bordered" id="T_generations_table">
+    <table class="table table-hover table-bordered" id="transformant_progenies_table">
         <thead>
             <tr>
-                <th>T0</th>
-                <th>T1</th>
-                <th>T1 with T-DNA</th>
-                <th>T1 without T-DNA</th>
+                <th>Accessions</th>
+                <th>Vector Name</th>
+                <th>Number of Insertions</th>
+                <th>Generation</th>
             </tr>
         </thead>
-
     </table>
 </div>
 
@@ -31,6 +30,12 @@ jQuery(document).ready(function(){
     const stock_id = "<%$stock_id%>";
 
     jQuery('#T_generation_section_onswitch').click( function() {
+        const progenies_table = jQuery('#transformant_progenies_table').DataTable({
+            'autoWidth': false,
+            'order': false,
+            'ajax': '/ajax/transformation/transformant_progenies/' + stock_id,
+
+        });
     });
 });
 

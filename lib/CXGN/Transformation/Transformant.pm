@@ -200,6 +200,39 @@ sub _get_transgenes {
 }
 
 
+sub get_progeny_info {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $transformant_stock_id = $self->transformant_stock_id();
+
+    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
+    my $number_of_insertions_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'number_of_insertions', 'stock_property')->cvterm_id();
+    my $transgenic_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'transgenic', 'stock_property')->cvterm_id();
+    my $T_generation_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'T_generation', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT progeny.stock_id, progeny.uniquename, transgenic.value, number_of_insertions.value, T_generation.value
+        FROM stock
+        JOIN stock_relationship ON (stock.stock_id = stock_relationship.subject_id) AND stock_relationship.type_id = ? AND stock_relationship.value = 'self'
+        JOIN stock AS progeny ON (progeny.stock_id = stock_relationship.object_id) AND progeny.type_id = ?
+        LEFT JOIN stockprop AS transgenic ON (transgenic.stock_id = progeny.stock_id) AND transgenic.type_id = ?
+        LEFT JOIN stockprop AS number_of_insertions ON (number_of_insertions.stock_id = progeny.stock_id) AND number_of_insertions.type_id = ?
+        LEFT JOIN stockprop AS T_generation ON (T_generation.stock_id = progeny.stock_id) AND T_generation.type_id = ?
+        WHERE stock.stock_id = ? ORDER BY progeny.stock_id ASC";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+
+    $h->execute($female_parent_type_id, $accession_type_id, $transgenic_type_id, $number_of_insertions_type_id, $T_generation_type_id, $transformant_stock_id);
+
+    my @progeny_info = ();
+    while (my ($progeny_id,  $progeny_name, $transgenic_info, $number_of_insertions, $T_generation) = $h->fetchrow_array()){
+        push @progeny_info, [$progeny_id,  $progeny_name, $transgenic_info, $number_of_insertions, $T_generation]
+    }
+
+    return \@progeny_info;
+
+}
+
 ###
 1;
 ###

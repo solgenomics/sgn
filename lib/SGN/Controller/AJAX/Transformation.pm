@@ -1875,6 +1875,31 @@ sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted
     $c->stash->{rest}={data=>\@obsoleted_accessions};
 }
 
+
+sub get_transformant_progenies :Path('/ajax/transformation/transformant_progenies') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $transformant_stock_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $dbh = $c->dbc->dbh;
+
+    my $transformant_obj = CXGN::Transformation::Transformant->new({schema=>$schema, dbh=>$dbh, transformant_stock_id=>$transformant_stock_id});
+    my $result = $transformant_obj->get_progeny_info();
+    my @sorted_result = natkeysort {($_->[1])} @$result;
+
+    my @progeny_info;
+
+    foreach my $r (@sorted_result){
+        my ($progeny_stock_id, $progeny_name, $vector_name, $number_of_insertions, $T_generation) = @$r;
+            push @progeny_info, [qq{<a href="/stock/$progeny_stock_id/view">$progeny_name</a>}, $vector_name, $number_of_insertions, 'T'.$T_generation, $progeny_name];
+
+    }
+
+    $c->stash->{rest} = {data => \@progeny_info};
+
+}
+
+
 ###
 1;#
 ###
