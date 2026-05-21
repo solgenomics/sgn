@@ -8,9 +8,9 @@ $stock_id
         <thead>
             <tr>
                 <th>Accessions</th>
+                <th>Generation</th>
                 <th>Vector Name</th>
                 <th>Number of Insertions</th>
-                <th>Generation</th>
             </tr>
         </thead>
     </table>
@@ -29,7 +29,7 @@ $stock_id
 jQuery(document).ready(function(){
     const stock_id = "<%$stock_id%>";
 
-    jQuery('#T_generation_section_onswitch').click( function() {
+    jQuery('#progenies_section_onswitch').click( function() {
         const progenies_table = jQuery('#transformant_progenies_table').DataTable({
             'autoWidth': false,
             'order': false,

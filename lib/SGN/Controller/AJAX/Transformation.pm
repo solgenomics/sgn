@@ -1891,7 +1891,7 @@ sub get_transformant_progenies :Path('/ajax/transformation/transformant_progenie
 
     foreach my $r (@sorted_result){
         my ($progeny_stock_id, $progeny_name, $vector_name, $number_of_insertions, $T_generation) = @$r;
-            push @progeny_info, [qq{<a href="/stock/$progeny_stock_id/view">$progeny_name</a>}, $vector_name, $number_of_insertions, 'T'.$T_generation, $progeny_name];
+            push @progeny_info, [qq{<a href="/stock/$progeny_stock_id/view">$progeny_name</a>}, 'T'.$T_generation, $vector_name, $number_of_insertions, $progeny_name];
 
     }
 

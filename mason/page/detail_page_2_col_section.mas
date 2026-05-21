@@ -364,9 +364,9 @@ $logged_in_name => undef
 % if ($info_section_id eq 'delete_transformation_section'){
                                 <& /transformation/delete_transformation_section.mas, transformation_id => $transformation_id, has_associated_transformants => $has_associated_transformants &>
 % } #End delete_transformation_section
-% if ($info_section_id eq 'T_generation_section'){
-                                <& /transformation/T_generations.mas, stock_id => $stock_id &>
-% } #End T_generation_section
+% if ($info_section_id eq 'progenies_section'){
+                                <& /transformation/progeny_info.mas, stock_id => $stock_id &>
+% } #End progenies_section
 
 
 % if ($info_section_id eq 'stock_images_section'){
