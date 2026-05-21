@@ -1,0 +1,47 @@
+<%args>
+</%args>
+
+<div class="container" style="max-width: 1100px;">
+  <h2>SeedQuest — Legal Notice</h2>
+
+  <p>
+    SeedQuest provides digital tools for agricultural analysis, field experimentation, breeding data management,
+    and decision-support workflows.
+  </p>
+
+  <p>
+    All data, tools, and information available through SeedQuest are provided on an “AS IS” and “AS AVAILABLE” basis,
+    without warranties of any kind, either express or implied, including (without limitation) warranties of
+    merchantability, fitness for a particular purpose, accuracy, non-infringement, or availability.
+  </p>
+
+  <p>
+    SeedQuest outputs are intended to support professional decision-making. They do not constitute guaranteed
+    recommendations, official scientific publications, regulatory guidance, or professional services.
+    Users must independently validate results in the field and ensure compliance with applicable laws and regulations.
+  </p>
+
+  <p>
+    Users are solely responsible for the accuracy, legality, completeness, and interpretation of any data uploaded,
+    generated, or exported from the system. SeedQuest is not liable for agronomic, financial, operational, or
+    consequential outcomes resulting from platform usage, including decisions made based on analyses, forecasts,
+    or imported third-party data sources.
+  </p>
+
+  <p>
+    The platform may include experimental features, custom ontologies, user-defined calculations, and integrations
+    with external services. Such components may change over time and may contain errors or incomplete information.
+  </p>
+
+  <p style="margin-top: 18px;">
+    <b>Credits:</b> SeedQuest is built upon open scientific and technical foundations developed within the
+    Sol Genomics Network (SGN) ecosystem and related academic initiatives, including contributions from the
+    Boyce Thompson Institute and collaborating institutions. These contributions are gratefully acknowledged.
+  </p>
+
+  <h3>Learn and documentation</h3>
+  <ul>
+    <li><a href="https://solgenomics.github.io/sgn/" target="_blank">Upstream SGN/Breedbase manual</a></li>
+    <li><a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_blank">Workshops & tutorials (YouTube)</a></li>
+  </ul>
+</div>
