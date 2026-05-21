@@ -66,10 +66,10 @@ sub patch {
 
     my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
     my $site_basedir = getcwd()."/../..";
-    my $dbpass_key = `cat $site_basedir/sgn.conf $site_basedir/sgn_local.conf | grep '^dbpass'`;
-    my (undef, $dbpass) = split(/\s+/, $dbpass_key);
-    my $dbuser_key = `cat $site_basedir/sgn.conf $site_basedir/sgn_local.conf | grep '^dbuser'`;
-    my (undef, $dbuser) = split(/\s+/, $dbuser_key);
+    my $dbuser = $self->dbuser;
+    my $dbpass = $self->dbpass;
+
+    print STDERR "\n Got DB with $dbuser and $dbpass.\n";
         
     print STDERR "INSERTING CV TERMS...\n";
 

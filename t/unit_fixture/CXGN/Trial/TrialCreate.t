@@ -790,6 +790,6 @@ ok(! $delete_error);
 eval {$test_treatment->delete()};
 ok(! $@ , 'Check treatment delete');
 
-# $fix->clean_up_db();
+$fix->clean_up_db();
 
 done_testing();

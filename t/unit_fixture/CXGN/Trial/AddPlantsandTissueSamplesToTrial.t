@@ -14,6 +14,7 @@ use Spreadsheet::Read;
 use CXGN::Fieldbook::DownloadTrial;
 use File::Temp 'tempfile';
 use DateTime;
+use CXGN::Stock;
 
 my $f = SGN::Test::Fixture->new();
 
@@ -1545,6 +1546,65 @@ for my $extension ("xls", "xlsx") {
     is($plot_name_3, 'test_trial211');
     is($plant_name_3, 'test_trial211_plant_1');
     is($tissue_sample_name_3, 'test_trial211_plant_1_root1');
+
+    #test retrieving trial for accessions, plots, plants and tissue $sample
+    my $schema = $f->bcs_schema();
+    my $accession_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_accession1'})->stock_id();
+    my $plot_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial22'})->stock_id();
+    my $plant_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial22_plant_1'})->stock_id();
+    my $tissue_sample_stock_id = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial25_plant_1_leaf'})->stock_id();
+
+    #accession
+    my $accession_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $accession_stock_id
+    );
+    my @accession_trials = $accession_stock->get_trials();
+    my $accession_number_of_trials = scalar @accession_trials;
+    my $accession_trial_name = $accession_trials[0][1];
+    my $accession_trial_location = $accession_trials[0][3];
+    is($accession_number_of_trials, 1);
+    is($accession_trial_name, 'test_trial');
+    is($accession_trial_location, 'test_location');
+
+    #plot
+    my $plot_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $plot_stock_id
+    );
+    my @plot_trials = $plot_stock->get_trials();
+    my $plot_number_of_trials = scalar @plot_trials;
+    my $plot_trial_name = $plot_trials[0][1];
+    my $plot_trial_location = $plot_trials[0][3];
+    is($plot_number_of_trials, 1);
+    is($plot_trial_name, 'test_trial');
+    is($plot_trial_location, 'test_location');
+
+    #plant
+    my $plant_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $plant_stock_id
+    );
+    my @plant_trials = $plant_stock->get_trials();
+    my $plant_number_of_trials = scalar @plant_trials;
+    my $plant_trial_name = $plant_trials[0][1];
+    my $plant_trial_location = $plant_trials[0][3];
+    is($plant_number_of_trials, 1);
+    is($plant_trial_name, 'test_trial');
+    is($plant_trial_location, 'test_location');
+
+    #tissue_sample
+    my $tissue_sample_stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $tissue_sample_stock_id
+    );
+    my @tissue_sample_trials = $tissue_sample_stock->get_trials();
+    my $tissue_sample_number_of_trials = scalar @tissue_sample_trials;
+    my $tissue_sample_trial_name = $tissue_sample_trials[0][1];
+    my $tissue_sample_trial_location = $tissue_sample_trials[0][3];
+    is($tissue_sample_number_of_trials, 1);
+    is($tissue_sample_trial_name, 'test_trial');
+    is($tissue_sample_trial_location, 'test_location');
 
     $f->clean_up_db();
 }

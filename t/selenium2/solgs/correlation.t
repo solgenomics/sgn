@@ -78,7 +78,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table'); 
-    sleep(2);
+    sleep(5);
 
 
     $d->get_ok('/correlation/analysis', 'correlation home page');
@@ -145,7 +145,7 @@ $d->while_logged_in_as("submitter", sub {
 
     `rm -r $cache_dir`;
 
-    # ########## solGS ##########
+    ########## solGS ##########
     $d->get('/solgs', 'solgs home page');
     sleep(3);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -239,7 +239,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="Kasese solgs trial"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('run_genetic_correlation', 'id',  'calc gen corr')->click();
-    sleep(200);
+    sleep(300);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
     sleep(5);
 
@@ -253,7 +253,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial type tr pop')->click();
     sleep(5);
     $d->find_element_ok('run_genetic_correlation', 'id',  'calc gen corr')->click();
-    sleep(200);
+    sleep(300);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot')->click();
     sleep(5);
 
@@ -270,7 +270,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(250);
+    sleep(350);
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
@@ -285,7 +285,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(1);
+    sleep(2);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
@@ -318,7 +318,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
     sleep(3);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
-    sleep(2);
+    sleep(3);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
     sleep(5);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
@@ -361,7 +361,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(250);
+    sleep(350);
 
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
@@ -371,7 +371,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
     sleep(3);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
-    sleep(10);
+    sleep(20);
 
 
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
@@ -387,7 +387,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	  sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(300);
+    sleep(350);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(15);
 
@@ -399,7 +399,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="Training population 2804608595"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('run_genetic_correlation', 'id',  'calc gen corr')->click();
-    sleep(200);
+    sleep(350);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
 
@@ -414,7 +414,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//select[@id="corr_pops_select"]/option[text()="trial2 NaCRRI"]', 'xpath', 'select trial type tr pop')->click();
     sleep(3);
     $d->find_element_ok('run_genetic_correlation', 'id',  'calc gen corr')->click();
-    sleep(200);
+    sleep(350);
     $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
 
@@ -430,7 +430,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(250);
+    sleep(350);
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
    sleep(1);
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);

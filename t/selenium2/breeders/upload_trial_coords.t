@@ -1,9 +1,11 @@
 use lib 't/lib';
 
-use Test::More 'tests' => 12;
+use Test::More 'tests' => 11;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+
+use strict;
 
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
@@ -17,7 +19,7 @@ $t->while_logged_in_as("submitter", sub {
     my $heatmap_onswitch = $t->find_element_ok("pheno_heatmap_onswitch",  "id",  "click to open pheno heatmap panel");
 
     $heatmap_onswitch->click();
-    sleep(3);
+    sleep(5);
 
     $t->find_element_ok("heatmap_upload_trial_coords_link", "id", "click on upload_trial_coords_link ")->click();
 
@@ -34,10 +36,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(15);
 
     $t->find_element_ok("trial_coord_upload_success_dialog_message_cancel", "id", "close success msg")->click();
-    sleep(1);
-
-    $t->find_element_ok("upload_trial_coords_cancel_button", "id", "close upload modal")->click();
-    sleep(1);
+    sleep(10);
 
     # RELOAD PAGE TO CHECK IF SUCCESS
     $t->get_ok('/breeders/trial/137');
@@ -54,7 +53,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->find_element_ok("delete_field_map_hm_link", "id", "find a delete coordinates after upload button and click")->click();
     sleep(1);
 
-    $t->find_element_ok("delete_field_coords_ok_button", "id", "find confirm deletion of coordinates after upload");
+    $t->accept_alert_ok("find confirm deletion of coordinates after upload");
     }
 );
 

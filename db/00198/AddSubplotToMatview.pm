@@ -215,45 +215,70 @@ SELECT cvterm.cvterm_id AS trait_component_id,
     GROUP BY 2,1 ORDER BY 2,1;
 ALTER VIEW trait_components OWNER TO web_usr;
 
+-- (the following was fixed after the patch had been issued. Patch 202 also fixes this)
+-- DROP VIEW IF EXISTS public.traits CASCADE;
+-- CREATE OR REPLACE VIEW public.traits AS
+-- SELECT
+--     cvterm.cvterm_id AS trait_id,
+--     (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
+-- FROM
+--     cvterm
+--     JOIN dbxref USING(dbxref_id)
+--     JOIN db ON(dbxref.db_id = db.db_id)
+--     LEFT JOIN cvterm_relationship is_variable
+--         ON cvterm.cvterm_id = is_variable.subject_id
+--         AND is_variable.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF' and is_relationshiptype = 1)
+-- WHERE
+--     cvterm.cvterm_id IN (
+--         SELECT cvterm_id
+--         FROM cvprop
+--         WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'trait_ontology')
+--     )
+--     AND is_variable.subject_id IS NOT NULL
+
+-- UNION
+
+-- SELECT
+--     cvterm.cvterm_id AS trait_id,
+--     (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
+-- FROM
+--     cvterm
+--     JOIN dbxref USING(dbxref_id)
+--     JOIN db ON(dbxref.db_id = db.db_id)
+--     LEFT JOIN cvterm_relationship is_subject
+--         ON cvterm.cvterm_id = is_subject.subject_id
+-- WHERE
+--     cvterm.cvterm_id IN (
+--         SELECT cvterm_id
+--         FROM cvprop
+--         WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'composed_trait_ontology')
+--     )
+--     AND is_subject.subject_id IS NOT NULL
+-- ORDER BY 2;
+
 DROP VIEW IF EXISTS public.traits CASCADE;
-CREATE OR REPLACE VIEW public.traits AS
-SELECT 
-    cvterm.cvterm_id AS trait_id,
-    (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
-FROM 
-    cvterm
+CREATE VIEW public.traits AS
+  SELECT cvterm.cvterm_id AS trait_id,
+  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+	FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'trait_ontology'))
+    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
+	  JOIN dbxref USING(dbxref_id)
+    JOIN db ON(dbxref.db_id = db.db_id)
+    LEFT JOIN cvterm_relationship is_variable ON cvterm.cvterm_id = is_variable.subject_id AND is_variable.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF' AND cv_id = (SELECT cv_id FROM cv where cv.name = 'relationship') )
+    WHERE is_variable.subject_id IS NOT NULL
+    GROUP BY 1,2
+  UNION
+  SELECT cvterm.cvterm_id AS trait_id,
+  (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_name
+  FROM cv
+    JOIN cvprop ON(cv.cv_id = cvprop.cv_id AND cvprop.type_id IN (SELECT cvterm_id from cvterm where cvterm.name = 'composed_trait_ontology'))
+    JOIN cvterm ON(cvprop.cv_id = cvterm.cv_id)
     JOIN dbxref USING(dbxref_id)
     JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_variable 
-        ON cvterm.cvterm_id = is_variable.subject_id 
-        AND is_variable.type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'VARIABLE_OF' and is_relationshiptype = 1)
-WHERE 
-    cvterm.cvterm_id IN (
-        SELECT cvterm_id 
-        FROM cvprop 
-        WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'trait_ontology')
-    )
-    AND is_variable.subject_id IS NOT NULL
-
-UNION
-
-SELECT 
-    cvterm.cvterm_id AS trait_id,
-    (((cvterm.name || '|') || db.name) || ':' || dbxref.accession) AS trait_name
-FROM 
-    cvterm
-    JOIN dbxref USING(dbxref_id)
-    JOIN db ON(dbxref.db_id = db.db_id)
-    LEFT JOIN cvterm_relationship is_subject 
-        ON cvterm.cvterm_id = is_subject.subject_id
-WHERE 
-    cvterm.cvterm_id IN (
-        SELECT cvterm_id 
-        FROM cvprop 
-        WHERE type_id IN (SELECT cvterm_id FROM cvterm WHERE name = 'composed_trait_ontology')
-    )
-    AND is_subject.subject_id IS NOT NULL
-ORDER BY 2;
+    LEFT JOIN cvterm_relationship is_subject ON cvterm.cvterm_id = is_subject.subject_id
+    WHERE is_subject.subject_id IS NOT NULL
+    GROUP BY 1,2 ORDER BY 2;
 
 ALTER VIEW public.traits OWNER TO web_usr;
 
@@ -300,7 +325,7 @@ SELECT projectprop.value AS year_id,
 ALTER VIEW years OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.seedlots CASCADE;
-CREATE VIEW public.seedlots AS 
+CREATE VIEW public.seedlots AS
 SELECT stock.stock_id AS seedlot_id,
    stock.uniquename AS seedlot_name
    FROM stock
@@ -485,18 +510,18 @@ ALTER VIEW plotsXtraits OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.subplotsXtraits CASCADE;
 CREATE VIEW public.subplotsXtraits AS
-select sr.object_id as subplot_id, p.cvalue_id as trait_id from stock_relationship sr 
+select sr.object_id as subplot_id, p.cvalue_id as trait_id from stock_relationship sr
     join nd_experiment_stock nes on nes.stock_id = sr.object_id
-    join nd_experiment_phenotype nep on nep.nd_experiment_id = nes.nd_experiment_id 
-    join phenotype p on p.phenotype_id = nep.phenotype_id 
+    join nd_experiment_phenotype nep on nep.nd_experiment_id = nes.nd_experiment_id
+    join phenotype p on p.phenotype_id = nep.phenotype_id
     where sr.type_id = (select cvterm_id from cvterm where name = 'subplot_of')
     group by 1,2;
 ALTER VIEW subplotsXtraits OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.traitsXtrials CASCADE;
 CREATE VIEW public.traitsXtrials AS
-select  p.cvalue_id as trait_id, nep.project_id as trial_id from nd_experiment_project nep 
-join nd_experiment_phenotype nep2 on nep2.nd_experiment_id = nep.nd_experiment_id 
+select  p.cvalue_id as trait_id, nep.project_id as trial_id from nd_experiment_project nep
+join nd_experiment_phenotype nep2 on nep2.nd_experiment_id = nep.nd_experiment_id
 join phenotype p on p.phenotype_id = nep2.phenotype_id
 GROUP BY 1,2;
 ALTER VIEW traitsXtrials OWNER TO web_usr;
@@ -968,7 +993,7 @@ CREATE VIEW public.plotsXsubplots as
 SELECT sr.object_id as subplot_id,
 s.stock_id AS plot_id
 from stock_relationship sr
-join stock s on s.stock_id = sr.subject_id 
+join stock s on s.stock_id = sr.subject_id
 where sr.type_id = (select cvterm_id from cvterm where name = 'subplot_of')
 and s.type_id = (select cvterm_id from cvterm where name = 'plot');
 ALTER VIEW public.plotsXsubplots OWNER TO web_usr;
@@ -1155,7 +1180,7 @@ ALTER VIEW trialsXyears OWNER TO web_usr;
 DROP VIEW IF EXISTS public.accessionsXorganisms CASCADE;
 CREATE VIEW public.accessionsXorganisms AS
 select s.stock_id as accession_id, s.organism_id
-from stock s 
+from stock s
 where s.type_id = (select cvterm_id from cvterm where cvterm.name = 'accession')
 group by s.stock_id, s.organism_id;
 ALTER VIEW accessionsXorganisms OWNER TO web_usr;
@@ -1203,7 +1228,7 @@ SELECT s.organism_id,
     trialdesign.value AS trial_design_id
    FROM public.materialized_phenoview
    JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'design' )
-   JOIN public.stock s on s.stock_id = public.materialized_phenoview.accession_id  
+   JOIN public.stock s on s.stock_id = public.materialized_phenoview.accession_id
   GROUP BY organism_id, trialdesign.value;
 ALTER VIEW organismsXtrial_designs OWNER TO web_usr;
 
@@ -1215,7 +1240,7 @@ SELECT s.organism_id,
    FROM public.materialized_phenoview
    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id AND trialprop.type_id IN (SELECT cvterm_id from cvterm JOIN cv USING(cv_id) WHERE cv.name = 'project_type' )
    JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
-   JOIN public.stock s on s.stock_id = public.materialized_phenoview.accession_id 
+   JOIN public.stock s on s.stock_id = public.materialized_phenoview.accession_id
   GROUP BY organism_id, trialterm.cvterm_id;
 ALTER VIEW accessionsXtrial_types OWNER TO web_usr;
 
@@ -1224,7 +1249,7 @@ ALTER VIEW accessionsXtrial_types OWNER TO web_usr;
 DROP VIEW IF EXISTS public.organismsXplots CASCADE;
 CREATE VIEW public.organismsXplots AS
 select s.organism_id, s.stock_id as plot_id
-from stock s 
+from stock s
 where s.type_id = (select cvterm_id from cvterm where cvterm.name = 'plot')
 group by s.stock_id, plot_id;
 ALTER VIEW organismsXplots OWNER TO web_usr;
@@ -1233,7 +1258,7 @@ ALTER VIEW organismsXplots OWNER TO web_usr;
 DROP VIEW IF EXISTS public.organismsXsubplots CASCADE;
 CREATE VIEW public.organismsXsubplots AS
 select s.organism_id, s.stock_id as subplot_id
-from stock s 
+from stock s
 where s.type_id = (select cvterm_id from cvterm where cvterm.name = 'subplot')
 group by s.stock_id, subplot_id;
 ALTER VIEW organismsXsubplots OWNER TO web_usr;
@@ -1243,7 +1268,7 @@ ALTER VIEW organismsXsubplots OWNER TO web_usr;
 DROP VIEW IF EXISTS public.organismsXplants CASCADE;
 CREATE VIEW public.organismsXplants AS
     select s.organism_id, s.stock_id as plant_id
-    from stock s 
+    from stock s
     where s.type_id = (select cvterm_id from cvterm where cvterm.name = 'plant')
 GROUP BY s.stock_id, plant_id;
 ALTER VIEW organismsXplants OWNER TO web_usr;
@@ -1253,7 +1278,7 @@ ALTER VIEW organismsXplants OWNER TO web_usr;
 DROP VIEW IF EXISTS public.organismsXtissue_sample CASCADE;
 CREATE VIEW public.organismsXtissue_sample AS
    select s.organism_id, s.stock_id as tissue_sample_id
-   from public.stock s 
+   from public.stock s
    where s.type_id = (select cvterm_id from cvterm where cvterm.name = 'tissue_sample')
    group by s.stock_id, tissue_sample_id;
 ALTER VIEW organismsXtissue_sample OWNER TO web_usr;
@@ -1296,7 +1321,7 @@ ALTER VIEW locationsXorganisms OWNER TO web_usr;
 
 --organismsXgenotyping_projects
 DROP VIEW IF EXISTS public.genotyping_projectsXorganisms CASCADE;
-CREATE VIEW public.genotyping_projectsXorganisms AS 
+CREATE VIEW public.genotyping_projectsXorganisms AS
 SELECT s.organism_id, genotyping_project_id
    FROM public.materialized_genoview
    join public.stock s on s.stock_id = accession_id
@@ -1305,7 +1330,7 @@ ALTER VIEW public.genotyping_projectsXorganisms OWNER TO web_usr;
 
 -- organismsXgenotyping_protocols
 DROP VIEW IF EXISTS public.genotyping_protocolsXorganisms CASCADE;
-CREATE VIEW public.genotyping_protocolsXorganisms AS 
+CREATE VIEW public.genotyping_protocolsXorganisms AS
     select s.organism_id,
     genotyping_protocol_id
     FROM public.materialized_genoview
@@ -1370,7 +1395,7 @@ SELECT public.stock.stock_id AS tissue_sample_id,
     projectprop.value AS trial_design_id
    FROM public.materialized_phenoview
    JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id FROM cvterm WHERE cvterm.name = 'tissue_sample'))
-   JOIN public.nd_experiment_stock nes on nes.stock_id = public.stock.stock_id  
+   JOIN public.nd_experiment_stock nes on nes.stock_id = public.stock.stock_id
    JOIN public.projectprop  on (projectprop.project_id = nes.nd_experiment_id  AND projectprop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'design'))
   GROUP BY stock.stock_id, public.projectprop.value;
 ALTER VIEW tissue_sampleXtrial_designs OWNER TO web_usr;
@@ -1397,30 +1422,30 @@ ALTER VIEW tissue_sampleXyears OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.plotsXtissue_sample CASCADE;
 CREATE VIEW public.plotsXtissue_sample AS
-SELECT ts.tissue_sample_id, so.stock_id AS plot_id  
+SELECT ts.tissue_sample_id, so.stock_id AS plot_id
     FROM tissue_sample ts
-    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id 
-    JOIN stock so ON so.stock_id = sr.object_id  
+    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id
+    JOIN stock so ON so.stock_id = sr.object_id
     WHERE so.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'plot')
 GROUP BY ts.tissue_sample_id, so.stock_id ;
 ALTER VIEW public.plotsXtissue_sample OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.subplotsXtissue_sample CASCADE;
 CREATE VIEW public.subplotsXtissue_sample AS
-SELECT ts.tissue_sample_id, so.stock_id AS subplot_id  
+SELECT ts.tissue_sample_id, so.stock_id AS subplot_id
     FROM tissue_sample ts
-    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id 
-    JOIN stock so ON so.stock_id = sr.object_id  
+    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id
+    JOIN stock so ON so.stock_id = sr.object_id
     WHERE so.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'subplot')
 GROUP BY ts.tissue_sample_id, so.stock_id ;
 ALTER VIEW public.subplotsXtissue_sample OWNER TO web_usr;
 
 DROP VIEW IF EXISTS public.plantsXtissue_sample CASCADE;
 CREATE VIEW public.plantsXtissue_sample AS
-SELECT ts.tissue_sample_id, so.stock_id AS plant_id 
+SELECT ts.tissue_sample_id, so.stock_id AS plant_id
     FROM tissue_sample ts
-    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id 
-    JOIN stock so ON so.stock_id = sr.object_id  
+    JOIN stock_relationship sr ON sr.subject_id = ts.tissue_sample_id
+    JOIN stock so ON so.stock_id = sr.object_id
     WHERE so.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'plant')
 GROUP BY ts.tissue_sample_id, so.stock_id ;
 ALTER VIEW plantsXtissue_sample OWNER TO web_usr;
@@ -1504,14 +1529,14 @@ CREATE VIEW public.genotyping_projects AS
 ALTER VIEW public.genotyping_projects OWNER TO web_usr;
 
 -- Add accessionsXgenotyping_projects view
-CREATE VIEW public.accessionsXgenotyping_projects AS 
+CREATE VIEW public.accessionsXgenotyping_projects AS
     SELECT accession_id, genotyping_project_id
     FROM materialized_genoview
     GROUP BY 1,2;
 ALTER VIEW public.accessionsXgenotyping_projects OWNER TO web_usr;
 
 -- Add breeding_programsXgenotyping_projects view
-CREATE VIEW public.breeding_programsXgenotyping_projects AS 
+CREATE VIEW public.breeding_programsXgenotyping_projects AS
     SELECT project_relationship.object_project_id AS breeding_program_id,
         project.project_id AS genotyping_project_id
     FROM public.project
@@ -1607,9 +1632,9 @@ ALTER VIEW public.genotyping_projectsXsubplots OWNER TO web_usr;
 CREATE VIEW public.genotyping_projectsXseedlots AS
     SELECT materialized_genoview.genotyping_project_id, stock.stock_id AS seedlot_id
     FROM materialized_genoview
-    LEFT JOIN stock_relationship seedlot_relationship ON materialized_genoview.accession_id = seedlot_relationship.subject_id 
+    LEFT JOIN stock_relationship seedlot_relationship ON materialized_genoview.accession_id = seedlot_relationship.subject_id
         AND seedlot_relationship.type_id IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'collection_of')
-    LEFT JOIN stock ON seedlot_relationship.object_id = stock.stock_id 
+    LEFT JOIN stock ON seedlot_relationship.object_id = stock.stock_id
         AND stock.type_id IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'seedlot')
     GROUP BY 1,2;
 ALTER VIEW public.genotyping_projectsXseedlots OWNER TO web_usr;
@@ -1620,7 +1645,7 @@ CREATE VIEW public.genotyping_projectsXtrait_components AS
     FROM materialized_genoview
     JOIN materialized_phenoview USING (accession_id)
     JOIN cvterm trait ON materialized_phenoview.trait_id = trait.cvterm_id
-    JOIN cvterm_relationship ON trait.cvterm_id = cvterm_relationship.object_id 
+    JOIN cvterm_relationship ON trait.cvterm_id = cvterm_relationship.object_id
         AND cvterm_relationship.type_id = (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'contains')
     JOIN cvterm trait_component ON cvterm_relationship.subject_id = trait_component.cvterm_id
     GROUP BY 1,2;
@@ -1631,7 +1656,7 @@ CREATE VIEW public.genotyping_projectsXtrial_designs AS
     SELECT materialized_genoview.genotyping_project_id, trialdesign.value AS trial_design_id
     FROM materialized_genoview
     JOIN materialized_phenoview USING (accession_id)
-    JOIN projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id 
+    JOIN projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id
         AND trialdesign.type_id = (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name = 'design')
     GROUP BY 1,2;
 ALTER VIEW public.genotyping_projectsXtrial_designs OWNER TO web_usr;
@@ -1641,7 +1666,7 @@ CREATE VIEW public.genotyping_projectsXtrial_types AS
     SELECT materialized_genoview.genotyping_project_id, trialterm.cvterm_id AS trial_type_id
     FROM materialized_genoview
     JOIN materialized_phenoview USING (accession_id)
-    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id 
+    JOIN projectprop trialprop ON materialized_phenoview.trial_id = trialprop.project_id
         AND trialprop.type_id IN (SELECT cvterm.cvterm_id FROM cvterm JOIN cv USING (cv_id) WHERE cv.name = 'project_type')
     JOIN cvterm trialterm ON trialprop.type_id = trialterm.cvterm_id
     GROUP BY 1,2;

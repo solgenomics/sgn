@@ -22,6 +22,18 @@
                 </div>
             </div>
             <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Trait ID: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="trait_search_id" placeholder="Search any trait ID or part of an ID"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Trait Synonym: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="trait_search_synonym" placeholder="Search any trait synonym or part of a synonym"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
                 <label class="col-sm-3 control-label">Search Definition: </label>
                 <div class="col-sm-9" >
                     <input type="text" class="form-control" id="trait_search_definition" placeholder="Search any word or piece of definition"/>
@@ -161,6 +173,8 @@ jQuery(document).ready(function () {
                 'data': function(d) {
                     d.trait_search_list_id  = jQuery('#trait_search_list_select_list_select').val();
                     d.trait_any_name  = jQuery('#trait_search_name').val();
+                    d.trait_id = jQuery('#trait_search_id').val();
+                    d.trait_synonym = jQuery('#trait_search_synonym').val();
                     d.trait_definition  = jQuery('#trait_search_definition').val();
                     d.ontology_db_id = selectedontologies;
                 }

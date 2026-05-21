@@ -93,10 +93,12 @@ sub activity_details :Path('/activity/details') : Args(1) {
     my $date = $time->ymd();
 
     my $source_info_string;
+    my $vector_id;
     if ($material_type eq 'transformation') {
         my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$material_id});
         my $info = $transformation_obj->get_transformation_info();
         my $plant_material_name = $info->[0]->[1];
+        $vector_id = $info->[0]->[2];
         my $vector_name = $info->[0]->[3];
         my $transformation_project_name = $associated_projects->[0]->[5];
         my $source_info_hash = {};
@@ -136,6 +138,7 @@ sub activity_details :Path('/activity/details') : Args(1) {
     $c->stash->{source_info} = $source_info_string;
     $c->stash->{stock_type_page} = 'tracking_id';
     $c->stash->{can_obsolete} = $can_obsolete;
+    $c->stash->{vector_id} = $vector_id;
     $c->stash->{template} = '/tracking_activities/activity_info_details.mas';
 
 }
@@ -251,7 +254,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     $c->stash->{activity_type} = $activity_type;
     $c->stash->{program_name} = $program_name;
     $c->stash->{source_info} = $source_info_string;
-    $c->stash->{can_obsolete} = $can_obsolete;    
+    $c->stash->{can_obsolete} = $can_obsolete;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

@@ -27,12 +27,29 @@ jQuery(document).ready(function(){
     jQuery('#trial_stocks_onswitch').click(function(){
         jQuery('#trial_stocks_table').DataTable({
             'destroy': true,
-            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stocks',
+            'ajax': {
+                url: '/ajax/breeders/trial/'+ <% $trial_id %> + '/stocks',
+                dataSrc: function (json) {
+                    // Only return one instance of each stock
+                    const data = json?.data || [];
+                    const seen_stock_ids = [];
+                    const rtn = [];
+                    for ( let i = 0; i < data.length; i++ ) {
+                        const d = data[i];
+                        if ( !seen_stock_ids.includes(d.stock_id) ) {
+                            seen_stock_ids.push(d.stock_id);
+                            rtn.push(d);
+                        }
+                    };
+                    return rtn;
+                },
+            },
             columns: [
                 { title: "Stock Name", "data": null, "render": function ( data, type, row ) {
                     if (row.stock_type == 'cross') { return "<a href='/cross/"+row.stock_id+"'>"+row.accession_name+"</a>";
                     } else { return "<a href='/stock/"+row.stock_id+"/view'>"+row.accession_name+"</a>";}
                 }},
+                { title: "Stock Species", "data": "organism" },
                 { title: "Stock Type", "data": "stock_type" },
             ],
             "fnInitComplete": function(oSettings, json) {

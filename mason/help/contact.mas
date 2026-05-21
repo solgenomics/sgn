@@ -23,7 +23,7 @@ my $infoNeeded = ["name", "email", "subject", ];
 
 % foreach my $info_category (@$infoNeeded) {
     <div class="form-group">
-      <label class="col-sm-2 control-label"><% ucfirst $info_category %>* : 
+      <label class="col-sm-2 control-label"><% ucfirst $info_category %>* :
       </label>
       <div class="col-sm-10">
         <input type="text" class="form-control" value="" name="<% $info_category %>"></input>
@@ -32,14 +32,14 @@ my $infoNeeded = ["name", "email", "subject", ];
 % }
 
     <div class="form-group">
-      <label class="col-sm-2 control-label">Body* : 
+      <label class="col-sm-2 control-label">Body* :
       </label>
       <div class="col-sm-10">
         <textarea rows="12" class="form-control" name="body"></textarea>
       </div>
     </div>
     <div class="form-group">
-      <label class="col-sm-2 control-label">What is <br/><% $contact_form_human_question %>?* : 
+      <label class="col-sm-2 control-label">What is <br/><% $contact_form_human_question %>?* :
       </label>
       <div class="col-sm-10">
         <input type="text" class="form-control" value="" name="contact_form_human_answer"></input>
@@ -57,7 +57,7 @@ my $infoNeeded = ["name", "email", "subject", ];
 
   </form>
   </div>
-  
+
   <br/>
   <h2>Contact Us</h2>
   <br/>
@@ -70,24 +70,20 @@ my $infoNeeded = ["name", "email", "subject", ];
       <tr>
         <td><b>Mailing Address</b></td>
 	<td>Sol Genomics Network<br />
-	Boyce Thompson Institute for Plant Research<br />
-	Room 221<br />
-	Tower Road<br />
+	c/o Lukas Mueller<br />
+	Boyce Thompson Institute<br />
+	533, Tower Road<br />
 	Ithaca, NY 14853<br />
 	USA<br /></td>
       </tr>
-      <tr>
-        <td><b>Phone</b></td>
-        <td>(607) 255-6557</td>
-      </tr>
-      <tr>
+      <!-- tr>
         <td><b>Mailing List</b></td>
         <td>To stay informed of developments at SGN you can subscribe to our <a href="http://rubisco.sgn.cornell.edu/mailman/listinfo/sgn-announce/">mailing list</a>. <br/>This is a low-volume list (usually no more than 2 messages per month).</td>
-      </tr>
+      </tr -->
     </tbody>
   </table>
 
-  </div>   
+  </div>
 </div>
 
 <div class="modal fade" id="submit_contact_form_response" name="submit_contact_form_response" tabindex="-1" role="dialog" aria-labelledby="submitContactResponseDialog">
@@ -114,7 +110,7 @@ my $infoNeeded = ["name", "email", "subject", ];
 
 jQuery(document).ready(function () {
 
-    jQuery('#contact_form_submit').on('click',function (e){ 
+    jQuery('#contact_form_submit').on('click',function (e){
         var subject = jQuery('input[name="subject"]').val();
         var name = jQuery('input[name="name"]').val();
         var email = jQuery('input[name="email"]').val();

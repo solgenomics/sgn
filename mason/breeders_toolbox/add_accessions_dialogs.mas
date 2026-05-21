@@ -104,6 +104,15 @@ $editable_stock_props_definitions
                                 <small>When checked, add synonyms of existing accession entries to the synonyms already stored in the database.  When not checked, remove any existing synonyms of existing accession entries and store only the synonyms in the upload file.</small>
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label class="col-sm-4 control-label">Create Accession List:</label>
+                            <div class="col-sm-8">
+                                <input type="checkbox" id="create_accession_list" name="create_accession_list" />
+                                <br />
+                                <small>When checked, automatically create a new accession list with the accessions in your upload file.</small>
+                                <input id="create_accession_list_name" name="create_accession_list_name" class='form-control input-sm' placeholder='New List Name' />
+                            </div>
+                        </div>
                     </form>
 
                     <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>

@@ -76,6 +76,11 @@ has 'trait_name_list' => (
     is => 'rw',
 );
 
+has 'trait_synonym_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is =>'rw',
+);
+
 has 'trait_name_is_exact' => (
     isa => 'Bool|Undef',
     is => 'rw',
@@ -129,7 +134,9 @@ sub search {
     }
 
     if ($self->accession_list && scalar(@{$self->accession_list}) > 0){
-        $and_conditions{'dbxref.accession'} = { -in => $self->accession_list };
+        foreach my $term (@{$self->accession_list}) {
+            push @{$and_conditions{'dbxref.accession'}}, {'ilike' => '%' . $term . '%'};
+        }
     }
 
     if ($self->trait_definition_list && scalar(@{$self->trait_definition_list}) > 0){
@@ -138,6 +145,20 @@ sub search {
             my $match_string = join '%', @words;
             push @{$and_conditions{'me.definition'}}, {'ilike' => '%'.$match_string.'%'};
         }
+    }
+
+    if ($self->trait_synonym_list && scalar(@{$self->trait_synonym_list}) > 0){
+        my @synonym_conditions;
+
+        foreach (@{$self->trait_synonym_list}){
+            my @words = split "\s+", $_;
+            my $match_string = join '%', @words;
+
+            push @synonym_conditions, {
+                'cvtermsynonyms.synonym' => { 'ilike' => '%' . $match_string . '%' }
+            };
+        }
+        $and_conditions{'-or'} = \@synonym_conditions;
     }
 
     if ($self->trait_name_list && scalar(@{$self->trait_name_list}) > 0){
@@ -173,10 +194,16 @@ sub search {
         $where_join{'type.name'} = 'VARIABLE_OF';
     }
 
+    my @joins = ({'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'});
+
+    if ($self->trait_synonym_list && @{$self->trait_synonym_list}) {
+        push @joins, 'cvtermsynonyms';
+    }
+
     my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
         \%and_conditions, 
         {
-            join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'} ],
+            join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'}, 'cvtermsynonyms' ],
             where => \%where_join,
             order_by => { '-asc' => $order_by },
             '+select' => ['db.name', 'dbxref.accession', 'type.name'],

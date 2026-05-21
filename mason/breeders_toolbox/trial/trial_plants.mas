@@ -3,7 +3,8 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [  "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch" ] &>
+<& /util/import_javascript.mas, classes => [  "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.HTMLSelect" ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
 <div id="trial_plants_html">
@@ -62,6 +63,7 @@ jQuery(document).ready(function () {
                     scrollX : true,
                     scrollCollapse: true
                 });
+
                 var lo = new CXGN.List();
                 jQuery('#plant_select_existing_list_name').html(lo.listSelect('plant_select_existing_list_name', ['plants'], undefined, undefined, undefined));
             },

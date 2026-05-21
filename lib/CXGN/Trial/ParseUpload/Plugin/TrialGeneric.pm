@@ -12,7 +12,7 @@ use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|stock_name plot_number block_number|;
 # stock_name can also be accession_name, cross_unique_id, or family_name
-my @OPTIONAL_COLUMNS = qw|plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|intercrop_stock_name plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 sub _validate_with_plugin {
@@ -20,6 +20,7 @@ sub _validate_with_plugin {
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
     my $trial_name = $self->get_trial_name();
+    my $trial_stock_type = $self->get_trial_stock_type();
 
     # Encountered Error and Warning Messages
     my %errors;
@@ -34,8 +35,10 @@ sub _validate_with_plugin {
         required_columns => \@REQUIRED_COLUMNS,
         optional_columns => \@OPTIONAL_COLUMNS,
         column_aliases => {
-            'stock_name' => [ 'accession_name', 'cross_unique_id', 'family_name' ]
-        }
+            'stock_name' => [ 'accession_name', 'cross_unique_id', 'family_name' ],
+            'intercrop_stock_name' => [ 'intercrop_accession_name', 'intercrop_cross_unique_id', 'intercrop_family_name' ]
+        },
+        column_arrays => [ 'intercrop_stock_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};
@@ -44,7 +47,7 @@ sub _validate_with_plugin {
     my $treatments = $parsed->{'additional_columns'};
 
     my $trait_validator = CXGN::List::Validate->new();
-    
+
     my $validate = $trait_validator->validate($schema, "traits", $treatments);
 
     foreach my $treatment (@{$treatments}) {
@@ -53,7 +56,7 @@ sub _validate_with_plugin {
         }
     }
 
-    if (@{$validate->{missing}}>0) { 
+    if (@{$validate->{missing}}>0) {
         foreach my $missing (@{$validate->{missing}}) {
             push @error_messages, "Treatment $missing does not exist in the database.\n";
         }
@@ -84,6 +87,7 @@ sub _validate_with_plugin {
         my $data = $_;
         my $row = $data->{'_row'};
         my $stock_name = $data->{'stock_name'};
+        my $intercrop_stock_name = $data->{'intercrop_stock_name'};
         my $plot_number = $data->{'plot_number'};
         my $block_number = $data->{'block_number'};
         my $plot_name = $data->{'plot_name'} || _create_plot_name($trial_name, $plot_number);
@@ -109,7 +113,7 @@ sub _validate_with_plugin {
             my $treatment_id = $treatment_id_list[0];
 
             my $treatment_obj = CXGN::Trait->new({
-                bcs_schema => $schema, 
+                bcs_schema => $schema,
                 cvterm_id => $treatment_id
             });
             if ($treatment_obj->format() eq "numeric" && defined($treatment_obj->minimum()) && defined($data->{$treatment}) && $data->{$treatment} < $treatment_obj->minimum()) {
@@ -266,11 +270,28 @@ sub _validate_with_plugin {
 
     # Stock Names: must exist in the database
     my @entry_names = @{$parsed_values->{'stock_name'}};
+    my @intercrop_names = $parsed_values->{'intercrop_stock_name'} ? @{$parsed_values->{'intercrop_stock_name'}} : ();
+    my @merged_names = uniq(@entry_names, @intercrop_names);
     my $entry_name_validator = CXGN::List::Validate->new();
-    my @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_crosses_or_familynames',\@entry_names)->{'missing'}};
-    if (scalar(@entry_names_missing) > 0) {
-        $errors{'missing_stocks'} = \@entry_names_missing;
-        push @error_messages, "The following entry names are not in the database as uniquenames or synonyms: ".join(',',@entry_names_missing);
+    my @entry_names_missing = ();
+    if ($trial_stock_type eq 'cross') {
+        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            $errors{'missing_stocks'} = \@entry_names_missing;
+            push @error_messages, "The following entry names are not in the database or are not accession or cross stock type: ".join(',',@entry_names_missing);
+        }
+    } elsif ($trial_stock_type eq 'family_name') {
+        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions_or_family_names',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            $errors{'missing_stocks'} = \@entry_names_missing;
+            push @error_messages, "The following entry names are not in the database or are not accession or family name stock type: ".join(',',@entry_names_missing);
+        }
+    } else {
+        @entry_names_missing = @{$entry_name_validator->validate($schema,'accessions',\@merged_names)->{'missing'}};
+        if (scalar(@entry_names_missing) > 0) {
+            $errors{'missing_stocks'} = \@entry_names_missing;
+            push @error_messages, "The following entry names are not in the database as uniquenames or synonyms of accession stock type: ".join(',',@entry_names_missing);
+        }
     }
 
     # Seedlots: names must exist in the database
@@ -280,10 +301,17 @@ sub _validate_with_plugin {
     }
 
     # Verify seedlot pairs: accession name of plot must match seedlot contents
-    if ( scalar(@seedlot_pairs) > 0 ) {
-        my $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);
-        if (exists($return->{error})){
-            push @error_messages, $return->{error};
+    if ((scalar @entry_names_missing == 0) && (scalar @seedlots_missing == 0)) {
+        if ( scalar(@seedlot_pairs) > 0 ) {
+            my $return;
+            if ($trial_stock_type eq 'family_name') {
+                $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_family_names($schema, \@seedlot_pairs);
+            } else {
+                $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_pairs);
+            }
+            if (exists($return->{error})){
+                push @error_messages, $return->{error};
+            }
         }
     }
 
@@ -378,9 +406,11 @@ sub _parse_with_plugin {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my @accessions = @{$values->{'stock_name'}};
+    my @intercrop_accessions = $values->{'intercrop_stock_name'} ? @{$values->{'intercrop_stock_name'}} : ();
+    my @merged_accessions = uniq(@accessions, @intercrop_accessions);
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
         'me.is_obsolete' => { '!=' => 't' },
-        'stockprops.value' => { -in => \@accessions},
+        'stockprops.value' => { -in => \@merged_accessions },
         'me.type_id' => $accession_cvterm_id,
         'stockprops.type_id' => $synonym_cvterm_id
     },{join => 'stockprops', '+select'=>['stockprops.value'], '+as'=>['synonym']});
@@ -399,6 +429,7 @@ sub _parse_with_plugin {
         my $r = $_;
         my $row = $r->{'_row'};
         my $stock_name = $r->{'stock_name'};
+        my $intercrop_stock_name = $r->{'intercrop_stock_name'};
         my $plot_number = $r->{'plot_number'};
         my $block_number = $r->{'block_number'};
         my $plot_name = $r->{'plot_name'} || _create_plot_name($trial_name, $plot_number);
@@ -423,6 +454,17 @@ sub _parse_with_plugin {
             }
             $stock_name = $stock_names[0];
         }
+        my @checked_intercrop_names;
+        foreach my $intercrop_name (@$intercrop_stock_name) {
+            if ($stock_synonyms_lookup{$intercrop_name}) {
+                my @accession_names = keys %{$stock_synonyms_lookup{$intercrop_name}};
+                if (scalar(@accession_names)>1) {
+                    print STDERR "There is more than one uniquename for this synonym $intercrop_name. this should not happen!\n";
+                }
+                $intercrop_name = $accession_names[0];
+            }
+            push @checked_intercrop_names, $intercrop_name;
+        }
 
         if ($entry_number) {
             $seen_entry_numbers{$stock_name} = $entry_number;
@@ -430,6 +472,7 @@ sub _parse_with_plugin {
 
         $design{$row}->{plot_name} = $plot_name;
         $design{$row}->{stock_name} = $stock_name;
+        $design{$row}->{intercrop_stock_name} = \@checked_intercrop_names;
         $design{$row}->{plot_number} = $plot_number;
         $design{$row}->{block_number} = $block_number;
         if ($is_a_control) {

@@ -1,6 +1,8 @@
 <%args>
 $stock_id
 $stock_uniquename => undef
+$vector_related_genes => undef
+$number_of_insertions => undef
 </%args>
 
 <&| /page/info_section.mas, id=>'transformation_experiment', title => 'Transformation Experiment', collapsible=>1, collapsed=>0 &>
@@ -14,6 +16,32 @@ $stock_uniquename => undef
                             <th>Plant Material</th>
                             <th>Transformation ID</th>
                             <th>Project</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
+<&| /page/info_section.mas, id=>'analysis_data', title => 'Number of Insertions and Expression Data', collapsible=>1, collapsed=>0 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <div class="col-sm-6">
+                    <table id = "transformant_number_of_insertions" class="table table-hover table-striped">
+                        <tr><td><b>Number of Insertions:</b></td><td><%$number_of_insertions%></td></tr>
+                    </table>
+                </div>
+                <table id = "transformant_qPCR_data" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>qPCR Tissue Type</th>
+                            <th>qPCR Assay Date</th>
+% my @column_header = split ',',$vector_related_genes;
+% foreach my $column_header(@column_header) {
+                            <th><%$column_header. " ".'(Relative)'%></th>
+%}
                         </tr>
                     </thead>
                 </table>
@@ -73,73 +101,80 @@ jQuery(document).ready(function(){
 
     const stock_id = "<%$stock_id%>";
 
-    const related_transformation_info_table = jQuery('#transformant_experiment_info').DataTable({
-        'ajax': '/ajax/transformation/transformant_experiment_info/'+stock_id,
-        'autoWidth': false,
-        'searching' : false,
-        'dom': 'rtip',
-        'order': false,
-        'paging': false,
-        'info': false,
-    });
+    jQuery('#related_transformation_info_section_onswitch').click(function(){
+        const related_transformation_info_table = jQuery('#transformant_experiment_info').DataTable({
+            'ajax': '/ajax/transformation/transformant_experiment_info/'+stock_id,
+            'autoWidth': false,
+            'searching' : false,
+            'dom': 'rtip',
+            'order': false,
+            'paging': false,
+            'info': false,
+        });
 
-    const related_transformants_table = jQuery('#related_transformants_table').DataTable({
-        'ajax': '/ajax/transformation/related_transformants/'+stock_id,
-        'autoWidth': false,
-        'order': false,
-        'columns': [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.related_transformant_id+"/view'>"+row.related_transformant_name+"</a>"; } },
-        ],
+        const transformant_qPCR_data_table = jQuery('#transformant_qPCR_data').DataTable({
+            'ajax': '/ajax/transformation/transformant_qPCR_data/'+stock_id,
+            'autoWidth': false,
+            'searching' : false,
+            'order': false,
+            'paging': false,
+            'info': false,
+        });
 
-        "fnInitComplete": function(oSettings, json) {
-            //console.log(json);
-            if (!isLoggedIn()) {
-                jQuery('#related_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-            } else {
-                let html = "";
-                for(let i=0; i<json.data.length; i++){
-                    html += json.data[i].related_transformant_name+"\n";
+        const related_transformants_table = jQuery('#related_transformants_table').DataTable({
+            'ajax': '/ajax/transformation/related_transformants/'+stock_id,
+            'autoWidth': false,
+            'order': false,
+            'columns': [
+                { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.related_transformant_id+"/view'>"+row.related_transformant_name+"</a>"; } },
+            ],
+
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#related_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    let html = "";
+                    for(let i=0; i<json.data.length; i++){
+                        html += json.data[i].related_transformant_name+"\n";
+                    }
+
+                    jQuery("#related_transformants_to_new_list").html(html);
+                    addToListMenu("related_transformants_add_to_list", "related_transformants_to_new_list", {
+                        selectText: true,
+                        listType: 'accessions',
+                    });
                 }
-
-                jQuery("#related_transformants_to_new_list").html(html);
-                addToListMenu("related_transformants_add_to_list", "related_transformants_to_new_list", {
-                    selectText: true,
-                    listType: 'accessions',
-                });
             }
-        }
+        });
 
-    });
+        const control_transformants_table = jQuery('#control_transformants_table').DataTable({
+            'ajax': '/ajax/transformation/control_transformants/'+stock_id,
+            'autoWidth': false,
+            'order': false,
+            'columns': [
+                { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
+            ],
 
+            "fnInitComplete": function(oSettings, json) {
+                //console.log(json);
+                if (!isLoggedIn()) {
+                    jQuery('#control_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+                } else {
+                    let html = "";
+                    for(let i=0; i<json.data.length; i++){
+                        html += json.data[i].control_transformant_name+"\n";
+                    }
 
-    const control_transformants_table = jQuery('#control_transformants_table').DataTable({
-        'ajax': '/ajax/transformation/control_transformants/'+stock_id,
-        'autoWidth': false,
-        'order': false,
-        'columns': [
-            { title: "Accession", "data": null, "render": function ( data, type, row ) { return "<a href='/stock/"+row.control_transformant_id+"/view'>"+row.control_transformant_name+"</a>"; } },
-        ],
-
-        "fnInitComplete": function(oSettings, json) {
-            //console.log(json);
-            if (!isLoggedIn()) {
-                jQuery('#control_transformants_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
-            } else {
-                let html = "";
-                for(let i=0; i<json.data.length; i++){
-                    html += json.data[i].control_transformant_name+"\n";
+                    jQuery("#control_transformants_to_new_list").html(html);
+                    addToListMenu("control_transformants_add_to_list", "control_transformants_to_new_list", {
+                        selectText: true,
+                        listType: 'accessions',
+                    });
                 }
-
-                jQuery("#control_transformants_to_new_list").html(html);
-                addToListMenu("control_transformants_add_to_list", "control_transformants_to_new_list", {
-                    selectText: true,
-                    listType: 'accessions',
-                });
             }
-        }
-
+        });
     });
-
 });
 
 

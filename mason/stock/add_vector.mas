@@ -20,11 +20,11 @@ $editable_stock_props_definitions => {}
 
 <div class="infosectioncontent">
 
-<p>Add new vector and details.</p> 
+<p>Add new vector and details.</p>
 <div style="margin-bottom:10px"><button style="float:right" class="btn btn-default" name="add_vectors_link"> Upload Vectors</button></div>
 <div class="row">
   <div class="col-sm-12">
-    
+
 
 <div class="container-fluid">
   <div class="well">
@@ -32,20 +32,13 @@ $editable_stock_props_definitions => {}
   <form class="form-horizontal" id="newVectorForm" action="#" onsubmit="handleSubmit();return false">
 
     <div class="form-group">
-      <label class="col-sm-3 control-label">Uniquename <font color="red">*</font>  
+      <label class="col-sm-3 control-label">Uniquename <font color="red">*</font>
       </label>
       <div class="col-sm-6">
-        <input type="text" class="form-control" value="" name="uniqueName" id="uniqueName" required>
+        <input type="text" class="form-control" value="" name="uniqueName" id="uniqueName" placeholder="Required"/>
       </div>
       <input class="col-sm-1" type="checkbox" id="uniqueNameAutoCheck" name="uniqueNameAutoCheck" value="uniqueNameAutoCheck" onclick="jqueryAutoUniqueName()">
       <label class="col-sm-2" for="uniqueNameAutoCheck"> Auto generate uniquename</label><br>
-    </div>
-    <div class="form-group">
-      <label class="col-sm-3 control-label">Organism <font color="red">*</font>  
-      </label>
-      <div class="col-sm-9">
-        <input class="form-control ui-autocomplete-input" type="text" id="species_name" name="species_name" value="" size="" onclick="jqueryStuff()" autocomplete="off" required>
-      </div>
     </div>
     <div class="form-group">
       <label class="col-sm-3 control-label">Cloning Organism Host</label>
@@ -53,7 +46,6 @@ $editable_stock_props_definitions => {}
         <input type="text" class="form-control" value="" id="CloningOrganism" name="CloningOrganism">
       </div>
     </div>
-
     <div class="form-group">
       <label class="col-sm-3 control-label">Strain </label>
       <div class="col-sm-9">
@@ -114,14 +106,6 @@ $editable_stock_props_definitions => {}
         <input type="text" class="form-control" value="" id="Terminators" name="Terminators">
       </div>
     </div>
-
-
-  <div class="form-group">
-    <label class="col-sm-3 control-label"></label>
-    <div class="col-sm-9">
-      <h5 valign="middle" style="color:red; font-size:90%; font-style:italic;">Fields Marked With * Are Required.</h5>
-    </div>
-  </div>
   <hr>
   <button style="float:right" class="btn btn-primary btn-lg" id="contact_form_submit">Add new vector</button>
   <input type="reset" value="Reset" class="btn btn-primary btn-lg" style="float:right;background-color: white; color:black" />
@@ -150,9 +134,17 @@ function handleSubmit() {
         type: 'POST',
         data: {'data': JSON.stringify([data])},
         url: '/ajax/create_vector_construct',
+        beforeSend: function(response){
+          jQuery('#working_modal').modal('show');
+        },
         success: function(response) {
-          if (response.error) { alert(response.error); }
-          else { alert('Saved!'); }
+          jQuery('#working_modal').modal('hide');
+          if (response.error) {
+            alert(response.error);
+          } else {
+            jQuery('#uniqueName').val('');
+            alert('Saved!');
+          }
         },
         error: function(response) {
           alert( 'An Error occured while storing vectors.');
@@ -160,18 +152,11 @@ function handleSubmit() {
     });
 }
 
-</script>  
+</script>
 
 </&>
 
 <script language="javascript">
-    function jqueryStuff() { 
-        jQuery(function() {
-            jQuery("#species_name").autocomplete({
-                source: '/organism/autocomplete'
-            });
-        });
-    }
     function jqueryAutoUniqueName() {
         jQuery('#uniqueNameAutoCheck').on('change', function () {
             var checked = jQuery(this).prop('checked');

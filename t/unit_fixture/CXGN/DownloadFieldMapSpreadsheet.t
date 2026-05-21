@@ -26,22 +26,56 @@ print STDERR $sgn_session_id."\n";
 my $trial_id = $schema->resultset('Project::Project')->find({name=>'test_trial'})->project_id();
 
 my $file = $test->config->{basepath}."/t/data/trial/field_coord_upload.csv";
+print STDERR "Upload file path: $file \n";
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
         'http://localhost:3010/ajax/breeders/trial/coordsupload',
         Content_Type => 'form-data',
         Content => [
-            trial_coordinates_uploaded_file => [ $file, 'coords_upload', Content_Type => 'application/vnd.ms-excel', ],
+            trial_coordinates_uploaded_file => [ $file, 'field_coord_upload.csv', Content_Type => 'text/csv', ],
             "trial_coordinates_upload_trial_id"=>$trial_id,
             "sgn_session_id"=>$sgn_session_id
         ]
     );
 
-#print STDERR Dumper $response;
+ok($response->is_success);
+
+$file = $test->config->{basepath}."/t/data/trial/field_coord_upload.tsv";
+print STDERR "Upload file path: $file \n";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/trial/coordsupload',
+        Content_Type => 'form-data',
+        Content => [
+            trial_coordinates_uploaded_file => [ $file, 'field_coord_upload.tsv', Content_Type => 'text/csv', ],
+            "trial_coordinates_upload_trial_id"=>$trial_id,
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
+ok($response->is_success);
+
+#test bad file input
+$file = $test->config->{basepath}."/t/data/trial/field_coord_upload_bad_input.csv";
+print STDERR "Upload file path: $file \n";
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/breeders/trial/coordsupload',
+        Content_Type => 'form-data',
+        Content => [
+            trial_coordinates_uploaded_file => [ $file, 'field_coord_upload_bad_input.csv', Content_Type => 'text/csv', ],
+            "trial_coordinates_upload_trial_id"=>$trial_id,
+            "sgn_session_id"=>$sgn_session_id
+        ]
+    );
+
 ok($response->is_success);
 my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
 print STDERR Dumper $message_hash;
+my $messages = $message_hash->{error};
+ok($messages =~ m/do not exist in the database as plots/gi);
+ok($messages =~ m/assigned to multiple plots/gi);
 
 my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
     schema => $schema,

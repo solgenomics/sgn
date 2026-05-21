@@ -27,14 +27,14 @@ Returns output like CXGN::Dataset, but uses a disk-cache for the response data
 
 =back
 
-=head1 SYNOPSYS
+=head1 SYNOPSIS
 
  my $ds = CXGN::Dataset->new( { people_schema => $p, schema => $s } );
  $ds->accessions([ 'a', 'b', 'c' ]);
  my $trials = $ds->retrieve_trials();
  my $sp_dataset_id = $ds->store();
  #...
- my $restored_ds = CXGN::Dataset( {  people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id } );
+ my $restored_ds = CXGN::Dataset->new({  people_schema => $p, schema => $s, sp_dataset_id => $sp_dataset_id } );
  my $years = $restored_ds->retrieve_years();
  #...
 
@@ -52,8 +52,7 @@ package CXGN::Dataset;
 
 use Moose;
 use Moose::Util::TypeConstraints;
-use Data::Dumper;
-use JSON::Any;
+#use Data::Dumper;
 use JSON::XS;
 use CXGN::BreederSearch;
 use CXGN::People::Schema;
@@ -347,42 +346,61 @@ has 'tool_compatibility' => (
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
 sub BUILD {
-    my $self = shift;
-    my $args = shift;
-
+    my ($self, $args) = @_;
 
     my $bs = CXGN::BreederSearch->new(dbh => $self->schema->storage->dbh());
     $self->breeder_search($bs);
 
-    if ($self->has_sp_dataset_id()) {
-        #print STDERR "Processing dataset_id ".$self->sp_dataset_id()."\n";
-        my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
-        if (!$row) { die "The dataset with id ".$self->sp_dataset_id()." does not exist"; }
-        my $dataset = JSON::Any->decode($row->dataset());
-        $self->data($dataset);
-        $self->name($row->name());
-        $self->description($row->description());
-        $self->sp_person_id($row->sp_person_id());
-        $self->accessions($dataset->{categories}->{accessions});
-        $self->plots($dataset->{categories}->{plots});
-        $self->plants($dataset->{categories}->{plants});
-        $self->trials($dataset->{categories}->{trials});
-        $self->traits($dataset->{categories}->{traits});
-        $self->years($dataset->{categories}->{years});
-        $self->breeding_programs($dataset->{categories}->{breeding_programs});
-        $self->genotyping_protocols($dataset->{categories}->{genotyping_protocols});
-	    $self->genotyping_projects($dataset->{categories}->{genotyping_projects});
-        $self->locations($dataset->{categories}->{locations});
-        $self->trial_designs($dataset->{categories}->{trial_designs});
-        $self->trial_types($dataset->{categories}->{trial_types});
-        $self->category_order($dataset->{category_order});
-        $self->tool_compatibility($dataset->{tool_compatibility});
-        $self->is_live($dataset->{is_live});
-        $self->is_public($dataset->{is_public}); 
-        if ($args->{outliers}) { $self->outliers($args->{outliers})} else { $self->outliers($dataset->{outliers}); }
-        if ($args->{outlier_cutoffs}) { $self->outlier_cutoffs } else {($dataset->{outlier_cutoffs}); };
+    unless ($self->has_sp_dataset_id) {
+        print STDERR "Creating empty dataset object\n";
+        return;
     }
-    else { print STDERR "Creating empty dataset object\n"; }
+
+    my $dataset_id = $self->sp_dataset_id;
+
+    my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $self->sp_dataset_id() });
+    die "Dataset with id $dataset_id does not exist\n" unless $row;
+
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
+    die "Invalid JSON for dataset_id $dataset_id: $@" if $@;
+
+    $self->data($dataset);
+    $self->name($row->name());
+    $self->description($row->description());
+    $self->sp_person_id($row->sp_person_id());
+
+    if ($dataset->{categories}) {
+	    my $categories = $dataset->{categories};
+            $self->accessions($categories->{accessions} || []);
+            $self->plots($categories->{plots});
+            $self->plants($categories->{plants});
+            $self->trials($categories->{trials});
+            $self->traits($categories->{traits});
+            $self->years($categories->{years});
+            $self->breeding_programs($categories->{breeding_programs});
+            $self->genotyping_protocols($categories->{genotyping_protocols});
+	    $self->genotyping_projects($categories->{genotyping_projects});
+            $self->locations($categories->{locations});
+            $self->trial_designs($categories->{trial_designs});
+            $self->trial_types($categories->{trial_types});
+    } else {
+	    print STDERR "dataset categories not defined\n";
+    }
+
+    $self->category_order($dataset->{category_order});
+    $self->tool_compatibility($dataset->{tool_compatibility});
+    $self->is_live($dataset->{is_live});
+    $self->is_public($dataset->{is_public}); 
+    if (exists $args->{outliers}) {
+        $self->outliers($args->{outliers});
+    } else {
+        $self->outliers($dataset->{outliers});
+    }
+    if (exists $args->{outlier_cutoffs}) {
+        $self->outlier_cutoffs($args->{outlier_cutoffs});
+    } else {
+        $self->outlier_cutoffs($dataset->{outlier_cutoffs});
+    }
 }
 
 
@@ -907,8 +925,7 @@ retrieves accessions as a listref of listref [stock_id, uniquename]
 
 sub retrieve_accessions {
     my $self = shift;
-    my $accessions;
-    if ($self->accessions() && scalar(@{$self->accessions()})>0) {
+    if ($self->accessions() && @{$self->accessions()}) {
         my @stocks;
         my $stock_rs = $self->schema->resultset("Stock::Stock")->search({'stock_id' => { -in => $self->accessions }});
         while (my $a = $stock_rs->next()) {
@@ -916,12 +933,11 @@ sub retrieve_accessions {
         }
         return \@stocks;
     }
-    else {
-        my $criteria = $self->get_dataset_definition();
-        push @$criteria, "accessions";
 
-        $accessions = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("accessions"));
-    }
+    print STDERR "getting accessions another way\n";
+    my $criteria = $self->get_dataset_definition();
+    push @$criteria, "accessions";
+    my $accessions = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("accessions"));
     return $accessions->{results};
 }
 
@@ -997,7 +1013,6 @@ sub retrieve_trials {
         push @$criteria, "trials";
         $trials = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("trials"));
     }
-    #print STDERR "TRIALS: ".Dumper($trials);
     return $trials->{results};
 }
 
@@ -1009,22 +1024,20 @@ retrieves traits as a listref of listrefs.
 
 sub retrieve_traits {
     my $self = shift;
-    my $traits;
-    if ($self->traits && scalar(@{$self->traits})>0) {
+    if ($self->traits && @{$self->traits()}) {
         my @cvterms;
-        my $rs = $self->schema->resultset("Cv::Cvterm")->search({'cvterm_id' => {-in => $self->traits}});
-        while (my $a = $rs->next()) {
+        my $cvterm_rs = $self->schema->resultset("Cv::Cvterm")->search({'cvterm_id' => {-in => $self->traits}});
+        while (my $a = $cvterm_rs->next()) {
             push @cvterms, [$a->cvterm_id, $a->name];
         }
         return \@cvterms;
     }
-    else {
-        my $criteria = $self->get_dataset_definition();
-        push @$criteria, "traits";
-        $traits = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("traits"));
-    }
-    return $traits->{results};
 
+    print STDERR "getting traits another way\n";
+    my $criteria = $self->get_dataset_definition();
+    push @$criteria, "traits";
+    my $traits = $self->breeder_search()->metadata_query($criteria, $self->_get_source_dataref("traits"));
+    return $traits->{results};
 }
 
 =head2 retrieve_years()

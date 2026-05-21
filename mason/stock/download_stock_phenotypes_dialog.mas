@@ -5,6 +5,15 @@ $stock_type
 $stock_name => undef
 </%args>
 
+<%once>
+    my $default_repeat_measurements = $c->get_conf('pheno_download_default_repeat_measurements');
+    my $default_include_timestamps = $c->get_conf('pheno_download_default_include_timestamps');
+    my $default_include_intercrop_accessions = $c->get_conf('pheno_download_default_include_intercrop_accessions');
+    my $default_include_entry_numbers = $c->get_conf('pheno_download_default_include_entry_numbers');
+    my $default_include_trait_synonyms = $c->get_conf('pheno_download_default_include_trait_synonyms');
+    my $default_supress_outliers = $c->get_conf('exclude_phenotype_outliers');
+</%once>
+
 
 <div class="modal fade" id="download_stock_phenotypes_dialog" name="download_stock_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadStockPhenotypesDialog">
   <div class="modal-dialog" role="document">
@@ -39,9 +48,23 @@ $stock_name => undef
 
 <&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
 
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Include Timestamps: </label>
-                <div class="col-sm-9" >
+            <div class="row form-group">
+                <label class="col-sm-8 control-label">For repeated measurements, return the: </label>
+                <div class="col-sm-4">
+                    <select class="form-control" id="download_stock_phenotypes_repetitive_measurements_option">
+                        <option value="first">First value</option>
+                        <option value="last">Last value</option>
+                        <option value="average">Averaged value</option>
+                        <option value="sum">Sum values</option>
+                        <option value="all_values_single_line">All Values Single Line</option>
+                        <option value="all_values_multiple_line">All Values Multiple Line</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row form-group">
+                <label class="col-sm-8 control-label">Include Timestamps: </label>
+                <div class="col-sm-4" >
                     <select class="form-control" id="download_stock_phenotypes_timestamp_option">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
@@ -49,9 +72,39 @@ $stock_name => undef
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="col-sm-3 control-label">Suppress User Defined Phenotype Outliers: </label>
-                <div class="col-sm-9" >
+            <div class="row form-group">
+                <label class="col-sm-8 control-label">Include Intercrop Accessions: </label>
+                <div class="col-sm-4" >
+                    <select class="form-control" id="download_stock_phenotypes_intercrop_accessions_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row form-group">
+                <label class="col-sm-8 control-label">Include Entry Numbers: </label>
+                <div class="col-sm-4" >
+                    <select class="form-control" id="download_stock_phenotypes_entry_numbers_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row form-group">
+                <label class="col-sm-8 control-label">Include Trait Synonyms: </label>
+                <div class="col-sm-4" >
+                    <select class="form-control" id="download_stock_phenotypes_trait_synonyms_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row form-group">
+                <label class="col-sm-8 control-label">Suppress User Defined Phenotype Outliers: </label>
+                <div class="col-sm-4" >
                     <select class="form-control" id="download_stock_phenotypes_exclude_outliers">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
@@ -59,24 +112,20 @@ $stock_name => undef
                 </div>
             </div>
 
-            <div class="form-group">
+            <div class="row form-group">
                 <label class="col-sm-3 control-label">Traits:</label>
                 <div class="col-sm-9" >
                     <div id="download_stock_phenotypes_traits">
                     </div>
                 </div>
             </div>
-           <div class="row">
-               <div id="download_stock_phenotypes_select_all" class="btn btn-sm btn-primary" style="margin:3px">Select all traits</div>
-               <div id="download_stock_phenotypes_select_reset" class="btn btn-sm btn-default" style="margin:3px">Unselect all traits</div>
+           <div class="row form-group">
+              <div class="col-sm-3"></div>
+              <div class="col-sm-9">
+                <div id="download_stock_phenotypes_select_all" class="btn btn-sm btn-primary" style="margin:3px">Select all traits</div>
+                <div id="download_stock_phenotypes_select_reset" class="btn btn-sm btn-default" style="margin:3px">Unselect all traits</div>
+              </div>
            </div>
-
-            <style>
-              #download_stock_phenotypes_traits_select:hover {
-                width:auto;
-                margin-left: -140px;
-              }
-            </style>
 </&>
         </form><br/>
 
@@ -92,15 +141,8 @@ $stock_name => undef
 
 <script>
 
-
-var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
-
-if (parseInt(check_outliers) === 1) {
-    document.getElementById('download_stock_phenotypes_exclude_outliers').value = "1";
-    document.getElementById('download_stock_phenotypes_exclude_outliers').checked = true;
-}
-
 jQuery(document).ready(function() {
+  setDefaultOptions();
 
   jQuery('#stock_download_phenotypes_button').click( function () {
     jQuery('#download_stock_phenotypes_dialog').modal("show");
@@ -129,7 +171,11 @@ jQuery(document).ready(function() {
     var stock_type = "<% $stock_type %>";
     var stock_id = ["<% $stock_id %>"];
     var format = jQuery("#download_stock_phenotypes_format").val();
+    var repetitive_measurements = jQuery("#download_stock_phenotypes_repetitive_measurements_option").val();
     var timestamp = jQuery("#download_stock_phenotypes_timestamp_option").val();
+    var intercrop = jQuery("#download_stock_phenotypes_intercrop_accessions_option").val();
+    var entry_numbers = jQuery("#download_stock_phenotypes_entry_numbers_option").val();
+    var trait_synonyms = jQuery("#download_stock_phenotypes_trait_synonyms_option").val();
     var traits = jQuery("#download_stock_phenotypes_traits_select").val();
     if (! Array.isArray(traits) ) {
        traits = [ traits ];
@@ -137,10 +183,26 @@ jQuery(document).ready(function() {
 
     var datalevel = jQuery("#download_stock_phenotypes_level_option").val();
     var exclude_phenotype_outlier = jQuery("#download_stock_phenotypes_exclude_outliers").val();
-    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier);
+    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms);
   });
 
 });
+
+function setDefaultOptions() {
+    var default_repeat_measurements = "<% $default_repeat_measurements %>";
+    var default_include_timestamps = <% $default_include_timestamps %>;
+    var default_include_intercrop_accessions = <% $default_include_intercrop_accessions %>;
+    var default_include_entry_numbers = <% $default_include_entry_numbers %>;
+    var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
+    var default_supress_outliers = <% $default_supress_outliers %>;
+
+    jQuery("#download_stock_phenotypes_repetitive_measurements_option").val(default_repeat_measurements);
+    jQuery("#download_stock_phenotypes_timestamp_option").val(default_include_timestamps);
+    jQuery("#download_stock_phenotypes_intercrop_accessions_option").val(default_include_intercrop_accessions);
+    jQuery("#download_stock_phenotypes_entry_numbers_option").val(default_include_entry_numbers);
+    jQuery("#download_stock_phenotypes_trait_synonyms_option").val(default_include_trait_synonyms);
+    jQuery("#download_stock_phenotypes_exclude_outliers").val(default_supress_outliers);
+}
 
 function data_level_change_traits() {
     var stock_type = "<% $stock_type %>";

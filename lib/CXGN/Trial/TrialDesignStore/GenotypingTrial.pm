@@ -16,14 +16,13 @@ sub BUILD {
     $self->set_stock_type_id($self->get_tissue_sample_cvterm_id);
     $self->set_stock_relationship_type_id($self->get_tissue_sample_of_cvterm_id);
 
-    $self->set_source_stock_types(
-	[
-	  $self->get_accession_cvterm_id,
-	  $self->get_plot_cvterm_id,
-	  $self->get_plant_cvterm_id,
-	  $self->get_tissue_sample_cvterm_id
-	]
-	);
+    $self->set_source_stock_types ([
+        $self->get_accession_cvterm_id,
+        $self->get_plot_cvterm_id,
+        $self->get_subplot_cvterm_id,
+        $self->get_plant_cvterm_id,
+        $self->get_tissue_sample_cvterm_id
+    ]);
 
     $self->set_valid_properties(
     [
@@ -109,7 +108,7 @@ sub validate_design {
         $error .= "Name $s->uniquename already exists in the database.";
     }
 
-    my @source_stock_types = ($accession_type_id, $plot_type_id, $plant_type_id, $tissue_type_id);
+    my @source_stock_types = ($accession_type_id, $plot_type_id, $subplot_type_id, $plant_type_id, $tissue_type_id);
 
     my $rs = $chado_schema->resultset('Stock::Stock')->search({
         'is_obsolete' => { '!=' => 't' },

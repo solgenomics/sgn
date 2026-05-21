@@ -47,7 +47,7 @@ export function WizardDatasets(main_id,wizard){
     var val = main.select(".wizard-dataset-select").node().value;
     if(val!=""){
         var dataset = datasets.getDataset(val);
-        var details = '';
+        var details = "";
         dataset.category_order.forEach(function(cat) {
             var contents = dataset.categories[cat];
 	    if(contents) {

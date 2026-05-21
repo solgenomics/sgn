@@ -5,6 +5,14 @@ $dialog_type => undef
 $dialog_name => undef
 </%args>
 
+<%once>
+    my $default_repeat_measurements = $c->get_conf('pheno_download_default_repeat_measurements');
+    my $default_include_timestamps = $c->get_conf('pheno_download_default_include_timestamps');
+    my $default_include_intercrop_accessions = $c->get_conf('pheno_download_default_include_intercrop_accessions');
+    my $default_include_entry_numbers = $c->get_conf('pheno_download_default_include_entry_numbers');
+    my $default_include_trait_synonyms = $c->get_conf('pheno_download_default_include_trait_synonyms');
+    my $default_supress_outliers = $c->get_conf('exclude_phenotype_outliers');
+</%once>
 
 <div class="modal fade" id="download_trial_phenotypes_dialog" name="download_trial_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadTrialPhenotypesDialog">
   <div class="modal-dialog" role="document">
@@ -65,23 +73,23 @@ $dialog_name => undef
 
 <&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
 
-        <div class="form-group">
-	      	<label class="col-sm-3 control-label">For repeated measurements, return the </label>
-			<div class="col-sm-9">
-		  		<select class="form-control" id="download_trial_phenotypes_repetitive_measurements_option">
-		    		<option value="first">First value</option>
-		    		<option value="last">Last value</option>
-		    		<option value="average" selected>Averaged value</option>
-                    <option value="sum">Sum values</option>
-		    		<option value="all_values_single_line">All Values Single Line</option>
-                    <option value="all_values_multiple_line">All Values Multiple Line</option>
-		  		</select>
-			</div>
-	    </div>
-	    
             <div class="form-group">
-                <label class="col-sm-3 control-label">Include Timestamps: </label>
-                <div class="col-sm-9" >
+                <label class="col-sm-7 control-label">For repeated measurements, return the: </label>
+                <div class="col-sm-5">
+                    <select class="form-control" id="download_trial_phenotypes_repetitive_measurements_option">
+                        <option value="first">First value</option>
+                        <option value="last">Last value</option>
+                        <option value="average">Averaged value</option>
+                        <option value="sum">Sum values</option>
+                        <option value="all_values_single_line">All Values Single Line</option>
+                        <option value="all_values_multiple_line">All Values Multiple Line</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-7 control-label">Include Timestamps: </label>
+                <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_timestamp_option">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
@@ -90,8 +98,18 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Include Entry Numbers: </label>
-                <div class="col-sm-9" >
+                <label class="col-sm-7 control-label">Include Intercrop Accessions: </label>
+                <div class="col-sm-5" >
+                    <select class="form-control" id="download_trial_phenotypes_intercrop_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-7 control-label">Include Entry Numbers: </label>
+                <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_entry_numbers_option">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
@@ -100,9 +118,9 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Suppress User Defined Phenotype Outliers: </label>
-                <div class="col-sm-9" >
-                    <select class="form-control" id="download_trial_phenotypes_exclude_outliers">
+                <label class="col-sm-7 control-label">Include Trait Synonyms: </label>
+                <div class="col-sm-5" >
+                    <select class="form-control" id="download_trial_phenotypes_trait_synonyms_option">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -110,28 +128,38 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-3 control-label">Trait Name Contains: </label>
-                <div class="col-sm-9" >
-                    <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="Example: storage root,oxoglutarate"/>
+                <label class="col-sm-7 control-label">Trait Name Contains: </label>
+                <div class="col-sm-5" >
+                    <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="storage root,oxoglutarate" style="width: 100%"/>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-8 control-label">Minimum Phenotype Value: </label>
-                        <div class="col-sm-4" >
+                        <label class="col-sm-7 control-label">Min Phenotype Value: </label>
+                        <div class="col-sm-5" >
                             <input id="download_trial_phenotype_phenotype_min" name="download_trial_phenotype_phenotype_min" type="number" class="form-control" />
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-6">
                     <div class="form-group">
-                        <label class="col-sm-8 control-label">Maximum Phenotype Value: </label>
-                        <div class="col-sm-4" >
+                        <label class="col-sm-7 control-label">Max Phenotype Value: </label>
+                        <div class="col-sm-5" >
                             <input id="download_trial_phenotype_phenotype_max" name="download_trial_phenotype_phenotype_max" type="number" class="form-control" />
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-7 control-label">Suppress User Defined Phenotype Outliers: </label>
+                <div class="col-sm-5" >
+                    <select class="form-control" id="download_trial_phenotypes_exclude_outliers">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
             </div>
 </&>
@@ -149,15 +177,9 @@ $dialog_name => undef
 
 <script>
 
-var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
-
-if (parseInt(check_outliers) === 1) {
-    document.getElementById('download_trial_phenotypes_exclude_outliers').value = "1";
-    document.getElementById('download_trial_phenotypes_exclude_outliers').checked = true;
-}
-
-
 jQuery(document).ready(function() {
+
+  setDefaultOptions();
 
   jQuery('#trial_download_phenotypes_button').click( function () {
     jQuery('#download_trial_phenotypes_dialog').modal("show");
@@ -175,6 +197,7 @@ jQuery(document).ready(function() {
     var format = jQuery("#download_trial_phenotypes_format").val();
     var repetitive_measurements = jQuery("#download_trial_phenotypes_repetitive_measurements_option").val();
     var timestamp = jQuery("#download_trial_phenotypes_timestamp_option").val();
+    var intercrop = jQuery("#download_trial_phenotypes_intercrop_option").val()
     var entry_numbers = jQuery("#download_trial_phenotypes_entry_numbers_option").val();
     var trait_contains = jQuery("#download_trial_phenotype_trait_contains").val();
     var trait_contains_array = trait_contains.split(",");
@@ -184,8 +207,9 @@ jQuery(document).ready(function() {
     var phenotype_min_value = jQuery("#download_trial_phenotype_phenotype_min").val();
     var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
     var exclude_phenotype_outlier = jQuery("#download_trial_phenotypes_exclude_outliers").val();
+    var include_trait_synonyms = jQuery("#download_trial_phenotypes_trait_synonyms_option").val();
 
-    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&speed="+speed+"&format="+format+"&timestamp="+timestamp+"&entry_numbers="+entry_numbers+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements);
+    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&speed="+speed+"&format="+format+"&timestamp="+timestamp+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&trait_synonyms="+include_trait_synonyms);
 
   });
 
@@ -194,5 +218,21 @@ jQuery(document).ready(function() {
 function data_level_change_traits() {
     get_select_box('traits', 'download_trial_phenotypes_traits', { 'name' : 'download_trial_phenotypes_traits_select', 'id' : 'download_trial_phenotypes_traits_select', 'trial_ids':'<% $trial_ids %>', 'data_level':jQuery('#download_trial_phenotypes_level_option').val(), 'multiple': true });
     get_select_box('phenotyped_trait_components', 'download_trial_phenotypes_trait_components', { 'name' : 'download_trial_phenotypes_trait_components_select', 'id' : 'download_trial_phenotypes_trait_components_select', 'trial_ids':'<% $trial_ids %>', 'data_level':jQuery('#download_trial_phenotypes_level_option').val() });
+}
+
+function setDefaultOptions() {
+    var default_repeat_measurements = "<% $default_repeat_measurements %>";
+    var default_include_timestamps = <% $default_include_timestamps %>;
+    var default_include_intercrop_accessions = <% $default_include_intercrop_accessions %>;
+    var default_include_entry_numbers = <% $default_include_entry_numbers %>;
+    var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
+    var default_supress_outliers = <% $default_supress_outliers %>;
+
+    jQuery("#download_trial_phenotypes_repetitive_measurements_option").val(default_repeat_measurements);
+    jQuery("#download_trial_phenotypes_timestamp_option").val(default_include_timestamps);
+    jQuery("#download_trial_phenotypes_intercrop_option").val(default_include_intercrop_accessions);
+    jQuery("#download_trial_phenotypes_entry_numbers_option").val(default_include_entry_numbers);
+    jQuery("#download_trial_phenotypes_trait_synonyms_option").val(default_include_trait_synonyms);
+    jQuery("#download_trial_phenotypes_exclude_outliers").val(default_supress_outliers);
 }
 </script>

@@ -390,7 +390,6 @@ has 'description' => (
 has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
-    default => 0,
 );
 
 =head2 accessor organization_name()
@@ -552,6 +551,9 @@ sub BUILD {
     $self->stock($stock);
     $self->stock_id($stock->stock_id);
     $self->create_date($stock->create_date);
+    if (!defined ($self->is_obsolete)) {
+        $self->is_obsolete($stock->is_obsolete);
+    }
 
     unless ($self->is_saving) {
         $self->organism_id($stock->organism_id);
@@ -675,7 +677,7 @@ sub store {
                 description => $self->description(),
                 type_id => $self->type_id(),
                 organism_id => $self->organism_id(),
-                is_obsolete => $self->is_obsolete(),
+                is_obsolete => 0,
             });
             $new_row->insert();
 
@@ -1321,10 +1323,14 @@ sub get_trials {
     my $schema = $self->schema();
     my $dbh = $schema->storage()->dbh();
     my $stock_id = $self->stock_id();
+    my $type = $self->type();
+    my @where_clause;
 
     my $plot_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $tissue_sample_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $geolocation_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'project location', 'project_property')->cvterm_id();
 
@@ -1336,20 +1342,29 @@ sub get_trials {
     while (my ($nd_geolocation_id, $description) = $geolocation_h->fetchrow_array()) {
         $geolocations{$nd_geolocation_id} = $description;
     }
+    push @where_clause, "stock.type_id = $plot_type_id";
+    if ($type eq 'plot') {
+        push @where_clause, "stock.stock_id = $stock_id";
+    } elsif (($type eq 'accession') || ($type eq 'plant') || $type eq 'subplot' || $type eq 'cross' || $type eq 'family_name') {
+        push @where_clause, "stock_relationship_1.object_id = $stock_id";
+    } elsif ($type eq 'tissue_sample') {
+        push @where_clause, "stock_relationship_2.subject_id = $stock_id OR nd_experiment_stock.stock_id = $stock_id";
+    }
+
+    my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $q = "SELECT distinct(project.project_id), project.name, projectprop.value
-    FROM stock as accession
-    JOIN stock_relationship on (accession.stock_id=stock_relationship.object_id) AND stock_relationship.type_id IN (?,?)
-    JOIN stock on (stock.stock_id=stock_relationship.subject_id) AND stock.type_id IN (?,?)
-	JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
-    JOIN nd_experiment_project USING (nd_experiment_id)
-	JOIN project USING (project_id)
-    LEFT JOIN projectprop ON (project.project_id=projectprop.project_id)
-	WHERE projectprop.type_id=? AND accession.stock_id=?;";
+    FROM stock
+    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
+    JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
+    JOIN project ON (nd_experiment_project.project_id = project.project_id)
+    JOIN projectprop ON (project.project_id=projectprop.project_id) AND projectprop.type_id = ?
+    LEFT JOIN stock_relationship AS stock_relationship_1 ON (stock.stock_id=stock_relationship_1.subject_id) AND stock_relationship_1.type_id IN (?,?,?)
+    LEFT JOIN stock_relationship AS stock_relationship_2 ON (stock.stock_id=stock_relationship_2.object_id) AND stock_relationship_2.type_id = ?
+    $where_clause;";
 
     my $h = $dbh->prepare($q);
-    $h->execute($plot_of_type_id, $tissue_sample_type_id, $plot_type_id, $tissue_sample_type_id, $geolocation_type_id, $stock_id);
-
+    $h->execute($geolocation_type_id, $plot_of_type_id, $subplot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id);
     my @trials;
     while (my ($project_id, $project_name, $nd_geolocation_id) = $h->fetchrow_array()) {
         push @trials, [ $project_id, $project_name, $nd_geolocation_id, $geolocations{$nd_geolocation_id} ];
@@ -1951,11 +1966,11 @@ sub add_synonym {
 =head2 get_child_stocks
 
 Usage: $self->get_child_stocks
-Desc: retrieves a structured hash of all child stocks (subplots, plants, tissue samples). Self is included at the top. 
+Desc: retrieves a structured hash of all child stocks (subplots, plants, tissue samples). Self is included at the top.
 Ret: a scalar hash
 Args:
 Side effects:
-Example: 
+Example:
 
 =cut
 
@@ -1969,11 +1984,11 @@ sub get_child_stocks {
         die "Cannot get child stocks without knowing stock type!\n";
     }
 
-    my $plot_and_plant_q = "SELECT stock.stock_id, stock.name, 
-        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+    my $plot_and_plant_q = "SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
         (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
-        FROM stock_relationship 
-        JOIN stock ON (stock.stock_id=stock_relationship.object_id) 
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.object_id)
         WHERE stock_relationship.subject_id=?"; #For plots, this returns accessions, subplots, and plants. For plants, this returns parent subplot and accessions. Also gives accessions for subplots.
 
     my $subplot_q = "SELECT stock.stock_id, stock.name,
@@ -1985,16 +2000,16 @@ sub get_child_stocks {
 
     my $stockprops_q = "SELECT cvterm.name, cvterm_id, value FROM stockprop
         JOIN cvterm ON (cvterm.cvterm_id=stockprop.type_id)
-        WHERE stockprop.stock_id=?"; #gets all stockprops for any stock. 
+        WHERE stockprop.stock_id=?"; #gets all stockprops for any stock.
 
-    my $tissue_sample_q = "SELECT * FROM 
-        (SELECT stock.stock_id, stock.name, 
-        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+    my $tissue_sample_q = "SELECT * FROM
+        (SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
         (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
-        FROM stock_relationship 
-        JOIN stock ON (stock.stock_id=stock_relationship.subject_id) 
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
         WHERE stock_relationship.object_id=?) AS tissue_samples_subquery
-        WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples. 
+        WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples.
 
     my $stock_structure = {
         stock_id => $stock_id,
@@ -2023,7 +2038,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2040,7 +2055,7 @@ sub get_child_stocks {
                     stock_id => $subplot->{stock_id},
                     type => $subplot->{type}
                 });
-                $stock_structure->{has}->{"".$subplot->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$subplot->{name}.""} = $child_stock->get_child_stocks();
             }
         } elsif (@has_plants) {
             foreach my $plant (@has_plants) {
@@ -2049,7 +2064,7 @@ sub get_child_stocks {
                     stock_id => $plant->{stock_id},
                     type => $plant->{type}
                 });
-                $stock_structure->{has}->{"".$plant->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$plant->{name}.""} = $child_stock->get_child_stocks();
             }
         } else { # no plants or subplots, just accessions
             foreach my $accession (@accessions) {
@@ -2058,7 +2073,7 @@ sub get_child_stocks {
                     stock_id => $accession->{stock_id},
                     type => $accession->{type}
                 });
-                $stock_structure->{has}->{''.$accession->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{''.$accession->{name}.""} = $child_stock->get_child_stocks();
             }
         }
 
@@ -2072,7 +2087,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2084,7 +2099,7 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2101,7 +2116,7 @@ sub get_child_stocks {
                     stock_id => $plant->{stock_id},
                     type => $plant->{type}
                 });
-                $stock_structure->{has}->{"".$plant->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$plant->{name}.""} = $child_stock->get_child_stocks();
             }
         } else {# if no plants, subplots can only have accessions
             foreach my $accession (@child_stocks) {
@@ -2110,7 +2125,7 @@ sub get_child_stocks {
                     stock_id => $accession->{stock_id},
                     type => $accession->{type}
                 });
-                $stock_structure->{has}->{"".$accession->{stock_name}.""} = $child_stock->get_child_stocks();
+                $stock_structure->{has}->{"".$accession->{name}.""} = $child_stock->get_child_stocks();
             }
         }
 
@@ -2124,19 +2139,19 @@ sub get_child_stocks {
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
         }
 
-        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q); 
+        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q);
         $h->execute($stock_id);
 
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @child_stocks, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type,
                 relationship_type => $relationship_type
             };
@@ -2151,7 +2166,7 @@ sub get_child_stocks {
                 stock_id => $child->{stock_id},
                 type => $child->{type}
             });
-            $stock_structure->{has}->{"".$child->{stock_name}.""} = $child_stock->get_child_stocks();
+            $stock_structure->{has}->{"".$child->{name}.""} = $child_stock->get_child_stocks();
         }
 
     } elsif ($type eq "tissue_sample") {
@@ -2168,7 +2183,7 @@ sub get_child_stocks {
 =head2 get_child_stocks_flat_list
 
 Same as get_child_stocks, but returns just a flat listref and not a hierarchy. Stockprops are ommitted.
-Listref elements are hashrefs with structure {stock_id, name, type}. This stock is dropped in the list, 
+Listref elements are hashrefs with structure {stock_id, name, type}. Self is dropped in the list,
 unlike in get_child_stocks where it remains at the top of the hierarchy.
 
 =cut
@@ -2183,11 +2198,11 @@ sub get_child_stocks_flat_list {
         die "Cannot get child stocks without knowing stock type!\n";
     }
 
-    my $plot_and_plant_q = "SELECT stock.stock_id, stock.name, 
-        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+    my $plot_and_plant_q = "SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
         (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
-        FROM stock_relationship 
-        JOIN stock ON (stock.stock_id=stock_relationship.object_id) 
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.object_id)
         WHERE stock_relationship.subject_id=?"; #For plots, this returns accessions, subplots, and plants. For plants, this returns parent subplot and accessions. Also gives accessions for subplots.
 
     my $subplot_q = "SELECT stock.stock_id, stock.name,
@@ -2197,14 +2212,14 @@ sub get_child_stocks_flat_list {
         JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
         WHERE stock_relationship.object_id=?;"; #gets parent plot and child plants
 
-    my $tissue_sample_q = "SELECT * FROM 
-        (SELECT stock.stock_id, stock.name, 
-        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type, 
+    my $tissue_sample_q = "SELECT * FROM
+        (SELECT stock.stock_id, stock.name,
+        (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock.type_id) AS stock_type,
         (SELECT cvterm.name FROM cvterm WHERE cvterm_id=stock_relationship.type_id) AS relationship_type
-        FROM stock_relationship 
-        JOIN stock ON (stock.stock_id=stock_relationship.subject_id) 
+        FROM stock_relationship
+        JOIN stock ON (stock.stock_id=stock_relationship.subject_id)
         WHERE stock_relationship.object_id=?) AS tissue_samples_subquery
-        WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples. 
+        WHERE stock_type='tissue_sample'"; #only useful for plants, where it gives tissue samples.
 
     my $stock_structure = [];
 
@@ -2236,7 +2251,7 @@ sub get_child_stocks_flat_list {
                 });
                 push @{$stock_structure}, @{$child_stock->get_child_stocks_flat_list()};
             }
-        } 
+        }
 
     } elsif ($type eq "subplot") {
 
@@ -2266,13 +2281,13 @@ sub get_child_stocks_flat_list {
         }
     } elsif ($type eq "plant") {
 
-        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q); 
+        $h = $self->schema()->storage()->dbh()->prepare($tissue_sample_q);
         $h->execute($stock_id);
 
         while (my ($child_stock_id, $child_stock_name, $child_type, $relationship_type) = $h->fetchrow_array()){
             push @{$stock_structure}, {
                 stock_id => $child_stock_id,
-                stock_name => $child_stock_name,
+                name => $child_stock_name,
                 type => $child_type
             };
         }

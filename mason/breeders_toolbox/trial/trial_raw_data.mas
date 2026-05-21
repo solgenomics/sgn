@@ -1,6 +1,8 @@
 
 <%args>
 $trial_id
+$trial_stock_type
+$user_can_modify
 </%args>
 
 <& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &>
@@ -65,7 +67,7 @@ $trial_id
 	    <td>
 			<div class="form-group">
 				<label for="raw_data_observation_level">Observation Level:</label>
-				<select id="raw_data_observation_level">
+				<select class="form-control" id="raw_data_observation_level">
 					<option value="plot">Plots</option>
 					<option value="plant">Plants</option>
 					<option value="subplot">Subplots</option>
@@ -73,6 +75,19 @@ $trial_id
 	      		</select>
 			</div>
 	    </td>
+		<td>
+			<div class="form-group">
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="
+				The site will automatically refresh
+				materialized views periodically, but
+				you can do this manually to ensure 
+				views are updated before analyses or
+				data downloads.
+				"></span> &nbsp;
+				<button id="refresh_phenoview_btn" class="btn btn-primary btn-sm">Refresh Materialized Phenotype View</button>
+			</div>
+		</td>
 	</tr>
 	<tr>
 	<!--
@@ -106,9 +121,72 @@ $trial_id
 
 <script>
 
-    jQuery(window).ready( function() {
+var user_can_modify = <% $user_can_modify %>;
 
-        jQuery('#trial_raw_data_onswitch').click( function() {
+function edit_single_observation(observation_id) {
+	jQuery(`#${observation_id}_edit_btn`).attr("style", "display:none");
+	jQuery(`#${observation_id}_save_changes_btn`).attr("style", "display:inline");
+	jQuery(`#${observation_id}_discard_changes_btn`).attr("style", "display:inline");
+
+	let originalValue = jQuery(`#${observation_id}_edit_btn`).attr('data-obs-value');
+	let originalTimestamp = jQuery(`#${observation_id}_edit_btn`).attr('data-obs-timestamp');
+	let cell = jQuery(`#${observation_id}_edit_btn`).closest('tr').find('td').eq(3);
+	cell.data('original-content', cell.html());
+	cell.html(
+		`<input type="text" id="${observation_id}_value_input" class="form-control input-sm" style="display:inline-block;width:auto" value="${originalValue}"> ` +
+		`<input type="text" id="${observation_id}_timestamp_input" placeholder="YYYY-MM-DD HH:MM:SS+0000" class="form-control input-sm" style="display:inline-block;width:auto" value="${originalTimestamp}">`
+	);
+}
+
+function save_single_observation(observation_id) {
+	jQuery(`#${observation_id}_save_changes_btn`).attr("style", "display:none");
+	jQuery(`#${observation_id}_discard_changes_btn`).attr("style", "display:none");
+	jQuery(`#${observation_id}_edit_btn`).attr("style", "display:inline");
+
+	let newValue = jQuery(`#${observation_id}_value_input`).val();
+	let newTimestamp = jQuery(`#${observation_id}_timestamp_input`).val();
+	let newDisplay = newValue + (newTimestamp ? ", " + newTimestamp : "");
+	
+	jQuery.ajax({
+		url : '/ajax/phenotype/edit/'+observation_id+'',
+		data : {
+			'new_observation_value' : newValue,
+			'new_observation_timestamp' : newTimestamp,
+			'trial_id' : <% $trial_id %>
+		},
+		beforeSend : function() {
+			jQuery('#working_modal').modal("show");
+		},
+		success : function(response) {
+			jQuery('#working_modal').modal("hide");
+			if (response.error) {
+				alert(response.error);
+				discard_observation_edit(observation_id);
+			} else {
+				let cell = jQuery(`#${observation_id}_save_changes_btn`).closest('tr').find('td').eq(3);
+				cell.html(newDisplay);
+				jQuery(`#${observation_id}_edit_btn`).attr('data-obs-value', newValue).attr('data-obs-timestamp', newTimestamp);
+			}
+		},
+		error : function() {
+			jQuery('#working_modal').modal("hide");
+			alert("Server error, check console.");
+		}
+	});
+}
+
+function discard_observation_edit(observation_id) {
+	jQuery(`#${observation_id}_discard_changes_btn`).attr("style", "display:none");
+	jQuery(`#${observation_id}_save_changes_btn`).attr("style", "display:none");
+	jQuery(`#${observation_id}_edit_btn`).attr("style", "display:inline");
+
+	let cell = jQuery(`#${observation_id}_discard_changes_btn`).closest('tr').find('td').eq(3);
+	cell.html(cell.data('original-content'));
+}
+
+jQuery(window).ready( function() {
+
+    jQuery('#trial_raw_data_onswitch').click( function() {
 
 	    create_trait_menu_for_trial(<% $trial_id %>)
 	    	.then( (result) => fetch_traits(result.result.searchResultsDbId))
@@ -117,6 +195,28 @@ $trial_id
 		});
 	});
 
+	jQuery('#refresh_phenoview_btn').on('click', function() {
+		jQuery('#refresh_phenoview_btn').prop("disabled", true);
+		jQuery('#working_modal').modal("show");
+		fetch(
+			document.location.origin + `/ajax/breeder/refresh?matviews=phenotypes`,
+			{
+				method: 'POST',
+				credentials: 'include'
+			}
+		).then(resp => resp.json())
+		.then(json => {
+			if (json.error) {
+				throw new Error(json.error);
+			} else {
+				jQuery('#refresh_phenoview_btn').prop("disabled", false);
+				jQuery('#working_modal').modal("hide");
+			}
+		})
+		.catch(err => {
+			alert(err.message);
+		});
+	});
 
 	jQuery('#raw_data_trait_select_button').click( function() {
 	   	var trait_id = jQuery('#selectRawDataTrait').find(":selected").val();
@@ -241,7 +341,7 @@ $trial_id
     }
 
     function build_menu(result) {
-		var menu = '<select id="selectRawDataTrait">';
+		var menu = '<select class="form-control" id="selectRawDataTrait">';
 		for (var i=0; i<result.data.length; i++) {
 		    menu += '<option value="'+result.data[i].observationVariableDbId+'">'+result.data[i].trait.traitName+'</option>';
 		}
@@ -290,29 +390,58 @@ $trial_id
     	    //combine the value and timestamp in the single column with comma sep !! 
     	    var value_with_timestamp = result.data[i].value + (formattedDate ? ", " + formattedDate : "");
 
-		    data.push( [ 
-				result.data[i].observationDbId, 
-				result.data[i].observationUnitName, 
-				result.data[i].observationVariableName, 
-				value_with_timestamp, 
-				formattedDate, // this column is just used to sort all the columns based on the date in ascending order !!
-				result.data[i].collector 
-			]);
+			if (user_can_modify) {
+				data.push( [ 
+					result.data[i].observationDbId, 
+					result.data[i].observationUnitName, 
+					result.data[i].observationVariableName, 
+					value_with_timestamp, 
+					formattedDate, // this column is just used to sort all the columns based on the date in ascending order !!
+					result.data[i].collector,
+					`<button id="${result.data[i].observationDbId}_edit_btn" class="btn btn-sm btn-primary observation-edit" data-obs-value="${result.data[i].value}" data-obs-timestamp="${formattedDate}" onclick="edit_single_observation(${result.data[i].observationDbId})"><span class="glyphicon glyphicon-edit"></span></button><button id="${result.data[i].observationDbId}_save_changes_btn" class="btn btn-sm btn-success observation-save-changes" style="display:none" onclick="save_single_observation(${result.data[i].observationDbId})"><span class="glyphicon glyphicon-floppy-disk"></span></button><button id="${result.data[i].observationDbId}_discard_changes_btn" class="btn btn-sm btn-danger observation-discard-changes" style="display:none" onclick="discard_observation_edit(${result.data[i].observationDbId})"><span class="glyphicon glyphicon-floppy-remove"></span></button>`//This column has controls for changing the trait data
+				]);
+			} else {
+				data.push( [ 
+					result.data[i].observationDbId, 
+					result.data[i].observationUnitName, 
+					result.data[i].observationVariableName, 
+					value_with_timestamp, 
+					formattedDate, // this column is just used to sort all the columns based on the date in ascending order !!
+					result.data[i].collector
+				]);
+			}
 		}
 
-		jQuery('#raw_trait_data_table').DataTable( {
-		   'destroy': true,
-		   'columns': [
-		    { title: 'observation id'},
-		    { title: 'observation unit' },
-		    { title: 'observation variable' },
-		    { title: 'value, timestamp' },
-			{ title: 'Sort Date', visible: false },//this column will be hidden !!!
-		    { title: 'collector' }
-		    ],
-		   'data' : data,
-		   'order': [[4, 'asc']] 
-		});
+		if (user_can_modify) {
+			jQuery('#raw_trait_data_table').DataTable( {
+				'destroy': true,
+				'columns': [
+						{ title: 'observation id'},
+						{ title: 'observation unit' },
+						{ title: 'observation variable' },
+						{ title: 'value, timestamp' },
+						{ title: 'Sort Date', visible: false },//this column will be hidden !!!
+						{ title: 'collector' },
+						{ title: '', }
+					],
+				'data' : data,
+				'order': [[4, 'asc']] 
+			});
+		} else {
+			jQuery('#raw_trait_data_table').DataTable( {
+				'destroy': true,
+				'columns': [
+						{ title: 'observation id'},
+						{ title: 'observation unit' },
+						{ title: 'observation variable' },
+						{ title: 'value, timestamp' },
+						{ title: 'Sort Date', visible: false },//this column will be hidden !!!
+						{ title: 'collector' }
+					],
+				'data' : data,
+				'order': [[4, 'asc']] 
+			});
+		}
     }
 });
 

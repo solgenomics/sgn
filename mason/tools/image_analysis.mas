@@ -154,6 +154,14 @@ tr.shown td.details-control {
                 <button class="btn btn-primary" id="image_analysis_submit" disabled>Submit for Analysis</button>
                 </center>
                 <hr>
+
+                <div id="analysis_image_result">
+                    <a id="analysis_image_link" href="#" target="_blank">
+                        <img id="analysis_image" src="" style="max-width:500px; width:100%; height:auto; display:block; margin:0 auto;"/>
+                    </a>
+                </div>
+                <br/>
+
                 <div id="image_analysis_result" style="display: none;">
                     <table class="display" style="width:100%" id="image_analysis_result_table">
                         <thead>
@@ -161,7 +169,7 @@ tr.shown td.details-control {
                                <th></th>
                                <th>Stock</th>
                                <th>Trait</th>
-                               <th># Analyzed Images</th>
+                               <th id="analyzed_header"></th>
                                <th>Mean Value</th>
                            </tr>
                        </thead>
@@ -238,6 +246,27 @@ tr.shown td.details-control {
         </div>
       </div>
     </div>
+
+    <div id="plantCreationWarning" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <p>The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.</p>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" id="save_results_continue">Continue</button>
+        </div>
+
+        </div>
+    </div>
+    </div>
 </&>
 
 <script>
@@ -290,9 +319,11 @@ jQuery(document).ready(function(){
 
     jQuery('#image_analysis_service_select').change(function() {
         var service = jQuery('#image_analysis_service_select').val();
-	var service_defs = JSON.parse('<% JSON::encode_json(\%services) %>');
+	    var service_defs = JSON.parse('<% JSON::encode_json(\%services) %>');
         jQuery('#image_analysis_trait_select').html('<option value="">Select A Trait</option>');
-        if (service) {
+        jQuery('#image_analysis_trait_select').html('<option value=""></option>');
+        console.log("service:", service);
+        if (service && service !== "multi-trait") {
             jQuery('#working_modal').modal('show');
             // add crop and service specific trait options
             var all_traits = service_defs[service].service_traits;
@@ -331,13 +362,19 @@ jQuery(document).ready(function(){
                     jQuery('#image_analysis_trait_select').append(options);
                     jQuery('#image_analysis_trait_group').show();
                     jQuery('#working_modal').modal('hide');
+                    jQuery('#analyzed_header'),text('# Analyzed Images');
                 }
             });
-      }
-      else {
-          // hide trait select
-          jQuery('#image_analysis_trait_group').hide();
-      }
+        }
+        else if (service === "multi-trait") {
+            jQuery('#image_analysis_trait_group').hide();
+            jQuery('#image_analysis_submit').prop('disabled', false);
+            jQuery('#analyzed_header').text('# Analyzed Objects');
+        }
+        else {
+            // hide trait select
+            jQuery('#image_analysis_trait_group').hide();
+        }
     });
 
     jQuery('#image_analysis_trait_select').change(function() {
@@ -351,6 +388,7 @@ jQuery(document).ready(function(){
 
     const selected_image_ids = [];
     let submit_results;
+    let is_multi_trait;
 
     jQuery('#image_analysis_submit').click(function(){
         jQuery('input[name="image_analysis_select"]').each(function() {
@@ -424,15 +462,16 @@ jQuery(document).ready(function(){
         jQuery('#progress_msg').text('All '+image_total+' images submitted, waiting for responses.');
 
         jQuery.when.apply(jQuery, deferred_calls).then(function() {
-            // console.log("Results are:");
-            // console.log(results);
+            console.log("Results are:");
+            console.log(results);
             var first = results[0];
             submit_results = first;
             // console.log("stock type:", first.stock_type_name);
 
-            if (first.stock_type_name === "plot") {
-                alert("The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.")
-            }
+            //if (first.stock_type_name === "plot") {
+            //    jQuery('#my_dialog_modal').modal('show');
+                //alert("The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.")
+            //}
 
             let metricsData = Object.entries(first.result.analysis_info)
                 .filter(([key, value]) => key != null && value != null)
@@ -458,17 +497,24 @@ jQuery(document).ready(function(){
                     data: { 'result': JSON.stringify(results) },
                     success: function(response) {
                         // console.log("Grouped Results are:");
-                        // console.log(response);
+                        //console.log(response);
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
                         .attr("aria-valuenow", current_progress)
                         .text(Math.round(current_progress) + "%");
                         jQuery('#progress_msg').text('Building results table.');
+
+                        is_multi_trait = response.results.multi_trait_analysis;
+                        if (response.results.analyzed_image_overlay) {
+                            jQuery('#analysis_image').attr('src', response.results.analyzed_image_overlay);
+                            jQuery('#analysis_image_link').attr('href', response.results.analyzed_image_overlay);
+                            jQuery('#analysis_image_result').show()
+                        }
                         jQuery('#image_analysis_result').show();
 
                         var table = jQuery('#image_analysis_result_table').DataTable( {
                             "destroy" : true,
-                            "data": response.results,
+                            "data": response.results.table_data,
                             "dom": 'Bfrtip',
                             "buttons":  [
                                 'copy', 'excel', 'csv', 'pdf'
@@ -538,8 +584,20 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#image_analysis_save_results').click(function(){
+        console.log("submit results", submit_results);
+        if (submit_results.stock_type_name === "plot") {
+            jQuery('#plantCreationWarning').modal('show');
+        }
+    });
 
+    jQuery('#save_results_continue').click(function() {
+        jQuery('#plantCreationWarning').modal('hide');
+        saveResults();
+    });
+
+    function saveResults() {
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
+        console.log("table data:", table_data);
         let dt = new DataTransfer();
 
         jQuery('#working_modal').modal('show');
@@ -571,8 +629,8 @@ jQuery(document).ready(function(){
 
         let plantId = table_data[0].observationUnitDbId;
         
-        if (jQuery('#image_analysis_service_select option:selected').text() === "Citrus Image Multi Analysis") {
-            if (submit_results.stock_type_name === "plot") {
+        if (jQuery('#image_analysis_service_select option:selected').text() === "Citrus Image Multi Analysis" || jQuery('#image_analysis_service_select option:selected').text() === "Image Multi Object Multi Trait Analysis") {
+            if (submit_results.stock_type_name === "plot") { //shold this be !== "plant"?
                 jQuery.ajax({
                     type: 'GET',
                     contentType: 'application/json',
@@ -615,92 +673,126 @@ jQuery(document).ready(function(){
             const fileData = {};
             let imageFiles;
             let imageData;
+            const samples = {};
+            let plotId = table_data[0].observationUnitDbId;
+            let studyDbId = table_data[0].studyDbId;
+            let germplasmName = plantData[0].observationUnitName;
+            let accessionId = table_data[0].germplasmDbId;
+            let sampleName;
 
-            table_data.forEach(function(row) {
-                let plotId = row.observationUnitDbId;
-                let studyDbId = row.studyDbId;
-                let germplasmName = plantData[0].observationUnitName;
-                let accessionId = table_data[0].germplasmDbId;
-                //const imageId = selected_image_ids[0].toString();
+            table_data.forEach(row => {
+                row.details.forEach((detail, i) => {
+                    const key = detail.object_name || detail.image_name;
 
-                row.details.forEach(function(detail, i) {
-                    let sampleNumber = parseInt(detail.sample_num) + 1 + i;
-                    let sampleName = submit_results.result.trait_id + '_' + germplasmName + '_' + 'sample' + sampleNumber;
-                    let proxyUrl = "/get_image_file?url=" + encodeURIComponent(detail.analyzed_link);
-                    
-
-                    fetch(proxyUrl)
-                        .then(response => {
-                            if (!response.ok) throw new Error("Failed to fetch " + proxyUrl);
-                            return response.blob();
-                        })
-                        .then(blob => {
-                            let filename = sampleName + ".png";
-                            let file = new File([blob], filename, {type: blob.type || "image/png" });
-                            dt.items.add(file);
-
-                            document.getElementById('upload_images_file_input').files = dt.files;
-                            imageFiles = document.getElementById('upload_images_file_input').files;
-
-                            fileData[file.name] = {
-                                "imageFileName": file.name,
-                                "imageFileSize": file.size,
-                                "mimeType": file.type
-                            };
-                        })
-                        .catch(err => console.error(err));
-
-                    tissueSamplesData.push(
-                        {
-                            additionalInfo: {
-                                observationUnitParent: plantId
-                            },
-                            observationUnitName: sampleName,
-                            studyDbId: studyDbId,
-                            germplasmDbId: accessionId,
-                            observationUnitPosition: {
-                                observationLevel: {
-                                    levelName: "tissue_sample",
-                                    levelCode: "tissue_sameple" + sampleNumber,
-                                    levelOrder: 4
-                                },
-                                observationLevelRelationships: [
-                                    {
-                                        levelName: "plant",
-                                        observationUnitDbId: plantId,
-                                        levelOrder: 4
-                                    }
-                                ],
-                                positionCoordinateX: null,
-                                positionCoordinateY: null,
-                                geoCoordinates: null
-                            }
+                    if (!samples[key]) {
+                        let sampleNumber = parseInt(detail.sample_num) + i;
+                        if (is_multi_trait == 1) {
+                            sampleName = germplasmName + '_' + 'sample' + sampleNumber;
+                        } else {
+                            sampleName = detail.trait_id + '_' + germplasmName + '_' + 'sample' + sampleNumber;
                         }
-                    )
 
-                    tissueSampleMap[sampleName] = detail.value;
-                })
-            })
+                        samples[key] = {
+                            sampleName: sampleName,
+                            trait_values: {},
+                            analyzed_link: detail.analyzed_link,
+                            studyDbId: row.studyDbId,
+                            accessionId: table_data[0].germplasmDbId
+                        };
+                    }
+                    samples[key].trait_values[row.observationVariableDbId] = detail.value;
+                });
+            });
+
+            Object.values(samples).forEach((sample, index) => {
+                const sampleName = sample.sampleName;
+                const proxyUrl = "/get_image_file?url=" + encodeURIComponent(sample.analyzed_link);
+
+                // fetch image
+                if (jQuery('#image_analysis_service_select option:selected').text() !== "Image Multi Object Multi Trait Analysis") {
+                    console.log("test multi image");
+                    fetch(proxyUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error("Failed to fetch " + proxyUrl);
+                        return response.blob();
+                    })
+                    .then(blob => {
+                        let filename = sampleName + ".png";
+                        let file = new File([blob], filename, { type: blob.type || "image/png" });
+                        dt.items.add(file);
+
+                        document.getElementById('upload_images_file_input').files = dt.files;
+                        imageFiles = document.getElementById('upload_images_file_input').files;
+
+                        fileData[file.name] = {
+                            imageFileName: file.name,
+                            imageFileSize: file.size,
+                            mimeType: file.type
+                        };
+                    })
+                    .catch(err => console.error(err));
+                }
+                
+                
+                // create tissue sample
+                tissueSamplesData.push({
+                    additionalInfo: {
+                        observationUnitParent: plantId
+                    },
+                    observationUnitName: sampleName,
+                    studyDbId: sample.studyDbId,
+                    germplasmDbId: sample.accessionId,
+                    observationUnitPosition: {
+                        observationLevel: {
+                            levelName: "tissue_sample",
+                            levelCode: "tissue_sample_" + (index + 1),
+                            levelOrder: 4
+                        },
+                        observationLevelRelationships: [
+                            {
+                                levelName: "plant",
+                                observationUnitDbId: plantId,
+                                levelOrder: 4
+                            }
+                        ],
+                        positionCoordinateX: null,
+                        positionCoordinateY: null,
+                        geoCoordinates: null
+                    }
+                });
+
+                // store ALL trait values per sample
+                tissueSampleMap[sampleName] = sample.trait_values;
+            });
+            console.log("tissueSamplesData1", tissueSamplesData);
 
             // Add observations to existing samples if analysis has been run on current image before
             if (table_data[0].image_analyzed == 1) {
+                console.log("tissueSamplesData:", tissueSamplesData);
                 getOrCreateSamples(tissueSamplesData).then(sampleData => {
-                    //console.log("samples data", sampleData);
-
+                    console.log("sampleData", sampleData);
+                    console.log("tissueSampleMap", tissueSampleMap);
                     const observationData = [];
-                    for (const sampleId of Object.keys(sampleData)) {
-                        observationData.push({
-                            //additionalInfo: { observationUnitParent: plantId },
-                            collector: table_data[0].collector,
-                            observationUnitDbId: sampleId,
-                            observationVariableDbId: table_data[0].observationVariableDbId,
-                            observationVariableName: table_data[0].observationVariableName,
-                            observationTimeStamp: table_data[0].observationTimeStamp,
-                            value: tissueSampleMap[sampleData[sampleId]]
-                        });
-                    }
 
-                    // console.log("observation json", JSON.stringify(observationData));
+                    Object.entries(sampleData).forEach(([sampleId, sampleName]) => {
+                        const sampleValues = tissueSampleMap[sampleName];
+                        console.log("sampleValues:", sampleValues);
+
+                        if (!sampleValues) return; // safety check
+
+                        Object.entries(sampleValues).forEach(([traitId, value]) => {
+                            console.log("traitId:", traitId);
+                            observationData.push({
+                                collector: table_data[0].collector,
+                                observationUnitDbId: sampleId,
+                                observationVariableDbId: traitId,
+                                observationTimeStamp: table_data[0].observationTimeStamp,
+                                value: value
+                            });
+                        });
+                    });
+
+                    console.log("observation json", JSON.stringify(observationData));
 
                     jQuery.ajax({
                         type: 'POST',
@@ -731,6 +823,7 @@ jQuery(document).ready(function(){
                             observationUnitDbIdsMap[unit.observationUnitName] = unit.observationUnitDbId;
                         });
 
+
                         imageData = Object.values(fileData).map(file => {
                             const sampleName = file.imageFileName.replace(/\.[^/.]+$/, "");
                             file.observationUnitDbId = observationUnitDbIdsMap[sampleName];
@@ -740,17 +833,21 @@ jQuery(document).ready(function(){
                         const observationData = [];
 
                         response.result.data.forEach(unit => {
-                            observationData.push(
-                                {
+                            const sampleValues = tissueSampleMap[unit.observationUnitName];
+
+                            if (!sampleValues) return;
+                            Object.entries(sampleValues).forEach(([traitId, value]) => {
+                                observationData.push({
                                     collector: table_data[0].collector,
                                     observationUnitDbId: unit.observationUnitDbId,
-                                    observationVariableDbId: table_data[0].observationVariableDbId,
-                                    observationVariableName: table_data[0].observationVariableName,
+                                    observationVariableDbId: traitId,
                                     observationTimeStamp: table_data[0].observationTimeStamp,
-                                    value: tissueSampleMap[unit.observationUnitName]
-                                }
-                            )
+                                    value: value
+                                });
+                            })
+                            
                         })
+                        console.log("observationdata 2:", observationData);
 
                         jQuery.ajax({
                             type: 'POST',
@@ -758,8 +855,9 @@ jQuery(document).ready(function(){
                             url: '/brapi/v2/observations',
                             headers: { "Authorization": "Bearer "+jQuery.cookie("sgn_session_id") },
                             data: JSON.stringify(observationData),
-                            success: function(obsResponse) {    
-                                loadAllImages(imageFiles, imageData).then(function(uploadStatus) {
+                            success: function(obsResponse) {
+                                let promise = (imageFiles && imageFiles.length) ? loadAllImages(imageFiles, imageData) : Promise.resolve();
+                                promise.then(function(uploadStatus) {
                                     console.log("Upload completed!");
                                     jQuery('#working_modal').modal('hide');
                                     jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
@@ -807,7 +905,7 @@ jQuery(document).ready(function(){
         });
         }
         
-    });
+    }
 
 });
 
@@ -984,27 +1082,33 @@ function format ( d ) {
         var text;
         if (result.startsWith("Error: ")) {
             text = result;
+        } else if (Object.hasOwn(image, 'object_name')) {
+            text = '';
+            name_header = "Object Name";
+            name = image.object_name;
         } else {
             text = '<img src="'+result+'" width="100">';
+            name_header = "Image Name";
+            name = image.image_name;
         }
         detail_rows +=
         `<tr>
-          <td>`+image.image_name+`</td>
+          <td>`+name+`</td>
           <td>`+text+`</td>
           <td>`+image.value+`</td>
         </tr>`
     });
 
-return `<table class="table">
-            <thead>
-                <tr>
-                  <th scope="col">Image Name</th>
-                  <th scope="col">Analyzed Image</th>
-                  <th scope="col">Value</th>
-                </tr>
-             </thead>
-             <tbody>` + detail_rows + `</tbody>
-        </table>`;
+    return `<table class="table">
+                <thead>
+                    <tr>
+                    <th scope="col">` + name_header + `</th>
+                    <th scope="col">Analyzed Image</th>
+                    <th scope="col">Value</th>
+                    </tr>
+                </thead>
+                <tbody>` + detail_rows + `</tbody>
+            </table>`;
 
 }
 

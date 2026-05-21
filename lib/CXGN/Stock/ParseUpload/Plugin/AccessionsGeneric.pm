@@ -60,7 +60,8 @@ sub _validate_with_plugin {
         'introgression_end_position_bp' => ['introgression_end_position_bp', 'introgression_end_position_bps', 'introgression_end_position_bp(s)'],
         'number_of_insertions' => ['number of insertions'],
       },
-      column_arrays => [ 'synonyms' ]
+      column_arrays => [ 'synonyms' ],
+      unique_only_columns => [ 'accession_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
@@ -83,17 +84,6 @@ sub _validate_with_plugin {
       ];
       $self->_set_parse_errors(\%errors);
       return;
-    }
-
-    # check for duplicate accession entries
-    my %accession_name_counts;
-    foreach my $row (@$parsed_data) {
-      $accession_name_counts{$row->{'accession_name'}}++;
-    }
-    foreach my $k (keys %accession_name_counts) {
-      if ($accession_name_counts{$k} > 1) {
-        push @error_messages, "Accession $k occures $accession_name_counts{$k} times in the file. Accession names must be unique. Please remove duplicated accession names.";
-      }
     }
 
     # check validity of species names

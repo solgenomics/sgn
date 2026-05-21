@@ -114,7 +114,11 @@ jQuery(document).ready(function () {
     });
 
     jQuery('#images_search_results').on( 'draw.dt', function () {
-        jQuery('a.image_search_group').colorbox();
+        jQuery('a.image_search_group').colorbox({photo: true, onComplete: function () {
+            var titleWidth = jQuery('#cboxTitle').outerWidth(true);
+            var paddedWidth = titleWidth + 500;
+            jQuery.colorbox.resize({width: paddedWidth + 'px'});
+        }});
     });
 
 });

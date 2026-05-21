@@ -94,6 +94,9 @@ sub download {
     my $phenotype_max_value = $self->phenotype_max_value();
     my $exclude_phenotype_outlier = $self->exclude_phenotype_outlier;
     my $search_type = $self->search_type();
+    my $include_intercrop_stocks = $self->include_intercrop_stocks();
+    my $include_entry_numbers = $self->include_entry_numbers();
+    my $include_trait_synonyms = $self->include_trait_synonyms();
     my $phenotype_start_date = $self->start_date();
     my $phenotype_end_date = $self->end_date();
     my $repetitive_measurements = $self->repetitive_measurements();
@@ -129,9 +132,12 @@ sub download {
             trait_contains=>$trait_contains,
             phenotype_min_value=>$phenotype_min_value,
             phenotype_max_value=>$phenotype_max_value,
+            include_intercrop_stocks=>$include_intercrop_stocks,
+            include_entry_numbers=>$include_entry_numbers,
+            include_trait_synonyms=>$include_trait_synonyms,
             phenotype_start_date => $phenotype_start_date,
             phenotype_end_date => $phenotype_end_date,
-            repetitive_measurements => $repetitive_measurements,
+            repetitive_measurements => $repetitive_measurements
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

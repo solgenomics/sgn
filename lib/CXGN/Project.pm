@@ -203,9 +203,9 @@ sub get_cxgn_project_type {
     my $analysis_metadata_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'analysis_metadata_json', 'project_property')->cvterm_id();
     my $crossing_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), 'crossing_trial',  'project_type')->cvterm_id();
 
-    my $q = "SELECT projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id)";
+    my $q = "SELECT projectprop.type_id, projectprop.value FROM project JOIN projectprop USING(project_id) WHERE project_id = ?";
 	my $h = $self->bcs_schema->storage->dbh->prepare($q);
-	$h->execute();
+	$h->execute($self->get_trial_id());
 
     my $cxgn_project_type = 'field_trial_project';
     my $plot_data_level = 'plot';
@@ -4963,28 +4963,32 @@ sub get_accessions {
     my $family_name_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'family_name', 'stock_type' )->cvterm_id();
 	my $field_trial_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "field_layout", "experiment_type")->cvterm_id();
 	my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plot_of", "stock_relationship")->cvterm_id();
+    my $intercrop_plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "intercrop_plot_of", "stock_relationship")->cvterm_id();
 	my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "plant_of", "stock_relationship")->cvterm_id();
 	my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "subplot_of", "stock_relationship")->cvterm_id();
 	my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, "tissue_sample_of", "stock_relationship")->cvterm_id();
 
-	my $q = "SELECT DISTINCT(accession.stock_id), accession.uniquename, cvterm.name
+	my $q = "SELECT accession.stock_id, accession.uniquename, cvterm.name, STRING_AGG(DISTINCT(srt.name), ', '), organism.species
 		FROM stock as accession
         JOIN cvterm on (accession.type_id = cvterm.cvterm_id)
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
+		LEFT JOIN cvterm AS srt ON (stock_relationship.type_id = srt.cvterm_id)
 		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
 		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
+		LEFT JOIN organism ON (accession.organism_id = organism.organism_id)
 		WHERE accession.type_id IN (?, ?, ?)
-		AND stock_relationship.type_id IN (?, ?, ?, ?)
+		AND stock_relationship.type_id IN (?, ?, ?, ?, ?)
 		AND project.project_id = ?
+		GROUP BY 1,2,3,5
 		ORDER BY accession.stock_id;";
 
 	my $h = $self->bcs_schema->storage->dbh()->prepare($q);
-	$h->execute($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id,$plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id,$self->get_trial_id());
-	while (my ($stock_id, $uniquename, $stock_type) = $h->fetchrow_array()) {
-		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id, stock_type=>$stock_type};
+	$h->execute($accession_cvterm_id, $cross_cvterm_id, $family_name_cvterm_id, $plot_of_cvterm_id, $intercrop_plot_of_cvterm_id, $tissue_sample_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id,$self->get_trial_id());
+	while (my ($stock_id, $uniquename, $stock_type, $relationship_type, $organism) = $h->fetchrow_array()) {
+		push @accessions, {accession_name=>$uniquename, stock_id=>$stock_id, stock_type=>$stock_type, relationship_type=>$relationship_type, organism=>$organism};
 	}
 	return \@accessions;
 }

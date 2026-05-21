@@ -1,7 +1,7 @@
 package CXGN::BrAPI::v2::Common;
 
 =head1 NAME
- CXGN::BrAPI::v1::Common - parent class for BrAPI subclasses.
+ CXGN::BrAPI::v2::Common - parent class for BrAPI subclasses.
 =head1 DESCRIPTION
  Defines the following properties:
 =over 4

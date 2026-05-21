@@ -38,7 +38,7 @@ $pop_id = $trial_id if $trial_id;
 
 </style>
 
-<& /util/import_javascript.mas, classes => [ "solGS.gebvPhenoRegression", "solGS.scatterPlot"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.gebvPhenoRegression", "solGS.scatterPlot", "solGS.olsLine"] &>
 
   <&| /page/info_section.mas, 
   collapsible => 1, 

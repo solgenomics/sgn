@@ -199,7 +199,7 @@ sub search {
         ) outlier_stocks ON outlier_stocks.stock_id = materialized_phenotype_jsonb_table.observationunit_stock_id"
     };
 
-    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count FROM materialized_phenotype_jsonb_table
+    my $select_clause = "SELECT observationunit_stock_id, observationunit_uniquename, observationunit_type_name, germplasm_uniquename, germplasm_stock_id, rep, block, plot_number, row_number, col_number, plant_number, is_a_control, notes, trial_id, trial_name, trial_description, plot_width, plot_length, field_size, field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross, breeding_program_id, breeding_program_name, breeding_program_description, year, design, location_id, planting_date, harvest_date, folder_id, folder_name, folder_description, seedlot_transaction, seedlot_stock_id, seedlot_uniquename, seedlot_current_weight_gram, seedlot_current_count, seedlot_box_name, available_germplasm_seedlots, treatments, observations, count(observationunit_stock_id) OVER() AS full_count, intercrop_germplasm FROM materialized_phenotype_jsonb_table
                          LEFT JOIN (
                             select stock.stock_id, array_agg(db.name)::text[] as xref_sources, array_agg(dbxref.accession)::text[] as xref_ids
                             from stock
@@ -371,12 +371,43 @@ sub search {
 
     my  $q = $select_clause . $where_clause . $or_clause . $order_clause . $limit_clause . $offset_clause;
 
-    print STDERR "QUERY: $q\n\n";
+    # print STDERR "QUERY: $q\n\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
     while( my $r = $location_rs->next()){
         $location_id_lookup{$r->nd_geolocation_id} = $r->description;
+    }
+
+    # Get the trait ontology CVs
+    my $type_cvterm = $schema->resultset("Cv::Cvterm")->search(
+        {
+            'me.name' => { -in => ['trait_ontology', 'composed_trait_ontology'] },
+            'cv.name' => 'composable_cvtypes'
+        },
+        { join => 'cv' }
+    );
+    my @type_ids = $type_cvterm->get_column('cvterm_id')->all();
+    my $trait_cv = $schema->resultset("Cv::Cvprop")->search({ type_id => { -in => \@type_ids } });
+    my @trait_cv_ids = $trait_cv->get_column('cv_id')->all();
+
+    # Create a map of trait cvterm_ids -> synonyms
+    my %trait_synonyms;
+    my $cvtermsynonym_rs = $schema->resultset("Cv::Cvtermsynonym")->search(
+        { 
+            'cvterm.cv_id' => { -in => \@trait_cv_ids }
+        },
+        {
+            select => [ 'cvterm.cvterm_id', { min => 'synonym', -as => 'synonym' } ],
+            as => ['cvterm_id', 'synonym'],
+            join => 'cvterm',
+            group_by => [ 'cvterm.cvterm_id' ]
+        }
+    );
+    while ( my $r = $cvtermsynonym_rs->next() ) {
+        my $cvterm_id = $r->get_column('cvterm_id');
+        my $synonym = $r->get_column('synonym');
+        $trait_synonyms{$cvterm_id} = $synonym;
     }
 
     my $h = $schema->storage->dbh()->prepare($q);
@@ -386,7 +417,7 @@ sub search {
     my $calendar_funcs = CXGN::Calendar->new({});
     my %unique_traits;
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $notes, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments_json, $observations_json, $full_count) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $rep, $block, $plot_number, $row_number, $col_number, $plant_number, $is_a_control, $notes, $trial_id, $trial_name, $trial_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $seedlot_transaction, $seedlot_stock_id, $seedlot_uniquename, $seedlot_current_weight_gram, $seedlot_current_count, $seedlot_box_name, $available_germplasm_seedlots, $treatments_json, $observations_json, $full_count, $intercrop_germplasm) = $h->fetchrow_array()) {
         my $harvest_date_value = $calendar_funcs->display_start_date($harvest_date);
         my $planting_date_value = $calendar_funcs->display_start_date($planting_date);
         my $synonyms = $synonym_hash_lookup{$germplasm_uniquename};
@@ -395,6 +426,7 @@ sub search {
         my $treatments = JSON::XS->new->decode($treatments_json);
         my $available_germplasm_seedlots = JSON::XS->new->decode($available_germplasm_seedlots);
         my $seedlot_transaction = $seedlot_transaction ? JSON::XS->new->decode($seedlot_transaction) : {};
+        my $intercrop_germplasm = $intercrop_germplasm ? JSON::XS->new->decode($intercrop_germplasm) : [];
 
         my %ordered_observations;
         foreach (@$observations){
@@ -442,7 +474,7 @@ sub search {
 	    
 	    
 	    my $phenotype_uniquename = $o->{uniquename};
-	    $unique_traits{$trait_name}++;
+	    $unique_traits{$trait_name} = $o->{trait_id};
 	    if ($include_timestamp){
 
 		my $timestamp_value;
@@ -469,6 +501,9 @@ sub search {
 		    }
 		}
 	    }
+
+	    $o->{trait_synonym} = $trait_synonyms{$o->{trait_id}};
+
 	    push @return_observations, $o;
 	}
 
@@ -531,12 +566,13 @@ sub search {
             treatments => $treatments,
             observations => \@return_observations,
             full_count => $full_count,
+            intercrop_germplasm => $intercrop_germplasm
         };
     }
     #print STDERR Dumper \@result;
 
     print STDERR "Search End:".localtime."\n";
-    return (\@result, \%unique_traits);
+    return (\@result, \%unique_traits, \%trait_synonyms);
 }
 
 sub _sql_from_arrayref {

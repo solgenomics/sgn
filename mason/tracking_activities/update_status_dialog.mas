@@ -126,8 +126,8 @@ jQuery(document).ready(function(){
         var status_type = jQuery('#status_type').val();
         var comments = jQuery('#comments_for_updating').val();
 
-        if (identifier_id === '') {
-            alert("Error retrieving identifier info");
+        if ((identifier_id === '') && (material_id === '')) {
+            alert("Error retrieving source info");
             return;
         }
 

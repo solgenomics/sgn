@@ -81,6 +81,9 @@ jQuery(document).ready(function () {
                             if(response.design[well].source_plot_id){
                                 cell = cell + "<br/>Source Plot: <a href='/stock/" + response.design[well].source_plot_id +"/view'>" + response.design[well].source_plot_name + "</a>";
                             }
+                            if(response.design[well].source_subplot_id){
+                                cell = cell + "<br/>Source Subplot: <a href='/stock/" + response.design[well].source_subplot_id +"/view'>" + response.design[well].source_subplot_name + "</a>";
+                            }
                             if(response.design[well].source_plant_id){
                                 cell = cell + "<br/>Source Plant: <a href='/stock/" + response.design[well].source_plant_id +"/view'>" + response.design[well].source_plant_name + "</a>";
                             }

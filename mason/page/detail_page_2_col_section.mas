@@ -54,6 +54,7 @@ $identifier_prefix => undef
 $genotyping_facility => undef
 $management_factor_date => undef
 $management_factor_type => undef
+$management_factor_types => undef
 $trial_stock_type => undef
 $trial_stock_count => undef
 $trial_owner => undef
@@ -88,6 +89,9 @@ $derived_accession_relationship => undef
 $related_stock_link => undef
 $original_stock_link => undef
 $is_in_trial => undef
+$vector_related_genes => undef
+$vector_analyzed_tissue_types => undef
+$number_of_insertions => undef
 $is_a_parent => undef
 
 #Specific to genotyping protocol detail page
@@ -161,11 +165,31 @@ $name_format => undef
 $default_plant_material_id => undef
 $default_plant_material_name => undef
 
+#specific to transformation ID page
+$transformation_id => undef
+$vector_id => undef
+$vector_name => undef
+$control_id => undef
+$identifier_id => undef
+$identifier_name => undef
+$material_id => undef
+$material_name => undef
+$updated_status_type => undef
+$stock_type_page => undef
+$user_role => undef
+$has_associated_transformants => undef
+
 #Specific to activity page
 $vendor_id => undef
 $parent_project_id => undef
 $activity_type => undef
 $field_headers => ()
+
+#Specific to propagation page
+$propagation_type => undef
+$date => undef
+$logged_in_name => undef
+
 
 </%args>
 
@@ -200,7 +224,7 @@ $field_headers => ()
                                 <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, trial_stock_type => $trial_stock_type &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
-                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type &>
+                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
 % } #End trial_design_section
 % if ($info_section_id eq 'trial_detail_traits_assayed'){
 
@@ -213,12 +237,34 @@ $field_headers => ()
 % } #End trial_detail_traits_assayed
 
 % if ($info_section_id eq 'trial_raw_data') {
-   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
+   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type, user_can_modify => $user_can_modify &>
 % }
 
 % if ($info_section_id eq 'repetitive_measurements_data') {
     <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type &>
 % }
+
+% if ($info_section_id eq 'trial_analysis_tools') {
+    <& /breeders_toolbox/analysis_tools_section.mas,
+        trial_id => $trial_id,
+        trial_name => $trial_name
+    &>
+
+% if ($hidap_enabled) {
+    <& /hidap/hidap_trial_link.mas,
+        main_production_site_url => $main_production_site_url,
+        program                  => $breeding_program_name,
+        folder                   => $folder_name,
+        trial                    => $trial_name
+    &>
+% }
+% } #End trial_analysis_tools
+
+% if ($info_section_id eq 'trial_nirs_section') {
+    <& /breeders_toolbox/trial/trial_nirs_data.mas,
+        trial_id => $trial_id
+    &>
+% } #End trial nirs data
 
 % if ($info_section_id eq 'compute_derived_traits'){
                                 <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
@@ -226,151 +272,7 @@ $field_headers => ()
 % if ($info_section_id eq 'trial_upload_files'){
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
 % } #End trial_upload_files
-% if ($info_section_id eq 'trial_analysis_tools'){
 
-
-			        <!-- analysis tools on saved measurements -->
-			       <& /breeders_toolbox/trial/saved_measurement_analysis.mas,
-				     trial_id => $trial_id
-				&>
-                                <!-- Phenotypic correlation analysis -->
-                                <& /solgs/tools/correlation/analysis.mas,
-                                    corr_pop_id => $trial_id,
-                                    corr_pop_name => $trial_name
-                                &>
-
-                                <& /solgs/tools/anova/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-<!-- Auto-render adjusted means inline after ANOVA runs -->
-<script>
-(function() {
-  // Watch for "Adjusted means" download links created by anova.js
-  var anovaTable = document.getElementById('anova_table');
-  if (!anovaTable) return;
-
-  var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      if (m.type !== 'childList' || !m.addedNodes.length) return;
-      // Look for newly added "Adjusted means" download links
-      var links = anovaTable.querySelectorAll('a[download]');
-      links.forEach(function(link) {
-        if (link.textContent.trim() !== 'Adjusted means') return;
-        if (link.dataset.inlineRendered) return;
-        link.dataset.inlineRendered = '1';
-
-        var adjUrl = link.getAttribute('href');
-        if (!adjUrl) return;
-
-        // Create container for this trait's adjusted means
-        var containerId = 'adj_means_' + Date.now();
-        var container = document.createElement('div');
-        container.id = containerId;
-        container.style.marginTop = '20px';
-        // Insert after the Download: line (parent of the link)
-        var parent = link.closest('div') || link.parentNode;
-        if (parent && parent.parentNode) {
-          parent.parentNode.insertBefore(container, parent.nextSibling);
-        } else {
-          anovaTable.appendChild(container);
-        }
-
-        // Fetch and render the adjusted means file
-        jQuery.get(adjUrl, function(tsvData) {
-          if (!tsvData || !tsvData.trim()) return;
-          var lines = tsvData.trim().split('\n');
-          if (lines.length < 2) return;
-
-          var sep = lines[0].indexOf('\t') >= 0 ? '\t' : /\s{2,}/;
-          var headers = lines[0].split(sep).map(function(h) { return h.replace(/"/g, '').trim(); }).filter(Boolean);
-          var rows = [];
-          for (var r = 1; r < lines.length; r++) {
-            var cols = lines[r].split(sep).map(function(c) { return c.replace(/"/g, '').trim(); }).filter(Boolean);
-            if (cols.length >= headers.length) rows.push(cols);
-          }
-          if (!rows.length) return;
-
-          var tableId = 'adj_dt_' + Date.now();
-          var html = '<h4 style="color:#2c3e50;margin-top:16px">\u0421\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u0441\u0440\u0435\u0434\u043d\u0438\u0435 (\u043f\u043e \u0433\u0438\u0431\u0440\u0438\u0434\u0430\u043c)</h4>';
-          html += '<table id="' + tableId + '" class="table table-bordered table-striped table-condensed" style="width:100%">';
-          html += '<thead><tr>';
-          headers.forEach(function(h) { html += '<th>' + h + '</th>'; });
-          html += '</tr></thead><tbody>';
-          rows.forEach(function(row) {
-            html += '<tr>';
-            row.forEach(function(cell, idx) {
-              if (idx > 0 && !isNaN(parseFloat(cell))) {
-                html += '<td style="text-align:right">' + parseFloat(cell).toFixed(2) + '</td>';
-              } else {
-                html += '<td>' + cell + '</td>';
-              }
-            });
-            html += '</tr>';
-          });
-          html += '</tbody></table>';
-
-          jQuery('#' + containerId).html(html);
-
-          if (jQuery.fn.DataTable) {
-            jQuery('#' + tableId).DataTable({
-              pageLength: 25,
-              order: [[1, 'desc']],
-              language: {
-                search: "\u041f\u043e\u0438\u0441\u043a:",
-                lengthMenu: "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c _MENU_ \u0437\u0430\u043f\u0438\u0441\u0435\u0439",
-                info: "\u041f\u043e\u043a\u0430\u0437\u0430\u043d\u043e _START_ \u0434\u043e _END_ \u0438\u0437 _TOTAL_",
-                paginate: { previous: "\u2190", next: "\u2192" }
-              }
-            });
-          }
-        });
-      });
-    });
-  });
-
-  observer.observe(anovaTable, { childList: true, subtree: true });
-})();
-</script>
-                                 <!-- Population structure analysis PCA -->
-                                <& /solgs/tools/pca/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- Clustering -->
-                                <& /solgs/tools/cluster/analysis.mas,
-                                    trial_id => $trial_id
-                                  &>
-
-				<!-- kinship and inbreeding-->
-                                <& /solgs/tools/kinship/analysis.mas,
-                                    trial_id => $trial_id
-                                &>
-
-
-                                  <& /tools/heritability/heritability.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                <& /solgs/population/trait_acronyms.mas,
-                                  trial_id => $trial_id
-                              &>
-
-                                <& /tools/qualityControl/qualityControl.mas,
-                                    trial_id => $trial_id
-                                &>
-
-                                <& /tools/hybridScoring/hybridScoring.mas,
-                                    trial_id => $trial_id
-                                &>
-
-% if ($hidap_enabled) {
-                                <& /hidap/hidap_trial_link.mas, main_production_site_url=>$main_production_site_url, program => $breeding_program_name, folder => $folder_name, trial => $trial_name &>
-% }
-% } #End trial_analysis_tools
-% if ($info_section_id eq 'trial_nirs_section'){
-                                <& /breeders_toolbox/trial/trial_nirs_data.mas, trial_id => $trial_id &>
-% } #End trial nirs data
 % if ($info_section_id eq 'trial_weather_data'){
                                 <& /breeders_toolbox/trial/weather.mas, location => $location_name, trial_id => $trial_id &>
 % } #End trial_weather_data
@@ -444,15 +346,25 @@ $field_headers => ()
 % if ($info_section_id eq 'vector_related_accessions_section'){
                                 <& /stock/vector_related_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
 % } #End vector_related_accessions_section
-% if ($info_section_id eq 'vector_obsoleted_accessions_section'){
-                                <& /stock/vector_obsoleted_accessions.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_obsoleted_accessions_section
-% if ($info_section_id eq 'vector_transgenic_line_details_section'){
-                                <& /stock/vector_transformant_details.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, stock_type => $type_name &>
-% } #End vector_transgenic_line_details_section
+% if ($info_section_id eq 'obsoleted_accessions_section'){
+                                <& /transformation/obsoleted_accessions.mas, vector_id => $vector_id, transformation_id => $transformation_id, program_name => $program_name &>
+% } #End obsoleted_accessions_section
+% if ($info_section_id eq 'transgenic_line_details_section'){
+                                <& /transformation/transformant_details.mas, vector_id => $vector_id, transformation_id => $transformation_id, vector_name => $vector_name, stock_type => $type_name, vector_related_genes => $vector_related_genes, vector_analyzed_tissue_types => $vector_analyzed_tissue_types, program_name => $program_name &>
+% } #End transgenic_line_details_section
 % if ($info_section_id eq 'related_transformation_info_section'){
-                                <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename &>
+                                <& /stock/accession_related_transformation_info.mas, stock_id => $stock_id, stock_uniquename => $stock_uniquename, vector_related_genes => $vector_related_genes, number_of_insertions => $number_of_insertions &>
 % } #End related_transformation_info_section
+% if ($info_section_id eq 'control_transgenic_lines_section'){
+                                <& /transformation/control_transformants_section.mas, control_id => $control_id &>
+% } #End control_transgenic_lines_section
+% if ($info_section_id eq 'transformation_update_status_section'){
+                                <& /transformation/transformation_update_status_section.mas, identifier_id => $identifier_id, identifier_name => $identifier_name, material_id => $material_id, material_name => $material_name, updated_status_type => $updated_status_type, program_name => $program_name, stock_type_page => $stock_type_page, user_role => $user_role &>
+% } #End transformation_update_status_section
+% if ($info_section_id eq 'delete_transformation_section'){
+                                <& /transformation/delete_transformation_section.mas, transformation_id => $transformation_id, has_associated_transformants => $has_associated_transformants &>
+% } #End delete_transformation_section
+
 
 
 % if ($info_section_id eq 'stock_images_section'){
@@ -770,6 +682,12 @@ $field_headers => ()
                                 <& /transformation/transformation_project_deletion.mas, trial_id=>$trial_id &>
 % } #End transformation_project_deletion_section
 
+% if ($info_section_id eq 'propagation_project_details'){
+                                <& /propagation/propagation_project_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, trial_owner => $trial_owner, propagation_type => $propagation_type, date => $date, logged_in_name=>$logged_in_name &>
+% } #End propagation_project_details
+% if ($info_section_id eq 'propagation_group_ids_in_project_section'){
+                                <& /propagation/propagation_groups_in_project.mas, trial_id=>$trial_id &>
+% } #End propagation_group_ids_in_project_section
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>
