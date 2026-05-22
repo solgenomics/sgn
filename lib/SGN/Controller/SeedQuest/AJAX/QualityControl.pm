@@ -53,12 +53,22 @@ sub _html_escape {
     return $value;
 }
 
+sub _has_real_user {
+    my ($self, $c) = @_;
+    my $user = $c->user();
+    return 0 unless $user;
+    my $person = eval { $user->get_object() };
+    return 0 unless $person;
+    my $sp_person_id = eval { $person->get_sp_person_id() };
+    return defined $sp_person_id && $sp_person_id > 0;
+}
+
 sub prepare: Path('/ajax/seedquest/qualitycontrol/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
 
-    if (! $c->user()) {
+    if (! $self->_has_real_user($c)) {
         $c->stash->{rest} = {error=>'You must be logged in first!'};
         $c->detach;
     }
@@ -170,7 +180,7 @@ sub extract_trait_data :Path('/ajax/seedquest/qualitycontrol/grabdata') Args(0) 
     my $c = shift;
     my $dbh = $c->dbc->dbh();
 
-    unless ($c->user()) {
+    unless ($self->_has_real_user($c)) {
         $c->stash->{rest} = { error => 'You must be logged in first!' };
         return;
     }
@@ -235,7 +245,7 @@ sub data_restore :Path('/ajax/seedquest/qualitycontrol/datarestore') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    unless ($c->user()) {
+    unless ($self->_has_real_user($c)) {
         $c->stash->{rest} = { error => 'You must be logged in first!' };
         return;
     }
@@ -262,7 +272,7 @@ sub store_outliers : Path('/ajax/seedquest/qualitycontrol/storeoutliers') Args(0
     };
 
     my $user = $c->user();
-    unless ($user) {
+    unless ($self->_has_real_user($c)) {
         $c->stash->{rest} = $response_data;
         return;
     }
@@ -447,7 +457,7 @@ sub restore_outliers : Path('/ajax/seedquest/qualitycontrol/restoreoutliers') Ar
     };
 
     my $user = $c->user();
-    unless ($user) {
+    unless ($self->_has_real_user($c)) {
         $c->stash->{rest} = $response_data;
         return;
     }

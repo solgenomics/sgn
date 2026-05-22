@@ -10,9 +10,20 @@ use CXGN::People::Person;
 use List::MoreUtils 'uniq';
 use JSON::XS;
 use Data::Dumper;
+use URI::Escape qw(uri_escape);
 
 
 BEGIN { extends 'Catalyst::Controller' }
+
+sub _has_real_user {
+    my ($self, $c) = @_;
+    my $user = $c->user();
+    return 0 unless $user;
+    my $person = eval { $user->get_object() };
+    return 0 unless $person;
+    my $sp_person_id = eval { $person->get_sp_person_id() };
+    return defined $sp_person_id && $sp_person_id > 0;
+}
 
 #
 # Sets the actions in this controller to be registered with no prefix
@@ -283,7 +294,7 @@ sub auto : Private {
 
     # When require_login is enabled, keep direct unauthenticated requests out of
     # protected pages while still letting BrAPI apply its own auth policy.
-    if ($c->config->{require_login} && !$c->user()) {
+    if ($c->config->{require_login} && !$self->_has_real_user($c)) {
         my $path = $c->req->path;
         $path = '' if !defined $path;
 
@@ -324,7 +335,7 @@ sub auto : Private {
             my $url = '/' . $path;
             my $query = $c->req->uri->query;
             $url .= "?$query" if $query;
-            $c->res->redirect("/user/login?goto_url=$url");
+            $c->res->redirect("/user/login?goto_url=" . uri_escape($url));
             $c->detach;
             return 0;
         }

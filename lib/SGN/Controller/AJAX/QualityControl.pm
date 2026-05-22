@@ -26,13 +26,34 @@ __PACKAGE__->config(
     map => { 'application/json' => 'JSON' },
    );
 
+sub _html_escape {
+    my ($self, $value) = @_;
+    return '' unless defined $value;
+    $value =~ s/&/&amp;/g;
+    $value =~ s/</&lt;/g;
+    $value =~ s/>/&gt;/g;
+    $value =~ s/"/&quot;/g;
+    $value =~ s/'/&#39;/g;
+    return $value;
+}
+
+sub _has_real_user {
+    my ($self, $c) = @_;
+    my $user = $c->user();
+    return 0 unless $user;
+    my $person = eval { $user->get_object() };
+    return 0 unless $person;
+    my $sp_person_id = eval { $person->get_sp_person_id() };
+    return defined $sp_person_id && $sp_person_id > 0;
+}
+
 
 sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
 
-    if (! $c->user()) {
+    if (! $self->_has_real_user($c)) {
         $c->stash->{rest} = {error=>'You must be logged in first!'};
         $c->detach;
     }
@@ -64,7 +85,8 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
 
         foreach my $trait (@$traits) {
            if ($trait =~ m/.+\d{7}/){
-            $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$trait_options.'" value="'.$trait.'">'.$trait.'</input> </br>';
+            my $safe_trait = $self->_html_escape($trait);
+            $trait_html .= '<input type="checkbox" class="trait_box" name="'.$trait_options.'" value="'.$safe_trait.'">'.$safe_trait.'</input> </br>';
            }
         }
 
@@ -138,6 +160,11 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     my $c = shift;
     my $dbh = $c->dbc->dbh();
 
+    unless ($self->_has_real_user($c)) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
+
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
 
@@ -198,6 +225,11 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
     my $self = shift;
     my $c = shift;
 
+    unless ($self->_has_real_user($c)) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
+
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
 
@@ -220,7 +252,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     };
 
     my $user = $c->user();
-    unless ($user) {
+    unless ($self->_has_real_user($c)) {
         $c->stash->{rest} = $response_data;
         return;
     }
@@ -377,7 +409,7 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     };
 
     my $user = $c->user();
-    unless ($user) {
+    unless ($self->_has_real_user($c)) {
         $c->stash->{rest} = $response_data;
         return;
     }
