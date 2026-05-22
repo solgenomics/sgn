@@ -18,7 +18,8 @@
     '/css/buttons/buttons.bootstrap.min.css',
     '/css/buttons/buttons.dataTables.css',
     '/css/bootstrap3-xl-class.css',
-    '/css/bootstrap-select.min.css'
+    '/css/bootstrap-select.min.css',
+    '/css/colReorder.dataTables.min.css',
   ] &>
 
   <!-- <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" /> -->
