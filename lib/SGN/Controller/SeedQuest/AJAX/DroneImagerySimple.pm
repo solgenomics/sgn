@@ -1,4 +1,4 @@
-package SGN::Controller::AJAX::DroneImagerySimple;
+package SGN::Controller::SeedQuest::AJAX::DroneImagerySimple;
 
 use Moose;
 use Data::Dumper;
@@ -20,7 +20,7 @@ __PACKAGE__->config(
 
 =head1 NAME
 
-SGN::Controller::AJAX::DroneImagerySimple - Simplified drone imagery upload endpoint
+SGN::Controller::SeedQuest::AJAX::DroneImagerySimple - Simplified drone imagery upload endpoint
 
 =head1 DESCRIPTION
 
@@ -36,7 +36,7 @@ Provides a simplified upload endpoint that:
 # SIMPLE UPLOAD ENDPOINT
 # ============================================================================
 
-sub simple_upload : Path('/ajax/drone_imagery/simple_upload') : ActionClass('REST') { }
+sub simple_upload : Path('/ajax/seedquest/drone_imagery/simple_upload') : ActionClass('REST') { }
 
 sub simple_upload_POST : Args(0) {
     my $self = shift;

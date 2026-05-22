@@ -120,7 +120,7 @@ jQuery(document).ready(function() {
         jQuery('#hs_results').hide();
 
         jQuery.ajax({
-            url: '/ajax/hybridscoring/calculate',
+            url: '/ajax/seedquest/hybridscoring/calculate',
             type: 'POST',
             data: { trial_id: trialId },
             dataType: 'json',
@@ -136,7 +136,7 @@ jQuery(document).ready(function() {
                 scoringData = data;
                 renderResults(data);
                 jQuery('#hs_export_btn')
-                    .attr('href', '/ajax/hybridscoring/export?trial_id=' + trialId)
+                    .attr('href', '/ajax/seedquest/hybridscoring/export?trial_id=' + trialId)
                     .show();
             },
             error: function() {

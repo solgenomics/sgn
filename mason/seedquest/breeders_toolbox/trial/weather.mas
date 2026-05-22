@@ -185,7 +185,7 @@ jQuery(document).ready(function() {
   var seasonData = null;
 
   // Set Excel export URLs
-  var exportBase = '/ajax/weather/export?location_id=' + locationId + '&base_temp=10';
+  var exportBase = '/ajax/seedquest/weather/export?location_id=' + locationId + '&base_temp=10';
   jQuery('#tw_export_hydro').attr('href', exportBase + '&start_date=' + hydroStart + '&end_date=' + hydroEnd);
   jQuery('#tw_export_season').attr('href', exportBase + '&start_date=' + plantingDate + '&end_date=' + harvestDate);
 
@@ -230,7 +230,7 @@ jQuery(document).ready(function() {
 
   // === Request 1: Hydrological Year ===
   jQuery.ajax({
-    url: '/ajax/weather/gdd', type: 'POST',
+    url: '/ajax/seedquest/weather/gdd', type: 'POST',
     data: { location_id: locationId, base_temp: 10,
       seasons: JSON.stringify([{ year: parseInt(hydroEnd.substring(0,4)), start_date: hydroStart, end_date: hydroEnd }])
     },
@@ -249,7 +249,7 @@ jQuery(document).ready(function() {
 
   // === Request 2: Growing Season ===
   jQuery.ajax({
-    url: '/ajax/weather/gdd', type: 'POST',
+    url: '/ajax/seedquest/weather/gdd', type: 'POST',
     data: { location_id: locationId, base_temp: 10,
       seasons: JSON.stringify([{ year: parseInt(plantingDate.substring(0,4)), start_date: plantingDate, end_date: harvestDate }])
     },

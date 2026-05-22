@@ -1,5 +1,5 @@
 
-package SGN::Controller::AJAX::HybridScoring;
+package SGN::Controller::SeedQuest::AJAX::HybridScoring;
 
 use Moose;
 use JSON;
@@ -21,7 +21,7 @@ __PACKAGE__->config(
 # SCORING ENDPOINT
 # ============================================================================
 
-sub calculate : Path('/ajax/hybridscoring/calculate') Args(0) ActionClass('REST') { }
+sub calculate : Path('/ajax/seedquest/hybridscoring/calculate') Args(0) ActionClass('REST') { }
 sub calculate_GET  { shift->_do_calculate(@_); }
 sub calculate_POST { shift->_do_calculate(@_); }
 
@@ -187,7 +187,7 @@ sub _trimmed_mean {
 # EXCEL EXPORT
 # ============================================================================
 
-sub export : Path('/ajax/hybridscoring/export') Args(0) ActionClass('REST') { }
+sub export : Path('/ajax/seedquest/hybridscoring/export') Args(0) ActionClass('REST') { }
 
 sub export_GET {
     my ($self, $c) = @_;

@@ -1,4 +1,4 @@
-package SGN::Controller::AJAX::Weather;
+package SGN::Controller::SeedQuest::AJAX::Weather;
 
 use Moose;
 use Data::Dumper;
@@ -24,7 +24,7 @@ __PACKAGE__->config(
 # CROPS ENDPOINT
 # ============================================================================
 
-sub get_crops : Path('/ajax/weather/crops') Args(0) ActionClass('REST') { }
+sub get_crops : Path('/ajax/seedquest/weather/crops') Args(0) ActionClass('REST') { }
 sub get_crops_GET {
     my ($self, $c) = @_;
     
@@ -45,7 +45,7 @@ sub get_crops_GET {
 # GDD CALCULATION ENDPOINT
 # ============================================================================
 
-sub calculate_gdd : Path('/ajax/weather/gdd') Args(0) ActionClass('REST') { }
+sub calculate_gdd : Path('/ajax/seedquest/weather/gdd') Args(0) ActionClass('REST') { }
 sub calculate_gdd_GET { shift->_do_gdd_calculation(@_); }
 sub calculate_gdd_POST { shift->_do_gdd_calculation(@_); }
 
@@ -497,7 +497,7 @@ sub _parse_api_response {
 # STATION CONFIGURATION
 # ============================================================================
 
-sub get_station_config : Path('/ajax/weather/station/config') Args(0) ActionClass('REST') { }
+sub get_station_config : Path('/ajax/seedquest/weather/station/config') Args(0) ActionClass('REST') { }
 sub get_station_config_GET {
     my ($self, $c) = @_;
     
@@ -511,7 +511,7 @@ sub get_station_config_GET {
     $c->stash->{rest} = { success => 1, config => $config };
 }
 
-sub save_station_config : Path('/ajax/weather/station/config') Args(0) ActionClass('REST') { }
+sub save_station_config : Path('/ajax/seedquest/weather/station/config') Args(0) ActionClass('REST') { }
 sub save_station_config_POST {
     my ($self, $c) = @_;
 
@@ -528,7 +528,7 @@ sub save_station_config_POST {
 # DATA SOURCES LIST
 # ============================================================================
 
-sub get_data_sources : Path('/ajax/weather/sources') Args(0) ActionClass('REST') { }
+sub get_data_sources : Path('/ajax/seedquest/weather/sources') Args(0) ActionClass('REST') { }
 sub get_data_sources_GET {
     my ($self, $c) = @_;
     
@@ -563,7 +563,7 @@ sub get_data_sources_GET {
 # CACHE STATISTICS
 # ============================================================================
 
-sub get_cache_stats : Path('/ajax/weather/cache/stats') Args(0) ActionClass('REST') { }
+sub get_cache_stats : Path('/ajax/seedquest/weather/cache/stats') Args(0) ActionClass('REST') { }
 sub get_cache_stats_GET {
     my ($self, $c) = @_;
     
@@ -636,7 +636,7 @@ sub _timestamp_to_date {
 # EXCEL EXPORT
 # ============================================================================
 
-sub export_weather : Path('/ajax/weather/export') Args(0) {
+sub export_weather : Path('/ajax/seedquest/weather/export') Args(0) {
     my ($self, $c) = @_;
 
     unless ($c->user()) {

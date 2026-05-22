@@ -265,7 +265,7 @@ jQuery(document).ready(function() {
     
     // Load crops
     jQuery.ajax({
-        url: '/ajax/weather/crops',
+        url: '/ajax/seedquest/weather/crops',
         dataType: 'json',
         success: function(response) {
             var select = jQuery('#gdd_crop_select');
@@ -439,7 +439,7 @@ jQuery(document).ready(function() {
         jQuery('#gdd_calculate').prop('disabled', true).html('<span class="glyphicon glyphicon-refresh spinning"></span> Calculating...');
         
         jQuery.ajax({
-            url: '/ajax/weather/gdd',
+            url: '/ajax/seedquest/weather/gdd',
             data: {
                 location_id: location_id,
                 crop_id: crop_id,
@@ -630,7 +630,7 @@ jQuery(document).ready(function() {
         
         // Load station config
         jQuery.ajax({
-            url: '/ajax/weather/station_config/get',
+            url: '/ajax/seedquest/weather/station/config',
             data: { location_id: location_id },
             success: function(response) {
                 if (response.config) {
@@ -678,7 +678,7 @@ jQuery(document).ready(function() {
         var type = jQuery('#station_type').val();
         
         jQuery.ajax({
-            url: '/ajax/weather/station_config/save',
+            url: '/ajax/seedquest/weather/station/config',
             data: {
                 location_id: location_id,
                 station_type: type,
@@ -908,7 +908,7 @@ jQuery(document).ready(function() {
         $select.html('<option value="">Loading...</option>');
         
         jQuery.ajax({
-            url: '/ajax/weather/maturity_traits',
+            url: '/ajax/seedquest/weather/maturity_traits',
             data: { crop: crop },
             success: function(response) {
                 $select.empty();
@@ -1083,7 +1083,7 @@ jQuery(document).ready(function() {
                     
                     // Now fetch GDD
                     jQuery.ajax({
-                        url: '/ajax/weather/gdd',
+                        url: '/ajax/seedquest/weather/gdd',
                         data: {
                             location_id: locationId,
                             start_date: plantingDate,
@@ -1304,7 +1304,7 @@ jQuery(document).ready(function() {
                         
                         // Auto-fetch GDD for trial period
                         jQuery.ajax({
-                            url: '/ajax/weather/gdd',
+                            url: '/ajax/seedquest/weather/gdd',
                             data: {
                                 location_id: response.trial.location_id,
                                 start_date: response.trial.planting_date,

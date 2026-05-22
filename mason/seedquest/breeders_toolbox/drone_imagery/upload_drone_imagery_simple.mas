@@ -235,7 +235,7 @@ jQuery(document).ready(function() {
         formData.append('auto_detect', '1');
         
         jQuery.ajax({
-            url: '/ajax/drone_imagery/simple_upload',
+            url: '/ajax/seedquest/drone_imagery/simple_upload',
             type: 'POST',
             data: formData,
             processData: false,
