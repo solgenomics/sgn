@@ -213,14 +213,14 @@ function renderTable(data) {
     var tbody = jQuery('#gdd_data_table tbody');
     tbody.empty();
     jQuery.each(dailyData, function(i, day) {
-        var row = '<tr>'
-            '<td>' + day.date + '</td>'
-            '<td>' + day.temp_max + '</td>'
-            '<td>' + day.temp_min + '</td>'
-            '<td>' + day.gdd_day + '</td>'
-            '<td>' + day.gdd_cumulative + '</td>'
-            '<td>' + day.chu_day + '</td>'
-            '<td>' + day.chu_cumulative + '</td>'
+        var row = '<tr>' +
+            '<td>' + day.date + '</td>' +
+            '<td>' + day.temp_max + '</td>' +
+            '<td>' + day.temp_min + '</td>' +
+            '<td>' + day.gdd_day + '</td>' +
+            '<td>' + day.gdd_cumulative + '</td>' +
+            '<td>' + day.chu_day + '</td>' +
+            '<td>' + day.chu_cumulative + '</td>' +
             '<td>' + day.precip_day + '</td>';
 
         // Add optional columns
@@ -275,10 +275,10 @@ jQuery(document).ready(function() {
                 jQuery.each(response.crops, function(i, crop) {
                     var capAttr = (crop.cap_temp !== null && crop.cap_temp !== undefined) ? crop.cap_temp : '';
                     var matAttr = (crop.maturity_gdd !== null && crop.maturity_gdd !== undefined) ? crop.maturity_gdd : '';
-                    select.append('<option value="' + crop.id + '" data-base="' + crop.base_temp + '"'
-                        ' data-cap="' + capAttr + '" data-maturity="' + matAttr + '">'
-                        crop.crop_name + ' (Base: ' + crop.base_temp + '&deg;C'
-                        (capAttr !== '' ? ', cap ' + capAttr : '') + ')'
+                    select.append('<option value="' + crop.id + '" data-base="' + crop.base_temp + '"' +
+                        ' data-cap="' + capAttr + '" data-maturity="' + matAttr + '">' +
+                        crop.crop_name + ' (Base: ' + crop.base_temp + '&deg;C' +
+                        (capAttr !== '' ? ', cap ' + capAttr : '') + ')' +
                         (crop.use_chu ? ' [CHU]' : '') + '</option>');
                 });
             }
@@ -291,8 +291,8 @@ jQuery(document).ready(function() {
     for (var y = currentYear; y >= currentYear - 5; y--) {
         var checked = (y === currentYear - 1) ? 'active' : ''; // Default to last year
         yearSelector.append(
-            '<label class="btn btn-default ' + checked + '">'
-            '<input type="checkbox" name="years" value="' + y + '" ' + (checked ? 'checked' : '') + '> ' + y
+            '<label class="btn btn-default ' + checked + '">' +
+            '<input type="checkbox" name="years" value="' + y + '" ' + (checked ? 'checked' : '') + '> ' + y +
             '</label>'
         );
     }
@@ -317,14 +317,14 @@ jQuery(document).ready(function() {
             var defaultStart = year + '-04-15';
             var defaultEnd = year + '-09-30';
             container.append(
-                '<div class="row" style="margin-bottom:5px">'
-                '<div class="col-xs-2"><strong>' + year + ':</strong></div>'
-                '<div class="col-xs-5">'
-                '<input type="date" class="form-control input-sm season-start" data-year="' + year + '" value="' + defaultStart + '">'
-                '</div>'
-                '<div class="col-xs-5">'
-                '<input type="date" class="form-control input-sm season-end" data-year="' + year + '" value="' + defaultEnd + '">'
-                '</div>'
+                '<div class="row" style="margin-bottom:5px">' +
+                '<div class="col-xs-2"><strong>' + year + ':</strong></div>' +
+                '<div class="col-xs-5">' +
+                '<input type="date" class="form-control input-sm season-start" data-year="' + year + '" value="' + defaultStart + '">' +
+                '</div>' +
+                '<div class="col-xs-5">' +
+                '<input type="date" class="form-control input-sm season-end" data-year="' + year + '" value="' + defaultEnd + '">' +
+                '</div>' +
                 '</div>'
             );
         });
@@ -514,16 +514,16 @@ jQuery(document).ready(function() {
         jQuery('#year_summary').remove();
 
         // Build per-year summary table
-        var summaryHtml = '<h4>Per-Year Summary</h4><table class="table table-striped table-condensed">'
+        var summaryHtml = '<h4>Per-Year Summary</h4><table class="table table-striped table-condensed">' +
             '<thead><tr><th>Year</th><th>Days</th><th>Total GDD</th><th>Total CHU</th><th>Total Precip</th><th>Avg Temp</th></tr></thead><tbody>';
         jQuery.each(data.years, function(i, yr) {
-            summaryHtml += '<tr>'
-                '<td><strong>' + yr.year + '</strong></td>'
-                '<td>' + yr.days_count + '</td>'
-                '<td>' + yr.total_gdd + '</td>'
-                '<td>' + yr.total_chu + '</td>'
-                '<td>' + yr.total_precip + ' mm</td>'
-                '<td>' + yr.avg_temp + '°C</td>'
+            summaryHtml += '<tr>' +
+                '<td><strong>' + yr.year + '</strong></td>' +
+                '<td>' + yr.days_count + '</td>' +
+                '<td>' + yr.total_gdd + '</td>' +
+                '<td>' + yr.total_chu + '</td>' +
+                '<td>' + yr.total_precip + ' mm</td>' +
+                '<td>' + yr.avg_temp + '°C</td>' +
                 '</tr>';
         });
         summaryHtml += '</tbody></table>';
@@ -541,9 +541,9 @@ jQuery(document).ready(function() {
         jQuery.each(data.years, function(i, yr) {
             // Create chart div for this year
             var chartId = 'chart_year_' + yr.year;
-            container.append('<div class="year-chart-wrapper" style="margin-bottom:20px; padding:15px; background:#f9f9f9; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1)">'
-                '<h5 style="margin:0 0 10px 0; color:#2E7D32"><strong>' + yr.year + ' Growing Season</strong> (' + yr.start_date + ' to ' + yr.end_date + ')</h5>'
-                '<div id="' + chartId + '" style="height:350px;width:100%"></div>'
+            container.append('<div class="year-chart-wrapper" style="margin-bottom:20px; padding:15px; background:#f9f9f9; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1)">' +
+                '<h5 style="margin:0 0 10px 0; color:#2E7D32"><strong>' + yr.year + ' Growing Season</strong> (' + yr.start_date + ' to ' + yr.end_date + ')</h5>' +
+                '<div id="' + chartId + '" style="height:350px;width:100%"></div>' +
                 '</div>');
 
             var traces = [];
