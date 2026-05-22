@@ -7,7 +7,7 @@
 
     <!-- Top Cards: High Priority Tools -->
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title"><span class="glyphicon glyphicon-cloud"></span> Weather & GDD</h3>
@@ -19,19 +19,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="panel panel-success">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><span class="glyphicon glyphicon-camera"></span> Drone Imagery</h3>
-                </div>
-                <div class="panel-body">
-                    <p>Manage aerial surveys, orthophotos, and run spectral analytics.</p>
-                    <a href="/breeders/drone_imagery" class="btn btn-success btn-block">Manage Drones</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title"><span class="glyphicon glyphicon-grain"></span> Field Trials</h3>

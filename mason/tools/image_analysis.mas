@@ -3,7 +3,7 @@
 %services
 </%args>
 
-<script src="/js/source/legacy/CXGN/BreedersToolbox/UploadImages.js"></script>
+<script src="/js/legacy/CXGN/BreedersToolbox/UploadImages.js"></script>
 
 % use JSON::Any;
 

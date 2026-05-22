@@ -37,7 +37,6 @@
     <li><a href="/breeders/file_share_dump"><span class="glyphicon glyphicon-folder-close"></span> <span data-i18n="file_share">File Share</span></a></li>
 
     <li role="seperator" class="divider"></li>
-    <li><a href="/breeders/drone_imagery"><span class="glyphicon glyphicon-camera"></span> <span data-i18n="drone_imagery">Drone Imagery</span></a></li>
     <li><a href="/breeders/nirs"><span class="glyphicon glyphicon-signal"></span> NIRS</a></li>
     <li><a href="/breeders/transcriptomics"><span class="glyphicon glyphicon-align-left"></span> Transcriptomics</a></li>
   </ul>

@@ -30,8 +30,6 @@
 
 </style>
 
-<script type="text/javascript" src="http://d3js.org/d3.v3.js"></script>
-<script src="https://rawgit.com/tpreusse/radar-chart-d3/master/src/radar-chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <& /page/page_title.mas, title => "Radar Graph" &>
 

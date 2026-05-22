@@ -18,7 +18,7 @@ my $L = $m->comp('/site/sq_loc.mas', _hash => 1);
 .sq-dash-wrap { max-width: 100%; margin: 0 auto; padding: 0; }
 
 /* ─── Hero Quick-Access Cards ─── */
-.sq-hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 32px; }
+.sq-hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 32px; }
 
 .sq-card {
     position: relative;
@@ -74,7 +74,6 @@ my $L = $m->comp('/site/sq_loc.mas', _hash => 1);
 /* Card gradients — vibrant, curated palettes */
 .sq-card--trials   { background: linear-gradient(135deg, #f59e0b, #d97706); }
 .sq-card--weather  { background: linear-gradient(135deg, #06b6d4, #0284c7); }
-.sq-card--drones   { background: linear-gradient(135deg, #10b981, #059669); }
 .sq-card--qc       { background: linear-gradient(135deg, #ef4444, #dc2626); }
 
 /* ─── Section Grid ─── */
@@ -206,11 +205,6 @@ my $L = $m->comp('/site/sq_loc.mas', _hash => 1);
             <span class="glyphicon glyphicon-cloud sq-card-icon"></span>
             <h3 data-i18n="weather_gdd"><% $L->{weather_gdd} %></h3>
             <p data-i18n="weather_gdd_desc"><% $L->{weather_gdd_desc} %></p>
-        </a>
-        <a href="/breeders/drone_imagery" class="sq-card sq-card--drones">
-            <span class="glyphicon glyphicon-camera sq-card-icon"></span>
-            <h3 data-i18n="drone_imagery"><% $L->{drone_imagery} %></h3>
-            <p data-i18n="drone_imagery_desc"><% $L->{drone_imagery_desc} %></p>
         </a>
         <a href="/tools/seedquest/qualitycontrol" class="sq-card sq-card--qc">
             <span class="glyphicon glyphicon-check sq-card-icon"></span>

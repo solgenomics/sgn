@@ -2,10 +2,6 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ "calendar.moment_min", "calendar.fullcalendar_min", "jquery.dataTables", "calendar.fullcalendar_gcal_min", "calendar.bootstrap_datepicker_min" ] &>
-
-<& /util/import_css.mas, paths => ['/css/datepicker.css'] &>
-
 <script src="https://cdn.jsdelivr.net/npm/vega@3"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-lite@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
@@ -89,17 +85,7 @@
   }
 </style>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personalized Report Generator</title>
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-</head>
-
-<body>
-  <div>
+<div>
     <label style="font-size: 18px;">Welcome to the Personalized Report Generator</label>
 
     <p>This is a <b>CURATOR's</b> tool which allows you to create customized reports based on scripts tailored to the specific instructions of your Breedbase instance. These reports are designed to meet your unique needs and provide detailed insights into your data. If you require a new report type or have specific requirements, please reach out to the Breedbase team for assistance.</p>
@@ -135,7 +121,6 @@
 
       <button type="submit">Generate Report & Send Report</button>
     </form>
-  </div>
   <div id="loading-message" style="display:none; color: blue; font-weight: bold; margin-top: 15px;">
   Your report was submitted. You’ll receive an email when it’s ready. Feel free to navigate to other pages.
 </div>
@@ -143,17 +128,8 @@
 <div id="final-message" style="display:none; color: green; font-weight: bold; margin-top: 15px;">
 </div>
 
-</body>
-
 <script>
-  $(document).ready(function() {
-    // Initialize datepicker for the start and end date inputs
-    $("#start-date, #end-date").datepicker({
-      dateFormat: "dd/mm/yy", // Use the dd/mm/yyyy format
-      changeMonth: true,
-      changeYear: true
-    });
-
+  jQuery(document).ready(function($) {
     // Define the report_scripts variable (semicolon-separated list)
     var report_scripts = "<% $c->get_conf('report_engine') || 0 %>";
     
