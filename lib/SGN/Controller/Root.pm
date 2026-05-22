@@ -295,7 +295,7 @@ sub auto : Private {
             || $path =~ m{^help(/|$)}i             # help pages
             || $path =~ m{^user/(login|new|reset_password|confirm)}i  # auth pages
             || $path =~ m{^ajax/user/(login|new|forgot_username|reset_password)}i  # login AJAX
-            || $path =~ m{^brapi/v\d+/token$}i     # BrAPI login (Field Book)
+            || $path =~ m{^brapi(/|$)}i            # BrAPI handles its own auth policy
             || $path =~ m{^static/}i               # static assets
             || $path =~ m{^s/}i                    # /s/ static alias
             || $path =~ m{^css/}i                  # CSS

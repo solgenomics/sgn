@@ -4,7 +4,6 @@ package SGN::Controller::AJAX::BrAPI;
 use Moose;
 use JSON::Any;
 use Data::Dumper;
-use SGN::Role::CustomerAccess qw(is_customer get_user_bp_project_ids user_can_access_trial);
 
 use POSIX;
 use CXGN::BreedersToolbox::Projects;
@@ -339,21 +338,6 @@ sub _standard_response_construction {
 	$c->stash->{rest} = \%response;
 	$c->response->status((!$return_status) ? 200 : $return_status);
 	$c->detach;
-}
-
-
-# Customer users see only their Breeding Program's data.
-# For non-customer users, returns the original filter unchanged.
-sub _apply_customer_bp_filter {
-    my ($c, $existing_program_ids) = @_;
-
-    return $existing_program_ids unless is_customer($c);
-
-    my $bp_ids = get_user_bp_project_ids($c);
-    return $bp_ids if @$bp_ids;
-
-    # Customer has no BP roles — return impossible filter to show nothing
-    return [-1];
 }
 
 =head2 /brapi/v1/token
@@ -2140,14 +2124,10 @@ sub studies_search_GET {
     my $c = shift;
     my ($auth) = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
-
-    # Customer BP gate: restrict visible trials to user's breeding programs
-    my $program_filter = _apply_customer_bp_filter($c, $clean_inputs->{programDbId});
-
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
     my $brapi_package_result = $brapi_module->search({
-        programDbIds => $program_filter,
+        programDbIds => $clean_inputs->{programDbId},
         programNames => $clean_inputs->{programName},
         studyDbIds => $clean_inputs->{studyDbId},
         studyNames => $clean_inputs->{studyName},
@@ -2175,14 +2155,10 @@ sub studies_GET {
     my $c = shift;
     my $auth = _authenticate_user($c);
     my $clean_inputs = $c->stash->{clean_inputs};
-
-    # Customer BP gate: restrict visible trials to user's breeding programs
-    my $program_filter = _apply_customer_bp_filter($c, $clean_inputs->{programDbId});
-
     my $brapi = $self->brapi_module;
     my $brapi_module = $brapi->brapi_wrapper('Studies');
     my $brapi_package_result = $brapi_module->search({
-        programDbIds => $program_filter,
+        programDbIds => $clean_inputs->{programDbId},
         programNames => $clean_inputs->{programName},
         studyDbIds => $clean_inputs->{studyDbId},
         studyNames => $clean_inputs->{studyName},
@@ -2295,16 +2271,6 @@ sub studies_single  : Chained('brapi') PathPart('studies') CaptureArgs(1) {
 	my $study_id = shift;
 
 	$c->stash->{study_id} = $study_id;
-
-	# Customer BP gate: block access to trials outside user's BP
-	if (is_customer($c) && !user_can_access_trial($c, $study_id)) {
-		my $brapi_package_result = CXGN::BrAPI::JSONResponse->return_error(
-			$c->stash->{status},
-			'Access denied: this trial is not part of your breeding program.',
-			403
-		);
-		_standard_response_construction($c, $brapi_package_result, 403);
-	}
 }
 
 
