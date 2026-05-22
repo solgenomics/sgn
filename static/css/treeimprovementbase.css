@@ -591,6 +591,7 @@ td.infosectionsubtitle {
     background-color: var(--well-background-color);
     border: var(--well-border);
     border-radius: var(--border-radius);
+    margin: var(--padding-sm);
 }
 
 /*
@@ -792,8 +793,9 @@ Table
     border-spacing: 0px;
     border-collapse: separate;
     border: var(--well-border);
-    margin-bottom: 0px;
     border-radius: var(--border-radius);
+    margin: var(--padding-sm);
+    width: calc(100% - var(--padding-md));
 }
 
 .table tbody tr td, .table tbody tr th {
