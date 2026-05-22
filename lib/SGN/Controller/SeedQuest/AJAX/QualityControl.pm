@@ -42,6 +42,17 @@ sub _trait_cvterm_id {
     return $row ? $row->cvterm_id : undef;
 }
 
+sub _html_escape {
+    my ($self, $value) = @_;
+    return '' unless defined $value;
+    $value =~ s/&/&amp;/g;
+    $value =~ s/</&lt;/g;
+    $value =~ s/>/&gt;/g;
+    $value =~ s/"/&quot;/g;
+    $value =~ s/'/&#39;/g;
+    return $value;
+}
+
 sub prepare: Path('/ajax/seedquest/qualitycontrol/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -84,7 +95,8 @@ sub prepare: Path('/ajax/seedquest/qualitycontrol/prepare') Args(0) {
 
         foreach my $trait (@$traits) {
            if ($trait =~ m/.+\d{7}/){
-            $trait_html .= '<input type="checkbox" class= "trait_box" name="'.$trait_options.'" value="'.$trait.'">'.$trait.'</input> </br>';
+            my $safe_trait = $self->_html_escape($trait);
+            $trait_html .= '<input type="checkbox" class="trait_box" name="'.$trait_options.'" value="'.$safe_trait.'">'.$safe_trait.'</input> </br>';
            }
         }
 
@@ -158,6 +170,11 @@ sub extract_trait_data :Path('/ajax/seedquest/qualitycontrol/grabdata') Args(0) 
     my $c = shift;
     my $dbh = $c->dbc->dbh();
 
+    unless ($c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
+
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");
 
@@ -217,6 +234,11 @@ sub extract_trait_data :Path('/ajax/seedquest/qualitycontrol/grabdata') Args(0) 
 sub data_restore :Path('/ajax/seedquest/qualitycontrol/datarestore') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    unless ($c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
 
     my $file = $c->req->param("file");
     my $trait = $c->req->param("trait");

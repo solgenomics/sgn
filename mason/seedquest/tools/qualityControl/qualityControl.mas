@@ -54,6 +54,15 @@ $pop_id = $trial_id if $trial_id;
 
 <script>
 jQuery(document).ready(function() {
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     var trialId = '<% $trial_id %>';
     if (!trialId) return;
 
@@ -101,7 +110,7 @@ jQuery(document).ready(function() {
             badge.html('<span class="label label-success">'
                 + '<span class="glyphicon glyphicon-ok"></span> QC пройден</span>');
 
-            var traitInfo = traitName ? ' (трейт: ' + traitName + ')' : '';
+            var traitInfo = traitName ? ' (трейт: ' + escapeHtml(traitName) + ')' : '';
             msg.removeClass('alert-info alert-warning')
                .addClass('alert-success')
                .html('<span class="glyphicon glyphicon-ok-sign"></span> '

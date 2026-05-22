@@ -112,6 +112,10 @@ jQuery(document).ready(function() {
 
     var scoringData = null;
 
+    function cell(text, attrs) {
+        return jQuery('<td></td>').attr(attrs || {}).text(text);
+    }
+
     jQuery('#hs_calculate_btn').click(function() {
         var btn = jQuery(this);
         btn.prop('disabled', true);
@@ -226,18 +230,18 @@ jQuery(document).ready(function() {
         var tbody = table.find('tbody');
         hybrids.forEach(function(h, idx) {
             var row = jQuery('<tr></tr>');
-            row.append('<td>' + (idx + 1) + '</td>');
-            row.append('<td style="text-align:left;font-weight:bold;">' + h.name + '</td>');
-            row.append('<td>' + h.reps + '</td>');
+            row.append(cell(idx + 1));
+            row.append(cell(h.name, { style: 'text-align:left;font-weight:bold;' }));
+            row.append(cell(h.reps));
 
             if (h.trimmed_mean !== null) {
-                row.append('<td>' + h.trimmed_mean + '</td>');
+                row.append(cell(h.trimmed_mean));
                 var score = parseFloat(h.score);
                 var cls = score >= 100 ? 'hs-good' : 'hs-bad';
-                row.append('<td class="' + cls + '">' + h.score + '</td>');
+                row.append(cell(h.score, { class: cls }));
                 var diff = (score - 100).toFixed(1);
                 var diffStr = diff >= 0 ? '+' + diff + '%' : diff + '%';
-                row.append('<td>' + diffStr + '</td>');
+                row.append(cell(diffStr));
             } else {
                 row.append('<td class="hs-na">N/A</td>');
                 row.append('<td class="hs-na">N/A</td>');

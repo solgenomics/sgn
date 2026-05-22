@@ -22,6 +22,15 @@ $trial_name => undef
 
 <script>
 (function() {
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   var anovaTable = document.getElementById('anova_table');
   if (!anovaTable) return;
 
@@ -66,7 +75,7 @@ $trial_name => undef
           var html = '<h4 style="color:#2c3e50;margin-top:16px">Adjusted means by hybrid</h4>';
           html += '<table id="' + tableId + '" class="table table-bordered table-striped table-condensed" style="width:100%">';
           html += '<thead><tr>';
-          headers.forEach(function(h) { html += '<th>' + h + '</th>'; });
+          headers.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; });
           html += '</tr></thead><tbody>';
           rows.forEach(function(row) {
             html += '<tr>';
@@ -74,7 +83,7 @@ $trial_name => undef
               if (idx > 0 && !isNaN(parseFloat(cell))) {
                 html += '<td style="text-align:right">' + parseFloat(cell).toFixed(2) + '</td>';
               } else {
-                html += '<td>' + cell + '</td>';
+                html += '<td>' + escapeHtml(cell) + '</td>';
               }
             });
             html += '</tr>';
