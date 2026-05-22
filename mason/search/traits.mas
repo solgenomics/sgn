@@ -113,8 +113,6 @@
         </div>
     </&>
 
-</div>
-
 <script>
 
 jQuery(document).ready(function () {
@@ -179,7 +177,8 @@ jQuery(document).ready(function () {
                     d.ontology_db_id = selectedontologies;
                 }
             },
-            "order": [[ 1, "asc" ]]
+            "order": [[ 1, "asc" ]],
+            'scrollX': true,
         });
     }
 
