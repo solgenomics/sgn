@@ -3,7 +3,7 @@
   <title><% $t ? "$t - " : '' %>BreedBase</title>
 
 <!-- SeedQuest Global Skin -->
-<link rel="stylesheet" href="/static_content/seedquest_global.css?v=22" />
+<link rel="stylesheet" href="/static_content/seedquest_global.css?v=23" />
 
 <!-- SeedQuest i18n: dictionary must load before the engine -->
 <script src="/static_content/sq-i18n-dict.js?v=8" defer></script>
