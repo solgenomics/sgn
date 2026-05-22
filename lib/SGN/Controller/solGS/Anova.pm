@@ -245,12 +245,20 @@ sub check_categorical_dependent_variable {
     my $trait_abbr = $c->stash->{trait_abbr};
 
     my $trait_idx = firstidx { $_ eq $trait_abbr } @headers;
-    my $trait_col = $trait_idx + 1;
+    return 0 if $trait_idx < 0;
 
-    my $trait_values = `cut -f $trait_col $pheno_file 2>&1`;
-    $trait_values =~ s/$trait_abbr|\n//g;
-    my @trait_values = split( /\t/, $trait_values );
+    my @trait_values;
+    open(my $pfh, '<:utf8', $pheno_file) or return 0;
+    <$pfh>;
+    while (my $line = <$pfh>) {
+        chomp $line;
+        my @cols = split(/\t/, $line, -1);
+        my $val = $cols[$trait_idx] // '';
+        push @trait_values, $val if $val ne '';
+    }
+    close($pfh);
 
+    return 0 unless @trait_values;
     my $categorical = all { $_ =~ /[A-Za-z]/ } @trait_values;
 
     return $categorical;
