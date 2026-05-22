@@ -1,7 +1,6 @@
 package SGN::Controller::AJAX::TrialMetadata;
 
 use Moose;
-use SGN::Role::CustomerAccess qw(is_customer user_can_access_trial);
 use Data::Dumper;
 use Bio::Chado::Schema;
 use CXGN::People::Schema;
@@ -102,15 +101,6 @@ sub trial : Chained('/') PathPart('ajax/breeders/trial') CaptureArgs(1) {
     }
     catch {
         print STDERR "Trial Layout for $trial_id does not exist. @_\n";
-    };
-
-    # Customer BP gate: block access to trials outside user's BP
-    if (is_customer($c) && !user_can_access_trial($c, $trial_id)) {
-        $c->stash->{rest} = {
-            error => 'Access denied: this trial is not part of your breeding program.'
-        };
-        $c->detach();
-        return;
     }
 
 }
