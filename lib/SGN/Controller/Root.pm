@@ -281,9 +281,9 @@ sub auto : Private {
         }
     }
 
-    # Global auth gate: unauthenticated users see only homepage & about page.
-    # All other pages require login.
-    unless ($c->user()) {
+    # When require_login is enabled, keep direct unauthenticated requests out of
+    # protected pages while still letting BrAPI apply its own auth policy.
+    if ($c->config->{require_login} && !$c->user()) {
         my $path = $c->req->path;
         $path = '' if !defined $path;
 

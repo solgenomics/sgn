@@ -626,12 +626,10 @@ sub add_bulk {
 	my $self = shift;
 	my $elements = shift;
 	my $list_id = shift // $self->list_id();
-	
-	# SeedQuest fix: Validate list_id before SQL execution
-	if (!defined($list_id) || $list_id eq '' || $list_id !~ /^\d+$/) {
+	if (!defined($list_id) || $list_id eq '' || $list_id !~ /^[1-9]\d*$/) {
 		return {error => "Invalid list_id: must be a positive integer"};
 	}
-	
+
 	my %elements_in_list;
 	my @elements_added;
 	my @duplicates;
