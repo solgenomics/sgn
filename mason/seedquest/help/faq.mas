@@ -1,0 +1,167 @@
+<& "/page/page_title.mas", title => "SeedQuest: Frequently Asked Questions (FAQ)" &>
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <p>
+      <b>SeedQuest</b> is an agricultural analytics and breeding support platform
+      built on the open SGN / Breedbase ecosystem and customized for SeedQuest workflows.
+    </p>
+    <p style="margin-bottom:0;">
+      The platform is designed to help users organize field trials, breeding material,
+      and agronomic observations in a structured and traceable way.
+      SeedQuest is a <b>decision-support system</b> and does not replace professional judgment.
+    </p>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><b>Getting started</b></div>
+  <div class="panel-body">
+
+    <p><b>Q: I am new to SeedQuest. Where should I start?</b><br/>
+    <b>A:</b> Start by understanding the core concepts: accessions, trials, plots, and traits.
+    The fastest way is to read the official SGN / Breedbase manual and watch a short tutorial video.
+    Links are provided at the bottom of this page.
+    </p>
+
+    <p><b>Q: Do I need to read everything before using the system?</b><br/>
+    <b>A:</b> No. You can start with a small test trial.
+    Learn by doing, but follow the recommended order:
+    create accessions -> create a trial -> assign plots -> record data.
+    </p>
+
+    <p><b>Q: Is there a recommended workflow?</b><br/>
+    <b>A:</b> Yes. SeedQuest works best when data is added in a logical sequence.
+    Avoid creating trials or uploading data before accessions and traits are clearly defined.
+    </p>
+
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><b>Core concepts</b></div>
+  <div class="panel-body">
+
+    <p><b>Q: What is an accession?</b><br/>
+    <b>A:</b> An accession is a unique plant entry in the system.
+    It can represent a variety, hybrid, inbred line, population, or breeding material.
+    Each accession has a stable identifier and is reused across trials and years.
+    </p>
+
+    <p><b>Q: What is the difference between an accession and a plot?</b><br/>
+    <b>A:</b> An accession is the genetic or material entity.
+    A plot is a physical instance of that accession in a specific trial, location, and season.
+    </p>
+
+    <p><b>Q: Should I create new accessions every year?</b><br/>
+    <b>A:</b> No. Accessions should remain stable over time.
+    Year, location, and treatment belong to the trial and plot level, not the accession name.
+    </p>
+
+    <p><b>Q: What are traits?</b><br/>
+    <b>A:</b> Traits are measured or observed characteristics (e.g. height, yield, score).
+    Traits should be clearly defined and reused consistently.
+    </p>
+
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><b>Trials and data collection</b></div>
+  <div class="panel-body">
+
+    <p><b>Q: How do I create a field trial?</b><br/>
+    <b>A:</b> First create accessions.
+    Then create a trial, define its design (blocks, replications, layout),
+    and assign accessions to plots.
+    </p>
+
+    <p><b>Q: What types of trials can be managed?</b><br/>
+    <b>A:</b> Variety and hybrid trials, breeding nurseries,
+    agronomic factor trials, density trials,
+    and multi-location or multi-year experiments.
+    </p>
+
+    <p><b>Q: What data can I record?</b><br/>
+    <b>A:</b> Phenotypic traits, agronomic notes, dates, scores,
+    yield and quality parameters, and linked files such as photos or documents.
+    </p>
+
+    <p><b>Q: Can I upload data from Excel?</b><br/>
+    <b>A:</b> Yes. Use standard Breedbase / SeedQuest templates.
+    Always check column names, units, and trait definitions before upload.
+    </p>
+
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><b>Using SeedQuest responsibly</b></div>
+  <div class="panel-body">
+
+    <p><b>Q: Does SeedQuest give recommendations?</b><br/>
+    <b>A:</b> No. SeedQuest organizes and analyzes data,
+    but decisions remain the responsibility of the user.
+    </p>
+
+    <p><b>Q: Who is responsible for data quality?</b><br/>
+    <b>A:</b> Users are responsible for the accuracy,
+    completeness, and interpretation of all data entered into the system.
+    </p>
+
+    <p><b>Q: Can SeedQuest outputs be used for official or regulatory reporting?</b><br/>
+    <b>A:</b> No. Outputs are analytical and informational
+    and should not replace certified reports or official documentation.
+    </p>
+
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><b>Integration and standards</b></div>
+  <div class="panel-body">
+
+    <p><b>Q: Is SeedQuest based on Breedbase?</b><br/>
+    <b>A:</b> Yes. SeedQuest is built on the SGN / Breedbase platform
+    and adapted for SeedQuest-specific crops and workflows.
+    </p>
+
+    <p><b>Q: Does SeedQuest support BrAPI?</b><br/>
+    <b>A:</b> The underlying platform supports BrAPI endpoints
+    where enabled and configured.
+    </p>
+
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><b>Learning resources</b></div>
+  <div class="panel-body">
+    <ul>
+      <li>
+        <a href="https://solgenomics.github.io/sgn/" target="_new">
+          Official SGN / Breedbase manual
+        </a>
+      </li>
+      <li>
+        <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">
+          Video tutorials and workshops
+        </a>
+      </li>
+    </ul>
+    <p style="font-size:12px; color:#777;">
+      These materials describe the underlying system on which SeedQuest is based.
+    </p>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><b>Credits</b></div>
+  <div class="panel-body">
+    <p>
+      SeedQuest is built upon open scientific and technical foundations developed
+      within the Sol Genomics Network (SGN) and the Breedbase ecosystem,
+      with contributions from the Boyce Thompson Institute and collaborating institutions.
+    </p>
+  </div>
+</div>

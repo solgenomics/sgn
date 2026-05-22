@@ -1,0 +1,114 @@
+<%args>
+</%args>
+
+<& /page/page_title.mas, title=>'SeedQuest Breeder Tools' &>
+
+<div class="container-fluid">
+
+    <!-- Top Cards: High Priority Tools -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="glyphicon glyphicon-cloud"></span> Weather & GDD</h3>
+                </div>
+                <div class="panel-body">
+                    <p>Track growing conditions, calculate GDD/CHU, and sync station data.</p>
+                    <a href="/tools/weather/gdd" class="btn btn-info btn-block">Open GDD Calculator</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="glyphicon glyphicon-camera"></span> Drone Imagery</h3>
+                </div>
+                <div class="panel-body">
+                    <p>Manage aerial surveys, orthophotos, and run spectral analytics.</p>
+                    <a href="/breeders/drone_imagery" class="btn btn-success btn-block">Manage Drones</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><span class="glyphicon glyphicon-grain"></span> Field Trials</h3>
+                </div>
+                <div class="panel-body">
+                    <p>Design field layouts, collect data, and manage trials.</p>
+                    <a href="/breeders/trials" class="btn btn-warning btn-block">Manage Trials</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    
+    <!-- Management Sections -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="list-group">
+                <a href="#" class="list-group-item active">
+                    <h4 class="list-group-item-heading">Germplasm & Inventory</h4>
+                </a>
+                <a href="/breeders/manage_programs" class="list-group-item">
+                    <h4 class="list-group-item-heading">Breeding Programs</h4>
+                    <p class="list-group-item-text">Manage breeding programs and metadata.</p>
+                </a>
+                <a href="/breeders/accessions" class="list-group-item">
+                    <h4 class="list-group-item-heading">Accessions</h4>
+                    <p class="list-group-item-text">Manage germplasm database.</p>
+                </a>
+                <a href="/breeders/crosses" class="list-group-item">
+                    <h4 class="list-group-item-heading">Crosses</h4>
+                    <p class="list-group-item-text">Create and track crosses.</p>
+                </a>
+                <a href="/order/stocks/view" class="list-group-item">
+                    <h4 class="list-group-item-heading">Order Stocks</h4>
+                    <p class="list-group-item-text">Manage seed orders.</p>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="list-group">
+                <a href="#" class="list-group-item active">
+                    <h4 class="list-group-item-heading">Field & Lab Operations</h4>
+                </a>
+                <a href="/breeders/locations" class="list-group-item">
+                    <h4 class="list-group-item-heading">Locations</h4>
+                    <p class="list-group-item-text">Manage field and lab locations.</p>
+                </a>
+                <a href="/breeders/phenotyping" class="list-group-item">
+                    <h4 class="list-group-item-heading">Phenotyping</h4>
+                    <p class="list-group-item-text">Upload and view phenotype data.</p>
+                </a>
+                <a href="/breeders/genotyping" class="list-group-item">
+                    <h4 class="list-group-item-heading">Genotyping</h4>
+                    <p class="list-group-item-text">Manage genotyping plates and markers.</p>
+                </a>
+                <a href="/fieldbook" class="list-group-item">
+                    <h4 class="list-group-item-heading">Field Book App</h4>
+                    <p class="list-group-item-text">Sync with Android data collection app.</p>
+                </a>
+                <a href="/barcode" class="list-group-item">
+                    <h4 class="list-group-item-heading">Barcodes</h4>
+                    <p class="list-group-item-text">Generate barcoded labels.</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="well well-sm">
+                <h4><span class="glyphicon glyphicon-download"></span> Data Management</h4>
+                <a href="/breeders/download" class="btn btn-default">Download Data</a>
+                <a href="/breeders/upload" class="btn btn-default">Upload Data</a>
+            </div>
+        </div>
+    </div>
+
+</div>

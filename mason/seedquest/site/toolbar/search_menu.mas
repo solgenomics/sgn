@@ -1,0 +1,16 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown"><span data-i18n="nav_search">Search</span></a>
+  <ul class="dropdown-menu">
+    <li><a href="/breeders/search"><span class="glyphicon glyphicon-flash"></span> <span data-i18n="search_wizard">Wizard</span></a></li>
+    <li><a href="/search/bulk"><span class="glyphicon glyphicon-list-alt"></span> Bulk Search</a></li>
+    <li><a href="/search/stocks"><span class="glyphicon glyphicon-leaf"></span> <span data-i18n="search_accessions">Accessions and Plots</span></a></li>
+    <li><a href="/search/organisms"><span class="glyphicon glyphicon-globe"></span> Organisms</a></li>
+    <li><a href="/search/cross"><span class="glyphicon glyphicon-random"></span> <span data-i18n="search_crosses">Progenies, Parents, Crosses</span></a></li>
+    <li><a href="/search/trials"><span class="glyphicon glyphicon-tree-deciduous"></span> <span data-i18n="search_trials">Field Trials</span></a></li>
+
+    <li role="separator" class="divider"></li>
+    <li><a href="/search/traits"><span class="glyphicon glyphicon-tags"></span> <span data-i18n="search_traits">Traits</span></a></li>
+    <li><a href="/search/images"><span class="glyphicon glyphicon-picture"></span> Images</a></li>
+    <li><a href="/search/people"><span class="glyphicon glyphicon-user"></span> People</a></li>
+    <li><a href="/help/faq.pl"><span class="glyphicon glyphicon-question-sign"></span> FAQ</a></li>
+  </ul>
+</li>

@@ -1,30 +1,38 @@
-<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown"><span data-i18n="nav_analyze">Analyze</span></a>
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Analyze</a>
+<!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Genomes<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
-    <li><a href="/analyses"><span class="glyphicon glyphicon-floppy-disk"></span> Stored Analyses</a></li>
+    <li><a href="/analyses">Stored Analyses</a></li>
     <li class="dropdown-header">Breeder Tools</li>
-    <li><a href="/selection/index"><span class="glyphicon glyphicon-stats"></span> <span data-i18n="selection_index">Selection Index</span></a></li>
-    <li><a href="/pca/analysis"><span class="glyphicon glyphicon-equalizer"></span> Population Structure</a></li>
-    <li><a href="/cluster/analysis"><span class="glyphicon glyphicon-th"></span> Clustering</a></li>
-    <li><a href="/correlation/analysis"><span class="glyphicon glyphicon-resize-small"></span> <span data-i18n="correlation">Correlation</span></a></li>
-    <li><a href="/tools/stability"><span class="glyphicon glyphicon-adjust"></span> <span data-i18n="stability">Stability AMMI/GGE</span></a></li>
-    <li><a href="/tools/heritability"><span class="glyphicon glyphicon-scale"></span> <span data-i18n="heritability">Heritability</span></a></li>
-    <li><a href="/tools/qualitycontrol"><span class="glyphicon glyphicon-check"></span> <span data-i18n="quality_control">Quality Control</span></a></li>
+    <li><a href="/selection/index">Selection Index</a></li>
+    <!-- li><a href="/analyze/phenotypes">Analyze Phenotypes</a><li -->
+    <!-- li><a href="/barcode">Barcode Tools</a></li -->
+    <!--li><a href="/solgs/search">Genomic Selection</a></li -->
+    <li><a href="/pca/analysis">Population Structure</a></li>
+    <li><a href="/cluster/analysis">Clustering</a></li>
+    <li><a href="/correlation/analysis">Correlation</a></li>
+    <li><a href="/kinship/analysis">Kinship & Inbreeding</a></li>
+    <li><a href="/tools/stability">Stability AMMI/GGE</a></li>
+    <li><a href="/tools/heritability">Heritability</a></li>
     <li role="separator" class="divider"></li>
-    <li><a href="/accession_usage"><span class="glyphicon glyphicon-sort-by-attributes"></span> Accession Usage</a></li>
-    <li><a href="/tools/mixedmodels"><span class="glyphicon glyphicon-random"></span> <span data-i18n="mixed_models">Mixed Models</span></a></li>
-    <li><a href="/tools/trial/comparison/list"><span class="glyphicon glyphicon-transfer"></span> <span data-i18n="compare_trials">Compare Trials</span></a></li>
-    <li><a href="/tools/graphicalfiltering"><span class="glyphicon glyphicon-filter"></span> Graphical Filtering</a></li>
-    <li><a href="/tools/boxplotter"><span class="glyphicon glyphicon-modal-window"></span> <span data-i18n="boxplotter">BoxPlotter Tool</span></a></li>
-    <li><a href="/tools/image_analysis"><span class="glyphicon glyphicon-picture"></span> Image Analysis</a></li>
+    <li><a href="/accession_usage">Accession Usage</a></li>
+    <li><a href="/tools/mixedmodels">Mixed Models</a></li>
+    <li><a href="/tools/trial/comparison/list">Compare Trials</a></li>
+    <li><a href="/tools/graphicalfiltering">Graphical Filtering</a></li>
+    <li><a href="/tools/boxplotter">BoxPlotter Tool</a></li>
+    <li><a href="/tools/solgwas">GWAS</a></li>
+    <li><a href="/tools/image_analysis">Image Analysis</a></li>
 
     <li role="separator" class="divider"></li>
-    <li class="dropdown-header">Weather & Environment</li>
-    <li><a href="/tools/weather/gdd"><span class="glyphicon glyphicon-cloud"></span> <span data-i18n="weather_gdd">GDD/CHU Calculator</span></a></li>
-    <li><a href="/noaa_ncdc_analysis"><span class="glyphicon glyphicon-globe"></span> NOAA Weather Analysis</a></li>
+    <li class="dropdown-header">Sequence Analysis</li>
+    <li><a class="footer" href="/tools/blast">BLAST</a></li>
+    <!-- li><a class="footer" href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
+    <li><a class="footer" href="https://cassavabase.org/jbrowse_cassavabase/?data=data/json/hapmap_variants">HapMap Jbrowse</a></li --> 
 
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Other</li>
-    <li><a href="/tools/onto/"><span class="glyphicon glyphicon-book"></span> <span data-i18n="ontology_browser">Ontology Browser</span></a></li>
-    <li><a href="/tools/compose/"><span class="glyphicon glyphicon-plus"></span> Compose a New Trait</a></li>
+    <li><a href="/tools/onto/">Ontology Browser</a></li>
+    <li><a href="/tools/compose_trait/">Compose a New Trait</a></li>
+    <li><a href="/tools/compose_treatment/">Compose a New Treatment</a></li>
+
   </ul>
 </li>

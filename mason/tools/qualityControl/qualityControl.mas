@@ -1,18 +1,12 @@
 <%doc>
 
 =head1 NAME
-
-/tools/qualityControl/qualityControl.mas - Quality Control status and link
-
-=head1 DESCRIPTION
-
-Shows QC status badge for the trial and links to the working
-Dataset Quality Control tool. Badge updates dynamically based on
-whether validated_phenotype property exists for this trial.
+ 
+/tools/qualityControl/qualityControl.mas - qualityControl output section
 
 =AUTHOR
 
-Chris Simoes (ccs263@cornell.edu), refactored by SeedQuest team
+Chris Simoes (ccs263@cornell.edu)
 
 =cut
 
@@ -31,94 +25,34 @@ $pop_id = $trial_id if $trial_id;
 
 </%perl>
 
-<&| /page/info_section.mas,
-      collapsible => 1,
-      collapsed   => 1,
-      title       => 'Quality Control <span id="qc_badge" style="margin-left:8px;"></span>'
+<style>
+/* qualityControl coefficients plot styling */
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+</style>
+
+
+<& /util/import_javascript.mas, classes => ["d3.d3Min", "qualityControl.qualityControl"] &>
+<&| /page/info_section.mas, 
+      collapsible => 1, 
+      collapsed   => 0, 
+      title       => "Quality Control Tool (st4gi)"
 &>
 
-<div id="qualityControl_canvas" style="padding: 10px;">
 
-    <div id="qc_status_message" class="alert alert-info" style="margin-bottom: 10px;">
-        <span class="glyphicon glyphicon-info-sign"></span>
-        Используйте Quality Control для проверки данных перед анализом.
-    </div>
-
-    <a href="/tools/qualitycontrol" class="btn btn-primary" target="_blank">
-        <span class="glyphicon glyphicon-check"></span>
-        Открыть Quality Control
-    </a>
-
-    <input type="hidden" id="population_id" value="<% $pop_id %>" />
+<div id="qualityControl_canvas">
+  <input id="run_pheno_qualityControl" class="button" type="button" value="Run QC" /> 
+  <input type="hidden" id="population_id" value="<% $pop_id %>" />
+  <div id="qualityControl_message"  style="font-weight:bold;text-align:center;color:#A7C942"></div>
 </div>
-
-<script>
-jQuery(document).ready(function() {
-    var trialId = '<% $trial_id %>';
-    if (!trialId) return;
-
-    // Get trial name first, then check if it's in validated list
-    jQuery.ajax({
-        url: '/ajax/breeders/trial/' + trialId + '/has_subplots',
-        type: 'GET',
-        dataType: 'json',
-        success: function(nameData) {
-            var trialName = (nameData && nameData.trial_name) ? nameData.trial_name : null;
-            if (!trialName) return;
-
-            // Check validated trials list
-            jQuery.ajax({
-                url: '/ajax/validatedtrials/grabdata',
-                type: 'GET',
-                dataType: 'json',
-                success: function(result) {
-                    var validated = false;
-                    var validatedTrait = '';
-                    if (result && result.data) {
-                        for (var i = 0; i < result.data.length; i++) {
-                            if (result.data[i].name === trialName) {
-                                validated = true;
-                                validatedTrait = result.data[i].validated_trait || '';
-                                break;
-                            }
-                        }
-                    }
-                    updateQcStatus(validated, validatedTrait);
-                },
-                error: function() {
-                    // Can't check — leave neutral
-                }
-            });
-        }
-    });
-
-    function updateQcStatus(validated, traitName) {
-        var badge = jQuery('#qc_badge');
-        var msg = jQuery('#qc_status_message');
-
-        if (validated) {
-            // Green badge in title — visible even when section is collapsed
-            badge.html('<span class="label label-success">'
-                + '<span class="glyphicon glyphicon-ok"></span> QC пройден</span>');
-
-            var traitInfo = traitName ? ' (трейт: ' + traitName + ')' : '';
-            msg.removeClass('alert-info alert-warning')
-               .addClass('alert-success')
-               .html('<span class="glyphicon glyphicon-ok-sign"></span> '
-                 + '<strong>QC выполнен</strong> — данные прошли проверку качества.'
-                 + traitInfo);
-        } else {
-            // Orange badge — QC not done
-            badge.html('<span class="label label-warning">'
-                + '<span class="glyphicon glyphicon-exclamation-sign"></span> QC не пройден</span>');
-
-            msg.removeClass('alert-info alert-success')
-               .addClass('alert-warning')
-               .html('<span class="glyphicon glyphicon-exclamation-sign"></span> '
-                 + '<strong>QC не проведён</strong> — рекомендуется выполнить проверку качества данных.');
-        }
-    }
-});
-</script>
 
 </&>

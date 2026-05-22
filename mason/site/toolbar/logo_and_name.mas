@@ -1,6 +1,7 @@
 
 <a class="navbar-brand sgn_brand_name" href="/">
 
-<img src="/static/img/seedquest_logo.png" height="32" style="position:relative;top:-6px;left:20px" />
+<!-- span style="font-face:arial;font-size:16pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span -->
+<img src="/img/Breedbase_HighRes.png" width="180" style="position:relative;top:-30px;left:20px" />
 
 </a>

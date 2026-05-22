@@ -1,11 +1,9 @@
 <li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >Maps</a>
-<!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
-    
-    <li><a href="/cview/index.pl">All Maps</a></li>
-    <li><a href="http://maps.solgenomics.net">The New Comparative Viewer</a></li>
-    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1">Comparative Viewer</a></li>
-    <li><a href="/cview/help/map_submission">Submit a map</a></li>
+    <li><a href="/cview/index.pl"><span class="glyphicon glyphicon-globe"></span> All Maps</a></li>
+    <li><a href="http://maps.solgenomics.net"><span class="glyphicon glyphicon-map-marker"></span> The New Comparative Viewer</a></li>
+    <li><a href="/cview/view_chromosome.pl?show_offsets=1&amp;show_ruler=1&amp;show_offsets=1"><span class="glyphicon glyphicon-resize-horizontal"></span> Comparative Viewer</a></li>
+    <li><a href="/cview/help/map_submission"><span class="glyphicon glyphicon-upload"></span> Submit a map</a></li>
     <li role="separator" class="divider"></li>
     
     <li class="dropdown-header">Tomato</li>

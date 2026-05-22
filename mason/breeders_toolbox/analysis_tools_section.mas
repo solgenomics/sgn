@@ -20,84 +20,6 @@ $trial_name => undef
     trial_id => $trial_id
 &>
 
-<script>
-(function() {
-  var anovaTable = document.getElementById('anova_table');
-  if (!anovaTable) return;
-
-  var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      if (m.type !== 'childList' || !m.addedNodes.length) return;
-      var links = anovaTable.querySelectorAll('a[download]');
-      links.forEach(function(link) {
-        if (link.textContent.trim() !== 'Adjusted means') return;
-        if (link.dataset.inlineRendered) return;
-        link.dataset.inlineRendered = '1';
-
-        var adjUrl = link.getAttribute('href');
-        if (!adjUrl) return;
-
-        var containerId = 'adj_means_' + Date.now();
-        var container = document.createElement('div');
-        container.id = containerId;
-        container.style.marginTop = '20px';
-        var parent = link.closest('div') || link.parentNode;
-        if (parent && parent.parentNode) {
-          parent.parentNode.insertBefore(container, parent.nextSibling);
-        } else {
-          anovaTable.appendChild(container);
-        }
-
-        jQuery.get(adjUrl, function(tsvData) {
-          if (!tsvData || !tsvData.trim()) return;
-          var lines = tsvData.trim().split('\n');
-          if (lines.length < 2) return;
-
-          var sep = lines[0].indexOf('\t') >= 0 ? '\t' : /\s{2,}/;
-          var headers = lines[0].split(sep).map(function(h) { return h.replace(/"/g, '').trim(); }).filter(Boolean);
-          var rows = [];
-          for (var r = 1; r < lines.length; r++) {
-            var cols = lines[r].split(sep).map(function(c) { return c.replace(/"/g, '').trim(); }).filter(Boolean);
-            if (cols.length >= headers.length) rows.push(cols);
-          }
-          if (!rows.length) return;
-
-          var tableId = 'adj_dt_' + Date.now();
-          var html = '<h4 style="color:#2c3e50;margin-top:16px">Adjusted means by hybrid</h4>';
-          html += '<table id="' + tableId + '" class="table table-bordered table-striped table-condensed" style="width:100%">';
-          html += '<thead><tr>';
-          headers.forEach(function(h) { html += '<th>' + h + '</th>'; });
-          html += '</tr></thead><tbody>';
-          rows.forEach(function(row) {
-            html += '<tr>';
-            row.forEach(function(cell, idx) {
-              if (idx > 0 && !isNaN(parseFloat(cell))) {
-                html += '<td style="text-align:right">' + parseFloat(cell).toFixed(2) + '</td>';
-              } else {
-                html += '<td>' + cell + '</td>';
-              }
-            });
-            html += '</tr>';
-          });
-          html += '</tbody></table>';
-
-          jQuery('#' + containerId).html(html);
-
-          if (jQuery.fn.DataTable) {
-            jQuery('#' + tableId).DataTable({
-              pageLength: 25,
-              order: [[1, 'desc']]
-            });
-          }
-        });
-      });
-    });
-  });
-
-  observer.observe(anovaTable, { childList: true, subtree: true });
-})();
-</script>
-
 <!-- Population structure analysis PCA -->
 <& /solgs/tools/pca/analysis.mas,
     trial_id => $trial_id
@@ -121,10 +43,9 @@ $trial_name => undef
     trial_id => $trial_id
 &>
 
-<& /tools/qualityControl/qualityControl.mas,
-    trial_id => $trial_id
-&>
+% if ($c->req->base =~ /sweetpotatobase/) {
+    <& /tools/qualityControl/qualityControl.mas,
+        trial_id => $trial_id
+    &>
+% }
 
-<& /tools/hybridScoring/hybridScoring.mas,
-    trial_id => $trial_id
-&>

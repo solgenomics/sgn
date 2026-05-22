@@ -1,167 +1,94 @@
-<& "/page/page_title.mas", title => "SeedQuest: Frequently Asked Questions (FAQ)" &>
 
-<div class="panel panel-default">
-  <div class="panel-body">
-    <p>
-      <b>SeedQuest</b> is an agricultural analytics and breeding support platform
-      built on the open SGN / Breedbase ecosystem and customized for SeedQuest workflows.
-    </p>
-    <p style="margin-bottom:0;">
-      The platform is designed to help users organize field trials, breeding material,
-      and agronomic observations in a structured and traceable way.
-      SeedQuest is a <b>decision-support system</b> and does not replace professional judgment.
-    </p>
-  </div>
-</div>
+<& "/page/page_title.mas", title => "SGN: Frequently Asked Questions (FAQ)" &>
+<table summary="" width="720" cellpadding="0" cellspacing="0"
+  border="0">
+    <tr>
+      <td>
+        <center>
+          <table summary="" width="720" cellpadding="0"
+          cellspacing="0" border="0">
+            <tr>
+              <td>
+                This page contains questions that SGN users ask and
+                are useful to the larger SGN user community. Please
+                <a href="/contact/form">let
+                us know</a> if you have a question that you think
+                should be added.
 
-<div class="panel panel-default">
-  <div class="panel-heading"><b>Getting started</b></div>
-  <div class="panel-body">
+                <p><strong>Question:</strong> Where can I order clones?<br />
+                <strong>Answer:</strong> This depends on the species and on
+                the specific library. For tomato clones, you can
+                use the clone ordering facility at the <a href=
+                "http://ted.bti.cornell.edu/order/">Boyce Thompson
+                Institute</a>. For potato clones that were
+                sequenced as part of the U.S. potato genome
+                project, the ordering is handled by the <a href=
+                "http://genome.arizona.edu/orders/">Arizona Genome
+                Institute</a>. For all other libraries, please
+                contact the library submitters given on the library
+                detail pages (use the <a href=
+                "/search/direct_search.pl?search=ESTs">Library
+                Search</a> page to find the library in
+                question).</p>
 
-    <p><b>Q: I am new to SeedQuest. Where should I start?</b><br/>
-    <b>A:</b> Start by understanding the core concepts: accessions, trials, plots, and traits.
-    The fastest way is to read the official SGN / Breedbase manual and watch a short tutorial video.
-    Links are provided at the bottom of this page.
-    </p>
+                <p><strong>Question:</strong> The SGN pages look really
+                messed up on my browser.<br />
+                <strong>Answer:</strong> You are working with an old browser
+                that does not support style sheets, such as the
+                browsers of the Netscape 4.x series. SGN pages
+                require style sheets and javascript to be turned
+                on.</p>
 
-    <p><b>Q: Do I need to read everything before using the system?</b><br/>
-    <b>A:</b> No. You can start with a small test trial.
-    Learn by doing, but follow the recommended order:
-    create accessions -> create a trial -> assign plots -> record data.
-    </p>
+                <p><strong>Question:</strong> Can I submit my data to
+                SGN?<br />
+                <strong>Answer:</strong> Please send us a message using the <a href=
+                "/contact/form">contact form</a>
+                with a description of the data you would like to
+                submit. We will then work with you to integrate
+                your data into the database and/or add it to the
+                FTP server.<br />
+                </p>
+                <p><strong>Question:</strong> Tomato genome has 12 chromosomes. However, some sequences are mapped to 'ch00'. What is 'ch00'? <br />
+                <strong>Answer:</strong> ch00 is a place holder for tomato sequences that could not be mapped to any of the 12 tomato chromosomes.
+                <br />
+                <p><strong>Question:</strong> What does the color gradient in the Gbrowse tracks mean? <br />
+                <strong>Answer:</strong> The intensity of the color signifies the degree of match between the feature and the genome sequence, the white color signifies the lowest match whereas the darkest color signifies the strongest match. You can find more detailed explanation by following the '?' button on the track of your interest.
 
-    <p><b>Q: Is there a recommended workflow?</b><br/>
-    <b>A:</b> Yes. SeedQuest works best when data is added in a logical sequence.
-    Avoid creating trials or uploading data before accessions and traits are clearly defined.
-    </p>
-
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading"><b>Core concepts</b></div>
-  <div class="panel-body">
-
-    <p><b>Q: What is an accession?</b><br/>
-    <b>A:</b> An accession is a unique plant entry in the system.
-    It can represent a variety, hybrid, inbred line, population, or breeding material.
-    Each accession has a stable identifier and is reused across trials and years.
-    </p>
-
-    <p><b>Q: What is the difference between an accession and a plot?</b><br/>
-    <b>A:</b> An accession is the genetic or material entity.
-    A plot is a physical instance of that accession in a specific trial, location, and season.
-    </p>
-
-    <p><b>Q: Should I create new accessions every year?</b><br/>
-    <b>A:</b> No. Accessions should remain stable over time.
-    Year, location, and treatment belong to the trial and plot level, not the accession name.
-    </p>
-
-    <p><b>Q: What are traits?</b><br/>
-    <b>A:</b> Traits are measured or observed characteristics (e.g. height, yield, score).
-    Traits should be clearly defined and reused consistently.
-    </p>
-
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading"><b>Trials and data collection</b></div>
-  <div class="panel-body">
-
-    <p><b>Q: How do I create a field trial?</b><br/>
-    <b>A:</b> First create accessions.
-    Then create a trial, define its design (blocks, replications, layout),
-    and assign accessions to plots.
-    </p>
-
-    <p><b>Q: What types of trials can be managed?</b><br/>
-    <b>A:</b> Variety and hybrid trials, breeding nurseries,
-    agronomic factor trials, density trials,
-    and multi-location or multi-year experiments.
-    </p>
-
-    <p><b>Q: What data can I record?</b><br/>
-    <b>A:</b> Phenotypic traits, agronomic notes, dates, scores,
-    yield and quality parameters, and linked files such as photos or documents.
-    </p>
-
-    <p><b>Q: Can I upload data from Excel?</b><br/>
-    <b>A:</b> Yes. Use standard Breedbase / SeedQuest templates.
-    Always check column names, units, and trait definitions before upload.
-    </p>
-
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading"><b>Using SeedQuest responsibly</b></div>
-  <div class="panel-body">
-
-    <p><b>Q: Does SeedQuest give recommendations?</b><br/>
-    <b>A:</b> No. SeedQuest organizes and analyzes data,
-    but decisions remain the responsibility of the user.
-    </p>
-
-    <p><b>Q: Who is responsible for data quality?</b><br/>
-    <b>A:</b> Users are responsible for the accuracy,
-    completeness, and interpretation of all data entered into the system.
-    </p>
-
-    <p><b>Q: Can SeedQuest outputs be used for official or regulatory reporting?</b><br/>
-    <b>A:</b> No. Outputs are analytical and informational
-    and should not replace certified reports or official documentation.
-    </p>
-
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading"><b>Integration and standards</b></div>
-  <div class="panel-body">
-
-    <p><b>Q: Is SeedQuest based on Breedbase?</b><br/>
-    <b>A:</b> Yes. SeedQuest is built on the SGN / Breedbase platform
-    and adapted for SeedQuest-specific crops and workflows.
-    </p>
-
-    <p><b>Q: Does SeedQuest support BrAPI?</b><br/>
-    <b>A:</b> The underlying platform supports BrAPI endpoints
-    where enabled and configured.
-    </p>
-
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading"><b>Learning resources</b></div>
-  <div class="panel-body">
-    <ul>
-      <li>
-        <a href="https://solgenomics.github.io/sgn/" target="_new">
-          Official SGN / Breedbase manual
-        </a>
-      </li>
-      <li>
-        <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">
-          Video tutorials and workshops
-        </a>
-      </li>
-    </ul>
-    <p style="font-size:12px; color:#777;">
-      These materials describe the underlying system on which SeedQuest is based.
-    </p>
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading"><b>Credits</b></div>
-  <div class="panel-body">
-    <p>
-      SeedQuest is built upon open scientific and technical foundations developed
-      within the Sol Genomics Network (SGN) and the Breedbase ecosystem,
-      with contributions from the Boyce Thompson Institute and collaborating institutions.
-    </p>
-  </div>
-</div>
+		<p>
+		  <strong>Question:</strong> What do the identifiers of the format Solyc01g001010.1.1 mean?<br />
+		  <strong>Answer:</strong> These identifiers denote loci, predicted mRNA and protein sequences from the tomato genome sequencing project. "Solyc" is the 5 letter abbreviation of <i>Solanum lycopersicum</i>, the 2 digit number following the 'Solyc' denotes the chromosome, 'g' denotes that the sequence is a gene, and the 6 digit number following the 'g' identifies the gene on the chromosome, starting at the top and counting in 10 increments. The first '.1' denotes the annotation version number of the locus (and if only the first number is given, denotes the locus), whereas the second '.1' denotes the transcript (a locus can give rise to many transcripts, splice variants), and also the proteins derived from these transcripts.
+                <br />
+                </p>
+                <p>
+		  <strong>Question:</strong>How can I use the SGN Intron Finder tool for a batch of sequences?<br />
+		  <strong>Answer:</strong> (1) You can enter multiple sequences to the <a href="/tools/intron_detection/find_introns.pl">form</a>. (2) If you are doing the blasting locally, try using the code below:<br/> <a href="https://github.com/solgenomics/sgn/blob/master/cgi-bin/tools/intron_detection/intron_finder_homology.pl"> code 1</a>, <a href="https://github.com/solgenomics/sgn/blob/master/lib/SGN/IntronFinder/Homology.pm">code 2</a>. 
+                <br />
+                </p>
+                <p>
+		  <strong>Question:</strong>What cultivar was used for the international tomato genome sequencing project ?<br />
+		  <strong>Answer:</strong> <a href="/stock/676/view">Heinz 1706</a>.
+                <br />
+                </p>
+                 <p>
+		  <strong>Question:</strong> How can I download annotation features on the tomato genome?<br />
+		  <strong>Answer:</strong> As an alternative to Gbrowse's download function, you can use this <a href="/search/features">tool</a> to select your region of interest and download the features using the download options at the top right of the page. 
+                <br />
+                </p>
+                <p>
+		  <strong>Question:</strong> How can I convert tomato unigene ids between builds?<br />
+		  <strong>Answer: </strong>Use this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/tomato_species_unigenes.v1.global_versionmapping.tab">file</a>, and read this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/README_about_global_version_mapping.txt">key</a>. <b>Caveat</b>: a unigene may be split or merged with other unigene(s) in different builds. For unigenes of non-tomato species, look for similarly named files higher up in the ftp directory.
+                <br />
+                </p>
+ <p>
+		  <strong>Question:</strong> How can I map tomato gene model ids (ITAG_2.3 annotation) to their corresponding SGN unigene ids (unigine build #2)?<br />
+		  <strong>Answer: </strong>Use this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/unigene_annotations/tomato_species_unigenes.v2.Solyc_ITAG2.3.genemodels.map.txt">file</a>, and read this <a href="ftp://ftp.solgenomics.net/unigene_builds/combined_species_assemblies/tomato_species/README_about_global_version_mapping.txt">note</a>.
+                <br />
+                </p>
+              </td>
+            </tr>
+          </table>         
+        </center>
+      </td>
+    </tr>
+  </table>
+</center>

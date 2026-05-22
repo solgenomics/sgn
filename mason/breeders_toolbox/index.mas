@@ -1,114 +1,229 @@
-<%args>
-</%args>
 
-<& /page/page_title.mas, title=>'SeedQuest Breeder Tools' &>
+<%doc>
 
-<div class="container-fluid">
+</%doc>
 
-    <!-- Top Cards: High Priority Tools -->
-    <div class="row">
-        <div class="col-md-4">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><span class="glyphicon glyphicon-cloud"></span> Weather & GDD</h3>
-                </div>
-                <div class="panel-body">
-                    <p>Track growing conditions, calculate GDD/CHU, and sync station data.</p>
-                    <a href="/tools/weather/gdd" class="btn btn-info btn-block">Open GDD Calculator</a>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="panel panel-success">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><span class="glyphicon glyphicon-camera"></span> Drone Imagery</h3>
-                </div>
-                <div class="panel-body">
-                    <p>Manage aerial surveys, orthophotos, and run spectral analytics.</p>
-                    <a href="/breeders/drone_imagery" class="btn btn-success btn-block">Manage Drones</a>
-                </div>
-            </div>
-        </div>
+<style type="text/css">
+    @import url("/css/icon_nav.css");
 
-        <div class="col-md-4">
-            <div class="panel panel-warning">
-                <div class="panel-heading">
-                    <h3 class="panel-title"><span class="glyphicon glyphicon-grain"></span> Field Trials</h3>
-                </div>
-                <div class="panel-body">
-                    <p>Design field layouts, collect data, and manage trials.</p>
-                    <a href="/breeders/trials" class="btn btn-warning btn-block">Manage Trials</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    div.page_introduction {
+        margin-bottom: 0;
+    }
 
-    <hr>
+    #icon_nav {
+        width: 720px;
+        height: 500px;
+        position: relative;
+    }
+
+    .SNPTool {
+    	position: relative; 
+    	top: 100px;
+    	left: 50px;
+    }
+
+    .SNPToolSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    	z-index: 1;
+    }   
+   
+
+    .Markers {
+    	position: relative; 
+    	top: 110px;
+    	left: 400px;
+    }
+
+    .MarkersSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    }
+
+
+    .Phenotypes {
+    	position: relative; 
+    	top: 20px;
+    	left: -30px;
+    }
+
+    .TraitsSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    }
+
+
+    .QTLTool {
+    	position: relative; 
+    	top: 170px;
+    	left: 120px;
+    }
+
+    .QTLToolSubMenu {
+    	background-image: url(../images/MapsMarkersSub.png);
+    	width: 227px;
+    	height: 341px;
+    	padding-top: 15px;
+    	position: relative;
+    	top: 0px;
+    	left: 0px;
+    	z-index: 1;
+    }
     
-    <!-- Management Sections -->
-    <div class="row">
-        <div class="col-md-6">
-            <div class="list-group">
-                <a href="#" class="list-group-item active">
-                    <h4 class="list-group-item-heading">Germplasm & Inventory</h4>
-                </a>
-                <a href="/breeders/manage_programs" class="list-group-item">
-                    <h4 class="list-group-item-heading">Breeding Programs</h4>
-                    <p class="list-group-item-text">Manage breeding programs and metadata.</p>
-                </a>
-                <a href="/breeders/accessions" class="list-group-item">
-                    <h4 class="list-group-item-heading">Accessions</h4>
-                    <p class="list-group-item-text">Manage germplasm database.</p>
-                </a>
-                <a href="/breeders/crosses" class="list-group-item">
-                    <h4 class="list-group-item-heading">Crosses</h4>
-                    <p class="list-group-item-text">Create and track crosses.</p>
-                </a>
-                <a href="/order/stocks/view" class="list-group-item">
-                    <h4 class="list-group-item-heading">Order Stocks</h4>
-                    <p class="list-group-item-text">Manage seed orders.</p>
-                </a>
-            </div>
-        </div>
+    .Genes { 
+        position: relative;
+        top: 10px;
+        left: 130px;
+    }
 
-        <div class="col-md-6">
-            <div class="list-group">
-                <a href="#" class="list-group-item active">
-                    <h4 class="list-group-item-heading">Field & Lab Operations</h4>
-                </a>
-                <a href="/breeders/locations" class="list-group-item">
-                    <h4 class="list-group-item-heading">Locations</h4>
-                    <p class="list-group-item-text">Manage field and lab locations.</p>
-                </a>
-                <a href="/breeders/phenotyping" class="list-group-item">
-                    <h4 class="list-group-item-heading">Phenotyping</h4>
-                    <p class="list-group-item-text">Upload and view phenotype data.</p>
-                </a>
-                <a href="/breeders/genotyping" class="list-group-item">
-                    <h4 class="list-group-item-heading">Genotyping</h4>
-                    <p class="list-group-item-text">Manage genotyping plates and markers.</p>
-                </a>
-                <a href="/fieldbook" class="list-group-item">
-                    <h4 class="list-group-item-heading">Field Book App</h4>
-                    <p class="list-group-item-text">Sync with Android data collection app.</p>
-                </a>
-                <a href="/barcode" class="list-group-item">
-                    <h4 class="list-group-item-heading">Barcodes</h4>
-                    <p class="list-group-item-text">Generate barcoded labels.</p>
-                </a>
-            </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="well well-sm">
-                <h4><span class="glyphicon glyphicon-download"></span> Data Management</h4>
-                <a href="/breeders/download" class="btn btn-default">Download Data</a>
-                <a href="/breeders/upload" class="btn btn-default">Upload Data</a>
-            </div>
-        </div>
-    </div>
 
+</style>
+
+<& /page/page_title.mas, title=>'SGN Breeders Toolbox' &>
+ 
+<div class="page_introduction">
+<p>The purpose of this page is to give breeders direct links to
+breeder-relevant tools and data on SGN. It is a work in progress and
+your feedback or suggestions are welcome to build this into a
+comprehensive, easy to use and breeder-friendly resource.</p>
+
+<p>We love feedback!  Please contact <a href="mailto:jv27\@cornell.edu">Joyce van Eck</a>
+with suggestions for improvements!</p>
 </div>
+
+<div id="icon_nav">
+<ul>
+
+	
+    
+	<li class="SNPTool"><!-- a href="#" --><img src="/img/breedericonmenu/SNPTool.png" alt="SNP Tool" title="SNP Tool (coming soon)" ><!-- /a -->
+    	<!--
+		<ul>
+            <div class="SNPToolSubMenu">
+                <li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+     <li class="Markers"><a href="/search/direct_search.pl?search=markers"><img src="/img/breedericonmenu/Markers.png" alt="Markers" title="Maps &amp; Markers"  /></a>
+    	<!--
+		<ul>
+            <div class="MarkersSubMenu">
+            	<li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+	
+
+	<li class="Phenotypes"><a href="/search/direct_search.pl?search=phenotypes"><img src="/img/soliconmenu/Phenotypes.png" alt="Traits" title="Traits &amp; Phenotypes" /></a>
+    	<!--
+		<ul>
+            <div class="TraitsSubMenu">
+            	<li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+    
+	<li class="QTLTool"><a href="/search/direct_search.pl?search=qtl"><img src="/img/breedericonmenu/QTLTool.png" alt="QTL Tool" title="Access QTL data" /></a>
+    	<!--
+   		<ul>
+            <div class="QTLToolSubMenu">
+                <li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+
+		<li class="Genes"><a href="/search/direct_search.pl?search=loci"><img src="/img/soliconmenu/Genes.png" alt="Genes" title="Genes" ></a>
+    	<!--
+		<ul>
+            <div class="SNPToolSubMenu">
+                <li><a href="#">Test...1</a></li>
+                <li><a href="#">Test...2</a></li>
+                <li><a href="#">Test...3</a></li>
+            </div>
+        </ul>
+        -->
+	</li>
+
+
+</ul>
+</div>
+
+
+<&| /page/info_section.mas, title=>'Tutorials' &>
+<ul>
+  <li>The SGN Breeders Toolbox <a href="http://www.extension.org/pages/61208">webinar</a> by Joyce Van Eck</li>
+  <li>Plant Breeding and Genomics at the <a href="http://www.extension.org/plant_breeding_genomics">eXtension</a> site</li>
+  <li>Tomato Genome Browser <a href="http://www.extension.org/article/32485">Webinar</a> presented at the 2010 Tomato Disease Workshop by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
+  <li>Designing a CAPS Marker From a SNP Using The <a href="http://www.extension.org/article/32361">SGN CAPS Designer</a> by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
+ <li>A voiceover Powerpoint <a href="http://www.extension.org/pages/60317/sgn-marker-search-tool-tutorial-for-plant-breeders">tutorial for the "Markers" tool </a> by <a href="mailto:merk.9@osu.edu">Heather Merk</a></li>
+</ul>
+</&>
+
+<&| /page/info_section.mas, title=>'SGN tools' &>
+<ul>
+  <li>Browse the SGN <a href="/search/direct_search.pl?search=markers/">Markers database</a></li>
+  <li>Browse available controlled vocabularies using the SGN <a href="/tools/onto/">Ontology browser</a></li>
+  <li>Develop CAPS markers using the <a href="/tools/caps_designer/caps_input.pl">CAPS Designer</a></li>
+  <li>Check intron locations in transript data using the <a href="/tools/intron_detection/find_introns.pl">Intron Finder</a></li>
+  <li><a href="/phenome/qtl_form.pl">QTL data submssion</a> and on-the-fly QTL analysis <a href="/search/direct_search.pl?search=qtl/">for Solanaceae traits</a></li>
+  <li>SGN gene and phenotype <a href="/phenome/">submission guide</a> </li>
+</ul>
+</&>
+
+<&| /page/info_section.mas, title=>'Tools in development' &>
+<ul><li>SNP discovery tool. This will be part of the <a href="https://www.msu.edu/~douchesd/solcapwebpage.htm">SolCAP</a> project.</li></ul>
+</&>
+
+<&| /page/info_section.mas, title=>'Links' &>
+<ul>
+<li><b>Potato</b>
+ <ul>
+  <li><a href="/organism/Solanum_tuberosum/genome">Potato genome</a></li>
+  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdEtWaUV3S1FzUjNFVmt4X29fNU9HLXc&hl=en_US">Potato marker list</a> (work in progres by David Douches)</li>
+ </ul>
+</li>
+<li><b>Tomato</b>
+ <ul>
+  <li><a href="/organism/Solanum_lycopersicum/genome">Tomato genome</a></li>
+  <li><a href="https://spreadsheets.google.com/spreadsheet/ccc?key=0AglmOi1fE8ZYdE9RU0dlS2h4S29RMk1ZQXk4aUJBOGc&hl=en_US">Tomato resistance genes </a> (by Douglas Maxwell).</li>
+ </ul>
+</li>
+<li><a href="http://www.tomatomap.net/">TomatoMap.Net</a> - a site for Tomato Genetics at Ohio State University.</li>
+<li><a href="http://solcap.msu.edu/">SolCAP</a> - the official SolCAP website at Michigan State University.</li>
+<li><a href="http://www.oardc.ohio-state.edu/vanderknaap/tomato_analyzer.htm">Tomato Analyzer</a> - software for scoring fruit shape and other shapes.</li>
+<li><a href="/help/index.pl#submit">Submitting data to SGN</a> - instruction for data submissions to SGN.</li>
+</ul>
+</&>
+
+
+<& /util/import_javascript.mas, classes => [qw[ icon_nav ]] &>
+

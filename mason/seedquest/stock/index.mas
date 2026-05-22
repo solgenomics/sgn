@@ -94,6 +94,7 @@ my $vector_related_genes = $stockref->{vector_related_genes};
 my $vector_analyzed_tissue_types = $stockref->{vector_analyzed_tissue_types};
 my $number_of_insertions = $stockref->{number_of_insertions};
 my $is_a_parent = $stockref->{is_a_parent};
+my $is_breeder = $stockref->{is_breeder};
 
 my @editable_stock_props = split "," , $editable_stock_props_string;
 
@@ -426,6 +427,8 @@ function jqueryStuff() {
 
 % if ($type_name eq 'accession'){
 
+% # Pedigree section: only visible to breeder or curator roles
+% if ($is_breeder || $curator) {
 <%perl>
         my $collapsible = 0;
         if ($has_pedigree==1) {
@@ -439,6 +442,7 @@ function jqueryStuff() {
 </%perl>
 
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Pedigree</h4>", info_section_subtitle => 'View and edit pedigree information.', icon_class => "glyphicon glyphicon-random", info_section_id => "stock_pedigree_section", buttons_html => $add_parent_link.$remove_parent_link, has_pedigree => $has_pedigree, info_section_collapsed => 1 &>
+% } # end pedigree breeder/curator check
     <& /page/detail_page_2_col_section.mas, stock_id => $stock_id, info_section_title => "<h4 style='display:inline'>Related Stocks</h4>", info_section_subtitle => 'View any plots, plants, tissue_sample, and/or accessions that are linked to this stock.', icon_class => "glyphicon glyphicon-retweet", info_section_id => "stock_related_stock_section", stock_uniquename => $uniquename, type_name => $type_name &>
 
 % }

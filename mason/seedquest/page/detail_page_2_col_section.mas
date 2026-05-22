@@ -245,9 +245,9 @@ $logged_in_name => undef
 % }
 
 % if ($info_section_id eq 'trial_analysis_tools') {
-    <& /breeders_toolbox/analysis_tools_section.mas, 
-        trial_id => $trial_id, 
-        trial_name => $trial_name 
+    <& /breeders_toolbox/analysis_tools_section.mas,
+        trial_id => $trial_id,
+        trial_name => $trial_name
     &>
 
 % if ($hidap_enabled) {
@@ -274,7 +274,7 @@ $logged_in_name => undef
 % } #End trial_upload_files
 
 % if ($info_section_id eq 'trial_weather_data'){
-                                <& /breeders_toolbox/trial/weather.mas, location => $location_name &>
+                                <& /breeders_toolbox/trial/weather.mas, location => $location_name, trial_id => $trial_id &>
 % } #End trial_weather_data
 % if ($info_section_id eq 'trial_jbrowse_data'){
                                 <& /breeders_toolbox/trial/jbrowse_instance.mas, trial_id => $trial_id &>

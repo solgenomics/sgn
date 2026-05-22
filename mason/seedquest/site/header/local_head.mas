@@ -1,0 +1,9 @@
+<!-- file needed to add more styles and js libraries to sites dependent on SGN -->
+% my $t = $m->request_args->{'page_title'};
+  <title><% $t ? "$t - " : '' %>BreedBase</title>
+
+<!-- SeedQuest Global Skin -->
+<link rel="stylesheet" href="/s/seedquest_global.css?v=21" />
+
+<!-- SeedQuest i18n: client-side language switcher -->
+<script src="/s/sq-i18n.js?v=7" defer></script>
