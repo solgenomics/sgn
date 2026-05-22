@@ -273,8 +273,12 @@ jQuery(document).ready(function() {
             select.append('<option value="">-- Select Crop --</option>');
             if (response && response.crops) {
                 jQuery.each(response.crops, function(i, crop) {
-                    select.append('<option value="' + crop.id + '" data-base="' + crop.base_temp + '">' + 
-                        crop.crop_name + ' (Base: ' + crop.base_temp + '&deg;C)' + 
+                    var capAttr = (crop.cap_temp !== null && crop.cap_temp !== undefined) ? crop.cap_temp : '';
+                    var matAttr = (crop.maturity_gdd !== null && crop.maturity_gdd !== undefined) ? crop.maturity_gdd : '';
+                    select.append('<option value="' + crop.id + '" data-base="' + crop.base_temp + '"' +
+                        ' data-cap="' + capAttr + '" data-maturity="' + matAttr + '">' +
+                        crop.crop_name + ' (Base: ' + crop.base_temp + '&deg;C' +
+                        (capAttr !== '' ? ', cap ' + capAttr : '') + ')' +
                         (crop.use_chu ? ' [CHU]' : '') + '</option>');
                 });
             }
@@ -409,8 +413,13 @@ jQuery(document).ready(function() {
     jQuery('#gdd_calculate').click(function() {
         var location_id = jQuery('#gdd_location_id').val();
         var crop_id = jQuery('#gdd_crop_select').val();
-        var base_temp = jQuery('#gdd_custom_base').val();
-        
+        var $crop = jQuery('#gdd_crop_select option:selected');
+        // Custom base overrides the crop's base; cap comes from the crop (e.g. corn 86/50).
+        var custom_base = jQuery('#gdd_custom_base').val();
+        var base_temp = (custom_base !== '' && custom_base != null) ? custom_base
+                        : ($crop.data('base') != null ? $crop.data('base') : '');
+        var cap_temp = ($crop.data('cap') != null ? $crop.data('cap') : '');
+
         if (!location_id) {
             alert('Please select a location');
             return;
@@ -444,6 +453,7 @@ jQuery(document).ready(function() {
                 location_id: location_id,
                 crop_id: crop_id,
                 base_temp: base_temp,
+                cap_temp: cap_temp,
                 seasons: JSON.stringify(seasons)
             },
             success: function(response) {
@@ -630,7 +640,7 @@ jQuery(document).ready(function() {
         
         // Load station config
         jQuery.ajax({
-            url: '/ajax/seedquest/weather/station/config',
+            url: '/ajax/seedquest/weather/station_config/get',
             data: { location_id: location_id },
             success: function(response) {
                 if (response.config) {
@@ -678,7 +688,8 @@ jQuery(document).ready(function() {
         var type = jQuery('#station_type').val();
         
         jQuery.ajax({
-            url: '/ajax/seedquest/weather/station/config',
+            type: 'POST',
+            url: '/ajax/seedquest/weather/station_config/save',
             data: {
                 location_id: location_id,
                 station_type: type,
@@ -693,11 +704,67 @@ jQuery(document).ready(function() {
                     alert('Configuration saved!');
                     jQuery('#station_config_modal').modal('hide');
                 } else {
-                    alert('Error saving: ' + (response.error || 'Unknown error'));
+                    // Server-managed config returns success:0 with an explanatory message.
+                    alert(response.message || response.error || 'Could not save configuration');
+                    jQuery('#station_config_modal').modal('hide');
                 }
             },
             error: function() {
                 alert('Error saving configuration');
+            }
+        });
+    });
+
+    // ---- Clean days-to-maturity (uses the working /ajax/seedquest/weather/maturity) ----
+    function openSqMaturity() {
+        var $crop = jQuery('#gdd_crop_select option:selected');
+        var mat = $crop.data('maturity');
+        if (mat != null && mat !== '' && !jQuery('#sqm_target').val()) {
+            jQuery('#sqm_target').val(mat);
+        }
+        jQuery('#sqm_result').hide();
+        jQuery('#sqm_status').hide();
+        jQuery('#sq_maturity_modal').modal('show');
+    }
+    jQuery('#maturity_calculator_btn').click(openSqMaturity);
+    jQuery('#maturity_calculator_top').click(openSqMaturity);
+    jQuery('#sqm_estimate').click(function() {
+        var location_id = jQuery('#gdd_location_id').val();
+        var sowing_date = jQuery('#sqm_sowing_date').val();
+        var metric = jQuery('#sqm_metric').val();
+        var target = jQuery('#sqm_target').val();
+        var $crop = jQuery('#gdd_crop_select option:selected');
+        var custom_base = jQuery('#gdd_custom_base').val();
+        var base_temp = (custom_base !== '' && custom_base != null) ? custom_base
+                        : ($crop.data('base') != null ? $crop.data('base') : '');
+        var cap_temp = ($crop.data('cap') != null ? $crop.data('cap') : '');
+        if (!location_id) { alert('Please select a location'); return; }
+        if (!sowing_date) { alert('Please choose a sowing date'); return; }
+        if (!target || target <= 0) { alert('Please enter a maturity target'); return; }
+        jQuery('#sqm_status').removeClass('alert-danger alert-success').addClass('alert-info')
+            .html('<span class="glyphicon glyphicon-refresh spinning"></span> Estimating...').show();
+        jQuery('#sqm_result').hide();
+        jQuery.ajax({
+            url: '/ajax/seedquest/weather/maturity',
+            data: { location_id: location_id, sowing_date: sowing_date, metric: metric,
+                    target: target, base_temp: base_temp, cap_temp: cap_temp },
+            success: function(r) {
+                if (r.error) {
+                    jQuery('#sqm_status').removeClass('alert-info').addClass('alert-danger').html('Error: ' + r.error);
+                    return;
+                }
+                jQuery('#sqm_status').hide();
+                jQuery('#sqm_date').text(r.maturity_date || '—');
+                jQuery('#sqm_days').text(r.days_to_maturity != null ? r.days_to_maturity : '—');
+                jQuery('#sqm_acc').text((r.accumulated || '—') + ' / ' + (r.target || '—') + ' ' + String(r.metric || '').toUpperCase());
+                var stateMap = { reached: 'Target reached (from observed weather)',
+                                 projected: 'Projected (future days estimated from average)',
+                                 insufficient_data: 'Not enough weather data' };
+                jQuery('#sqm_state').text(stateMap[r.status] || r.status || '—');
+                jQuery('#sqm_result').show();
+            },
+            error: function() {
+                jQuery('#sqm_status').removeClass('alert-info').addClass('alert-danger').html('Request failed');
             }
         });
     });
@@ -760,727 +827,50 @@ jQuery(document).ready(function() {
     </div>
 </div>
 
-<!-- Maturity Calculator Modal -->
-<div class="modal fade" id="maturity_calculator_modal" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary" style="color:white">
-                <button type="button" class="close" data-dismiss="modal" style="color:white">&times;</button>
-                <h4 class="modal-title">
-                    <span class="glyphicon glyphicon-grain"></span> Maturity Calculator - Create Phenotypes
-                    <button type="button" class="btn btn-link" id="mc_settings_toggle" style="color:white; padding:0 10px" title="Trait Settings">
-                        <span class="glyphicon glyphicon-cog"></span>
-                    </button>
-                </h4>
-            </div>
-            <div class="modal-body" id="mc_modal_body">
-                <!-- Settings Panel (collapsed by default) -->
-                <div id="mc_settings_panel" class="panel panel-default" style="display:none">
-                    <div class="panel-heading"><strong><span class="glyphicon glyphicon-cog"></span> Trait Settings</strong></div>
-                    <div class="panel-body">
-                        <p class="text-muted small">Select which ontology traits to use for GDD calculation. Defaults are set for your crop type.</p>
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Emergence Trait:</label>
-                                    <select class="form-control input-sm" id="mc_trait_emergence">
-                                        <option value="97939">Seedling emergence - Date (yymmdd)</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Flowering Trait:</label>
-                                    <select class="form-control input-sm" id="mc_trait_flowering">
-                                        <option value="81054">Silking time - day (Maize)</option>
-                                        <option value="81052">Anthesis silking interval</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>Maturity Trait:</label>
-                                    <select class="form-control input-sm" id="mc_trait_maturity">
-                                        <option value="80767">Maturity time - day</option>
-                                        <option value="81183">Maturity time - day (alt)</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="alert alert-warning" id="mc_trait_warning" style="display:none; margin-bottom:0">
-                            <small><span class="glyphicon glyphicon-exclamation-sign"></span> Some selected traits may not exist in your ontology. Contact administrator to add them.</small>
-                        </div>
-                        <div class="checkbox" style="margin-top:10px">
-                            <label>
-                                <input type="checkbox" id="mc_use_planting_fallback"> 
-                                <strong>Use planting date as fallback</strong> if no emergence data exists
-                            </label>
-                            <span style="margin-left:15px">
-                                Days to emergence: 
-                                <input type="number" id="mc_fallback_emergence_days" 
-                                       min="1" max="20" value="7" 
-                                       style="width:60px; display:inline-block" 
-                                       class="form-control input-sm">
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="alert alert-info">
-                    <strong>GDD:</strong> <span id="mc_gdd_value">0</span> | 
-                    <strong>CHU:</strong> <span id="mc_chu_value">0</span> | 
-                    <strong>Period:</strong> <span id="mc_period_display">-</span>
-                </div>
-                
-                <div class="form-group">
-                    <label>Search Trial:</label>
-                    <input type="text" class="form-control" id="mc_trial_search" placeholder="Type to search trials...">
-                </div>
-                
-                <div id="mc_trial_results" style="max-height:150px; overflow-y:auto; border:1px solid #ddd; padding:5px; margin-bottom:15px; display:none"></div>
-                
-                <div id="mc_accession_section" style="display:none">
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="mc_select_all"> Select All Accessions
-                        </label>
-                        <span class="badge" id="mc_accession_count" style="margin-left:10px">0</span>
-                    </div>
-                    
-                    <div id="mc_accession_list" style="max-height:250px; overflow-y:auto; border:1px solid #ddd; padding:10px">
-                        <!-- Accession checkboxes -->
-                    </div>
-                </div>
-                
-                <div id="mc_loading" style="display:none; text-align:center">
-                    <span class="glyphicon glyphicon-refresh spinning"></span> Loading...
-                </div>
-            </div>
-            <div class="modal-footer">
-                <div id="mc_validation_summary" style="text-align:left; margin-bottom:10px; display:none;">
-                    <small>
-                        <span class="label label-success">✓ Maturity</span>
-                        <span class="label label-warning">⚠ Emergence</span>
-                        <span class="label label-default">○ No data</span>
-                    </small>
-                </div>
-                <span id="mc_status" class="text-success pull-left"></span>
-                <button type="button" class="btn btn-info" id="mc_validate_data">
-                    <span class="glyphicon glyphicon-check"></span> Validate Data
-                </button>
-                <button type="button" class="btn btn-default" data-dismiss="modal" id="mc_modal_footer_close">Cancel</button>
-                <button type="button" class="btn btn-primary" id="mc_create_phenotypes" disabled>
-                    <span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes
-                </button>
-            </div>
+<!-- Simple Days-to-Maturity Modal (uses /ajax/seedquest/weather/maturity) -->
+<div class="modal fade" id="sq_maturity_modal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success" style="color:white">
+        <button type="button" class="close" data-dismiss="modal" style="color:white">&times;</button>
+        <h4 class="modal-title"><span class="glyphicon glyphicon-grain"></span> Days to Maturity</h4>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">Accumulates heat units from the sowing date for the selected location and crop until the maturity target is reached. Future days are projected from the average so far.</p>
+        <div class="form-group">
+          <label>Sowing date</label>
+          <input type="date" class="form-control" id="sqm_sowing_date">
         </div>
+        <div class="form-group">
+          <label>Heat-unit metric</label>
+          <select class="form-control" id="sqm_metric">
+            <option value="gdd">GDD (Growing Degree Days)</option>
+            <option value="chu">CHU (Crop Heat Units)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Maturity target (heat units)</label>
+          <input type="number" class="form-control" id="sqm_target" placeholder="e.g. 2700">
+          <small class="text-muted">Pre-filled from the selected crop; override per hybrid/variety.</small>
+        </div>
+        <div id="sqm_status" class="alert" style="display:none"></div>
+        <div id="sqm_result" style="display:none">
+          <table class="table table-condensed">
+            <tr><th>Estimated maturity date</th><td id="sqm_date">&mdash;</td></tr>
+            <tr><th>Days from sowing</th><td id="sqm_days">&mdash;</td></tr>
+            <tr><th>Accumulated / target</th><td id="sqm_acc">&mdash;</td></tr>
+            <tr><th>Status</th><td id="sqm_state">&mdash;</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="sqm_estimate">Estimate maturity</button>
+      </div>
     </div>
+  </div>
 </div>
 
-<script>
-// Maturity Calculator JavaScript
-jQuery(document).ready(function() {
-    var mcSelectedTrial = null;
-    var mcAccessions = [];
-    var mcCropType = 'maize_trait';  // Will be detected from trial
-    var mcReadyCount = 0;  // Count of accessions with emergence data
-    var mcOriginalModalBody = null;  // Store original modal content for reset
-    
-    // Store original modal body content on first load
-    mcOriginalModalBody = jQuery('#mc_modal_body').html();
-    
-    // Reset modal when closed
-    jQuery('#maturity_calculator_modal').on('hidden.bs.modal', function() {
-        jQuery('#mc_modal_body').html(mcOriginalModalBody);
-        jQuery('#mc_modal_footer_close').show().text('Cancel').removeClass('btn-success').addClass('btn-default');
-        jQuery('#mc_create_phenotypes').show().prop('disabled', true).html(
-            '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes'
-        );
-        jQuery('#mc_validate_data').show();
-        jQuery('#mc_validation_summary').hide();
-        jQuery('#mc_status').text('');
-        mcSelectedTrial = null;
-    });
-    
-    // Function to load maturity traits dynamically from API
-    function loadMaturityTraits(crop) {
-        var $select = jQuery('#mc_trait_maturity');
-        $select.html('<option value="">Loading...</option>');
-        
-        jQuery.ajax({
-            url: '/ajax/seedquest/weather/maturity_traits',
-            data: { crop: crop },
-            success: function(response) {
-                $select.empty();
-                if (response.traits && response.traits.length > 0) {
-                    response.traits.forEach(function(t) {
-                        var formatBadge = '';
-                        var disabled = '';
-                        if (t.format === 'day') {
-                            formatBadge = ' [DAY]';
-                        } else if (t.format === 'date') {
-                            formatBadge = ' [DATE]';
-                        } else {
-                            formatBadge = ' [unsupported]';
-                            disabled = 'disabled';
-                        }
-                        $select.append('<option value="' + t.id + '" ' + disabled + '>' + 
-                            t.name + formatBadge + '</option>');
-                    });
-                    // Show warning if some traits are unsupported
-                    var hasUnsupported = response.traits.some(function(t) { return t.format === 'unknown'; });
-                    jQuery('#mc_trait_warning').toggle(hasUnsupported);
-                } else {
-                    $select.append('<option value="">No maturity traits found</option>');
-                }
-            },
-            error: function() {
-                $select.html('<option value="">Failed to load traits</option>');
-            }
-        });
-    }
-    
-    // Function to open Maturity Calculator modal
-    function openMaturityCalculator(requireGdd) {
-        if (requireGdd && !gddData) {
-            alert('Please calculate GDD/CHU first');
-            return;
-        }
-        
-        // Display current GDD/CHU values if available
-        if (gddData) {
-            jQuery('#mc_gdd_value').text(gddData.total_gdd || (gddData.summary && gddData.summary.avg_gdd) || 0);
-            jQuery('#mc_chu_value').text(gddData.total_chu || (gddData.summary && gddData.summary.avg_chu) || 0);
-            
-            var period = '';
-            if (gddData.years && gddData.years.length > 0) {
-                period = gddData.years[0].start_date + ' to ' + gddData.years[0].end_date;
-            }
-            jQuery('#mc_period_display').text(period);
-        } else {
-            jQuery('#mc_gdd_value').text('—');
-            jQuery('#mc_chu_value').text('—');
-            jQuery('#mc_period_display').text('Calculate GDD first');
-        }
-        
-        // Reset state
-        jQuery('#mc_trial_search').val('');
-        jQuery('#mc_trial_results').hide().empty();
-        jQuery('#mc_accession_section').hide();
-        jQuery('#mc_accession_list').empty();
-        jQuery('#mc_create_phenotypes').prop('disabled', true);
-        jQuery('#mc_status').text('');
-        mcSelectedTrial = null;
-        mcAccessions = [];
-        mcCropType = 'maize_trait';
-        
-        // Load traits dynamically from API
-        loadMaturityTraits(mcCropType);
-        
-        jQuery('#maturity_calculator_modal').modal('show');
-    }
-    
-    // Open from Results panel button (requires GDD data)
-    jQuery('#maturity_calculator_btn').click(function() {
-        openMaturityCalculator(true);
-    });
-    
-    // Open from top button (no GDD requirement)
-    jQuery('#maturity_calculator_top').click(function() {
-        openMaturityCalculator(false);
-    });
-    
-    // Trial search
-    var searchTimeout;
-    jQuery('#mc_trial_search').on('input', function() {
-        var query = jQuery(this).val().trim();
-        clearTimeout(searchTimeout);
-        
-        if (query.length < 2) {
-            jQuery('#mc_trial_results').hide();
-            return;
-        }
-        
-        searchTimeout = setTimeout(function() {
-            jQuery('#mc_loading').show();
-            
-            jQuery.ajax({
-                url: '/ajax/search/trials',
-                data: { trial_name: query },
-                success: function(response) {
-                    jQuery('#mc_loading').hide();
-                    var results = jQuery('#mc_trial_results');
-                    results.empty();
-                    
-                    // Response is DataTables format: data is array of arrays
-                    // [0]=link with name, [5]=location
-                    if (response && response.data && response.data.length > 0) {
-                        jQuery.each(response.data, function(i, row) {
-                            // Extract trial ID and name from link HTML
-                            // row: [0]=link, [5]=location, [8]=planting_date, [9]=harvest_date
-                            var linkHtml = row[0];
-                            var match = linkHtml.match(/trial\/(\d+)[^>]*>([^<]+)/);
-                            if (match) {
-                                var trialId = match[1];
-                                var trialName = match[2];
-                                var location = row[5] || '';
-                                var plantingDate = row[8] || '';
-                                var harvestDate = row[9] || '';
-                                results.append(
-                                    '<div class="mc-trial-item" data-id="' + trialId + '" data-name="' + trialName + '" data-planting="' + plantingDate + '" data-harvest="' + harvestDate + '" data-location="' + location + '" style="padding:8px; cursor:pointer; border-bottom:1px solid #eee">' +
-                                    '<strong>' + trialName + '</strong>' +
-                                    (location ? ' <span class="text-muted">(' + location + ')</span>' : '') +
-                                    (plantingDate ? ' <small class="text-success">' + plantingDate + '</small>' : ' <span class="text-warning"><small>No planting date</small></span>') +
-                                    '</div>'
-                                );
-                            }
-                        });
-                        results.show();
-                    } else {
-                        results.html('<p class="text-muted" style="padding:10px">No trials found</p>').show();
-                    }
-                },
-                error: function() {
-                    jQuery('#mc_loading').hide();
-                    jQuery('#mc_trial_results').html('<p class="text-danger" style="padding:10px">Error searching trials</p>').show();
-                }
-            });
-        }, 300);
-    });
-    
-    // Select trial
-    jQuery('#mc_trial_results').on('click', '.mc-trial-item', function() {
-        var plantingDate = jQuery(this).data('planting') || '';
-        var harvestDate = jQuery(this).data('harvest') || '';
-        var locationName = jQuery(this).data('location') || '';
-        
-        mcSelectedTrial = {
-            id: jQuery(this).data('id'),
-            name: jQuery(this).data('name'),
-            planting_date: plantingDate,
-            harvest_date: harvestDate,
-            location: locationName
-        };
-        
-        jQuery('#mc_trial_search').val(mcSelectedTrial.name);
-        jQuery('#mc_trial_results').hide();
-        
-        // Validate dates and show warning if missing
-        var warnings = [];
-        if (!plantingDate) warnings.push('Planting date not set');
-        if (!harvestDate) warnings.push('Harvest date not set');
-        
-        if (warnings.length > 0) {
-            jQuery('#mc_status').html('<span class="text-warning"><strong>⚠ Warning:</strong> ' + warnings.join(', ') + '. GDD calculation may be inaccurate.</span>');
-        } else {
-            jQuery('#mc_status').html('<span class="text-success"><small>Trial dates: ' + plantingDate + ' → ' + harvestDate + '</small></span>');
-            
-            // First get location_id from trial, then fetch GDD
-            jQuery.ajax({
-                url: '/ajax/trial/' + mcSelectedTrial.id + '/location_id',
-                success: function(locResponse) {
-                    var locationId = locResponse.location_id || null;
-                    
-                    // Now fetch GDD
-                    jQuery.ajax({
-                        url: '/ajax/seedquest/weather/gdd',
-                        data: {
-                            location_id: locationId,
-                            start_date: plantingDate,
-                            end_date: harvestDate
-                        },
-                        success: function(response) {
-                            if (response && !response.error) {
-                                gddData = response;
-                                var totalGdd = response.total_gdd || (response.summary && response.summary.avg_gdd) || 0;
-                                var totalChu = response.total_chu || (response.summary && response.summary.avg_chu) || 0;
-                                jQuery('#mc_gdd_value').text(totalGdd.toFixed ? totalGdd.toFixed(0) : totalGdd);
-                                jQuery('#mc_chu_value').text(totalChu.toFixed ? totalChu.toFixed(0) : totalChu);
-                                jQuery('#mc_period_display').text(plantingDate + ' → ' + harvestDate);
-                            } else {
-                                jQuery('#mc_period_display').text('GDD fetch error: ' + (response.error || 'unknown'));
-                            }
-                        },
-                        error: function() {
-                            jQuery('#mc_period_display').text('Weather API unavailable');
-                        }
-                    });
-                },
-                error: function() {
-                    jQuery('#mc_period_display').text('Could not get location');
-                }
-            });
-        }
-        
-        // Load accessions for this trial
-        jQuery('#mc_loading').show();
-        jQuery('#mc_accession_section').hide();
-        
-        jQuery.ajax({
-            url: '/ajax/breeders/trial/' + mcSelectedTrial.id + '/accessions',
-            success: function(response) {
-                jQuery('#mc_loading').hide();
-                // Response format: {accessions: [[{stock_id, accession_name, stock_type}, ...]]}
-                mcAccessions = (response.accessions && response.accessions[0]) || [];
-                
-                var list = jQuery('#mc_accession_list');
-                list.empty();
-                
-                if (mcAccessions.length > 0) {
-                    jQuery('#mc_accession_count').text(mcAccessions.length + ' accessions');
-                    
-                    jQuery.each(mcAccessions, function(i, acc) {
-                        list.append(
-                            '<div class="checkbox" style="margin:3px 0">' +
-                            '<label><input type="checkbox" class="mc-accession-cb" value="' + acc.stock_id + '" data-name="' + acc.accession_name + '"> ' +
-                            acc.accession_name + '</label>' +
-                            '</div>'
-                        );
-                    });
-                    
-                    jQuery('#mc_accession_section').show();
-                } else {
-                    list.html('<p class="text-muted">No accessions in this trial</p>');
-                    jQuery('#mc_accession_section').show();
-                }
-            },
-            error: function() {
-                jQuery('#mc_loading').hide();
-                jQuery('#mc_accession_list').html('<p class="text-danger">Error loading accessions</p>');
-                jQuery('#mc_accession_section').show();
-            }
-        });
-    });
-    
-    // Select All checkbox
-    jQuery('#mc_select_all').change(function() {
-        jQuery('.mc-accession-cb').prop('checked', jQuery(this).is(':checked'));
-        updateCreateButton();
-    });
-    
-    // Individual checkbox change
-    jQuery('#mc_accession_list').on('change', '.mc-accession-cb', function() {
-        updateCreateButton();
-    });
-    
-    function updateCreateButton() {
-        var selectedCount = jQuery('.mc-accession-cb:checked').length;
-        // Count only selected accessions that are ready (have emergence data)
-        var selectedReadyCount = jQuery('.mc-accession-cb:checked').filter(function() {
-            return jQuery(this).data('is-ready') == '1' || jQuery(this).data('is-ready') === true;
-        }).length;
-        jQuery('#mc_create_phenotypes').prop('disabled', selectedReadyCount === 0);
-        jQuery('#mc_create_phenotypes').html(
-            '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU for ' + selectedReadyCount + ' Accession(s)'
-        );
-    }
-    
-    // Load phenology traits dynamically
-    var mcTraitsLoaded = false;
-    function loadPhenologyTraits() {
-        if (mcTraitsLoaded) return;
-        
-        jQuery.ajax({
-            url: '/ajax/phenology/traits',
-            data: { crop: mcCropType || 'maize' },
-            success: function(response) {
-                mcTraitsLoaded = true;
-                
-                // Populate emergence dropdown
-                var emSelect = jQuery('#mc_trait_emergence').empty();
-                (response.traits.emergence || []).forEach(function(t) {
-                    var selected = (t.id == response.defaults.emergence) ? ' selected' : '';
-                    emSelect.append('<option value="' + t.id + '"' + selected + '>' + t.name + '</option>');
-                });
-                if (emSelect.children().length === 0) {
-                    emSelect.append('<option value="">No emergence traits found</option>');
-                    jQuery('#mc_trait_warning').show();
-                }
-                
-                // Populate flowering dropdown
-                var flSelect = jQuery('#mc_trait_flowering').empty();
-                (response.traits.flowering || []).forEach(function(t) {
-                    var selected = (t.id == response.defaults.flowering) ? ' selected' : '';
-                    flSelect.append('<option value="' + t.id + '"' + selected + '>' + t.name + '</option>');
-                });
-                if (flSelect.children().length === 0) {
-                    flSelect.append('<option value="">No flowering traits found</option>');
-                    jQuery('#mc_trait_warning').show();
-                }
-                
-                
-                // Maturity dropdown is now populated by loadMaturityTraits() with format badges
-                // Do not overwrite it here - it was already loaded when modal opened
-            }
-        });
-    }
-    
-    // Settings panel toggle - load traits on open
-    jQuery('#mc_settings_toggle').click(function() {
-        jQuery('#mc_settings_panel').slideToggle(200);
-        loadPhenologyTraits();
-    });
-    
-    // Validate Data button - fetch phenotype status for accessions
-    jQuery('#mc_validate_data').click(function() {
-        if (!mcSelectedTrial) {
-            alert('Please select a trial first');
-            return;
-        }
-        
-        jQuery('#mc_validate_data').prop('disabled', true).html(
-            '<span class="glyphicon glyphicon-refresh spinning"></span> Validating...'
-        );
-        
-        jQuery.ajax({
-            url: '/ajax/trial/' + mcSelectedTrial.id + '/phenology',
-            success: function(response) {
-                jQuery('#mc_validate_data').prop('disabled', false).html(
-                    '<span class="glyphicon glyphicon-check"></span> Validate Data'
-                );
-                
-                if (response.accessions) {
-                    var list = jQuery('#mc_accession_list');
-                    list.empty();
-                    
-                    var summary = response.summary || {};
-                    var readyCount = summary.ready || 0;
-                    var notReadyCount = summary.not_ready || 0;
-                    mcReadyCount = readyCount;  // Store globally for button/dialog
-                    
-                    jQuery.each(response.accessions, function(i, acc) {
-                        var statusIcon, statusClass, statusTitle;
-                        var missingText = '';
-                        
-                        if (acc.is_ready) {
-                            // Ready - has maturity or flowering
-                            statusIcon = '✓';
-                            statusClass = 'text-success';
-                            var vals = [];
-                            if (acc.maturity_value) vals.push('M:' + acc.maturity_value);
-                            if (acc.flowering_value) vals.push('F:' + acc.flowering_value);
-                            if (acc.emergence_value) vals.push('E:' + acc.emergence_value);
-                            statusTitle = 'Ready (' + vals.join(', ') + ')';
-                        } else {
-                            // Not ready - show what's missing
-                            statusIcon = '✗';
-                            statusClass = 'text-danger';
-                            var missing = acc.missing || [];
-                            missingText = ' <span class="text-muted small">- missing: ' + missing.join(', ') + '</span>';
-                            statusTitle = 'Missing: ' + missing.join(', ');
-                        }
-                        
-                        list.append(
-                            '<div class="checkbox" style="margin:3px 0">' +
-                            '<label>' +
-                            '<input type="checkbox" class="mc-accession-cb" value="' + (acc.plot_ids ? acc.plot_ids.join(',') : '') + '" ' +
-                            'data-name="' + acc.name + '" data-is-ready="' + (acc.is_ready ? '1' : '0') + '" ' +
-                            'data-maturity="' + (acc.maturity_value || '') + '"' + (acc.is_ready ? ' checked' : '') + '> ' +
-                            '<span class="' + statusClass + '" title="' + statusTitle + '" style="font-size:16px">' + statusIcon + '</span> ' +
-                            '<strong>' + acc.name + '</strong>' +
-                            ' <span class="badge">' + acc.plot_count + ' plots</span>' +
-                            missingText +
-                            '</label>' +
-                            '</div>'
-                        );
-                    });
-                    
-                    // Update summary with clear counts
-                    jQuery('#mc_validation_summary').show()
-                        .html('<div style="text-align:center; padding:5px; background:#f5f5f5; border-radius:3px; margin-bottom:10px">' +
-                            '<span class="label label-success" style="font-size:14px">✓ ' + readyCount + ' ready</span> ' +
-                            '<span class="label label-danger" style="font-size:14px">✗ ' + notReadyCount + ' need data</span> ' +
-                            '<br><small class="text-muted">Total: ' + response.accessions.length + ' germplasm, ' + summary.total_plots + ' plots</small>' +
-                        '</div>');
-                    
-                    // Update crop type from response
-                    if (response.crop) {
-                        mcCropType = response.crop;
-                    }
-                    
-                    // Update mcSelectedTrial with location_id from response
-                    if (response.trial && response.trial.location_id) {
-                        mcSelectedTrial.location_id = response.trial.location_id;
-                        
-                        // Auto-fetch GDD for trial period
-                        jQuery.ajax({
-                            url: '/ajax/seedquest/weather/gdd',
-                            data: {
-                                location_id: response.trial.location_id,
-                                start_date: response.trial.planting_date,
-                                end_date: response.trial.harvest_date
-                            },
-                            success: function(gddResponse) {
-                                if (gddResponse && !gddResponse.error) {
-                                    gddData = gddResponse;
-                                    var totalGdd = gddResponse.total_gdd || (gddResponse.summary && gddResponse.summary.avg_gdd) || 0;
-                                    var totalChu = gddResponse.total_chu || (gddResponse.summary && gddResponse.summary.avg_chu) || 0;
-                                    jQuery('#mc_gdd_value').text(totalGdd.toFixed ? totalGdd.toFixed(0) : totalGdd);
-                                    jQuery('#mc_chu_value').text(totalChu.toFixed ? totalChu.toFixed(0) : totalChu);
-                                    jQuery('#mc_period_display').text(response.trial.planting_date + ' → ' + response.trial.harvest_date);
-                                }
-                            }
-                        });
-                    }
-                    
-                    jQuery('#mc_status').html('<span class="text-info">✓ Validation complete for <strong>' + response.accessions.length + '</strong> germplasm. Crop: ' + mcCropType + '</span>');
-                    
-                    // Enable create button based on selections
-                    updateCreateButton();
-                }
-            },
-            error: function() {
-                jQuery('#mc_validate_data').prop('disabled', false).html(
-                    '<span class="glyphicon glyphicon-check"></span> Validate Data'
-                );
-                jQuery('#mc_status').html('<span class="text-danger">Error validating data</span>');
-            }
-        });
-    });
-    
-    // Create Phenotypes
-    jQuery('#mc_create_phenotypes').click(function() {
-        console.log('Create button clicked, gddData:', gddData);
-        var selectedIds = [];
-        var selectedNames = [];
-        jQuery('.mc-accession-cb:checked').each(function() {
-            // Value is comma-separated plot_ids, split and flatten
-            var plotIds = jQuery(this).val().split(',');
-            plotIds.forEach(function(id) {
-                if (id && id.trim()) {
-                    selectedIds.push(parseInt(id.trim(), 10));
-                }
-            });
-            selectedNames.push(jQuery(this).data('name'));
-        });
-        
-        if (selectedIds.length === 0) {
-            alert('Please select at least one accession');
-            return;
-        }
-        
-        // Build confirmation message
-        var gddVal = 0;
-        var chuVal = 0;
-        var periodStr = 'Not calculated';
-        
-        if (gddData) {
-            gddVal = parseFloat(gddData.total_gdd || (gddData.summary && gddData.summary.avg_gdd) || 0).toFixed(1);
-            chuVal = parseFloat(gddData.total_chu || (gddData.summary && gddData.summary.avg_chu) || 0).toFixed(1);
-            if (gddData.years && gddData.years[0]) {
-                periodStr = gddData.years[0].start_date + ' to ' + gddData.years[0].end_date;
-            }
-        } else {
-            // Use trial dates if GDD not calculated
-            gddVal = '—';
-            chuVal = '—';
-            periodStr = mcSelectedTrial.planting_date + ' to ' + mcSelectedTrial.harvest_date;
-        }
-        
-        // Count only ready accessions that will actually get phenotypes
-        var actualReadyCount = jQuery('.mc-accession-cb:checked').filter(function() {
-            return jQuery(this).data('is-ready') == '1' || jQuery(this).data('is-ready') === true;
-        }).length;
-        var confirmMsg = '📊 Create Phenotypes?\n\n' +
-            'Trial: ' + mcSelectedTrial.name + '\n' +
-            'Accessions with data: ' + actualReadyCount + '\n' +
-            '─────────────────\n' +
-            'GDD: ' + gddVal + '\n' +
-            'CHU: ' + chuVal + '\n' +
-            'Period: ' + periodStr + '\n' +
-            '─────────────────\n\n' +
-            (gddData ? '' : '⚠️ Warning: GDD not calculated! Values will be 0.\n\n') +
-            'This will create ' + (actualReadyCount * 2) + ' phenotype records.\n\n' +
-            'Click OK to save, Cancel to review.';
-        
-        if (!confirm(confirmMsg)) {
-            return;
-        }
-        
-        jQuery('#mc_create_phenotypes').prop('disabled', true).html(
-            '<span class="glyphicon glyphicon-refresh spinning"></span> Creating...'
-        );
-        
-        jQuery.ajax({
-            url: '/ajax/phenotype/store_gdd_batch',
-            type: 'POST',
-            data: {
-                trial_id: mcSelectedTrial.id,
-                accession_ids: JSON.stringify(selectedIds),
-                gdd: gddData ? (gddData.total_gdd || (gddData.summary && gddData.summary.avg_gdd) || 0) : 0,
-                chu: gddData ? (gddData.total_chu || (gddData.summary && gddData.summary.avg_chu) || 0) : 0,
-                crop: mcCropType,
-                maturity_trait_id: jQuery('#mc_trait_maturity').val(),
-                emergence_trait_id: jQuery('#mc_trait_emergence').val(),
-                use_planting_fallback: jQuery('#mc_use_planting_fallback').is(':checked') ? 1 : 0,
-                fallback_emergence_days: parseInt(jQuery('#mc_fallback_emergence_days').val()) || 7,
-                collect_date: mcSelectedTrial.harvest_date || (gddData && gddData.years ? gddData.years[0].end_date : null)
-            },
-            success: function(response) {
-                console.log('Store response:', response);
-                if (response.success) {
-                    // Build result summary from actual saved values
-                    var resultHtml = '<div class="alert alert-success">' +
-                        '<h5><span class="glyphicon glyphicon-ok"></span> Phenotypes Created Successfully!</h5>' +
-                        '<p>Created <strong>' + response.created + '</strong> phenotype records for ' + 
-                        '<strong>' + Math.floor(response.created / 2) + '</strong> accession(s)</p>' +
-                        '</div>';
-                    
-                    // Show actual saved per-plot values from backend
-                    resultHtml += '<table class="table table-condensed table-bordered">' +
-                        '<thead><tr><th>Accession</th><th>GDD</th><th>CHU</th><th>Maturity (days)</th></tr></thead>' +
-                        '<tbody>';
-                    
-                    if (response.results && response.results.length > 0) {
-                        jQuery.each(response.results, function(i, r) {
-                            // Find accession name by stock_id
-                            var accName = 'Stock #' + r.stock_id;
-                            jQuery('.mc-accession-cb:checked').each(function() {
-                                var plotIds = jQuery(this).val().split(',');
-                                if (plotIds.includes(String(r.stock_id)) || 
-                                    jQuery(this).val() === String(r.stock_id)) {
-                                    accName = jQuery(this).data('name');
-                                    return false;
-                                }
-                            });
-                            resultHtml += '<tr><td>' + accName + '</td>' +
-                                '<td><strong>' + parseFloat(r.gdd || 0).toFixed(1) + '</strong></td>' +
-                                '<td><strong>' + parseFloat(r.chu || 0).toFixed(1) + '</strong></td>' +
-                                '<td>' + (r.maturity_days || '-') + '</td></tr>';
-                        });
-                    } else {
-                        resultHtml += '<tr><td colspan="4">No per-plot data available</td></tr>';
-                    }
-                    resultHtml += '</tbody></table>';
-                    
-                    // Replace modal body with results
-                    jQuery('#mc_modal_body').html(resultHtml);
-                    
-                    // Change button to Close
-                    jQuery('#mc_create_phenotypes').hide();
-                    jQuery('#mc_modal_footer_close').show().text('Close').removeClass('btn-default').addClass('btn-success');
-                    
-                } else {
-                    jQuery('#mc_status').html('<span class="text-danger">Error: ' + (response.error || 'Unknown') + '</span>');
-                    jQuery('#mc_create_phenotypes').prop('disabled', false).html(
-                        '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes'
-                    );
-                }
-            },
-            error: function(xhr, status, error) {
-                console.log('AJAX error:', status, error, xhr.responseText);
-                jQuery('#mc_status').html('<span class="text-danger">Failed to create phenotypes: ' + error + '</span>');
-                jQuery('#mc_create_phenotypes').prop('disabled', false).html(
-                    '<span class="glyphicon glyphicon-plus"></span> Create GDD/CHU Phenotypes'
-                );
-            },
-            complete: function(xhr, status) {
-                console.log('AJAX complete:', status, xhr.status);
-            }
-        });
-    });
-});
-</script>
 
 <style>
 .spinning {

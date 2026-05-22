@@ -65,29 +65,29 @@ my $hydro_end   = $year ? "${year}-09-01" : '';
 </%init>
 
 <div id="trial_weather_widget">
-  <p id="trial_weather_check"><i class="glyphicon glyphicon-refresh spinning"></i> Загрузка погодных данных...</p>
+  <p id="trial_weather_check"><i class="glyphicon glyphicon-refresh spinning"></i> Loading weather data...</p>
 
   <div id="trial_weather_summary" style="display:none">
 
     <!-- Row 1: Hydrological Year -->
     <div class="panel panel-default" style="margin-bottom:8px">
       <div class="panel-heading" style="padding:6px 12px">
-        <strong>📅 Годовой водный баланс</strong>
+        <strong>📅 Annual water balance</strong>
         <small class="text-muted pull-right" id="tw_hydro_period"></small>
       </div>
       <div class="panel-body" style="padding:10px">
         <div class="row text-center">
           <div class="col-xs-4">
             <h4 style="color:#3498db;margin:4px 0"><span id="tw_hydro_precip">—</span> <small>мм</small></h4>
-            <small class="text-muted">Осадки за год</small>
+            <small class="text-muted">Annual precipitation</small>
           </div>
           <div class="col-xs-4">
             <h4 style="color:#e67e22;margin:4px 0"><span id="tw_hydro_gdd">—</span></h4>
-            <small class="text-muted">GDD за год</small>
+            <small class="text-muted">Annual GDD</small>
           </div>
           <div class="col-xs-4">
             <h4 style="color:#2ecc71;margin:4px 0"><span id="tw_hydro_chu">—</span></h4>
-            <small class="text-muted">CHU за год</small>
+            <small class="text-muted">Annual CHU</small>
           </div>
         </div>
       </div>
@@ -96,14 +96,14 @@ my $hydro_end   = $year ? "${year}-09-01" : '';
     <!-- Row 2: Growing Season -->
     <div class="panel panel-default" style="margin-bottom:8px">
       <div class="panel-heading" style="padding:6px 12px">
-        <strong>🌱 Вегетационный период</strong>
+        <strong>🌱 Growing season</strong>
         <small class="text-muted pull-right" id="tw_season_period"></small>
       </div>
       <div class="panel-body" style="padding:10px">
         <div class="row text-center">
           <div class="col-xs-3">
             <h4 style="color:#3498db;margin:4px 0"><span id="tw_season_precip">—</span> <small>мм</small></h4>
-            <small class="text-muted">Осадки</small>
+            <small class="text-muted">Precipitation</small>
           </div>
           <div class="col-xs-3">
             <h4 style="color:#e67e22;margin:4px 0"><span id="tw_season_gdd">—</span></h4>
@@ -115,7 +115,7 @@ my $hydro_end   = $year ? "${year}-09-01" : '';
           </div>
           <div class="col-xs-3">
             <h4 style="color:#8e44ad;margin:4px 0"><span id="tw_season_days">—</span></h4>
-            <small class="text-muted">Дней</small>
+            <small class="text-muted">Days</small>
           </div>
         </div>
       </div>
@@ -124,10 +124,10 @@ my $hydro_end   = $year ? "${year}-09-01" : '';
     <!-- Row 3: Chart -->
     <div class="panel panel-default" style="margin-bottom:8px">
       <div class="panel-heading" style="padding:6px 12px">
-        <strong>📊 Погода за вегетацию</strong>
+        <strong>📊 Growing-season weather</strong>
         <div class="btn-group btn-group-xs pull-right" role="group">
-          <button type="button" class="btn btn-default tw-chart-btn active" data-mode="temp">Температура</button>
-          <button type="button" class="btn btn-default tw-chart-btn" data-mode="precip">Осадки</button>
+          <button type="button" class="btn btn-default tw-chart-btn active" data-mode="temp">Temperature</button>
+          <button type="button" class="btn btn-default tw-chart-btn" data-mode="precip">Precipitation</button>
           <button type="button" class="btn btn-default tw-chart-btn" data-mode="gdd">GDD</button>
         </div>
       </div>
@@ -138,13 +138,13 @@ my $hydro_end   = $year ? "${year}-09-01" : '';
 
     <div style="margin-top:8px">
       <a id="tw_export_hydro" href="#" class="btn btn-sm btn-success" style="margin-right:4px" download>
-        <span class="glyphicon glyphicon-download-alt"></span> Excel: годовой (сент.→сент.)
+        <span class="glyphicon glyphicon-download-alt"></span> Excel: annual (Sep -> Sep)
       </a>
       <a id="tw_export_season" href="#" class="btn btn-sm btn-primary" style="margin-right:4px" download>
-        <span class="glyphicon glyphicon-download-alt"></span> Excel: вегетація
+        <span class="glyphicon glyphicon-download-alt"></span> Excel: growing season
       </a>
       <a href="/tools/weather/gdd" class="btn btn-sm btn-default">
-        <span class="glyphicon glyphicon-stats"></span> GDD/CHU калькулятор
+        <span class="glyphicon glyphicon-stats"></span> GDD/CHU Calculator
       </a>
     </div>
   </div>
@@ -173,11 +173,11 @@ jQuery(document).ready(function() {
   var trialLocation = "<% $location %>";
 
   if (!locationId) {
-    jQuery('#trial_weather_check').html('<p><i>Локация не найдена. </i><a href="/tools/weather/gdd">GDD калькулятор</a></p>');
+    jQuery('#trial_weather_check').html('<p><i>Location not found. </i><a href="/tools/weather/gdd">GDD Calculator</a></p>');
     return;
   }
   if (!plantingDate || !harvestDate) {
-    jQuery('#trial_weather_check').html('<p><i>Не указаны даты посева/уборки. </i><a href="/tools/weather/gdd">GDD калькулятор</a></p>');
+    jQuery('#trial_weather_check').html('<p><i>Planting/harvest dates not set. </i><a href="/tools/weather/gdd">GDD Calculator</a></p>');
     return;
   }
 
@@ -192,7 +192,7 @@ jQuery(document).ready(function() {
   function checkDone() {
     if (completed >= 2) {
       if (errors >= 2) {
-        jQuery('#trial_weather_check').html('<p><i>Ошибка загрузки. </i><a href="/tools/weather/gdd">GDD калькулятор</a></p>');
+        jQuery('#trial_weather_check').html('<p><i>Loading error. </i><a href="/tools/weather/gdd">GDD Calculator</a></p>');
       } else {
         jQuery('#trial_weather_check').hide();
         jQuery('#trial_weather_summary').show();
@@ -343,14 +343,14 @@ jQuery(document).ready(function() {
 
       // Legend
       var lg = svg.append('g').attr('transform', 'translate(' + (W-150) + ',0)');
-      [['Tmax','#e74c3c'],['Tср','#e67e22'],['Tmin','#3498db']].forEach(function(l,i){
+      [['Tmax','#e74c3c'],['Tavg','#e67e22'],['Tmin','#3498db']].forEach(function(l,i){
         lg.append('line').attr('x1',0).attr('x2',16).attr('y1',i*14).attr('y2',i*14).attr('stroke',l[1]).attr('stroke-width',2);
         lg.append('text').attr('x',20).attr('y',i*14+4).text(l[0]).style('font-size','10px');
       });
 
       // Hover overlay
       addHoverOverlay(svg, data, xScale, W, H, tooltip, function(d) {
-        return d.date + '<br>Tmax: ' + d.tmax + '°C<br>Tмін: ' + d.tmin + '°C<br>Tсер: ' + d.tavg + '°C';
+        return d.date + '<br>Tmax: ' + d.tmax + '°C<br>Tmin: ' + d.tmin + '°C<br>Tavg: ' + d.tavg + '°C';
       });
 
     } else if (mode === 'precip') {
@@ -365,7 +365,7 @@ jQuery(document).ready(function() {
 
       var rAxis = d3.axisRight(yScale2).ticks(5);
       svg.append('g').attr('transform','translate('+W+',0)').call(rAxis).selectAll('text').style('font-size','10px');
-      svg.append('text').attr('transform','rotate(90)').attr('y',-W-40).attr('x',H/2).attr('text-anchor','middle').style('font-size','11px').text('мм (сумма)');
+      svg.append('text').attr('transform','rotate(90)').attr('y',-W-40).attr('x',H/2).attr('text-anchor','middle').style('font-size','11px').text('mm (total)');
 
       var barW = Math.max(1, W / data.length - 1);
       svg.selectAll('.precip-bar').data(data).enter().append('rect')
@@ -382,7 +382,7 @@ jQuery(document).ready(function() {
         .attr('d', d3.line().x(function(d){return xScale(d._date)}).y(function(d){return yScale2(+d.precip_cumulative)}).curve(d3.curveMonotoneX));
 
       addHoverOverlay(svg, data, xScale, W, H, tooltip, function(d) {
-        return d.date + '<br>Осадки: ' + d.precip_day + ' мм<br>Σ: ' + d.precip_cumulative + ' мм';
+        return d.date + '<br>Precipitation: ' + d.precip_day + ' мм<br>Σ: ' + d.precip_cumulative + ' мм';
       });
 
     } else if (mode === 'gdd') {

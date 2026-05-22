@@ -28,14 +28,17 @@ sub get_crops : Path('/ajax/seedquest/weather/crops') Args(0) ActionClass('REST'
 sub get_crops_GET {
     my ($self, $c) = @_;
     
+    # Verified base temps / methods — see SEEDQUEST_WEATHER_RESEARCH_2026-05-22.md.
+    # cap_temp set => modified "86/50" method (cap Tmax, floor Tmin at base); undef => simple average.
+    # maturity_gdd/_chu = default accumulation targets to physiological maturity (editable per variety).
     my @crops = (
-        { id => 1, crop_name => 'Corn (GDD)', base_temp => 10, use_chu => 0 },
-        { id => 2, crop_name => 'Corn (CHU)', base_temp => 4.4, use_chu => 1 },
-        { id => 3, crop_name => 'Wheat', base_temp => 0, use_chu => 0 },
-        { id => 4, crop_name => 'Soybean (GDD)', base_temp => 10, use_chu => 0 },
-        { id => 5, crop_name => 'Soybean (CHU)', base_temp => 4.4, use_chu => 1 },
-        { id => 6, crop_name => 'Sunflower', base_temp => 8, use_chu => 0 },
-        { id => 7, crop_name => 'Custom', base_temp => 10, use_chu => 0 },
+        { id => 1, crop_name => 'Corn / Maize',      base_temp => 10,  cap_temp => 30,    use_chu => 1, method => 'modified', maturity_gdd => 2700, maturity_chu => 2900 },
+        { id => 2, crop_name => 'Soybean',           base_temp => 10,  cap_temp => 30,    use_chu => 0, method => 'modified', maturity_gdd => 2400, maturity_chu => undef },
+        { id => 3, crop_name => 'Sunflower',         base_temp => 6.7, cap_temp => undef, use_chu => 0, method => 'simple',   maturity_gdd => 1550, maturity_chu => undef },
+        { id => 4, crop_name => 'Wheat',             base_temp => 0,   cap_temp => undef, use_chu => 0, method => 'simple',   maturity_gdd => 2000, maturity_chu => undef },
+        { id => 5, crop_name => 'Barley',            base_temp => 0,   cap_temp => undef, use_chu => 0, method => 'simple',   maturity_gdd => 1850, maturity_chu => undef },
+        { id => 6, crop_name => 'Rapeseed / Canola', base_temp => 5,   cap_temp => undef, use_chu => 0, method => 'simple',   maturity_gdd => 1500, maturity_chu => undef },
+        { id => 7, crop_name => 'Custom',            base_temp => 10,  cap_temp => undef, use_chu => 1, method => 'simple',   maturity_gdd => undef, maturity_chu => undef },
     );
     
     $c->stash->{rest} = { crops => \@crops };
@@ -60,13 +63,25 @@ sub _do_gdd_calculation {
 
     my $location_id = $c->req->param('location_id');
     my $seasons_json = $c->req->param('seasons');
-    my $base_temp = $c->req->param('base_temp') || 10;
+    # NB: base_temp can legitimately be 0 (e.g. wheat) — use defined-or, not ||.
+    my $base_temp = $c->req->param('base_temp');
+    $base_temp = 10 unless defined $base_temp && $base_temp ne '';
+    # cap_temp set (e.g. 30 => corn 86/50 method); undef/'' => simple average method.
+    my $cap_temp = $c->req->param('cap_temp');
+    $cap_temp = undef unless defined $cap_temp && $cap_temp ne '';
     my $data_source = $c->req->param('data_source') || 'openmeteo';
-    
+
+    # Resolve coordinates up front; error clearly instead of defaulting to a
+    # hard-coded town (previously Mirgorod) which silently returned wrong data.
+    my ($lat, $lon) = $self->_get_location_coords($c, $location_id);
+    unless (defined $lat && defined $lon) {
+        $c->stash->{rest} = { error => "Location has no coordinates. Set latitude/longitude for this location first." };
+        return;
+    }
+
     try {
         my $seasons = decode_json($seasons_json);
         my @results;
-        my ($lat, $lon) = $self->_get_location_coords($c, $location_id);
         my $cache_stats = { from_cache => 0, from_api => 0 };
         
         foreach my $season (@$seasons) {
@@ -74,40 +89,37 @@ sub _do_gdd_calculation {
             my $start_date = $season->{start_date} || $season->{start} || "$year-04-15";
             my $end_date = $season->{end_date} || $season->{end} || "$year-09-30";
             
-            # Try to get cached data first
+            # Use cache only if it fully covers the requested range — otherwise a
+            # partial cache (e.g. 5 of 60 days) would silently undercount GDD.
             my $weather_data = $self->_get_cached_weather($c, $location_id, $start_date, $end_date);
+            my $exp_days = int(($self->_date_to_timestamp($end_date) - $self->_date_to_timestamp($start_date)) / 86400) + 1;
             my $used_cache = 0;
-            
-            if ($weather_data && scalar(@$weather_data) > 0) {
+
+            if ($weather_data && scalar(@$weather_data) >= $exp_days) {
                 $cache_stats->{from_cache} += scalar(@$weather_data);
                 $used_cache = 1;
             } else {
-                # Priority fallback: Davis → Ecowitt → Open-Meteo
+                # Source resolution BY LOCATION: a ground station mapped to THIS
+                # location wins (truth on the field); otherwise Open-Meteo, which is
+                # available globally on land.
                 my $api_data;
-                my $actual_source = 'openmeteo';  # Will track which source succeeded
-                
-                # Try Davis first (if configured)
-                if ($c->config->{davis_api_key}) {
-                    $api_data = $self->_fetch_davis_data($c, $location_id, $start_date, $end_date);
-                    if ($api_data) {
-                        $actual_source = 'davis';
-                    }
+                my ($resolved, $station) = $self->_resolve_source($c, $location_id);
+                my $actual_source = 'openmeteo';
+
+                if ($resolved eq 'davis') {
+                    $api_data = $self->_fetch_davis_data($c, $station, $start_date, $end_date);
+                    $actual_source = 'davis' if $api_data;
+                } elsif ($resolved eq 'ecowitt') {
+                    $api_data = $self->_fetch_ecowitt_data($c, $station, $start_date, $end_date);
+                    $actual_source = 'ecowitt' if $api_data;
                 }
-                
-                # Try Ecowitt if Davis failed or not configured
-                if (!$api_data && $c->config->{ecowitt_app_key}) {
-                    $api_data = $self->_fetch_ecowitt_data($c, $location_id, $start_date, $end_date);
-                    if ($api_data) {
-                        $actual_source = 'ecowitt';
-                    }
-                }
-                
-                # Fall back to Open-Meteo (always available)
+
+                # Fall back to Open-Meteo (always available on land).
                 if (!$api_data) {
                     $api_data = $self->_fetch_openmeteo_data($lat, $lon, $start_date, $end_date);
                     $actual_source = 'openmeteo';
                 }
-                
+
                 $weather_data = $self->_parse_api_response($api_data, $actual_source);
                 $data_source = $actual_source;  # Update for response
                 
@@ -118,27 +130,26 @@ sub _do_gdd_calculation {
                 }
             }
             
-            # Calculate GDD/CHU
+            # Calculate GDD/CHU via shared helpers; skip days with missing temps
+            # (do not fabricate 20/10) and track real mean temperature.
             my @daily_data;
-            my ($total_gdd, $total_chu, $total_precip) = (0, 0, 0);
-            
+            my ($total_gdd, $total_chu, $total_precip, $total_tavg) = (0, 0, 0, 0);
+            my $missing_days = 0;
+
             foreach my $day (@{$weather_data || []}) {
-                my $tmax = $day->{tmax} // 20;
-                my $tmin = $day->{tmin} // 10;
+                my $tmax = $day->{tmax};
+                my $tmin = $day->{tmin};
                 my $precip = $day->{precip} // 0;
+                if (!defined $tmax || !defined $tmin) { $missing_days++; next; }
                 my $tavg = ($tmax + $tmin) / 2;
-                
-                my $gdd = $tavg > $base_temp ? $tavg - $base_temp : 0;
+
+                my $gdd = $self->_gdd_day($tmax, $tmin, $base_temp, $cap_temp);
+                my $chu_day = $self->_chu_day($tmax, $tmin);
                 $total_gdd += $gdd;
-                
-                my $chu_max = $tmax > 10 ? 3.33 * ($tmax - 10) - 0.084 * (($tmax - 10) ** 2) : 0;
-                my $chu_min = $tmin > 4.4 ? 1.8 * ($tmin - 4.4) : 0;
-                # Ontario CHU method: CHU = (CHU_max + CHU_min) / 2
-                my $chu_day = ($chu_max + $chu_min) / 2;
-                $chu_day = 0 if $chu_day < 0;
                 $total_chu += $chu_day;
                 $total_precip += $precip;
-                
+                $total_tavg += $tavg;
+
                 push @daily_data, {
                     date => $day->{date},
                     tmax => sprintf("%.1f", $tmax),
@@ -161,7 +172,8 @@ sub _do_gdd_calculation {
                 total_chu => sprintf("%.1f", $total_chu),
                 total_precip => sprintf("%.1f", $total_precip),
                 days_count => scalar(@daily_data),
-                avg_temp => sprintf("%.1f", scalar(@daily_data) > 0 ? ($total_gdd / scalar(@daily_data)) + $base_temp : 0),
+                missing_days => $missing_days,
+                avg_temp => sprintf("%.1f", scalar(@daily_data) > 0 ? $total_tavg / scalar(@daily_data) : 0),
                 daily_data => \@daily_data,
                 data_source => $used_cache ? 'cached' : $data_source,
             };
@@ -210,6 +222,100 @@ sub _do_gdd_calculation {
     } catch {
         $c->stash->{rest} = { error => "Failed to calculate GDD: $_" };
     };
+}
+
+# ============================================================================
+# DAYS-TO-MATURITY PROJECTION
+# ============================================================================
+
+sub maturity_estimate : Path('/ajax/seedquest/weather/maturity') Args(0) ActionClass('REST') { }
+sub maturity_estimate_GET  { shift->_do_maturity(@_); }
+sub maturity_estimate_POST { shift->_do_maturity(@_); }
+
+sub _do_maturity {
+    my ($self, $c) = @_;
+
+    unless ($c->user()) {
+        $c->stash->{rest} = { error => 'You must be logged in first!' };
+        return;
+    }
+
+    my $location_id = $c->req->param('location_id');
+    my $sowing_date = $c->req->param('sowing_date');
+    my $metric      = lc($c->req->param('metric') || 'gdd');   # gdd | chu
+    my $target      = $c->req->param('target');                # accumulation target to maturity
+    my $base_temp   = $c->req->param('base_temp');
+    $base_temp = 10 unless defined $base_temp && $base_temp ne '';
+    my $cap_temp    = $c->req->param('cap_temp');
+    $cap_temp = undef unless defined $cap_temp && $cap_temp ne '';
+
+    unless ($sowing_date && defined $target && $target > 0) {
+        $c->stash->{rest} = { error => 'sowing_date and a positive target are required.' };
+        return;
+    }
+
+    my ($lat, $lon) = $self->_get_location_coords($c, $location_id);
+    unless (defined $lat && defined $lon) {
+        $c->stash->{rest} = { error => 'Location has no coordinates. Set latitude/longitude first.' };
+        return;
+    }
+
+    my $result = try {
+        # Accumulate from sowing up to a season+margin, but not beyond today.
+        my $sow_ts     = $self->_date_to_timestamp($sowing_date);
+        my $horizon_ts = $sow_ts + 300 * 86400;
+        my $end_ts     = $horizon_ts < time() ? $horizon_ts : time();
+        my $end_date   = $self->_timestamp_to_date($end_ts);
+
+        my $weather  = $self->_get_cached_weather($c, $location_id, $sowing_date, $end_date);
+        my $exp_days = int(($end_ts - $sow_ts) / 86400) + 1;
+        if (!$weather || scalar(@$weather) < $exp_days) {
+            my $api = $self->_fetch_openmeteo_data($lat, $lon, $sowing_date, $end_date);
+            $weather = $self->_parse_api_response($api, 'openmeteo');
+            $self->_cache_weather_data($c, $location_id, $weather, 'openmeteo') if $weather && @$weather;
+        }
+        my @days = sort { ($a->{date} // '') cmp ($b->{date} // '') } @{$weather || []};
+
+        my ($cum, $n, $sum_daily, $reached_date) = (0, 0, 0, undef);
+        foreach my $d (@days) {
+            my ($tmax, $tmin) = ($d->{tmax}, $d->{tmin});
+            next unless defined $tmax && defined $tmin;
+            my $inc = ($metric eq 'chu')
+                ? $self->_chu_day($tmax, $tmin)
+                : $self->_gdd_day($tmax, $tmin, $base_temp, $cap_temp);
+            $cum += $inc; $n++; $sum_daily += $inc;
+            $reached_date = $d->{date} if !$reached_date && $cum >= $target;
+        }
+
+        my %out = (
+            success        => 1,
+            metric         => $metric,
+            target         => $target + 0,
+            accumulated    => sprintf('%.0f', $cum),
+            days_with_data => $n,
+            sowing_date    => $sowing_date,
+        );
+        if ($reached_date) {
+            $out{status}           = 'reached';
+            $out{maturity_date}    = $reached_date;
+            $out{days_to_maturity} = int(($self->_date_to_timestamp($reached_date) - $sow_ts) / 86400);
+        } elsif ($n > 0 && $sum_daily > 0) {
+            # Project the remainder using mean daily accumulation observed so far.
+            my $avg        = $sum_daily / $n;
+            my $extra_days = int(($target - $cum) / $avg + 0.5);
+            $out{status}           = 'projected';
+            $out{avg_daily}        = sprintf('%.2f', $avg);
+            $out{days_to_maturity} = $n + $extra_days;
+            $out{maturity_date}    = $self->_timestamp_to_date($sow_ts + ($n + $extra_days) * 86400);
+        } else {
+            $out{status} = 'insufficient_data';
+        }
+        return \%out;
+    } catch {
+        return { error => "Maturity estimate failed: $_" };
+    };
+
+    $c->stash->{rest} = $result;
 }
 
 # ============================================================================
@@ -334,11 +440,17 @@ sub _fetch_openmeteo_data {
         'dew_point_2m_mean',
         'soil_temperature_0_to_7cm_mean', 'soil_moisture_0_to_7cm_mean',
     );
+    # Recent seasons (>=2022) come from the Historical Forecast API (≈no lag, tracks
+    # actual conditions); older dates from the ERA5 Archive API (1940+, ~5-7 day lag).
+    my ($start_year) = split /-/, ($start_date // '');
+    my $base = ($start_year && $start_year >= 2022)
+        ? 'https://historical-forecast-api.open-meteo.com/v1/forecast'
+        : 'https://archive-api.open-meteo.com/v1/archive';
     my $url = sprintf(
-        "https://archive-api.open-meteo.com/v1/archive?latitude=%.4f&longitude=%.4f&start_date=%s&end_date=%s&daily=%s&timezone=auto",
-        $lat, $lon, $start_date, $end_date, $vars
+        "%s?latitude=%.4f&longitude=%.4f&start_date=%s&end_date=%s&daily=%s&timezone=auto",
+        $base, $lat, $lon, $start_date, $end_date, $vars
     );
-    
+
     my $response = $ua->get($url);
     return $response->is_success ? decode_json($response->decoded_content) : undef;
 }
@@ -347,31 +459,46 @@ sub _fetch_openmeteo_data {
 # DAVIS WEATHERLINK v2 API
 # ============================================================================
 
+# Resolve the weather source for a location: a mapped ground station (Davis/Ecowitt)
+# if configured for it, else Open-Meteo (global land coverage).
+# Config: $c->config->{weather_station_map} = { <location_id> => { type=>'davis'|'ecowitt', station_id=>..., mac=>... } }
+sub _resolve_source {
+    my ($self, $c, $location_id) = @_;
+    my $map = $c->config->{weather_station_map};
+    if ($map && ref $map eq 'HASH' && defined $location_id && $map->{$location_id}) {
+        my $m = $map->{$location_id};
+        my $type = lc($m->{type} || '');
+        if ($type eq 'davis' && $c->config->{davis_api_key} && $c->config->{davis_api_secret}) {
+            return ('davis', $m->{station_id});
+        }
+        if ($type eq 'ecowitt' && $c->config->{ecowitt_app_key} && $c->config->{ecowitt_api_key}) {
+            return ('ecowitt', $m->{mac});
+        }
+    }
+    return ('openmeteo', undef);
+}
+
 sub _fetch_davis_data {
-    my ($self, $c, $location_id, $start_date, $end_date) = @_;
-    
-    my $api_key = $c->config->{davis_api_key} || '';
+    my ($self, $c, $station_id, $start_date, $end_date) = @_;
+
+    my $api_key    = $c->config->{davis_api_key} || '';
     my $api_secret = $c->config->{davis_api_secret} || '';
-    my $station_id = $c->config->{davis_station_id} || '';
-    
+    $station_id  ||= $c->config->{davis_station_id} || '';
+
     return undef unless $api_key && $api_secret && $station_id;
     
     my $ua = LWP::UserAgent->new(timeout => 30);
-    
-    # Convert dates to Unix timestamps
+
     my $start_ts = $self->_date_to_timestamp($start_date);
-    my $end_ts = $self->_date_to_timestamp($end_date);
-    
-    # Build API request with HMAC signature
-    my $t = time();
-    my $params = "api-key=$api_key&end-timestamp=$end_ts&start-timestamp=$start_ts&station-id=$station_id&t=$t";
-    my $signature = hmac_sha256_hex($params, $api_secret);
-    
-    my $url = "https://api.weatherlink.com/v2/historic/$station_id?$params";
-    
-    my $response = $ua->get($url, 
-        'X-Api-Secret' => $signature
-    );
+    my $end_ts   = $self->_date_to_timestamp($end_date);
+
+    # WeatherLink v2 current auth: api-key as a query param, the RAW secret in the
+    # X-Api-Secret header. (The api-signature HMAC method is deprecated.)
+    my $url = "https://api.weatherlink.com/v2/historic/$station_id"
+            . "?api-key=" . uri_escape($api_key)
+            . "&start-timestamp=$start_ts&end-timestamp=$end_ts";
+
+    my $response = $ua->get($url, 'X-Api-Secret' => $api_secret);
     
     if ($response->is_success) {
         return decode_json($response->decoded_content);
@@ -386,26 +513,25 @@ sub _fetch_davis_data {
 # ============================================================================
 
 sub _fetch_ecowitt_data {
-    my ($self, $c, $location_id, $start_date, $end_date) = @_;
-    
+    my ($self, $c, $mac, $start_date, $end_date) = @_;
+
     my $app_key = $c->config->{ecowitt_app_key} || '';
     my $api_key = $c->config->{ecowitt_api_key} || '';
-    my $mac = $c->config->{ecowitt_mac} || '';
-    
+    $mac      ||= $c->config->{ecowitt_mac} || '';
+
     return undef unless $app_key && $api_key && $mac;
-    
+
     my $ua = LWP::UserAgent->new(timeout => 30);
-    
-    my $url = "https://api.ecowitt.net/api/v3/device/history";
-    my $response = $ua->post($url, {
-        application_key => $app_key,
-        api_key => $api_key,
-        mac => $mac,
-        start_date => $start_date,
-        end_date => $end_date,
-        call_back => 'outdoor,rainfall',
-        cycle_type => 'day',
-    });
+
+    # Ecowitt history is a GET with daily aggregation (cycle_type=1day). Was wrongly POST.
+    my $url = "https://api.ecowitt.net/api/v3/device/history?"
+            . "application_key=" . uri_escape($app_key)
+            . "&api_key=" . uri_escape($api_key)
+            . "&mac=" . uri_escape($mac)
+            . "&start_date=" . uri_escape($start_date)
+            . "&end_date=" . uri_escape($end_date)
+            . "&call_back=outdoor,rainfall&cycle_type=1day";
+    my $response = $ua->get($url);
     
     if ($response->is_success) {
         return decode_json($response->decoded_content);
@@ -497,21 +623,24 @@ sub _parse_api_response {
 # STATION CONFIGURATION
 # ============================================================================
 
-sub get_station_config : Path('/ajax/seedquest/weather/station/config') Args(0) ActionClass('REST') { }
+# Path matches what the UI actually calls (/station_config/get|save); the old
+# /station/config path 404'd and double-registered GET+POST on one path.
+sub get_station_config : Path('/ajax/seedquest/weather/station_config/get') Args(0) ActionClass('REST') { }
 sub get_station_config_GET {
     my ($self, $c) = @_;
-    
+
     my $config = {
         source => 'openmeteo',
         davis_configured => ($c->config->{davis_api_key} ? 1 : 0),
         ecowitt_configured => ($c->config->{ecowitt_app_key} ? 1 : 0),
         description => 'Weather data from Open-Meteo Historical API',
+        editable => 0,   # station credentials live in sgn_local.conf, not the UI
     };
-    
+
     $c->stash->{rest} = { success => 1, config => $config };
 }
 
-sub save_station_config : Path('/ajax/seedquest/weather/station/config') Args(0) ActionClass('REST') { }
+sub save_station_config : Path('/ajax/seedquest/weather/station_config/save') Args(0) ActionClass('REST') { }
 sub save_station_config_POST {
     my ($self, $c) = @_;
 
@@ -520,8 +649,12 @@ sub save_station_config_POST {
         return;
     }
 
-    # Note: Config changes would need to be persisted to sgn_local.conf
-    $c->stash->{rest} = { success => 1, message => "Configuration updated" };
+    # Credentials are server-managed (sgn_local.conf). Report honestly instead of
+    # falsely claiming the change was saved.
+    $c->stash->{rest} = {
+        success => 0,
+        message => "Weather source is configured on the server (sgn_local.conf); it cannot be changed from the UI.",
+    };
 }
 
 # ============================================================================
@@ -600,22 +733,49 @@ sub get_cache_stats_GET {
 # HELPER FUNCTIONS
 # ============================================================================
 
+# Single source of truth for GDD/CHU so the on-screen calculator and the Excel
+# export can never disagree. cap defined => corn 86/50 (cap tmax, floor tmin at
+# base); cap undef => simple average. Returns undef when temps are missing.
+sub _gdd_day {
+    my ($self, $tmax, $tmin, $base, $cap) = @_;
+    return undef unless defined $tmax && defined $tmin;
+    my $gdd;
+    if (defined $cap) {
+        my $t_hi = $tmax > $cap  ? $cap  : $tmax;
+        my $t_lo = $tmin < $base ? $base : $tmin;
+        $gdd = ($t_hi + $t_lo) / 2 - $base;
+    } else {
+        $gdd = ($tmax + $tmin) / 2 - $base;
+    }
+    return $gdd < 0 ? 0 : $gdd;
+}
+
+# Ontario CHU (clamping each term independently, like the export did).
+sub _chu_day {
+    my ($self, $tmax, $tmin) = @_;
+    return undef unless defined $tmax && defined $tmin;
+    my $ymax = 3.33 * ($tmax - 10) - 0.084 * ($tmax - 10) ** 2;
+    $ymax = 0 if $ymax < 0;
+    my $ymin = 1.8 * ($tmin - 4.4);
+    $ymin = 0 if $ymin < 0;
+    return ($ymax + $ymin) / 2;
+}
+
 sub _get_location_coords {
     my ($self, $c, $location_id) = @_;
-    
-    my ($lat, $lon) = (49.97, 33.60);  # Default: Mirgorod, Ukraine
-    
+
+    my ($lat, $lon);   # undef => location has no usable coordinates (caller must handle)
     if ($location_id) {
         try {
             my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
             my $loc = $schema->resultset('NaturalDiversity::NdGeolocation')->find($location_id);
             if ($loc) {
-                $lat = $loc->latitude if defined $loc->latitude;
+                $lat = $loc->latitude  if defined $loc->latitude;
                 $lon = $loc->longitude if defined $loc->longitude;
             }
         } catch { };
     }
-    
+
     return ($lat, $lon);
 }
 
@@ -648,7 +808,10 @@ sub export_weather : Path('/ajax/seedquest/weather/export') Args(0) {
     my $location_id = $c->req->param('location_id');
     my $start_date  = $c->req->param('start_date');
     my $end_date    = $c->req->param('end_date');
-    my $base_temp   = $c->req->param('base_temp') || 10;
+    my $base_temp   = $c->req->param('base_temp');
+    $base_temp = 10 unless defined $base_temp && $base_temp ne '';
+    my $cap_temp    = $c->req->param('cap_temp');
+    $cap_temp = undef unless defined $cap_temp && $cap_temp ne '';
 
     unless ($location_id && $start_date && $end_date) {
         $c->res->status(400);
@@ -743,25 +906,11 @@ sub export_weather : Path('/ajax/seedquest/weather/export') Args(0) {
         my $tavg = $r->{temp_mean} || (defined $tmax && defined $tmin ? ($tmax + $tmin) / 2 : undef);
         my $precip = $r->{precipitation} || 0;
 
-        # GDD calculation (corn 86/50 method: cap at 30°C)
-        my $gdd_day = 0;
-        if (defined $tmax && defined $tmin) {
-            my $t_hi = $tmax > 30 ? 30 : $tmax;
-            my $t_lo = $tmin < $base_temp ? $base_temp : $tmin;
-            $gdd_day = ($t_hi + $t_lo) / 2 - $base_temp;
-            $gdd_day = 0 if $gdd_day < 0;
-        }
+        # GDD/CHU via the shared helpers — identical maths to the on-screen
+        # calculator, so screen and Excel can no longer disagree.
+        my $gdd_day = $self->_gdd_day($tmax, $tmin, $base_temp, $cap_temp) // 0;
         $gdd_cum += $gdd_day;
-
-        # CHU calculation (Ontario method)
-        my $chu_day = 0;
-        if (defined $tmax && defined $tmin) {
-            my $ymax = 3.33 * ($tmax - 10) - 0.084 * ($tmax - 10)**2;
-            $ymax = 0 if $ymax < 0;
-            my $ymin = 1.8 * ($tmin - 4.4);
-            $ymin = 0 if $ymin < 0;
-            $chu_day = ($ymax + $ymin) / 2;
-        }
+        my $chu_day = $self->_chu_day($tmax, $tmin) // 0;
         $chu_cum += $chu_day;
         $precip_cum += $precip;
 
