@@ -6,7 +6,6 @@ use Moose;
 use Data::Dumper;
 use File::Slurp;
 use File::Spec qw | catfile |;
-use File::Path qw(rmtree);
 use File::Glob qw(bsd_glob);
 use JSON::Any;
 use File::Basename qw | basename |;
@@ -27,6 +26,21 @@ __PACKAGE__->config(
     map => { 'application/json' => 'JSON' },
    );
 
+use constant MAX_QC_OUTLIERS => 5000;
+use constant MAX_QC_TRAITS   => 200;
+use constant MAX_QC_TRIALS   => 500;
+
+sub _positive_int {
+    my ($self, $value) = @_;
+    return defined $value && $value =~ /^[1-9][0-9]*$/;
+}
+
+sub _trait_cvterm_id {
+    my ($self, $schema, $trait_name) = @_;
+    return undef unless defined $trait_name && $trait_name ne '' && length($trait_name) <= 500;
+    my $row = eval { SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $trait_name) };
+    return $row ? $row->cvterm_id : undef;
+}
 
 sub prepare: Path('/ajax/seedquest/qualitycontrol/prepare') Args(0) {
     my $self = shift;
@@ -36,6 +50,11 @@ sub prepare: Path('/ajax/seedquest/qualitycontrol/prepare') Args(0) {
     if (! $c->user()) {
         $c->stash->{rest} = {error=>'You must be logged in first!'};
         $c->detach;
+    }
+
+    unless ($self->_positive_int($dataset_id)) {
+        $c->stash->{rest} = { error => 'Invalid dataset_id.' };
+        return;
     }
 
     $c->tempfiles_subdir("qualitycontrol");
@@ -247,7 +266,16 @@ sub store_outliers : Path('/ajax/seedquest/qualitycontrol/storeoutliers') Args(0
         $c->stash->{rest} = { error => 'Invalid outlier payload.' };
         return;
     }
+    if (@$outliers_data > MAX_QC_OUTLIERS) {
+        $c->stash->{rest} = { error => 'Too many outliers in one request.' };
+        return;
+    }
+
     my $main_trait = $c->req->param('trait');
+    unless (defined $main_trait && $main_trait ne '') {
+        $c->stash->{rest} = { error => 'Missing trait.' };
+        return;
+    }
 
     my %trait_ids;
     my %study_names;
@@ -259,12 +287,20 @@ sub store_outliers : Path('/ajax/seedquest/qualitycontrol/storeoutliers') Args(0
         $c->stash->{rest} = { error => 'Invalid other traits payload.' };
         return;
     }
+    if (@$othertraits > MAX_QC_TRAITS) {
+        $c->stash->{rest} = { error => 'Too many traits in one request.' };
+        return;
+    }
 
     # Remove duplicates using a hash
-    my %unique_traits = map { $_ => 1 } @$othertraits;
+    my %unique_traits = map { $_ => 1 } grep { defined $_ && $_ ne '' } @$othertraits;
     my @unique_othertraits = keys %unique_traits;
 
     foreach my $entry (@$outliers_data) {
+        if (ref($entry) ne 'HASH') {
+            $c->stash->{rest} = { error => 'Invalid outlier row.' };
+            return;
+        }
         $trait = $entry->{trait};
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
@@ -272,7 +308,12 @@ sub store_outliers : Path('/ajax/seedquest/qualitycontrol/storeoutliers') Args(0
 
     my @alltraits = ($main_trait, @unique_othertraits);
     foreach my $sel_trait (@alltraits) {
-        $trait_ids{$sel_trait} = SGN::Model::Cvterm->get_cvterm_row_from_trait_name($schema, $sel_trait)->cvterm_id;
+        my $cvterm_id = $self->_trait_cvterm_id($schema, $sel_trait);
+        unless ($cvterm_id) {
+            $c->stash->{rest} = { error => "Unknown trait: $sel_trait" };
+            return;
+        }
+        $trait_ids{$sel_trait} = $cvterm_id;
     }
 
     # Build validated trait label: "trait_name|operator_name"
@@ -282,6 +323,10 @@ sub store_outliers : Path('/ajax/seedquest/qualitycontrol/storeoutliers') Args(0
     my @unique_study_names = keys %study_names;
     unless (@unique_study_names) {
         $c->stash->{rest} = { error => 'No unique study names found.' };
+        return;
+    }
+    if (@unique_study_names > MAX_QC_TRIALS) {
+        $c->stash->{rest} = { error => 'Too many trials in one request.' };
         return;
     }
 
@@ -304,72 +349,71 @@ sub store_outliers : Path('/ajax/seedquest/qualitycontrol/storeoutliers') Args(0
 
     my $experiment_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'phenotyping_experiment', 'experiment_type')->cvterm_id();
 
-    # Execute the validated_phenotype insert
-    eval {
-        my $sth_trial = $dbh->prepare($trial_sql);
-        $sth_trial->execute($trait_operator, @unique_study_names);
-    };
-
-    if ($@) {
-        $c->log->error("QC store_outliers: failed to insert validated_phenotype: $@");
-    }
-
     my @plot_names  = map { $_->{plotName} } @$outliers_data;
     my %seen_plots;
     @plot_names = grep { defined $_ && $_ ne '' && !$seen_plots{$_}++ } @plot_names;
 
-    # Proceed only if there are outliers to store
-    if (@plot_names) {
-        my %seen_traits;
-        my @unique_trait_ids = grep { defined $_ && !$seen_traits{$_}++ } values %trait_ids;
+    my $transaction_ok = eval {
+        local $dbh->{RaiseError} = 1;
+        local $dbh->{PrintError} = 0;
+        $dbh->begin_work;
 
-        if (@plot_names && @unique_trait_ids) {
-            # Build fully parameterized outlier INSERT query
-            my $plot_placeholders  = join(', ', ('?') x scalar(@plot_names));
-            my $trait_placeholders = join(', ', ('?') x scalar(@unique_trait_ids));
+        my $sth_trial = $dbh->prepare($trial_sql);
+        $sth_trial->execute($trait_operator, @unique_study_names);
 
-            my $outlier_data_sql = qq{
-                INSERT INTO phenotypeprop (phenotype_id, type_id, value)
-                SELECT phenotype.phenotype_id,
-                       cvterm_outlier.cvterm_id,
-                       phenotype.value
-                FROM phenotype
-                JOIN nd_experiment_phenotype
-                    ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
-                JOIN nd_experiment_stock
-                    ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id
-                JOIN stock
-                    ON stock.stock_id = nd_experiment_stock.stock_id
-                LEFT JOIN phenotypeprop existing_prop
-                    ON existing_prop.phenotype_id = phenotype.phenotype_id
-                    AND existing_prop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
-                CROSS JOIN (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier') AS cvterm_outlier
-                WHERE stock.uniquename IN ($plot_placeholders)
-                AND nd_experiment_stock.type_id = ?
-                AND phenotype.observable_id IN ($trait_placeholders)
-                AND existing_prop.phenotype_id IS NULL
-            };
+        # Proceed only if there are outliers to store
+        if (@plot_names) {
+            my %seen_traits;
+            my @unique_trait_ids = grep { defined $_ && !$seen_traits{$_}++ } values %trait_ids;
 
-            eval {
+            if (@unique_trait_ids) {
+                # Build fully parameterized outlier INSERT query
+                my $plot_placeholders  = join(', ', ('?') x scalar(@plot_names));
+                my $trait_placeholders = join(', ', ('?') x scalar(@unique_trait_ids));
+
+                my $outlier_data_sql = qq{
+                    INSERT INTO phenotypeprop (phenotype_id, type_id, value)
+                    SELECT phenotype.phenotype_id,
+                           cvterm_outlier.cvterm_id,
+                           phenotype.value
+                    FROM phenotype
+                    JOIN nd_experiment_phenotype
+                        ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
+                    JOIN nd_experiment_stock
+                        ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id
+                    JOIN stock
+                        ON stock.stock_id = nd_experiment_stock.stock_id
+                    LEFT JOIN phenotypeprop existing_prop
+                        ON existing_prop.phenotype_id = phenotype.phenotype_id
+                        AND existing_prop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
+                    CROSS JOIN (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier') AS cvterm_outlier
+                    WHERE stock.uniquename IN ($plot_placeholders)
+                    AND nd_experiment_stock.type_id = ?
+                    AND phenotype.observable_id IN ($trait_placeholders)
+                    AND existing_prop.phenotype_id IS NULL
+                };
+
                 my $sth_outliers = $dbh->prepare($outlier_data_sql);
                 $sth_outliers->execute(@plot_names, $experiment_type, @unique_trait_ids);
-            };
-
-            if ($@) {
-                $c->log->error("QC store_outliers: failed to insert outlier props: $@");
-                $c->stash->{rest} = { error => "Failed to store outlier data: $@" };
-                return;
             }
         }
+
+        $dbh->commit;
+        1;
+    };
+
+    unless ($transaction_ok) {
+        my $err = $@ || $dbh->errstr || 'unknown database error';
+        eval { $dbh->rollback if $dbh->{Active} };
+        $c->log->error("QC store_outliers: failed to store QC changes: $err");
+        $c->stash->{rest} = { error => "Failed to store outlier data: $err" };
+        return;
     }
 
     # Invalidate ANOVA/solGS cache so next run uses updated outlier flags
     $self->_invalidate_analysis_cache($c, \@unique_study_names);
 
     $c->stash->{rest} = $response_data;
-
-    ## cleaning tempfiles
-    rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 }
 
 sub restore_outliers : Path('/ajax/seedquest/qualitycontrol/restoreoutliers') Args(0) {
@@ -409,6 +453,10 @@ sub restore_outliers : Path('/ajax/seedquest/qualitycontrol/restoreoutliers') Ar
 
     # getting trait name — strip ontology suffix for LIKE matching
     my $trait = $c->req->param('trait');
+    unless (defined $trait && $trait ne '') {
+        $c->stash->{rest} = { error => 'Missing trait.' };
+        return;
+    }
     $trait =~ s/\|.*//;
     my $trait_like = $trait . '%';
 
@@ -423,6 +471,15 @@ sub restore_outliers : Path('/ajax/seedquest/qualitycontrol/restoreoutliers') Ar
 
     unless (@trial_list) {
         $c->stash->{rest} = { error => 'No trial names provided.' };
+        return;
+    }
+    @trial_list = grep { defined $_ && $_ ne '' && length($_) <= 500 } @trial_list;
+    unless (@trial_list) {
+        $c->stash->{rest} = { error => 'No valid trial names provided.' };
+        return;
+    }
+    if (@trial_list > MAX_QC_TRIALS) {
+        $c->stash->{rest} = { error => 'Too many trials in one request.' };
         return;
     }
 
@@ -459,27 +516,32 @@ sub restore_outliers : Path('/ajax/seedquest/qualitycontrol/restoreoutliers') Ar
         )
     };
 
-    eval {
+    my $transaction_ok = eval {
+        local $dbh->{RaiseError} = 1;
+        local $dbh->{PrintError} = 0;
+        $dbh->begin_work;
+
         my $sth_trial = $dbh->prepare($trial_clean_sql);
         $sth_trial->execute(@trial_list, $trait_like);
 
         my $sth_clean = $dbh->prepare($outliers_clean_sql);
         $sth_clean->execute($trait_like, @trial_list);
+
+        $dbh->commit;
+        1;
     };
 
-    if ($@) {
-        $c->stash->{rest} = { error => "Failed to restore data: $@" };
+    unless ($transaction_ok) {
+        my $err = $@ || $dbh->errstr || 'unknown database error';
+        eval { $dbh->rollback if $dbh->{Active} };
+        $c->stash->{rest} = { error => "Failed to restore data: $err" };
         return;
-    } else {
-        $c->stash->{rest} = $response_data;
     }
+
+    $c->stash->{rest} = $response_data;
 
     # Invalidate ANOVA/solGS cache after restoring outliers
     $self->_invalidate_analysis_cache($c, \@trial_list) if @trial_list;
-
-    ## cleaning tempfiles
-    rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
-
 }
 
 # ============================================================================

@@ -38,7 +38,6 @@
 
     <li role="seperator" class="divider"></li>
     <li><a href="/breeders/drone_imagery"><span class="glyphicon glyphicon-camera"></span> <span data-i18n="drone_imagery">Drone Imagery</span></a></li>
-    <li><a href="/breeders/drone_imagery_simple"><span class="glyphicon glyphicon-cloud-upload"></span> Quick Drone Upload</a></li>
     <li><a href="/breeders/nirs"><span class="glyphicon glyphicon-signal"></span> NIRS</a></li>
     <li><a href="/breeders/transcriptomics"><span class="glyphicon glyphicon-align-left"></span> Transcriptomics</a></li>
   </ul>

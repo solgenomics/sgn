@@ -20,6 +20,58 @@ __PACKAGE__->config(
     map       => { 'application/json' => 'JSON' },
 );
 
+use constant MAX_WEATHER_SEASONS    => 10;
+use constant MAX_WEATHER_RANGE_DAYS => 370;
+use constant MAX_MATURITY_TARGET    => 10000;
+
+sub _positive_int {
+    my ($self, $value) = @_;
+    return defined $value && $value =~ /^[1-9][0-9]*$/;
+}
+
+sub _is_number {
+    my ($self, $value) = @_;
+    return defined $value && $value =~ /^-?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$/;
+}
+
+sub _validate_heat_params {
+    my ($self, $base_temp, $cap_temp) = @_;
+    return 'base_temp must be numeric.' unless $self->_is_number($base_temp);
+    return 'base_temp is outside the supported range.' if $base_temp < -20 || $base_temp > 40;
+    if (defined $cap_temp && $cap_temp ne '') {
+        return 'cap_temp must be numeric.' unless $self->_is_number($cap_temp);
+        return 'cap_temp is outside the supported range.' if $cap_temp < -20 || $cap_temp > 60;
+        return 'cap_temp must be greater than or equal to base_temp.' if $cap_temp < $base_temp;
+    }
+    return undef;
+}
+
+sub _valid_date {
+    my ($self, $date) = @_;
+    return 0 unless defined $date && $date =~ /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+    my $ts = eval { $self->_date_to_timestamp($date) };
+    return 0 if $@ || !defined $ts;
+    return $self->_timestamp_to_date($ts) eq $date;
+}
+
+sub _date_range_days {
+    my ($self, $start_date, $end_date) = @_;
+    return undef unless $self->_valid_date($start_date) && $self->_valid_date($end_date);
+    my $start_ts = eval { $self->_date_to_timestamp($start_date) };
+    my $end_ts   = eval { $self->_date_to_timestamp($end_date) };
+    return undef if !defined $start_ts || !defined $end_ts || $@;
+    return int(($end_ts - $start_ts) / 86400) + 1;
+}
+
+sub _validate_date_range {
+    my ($self, $start_date, $end_date, $max_days) = @_;
+    my $days = $self->_date_range_days($start_date, $end_date);
+    return 'Dates must use YYYY-MM-DD and be real calendar dates.' unless defined $days;
+    return 'Start date must be before or equal to end date.' if $days < 1;
+    return "Date range is too large. Limit is $max_days days." if $days > $max_days;
+    return undef;
+}
+
 # ============================================================================
 # CROPS ENDPOINT
 # ============================================================================
@@ -71,6 +123,49 @@ sub _do_gdd_calculation {
     $cap_temp = undef unless defined $cap_temp && $cap_temp ne '';
     my $data_source = $c->req->param('data_source') || 'openmeteo';
 
+    unless ($self->_positive_int($location_id)) {
+        $c->stash->{rest} = { error => 'Invalid location_id.' };
+        return;
+    }
+    if (my $err = $self->_validate_heat_params($base_temp, $cap_temp)) {
+        $c->stash->{rest} = { error => $err };
+        return;
+    }
+
+    my $seasons = eval { decode_json($seasons_json || '') };
+    if ($@ || ref($seasons) ne 'ARRAY' || !@$seasons) {
+        $c->stash->{rest} = { error => 'Invalid seasons payload.' };
+        return;
+    }
+    if (@$seasons > MAX_WEATHER_SEASONS) {
+        $c->stash->{rest} = { error => 'Too many seasons in one request.' };
+        return;
+    }
+
+    my @validated_seasons;
+    foreach my $season (@$seasons) {
+        if (ref($season) ne 'HASH') {
+            $c->stash->{rest} = { error => 'Invalid season row.' };
+            return;
+        }
+        my $year = $season->{year};
+        unless (defined $year && $year =~ /^[0-9]{4}$/) {
+            $c->stash->{rest} = { error => 'Each season must include a four-digit year.' };
+            return;
+        }
+        my $start_date = $season->{start_date} || $season->{start} || "$year-04-15";
+        my $end_date = $season->{end_date} || $season->{end} || "$year-09-30";
+        if (my $err = $self->_validate_date_range($start_date, $end_date, MAX_WEATHER_RANGE_DAYS)) {
+            $c->stash->{rest} = { error => $err };
+            return;
+        }
+        push @validated_seasons, {
+            year       => $year,
+            start_date => $start_date,
+            end_date   => $end_date,
+        };
+    }
+
     # Resolve coordinates up front; error clearly instead of defaulting to a
     # hard-coded town (previously Mirgorod) which silently returned wrong data.
     my ($lat, $lon) = $self->_get_location_coords($c, $location_id);
@@ -80,14 +175,13 @@ sub _do_gdd_calculation {
     }
 
     try {
-        my $seasons = decode_json($seasons_json);
         my @results;
         my $cache_stats = { from_cache => 0, from_api => 0 };
 
-        foreach my $season (@$seasons) {
+        foreach my $season (@validated_seasons) {
             my $year = $season->{year};
-            my $start_date = $season->{start_date} || $season->{start} || "$year-04-15";
-            my $end_date = $season->{end_date} || $season->{end} || "$year-09-30";
+            my $start_date = $season->{start_date};
+            my $end_date = $season->{end_date};
 
             # Use cache only if it fully covers the requested range — otherwise a
             # partial cache (e.g. 5 of 60 days) would silently undercount GDD.
@@ -249,8 +343,28 @@ sub _do_maturity {
     my $cap_temp    = $c->req->param('cap_temp');
     $cap_temp = undef unless defined $cap_temp && $cap_temp ne '';
 
-    unless ($sowing_date && defined $target && $target > 0) {
+    unless ($sowing_date && defined $target && $target ne '') {
         $c->stash->{rest} = { error => 'sowing_date and a positive target are required.' };
+        return;
+    }
+    unless ($self->_positive_int($location_id)) {
+        $c->stash->{rest} = { error => 'Invalid location_id.' };
+        return;
+    }
+    unless ($metric eq 'gdd' || $metric eq 'chu') {
+        $c->stash->{rest} = { error => 'metric must be gdd or chu.' };
+        return;
+    }
+    unless ($self->_is_number($target) && $target > 0 && $target <= MAX_MATURITY_TARGET) {
+        $c->stash->{rest} = { error => 'target is outside the supported range.' };
+        return;
+    }
+    if (my $err = $self->_validate_heat_params($base_temp, $cap_temp)) {
+        $c->stash->{rest} = { error => $err };
+        return;
+    }
+    unless ($self->_valid_date($sowing_date)) {
+        $c->stash->{rest} = { error => 'sowing_date must be a real YYYY-MM-DD date.' };
         return;
     }
 
@@ -263,6 +377,9 @@ sub _do_maturity {
     my $result = try {
         # Accumulate from sowing up to a season+margin, but not beyond today.
         my $sow_ts     = $self->_date_to_timestamp($sowing_date);
+        if ($sow_ts > time()) {
+            return { error => 'sowing_date cannot be in the future.' };
+        }
         my $horizon_ts = $sow_ts + 300 * 86400;
         my $end_ts     = $horizon_ts < time() ? $horizon_ts : time();
         my $end_date   = $self->_timestamp_to_date($end_ts);
@@ -816,6 +933,21 @@ sub export_weather : Path('/ajax/seedquest/weather/export') Args(0) {
     unless ($location_id && $start_date && $end_date) {
         $c->res->status(400);
         $c->res->body('Missing parameters: location_id, start_date, end_date');
+        return;
+    }
+    unless ($self->_positive_int($location_id)) {
+        $c->res->status(400);
+        $c->res->body('Invalid location_id.');
+        return;
+    }
+    if (my $err = $self->_validate_heat_params($base_temp, $cap_temp)) {
+        $c->res->status(400);
+        $c->res->body($err);
+        return;
+    }
+    if (my $err = $self->_validate_date_range($start_date, $end_date, MAX_WEATHER_RANGE_DAYS)) {
+        $c->res->status(400);
+        $c->res->body($err);
         return;
     }
 
