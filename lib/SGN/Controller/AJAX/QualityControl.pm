@@ -155,6 +155,11 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
 
     # Build parameterized query — no string interpolation in SQL
     my @names = keys %$unique_names;
+    unless (@names) {
+        $c->stash->{rest} = { data => $data, trait => $trait };
+        return;
+    }
+
     my $placeholders = join(',', ('?') x scalar(@names));
 
     my $trait_sql = qq{
@@ -223,6 +228,11 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my $response_data = {
         is_curator => $curator ? 1 : 0,
     };
+
+    unless ($curator) {
+        $c->stash->{rest} = $response_data;
+        return;
+    }
 
     # Retrieve and decode the outliers from the request
     my $outliers_string = $c->req->param('outliers');
@@ -327,18 +337,15 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
                 AND existing_prop.phenotype_id IS NULL
             };
 
-            # Execute only if user has curator/breeder privileges
-            if ($curator == 1) {
-                eval {
-                    my $sth_outliers = $dbh->prepare($outlier_data_sql);
-                    $sth_outliers->execute(@plot_names, $experiment_type, @unique_trait_ids);
-                };
+            eval {
+                my $sth_outliers = $dbh->prepare($outlier_data_sql);
+                $sth_outliers->execute(@plot_names, $experiment_type, @unique_trait_ids);
+            };
 
-                if ($@) {
-                    $c->log->error("QC store_outliers: failed to insert outlier props: $@");
-                    $c->stash->{rest} = { error => "Failed to store outlier data: $@" };
-                    return;
-                }
+            if ($@) {
+                $c->log->error("QC store_outliers: failed to insert outlier props: $@");
+                $c->stash->{rest} = { error => "Failed to store outlier data: $@" };
+                return;
             }
         }
     }
@@ -423,7 +430,7 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
     };
 
     # Execute the cleanup queries (curators only)
-    if ($curator eq 'curator') {
+    if ($curator && $curator eq 'curator') {
         eval {
             my $sth_trial = $dbh->prepare($trial_clean_sql);
             $sth_trial->execute(@trial_list, $trait_like);
@@ -438,12 +445,12 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
         } else {
             $c->stash->{rest} = $response_data;
         }
+
+        # Invalidate ANOVA/solGS cache after restoring outliers
+        $self->_invalidate_analysis_cache($c, \@trial_list) if @trial_list;
     } else {
         $c->stash->{rest} = $response_data;
     }
-
-    # Invalidate ANOVA/solGS cache after restoring outliers
-    $self->_invalidate_analysis_cache($c, \@trial_list) if @trial_list;
 
     ## cleaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
