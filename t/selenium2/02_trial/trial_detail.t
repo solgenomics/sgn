@@ -1,7 +1,7 @@
 use lib 't/lib';
 use strict;
 
-use Test::More 'tests' => 171;
+use Test::More 'tests' => 183;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -94,7 +94,7 @@ $t->while_logged_in_as("curator", sub {
         $t->find_element_ok("upload_trial_submit_first", "name", "find and click upload trial submit button")->click();
 
         # important sleep 60 seconds for a functionality - it can take ages to save a trail depend of the machine
-        sleep(60);
+        sleep(10);
 
         $t->find_element_ok("close_trial_upload_dialog", "id", "find and click close trial upload button")->click();
 
@@ -166,6 +166,15 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /[No Planting Date]/, "Verify planting date");
         ok($trial_details =~ /[No Harvest Date]/, "Verify harvest date");
         ok($trial_details =~ /Test trial detail selenium - description/, "Verify description");
+
+        # edit trial details
+        $t->find_element_ok("edit_trial_details", "id", "open trial details")->click();
+        $t->find_element_ok('//select[@id="edit_trial_year_0"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year 0")->click();
+        $t->find_element_ok("save_trial_details", "id", "save trial details")->click();
+        $t->find_element_ok("trial_details_saved_close_button", "id", "close trial details")->click();
+
+        my $trial_year = $t->find_element_ok("trial_year", "id", "locate trial year")->get_attribute('innerHTML');
+        ok($trial_year =~ /2016 | Year 0: 2015/, "Verify year 0");
 
         my $trial_design_onswitch = $t->find_element_ok("trial_design_section_onswitch", "id", "click to open design section");
         $trial_design_onswitch->click();
@@ -240,6 +249,7 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /T100_plot_06/, "Verify plots");
         ok($trial_details =~ /T100_plot_07/, "Verify plots");
         ok($trial_details =~ /T100_plot_08/, "Verify plots");
+
     }
 });
 
