@@ -1,0 +1,297 @@
+<%args>
+$schema
+$phenotype_files => undef
+$breeding_programs => undef
+$locations => undef
+$preferred_species => undef
+$editable_stock_props => {}
+</%args>
+
+<style>
+#outercontainer {
+    max-width: 1180px !important;
+    width: 94% !important;
+    margin: 0 auto !important;
+}
+.sq-home {
+    margin: 18px auto 42px;
+}
+.sq-home-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+    gap: 34px;
+    align-items: center;
+    padding: 24px 0 24px;
+}
+.sq-home-kicker {
+    color: #0f766e;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+}
+.sq-home h1 {
+    color: #0f172a;
+    font-size: 42px;
+    line-height: 1.08;
+    font-weight: 800;
+    letter-spacing: 0;
+    margin: 0 0 16px;
+}
+.sq-home-lead {
+    color: #334155;
+    font-size: 17px;
+    line-height: 1.58;
+    max-width: 700px;
+    margin: 0 0 16px;
+}
+.sq-home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+}
+.sq-home-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    padding: 11px 17px;
+    font-weight: 700;
+    text-decoration: none !important;
+    border: 1px solid transparent;
+}
+.sq-home-btn-primary {
+    background: #2563eb;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+.sq-home-btn-secondary {
+    background: #fff;
+    color: #0f172a !important;
+    border-color: #dbe3ee;
+}
+.sq-home-panel,
+.sq-home-section,
+.sq-home-card {
+    background: #fff;
+    border: 1px solid #dbe3ee;
+    border-radius: 10px;
+    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
+}
+.sq-home-panel {
+    padding: 26px;
+}
+.sq-home-logo {
+    display: block;
+    max-width: 300px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 24px;
+}
+.sq-home-panel h2,
+.sq-home-section h3 {
+    color: #0f172a;
+    font-weight: 800;
+    margin: 0 0 12px;
+}
+.sq-home-panel h2 {
+    font-size: 20px;
+}
+.sq-home-section h3 {
+    font-size: 20px;
+}
+.sq-home-panel p,
+.sq-home-section p {
+    color: #475569;
+    line-height: 1.58;
+    margin: 0 0 14px;
+}
+.sq-home-list {
+    list-style: none;
+    padding: 0;
+    margin: 18px 0 0;
+}
+.sq-home-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #334155;
+    padding: 8px 0;
+    border-top: 1px solid #eef2f7;
+}
+.sq-home-list .glyphicon {
+    color: #0f766e;
+}
+.sq-home-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 10px 0 24px;
+}
+.sq-home-card {
+    display: block;
+    padding: 18px;
+    text-decoration: none !important;
+    color: #0f172a !important;
+    min-height: 154px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.sq-home-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10);
+    border-color: #93c5fd;
+}
+.sq-home-card .glyphicon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0f2fe;
+    color: #0369a1;
+    margin-bottom: 12px;
+}
+.sq-home-card h3 {
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0 0 7px;
+    color: #0f172a;
+}
+.sq-home-card p {
+    font-size: 13px;
+    line-height: 1.45;
+    margin: 0;
+    color: #64748b;
+}
+.sq-home-sections {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+.sq-home-section {
+    padding: 22px;
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+.sq-home-section-wide {
+    grid-column: 1 / -1;
+}
+.sq-home-credit {
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 14px;
+}
+@media (max-width: 850px) {
+    .sq-home-hero,
+    .sq-home-grid,
+    .sq-home-sections {
+        grid-template-columns: 1fr;
+    }
+    .sq-home h1 {
+        font-size: 32px;
+    }
+}
+</style>
+
+<div class="sq-home">
+    <section class="sq-home-hero">
+        <div>
+            <div class="sq-home-kicker">SeedQuest</div>
+            <h1>Professional digital platform for agricultural analysis, field trials, and breeding support.</h1>
+            <p class="sq-home-lead">
+                SeedQuest is designed for agronomists, breeding teams, and agricultural companies
+                working with data-driven decision-making.
+            </p>
+            <p class="sq-home-lead">
+                The platform integrates field experiments, phenotypic observations, yield and
+                quality data, climatic inputs, and agronomic parameters into a structured and
+                auditable workflow.
+            </p>
+            <div class="sq-home-actions">
+                <a href="/user/login" class="sq-home-btn sq-home-btn-primary">
+                    <span class="glyphicon glyphicon-log-in"></span> Login
+                </a>
+                <a href="/breeders/home" class="sq-home-btn sq-home-btn-secondary">
+                    <span class="glyphicon glyphicon-dashboard"></span> Dashboard
+                </a>
+                <a href="/help" class="sq-home-btn sq-home-btn-secondary">
+                    <span class="glyphicon glyphicon-question-sign"></span> Help
+                </a>
+            </div>
+        </div>
+
+        <aside class="sq-home-panel">
+            <img class="sq-home-logo" src="/static_content/seedquest_logo.png" alt="SeedQuest" />
+            <h2>Built for applied breeding work</h2>
+            <p>
+                Design and manage field trials, evaluate crop performance across locations
+                and seasons, and support professional agronomic consulting and breeding programs.
+            </p>
+            <ul class="sq-home-list">
+                <li><span class="glyphicon glyphicon-leaf"></span> Field trials and germplasm workflows</li>
+                <li><span class="glyphicon glyphicon-cloud"></span> Climate and agronomic inputs</li>
+                <li><span class="glyphicon glyphicon-check"></span> Structured, auditable decisions</li>
+            </ul>
+        </aside>
+    </section>
+
+    <section class="sq-home-grid">
+        <a href="/breeders/search" class="sq-home-card">
+            <span class="glyphicon glyphicon-search"></span>
+            <h3>Search and organize data</h3>
+            <p>Find accessions, trials, traits, people, images, and genotyping records.</p>
+        </a>
+        <a href="/tools/weather/gdd" class="sq-home-card">
+            <span class="glyphicon glyphicon-cloud"></span>
+            <h3>Weather and agronomy</h3>
+            <p>Work with climatic inputs, GDD, CHU, and crop-specific growing metrics.</p>
+        </a>
+        <a href="/tools/seedquest/qualitycontrol" class="sq-home-card">
+            <span class="glyphicon glyphicon-check"></span>
+            <h3>Quality control</h3>
+            <p>Review phenotype datasets, detect outliers, and prepare cleaner analysis inputs.</p>
+        </a>
+    </section>
+
+    <section class="sq-home-sections">
+        <div class="sq-home-section">
+            <h3>What is SeedQuest?</h3>
+            <p>
+                SeedQuest is a professional digital platform for agricultural analysis,
+                field trials, and breeding support.
+            </p>
+            <p>
+                It is designed for agronomists, breeding teams, and agricultural companies
+                working with data-driven decision-making.
+            </p>
+        </div>
+
+        <div class="sq-home-section">
+            <h3>How is SeedQuest used?</h3>
+            <p>
+                SeedQuest is used to design and manage field trials, evaluate crop
+                performance across locations and seasons, and support professional
+                agronomic consulting and breeding programs.
+            </p>
+        </div>
+
+        <div class="sq-home-section sq-home-section-wide">
+            <h3>What crops are supported?</h3>
+            <p>
+                SeedQuest is actively used for maize, soybean, sunflower, wheat, and other
+                major field crops, with flexible support for custom trial designs and
+                crop-specific ontologies.
+            </p>
+            <div class="sq-home-credit">
+                SeedQuest is built on open scientific tools developed within the Sol Genomics Network (SGN) ecosystem.
+            </div>
+        </div>
+    </section>
+</div>
+
+% if ($phenotype_files) {
+     <& homepage/phenotype_uploads.mas, phenotype_files=>$phenotype_files &>
+% }
