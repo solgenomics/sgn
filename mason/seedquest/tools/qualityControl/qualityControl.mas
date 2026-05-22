@@ -44,7 +44,7 @@ $pop_id = $trial_id if $trial_id;
         Используйте Quality Control для проверки данных перед анализом.
     </div>
 
-    <a href="/tools/qualitycontrol" class="btn btn-primary" target="_blank">
+    <a href="/tools/seedquest/qualitycontrol" class="btn btn-primary" target="_blank">
         <span class="glyphicon glyphicon-check"></span>
         Открыть Quality Control
     </a>

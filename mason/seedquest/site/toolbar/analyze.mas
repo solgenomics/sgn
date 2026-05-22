@@ -8,7 +8,7 @@
     <li><a href="/correlation/analysis"><span class="glyphicon glyphicon-resize-small"></span> <span data-i18n="correlation">Correlation</span></a></li>
     <li><a href="/tools/stability"><span class="glyphicon glyphicon-adjust"></span> <span data-i18n="stability">Stability AMMI/GGE</span></a></li>
     <li><a href="/tools/heritability"><span class="glyphicon glyphicon-scale"></span> <span data-i18n="heritability">Heritability</span></a></li>
-    <li><a href="/tools/qualitycontrol"><span class="glyphicon glyphicon-check"></span> <span data-i18n="quality_control">Quality Control</span></a></li>
+    <li><a href="/tools/seedquest/qualitycontrol"><span class="glyphicon glyphicon-check"></span> <span data-i18n="quality_control">Quality Control</span></a></li>
     <li role="separator" class="divider"></li>
     <li><a href="/accession_usage"><span class="glyphicon glyphicon-sort-by-attributes"></span> Accession Usage</a></li>
     <li><a href="/tools/mixedmodels"><span class="glyphicon glyphicon-random"></span> <span data-i18n="mixed_models">Mixed Models</span></a></li>

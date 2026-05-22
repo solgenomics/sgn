@@ -212,7 +212,7 @@ my $L = $m->comp('/site/sq_loc.mas', _hash => 1);
             <h3 data-i18n="drone_imagery"><% $L->{drone_imagery} %></h3>
             <p data-i18n="drone_imagery_desc"><% $L->{drone_imagery_desc} %></p>
         </a>
-        <a href="/tools/qualitycontrol" class="sq-card sq-card--qc">
+        <a href="/tools/seedquest/qualitycontrol" class="sq-card sq-card--qc">
             <span class="glyphicon glyphicon-check sq-card-icon"></span>
             <h3 data-i18n="quality_control"><% $L->{quality_control} %></h3>
             <p data-i18n="quality_control_desc"><% $L->{quality_control_desc} %></p>

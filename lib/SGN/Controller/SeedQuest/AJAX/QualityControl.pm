@@ -1,5 +1,5 @@
 
-package SGN::Controller::AJAX::QualityControl;
+package SGN::Controller::SeedQuest::AJAX::QualityControl;
 
 use Moose;
 
@@ -7,6 +7,7 @@ use Data::Dumper;
 use File::Slurp;
 use File::Spec qw | catfile |;
 use File::Path qw(rmtree);
+use File::Glob qw(bsd_glob);
 use JSON::Any;
 use File::Basename qw | basename |;
 use DateTime;
@@ -27,7 +28,7 @@ __PACKAGE__->config(
    );
 
 
-sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
+sub prepare: Path('/ajax/seedquest/qualitycontrol/prepare') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dataset_id = $c->req->param('dataset_id');
@@ -133,7 +134,7 @@ sub _parse_phenotype_file {
     return (\@data, \%unique_names, undef);
 }
 
-sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
+sub extract_trait_data :Path('/ajax/seedquest/qualitycontrol/grabdata') Args(0) {
     my $self = shift;
     my $c = shift;
     my $dbh = $c->dbc->dbh();
@@ -194,7 +195,7 @@ sub extract_trait_data :Path('/ajax/qualitycontrol/grabdata') Args(0) {
     }
 }
 
-sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
+sub data_restore :Path('/ajax/seedquest/qualitycontrol/datarestore') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -212,7 +213,7 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
     $c->stash->{rest} = { data => \@project_names, trait => $trait };
 }
 
-sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
+sub store_outliers : Path('/ajax/seedquest/qualitycontrol/storeoutliers') Args(0) {
     my ($self, $c) = @_;
 
     my $response_data = {
@@ -362,13 +363,16 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
         }
     }
 
+    # Invalidate ANOVA/solGS cache so next run uses updated outlier flags
+    $self->_invalidate_analysis_cache($c, \@unique_study_names);
+
     $c->stash->{rest} = $response_data;
 
     ## cleaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 }
 
-sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
+sub restore_outliers : Path('/ajax/seedquest/qualitycontrol/restoreoutliers') Args(0) {
 
     my ($self, $c) = @_;
 
@@ -470,9 +474,58 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
         $c->stash->{rest} = $response_data;
     }
 
+    # Invalidate ANOVA/solGS cache after restoring outliers
+    $self->_invalidate_analysis_cache($c, \@trial_list) if @trial_list;
+
     ## cleaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
 
+}
+
+# ============================================================================
+# Cache invalidation: clear ANOVA + phenotype cache for affected trials
+# so the next run recalculates with current outlier flags.
+# ============================================================================
+
+sub _invalidate_analysis_cache {
+    my ($self, $c, $trial_names) = @_;
+    return unless $trial_names && @$trial_names;
+
+    my $dbh = $c->dbc->dbh;
+    my $tmp_dir = $c->config->{cluster_shared_tempdir} || '/home/production/tmp';
+
+    # Resolve trial names to project IDs (parameterized)
+    my $placeholders = join(',', ('?') x scalar(@$trial_names));
+    my $sth = $dbh->prepare(
+        "SELECT project_id FROM project WHERE name IN ($placeholders)"
+    );
+    $sth->execute(@$trial_names);
+
+    my @trial_ids;
+    while (my ($pid) = $sth->fetchrow_array) {
+        push @trial_ids, $pid;
+    }
+    return unless @trial_ids;
+
+    # Delete cache files matching each trial ID under all known cache paths
+    for my $tid (@trial_ids) {
+        my @patterns = (
+            # solGS phenotype data + traits
+            "$tmp_dir/*/solgs/cache/phenotype_data_$tid",
+            "$tmp_dir/*/solgs/cache/all_traits_pop_$tid",
+            "$tmp_dir/*/solgs/cache/traits_*_pop_$tid",
+            "$tmp_dir/*/solgs/tempfiles/*${tid}*",
+            # ANOVA results under hostname subdir
+            "$tmp_dir/*/anova/cache/*${tid}*",
+            "$tmp_dir/*/anova/tempfiles/*${tid}*",
+            # Direct ANOVA cache (breedbase-site dir, used by Anova.pm)
+            "$tmp_dir/breedbase-site/anova/*${tid}*",
+        );
+        for my $pattern (@patterns) {
+            my @files = bsd_glob($pattern);
+            unlink @files if @files;
+        }
+    }
 }
 
 
