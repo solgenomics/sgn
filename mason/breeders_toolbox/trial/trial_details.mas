@@ -6,6 +6,7 @@ $breeding_program_id
 $location_name
 $country_name
 $year
+$year_0
 $trial_type
 $planting_date
 $transplanting_date
@@ -25,7 +26,6 @@ $trial_owner
 $latest_trial_activity => undef
 
 </%args>
-
 
 <div class="row">
     <div class="col-sm-8">
@@ -78,6 +78,9 @@ $latest_trial_activity => undef
                     <div id="trial_year">
 % if ($year) {
 %  print "$year";
+%  if ($year_0) {
+%    print " | Year 0: $year_0";
+%  }
 % } else {
 %  print "<span class='text-danger'>[No Year]</span>";
 % }
