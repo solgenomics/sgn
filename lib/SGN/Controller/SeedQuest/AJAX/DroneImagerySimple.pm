@@ -41,32 +41,32 @@ sub simple_upload : Path('/ajax/seedquest/drone_imagery/simple_upload') : Action
 sub simple_upload_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     # Check login
     unless ($c->user) {
         $c->stash->{rest} = { error => 'You must be logged in to upload images' };
         return;
     }
-    
+
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-    
+
     # Get parameters
     my $trial_id = $c->req->param('trial_id');
     my $use_odm = $c->req->param('use_odm') || 0;
     my $auto_detect = $c->req->param('auto_detect') || 1;
     my $upload = $c->req->upload('upload_zip');
-    
+
     unless ($trial_id) {
         $c->stash->{rest} = { error => 'Please select a field trial' };
         return;
     }
-    
+
     unless ($upload) {
         $c->stash->{rest} = { error => 'Please provide a ZIP file with images' };
         return;
     }
-    
+
     # Get trial info
     my $trial = $schema->resultset('Project::Project')->find({ project_id => $trial_id });
     unless ($trial) {
@@ -74,13 +74,13 @@ sub simple_upload_POST : Args(0) {
         return;
     }
     my $trial_name = $trial->name();
-    
+
     # Archive the uploaded file
     my $upload_tempfile = $upload->tempname;
     my $upload_original_name = $upload->filename;
     my $time = DateTime->now();
     my $timestamp = $time->ymd() . "_" . $time->hms();
-    
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => "drone_imagery_simple_upload",
@@ -90,34 +90,34 @@ sub simple_upload_POST : Args(0) {
         user_id => $user_id,
         user_role => $c->user->get_object->get_user_type()
     });
-    
+
     my $archived_filename = $uploader->archive();
     unless ($archived_filename) {
         $c->stash->{rest} = { error => "Could not save uploaded file" };
         return;
     }
-    
+
     # Extract EXIF from first image in ZIP
     my $exif_info = _extract_exif_from_zip($archived_filename);
-    
+
     my $detected_sensor = $exif_info->{sensor} || 'cmos_color';
     my $detected_date = $exif_info->{date} || $time->ymd("/") . " " . $time->hms(":");
     my $drone_run_name = "${trial_name}_${timestamp}";
-    
+
     # Get ODM options for detected sensor
     my $odm_options = _get_odm_options($detected_sensor);
-    
+
     # Log detection
     print STDERR "DroneImagerySimple: Detected sensor=$detected_sensor, date=$detected_date\n";
     print STDERR "DroneImagerySimple: ODM options=$odm_options, trial=$trial_name, drone_run=$drone_run_name\n";
-    
+
     # Determine if we need ODM stitching
     my $stitching_mode = $use_odm ? 'yes_open_data_map_stitch' : 'no';
     my $radiocalibration = ($detected_sensor eq 'dji_mavic3m' || $detected_sensor eq 'micasense_5') ? 'Yes' : 'No';
-    
+
     # Create or get a default imaging vehicle ID (required by main controller)
     my $vehicle_id = _get_or_create_default_vehicle($c, $schema, $user_id);
-    
+
     # Build result for frontend - the frontend will POST to the main endpoint
     # OR we can do it server-side. For now, return params for frontend to handle.
     $c->stash->{rest} = {
@@ -155,17 +155,17 @@ Creates or retrieves a default imaging vehicle for simple uploads.
 
 sub _get_or_create_default_vehicle {
     my ($c, $schema, $user_id) = @_;
-    
+
     # Look for existing "Simple Upload Vehicle"
     my $vehicle_name = 'Simple Upload Default Vehicle';
     my $vehicle_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'imaging_event_vehicle', 'stock_type')->cvterm_id();
-    
+
     my $vehicle = $schema->resultset('Stock::Stock')->find_or_create({
         name => $vehicle_name,
         uniquename => $vehicle_name,
         type_id => $vehicle_type_id
     });
-    
+
     return $vehicle->stock_id();
 }
 
@@ -194,21 +194,21 @@ Extracts EXIF metadata from the first image in a ZIP file.
 
 sub _extract_exif_from_zip {
     my $zip_path = shift;
-    
+
     my $default = {
         date => undef,
         sensor => 'cmos_color',
         make => '',
         model => ''
     };
-    
+
     eval {
         require Archive::Zip;
         require Image::ExifTool;
-        
+
         my $zip = Archive::Zip->new();
         return $default unless $zip->read($zip_path) == Archive::Zip::AZ_OK();
-        
+
         # Find first image
         my @members = $zip->members();
         my $first_image;
@@ -219,30 +219,30 @@ sub _extract_exif_from_zip {
                 last;
             }
         }
-        
+
         return $default unless $first_image;
-        
+
         # Extract to temp
         my $tempdir = File::Temp::tempdir(CLEANUP => 1);
         my $temp_file = "$tempdir/" . basename($first_image->fileName());
         $zip->extractMember($first_image, $temp_file);
-        
+
         # Read EXIF
         my $exiftool = Image::ExifTool->new();
         $exiftool->ExtractInfo($temp_file);
-        
+
         my $make = $exiftool->GetValue('Make') || '';
         my $model = $exiftool->GetValue('Model') || '';
         my $date = $exiftool->GetValue('DateTimeOriginal') || $exiftool->GetValue('CreateDate') || '';
-        
+
         # Format date
         if ($date =~ /^(\d{4}):(\d{2}):(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/) {
             $date = "$1/$2/$3 $4:$5:$6";
         }
-        
+
         # Detect sensor
         my $sensor = _detect_sensor($make, $model);
-        
+
         return {
             date => $date,
             sensor => $sensor,
@@ -250,11 +250,11 @@ sub _extract_exif_from_zip {
             model => $model
         };
     };
-    
+
     if ($@) {
         print STDERR "EXIF extraction error: $@\n";
     }
-    
+
     return $default;
 }
 
@@ -266,20 +266,20 @@ Detects sensor type from EXIF Make/Model.
 
 sub _detect_sensor {
     my ($make, $model) = @_;
-    
+
     $make = lc($make || '');
     $model = lc($model || '');
-    
+
     # DJI Mavic 3 Multispectral
     if ($make =~ /dji/ && ($model =~ /m3m|mavic\s*3.*multi/i)) {
         return 'dji_mavic3m';
     }
-    
+
     # MicaSense
     if ($make =~ /micasense/i) {
         return 'micasense_5';
     }
-    
+
     return 'cmos_color';
 }
 
@@ -291,14 +291,14 @@ Returns ODM command line options for the specified sensor.
 
 sub _get_odm_options {
     my $sensor = shift;
-    
+
     my %options = (
         'dji_mavic3m' => '--radiometric-calibration camera+sun --dsm --orthophoto-resolution 1.0 --ignore-gsd --pc-quality medium',
         'micasense_5' => '--radiometric-calibration camera+sun --dsm --min-num-features 10000',
         'cmos_color'  => '--dsm --pc-quality medium',
         'ccd_color'   => '--dsm --pc-quality medium',
     );
-    
+
     return $options{$sensor} || '--dsm --pc-quality low';
 }
 

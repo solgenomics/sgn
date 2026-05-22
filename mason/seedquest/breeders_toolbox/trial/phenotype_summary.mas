@@ -178,9 +178,9 @@ input[type="text"] {
         var type = "<% $trial_stock_type %>";
         var trial_id = "<% $trial_id %>";
         var dates_ready = false;
-    	jQuery.ajax( {
+	jQuery.ajax( {
             url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
-    	}).done( function(r) {
+	}).done( function(r) {
             //alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
             var raw_startDate = new Date(r.start_date).toISOString().split('T')[0];
             var raw_endDate = new Date(r.end_date).toISOString().split('T')[0];
@@ -197,9 +197,9 @@ input[type="text"] {
 	                "minDate": "2000-01-01",
 	                "maxDate": new Date(),
 	                locale: {
-	            	    format: 'YYYY-MM-DD'
+	                format: 'YYYY-MM-DD'
 	                }
-	            },function(start) { 
+	            },function(start) {
                     var summary_new_start_date = new Date(start).getTime();
                     var summary_new_end_date = new Date(jQuery('#summary_end_date').val()).getTime();
                     jQuery('#summary_phenotype_slider_range').slider('values', [summary_new_start_date, summary_new_end_date]);
@@ -214,8 +214,8 @@ input[type="text"] {
                     "minDate": "2000-01-01",
 	                "maxDate": new Date(),
 	                "yearSelect" : true,
-	                locale: { 
-	            	    format: 'YYYY-MM-DD'
+	                locale: {
+	                format: 'YYYY-MM-DD'
 	                },
 	            },function (end) {
                     var summary_new_start_date = new Date(jQuery('#summary_start_date').val()).getTime();
@@ -255,7 +255,7 @@ input[type="text"] {
                 trait_summary_hist_display_change('plot');
 %  }
             }
-	    }).fail( function(xhr, status, error) { 
+	    }).fail( function(xhr, status, error) {
             alert('An error occurred!' + xhr.responseText);
             console.error("the status:", xhr.status);
             console.error("the error:", error);
@@ -271,7 +271,7 @@ input[type="text"] {
             jQuery('#pheno_summary_table_div').empty().html(html);
             datatables_display_phenosummary(type);
         });
-    
+
         jQuery('#summary_end_date').change( function() {
 	        //datatables_display_phenosummary(type);
 	        var html = setup_tables(type);
@@ -286,7 +286,7 @@ input[type="text"] {
         jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
             if (!dates_ready) return; // Wait for date range AJAX
             init_summary_table(type);
-        
+
 
 %  if ($trial_stock_type eq 'analysis_instance') {
         trait_summary_hist_display_change('analysis_instance');
@@ -425,7 +425,7 @@ input[type="text"] {
 		    if (trait_value == null) {
 			jQuery('#working_modal').modal("hide");
 			return;
-		    }			
+		    }
 
                     jQuery.ajax( {
                         url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+trait_value+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
@@ -466,7 +466,7 @@ input[type="text"] {
         datatables_display_phenosummary(type);
 
         // get the earliest and last measurement date in the trial
-    
+
         jQuery(document).on('change', '#display_trial_phenosummary', function() {
             var html = setup_tables(type);
             jQuery('#pheno_summary_table_div').empty().html(html);
@@ -503,7 +503,7 @@ input[type="text"] {
         jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
-    
+
         // console.log("value",value);
         jQuery.ajax( {
             url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+value+'&display='+jQuery('#display_trial_phenosummary_hist').val()+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',

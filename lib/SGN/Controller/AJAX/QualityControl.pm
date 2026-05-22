@@ -49,10 +49,10 @@ sub prepare: Path('/ajax/qualitycontrol/prepare') Args(0) {
     $ds_json->retrieve_traits();
     my $ds_traits = $ds_json->traits();
 
-    
+
     # Print extracted traits
     if ($ds_traits && @$ds_traits) {
-       
+
         my $ds = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => 1, file_name => $temppath, quotes => 0);
         $ds->retrieve_phenotypes();
         my $pf = CXGN::Phenotypes::File->new( { file => $temppath."_phenotype.txt" });
@@ -252,7 +252,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my %study_names;
     my $trait;
 
-    my $othertraits_json = $c->req->param('othertraits');  
+    my $othertraits_json = $c->req->param('othertraits');
     my $othertraits = eval { decode_json($othertraits_json || '[]') };
     if ($@ || ref($othertraits) ne 'ARRAY') {
         $c->stash->{rest} = { error => 'Invalid other traits payload.' };
@@ -263,7 +263,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my %unique_traits = map { $_ => 1 } @$othertraits;
     my @unique_othertraits = keys %unique_traits;
 
-    foreach my $entry (@$outliers_data) { 
+    foreach my $entry (@$outliers_data) {
         $trait = $entry->{trait};
         my $study_name = $entry->{studyName};
         $study_names{$study_name} = 1 if defined $study_name;
@@ -288,7 +288,7 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my $study_placeholders = join(', ', ('?') x scalar(@unique_study_names));
     my $trial_sql = qq{
         INSERT INTO projectprop (project_id, type_id, value, rank)
-        SELECT 
+        SELECT
             p.project_id,
             (SELECT cvterm_id FROM cvterm WHERE name = 'validated_phenotype'),
             ?,
@@ -329,16 +329,16 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 
             my $outlier_data_sql = qq{
                 INSERT INTO phenotypeprop (phenotype_id, type_id, value)
-                SELECT phenotype.phenotype_id, 
-                       cvterm_outlier.cvterm_id, 
+                SELECT phenotype.phenotype_id,
+                       cvterm_outlier.cvterm_id,
                        phenotype.value
                 FROM phenotype
-                JOIN nd_experiment_phenotype 
-                    ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id 
-                JOIN nd_experiment_stock 
-                    ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id 
-                JOIN stock 
-                    ON stock.stock_id = nd_experiment_stock.stock_id 
+                JOIN nd_experiment_phenotype
+                    ON nd_experiment_phenotype.phenotype_id = phenotype.phenotype_id
+                JOIN nd_experiment_stock
+                    ON nd_experiment_stock.nd_experiment_id = nd_experiment_phenotype.nd_experiment_id
+                JOIN stock
+                    ON stock.stock_id = nd_experiment_stock.stock_id
                 LEFT JOIN phenotypeprop existing_prop
                     ON existing_prop.phenotype_id = phenotype.phenotype_id
                     AND existing_prop.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'phenotype_outlier')
@@ -402,7 +402,7 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
         $c->stash->{rest} = { error => 'Invalid restore payload.' };
         return;
     }
-    
+
     # getting trait name — strip ontology suffix for LIKE matching
     my $trait = $c->req->param('trait');
     $trait =~ s/\|.*//;

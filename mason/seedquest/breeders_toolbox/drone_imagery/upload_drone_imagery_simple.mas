@@ -140,9 +140,9 @@
 
 <div class="drone-upload-simple">
     <h2>📷 Upload Drone Imagery</h2>
-    
+
     <form id="drone_upload_simple_form" enctype="multipart/form-data">
-        
+
         <div class="form-group">
             <label for="trial_select">Select Field Trial</label>
             <div id="drone_simple_trial_select_div">
@@ -151,37 +151,37 @@
                 </select>
             </div>
         </div>
-        
+
         <div class="form-group">
             <label for="upload_zip">Upload Images (ZIP)</label>
             <input type="file" id="upload_zip" name="upload_zip" accept=".zip" />
         </div>
-        
+
         <div class="info-box">
             <strong>Auto-detection:</strong> Date, sensor type, and imaging event name will be extracted automatically from image EXIF data.
         </div>
-        
+
         <div class="detected-info" id="detected_info">
             <strong>Detected:</strong><br/>
             <span id="detected_sensor">Sensor: --</span><br/>
             <span id="detected_date">Date: --</span>
         </div>
-        
+
         <div class="checkbox-group">
             <input type="checkbox" id="use_odm" name="use_odm" checked />
             <label for="use_odm">Stitch raw images with OpenDroneMap</label>
         </div>
-        
+
         <div class="spinner" id="upload_spinner">
             <p>Processing images with OpenDroneMap...</p>
             <p style="font-size: 0.85rem; color: #666;">This may take several minutes</p>
         </div>
-        
+
         <button type="submit" class="btn-upload" id="btn_upload">
             Upload & Process
         </button>
     </form>
-    
+
     <div class="advanced-link">
         <a href="#" onclick="jQuery('#upload_drone_imagery_dialog').modal('show'); return false;">
             Need more options? Use Advanced Upload
@@ -194,7 +194,7 @@
 jQuery(document).ready(function() {
     // Load trials dropdown
     loadTrials();
-    
+
     // File change - detect EXIF
     jQuery('#upload_zip').on('change', function() {
         var file = this.files[0];
@@ -205,35 +205,35 @@ jQuery(document).ready(function() {
             jQuery('#detected_date').text('Date: Will be detected from images');
         }
     });
-    
+
     // Form submit
     jQuery('#drone_upload_simple_form').on('submit', function(e) {
         e.preventDefault();
-        
+
         var trial_id = jQuery('#trial_select').val();
         var file = jQuery('#upload_zip')[0].files[0];
         var use_odm = jQuery('#use_odm').is(':checked');
-        
+
         if (!trial_id) {
             alert('Please select a field trial');
             return;
         }
-        
+
         if (!file) {
             alert('Please select a ZIP file with images');
             return;
         }
-        
+
         // Show spinner
         jQuery('#upload_spinner').addClass('active');
         jQuery('#btn_upload').prop('disabled', true);
-        
+
         var formData = new FormData();
         formData.append('trial_id', trial_id);
         formData.append('upload_zip', file);
         formData.append('use_odm', use_odm ? '1' : '0');
         formData.append('auto_detect', '1');
-        
+
         jQuery.ajax({
             url: '/ajax/seedquest/drone_imagery/simple_upload',
             type: 'POST',
@@ -244,21 +244,21 @@ jQuery(document).ready(function() {
             success: function(response) {
                 jQuery('#upload_spinner').removeClass('active');
                 jQuery('#btn_upload').prop('disabled', false);
-                
+
                 if (response.success) {
                     // Show detected info
                     if (response.detected) {
                         jQuery('#detected_info').addClass('visible');
                         jQuery('#detected_sensor').text('Sensor: ' + (response.detected.sensor_display || response.detected.sensor));
                         jQuery('#detected_date').text('Date: ' + response.detected.date);
-                        
+
                         // Show camera make/model if available
                         if (response.detected.make || response.detected.model) {
-                            jQuery('#detected_info').append('<br><span>Camera: ' + 
+                            jQuery('#detected_info').append('<br><span>Camera: ' +
                                 (response.detected.make || '') + ' ' + (response.detected.model || '') + '</span>');
                         }
                     }
-                    
+
                     // Show success message with detected info
                     var msg = 'Upload successful!\n\n';
                     if (response.detected) {
@@ -267,7 +267,7 @@ jQuery(document).ready(function() {
                         msg += 'Imaging Event: ' + response.detected.drone_run_name + '\n\n';
                     }
                     msg += response.message;
-                    
+
                     alert(msg);
                     window.location.href = '/breeders/drone_imagery';
                 } else {
@@ -277,7 +277,7 @@ jQuery(document).ready(function() {
             error: function(xhr, status, error) {
                 jQuery('#upload_spinner').removeClass('active');
                 jQuery('#btn_upload').prop('disabled', false);
-                
+
                 var errorMsg = 'Upload failed: ';
                 if (status === 'timeout') {
                     errorMsg += 'Request timed out. The file may be too large or the server is busy.';
@@ -292,7 +292,7 @@ jQuery(document).ready(function() {
                 } else {
                     errorMsg += error || status || 'Unknown error';
                 }
-                
+
                 console.error('Upload error:', {status: status, error: error, xhr: xhr});
                 alert(errorMsg);
             }
@@ -309,7 +309,7 @@ function loadTrials() {
             var select = jQuery('#trial_select');
             select.empty();
             select.append('<option value="">-- Select Trial --</option>');
-            
+
             // Response is JSON with .select field containing HTML
             if (response && response.select) {
                 var tempDiv = jQuery('<div>').html(response.select);

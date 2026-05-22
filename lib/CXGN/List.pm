@@ -399,14 +399,14 @@ sub remove_element {
     # json data and gets interpreted wrong using grep, leading to errors. For example,
     # in some lists, usernames are stored, and when they contain dashes, an error occurs
     # as it is not legal regexp. See issue: https://github.com/solgenomics/sgn/issues/5689
-    
+
     my @clean;
     foreach my $e (@$elements) {
-	if ($e ne $element) { 
+	if ($e ne $element) {
 	    push @clean, $e;
 	}
     }
-    
+
     $self->elements(\@clean);
     return 0;
 }

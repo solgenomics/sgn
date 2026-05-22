@@ -3,9 +3,9 @@
     <li><a href="/about"><span class="glyphicon glyphicon-info-sign"></span> About</a></li>
     <li><a href="/contact/form"><span class="glyphicon glyphicon-envelope"></span> Contact</a></li>
     <li><a href="/about/"><span class="glyphicon glyphicon-bookmark"></span> Cite Breedbase</a></li>
-    
+
     <li role="separator" class="divider"></li>
-    
+
     <li><a href="https://solgenomics.github.io/sgn"><span class="glyphicon glyphicon-book"></span> Manual</a></li>
     <li><a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A"><span class="glyphicon glyphicon-facetime-video"></span> Video Tutorials</a></li>
     <li><a href="/help/faq.pl"><span class="glyphicon glyphicon-question-sign"></span> FAQ</a></li>

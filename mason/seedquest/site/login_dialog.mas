@@ -180,14 +180,14 @@ $goto_url => '/breeders/home'
                                             <input class="form-control" type="text" name="last_name" value="" />
                                         </div>
                                     </div>
-% if ( $join_breeding_programs ) { 
+% if ( $join_breeding_programs ) {
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Breeding Program(s): </label>
                                         <div class="col-sm-9">
                                             <div id="breeding_programs_div"></div>
                                       </div>
                                     </div>
-% } else {  
+% } else {
                                     <div class="form-group">
                                         <label class="col-sm-3 control-label">Organization: </label>
                                         <div class="col-sm-9">
@@ -250,7 +250,7 @@ $goto_url => '/breeders/home'
 </div>
 
 <script>
-jQuery(document).ready( function() { 
+jQuery(document).ready( function() {
 
     jQuery("#site_login_dialog").on('shown.bs.modal', function() {
         jQuery('#show_password').prop('checked', false);
@@ -271,7 +271,7 @@ jQuery(document).ready( function() {
             error: function(r) { alert('An error occurred! Sorry!');  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
-                else { 
+                else {
                     alert(r.message);
                     jQuery('#site_login_forgot_username_dialog').modal('hide');
                 }
@@ -293,7 +293,7 @@ jQuery(document).ready( function() {
             error: function(r) { alert('An error occurred! Sorry!');  },
             success: function(r) {
                 if (r.error) { alert(r.error); }
-                else { 
+                else {
                     alert(r.message);
                     jQuery('#site_login_reset_password_dialog').modal('hide');
                 }
@@ -358,25 +358,25 @@ jQuery(document).ready( function() {
             event.preventDefault();
         }
     });
-    jQuery('#login_form').submit( function(event) { 
+    jQuery('#login_form').submit( function(event) {
         event.preventDefault();
         var form_data = jQuery('#login_form').serialize();
-        if (!jQuery('#username').val() || !jQuery('#password').val()) { 
+        if (!jQuery('#username').val() || !jQuery('#password').val()) {
             alert('Please enter a username and password');
             return;
         }
-        jQuery.ajax( { 
+        jQuery.ajax( {
             url: '/ajax/user/login',
             data: form_data,
             error: function(r) { alert('An error occurred! Sorry!');  },
             success: function(r) {
-                if (r.error) { 
+                if (r.error) {
                     alert(r.error);
                     return;
                 }
                 if (r.goto_url.match('login')) {
                     location.href='/breeders/home';
-                } else if (r.goto_url && r.goto_url !== "" ) { 
+                } else if (r.goto_url && r.goto_url !== "" ) {
                     location.href=r.goto_url;
                 } else {
                     location.href='/breeders/home';

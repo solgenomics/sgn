@@ -6,7 +6,7 @@
   # Priority: 1. Config file, 2. ENV vars, 3. git tags, 4. default
   my $cfg_ver  = eval { $c->config->{footer_version} } || "";
   my $cfg_date = eval { $c->config->{footer_build_date} } || "";
-  
+
   # Start with config values
   $tag     = $cfg_ver;
   $updated = $cfg_date;
@@ -51,9 +51,9 @@
         </div>
 
         <div class="sq-footer-links">
-          <a href="/legal">Legal</a> | 
-          <a href="https://solgenomics.github.io/sgn/" target="_new">Manual</a> | 
-          <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">Video tutorials</a> | 
+          <a href="/legal">Legal</a> |
+          <a href="https://solgenomics.github.io/sgn/" target="_new">Manual</a> |
+          <a href="https://www.youtube.com/channel/UC3jrvvzGKKEHzOriDBgnj0A" target="_new">Video tutorials</a> |
           <a href="/help/faq.pl">FAQ</a>
         </div>
       </div>

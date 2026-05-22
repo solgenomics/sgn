@@ -33,7 +33,7 @@ Calculate Growing Degree Days and Crop Heat Units for crop planning
                 </div>
             </div>
         </div>
-        
+
         <!-- Display Options Panel -->
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -81,7 +81,7 @@ Calculate Growing Degree Days and Crop Heat Units for crop planning
                 </div>
             </div>
         </div>
-        
+
         <br>
         <div class="text-center">
             <button class="btn btn-default" id="gdd_config_station" type="button" style="margin-right: 10px;">
@@ -102,7 +102,7 @@ Calculate Growing Degree Days and Crop Heat Units for crop planning
 <div id="gdd_results" style="display:none">
     <div class="panel panel-success">
         <div class="panel-heading">
-            <h4>Results 
+            <h4>Results
                 <div class="pull-right">
                     <button class="btn btn-success btn-sm" id="gdd_export_excel">
                         <span class="glyphicon glyphicon-download-alt"></span> Export to Excel
@@ -192,12 +192,12 @@ function renderTable(data) {
     // Handle both single-year (daily_data) and multi-year (all_daily_data) formats
     var dailyData = data.daily_data || data.all_daily_data;
     if (!data || !dailyData) return;
-    
+
     // Build table header dynamically
     var thead = jQuery('#gdd_data_table thead tr');
     thead.empty();
     thead.append('<th>Date</th><th>Max °C</th><th>Min °C</th><th>GDD (day)</th><th>GDD (cumul)</th><th>CHU (day)</th><th>CHU (cumul)</th><th>Precip (mm)</th>');
-    
+
     // Add optional columns based on checkboxes
     if (jQuery('#show_humidity').is(':checked')) thead.append('<th>Humidity %</th>');
     if (jQuery('#show_solar').is(':checked')) thead.append('<th>Solar MJ/m²</th>');
@@ -208,21 +208,21 @@ function renderTable(data) {
     if (jQuery('#show_et').is(':checked')) thead.append('<th>ET mm</th>');
     if (jQuery('#show_soiltemp').is(':checked')) thead.append('<th>Soil °C</th>');
     if (jQuery('#show_soilmoisture').is(':checked')) thead.append('<th>Soil %</th>');
-    
+
     // Build table body
     var tbody = jQuery('#gdd_data_table tbody');
     tbody.empty();
     jQuery.each(dailyData, function(i, day) {
-        var row = '<tr>' +
-            '<td>' + day.date + '</td>' +
-            '<td>' + day.temp_max + '</td>' +
-            '<td>' + day.temp_min + '</td>' +
-            '<td>' + day.gdd_day + '</td>' +
-            '<td>' + day.gdd_cumulative + '</td>' +
-            '<td>' + day.chu_day + '</td>' +
-            '<td>' + day.chu_cumulative + '</td>' +
+        var row = '<tr>'
+            '<td>' + day.date + '</td>'
+            '<td>' + day.temp_max + '</td>'
+            '<td>' + day.temp_min + '</td>'
+            '<td>' + day.gdd_day + '</td>'
+            '<td>' + day.gdd_cumulative + '</td>'
+            '<td>' + day.chu_day + '</td>'
+            '<td>' + day.chu_cumulative + '</td>'
             '<td>' + day.precip_day + '</td>';
-        
+
         // Add optional columns
         if (jQuery('#show_humidity').is(':checked')) row += '<td>' + (day.humidity_mean || '-') + '</td>';
         if (jQuery('#show_solar').is(':checked')) row += '<td>' + (day.solar_radiation || '-') + '</td>';
@@ -233,14 +233,14 @@ function renderTable(data) {
         if (jQuery('#show_et').is(':checked')) row += '<td>' + (day.evapotranspiration || '-') + '</td>';
         if (jQuery('#show_soiltemp').is(':checked')) row += '<td>' + (day.soil_temp || '-') + '</td>';
         if (jQuery('#show_soilmoisture').is(':checked')) row += '<td>' + (day.soil_moisture || '-') + '</td>';
-        
+
         row += '</tr>';
         tbody.append(row);
     });
 }
 
 jQuery(document).ready(function() {
-    
+
     // Load locations directly
     jQuery.ajax({
         url: '/ajax/location/all',
@@ -252,7 +252,7 @@ jQuery(document).ready(function() {
             if (response && response.data) {
                 jQuery.each(response.data, function(i, loc) {
                     if (loc.properties && loc.properties.Name && loc.properties.Name !== '[Computation]') {
-                        select.append('<option value="' + loc.properties.Id + '">' + 
+                        select.append('<option value="' + loc.properties.Id + '">' +
                             loc.properties.Name + '</option>');
                     }
                 });
@@ -262,7 +262,7 @@ jQuery(document).ready(function() {
             jQuery('#gdd_location_id').html('<option value="">Error loading locations</option>');
         }
     });
-    
+
     // Load crops
     jQuery.ajax({
         url: '/ajax/seedquest/weather/crops',
@@ -275,10 +275,10 @@ jQuery(document).ready(function() {
                 jQuery.each(response.crops, function(i, crop) {
                     var capAttr = (crop.cap_temp !== null && crop.cap_temp !== undefined) ? crop.cap_temp : '';
                     var matAttr = (crop.maturity_gdd !== null && crop.maturity_gdd !== undefined) ? crop.maturity_gdd : '';
-                    select.append('<option value="' + crop.id + '" data-base="' + crop.base_temp + '"' +
-                        ' data-cap="' + capAttr + '" data-maturity="' + matAttr + '">' +
-                        crop.crop_name + ' (Base: ' + crop.base_temp + '&deg;C' +
-                        (capAttr !== '' ? ', cap ' + capAttr : '') + ')' +
+                    select.append('<option value="' + crop.id + '" data-base="' + crop.base_temp + '"'
+                        ' data-cap="' + capAttr + '" data-maturity="' + matAttr + '">'
+                        crop.crop_name + ' (Base: ' + crop.base_temp + '&deg;C'
+                        (capAttr !== '' ? ', cap ' + capAttr : '') + ')'
                         (crop.use_chu ? ' [CHU]' : '') + '</option>');
                 });
             }
@@ -291,12 +291,12 @@ jQuery(document).ready(function() {
     for (var y = currentYear; y >= currentYear - 5; y--) {
         var checked = (y === currentYear - 1) ? 'active' : ''; // Default to last year
         yearSelector.append(
-            '<label class="btn btn-default ' + checked + '">' +
-            '<input type="checkbox" name="years" value="' + y + '" ' + (checked ? 'checked' : '') + '> ' + y +
+            '<label class="btn btn-default ' + checked + '">'
+            '<input type="checkbox" name="years" value="' + y + '" ' + (checked ? 'checked' : '') + '> ' + y
             '</label>'
         );
     }
-    
+
     // Update season inputs when years change
     function updateSeasonInputs() {
         var selected = [];
@@ -304,41 +304,41 @@ jQuery(document).ready(function() {
             selected.push(parseInt(jQuery(this).val()));
         });
         selected.sort().reverse();
-        
+
         var container = jQuery('#season_inputs');
         container.empty();
-        
+
         if (selected.length === 0) {
             container.html('<p class="text-muted">Select at least one year above</p>');
             return;
         }
-        
+
         jQuery.each(selected, function(i, year) {
             var defaultStart = year + '-04-15';
             var defaultEnd = year + '-09-30';
             container.append(
-                '<div class="row" style="margin-bottom:5px">' +
-                '<div class="col-xs-2"><strong>' + year + ':</strong></div>' +
-                '<div class="col-xs-5">' +
-                '<input type="date" class="form-control input-sm season-start" data-year="' + year + '" value="' + defaultStart + '">' +
-                '</div>' +
-                '<div class="col-xs-5">' +
-                '<input type="date" class="form-control input-sm season-end" data-year="' + year + '" value="' + defaultEnd + '">' +
-                '</div>' +
+                '<div class="row" style="margin-bottom:5px">'
+                '<div class="col-xs-2"><strong>' + year + ':</strong></div>'
+                '<div class="col-xs-5">'
+                '<input type="date" class="form-control input-sm season-start" data-year="' + year + '" value="' + defaultStart + '">'
+                '</div>'
+                '<div class="col-xs-5">'
+                '<input type="date" class="form-control input-sm season-end" data-year="' + year + '" value="' + defaultEnd + '">'
+                '</div>'
                 '</div>'
             );
         });
     }
-    
+
     // Trigger season inputs update when years change
     jQuery('#year_selector').on('change', 'input', function() {
         jQuery(this).closest('label').toggleClass('active', this.checked);
         updateSeasonInputs();
     });
-    
+
     // Initialize season inputs
     updateSeasonInputs();
-    
+
     // Re-render table when Display Options checkboxes change
     jQuery('#displayOptions input[type="checkbox"]').change(function() {
         if (gddData) {
@@ -346,7 +346,7 @@ jQuery(document).ready(function() {
             renderTable(gddData);
         }
     });
-    
+
     // Export to Excel
     jQuery('#gdd_export_excel').click(function() {
         // Handle both single-year and multi-year data
@@ -355,7 +355,7 @@ jQuery(document).ready(function() {
             alert('No data to export. Please calculate GDD first.');
             return;
         }
-        
+
         // Prepare data for Excel
         var exportData = dataToExport.map(function(day) {
             return {
@@ -380,7 +380,7 @@ jQuery(document).ready(function() {
                 'Source': day.source || ''
             };
         });
-        
+
         // Add summary row
         exportData.push({});
         exportData.push({
@@ -393,21 +393,21 @@ jQuery(document).ready(function() {
             'CHU (cumulative)': gddData.total_chu,
             'Precip (mm)': gddData.total_precip
         });
-        
+
         // Create workbook
         var ws = XLSX.utils.json_to_sheet(exportData);
         var wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'GDD_CHU_Data');
-        
+
         // Generate filename
         var locationName = jQuery('#gdd_location_id option:selected').text() || 'location';
         var cropName = jQuery('#gdd_crop_select option:selected').text().split(' (')[0] || 'crop';
         var filename = 'GDD_' + locationName + '_' + cropName + '_' + gddData.start_date + '.xlsx';
-        
+
         // Download
         XLSX.writeFile(wb, filename);
     });
-    
+
     // Calculate GDD (with automatic sync of missing data)
     // Supports both single-year and multi-year modes
     jQuery('#gdd_calculate').click(function() {
@@ -424,7 +424,7 @@ jQuery(document).ready(function() {
             alert('Please select a location');
             return;
         }
-        
+
         // Collect selected years and their season dates
         var seasons = [];
         jQuery('.season-start').each(function() {
@@ -435,18 +435,18 @@ jQuery(document).ready(function() {
                 seasons.push({ year: year, start: start, end: end });
             }
         });
-        
+
         if (seasons.length === 0) {
             alert('Please select at least one year');
             return;
         }
-        
+
         // Show loading state
         jQuery('#gdd_results').hide();
         jQuery('#gdd_sync_status').removeClass('alert-success alert-danger').addClass('alert-info')
             .html('<span class="glyphicon glyphicon-refresh spinning"></span> Checking database and fetching any missing weather data for ' + seasons.length + ' year(s)...').show();
         jQuery('#gdd_calculate').prop('disabled', true).html('<span class="glyphicon glyphicon-refresh spinning"></span> Calculating...');
-        
+
         jQuery.ajax({
             url: '/ajax/seedquest/weather/gdd',
             data: {
@@ -459,12 +459,12 @@ jQuery(document).ready(function() {
             success: function(response) {
                 // Reset button
                 jQuery('#gdd_calculate').prop('disabled', false).html('<span class="glyphicon glyphicon-stats"></span> Calculate GDD/CHU');
-                
+
                 if (response.error) {
                     jQuery('#gdd_sync_status').removeClass('alert-info').addClass('alert-danger').html('Error: ' + response.error);
                     return;
                 }
-                
+
                 // Show sync status
                 var syncMsg = '';
                 if (response.sync_info) {
@@ -476,10 +476,10 @@ jQuery(document).ready(function() {
                     syncMsg += ' (' + response.sync_info.existing + ' days already stored)';
                 }
                 jQuery('#gdd_sync_status').removeClass('alert-info alert-danger').addClass('alert-success').html(syncMsg);
-                
+
                 // Store data for export
                 gddData = response;
-                
+
                 if (response.multi_year && response.years) {
                     // Multi-year mode - show per-year summary and overlay chart
                     renderMultiYearResults(response);
@@ -492,7 +492,7 @@ jQuery(document).ready(function() {
                     renderTable(response);
                     renderSingleYearChart(response);
                 }
-                
+
                 jQuery('#gdd_results').show();
             },
             error: function() {
@@ -501,7 +501,7 @@ jQuery(document).ready(function() {
             }
         });
     });
-    
+
     // Render multi-year results with per-year table and overlay chart
     function renderMultiYearResults(data) {
         // Update summary cards with averages
@@ -509,46 +509,46 @@ jQuery(document).ready(function() {
         jQuery('#result_total_chu').text(data.summary.avg_chu + ' avg');
         jQuery('#result_total_precip').text(data.summary.avg_precip + ' avg');
         jQuery('#result_days_count').text(data.summary.total_days + ' (' + data.summary.years_count + ' yrs)');
-        
+
         // Remove any previous year summary
         jQuery('#year_summary').remove();
-        
+
         // Build per-year summary table
-        var summaryHtml = '<h4>Per-Year Summary</h4><table class="table table-striped table-condensed">' +
+        var summaryHtml = '<h4>Per-Year Summary</h4><table class="table table-striped table-condensed">'
             '<thead><tr><th>Year</th><th>Days</th><th>Total GDD</th><th>Total CHU</th><th>Total Precip</th><th>Avg Temp</th></tr></thead><tbody>';
         jQuery.each(data.years, function(i, yr) {
-            summaryHtml += '<tr>' +
-                '<td><strong>' + yr.year + '</strong></td>' +
-                '<td>' + yr.days_count + '</td>' +
-                '<td>' + yr.total_gdd + '</td>' +
-                '<td>' + yr.total_chu + '</td>' +
-                '<td>' + yr.total_precip + ' mm</td>' +
-                '<td>' + yr.avg_temp + '°C</td>' +
+            summaryHtml += '<tr>'
+                '<td><strong>' + yr.year + '</strong></td>'
+                '<td>' + yr.days_count + '</td>'
+                '<td>' + yr.total_gdd + '</td>'
+                '<td>' + yr.total_chu + '</td>'
+                '<td>' + yr.total_precip + ' mm</td>'
+                '<td>' + yr.avg_temp + '°C</td>'
                 '</tr>';
         });
         summaryHtml += '</tbody></table>';
         jQuery('#gdd_data_table').before('<div id="year_summary">' + summaryHtml + '</div>');
-        
+
         // Get chart option states
         var showGDD = jQuery('#chart_gdd').is(':checked');
         var showCHU = jQuery('#chart_chu').is(':checked');
         var showPrecip = jQuery('#chart_precip').is(':checked');
-        
+
         // Create separate chart for each year
         var container = jQuery('#charts_container');
         container.empty();
-        
+
         jQuery.each(data.years, function(i, yr) {
             // Create chart div for this year
             var chartId = 'chart_year_' + yr.year;
-            container.append('<div class="year-chart-wrapper" style="margin-bottom:20px; padding:15px; background:#f9f9f9; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1)">' +
-                '<h5 style="margin:0 0 10px 0; color:#2E7D32"><strong>' + yr.year + ' Growing Season</strong> (' + yr.start_date + ' to ' + yr.end_date + ')</h5>' +
-                '<div id="' + chartId + '" style="height:350px;width:100%"></div>' +
+            container.append('<div class="year-chart-wrapper" style="margin-bottom:20px; padding:15px; background:#f9f9f9; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1)">'
+                '<h5 style="margin:0 0 10px 0; color:#2E7D32"><strong>' + yr.year + ' Growing Season</strong> (' + yr.start_date + ' to ' + yr.end_date + ')</h5>'
+                '<div id="' + chartId + '" style="height:350px;width:100%"></div>'
                 '</div>');
-            
+
             var traces = [];
             var dates = yr.daily_data.map(function(d) { return d.date; });
-            
+
             // GDD trace (cumulative)
             if (showGDD) {
                 traces.push({
@@ -560,7 +560,7 @@ jQuery(document).ready(function() {
                     line: { color: '#2E7D32', width: 2 }
                 });
             }
-            
+
             // CHU trace (cumulative)
             if (showCHU) {
                 traces.push({
@@ -572,7 +572,7 @@ jQuery(document).ready(function() {
                     line: { color: '#F57C00', width: 2 }
                 });
             }
-            
+
             // Precipitation bars (daily)
             if (showPrecip) {
                 traces.push({
@@ -584,7 +584,7 @@ jQuery(document).ready(function() {
                     marker: { color: '#1976D2', opacity: 0.6 }
                 });
             }
-            
+
             var layout = {
                 margin: { t: 10, b: 50, l: 60, r: 60 },
                 xaxis: { title: 'Date' },
@@ -592,18 +592,18 @@ jQuery(document).ready(function() {
                 legend: { orientation: 'h', y: 1.1 },
                 showlegend: true
             };
-            
+
             if (showPrecip) {
                 layout.yaxis2 = { title: 'Precip (mm)', overlaying: 'y', side: 'right' };
             }
-            
+
             Plotly.newPlot(chartId, traces, layout, { responsive: true });
         });
-        
+
         // Also render combined table
         renderTable({ daily_data: data.all_daily_data });
     }
-    
+
     // Re-render charts when chart options change
     jQuery('#chart_gdd, #chart_chu, #chart_precip').change(function() {
         if (gddData && gddData.multi_year && gddData.years) {
@@ -612,14 +612,14 @@ jQuery(document).ready(function() {
             renderSingleYearChart(gddData);
         }
     });
-    
+
     // Render single-year chart (legacy)
     function renderSingleYearChart(data) {
         var dates = data.daily_data.map(function(d) { return d.date; });
         var gdd_cumul = data.daily_data.map(function(d) { return parseFloat(d.gdd_cumulative); });
         var chu_cumul = data.daily_data.map(function(d) { return parseFloat(d.chu_cumulative); });
         var precip = data.daily_data.map(function(d) { return parseFloat(d.precip_day); });
-        
+
         Plotly.newPlot('gdd_chart', [
             { x: dates, y: gdd_cumul, name: 'GDD', type: 'scatter', mode: 'lines', line: {color: '#5cb85c', width: 3} },
             { x: dates, y: chu_cumul, name: 'CHU', type: 'scatter', mode: 'lines', line: {color: '#f0ad4e', width: 3} },
@@ -632,12 +632,12 @@ jQuery(document).ready(function() {
             legend: { orientation: 'h', y: -0.2 }
         });
     }
-    
+
     // Load location config when selected
     jQuery('#gdd_location_id').change(function() {
         var location_id = jQuery(this).val();
         if (!location_id) return;
-        
+
         // Load station config
         jQuery.ajax({
             url: '/ajax/seedquest/weather/station_config/get',
@@ -646,7 +646,7 @@ jQuery(document).ready(function() {
                 if (response.config) {
                     var type = response.config.weather_station_type || 'Open-Meteo';
                     jQuery('#station_type').val(type).trigger('change');
-                    
+
                     if (type === 'Davis') {
                         jQuery('#davis_api_key').val(response.config.davis_api_key);
                         jQuery('#davis_api_secret').val(response.config.davis_api_secret);
@@ -668,25 +668,25 @@ jQuery(document).ready(function() {
         }
         jQuery('#station_config_modal').modal('show');
     });
-    
+
     // Station Type Change
     jQuery('#station_type').change(function() {
         var type = jQuery(this).val();
         jQuery('#davis_fields').hide();
         jQuery('#ecowitt_fields').hide();
-        
+
         if (type === 'Davis') {
             jQuery('#davis_fields').show();
         } else if (type === 'Ecowitt') {
             jQuery('#ecowitt_fields').show();
         }
     });
-    
+
     // Save Station Config
     jQuery('#save_station_config').click(function() {
         var location_id = jQuery('#gdd_location_id').val();
         var type = jQuery('#station_type').val();
-        
+
         jQuery.ajax({
             type: 'POST',
             url: '/ajax/seedquest/weather/station_config/save',
@@ -789,7 +789,7 @@ jQuery(document).ready(function() {
                         <option value="Ecowitt">Ecowitt</option>
                     </select>
                 </div>
-                
+
                 <div id="davis_fields" style="display:none">
                     <div class="form-group">
                         <label>API Key:</label>

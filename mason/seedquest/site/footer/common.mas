@@ -31,7 +31,7 @@
         <div class="container-fluid">
 	        <center>
 	          <img src="/img/wheel.gif" />
-    	      <div id="working_msg"></div>
+	      <div id="working_msg"></div>
 	        </center>
           <div id="working_modal_progress_div" style="display: none">
             <br /><br />

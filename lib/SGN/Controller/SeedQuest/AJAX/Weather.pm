@@ -27,7 +27,7 @@ __PACKAGE__->config(
 sub get_crops : Path('/ajax/seedquest/weather/crops') Args(0) ActionClass('REST') { }
 sub get_crops_GET {
     my ($self, $c) = @_;
-    
+
     # Verified base temps / methods — see SEEDQUEST_WEATHER_RESEARCH_2026-05-22.md.
     # cap_temp set => modified "86/50" method (cap Tmax, floor Tmin at base); undef => simple average.
     # maturity_gdd/_chu = default accumulation targets to physiological maturity (editable per variety).
@@ -40,7 +40,7 @@ sub get_crops_GET {
         { id => 6, crop_name => 'Rapeseed / Canola', base_temp => 5,   cap_temp => undef, use_chu => 0, method => 'simple',   maturity_gdd => 1500, maturity_chu => undef },
         { id => 7, crop_name => 'Custom',            base_temp => 10,  cap_temp => undef, use_chu => 1, method => 'simple',   maturity_gdd => undef, maturity_chu => undef },
     );
-    
+
     $c->stash->{rest} = { crops => \@crops };
 }
 
@@ -83,12 +83,12 @@ sub _do_gdd_calculation {
         my $seasons = decode_json($seasons_json);
         my @results;
         my $cache_stats = { from_cache => 0, from_api => 0 };
-        
+
         foreach my $season (@$seasons) {
             my $year = $season->{year};
             my $start_date = $season->{start_date} || $season->{start} || "$year-04-15";
             my $end_date = $season->{end_date} || $season->{end} || "$year-09-30";
-            
+
             # Use cache only if it fully covers the requested range — otherwise a
             # partial cache (e.g. 5 of 60 days) would silently undercount GDD.
             my $weather_data = $self->_get_cached_weather($c, $location_id, $start_date, $end_date);
@@ -122,14 +122,14 @@ sub _do_gdd_calculation {
 
                 $weather_data = $self->_parse_api_response($api_data, $actual_source);
                 $data_source = $actual_source;  # Update for response
-                
+
                 # Cache the data
                 if ($weather_data && scalar(@$weather_data) > 0) {
                     $self->_cache_weather_data($c, $location_id, $weather_data, $data_source);
                     $cache_stats->{from_api} += scalar(@$weather_data);
                 }
             }
-            
+
             # Calculate GDD/CHU via shared helpers; skip days with missing temps
             # (do not fabricate 20/10) and track real mean temperature.
             my @daily_data;
@@ -163,7 +163,7 @@ sub _do_gdd_calculation {
                     precip_cumulative => sprintf("%.1f", $total_precip),
                 };
             }
-            
+
             push @results, {
                 year => $year,
                 start_date => $start_date,
@@ -178,11 +178,11 @@ sub _do_gdd_calculation {
                 data_source => $used_cache ? 'cached' : $data_source,
             };
         }
-        
+
         # Build summary and combine all daily data for Excel export
         my ($sum_gdd, $sum_chu, $sum_precip, $total_days) = (0, 0, 0, 0);
         my @all_daily_data;
-        
+
         foreach my $r (@results) {
             $sum_gdd += $r->{total_gdd};
             $sum_chu += $r->{total_chu};
@@ -192,7 +192,7 @@ sub _do_gdd_calculation {
             push @all_daily_data, @{$r->{daily_data} || []};
         }
         my $years_count = scalar(@results);
-        
+
         $c->stash->{rest} = {
             success => 1,
             multi_year => ($years_count > 1) ? 1 : 0,
@@ -212,13 +212,13 @@ sub _do_gdd_calculation {
             days_count => $results[0]->{days_count} || 0,
             daily_data => $results[0]->{daily_data} || [],
             location => { lat => $lat, lon => $lon },
-            sync_info => { 
-                synced => $cache_stats->{from_api}, 
+            sync_info => {
+                synced => $cache_stats->{from_api},
                 existing => $cache_stats->{from_cache},
-                message => "Data from $data_source" 
+                message => "Data from $data_source"
             },
         };
-        
+
     } catch {
         $c->stash->{rest} = { error => "Failed to calculate GDD: $_" };
     };
@@ -324,7 +324,7 @@ sub _do_maturity {
 
 sub _get_cached_weather {
     my ($self, $c, $location_id, $start_date, $end_date) = @_;
-    
+
     my @data;
     try {
         my $dbh = $c->dbc->dbh;
@@ -346,7 +346,7 @@ sub _get_cached_weather {
                 END
         });
         $sth->execute($location_id, $start_date, $end_date);
-        
+
         while (my $row = $sth->fetchrow_hashref) {
             push @data, {
                 date    => $row->{date},
@@ -367,16 +367,16 @@ sub _get_cached_weather {
     } catch {
         warn "Weather cache read failed: $_";
     };
-    
+
     return \@data;
 }
 
 sub _cache_weather_data {
     my ($self, $c, $location_id, $data, $source) = @_;
-    
+
     try {
         my $dbh = $c->dbc->dbh;
-        
+
         # Upsert into weather_data with multi-source support
         my $sth = $dbh->prepare(q{
             INSERT INTO weather_data
@@ -398,7 +398,7 @@ sub _cache_weather_data {
                 soil_temp = EXCLUDED.soil_temp,
                 soil_moisture = EXCLUDED.soil_moisture
         });
-        
+
         foreach my $day (@$data) {
             $sth->execute(
                 $location_id,
@@ -428,7 +428,7 @@ sub _cache_weather_data {
 
 sub _fetch_openmeteo_data {
     my ($self, $lat, $lon, $start_date, $end_date) = @_;
-    
+
     my $ua = LWP::UserAgent->new(timeout => 60);
     # Full 17-variable agronomical dataset from Open-Meteo ERA5-Land
     my $vars = join(',',
@@ -486,7 +486,7 @@ sub _fetch_davis_data {
     $station_id  ||= $c->config->{davis_station_id} || '';
 
     return undef unless $api_key && $api_secret && $station_id;
-    
+
     my $ua = LWP::UserAgent->new(timeout => 30);
 
     my $start_ts = $self->_date_to_timestamp($start_date);
@@ -499,7 +499,7 @@ sub _fetch_davis_data {
             . "&start-timestamp=$start_ts&end-timestamp=$end_ts";
 
     my $response = $ua->get($url, 'X-Api-Secret' => $api_secret);
-    
+
     if ($response->is_success) {
         return decode_json($response->decoded_content);
     } else {
@@ -532,7 +532,7 @@ sub _fetch_ecowitt_data {
             . "&end_date=" . uri_escape($end_date)
             . "&call_back=outdoor,rainfall&cycle_type=1day";
     my $response = $ua->get($url);
-    
+
     if ($response->is_success) {
         return decode_json($response->decoded_content);
     } else {
@@ -547,15 +547,15 @@ sub _fetch_ecowitt_data {
 
 sub _parse_api_response {
     my ($self, $data, $source) = @_;
-    
+
     return [] unless $data;
-    
+
     my @result;
-    
+
     if ($source eq 'openmeteo') {
         my $daily = $data->{daily} || {};
         my $dates = $daily->{time} || [];
-        
+
         # Map all 17 Open-Meteo variables to internal field names
         my $tmax_arr   = $daily->{temperature_2m_max} || [];
         my $tmin_arr   = $daily->{temperature_2m_min} || [];
@@ -568,7 +568,7 @@ sub _parse_api_response {
         my $dew_arr    = $daily->{dew_point_2m_mean} || [];
         my $soilt_arr  = $daily->{soil_temperature_0_to_7cm_mean} || [];
         my $soilm_arr  = $daily->{soil_moisture_0_to_7cm_mean} || [];
-        
+
         for my $i (0..$#$dates) {
             push @result, {
                 date          => $dates->[$i],
@@ -604,7 +604,7 @@ sub _parse_api_response {
         my $outdoor = $data->{data}{outdoor} || {};
         my $temps = $outdoor->{temperature}{list} || [];
         my $rain = $data->{data}{rainfall}{daily}{list} || [];
-        
+
         for my $i (0..$#$temps) {
             my $t = $temps->[$i];
             push @result, {
@@ -615,7 +615,7 @@ sub _parse_api_response {
             };
         }
     }
-    
+
     return \@result;
 }
 
@@ -664,31 +664,31 @@ sub save_station_config_POST {
 sub get_data_sources : Path('/ajax/seedquest/weather/sources') Args(0) ActionClass('REST') { }
 sub get_data_sources_GET {
     my ($self, $c) = @_;
-    
+
     my @sources = (
-        { 
-            id => 'openmeteo', 
-            name => 'Open-Meteo', 
+        {
+            id => 'openmeteo',
+            name => 'Open-Meteo',
             description => 'Free historical weather API (1940-present)',
             configured => 1,
             requires_key => 0,
         },
-        { 
-            id => 'davis', 
-            name => 'Davis WeatherLink', 
+        {
+            id => 'davis',
+            name => 'Davis WeatherLink',
             description => 'Davis Instruments weather stations',
             configured => ($c->config->{davis_api_key} ? 1 : 0),
             requires_key => 1,
         },
-        { 
-            id => 'ecowitt', 
-            name => 'Ecowitt Cloud', 
+        {
+            id => 'ecowitt',
+            name => 'Ecowitt Cloud',
             description => 'Ecowitt weather stations',
             configured => ($c->config->{ecowitt_app_key} ? 1 : 0),
             requires_key => 1,
         },
     );
-    
+
     $c->stash->{rest} = { success => 1, sources => \@sources };
 }
 
@@ -699,9 +699,9 @@ sub get_data_sources_GET {
 sub get_cache_stats : Path('/ajax/seedquest/weather/cache/stats') Args(0) ActionClass('REST') { }
 sub get_cache_stats_GET {
     my ($self, $c) = @_;
-    
+
     my $stats = { total_records => 0, locations => 0, date_range => {} };
-    
+
     try {
         my $dbh = $c->dbc->dbh;
         my $sth = $dbh->prepare(q{
@@ -713,7 +713,7 @@ sub get_cache_stats_GET {
         });
         $sth->execute();
         my $row = $sth->fetchrow_hashref;
-        
+
         $stats = {
             total_records => $row->{total} || 0,
             locations => $row->{locations} || 0,
@@ -725,7 +725,7 @@ sub get_cache_stats_GET {
     } catch {
         # Table doesn't exist yet
     };
-    
+
     $c->stash->{rest} = { success => 1, stats => $stats };
 }
 

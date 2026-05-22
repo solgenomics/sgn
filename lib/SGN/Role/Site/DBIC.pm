@@ -36,16 +36,16 @@ sub dbic_schema {
     #Class::MOP::load_class( $schema_name );
     load_class( $schema_name );
     state %schema_cache;
-    
+
     return $schema_cache{$class}{$profile_name || ''}{$schema_name} ||= do {
         my $profile = $class->dbc_profile( $profile_name );
         #print STDERR "profile: ".Dumper($profile)."\n";
         #my $sp_person_id = $profile -> user -> get_object() -> get_sp_person_id;
         $schema_name->connect(
             @{$profile}{qw| dsn user password attributes |},
-            { on_connect_call => sub { $class->ensure_dbh_search_path_is_set(my $dbh = shift->dbh ) ; 
+            { on_connect_call => sub { $class->ensure_dbh_search_path_is_set(my $dbh = shift->dbh ) ;
 
-                
+
                 #my $delete_old_table_query = "DROP TABLE IF EXISTS logged_in_user";
                 #my $delete = $dbh -> do($delete_old_table_query);
                 my $q = "CREATE temporary table IF NOT EXISTS logged_in_user (sp_person_id bigint)";
@@ -58,19 +58,19 @@ sub dbic_schema {
                 my $insert_query = "INSERT INTO logged_in_user (sp_person_id) VALUES (?)";
                 my $insert_handle = $dbh -> prepare($insert_query);
                 $insert_handle -> execute($sp_person_id);
-               
 
-            
+
+
             }, },
-            
-            
+
+
             #on_connect_do => [
             #    "CREATE temporary table IF NOT EXISTS logged_in_user (sp_person_id bigint)",
              #   "INSERT INTO logged_in_user (sp_person_id) VALUES ($sp_person_id)",
             #]
-            
-            
-            
+
+
+
            )
     };
 }

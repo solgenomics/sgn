@@ -96,7 +96,7 @@ export function init(main_div) {
     let isFixedMinMax = false;
     let minVal;
     let maxVal;
-    
+
     $('#selected_variable').on('change', function () {
         trait_selected = $('#trait_select').val();  // Get the selected trait from the dropdown
 
@@ -106,7 +106,7 @@ export function init(main_div) {
         }
 
         // Fetch tempfile value
-        tempfile = $('#tempfile').html();  
+        tempfile = $('#tempfile').html();
 
         // Check if tempfile is not empty
         if (!tempfile || tempfile.trim() === '') {
@@ -133,7 +133,7 @@ export function init(main_div) {
                     populateOutlierTable(r.data, trait_selected);
                     populateCleanTable(r.data, outliers, trait_selected);
                 }
-                
+
             },
             error: function (e) {
                 alert('Error during AJAX request!');
@@ -141,9 +141,9 @@ export function init(main_div) {
         });
 
     });
-    
+
     $("#fixed-min-max").click(function() {
-        isFixedMinMax = true;  
+        isFixedMinMax = true;
 
         let dataset_id = get_dataset_id();
         minVal = parseFloat(document.getElementById("min-limit").value);
@@ -171,7 +171,7 @@ export function init(main_div) {
             });
         }
     });
-    
+
     const checkedTraits = [];
     $('#select_traits_button').on('click', function () {
         populateOtherTraits(all_traits, trait_selected);
@@ -182,11 +182,11 @@ export function init(main_div) {
         });
     });
 
-        
+
     $('#store_outliers_button').click(function () {
         $.ajax({
             url: '/ajax/seedquest/qualitycontrol/storeoutliers',
-            method: "POST",  
+            method: "POST",
             data: {"outliers": JSON.stringify(globalOutliers), "trait":trait_selected, "othertraits": JSON.stringify(checkedTraits)
             },
             success: function(response) {
@@ -197,7 +197,7 @@ export function init(main_div) {
                     $('#store_outliers_button').prop("disabled", true);
                     alert("Only curators or breeders are allowed to validated trials. Please contact a curator.", response.is_curator);
                 }
-                
+
 
             },
             error: function(xhr, status, error) {
@@ -214,7 +214,7 @@ export function init(main_div) {
             success: function (r) {
                 $('#working_modal').modal("hide");
                 if (r.message) {
-                    alert(r.message); 
+                    alert(r.message);
                     return;
                 } else {
                     var trialNames = r.data;
@@ -313,7 +313,7 @@ function calculateStatistics(values) {
 
 
 function populateOutlierTable(data, trait) {
-    const tableBody = document.querySelector("#outlier_table tbody"); 
+    const tableBody = document.querySelector("#outlier_table tbody");
 
     tableBody.innerHTML = ''; // Clear existing table content
     const groupedData = {};
@@ -331,7 +331,7 @@ function populateOutlierTable(data, trait) {
                     locationDbId: item.locationDbId,
                     locationName: item.locationName,
                     studyName: item.studyName,
-                    values: [] 
+                    values: []
                 };
             }
             groupedData[identifier].values.push(value);
@@ -341,7 +341,7 @@ function populateOutlierTable(data, trait) {
 
     for (const key in groupedData) {
         const dataGroup = groupedData[key];
-        const stats = calculateStatistics(dataGroup.values); 
+        const stats = calculateStatistics(dataGroup.values);
         const row = tableBody.insertRow();
         const cell1 = row.insertCell(0);
         const cell2 = row.insertCell(1);
@@ -379,8 +379,8 @@ function populateCleanTable(data, outliers, trait) {
         }
 
         // Extract the value from the specified trait
-        const valueStr = item[trait] || ''; 
-        const value = parseFloat(valueStr.replace(',', '.')); 
+        const valueStr = item[trait] || '';
+        const value = parseFloat(valueStr.replace(',', '.'));
 
         if (item.locationDbId && item.studyName) {
             const identifier = `${item.locationDbId}-${item.studyName}`;
@@ -398,7 +398,7 @@ function populateCleanTable(data, outliers, trait) {
 
     for (const key in groupedData) {
         const dataGroup = groupedData[key];
-        const stats = calculateStatistics(dataGroup.values); 
+        const stats = calculateStatistics(dataGroup.values);
         const row = tableBody.insertRow();
         const cell1 = row.insertCell(0);
         const cell2 = row.insertCell(1);
@@ -465,7 +465,7 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
       lowerBound = q1 - outlierMultiplier * iqr;
       upperBound = q3 + outlierMultiplier * iqr;
     }
-    
+
 
     const median = d3.quantile(values, 0.5);
 
@@ -508,7 +508,7 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
           height = 400 - margin.top - margin.bottom;
 
     d3.select("#trait_boxplot").select("svg").remove();
-    
+
     const svg = d3.select("#trait_boxplot")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -525,7 +525,7 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
         .range([0, height])
         .padding(0.1);
 
-    const boxWidth = y.bandwidth() / 2; 
+    const boxWidth = y.bandwidth() / 2;
 
     const boxplotGroup = svg.selectAll(".boxplot")
         .data(boxplotData.filter(d => d.values.length > 0)) // Skip empty groups
@@ -683,10 +683,10 @@ function populateTraitDropdown(selectedVariableHTML) {
 
     // Extract values from the checkboxes in the HTML
     tempDiv.find('input.trait_box').each(function () {
-        var traitValue = $(this).val(); 
+        var traitValue = $(this).val();
         traitSelect.append($('<option>', {
-            value: traitValue,  
-            text: traitValue    
+            value: traitValue,
+            text: traitValue
         }));
     });
 }

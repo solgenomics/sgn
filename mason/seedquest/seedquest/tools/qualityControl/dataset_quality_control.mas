@@ -56,8 +56,8 @@
   }
 
 #outliers_range .ui-slider-range { background: #5cb85c; }
-#outliers_range .ui-slider-handle { border-color: #d9534f; }                
-#outliers_range { background: #d9534f; margin-top: 0.7em;}       
+#outliers_range .ui-slider-handle { border-color: #d9534f; }
+#outliers_range { background: #d9534f; margin-top: 0.7em;}
 #custom-handle {
     width: 3em;
     height: 1.6em;
@@ -65,7 +65,7 @@
     margin-top: -.8em;
     text-align: center;
     line-height: 1.6em;
-}           
+}
 
 </style>
 
@@ -109,8 +109,8 @@
         <br>
         </div>
 
-        <div class="col-md-12 well" style="margin-top: 10px;">  
-            <h3>Outliers Range</h3>   
+        <div class="col-md-12 well" style="margin-top: 10px;">
+            <h3>Outliers Range</h3>
             <div class="col-md-8">
                 <div id="outliers_range">
                     <div id="custom-handle" class="ui-slider-handle"></div>
