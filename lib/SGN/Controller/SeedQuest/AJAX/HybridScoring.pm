@@ -35,8 +35,8 @@ sub _do_calculate {
     }
 
     my $trial_id = $c->req->param('trial_id');
-    unless ($trial_id) {
-        $c->stash->{rest} = { error => 'trial_id is required' };
+    unless (defined $trial_id && $trial_id =~ /^[0-9]+$/) {
+        $c->stash->{rest} = { error => 'A valid trial_id is required' };
         return;
     }
 
@@ -69,12 +69,12 @@ sub _do_calculate {
             JOIN stock s ON s.stock_id = nes.stock_id
             JOIN stock_relationship sr ON sr.subject_id = nes.stock_id
             JOIN stock s2 ON s2.stock_id = sr.object_id
-            JOIN cvterm ON phenotype.cvalue_id = cvterm.cvterm_id
+            JOIN cvterm ON phenotype.observable_id = cvterm.cvterm_id
             WHERE nep2.project_id = ?
-              AND phenotype.value ~ '^[0-9.eE+-]+$'
+              AND phenotype.value ~ '^[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?$'
               AND phenotype.phenotype_id NOT IN (
                   SELECT phenotype_id FROM phenotypeprop
-                  WHERE type_id = (
+                  WHERE type_id IN (
                       SELECT cvterm_id FROM cvterm
                       WHERE name = 'phenotype_outlier'
                   )
