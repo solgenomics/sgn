@@ -501,7 +501,7 @@ sub list_seedlots {
             join => \@seedlot_search_joins,
             '+select'=>['project.name', 'project.project_id', 'subject.stock_id', 'subject.uniquename', 'subject.type_id', 'nd_geolocation.description', 'nd_geolocation.nd_geolocation_id'],
             '+as'=>['breeding_program_name', 'breeding_program_id', 'source_stock_id', 'source_uniquename', 'source_type_id', 'location', 'location_id'],
-            order_by => {-asc=>'project.name'},
+            order_by => {-asc=> [qw/project.name me.stock_id/] }
             #distinct => 1
         }
     );
