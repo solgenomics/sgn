@@ -68,6 +68,13 @@ CREATE TABLE IF NOT EXISTS weather_data (
     UNIQUE (location_id, date, source)
 );
 CREATE INDEX IF NOT EXISTS weather_data_loc_date ON weather_data (location_id, date);
+ALTER TABLE weather_data ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT now();
+ALTER TABLE weather_data ADD COLUMN IF NOT EXISTS solar_radiation REAL;
+ALTER TABLE weather_data ADD COLUMN IF NOT EXISTS dew_point REAL;
+ALTER TABLE weather_data ADD COLUMN IF NOT EXISTS soil_temp REAL;
+ALTER TABLE weather_data ADD COLUMN IF NOT EXISTS soil_moisture REAL;
+CREATE UNIQUE INDEX IF NOT EXISTS weather_data_location_date_source_unique
+    ON weather_data (location_id, date, source);
 """
 
 UPSERT = """
@@ -173,6 +180,9 @@ def sync(days_back=30, retain_days=730):
             except Exception as e:
                 conn.rollback()
                 log(f"  ✗ {loc['name']} (id={loc['id']}): {e}")
+
+        if ok == 0:
+            raise RuntimeError(f"Weather sync failed for all {len(locations)} locations")
 
         if retain_days and retain_days > 0:
             with conn.cursor() as cur:
