@@ -209,34 +209,44 @@ sub data_restore :Path('/ajax/qualitycontrol/datarestore') Args(0) {
         return;
     }
 
-    # Return study names as comma-separated list (quoted via Perl, not SQL)
-    my $project_names = join(", ", keys %$unique_names);
-    $c->stash->{rest} = { data => $project_names, trait => $trait };
+    my @project_names = keys %$unique_names;
+    $c->stash->{rest} = { data => \@project_names, trait => $trait };
 }
 
 sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my ($self, $c) = @_;
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $operator = $c->user()->get_object()->get_first_name()." ".$c->user()->get_object()->get_last_name();
-
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-    my $dbh = $schema->storage->dbh;
-
-    my @user_roles = $c->user()->roles;
-    my $curator = (grep { $_ eq 'curator' || $_ eq 'breeder' } @user_roles) ? 1 : 0;
 
     my $response_data = {
-        is_curator => $curator ? 1 : 0,
+        is_curator => 0,
     };
+
+    my $user = $c->user();
+    unless ($user) {
+        $c->stash->{rest} = $response_data;
+        return;
+    }
+
+    my @user_roles = $user->roles;
+    my $curator = (grep { $_ eq 'curator' || $_ eq 'breeder' } @user_roles) ? 1 : 0;
+    $response_data->{is_curator} = $curator ? 1 : 0;
 
     unless ($curator) {
         $c->stash->{rest} = $response_data;
         return;
     }
 
+    my $sp_person_id = $user->get_object()->get_sp_person_id();
+    my $operator = $user->get_object()->get_first_name()." ".$user->get_object()->get_last_name();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $dbh = $schema->storage->dbh;
+
     # Retrieve and decode the outliers from the request
     my $outliers_string = $c->req->param('outliers');
-    my $outliers_data = decode_json($outliers_string);
+    my $outliers_data = eval { decode_json($outliers_string || '[]') };
+    if ($@ || ref($outliers_data) ne 'ARRAY') {
+        $c->stash->{rest} = { error => 'Invalid outlier payload.' };
+        return;
+    }
     my $main_trait = $c->req->param('trait');
 
     my %trait_ids;
@@ -244,7 +254,11 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     my $trait;
 
     my $othertraits_json = $c->req->param('othertraits');  
-    my $othertraits = decode_json($othertraits_json);
+    my $othertraits = eval { decode_json($othertraits_json || '[]') };
+    if ($@ || ref($othertraits) ne 'ARRAY') {
+        $c->stash->{rest} = { error => 'Invalid other traits payload.' };
+        return;
+    }
 
     # Remove duplicates using a hash
     my %unique_traits = map { $_ => 1 } @$othertraits;
@@ -301,16 +315,15 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
     }
 
     my @plot_names  = map { $_->{plotName} } @$outliers_data;
-    my @plot_values = map { $_->{value} } @$outliers_data;
-
-    my %seen;
-    @plot_names = grep { !$seen{$_}++ } @plot_names;
+    my %seen_plots;
+    @plot_names = grep { defined $_ && $_ ne '' && !$seen_plots{$_}++ } @plot_names;
 
     # Proceed only if there are outliers to store
     if (@plot_names) {
-        my @unique_trait_ids = grep { !$seen{$_}++ } values %trait_ids;
+        my %seen_traits;
+        my @unique_trait_ids = grep { defined $_ && !$seen_traits{$_}++ } values %trait_ids;
 
-        if (@plot_names && %trait_ids) {
+        if (@plot_names && @unique_trait_ids) {
             # Build fully parameterized outlier INSERT query
             my $plot_placeholders  = join(', ', ('?') x scalar(@plot_names));
             my $trait_placeholders = join(', ', ('?') x scalar(@unique_trait_ids));
@@ -362,25 +375,42 @@ sub store_outliers : Path('/ajax/qualitycontrol/storeoutliers') Args(0) {
 sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
 
     my ($self, $c) = @_;
-    my $dbh = $c->dbc->dbh();
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
-    my @user_roles = $c->user()->roles;
-    
+
+    my $response_data = {
+        is_curator => 0,
+    };
+
+    my $user = $c->user();
+    unless ($user) {
+        $c->stash->{rest} = $response_data;
+        return;
+    }
+
+    my @user_roles = $user->roles;
     my $curator = (grep { $_ eq 'curator' } @user_roles) ? 'curator' : undef;
+    $response_data->{is_curator} = $curator ? 1 : 0;
+
+    unless ($curator && $curator eq 'curator') {
+        $c->stash->{rest} = $response_data;
+        return;
+    }
+
+    my $dbh = $c->dbc->dbh();
+    my $sp_person_id = $user->get_object()->get_sp_person_id();
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     # Retrieve and decode the outlier trials from the request
     my $outliers_string = $c->req->param('outliers');
-    my $outlier_trials = decode_json($outliers_string);
+    my $outlier_trials = eval { decode_json($outliers_string || '[]') };
+    if ($@) {
+        $c->stash->{rest} = { error => 'Invalid restore payload.' };
+        return;
+    }
     
     # getting trait name — strip ontology suffix for LIKE matching
     my $trait = $c->req->param('trait');
     $trait =~ s/\|.*//;
     my $trait_like = $trait . '%';
-
-    my $response_data = {
-        is_curator => $curator ? 1 : 0,
-    };
 
     # Normalize $outlier_trials to an array of trial name strings
     my @trial_list;
@@ -429,28 +459,23 @@ sub restore_outliers : Path('/ajax/qualitycontrol/restoreoutliers') Args(0) {
         )
     };
 
-    # Execute the cleanup queries (curators only)
-    if ($curator && $curator eq 'curator') {
-        eval {
-            my $sth_trial = $dbh->prepare($trial_clean_sql);
-            $sth_trial->execute(@trial_list, $trait_like);
+    eval {
+        my $sth_trial = $dbh->prepare($trial_clean_sql);
+        $sth_trial->execute(@trial_list, $trait_like);
 
-            my $sth_clean = $dbh->prepare($outliers_clean_sql);
-            $sth_clean->execute($trait_like, @trial_list);
-        };
+        my $sth_clean = $dbh->prepare($outliers_clean_sql);
+        $sth_clean->execute($trait_like, @trial_list);
+    };
 
-        if ($@) {
-            $c->stash->{rest} = { error => "Failed to restore data: $@" };
-            return;
-        } else {
-            $c->stash->{rest} = $response_data;
-        }
-
-        # Invalidate ANOVA/solGS cache after restoring outliers
-        $self->_invalidate_analysis_cache($c, \@trial_list) if @trial_list;
+    if ($@) {
+        $c->stash->{rest} = { error => "Failed to restore data: $@" };
+        return;
     } else {
         $c->stash->{rest} = $response_data;
     }
+
+    # Invalidate ANOVA/solGS cache after restoring outliers
+    $self->_invalidate_analysis_cache($c, \@trial_list) if @trial_list;
 
     ## cleaning tempfiles
     rmtree(File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/qualitycontrol"));
