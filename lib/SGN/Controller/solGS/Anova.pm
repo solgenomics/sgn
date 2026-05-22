@@ -248,7 +248,7 @@ sub check_categorical_dependent_variable {
     return 0 if $trait_idx < 0;
 
     my @trait_values;
-    open(my $pfh, '<:utf8', $pheno_file) or return 0;
+    open(my $pfh, '<:encoding(UTF-8)', $pheno_file) or return 0;
     <$pfh>;
     while (my $line = <$pfh>) {
         chomp $line;
