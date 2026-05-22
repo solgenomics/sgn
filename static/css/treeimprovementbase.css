@@ -261,6 +261,17 @@ Bootstrap
     font-size: 50%;
 }
 
+.flex-wrap-row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.flex-wrap-row > [class*='col-'] {
+    float: none;
+    flex-grow: 1;
+    min-width: fit-content;
+}
+
 /*
 -------------------------------------------------------------------------------
 Buttons
