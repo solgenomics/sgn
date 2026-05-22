@@ -689,8 +689,8 @@ sub _parse_api_response {
         for my $i (0..$#$dates) {
             push @result, {
                 date          => $dates->[$i],
-                tmax          => $tmax_arr->[$i] // 20,
-                tmin          => $tmin_arr->[$i] // 10,
+                tmax          => $i < @$tmax_arr ? $tmax_arr->[$i] : undef,
+                tmin          => $i < @$tmin_arr ? $tmin_arr->[$i] : undef,
                 tmean         => $tmean_arr->[$i],
                 precip        => $precip_arr->[$i] // 0,
                 humidity      => $humid_arr->[$i],
@@ -708,11 +708,16 @@ sub _parse_api_response {
         foreach my $sensor (@$sensors) {
             next unless $sensor->{sensor_type} == 45; # ISS sensor
             foreach my $rec (@{$sensor->{data} || []}) {
+                my $tmax_f = defined $rec->{temp_hi} ? $rec->{temp_hi} : $rec->{temp_out_hi};
+                my $tmin_f = defined $rec->{temp_lo} ? $rec->{temp_lo} : $rec->{temp_out_lo};
+                my $rain_mm = defined $rec->{rainfall_mm} ? $rec->{rainfall_mm}
+                    : defined $rec->{rainfall_in} ? $rec->{rainfall_in} * 25.4
+                    : 0;
                 push @result, {
                     date => $self->_timestamp_to_date($rec->{ts}),
-                    tmax => $rec->{temp_hi_at} ? ($rec->{temp_hi_at} - 32) * 5/9 : undef,
-                    tmin => $rec->{temp_lo_at} ? ($rec->{temp_lo_at} - 32) * 5/9 : undef,
-                    precip => $rec->{rainfall_mm} // 0,
+                    tmax => defined $tmax_f ? ($tmax_f - 32) * 5/9 : undef,
+                    tmin => defined $tmin_f ? ($tmin_f - 32) * 5/9 : undef,
+                    precip => $rain_mm,
                 };
             }
         }
