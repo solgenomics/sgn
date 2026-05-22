@@ -1,0 +1,264 @@
+<%doc>
+SeedQuest Localization Helper (sq_loc.mas)
+==========================================
+Server-side translation component for BreedBase.
+Reads language preference from cookie 'sq_lang' (default: 'en').
+
+Usage in Mason templates:
+  <%init>
+  my $L = $m->comp('/lib/sq_loc.mas', _hash => 1);
+  </%init>
+  ...
+  <h3><% $L->{field_trials} %></h3>
+
+Or single key:
+  <& /lib/sq_loc.mas, k => 'field_trials' &>
+</%doc>
+
+<%args>
+$k     => undef
+$_hash => 0
+</%args>
+
+<%init>
+use utf8;
+
+# Read language from cookie via CGI environment (universally available)
+my $lang = 'en';
+if (my $cookie = $ENV{HTTP_COOKIE}) {
+    if ($cookie =~ /sq_lang=(\w+)/) {
+        $lang = $1;
+    }
+}
+# Validate language
+$lang = 'en' unless exists $TRANSLATIONS{$lang};
+
+if ($_hash) {
+    # Return hashref for batch usage in templates
+    return $TRANSLATIONS{$lang};
+}
+
+# Single-key mode
+if (defined $k && exists $TRANSLATIONS{$lang}{$k}) {
+    $m->print($TRANSLATIONS{$lang}{$k});
+} elsif (defined $k && exists $TRANSLATIONS{'en'}{$k}) {
+    # Fallback to English
+    $m->print($TRANSLATIONS{'en'}{$k});
+} elsif (defined $k) {
+    # Key not found — show key itself as debug hint
+    $m->print($k);
+}
+
+return;
+</%init>
+
+<%once>
+use utf8;
+
+my %TRANSLATIONS = (
+
+    # ═══════════════════════════════════════════════════
+    #  English (default / fallback)
+    # ═══════════════════════════════════════════════════
+    en => {
+        # Page title
+        dashboard_title       => 'SeedQuest Dashboard',
+
+        # Hero cards
+        field_trials          => 'Field Trials',
+        field_trials_desc     => 'Design layouts, collect data, manage trials',
+        weather_gdd           => 'Weather & GDD',
+        weather_gdd_desc      => 'Growing conditions, GDD/CHU, weather sync',
+        drone_imagery         => 'Drone Imagery',
+        drone_imagery_desc    => 'Aerial surveys, orthophotos, spectral data',
+        quality_control       => 'Quality Control',
+        quality_control_desc  => 'Outlier detection, data validation, QC tools',
+
+        # Section headers
+        germplasm_inv         => 'Germplasm & Inventory',
+        field_lab_ops         => 'Field & Lab Operations',
+        phenotype_analysis    => 'Phenotype Analysis',
+        data_management       => 'Data Management',
+        administration        => 'Administration',
+
+        # Germplasm items
+        breeding_programs     => 'Breeding Programs',
+        breeding_programs_d   => 'Manage programs and metadata',
+        accessions            => 'Accessions',
+        accessions_d          => 'Germplasm database, add accessions',
+        seed_lots             => 'Seed Lots',
+        seed_lots_d           => 'Track seed inventory and transactions',
+        crosses               => 'Crosses',
+        crosses_d             => 'Create and track crosses',
+        order_stocks          => 'Order Stocks',
+        order_stocks_d        => 'Manage seed orders',
+
+        # Field & Lab items
+        locations             => 'Locations',
+        locations_d           => 'Manage field and lab locations',
+        phenotyping           => 'Phenotyping',
+        phenotyping_d         => 'Upload and view phenotype data',
+        field_book            => 'Field Book App',
+        field_book_d          => 'Sync with Android data collection app',
+        barcodes              => 'Barcodes',
+        barcodes_d            => 'Generate barcoded labels for plots',
+        label_designer        => 'Label Designer',
+        label_designer_d      => 'Design and print custom labels',
+
+        # Analysis items
+        selection_index       => 'Selection Index',
+        selection_index_d     => 'Weighted selection index calculator',
+        correlation           => 'Correlation',
+        correlation_d         => 'Trait correlation analysis',
+        mixed_models          => 'Mixed Models',
+        mixed_models_d        => 'Linear mixed model analysis',
+        stability             => 'Stability AMMI/GGE',
+        stability_d           => 'Multi-environment stability analysis',
+        heritability          => 'Heritability',
+        heritability_d        => 'Estimate trait heritability',
+        compare_trials        => 'Compare Trials',
+        compare_trials_d      => 'Side-by-side trial comparison',
+        boxplotter            => 'BoxPlotter',
+        boxplotter_d          => 'Interactive box plot visualization',
+
+        # Data management items
+        download_data         => 'Download Data',
+        download_data_d       => 'Phenotypic and genotypic data exports',
+        upload_data           => 'Upload Data',
+        upload_data_d         => 'Upload data files to the database',
+        report_factory        => 'Report Factory',
+        report_factory_d      => 'Generate custom data reports',
+        file_share            => 'File Share',
+        file_share_d          => 'Shared files and exports',
+
+        # Admin items
+        user_roles            => 'User Roles',
+        user_roles_d          => 'Manage permissions and roles',
+        ontology_browser      => 'Ontology Browser',
+        ontology_browser_d    => 'Browse and manage trait ontologies',
+
+        # Navbar
+        nav_dashboard         => 'Dashboard',
+        nav_search            => 'Search',
+        nav_manage            => 'Manage',
+        nav_analyze           => 'Analyze',
+        nav_genotyping        => 'Genotyping',
+        nav_about             => 'About',
+
+        # Login
+        login_title           => 'Login',
+        login_username        => 'Username',
+        login_password        => 'Password',
+        login_submit          => 'Login',
+        login_forgot          => 'Forgot password?',
+        login_register        => 'Create new account',
+        login_error           => 'Incorrect username or password',
+        logout                => 'Logout',
+
+        # Language switcher
+        lang_label            => 'EN',
+    },
+
+    # ═══════════════════════════════════════════════════
+    #  Українська
+    # ═══════════════════════════════════════════════════
+    uk => {
+        # Заголовок
+        dashboard_title       => 'Панель SeedQuest',
+
+        # Картки швидкого доступу
+        field_trials          => 'Польові досліди',
+        field_trials_desc     => 'Планування, збір даних, управління дослідами',
+        weather_gdd           => 'Погода та GDD',
+        weather_gdd_desc      => 'Умови росту, GDD/CHU, синхронізація погоди',
+        drone_imagery         => 'Аерозйомка',
+        drone_imagery_desc    => 'Аерозйомка, ортофото, спектральні дані',
+        quality_control       => 'Контроль якості',
+        quality_control_desc  => 'Виявлення викидів, валідація даних, інструменти QC',
+
+        # Заголовки секцій
+        germplasm_inv         => 'Генетичний матеріал та інвентар',
+        field_lab_ops         => 'Польові та лабораторні операції',
+        phenotype_analysis    => 'Аналіз фенотипів',
+        data_management       => 'Управління даними',
+        administration        => 'Адміністрування',
+
+        # Генетичний матеріал
+        breeding_programs     => 'Програми селекції',
+        breeding_programs_d   => 'Управління програмами та метаданими',
+        accessions            => 'Зразки',
+        accessions_d          => 'База генетичного матеріалу, додавання зразків',
+        seed_lots             => 'Партії насіння',
+        seed_lots_d           => 'Облік насіння та транзакції',
+        crosses               => 'Схрещування',
+        crosses_d             => 'Створення та відстеження схрещувань',
+        order_stocks          => 'Замовлення',
+        order_stocks_d        => 'Управління замовленнями насіння',
+
+        # Польові операції
+        locations             => 'Локації',
+        locations_d           => 'Управління польовими та лабораторними локаціями',
+        phenotyping           => 'Фенотипування',
+        phenotyping_d         => 'Завантаження та перегляд фенотипних даних',
+        field_book            => 'Польовий журнал',
+        field_book_d          => 'Синхронізація з Android-додатком',
+        barcodes              => 'Штрих-коди',
+        barcodes_d            => 'Генерація штрих-кодів для ділянок',
+        label_designer        => 'Дизайнер етикеток',
+        label_designer_d      => 'Розробка та друк етикеток',
+
+        # Аналіз
+        selection_index       => 'Індекс відбору',
+        selection_index_d     => 'Калькулятор зваженого індексу відбору',
+        correlation           => 'Кореляція',
+        correlation_d         => 'Кореляційний аналіз ознак',
+        mixed_models          => 'Змішані моделі',
+        mixed_models_d        => 'Лінійний аналіз змішаних моделей',
+        stability             => 'Стабільність AMMI/GGE',
+        stability_d           => 'Аналіз стабільності в різних середовищах',
+        heritability          => 'Успадковуваність',
+        heritability_d        => 'Оцінка успадковуваності ознак',
+        compare_trials        => 'Порівняння дослідів',
+        compare_trials_d      => 'Порівняння дослідів пліч-о-пліч',
+        boxplotter            => 'Графіки',
+        boxplotter_d          => 'Інтерактивна візуалізація бокс-плотів',
+
+        # Управління даними
+        download_data         => 'Завантажити дані',
+        download_data_d       => 'Експорт фенотипних та генотипних даних',
+        upload_data           => 'Вивантажити дані',
+        upload_data_d         => 'Завантаження файлів у базу даних',
+        report_factory        => 'Фабрика звітів',
+        report_factory_d      => 'Генерація звітів за замовленням',
+        file_share            => 'Обмін файлами',
+        file_share_d          => 'Спільні файли та експорт',
+
+        # Адміністрування
+        user_roles            => 'Ролі користувачів',
+        user_roles_d          => 'Управління правами та ролями',
+        ontology_browser      => 'Браузер онтологій',
+        ontology_browser_d    => 'Перегляд та управління онтологіями ознак',
+
+        # Навігація
+        nav_dashboard         => 'Панель',
+        nav_search            => 'Пошук',
+        nav_manage            => 'Управління',
+        nav_analyze           => 'Аналіз',
+        nav_genotyping        => 'Генотипування',
+        nav_about             => 'Про нас',
+
+        # Логін
+        login_title           => 'Вхід',
+        login_username        => "Ім'я користувача",
+        login_password        => 'Пароль',
+        login_submit          => 'Увійти',
+        login_forgot          => 'Забули пароль?',
+        login_register        => 'Створити обліковий запис',
+        login_error           => "Невірне ім'я користувача або пароль",
+        logout                => 'Вийти',
+
+        # Перемикач мови
+        lang_label            => 'UA',
+    },
+);
+</%once>
