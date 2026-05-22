@@ -38,7 +38,7 @@ $trial_id => undef
   <center class = "col-md-offset-2 col-md-8">
       <div id="trialList" class="col-sm-12 col-md-12 col-lg-12">
           <label for="select_trial_for_selection_index">Trial: </label>
-          <select class="form-control" autofocus="autofocus" id="select_trial_for_selection_index"></select>
+          <div id="select_trial_for_selection_index_container"></div>
       </div><br>
   </center>
 </div>
@@ -59,8 +59,8 @@ $trial_id => undef
 
     jQuery(document).ready(function() {
         jQuery('#ranking_formula').html("<center><i>Select a trial.</i></center>");
-        get_select_box('trials', 'select_trial_for_selection_index', { 'name' : 'html_select_trial_for_selection_index', 'id' : 'html_select_trial_for_selection_index' , 'empty' : 1 });
-        jQuery('#select_trial_for_selection_index').change(load);
+        get_select_box('trials', 'select_trial_for_selection_index_container', { 'name' : 'select_trial_for_selection_index', 'id' : 'select_trial_for_selection_index' , 'empty' : 1 });
+        jQuery(document).on('change', '#select_trial_for_selection_index', load);
         load();
     });
     document.getElementById("formOptions").style.display="none";

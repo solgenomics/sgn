@@ -49,8 +49,7 @@ Titima Tantikanjana <tt15@cornell.edu>
                                             <label class="control-label col-sm-4">Genotyping protocol:</label>
                                                 <div class="col-sm-8">
                                                     <div class="input-group">
-                                                        <select class="form-control" id="selected_protocol">
-                                                        </select>
+                                                        <div id="selected_protocol_container"></div>
                                                     </div>
                                                 </div>
                                         </div>

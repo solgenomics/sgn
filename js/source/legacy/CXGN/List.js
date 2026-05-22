@@ -905,21 +905,27 @@ CXGN.List.prototype = {
         var lists = allLists.private_lists;
         var public_lists = allLists.public_lists;
 
-        var html = '<select class="form-control input-sm" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >';
+        var option_html = '';
         if (empty_element) {
-            html += '<option value="" >'+empty_element+'</option>\n';
+            option_html += '<option value="" >'+empty_element+'</option>\n';
         }
-        html += '<option disabled>--------YOUR LISTS BELOW--------</option>';
+        option_html += '<option disabled>--------YOUR LISTS BELOW--------</option>';
         for (var n=0; n<lists.length; n++) {
-            html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
+            option_html += '<option value='+lists[n][0]+'>'+lists[n][1]+'</option>';
         }
         if (hide_public_lists == undefined) {
-            html += '<option disabled>--------PUBLIC LISTS BELOW--------</option>';
+            option_html += '<option disabled>--------PUBLIC LISTS BELOW--------</option>';
             for (var n=0; n<public_lists.length; n++) {
-                html += '<option value='+public_lists[n][0]+'>'+public_lists[n][1]+'</option>';
+                option_html += '<option value='+public_lists[n][0]+'>'+public_lists[n][1]+'</option>';
             }
         }
 
+        var target = typeof document !== 'undefined' ? document.getElementById(div_name) : null;
+        if (target && target.tagName && target.tagName.toLowerCase() === 'select') {
+            return option_html;
+        }
+
+        var html = '<select class="form-control input-sm" id="'+div_name+'_list_select" name="'+div_name+'_list_select" >' + option_html;
         if (refresh) {
             if (types.length > 1) { types = types.join(',') }
             html = '<div class="input-group" id="'+div_name+'_list_select_div">'+html+'</select><span class="input-group-btn"><button class="btn btn-default" type="button" id="'+div_name+'_list_refresh" title="Refresh lists" onclick="refreshListSelect(\''+div_name+'\',\''+types+'\')"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></span></div>';

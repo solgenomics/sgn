@@ -6,7 +6,7 @@ jQuery(document).ready(function (){
     ALLELES_BY_MARKER = {};
     MARKER_BY_ALLELE = {};
 
-    get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
+    get_select_box('genotyping_protocol','selected_protocol_container', {'empty':1, 'id':'selected_protocol', 'name':'selected_protocol'});
 
     var lo = new CXGN.List();
     jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a list of marker alleles', 'refresh', 'hide_public_lists' ));

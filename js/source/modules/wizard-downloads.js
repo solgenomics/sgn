@@ -72,7 +72,8 @@ export function WizardDownloads(main_id,wizard){
         var download_format = d3.select(".wizard-download-genotypes-format").node().value;
         var compute_from_parents = d3.select(".wizard-download-genotypes-parents-compute").property("checked");
         var include_duplicate_genotypes = d3.select(".wizard-download-genotypes-duplicates-include").property("checked");
-        var marker_set_list_id = d3.select(".wizard-download-genotypes-marker-set-list-id").node().value;
+        var marker_set_list_id_node = d3.select("#wizard-download-genotypes-marker-set-list-id_list_select").node() || d3.select(".wizard-download-genotypes-marker-set-list-id").node();
+        var marker_set_list_id = marker_set_list_id_node ? marker_set_list_id_node.value : '';
         if(chromosome_number && marker_set_list_id) {
             alert(`Please indicate either chromosome or markerset, not both.`);
             d3.select(this).attr("disabled",null);

@@ -214,6 +214,8 @@ export function WizardSetup(main_id) {
   var lo = new CXGN.List();
   jQuery('#wizard-download-genotypes-marker-set-list-id')
     .html(lo.listSelect('wizard-download-genotypes-marker-set-list-id', ['markers'], 'Select a list', 'refresh', undefined));
+  jQuery('#wizard-download-genotypes-marker-set-list-id_list_select')
+    .addClass('wizard-download-genotypes-marker-set-list-id');
 
   return {
     wizard: wiz,
