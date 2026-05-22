@@ -1143,7 +1143,8 @@ if (length(selection_pop_data) != 0) {
 }
 
 
-if (!is.null(selection_pop_gebvs) && length(selection_pop_gebvs_file) != 0)  {
+if (!is.null(selection_pop_gebvs) && 
+length(selection_pop_gebvs_file) != 0)  {
     fwrite(
         selection_pop_gebvs,
         file  = selection_pop_gebvs_file,
@@ -1161,8 +1162,13 @@ if (!is.null(training_pop_genetic_values) &&
         row.names = TRUE,
         sep   = "\t",
         quote = FALSE,
-    )
+    )   
+}
 
+
+if (!is.null(combined_training_gebvs_genetic_values ) && 
+    length(combined_training_gebvs_genetic_values_file) != 0)  {
+        
     fwrite(
         combined_training_gebvs_genetic_values,
         file  = combined_training_gebvs_genetic_values_file,
@@ -1171,7 +1177,6 @@ if (!is.null(training_pop_genetic_values) &&
         quote = FALSE,
     )
 }
-
 
 
 if (!is.null(selection_pop_genetic_values) &&
@@ -1183,7 +1188,11 @@ if (!is.null(selection_pop_genetic_values) &&
         sep   = "\t",
         quote = FALSE,
     )
+}
 
+
+if (!is.null(combined_selection_gebvs_genetic_values) &&
+    length(combined_selection_gebvs_genetic_values_file) != 0)  {
     fwrite(
         combined_selection_gebvs_genetic_values,
         file  = combined_selection_gebvs_genetic_values_file,
