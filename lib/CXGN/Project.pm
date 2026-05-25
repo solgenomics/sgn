@@ -101,6 +101,14 @@ has 'year' => (
     lazy => 1,
     );
 
+has 'year_0' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+    trigger => \&get_year_0,
+    builder => 'set_year_0',
+    lazy => 1,
+    );
+
 has 'additional_info' => (
     is  => 'rw',
     isa => 'Maybe[HashRef]'
@@ -307,6 +315,64 @@ sub set_year {
 	$year =  $row->value();
     }
     return $year;
+}
+
+=head2 accessors get_year_0(), set_year_0()
+
+getter/setter for the year_0 property. The setter modifies the database.
+
+=cut
+
+sub get_year_0 {
+    my $self = shift;
+
+#    print STDERR "get_year_0()...\n";
+
+    if ($self->year_0()) { return $self->year_0(); }
+
+    my $type_id = $self->get_year_0_type_id();
+
+    my $rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { 'projectprops.type_id' => $type_id } );
+
+    if ($rs->count() == 0) {
+	return;
+    }
+    else {
+	return $rs->first()->value();
+    }
+
+}
+
+sub set_year_0 {
+    my $self = shift;
+    my $year_0 = shift;
+
+    if (!$year_0) {
+#	print STDERR "set_year_0(): No year 0 provided, not setting.\n";
+	return;
+    }
+
+#    print STDERR "set_year_0()... (with parameter $year_0)\n";
+    my $type_id = $self->get_year_0_type_id();
+
+    my $row = $self->bcs_schema->resultset('Project::Projectprop')->find( { project_id => $self->get_trial_id(), type_id => $type_id  });
+
+    if ($row) {
+#	print STDERR "Updating year 0 to $year_0...\n";
+	$row->value($year_0);
+	$row->update();
+    }
+    else {
+#	print STDERR "inserting new year 0 ($year_0)...\n";
+	$row = $self->bcs_schema->resultset('Project::Projectprop')->create(
+	    {
+		type_id => $type_id,
+		value => $year_0,
+		project_id =>  $self->get_trial_id()
+	    } );
+	$year_0 =  $row->value();
+    }
+    return $year_0;
 }
 
 =head2 accessors get_description(), set_description()
@@ -3191,6 +3257,14 @@ sub get_year_type_id {
     my $self = shift;
 
     my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'project year' });
+
+    return $rs->first()->cvterm_id();
+}
+
+sub get_year_0_type_id {
+    my $self = shift;
+
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'year_0' });
 
     return $rs->first()->cvterm_id();
 }
@@ -6101,6 +6175,7 @@ sub update_metadata {
         if ($details->{breeding_program}) { $self->set_breeding_program($details->{breeding_program}); }
         if ($details->{location}) { $self->set_location($details->{location}); }
         if ($details->{year}) { $self->set_year($details->{year}); }
+        if ($details->{year_0}) { $self->set_year_0($details->{year_0}); }
         if ($details->{type}) { $self->set_project_type($details->{type}); }
         if ($details->{design_type}) { $self->set_design_type($details->{design_type}); }
         if ($details->{planting_date}) {
