@@ -139,8 +139,6 @@ sub search {
 
     my $plot_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $intercrop_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'intercrop_plot_of', 'stock_relationship')->cvterm_id();
-    my $treatment_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_treatment_relationship', 'project_relationship')->cvterm_id();
-    my $treatment_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'treatment_experiment', 'experiment_type')->cvterm_id();
     my $seedlot_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
     my $seedlot_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
 
@@ -166,10 +164,6 @@ sub search {
         LEFT JOIN project_relationship folder_rel ON (project.project_id = folder_rel.subject_project_id AND folder_rel.type_id = $folder_rel_type_id)
         LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id)
         LEFT JOIN projectprop as location ON (project.project_id=location.project_id AND location.type_id = $project_location_type_id)
-        LEFT JOIN nd_experiment_stock treatment_nds ON (treatment_nds.type_id = $treatment_experiment_type_id AND treatment_nds.stock_id = observationunit.stock_id)
-        LEFT JOIN nd_experiment_project treatment_ndp ON (treatment_ndp.nd_experiment_id = treatment_nds.nd_experiment_id)
-        LEFT JOIN project_relationship treatment_rel ON (project.project_id = treatment_rel.object_project_id AND treatment_rel.type_id = $treatment_rel_type_id)
-        LEFT JOIN project treatment ON (treatment.project_id = treatment_rel.subject_project_id AND treatment.project_id = treatment_ndp.project_id)
         LEFT JOIN stock_relationship AS seedplot_planted ON(seedplot_planted.subject_id = observationunit.stock_id AND seedplot_planted.type_id=$seedlot_transaction_type_id)
         LEFT JOIN stock AS seedlot ON(seedplot_planted.object_id = seedlot.stock_id AND seedlot.type_id=$seedlot_type_id)
         LEFT JOIN stockprop AS rep ON (observationunit.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
@@ -185,7 +179,7 @@ sub search {
         left join metadata.md_image on (stock_image.image_id = md_image.image_id) ";
 
 
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, STRING_AGG(treatment.name, '|'), STRING_AGG(treatment.description, '|'), seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ',') ";
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ',') ";
 
     my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
 
@@ -262,23 +256,9 @@ sub search {
     my @observation_units;
 
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $germplasm_type_name, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description,
-    $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $treatment_name, $treatment_description, $seedlot_id, $seedlot_name, $full_count, $additional_info, $plot_geo_json, $image_ids, $intercrop_stock_id, $intercrop_stock_name) = $h->fetchrow_array()) {
+    $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $seedlot_id, $seedlot_name, $full_count, $additional_info, $plot_geo_json, $image_ids, $intercrop_stock_id, $intercrop_stock_name) = $h->fetchrow_array()) {
 
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
-
-        # Split treatment names and descriptions on | and parse into an array
-        my @names = split(/\|/, $treatment_name || '');
-        my @descriptions = split(/\|/, $treatment_description || '');
-        my @treatments;
-        for my $i (0 .. $#names) {
-            my $n = $names[$i];
-            my $d = $descriptions[$i];
-            push @treatments, { $n => $d };
-        }
-        if ( scalar(@treatments) == 0 ) {
-            push @treatments, { 'No ManagementFactor' => undef };
-        }
-        # my $treatments = $treatment_name ? { $treatment_name => $treatment_description } : { 'No ManagementFactor'=>undef };
 
         if ($project_description) { $project_description =~ s/\R//g; }
         if ($breeding_program_description) { $breeding_program_description =~ s/\R//g };
@@ -357,7 +337,7 @@ sub search {
             row_number => $row_number,
             col_number => $col_number,
             plant_number => $plant_number,
-            treatments => \@treatments,
+            treatments => [],
             full_count => $full_count,
             seedlot_id => $seedlot_id,
             seedlot_name => $seedlot_name,
@@ -366,6 +346,37 @@ sub search {
             image_ids => \@image_ids_parsed,
             intercrop_stocks => \@intercrop_stocks
         };
+    }
+
+    # Fetch treatments per stock from the phenotype table.
+    # Grouped by (stock_id, treatment_id_str, value) to produce one entry per unique application.
+    my %treatments_by_stock;
+    if (@observation_units) {
+        my $stock_list = join ',', @observation_units;
+        my $q_t = "SELECT DISTINCT ON (nes.stock_id, db.name || ':' || dbxref.accession, phenotype.value)
+            nes.stock_id,
+            db.name || ':' || dbxref.accession,
+            cvterm.name,
+            cvterm.definition,
+            phenotype.value,
+            coalesce(phenotype.collect_date::text, '')
+            FROM phenotype
+            JOIN nd_experiment_phenotype USING(phenotype_id)
+            JOIN nd_experiment_stock nes USING(nd_experiment_id)
+            JOIN cvterm ON phenotype.cvalue_id = cvterm.cvterm_id
+            JOIN dbxref ON cvterm.dbxref_id = dbxref.dbxref_id
+            JOIN db ON dbxref.db_id = db.db_id
+            WHERE db.name LIKE '\%TREATMENT\%'
+            AND nes.stock_id IN ($stock_list)
+            ORDER BY nes.stock_id, db.name || ':' || dbxref.accession, phenotype.value, phenotype.collect_date";
+        my $h_t = $schema->storage->dbh()->prepare($q_t);
+        $h_t->execute();
+        while (my ($sid, $tid_str, $t_name, $t_def, $t_value, $t_ts) = $h_t->fetchrow_array()) {
+            push @{$treatments_by_stock{"$sid"}}, { $tid_str => { name => $t_name, description => $t_def, value => $t_value, timestamp => $t_ts } };
+        }
+    }
+    for my $r (@result) {
+        $r->{treatments} = $treatments_by_stock{$r->{obsunit_stock_id}} // [];
     }
 
     ## Query observations if requested. No requested by default

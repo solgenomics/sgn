@@ -379,6 +379,37 @@ sub search {
         $location_id_lookup{$r->nd_geolocation_id} = $r->description;
     }
 
+    # Get the trait ontology CVs
+    my $type_cvterm = $schema->resultset("Cv::Cvterm")->search(
+        {
+            'me.name' => { -in => ['trait_ontology', 'composed_trait_ontology'] },
+            'cv.name' => 'composable_cvtypes'
+        },
+        { join => 'cv' }
+    );
+    my @type_ids = $type_cvterm->get_column('cvterm_id')->all();
+    my $trait_cv = $schema->resultset("Cv::Cvprop")->search({ type_id => { -in => \@type_ids } });
+    my @trait_cv_ids = $trait_cv->get_column('cv_id')->all();
+
+    # Create a map of trait cvterm_ids -> synonyms
+    my %trait_synonyms;
+    my $cvtermsynonym_rs = $schema->resultset("Cv::Cvtermsynonym")->search(
+        { 
+            'cvterm.cv_id' => { -in => \@trait_cv_ids }
+        },
+        {
+            select => [ 'cvterm.cvterm_id', { min => 'synonym', -as => 'synonym' } ],
+            as => ['cvterm_id', 'synonym'],
+            join => 'cvterm',
+            group_by => [ 'cvterm.cvterm_id' ]
+        }
+    );
+    while ( my $r = $cvtermsynonym_rs->next() ) {
+        my $cvterm_id = $r->get_column('cvterm_id');
+        my $synonym = $r->get_column('synonym');
+        $trait_synonyms{$cvterm_id} = $synonym;
+    }
+
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my @result;
@@ -443,7 +474,7 @@ sub search {
 	    
 	    
 	    my $phenotype_uniquename = $o->{uniquename};
-	    $unique_traits{$trait_name}++;
+	    $unique_traits{$trait_name} = $o->{trait_id};
 	    if ($include_timestamp){
 
 		my $timestamp_value;
@@ -470,6 +501,9 @@ sub search {
 		    }
 		}
 	    }
+
+	    $o->{trait_synonym} = $trait_synonyms{$o->{trait_id}};
+
 	    push @return_observations, $o;
 	}
 
@@ -538,7 +572,7 @@ sub search {
     #print STDERR Dumper \@result;
 
     print STDERR "Search End:".localtime."\n";
-    return (\@result, \%unique_traits);
+    return (\@result, \%unique_traits, \%trait_synonyms);
 }
 
 sub _sql_from_arrayref {

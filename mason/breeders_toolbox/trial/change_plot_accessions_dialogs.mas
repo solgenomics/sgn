@@ -1,16 +1,27 @@
 
 <%args>
 $trial_id
+$trial_stock_type
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form' ] &>
+
+% my $title = '';
+% if ($trial_stock_type eq 'cross') {
+%    $title = 'Change Cross Unique IDs or Accessions';
+% } elsif ($trial_stock_type eq 'family_name') {
+%    $title = 'Change Family Names or Accessions';
+% } else {
+%    $title = 'Change Accessions';
+% }
+
 
 <div class="modal fade" id="trial_design_change_accessions_dialog" name="trial_design_change_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="trialDesignChangeAccessionsDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="trialDesignChangeAccessionsDialog">Change Accessions</h4>
+                <h4 class="modal-title" id="trialDesignChangeAccessionsDialog"><%$title%></h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -22,7 +33,7 @@ $trial_id
                         <div class="panel panel-default">
                             <div class="panel-body">
                                 <b>Header:</b><br>
-                                The first row (header) must contain the columns 'plot_name' and 'accession_name'.<br>
+                                The first row (header) must contain the columns 'plot_name' and 'accession_name' or 'cross_unique_id' or 'family_name', depending on the stock type in this trial.<br>
                                 An optional additional column, 'new_plot_name' can be added to change the plot names:<br>
 
                                 <table style="margin-top: 3%;" class="table table-bordered table-hover">
@@ -38,11 +49,11 @@ $trial_id
                         </div>
                         <b>Required columns:</b><br>
                         <b>plot_name:</b> name of plot to change the accession for<br>
-                        <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
+                        <b>accession_name or cross_unique_id or family_name:</b> name of the accession or cross unique id or family name that the plot should be connected to.<br>
                         <br><b>Optional column:</b><br>
                         <b>new_plot_name:</b> new name for plot.<br>
                         <div class="list-group-item-warning" >
-                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
+                          <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions/cross_unique_ids/family_names may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
                         </div>
                     </div>
 
@@ -73,13 +84,13 @@ $trial_id
                 <h4 class="modal-title" id="tDDialog"><b>Warning!</b></h4>
             </div>
             <div class="modal-body">
-                <div class="container-fluid">  
+                <div class="container-fluid">
 
                     <big>
-                        <span>&#9888;</span> 
+                        <span>&#9888;</span>
                         <p3>
                             One or more traits have been assayed for this trial; <br>
-                            It is not recommended to change accessions at this point. Are you sure?
+                            It is not recommended to change accessions/cross_unique_ids/family_names at this point. Are you sure?
                         </p3>
                     </big>
 

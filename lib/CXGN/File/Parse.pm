@@ -119,6 +119,19 @@ COLUMN ARRAYS
     }
   );
 
+UNIQUE-ONLY COLUMNS
+  - Specify columns that are not allowed to have duplicate data entries
+  - By default, columns can have row values that are duplicated (appear in multiple rows)
+  - This is useful for ensuring some one-to-one data entries are caught in parsing
+  - Specify columns that should not have duplicate entries as an array of column names
+  - For columns that can have repeated entries, just leave them out of the hash
+
+  my $parser = CXGN::File::Parse->new(
+    file => '/path/to/data.xlsx',
+    required_columns => ['accession_name', 'species_name'],
+    unique_only_columns => ['accession_name']
+  );
+
 CASE SENSITIVITY
   - Column names are case-insensitive for any names provided in required_columns, optional_columns, or column_aliases (known column names)
   - If the file contains a column name in a different case than the known column name, the column name in the file
@@ -245,6 +258,12 @@ has column_arrays => (
   is => "ro"
 );
 
+# Array of column names that must contain unique data values
+has unique_only_columns => (
+  isa => "ArrayRef[Str]",
+  is => "ro"
+);
+
 
 #
 # PROCESS INITIAL ARGUMENTS
@@ -298,6 +317,8 @@ sub parse {
   my $required_columns = $self->required_columns();
   my $optional_columns = $self->optional_columns();
   my $column_arrays = $self->column_arrays();
+  my $unique_only_columns_array = $self->unique_only_columns();
+  my %unique_only_columns = map { $_ => 1 } @$unique_only_columns_array;
 
   # If type is not defined, use the file extension
   if ( !$type ) {
@@ -388,17 +409,56 @@ sub parse {
         }
       }
 
-      # Check the data for missing required values
+      # Check the data for missing required values and disallowed duplicates
+      my $seen = {};
       foreach my $d (@$data) {
         foreach my $c ( @{$parsed->{required_columns}} ) {
           my $v = $d->{$c};
+          my $r = $d->{_row};
           if ( !defined($v) || $v eq '' ) {
-            my $r = $d->{_row};
             push @{$parsed->{errors}}, "Required column $c does not have a value in row $r";
+          }
+          elsif ( $unique_only_columns{$c} ) {
+            if ( ref($v) eq 'ARRAY' ) {
+              foreach (@$v) {
+                if ( $_ ne '' && defined($_) ) {
+                  $seen->{$c}->{$_}->{$r} = 1;
+                }
+              }
+            }
+            else {
+              $seen->{$c}->{$v}->{$r} = 1;
+            }
+          }
+        }
+        foreach my $c ( (@{$parsed->{optional_columns}}, @{$parsed->{additional_columns}}) ) {
+          my $v = $d->{$c};
+          my $r = $d->{_row};
+
+          if ( $v ne '' && defined($v) && $unique_only_columns{$c} ) {
+            if ( ref($v) eq 'ARRAY' ) {
+              foreach (@$v) {
+                if ( $_ ne '' && defined($_) ) {
+                  $seen->{$c}->{$_}->{$r} = 1;
+                }
+              }
+            }
+            else {
+              $seen->{$c}->{$v}->{$r} = 1;
+            }
           }
         }
       }
 
+      # Check for duplicated values in unique only columns
+      foreach my $c ( sort keys %$seen ) {
+        foreach my $v ( sort keys %{$seen->{$c}} ) {
+          my @rows = sort keys %{$seen->{$c}->{$v}};
+          if ( scalar @rows > 1 ) {
+            push @{$parsed->{errors}}, "Column $c requires unique values, but $v appears more than once in rows " . join(',', @rows);
+          }
+        }
+      }
     }
 
     # Add columns that are arrays, as defined in the CXGN::File::Parse constructor

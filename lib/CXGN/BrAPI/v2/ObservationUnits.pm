@@ -147,20 +147,15 @@ sub _search {
         }
 
         ## Formatting treatments
-        # my @brapi_treatments;
-
-        # if ($c->config->{brapi_treatments_no_management_factor}) {
-        #     my $treatments = $obs_unit->{treatments};
-        #     foreach my $treatment (@$treatments) {
-        #         while (my ($factor, $modality) = each %$treatment) {
-        #             my $modality = $modality ? $modality : undef;
-        #             push @brapi_treatments, {
-        #                 factor   => $factor,
-        #                 modality => $modality,
-        #             };
-        #         }
-        #     }
-        # }
+        my @brapi_treatments;
+        foreach my $treatment (@{$obs_unit->{treatments}}) {
+            while (my ($treatment_id, $treatment_data) = each %$treatment) {
+                push @brapi_treatments, {
+                    factor   => $treatment_data->{name}."|".$treatment_id." | value = ".$treatment_data->{value},
+                    modality => $treatment_data->{description},
+                };
+            }
+        }
 
 	my %numbers;
 
@@ -314,7 +309,7 @@ sub _search {
             studyDbId => qq|$obs_unit->{trial_id}|,
             studyName => $obs_unit->{trial_name},
             plotImageDbIds => $obs_unit->{image_ids},
-            #treatments => \@brapi_treatments,
+            treatments => \@brapi_treatments,
             trialDbId => $obs_unit->{folder_id} ? qq|$obs_unit->{folder_id}| : qq|$obs_unit->{trial_id}|,
             trialName => $obs_unit->{folder_name} ? $obs_unit->{folder_name} : $obs_unit->{trial_name},
         };

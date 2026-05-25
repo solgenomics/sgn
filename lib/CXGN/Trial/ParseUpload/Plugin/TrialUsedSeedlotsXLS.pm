@@ -8,11 +8,17 @@ use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
 
+#
+# DEPRECATED: This plugin has been replaced by the TrialUsedSeedlotsGeneric plugin
+#
+
+
 sub _validate_with_plugin {
     my $self = shift;
 
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
+    my $trial_stock_type = $self->get_trial_stock_type();
 
     # Match a dot, extension .xls / .xlsx
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -172,9 +178,14 @@ sub _validate_with_plugin {
         $errors{'missing_seedlots'} = \@seedlots_missing;
     }
 
-    my $return = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@pairs);
-    if (exists($return->{error})){
-        push @error_messages, $return->{error};
+    my $validate_seedlot_plot_compatibility;
+    if ($trial_stock_type eq 'family_name') {
+        $validate_seedlot_plot_compatibility = CXGN::Stock::Seedlot->verify_seedlot_family_plot_compatibility($schema, \@pairs);
+    } else {
+        $validate_seedlot_plot_compatibility = CXGN::Stock::Seedlot->verify_seedlot_plot_compatibility($schema, \@pairs);
+    }
+    if (exists($validate_seedlot_plot_compatibility->{error})){
+        push @error_messages, $validate_seedlot_plot_compatibility->{error};
     }
 
     #store any errors found in the parsed file to parse_errors accessor

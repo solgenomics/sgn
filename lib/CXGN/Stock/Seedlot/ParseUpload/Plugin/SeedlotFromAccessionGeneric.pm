@@ -28,6 +28,7 @@ sub _validate_with_plugin {
             'box_name' => ['box name'],
             'weight_gram' => ['weight(g)'],
         },
+        unique_only_columns => [ 'seedlot_name' ]
     );
 
     my $parsed = $parser->parse();
@@ -51,7 +52,6 @@ sub _validate_with_plugin {
         return;
     }
 
-    my %duplicated_seedlot_names;
     my @accession_source_pairs;
     for my $row ( @$parsed_data ) {
         my $row_num = $row->{_row};
@@ -63,12 +63,6 @@ sub _validate_with_plugin {
 
         if ($seedlot_name =~ /\s/ || $seedlot_name =~ /\// || $seedlot_name =~ /\\/ ) {
             push @error_messages, "Cell A$row_num: seedlot_name must not contain spaces or slashes.";
-        }
-
-        if ($duplicated_seedlot_names{$seedlot_name}) {
-            push @error_messages, "Cell A$row_num: duplicated seedlot name: $seedlot_name. Seedlot name must be unique.";
-        } else {
-            $duplicated_seedlot_names{$seedlot_name}++;
         }
 
         if (!$amount || $amount eq '') {

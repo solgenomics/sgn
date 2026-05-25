@@ -295,7 +295,7 @@ sub _search {
     my $counter = 0;
 
     foreach (@$data){
-        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || $_->{phenotype_value} eq '0' ) {
+        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || ($_->{phenotype_value} && $_->{phenotype_value} eq '0') ) {
             my $observation_id = "$_->{phenotype_id}";
             my $additional_info;
             my $external_references;
@@ -310,8 +310,14 @@ sub _search {
 	        if ($obs_timestamp) {
                 my ($obs_date, $obs_time) = split / /, $obs_timestamp;
 		        my ($obs_year, $obs_month, $obs_day) = split /-/, $obs_date;
-		        my ($start_year, $start_month, $start_day) = split /\-/, $start_date;
-		        my ($end_year, $end_month, $end_day) = split /\-/, $end_date;
+		        my ($start_year, $start_month, $start_day);
+                if ($start_date) {
+                    ($start_year, $start_month, $start_day) = split /\-/, $start_date;
+                }
+		        my ($end_year, $end_month, $end_day);
+                if ($end_date) {
+                    ($end_year, $end_month, $end_day) = split /\-/, $end_date;
+                } 
 
 		        if ($obs_year && $obs_month && $obs_day && $start_year && $start_month && $start_day && $end_year && $end_month && $end_day) { 
 		            my $obs_date_obj = DateTime->new({ year => $obs_year, month => $obs_month, day => $obs_day });

@@ -99,6 +99,9 @@ my %ADDITIONAL_LIST_DATA = (
                 if ( $parents->{'mother'} && $parents->{'father'} ) {
                     $pedigree = $parents->{'mother'} . '/' . $parents->{'father'};
                 }
+		elsif ( $parents->{'mother'}) {
+		    $pedigree = $parents->{'mother'} .'/NA';
+		}
 
                 # Add pedigree to return hash
                 for my $index (0 .. $#$list_item_db_ids ) {
@@ -791,14 +794,11 @@ sub get_trial_design {
 
         my $trial_management_regime = $trial->get_management_regime();
 
-        # my $treatments = $trial->get_treatments();
-        # my @treatment_ids = map { $_->{trait_id} } @{$treatments};
-        # print STDERR "treatment ids are @treatment_ids\n";
         my $trial_layout_download = CXGN::Trial::TrialLayoutDownload->new({
             schema => $schema,
             trial_id => $trial_id,
             data_level => $type,
-            # treatment_ids => \@treatment_ids,
+            include_treatments => 'true',
             selected_columns => $selected_columns{$type},
             selected_trait_ids => [],
             use_synonyms => 'false',

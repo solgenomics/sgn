@@ -256,7 +256,7 @@ sub extract_protocol_data {
         } else {
             $marker_name = $self->ids()->[$i];
         }
-        my $chrom_name = $self->chroms()->[$i]
+        my $chrom_name = $self->chroms()->[$i];
         my %marker = (
             name => $self->ids()->[$i],
             chrom => $chrom_name,

@@ -3,6 +3,15 @@
 $dataset_id => undef
 </%args>
 
+<%once>
+  my $default_repeat_measurements = $c->get_conf('pheno_download_default_repeat_measurements');
+  my $default_include_timestamps = $c->get_conf('pheno_download_default_include_timestamps');
+  my $default_include_intercrop_accessions = $c->get_conf('pheno_download_default_include_intercrop_accessions');
+  my $default_include_entry_numbers = $c->get_conf('pheno_download_default_include_entry_numbers');
+  my $default_include_trait_synonyms = $c->get_conf('pheno_download_default_include_trait_synonyms');
+  my $default_supress_outliers = $c->get_conf('exclude_phenotype_outliers');
+</%once>
+
 <& /util/import_javascript.mas, entries => ["wizard"] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
@@ -420,7 +429,7 @@ $dataset_id => undef
               <td colspan="2">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" checked />
+                    <input class="wizard-download-phenotypes-entry-numbers" type="checkbox" />
                     Include accession entry numbers
                   </label>
                 </div>
@@ -430,15 +439,15 @@ $dataset_id => undef
               <td style="border-top: none; padding-top: 0">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-outliers" type="checkbox" />
-                    Supress user defined phenotype outliers
+                    <input class="wizard-download-phenotypes-trait-synonyms" type="checkbox" />
+                    Include trait synonyms
                   </label>
                 </div>
               </td>
               <td colspan="2" style="border-top: none; padding-top: 0">
                 <div class="checkbox">
                   <label>
-                    <input class="wizard-download-phenotypes-intercrop" type="checkbox" checked />
+                    <input class="wizard-download-phenotypes-intercrop" type="checkbox" />
                     Include intercrop accessions
                   </label>
                 </div>
@@ -450,7 +459,7 @@ $dataset_id => undef
                 <select class="wizard-download-repetitive-measurements-type form-control" >
                   <option value="first">First value</option>
                   <option value="last">Last value</option>
-                  <option value="average" selected>Averaged value</option>
+                  <option value="average">Averaged value</option>
                   <option value="sum">Sum values</option>
                   <option value="all_values_single_line">All Values Single Line</option>
                   <option value="all_values_multiple_line">All Values Multiple Line</option>
@@ -461,9 +470,11 @@ $dataset_id => undef
               <td style="border-top: none; padding-top: 0">
                 From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
               </td>
-              <td style="border-top: none; padding-top: 0">
+              <td style="border-top: none; padding-top: 0" colspan="2">
                 To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />	
               </td>
+            </tr>
+            <tr>
               <td style="border-top: none; padding-top: 0">
                 <input type="checkbox" id="include_dateless_items" checked="1" />
                 Include items without a date
@@ -481,6 +492,16 @@ $dataset_id => undef
               <td>
                 <span>Max Value</span>
                 <input placeholder="&#8734;" type="text" class="wizard-download-phenotypes-max form-control">
+              </td>
+            </tr>
+            <tr>
+              <td style="border-top: none; padding-top: 0" colspan="3">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-phenotypes-outliers" type="checkbox" />
+                    Supress user defined phenotype outliers
+                  </label>
+                </div>
               </td>
             </tr>
           </table>
@@ -526,19 +547,6 @@ $dataset_id => undef
 
 <script>
 
-document.addEventListener("DOMContentLoaded", function() {
-    var check_outliers = "<% $c->get_conf('exclude_phenotype_outliers') || 0 %>";
-
-    if (parseInt(check_outliers) === 1) {
-        // Set the checkbox to checked
-        var outlierCheckbox = document.querySelector('.wizard-download-phenotypes-outliers');
-        if (outlierCheckbox) {
-            outlierCheckbox.checked = true;
-        }
-    }
-});
-
-
   jQuery(document).ready(function (){
 %  if ($dataset_id){
       document.getElementsByClassName("wizard-dataset-select")[0].value = <% $dataset_id %>;
@@ -547,7 +555,24 @@ document.addEventListener("DOMContentLoaded", function() {
    $(".wizard-download-genotypes-info2").hide();
    $(".wizard-download-genotypes-info3").hide();
    $(".wizard-download-genotypes-info4").hide();
+   setDefaultPhenoDownloadOptions();
   });
+
+  function setDefaultPhenoDownloadOptions() {
+    var default_repeat_measurements = "<% $default_repeat_measurements %>";
+    var default_include_timestamps = <% $default_include_timestamps %>;
+    var default_include_intercrop_accessions = <% $default_include_intercrop_accessions %>;
+    var default_include_entry_numbers = <% $default_include_entry_numbers %>;
+    var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
+    var default_supress_outliers = <% $default_supress_outliers %>;
+
+    jQuery(".wizard-download-repetitive-measurements-type").each(function() { jQuery(this).val(default_repeat_measurements) });
+    jQuery(".wizard-download-phenotypes-timestamp").each(function() { jQuery(this).prop('checked', default_include_timestamps === 1) });
+    jQuery(".wizard-download-phenotypes-entry-numbers").each(function() { jQuery(this).prop('checked', default_include_entry_numbers === 1) });
+    jQuery(".wizard-download-phenotypes-trait-synonyms").each(function() { jQuery(this).prop('checked', default_include_trait_synonyms === 1) });
+    jQuery(".wizard-download-phenotypes-intercrop").each(function() { jQuery(this).prop('checked', default_include_intercrop_accessions === 1) });
+    jQuery(".wizard-download-phenotypes-outliers").each(function() { jQuery(this).prop('checked', default_supress_outliers === 1) });
+  }
 
   d3.select('#update_wizard_show').on('click', function () {
     $('#update_wizard_dialog').modal("show");

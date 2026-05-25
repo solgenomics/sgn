@@ -94,6 +94,7 @@ sub download {
     my $include_pedigree_parents = $self->include_pedigree_parents();
     my $include_intercrop_stocks = $self->include_intercrop_stocks();
     my $include_entry_numbers = $self->include_entry_numbers();
+    my $include_trait_synonyms = $self->include_trait_synonyms();
     my $search_type = $self->search_type();
     my $phenotype_start_date = $self->start_date();
     my $phenotype_end_date = $self->end_date();
@@ -133,6 +134,7 @@ sub download {
             include_pedigree_parents=>$include_pedigree_parents,
             include_intercrop_stocks=>$include_intercrop_stocks,
             include_entry_numbers=>$include_entry_numbers,
+            include_trait_synonyms=>$include_trait_synonyms,
             phenotype_start_date => $phenotype_start_date,
             phenotype_end_date => $phenotype_end_date,
             repetitive_measurements => $repetitive_measurements,
