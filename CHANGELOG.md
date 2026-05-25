@@ -35,14 +35,21 @@ The following changes come from the upstream solgenomics repository.
 
 The following changes are unique to the BFF-AFIRMS repository.
 
-| Pull Request                                         | Type    | Branch                                            | Description                                                           |
-| ---------------------------------------------------- | ------- | ------------------------------------------------- | --------------------------------------------------------------------- |
-| [PR #41](https://github.com/BFF-AFIRMS/sgn/pull/41) | Feature | BFF-AFIRMS/topic/content-update-projects-homepage | Search: Add the treatments search page to the navbar                  |
-| [PR #43](https://github.com/BFF-AFIRMS/sgn/pull/43) | Feature | BFF-AFIRMS/topic/spatial-layout-seedlot-download  | Trial: Add ability to include seedlot name in spatial layout download |
-| [PR #67](https://github.com/BFF-AFIRMS/sgn/pull/67) | Bug     | BFF-AFIRMS/topic/edit-unit-ontology-props         | Ontology: Can't edit properties of a unit or scale                    |
-| [PR #12](https://github.com/BFF-AFIRMS/sgn/pull/12) | Bug     | BFF-AFIRMS/topic/folders-for-genotyping           | Folder created in trials page cannot be used for genotyping           |
-| [PR #40](https://github.com/BFF-AFIRMS/sgn/pull/40) | Bug     | BFF-AFIRMS/topic/fix-wrong-identifier-prefix      | Trial: wrong identifier prefix                                        |
-| [PR #39](https://github.com/BFF-AFIRMS/sgn/pull/39) | Bug     | BFF-AFIRMS/topic/broken-treatment-with-seedlots   | Treatment: Adding to trial with linked seedlots causes error          |
+| Pull Request                                        | Type    | Branch                                            | Description                                                            |
+| --------------------------------------------------- | ------- | ------------------------------------------------- | ---------------------------------------------------------------------- |
+| [PR #41](https://github.com/BFF-AFIRMS/sgn/pull/41) | Feature | BFF-AFIRMS/topic/content-update-projects-homepage | Content: update project pages, homepage, and navbar style              |
+| [PR #68](https://github.com/BFF-AFIRMS/sgn/pull/68) | Bug     | BFF-AFIRMS/topic/speedup-phenotype-download       | DB: add indexing patch to speed up phenotype downloads                 |
+| [PR #12](https://github.com/BFF-AFIRMS/sgn/pull/12) | Bug     | BFF-AFIRMS/topic/folders-for-genotyping           | Folder: Folder created in trials page cannot be used for genotyping    |
+| [PR #67](https://github.com/BFF-AFIRMS/sgn/pull/67) | Feature | BFF-AFIRMS/topic/edit-unit-ontology-props         | Ontology: allow editing unit variable properties                       |
+| [PR #64](https://github.com/BFF-AFIRMS/sgn/pull/64) | Feature | BFF-AFIRMS/topic/enhance-stock-search             | Search: enhance stock results table                                    |
+| [PR #76](https://github.com/BFF-AFIRMS/sgn/pull/76) | Feature | setraver/styles                                   | Styles: adjust well and table margins                                  |
+| [PR #63](https://github.com/BFF-AFIRMS/sgn/pull/63) | Feature | setraver/styles                                   | Styles: assorted fixes                                                 |
+| [PR #33](https://github.com/BFF-AFIRMS/sgn/pull/33) | Feature | BFF-AFIRMS/setraver/test-perf                     | Tests: Remove sleeps from selenium2/tools tests                        |
+| [PR #36](https://github.com/BFF-AFIRMS/sgn/pull/36) | Feature | BFF-AFIRMS/setraver/test-parallel                 | Tests: Run subtests in parallel                                        |
+| [PR #39](https://github.com/BFF-AFIRMS/sgn/pull/39) | Bug     | BFF-AFIRMS/topic/broken-treatment-with-seedlots   | Treatment: Fix linked seedlots breaking treatments                     |
+| [PR #43](https://github.com/BFF-AFIRMS/sgn/pull/43) | Feature | BFF-AFIRMS/topic/spatial-layout-seedlot-download  | Trial: Add seedlot to spatial layout download                          |
+| [PR #40](https://github.com/BFF-AFIRMS/sgn/pull/40) | Bug     | BFF-AFIRMS/topic/fix-wrong-identifier-prefix      | Trial: Fix wrong identifier prefix                                     |
+| [PR #75](https://github.com/BFF-AFIRMS/sgn/pull/75) | Feature | BFF-AFIRMS/topic/add-trial-year-0                 | Trial: Add a year 0 project property                                   |
 
 ## sgn-453.0
  
