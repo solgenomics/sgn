@@ -6,6 +6,7 @@ $breeding_program_id
 $location_name
 $country_name
 $year
+$year_0
 $trial_type
 $planting_date
 $transplanting_date
@@ -27,8 +28,8 @@ $latest_trial_activity => undef
 </%args>
 
 
-<div class="row">
-    <div class="col-sm-8">
+<div class="row flex-wrap-row">
+    <div class="col-auto">
 
         <table class="table table-hover table-bordered" >
 
@@ -78,6 +79,9 @@ $latest_trial_activity => undef
                     <div id="trial_year">
 % if ($year) {
 %  print "$year";
+%  if ($year_0) {
+%    print " | Year 0: $year_0";
+%  }
 % } else {
 %  print "<span class='text-danger'>[No Year]</span>";
 % }
@@ -206,7 +210,7 @@ $latest_trial_activity => undef
         </table>
 
     </div>
-    <div class="col-sm-4">
+    <div class="col-auto">
         <div class="well well-sm">
             <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
         </div>

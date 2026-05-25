@@ -4,6 +4,7 @@ $trial_name
 $breeding_program
 $location
 $year
+$year_0
 $trial_type
 $trial_type_id
 $planting_date
@@ -57,6 +58,14 @@ $field_trial_is_planned_to_cross
                     <div class="col-sm-8">
                       <div class="input-group">
                         <select class="form-control" id="edit_trial_year" title="year" value="<%$year%>"></select>
+                      </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" for="edit_trial_year_0">Year 0: </label>
+                    <div class="col-sm-8">
+                      <div class="input-group">
+                        <select class="form-control" id="edit_trial_year_0" title="year_0" value="<%$year_0%>"></select>
                       </div>
                     </div>
                 </div>
