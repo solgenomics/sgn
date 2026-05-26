@@ -25,6 +25,7 @@ var infoToAdd;
 var accessionListFound;
 var speciesNames;
 var doFuzzySearch;
+var upload_in_progress = false;
 
 function disable_ui() {
     jQuery('#working_modal').modal("show");
@@ -412,6 +413,8 @@ jQuery(document).ready(function ($) {
             disable_ui();
         }
 
+        upload_in_progress = true;
+
         $.ajax({
             type: 'POST',
             url: '/ajax/accession_list/add',
@@ -428,10 +431,6 @@ jQuery(document).ready(function ($) {
             // },
             success: function (response) {
                 console.log("email_option_enabled on success:", email_option_enabled);
-                if (!email_option_enabled) {
-                    enable_ui();
-                }
-		        //alert("ADD ACCESSIONS: "+JSON.stringify(response));
                 if (response.error) {
                     alert(response.error);
                 } else {
@@ -445,13 +444,22 @@ jQuery(document).ready(function ($) {
             },
             error: function (response) {
                 console.log("email_option_enabled on error:", email_option_enabled);
-                if (!email_option_enabled) {
-                    enable_ui();
-                }
                 alert('An error occurred in processing. sorry'+response.responseText);
-            }
+            },
+            complete: function () {
+                upload_in_progress = false;
+                if (!email_option_enabled) enable_ui();
+            },
         });
     }
+
+    jQuery(window).on('beforeunload', function (e) {
+        if (upload_in_progress) {
+            e.preventDefault();
+            e.returnValue = ''; // required for Chrome
+            return '';          // required for some older browsers
+        }
+    });
 
     function verify_species_name() {
         var speciesName = $("#species_name_input").val();
