@@ -28,7 +28,9 @@ sub cache_clear : Path('/solgs/cache/clear') Args(0) {
     my $dataset_id = $args->{dataset_id};
 
     my $trials_ids = [];
-    $trials_ids = [ $trial_id ] if $trial_id;
+    if ($trial_id) {
+        push @$trials_ids, $trial_id;
+    }
 
     if ($dataset_id) {
         $trials_ids = $self->get_dataset_trials($c, $dataset_id);
@@ -36,7 +38,13 @@ sub cache_clear : Path('/solgs/cache/clear') Args(0) {
 
     my $delete_dirs_result = 1; 
     for my $trial_id (@$trials_ids) {
-        $delete_dirs_result = $self->delete_cache_dirs($c, $trial_id, $analysis_type);
+        my $args = {
+            trial_id => $trial_id,
+            analysis_types => [$analysis_type],
+            delete_all_analyses_output => 1,
+        };
+
+        $delete_dirs_result = $self->delete_cache_dirs($c, $args);
     }
     
 
@@ -65,9 +73,13 @@ sub clear_cache_trial_data {
 sub clear_cache_trial_analysis_data {
     my ($self, $c, $trial_id, $analysis_type) = @_;
 
+    my $args = {
+        trial_id => $trial_id,
+        analysis_types => [$analysis_type],
+        delete_all_analyses_output => 1,
+    };
+    my $delete_dirs_result = $self->delete_cache_dirs($c, $args);
 
-    my $delete_dirs_result = $self->delete_cache_dirs($c, $trial_id, $analysis_type);
-    
     return $delete_dirs_result;
 }
 
@@ -112,38 +124,62 @@ sub get_files_to_delete {
 
 
 sub delete_cache_dirs {
-    my ($self, $c, $trial_id, $analysis_type) = @_;
+    my ($self, $c, $args) = @_;
+
+    my $trial_id = $args->{trial_id};
+    my @analysis_types = $args->{analysis_types};
+    my $delete_all_analyses_output = $args->{delete_all_analyses_output} || 1;
 
     die "Trial ID must be a positive integer"
         unless $trial_id =~ /^\d+$/;
 
-    die "Invalid analysis type"
-        unless $analysis_type =~ /^[a-zA-Z]+$/;
 
-    my $analysis_cache_dir = catdir($c->stash->{"${analysis_type}_cache_dir"}, 'trials', $trial_id);
-    my $solgs_trial_cache_dir = catdir($c->stash->{solgs_cache_dir}, 'trials', $trial_id);
-    my $analysis_temp_dir = $c->stash->{"${analysis_type}_temp_dir"};
-    my $analysis_tempfiles_subdir = catdir($c->tempfiles_subdir, $analysis_type, 'trials', $trial_id);
+    if ($delete_all_analyses_output) {
+        @analysis_types = (
+            "solgs", "solqtl","anova", "correlation", 
+            "cluster", "kinship", "pca", "qualityControl", 
+            "heritability", "selectionIndex", "histogram", 
+            "log"
+        );
+    }
 
-    my @dirs_to_delete = (
-        $analysis_cache_dir, 
-        $solgs_trial_cache_dir, 
-        $analysis_temp_dir, 
-        $analysis_tempfiles_subdir
-    );
+    for my $analysis_type (@analysis_types) {
 
-    remove_tree(@dirs_to_delete, {
-        error => \my $err,
-        safe  => 1,
-    });
+        my $analysis_cache_dir = $self->analysis_cache_dir($c, $trial_id, $analysis_type);
+        my $analysis_tempfiles_subdir = $self->analysis_tempfiles_subdir($c, $trial_id, $analysis_type);
 
-    if (@$err) {
-        $c->log->error("Error removing a directory: " . $err->[0]->{message} . " at " . $err->[0]->{path});
-        return 0;
+        my @dirs_to_delete = (
+            $analysis_cache_dir, 
+            $analysis_tempfiles_subdir
+        );
+
+        remove_tree(@dirs_to_delete, {
+            error => \my $err,
+            safe  => 1,
+        });
+
+        if (@$err) {
+            $c->log->error("Error removing a directory: " . $err->[0]->{message} . " at " . $err->[0]->{path});
+            return 0;
+        }
     }
     
     return 1;
 
+}
+
+sub analysis_cache_dir {
+    my ($self, $c, $trial_id, $analysis_type) = @_;
+
+    my $analysis_cache_dir = catdir($c->stash->{"${analysis_type}_dir"}, $trial_id, 'cache');
+    return $analysis_cache_dir;
+}
+
+sub analysis_tempfiles_subdir {
+    my ($self, $c, $trial_id, $analysis_type) = @_;
+
+    my $analysis_tempfiles_subdir = catdir($c->tempfiles_subdir, $analysis_type, $trial_id, 'tempfiles');
+    return $analysis_tempfiles_subdir;
 }
 
 
