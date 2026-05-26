@@ -20,6 +20,7 @@ use Moose;
 use File::Slurp;
 use Text::CSV;
 use Data::Dumper;
+use JSON qw(decode_json);
 
 sub name {
     return "field book";
@@ -261,7 +262,7 @@ sub parse {
 
         my $unit_value = $row[$header_column_info{$unit_col}];
         my $trait = $row[$header_column_info{'trait'}];
-        my $value = $row[$header_column_info{'value'}];
+        my $value = _normalize_fieldbook_value($row[$header_column_info{'value'}]);
         my $timestamp = defined $header_column_info{'timestamp'} ? $row[$header_column_info{'timestamp'}] : '';
         my $collector = defined $header_column_info{'person'} ? $row[$header_column_info{'person'}] : '';
 
@@ -312,6 +313,36 @@ sub parse {
     $parse_result{'variables'} = \@traits;
 
     return \%parse_result;
+}
+
+sub _normalize_fieldbook_value {
+    my $value = shift;
+    return $value if !defined($value) || $value !~ /^\s*[\[\{]/;
+
+    my $decoded = eval { decode_json($value) };
+    return $value if $@;
+
+    if (ref($decoded) eq "ARRAY") {
+        my @values = map { _fieldbook_json_value($_) } @$decoded;
+        @values = grep { defined($_) && $_ ne "" } @values;
+        return @values ? join(":", @values) : "";
+    }
+
+    my $decoded_value = _fieldbook_json_value($decoded);
+    return defined($decoded_value) ? $decoded_value : $value;
+}
+
+sub _fieldbook_json_value {
+    my $entry = shift;
+    return if !defined($entry);
+
+    if (ref($entry) eq "HASH") {
+        return $entry->{value} if defined($entry->{value});
+        return $entry->{label} if defined($entry->{label});
+        return;
+    }
+
+    return ref($entry) ? undef : $entry;
 }
 
 1;
