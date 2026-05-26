@@ -552,13 +552,14 @@ sub anova_table_file {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->stash->{cache_dir} = $self->anova_trial_cache_dir($c, $trial_id);
+    my $cache_dir = $self->anova_trial_cache_dir($c, $trial_id);
 
     my $cache_data = {
         key       => "anova_table_html_${trial_id}_${trait_id}",
         file      => "anova_table_html_${trial_id}_${trait_id}",
         ext       => 'html',
-        stash_key => "anova_table_html_file"
+        stash_key => "anova_table_html_file",
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -566,8 +567,9 @@ sub anova_table_file {
     $cache_data = {
         key       => "anova_table_txt_${trial_id}_${trait_id}",
         file      => "anova_table_txt_${trial_id}_${trait_id}",
-         ext      => 'txt',
-        stash_key => "anova_table_txt_file"
+        ext       => 'txt',
+        stash_key => "anova_table_txt_file",
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -580,13 +582,14 @@ sub anova_diagnostics_file {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->stash->{cache_dir} = $self->anova_trial_cache_dir($c, $trial_id);
+    my $cache_dir = $self->anova_trial_cache_dir($c, $trial_id);
 
     my $cache_data = {
         key       => "anova_diagnosics_${trial_id}_${trait_id}",
         file      => "anova_diagnostics_${trial_id}_${trait_id}",
         ext       => '.png',
-        stash_key => "anova_diagnostics_file"
+        stash_key => "anova_diagnostics_file",
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -599,12 +602,13 @@ sub anova_model_file {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->stash->{cache_dir} = $self->anova_trial_cache_dir($c, $trial_id);
+    my $cache_dir = $self->anova_trial_cache_dir($c, $trial_id);
 
     my $cache_data = {
         key       => "anova_model_${trial_id}_${trait_id}",
         file      => "anova_model_${trial_id}_${trait_id}",
-        stash_key => "anova_model_file"
+        stash_key => "anova_model_file",
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -617,11 +621,18 @@ sub anova_error_file {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->stash->{file_id} = "${trial_id}_${trait_id}";
-    $c->stash->{cache_dir}     = $self->anova_trial_cache_dir($c, $trial_id);
-    $c->stash->{analysis_type} = 'anova';
+    my $file_id = "${trial_id}_${trait_id}";
+    
+    my $cache_dir = $self->anova_trial_cache_dir($c, $trial_id);
 
-    $c->controller('solGS::Files')->analysis_error_file($c);
+    my $cache_data = {
+        key       => "anova_error_file_${file_id}",
+        file      => "anova_error_file_${file_id}",
+        stash_key => "anova_error_file",
+        cache_dir => $cache_dir,
+    };
+
+    $c->controller('solGS::Files')->cache_file( $c, $cache_data );
 
 }
 
@@ -631,12 +642,13 @@ sub adj_means_file {
     my $trial_id = $c->stash->{trial_id};
     my $trait_id = $c->stash->{trait_id};
 
-    $c->stash->{cache_dir} = $self->anova_trial_cache_dir($c, $trial_id);
+    my $cache_dir = $self->anova_trial_cache_dir($c, $trial_id);
 
     my $cache_data = {
         key       => "adj_means_${trial_id}_${trait_id}",
         file      => "adj_means_${trial_id}_${trait_id}",
-        stash_key => "adj_means_file"
+        stash_key => "adj_means_file",
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -648,11 +660,8 @@ sub anova_trial_cache_dir {
 
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
-    my $cache_dir = catdir( $c->stash->{anova_dir}, $trial_id);
-    print STDERR "ANOVA cache dir: $cache_dir\n";
+    my $cache_dir = catdir( $c->stash->{anova_dir}, $trial_id, 'cache' );
     mkpath($cache_dir, 0, 755) unless -d $cache_dir;
-
-    print STDERR "ANOVA cache dir: $cache_dir\n";
 
     return $cache_dir;
 
