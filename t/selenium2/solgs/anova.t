@@ -1,4 +1,3 @@
-
 use strict;
 
 use lib 't/lib';
@@ -13,14 +12,12 @@ my $f = SGN::Test::Fixture->new();
 
 my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
 my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
 
 my $trait = "dry matter content percentage";
 
 `rm -r $cache_dir`;
 
 $d->while_logged_in_as("submitter", sub {
-
 
     $d->get('/solgs', 'solgs home page');
     sleep(4);
@@ -68,12 +65,10 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/breeders/trial/139', 'trial detail home page');
     sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
-    # $d->find_element_ok('anova_select_a_trait_div', 'id', 'click dropdown menu')->click();
-    # sleep(3);
     $d->find_element_ok('anova_select_traits', 'id', 'select a trait')->click();
     sleep(2);
      $d->find_element_ok('//select[@id="anova_select_traits"]/option[text()="' . $trait . '"]', 'xpath', 'select list sel pop')->click();
