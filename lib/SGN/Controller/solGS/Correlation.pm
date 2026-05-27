@@ -113,7 +113,6 @@ sub cache_pheno_corr_output_files {
 
     my $pop_id = $c->stash->{corr_pop_id};
     my $corr_cache_dir = $self->correlation_cache_dir($c);
-
     my $table_cache_data = {key    => 'pheno_corr_table_' . $pop_id,
 		      file      => "pheno_corr_table_${pop_id}" . '.txt',
 		      stash_key => 'pheno_corr_table_file',
@@ -147,7 +146,7 @@ sub cache_genetic_corr_output_files {
     my ($self, $c) = @_;
 
     my $corr_pop_id = $c->stash->{corr_pop_id};
-    my $pop_type         = $c->stash->{pop_type};
+    my $pop_type    = $c->stash->{pop_type};
     my $traits_code = $c->stash->{training_traits_code};
     my $sindex_name = $c->stash->{sindex_name};
 
@@ -244,13 +243,13 @@ sub pheno_corr_input_files {
     my $input_files;
 
     if ( $data_type =~ /phenotype/i ) {
-        $input_files = $c->stash->{phenotype_files_list}
-        || $c->stash->{phenotype_file_name};
+        $input_files = $c->stash->{phenotype_files_list} || $c->stash->{phenotype_file_name};
 
         if (!$input_files) {
             if ($c->stash->{data_set_type} =~ /combined_populations/) {
                 $c->controller('solGS::combinedTrials')->get_combined_pops_list( $c, $pop_id );
                 $c->controller('solGS::combinedTrials')->multi_pops_pheno_files($c, $c->stash->{combined_pops_list});
+                $input_files = $c->stash->{multi_pops_pheno_files};
             } else {
                 $c->controller('solGS::Files')->phenotype_file_name( $c, $pop_id);
             }
@@ -448,8 +447,8 @@ sub corr_query_jobs_file {
 sub correlation_cache_dir {
     my ($self, $c) = @_;
 
-    my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id};
-    my $corr_cache_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id);
+    my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id} || $c->stash->{training_pop_id};
+    my $corr_cache_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'cache');
 
     return $corr_cache_dir;
 
