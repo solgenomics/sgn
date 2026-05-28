@@ -64,7 +64,6 @@ $trial_stock_type => undef
 
     .interactive_fieldmap_buttons {
         margin-top: 4%;
-        width: 405px;
         margin-left: auto;
         margin-right: auto;
     }
