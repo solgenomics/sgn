@@ -835,6 +835,12 @@ Table
     border-width: 0px;
 }
 
+.table-trial-details td:nth-child(2) {
+    white-space: normal;
+    /* Limit the second column width in trial details, so that the QR code is beside it */
+    max-width: 320px;
+}
+
 /*.table>tbody>tr>td, */
 
 /*
