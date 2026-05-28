@@ -13,7 +13,6 @@ $user_can_modify => undef
 
 </style>
 
-<div class="well well-sm">
 
     <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 % my $stock_label = '';
@@ -33,11 +32,11 @@ $user_can_modify => undef
   </&>
 
   <& /breeders_toolbox/trial/trial_stocks_count.mas, trial_id => $trial_id &>
+
   <&| /page/info_section.mas, id => "trial_stocks", title=> $stock_label, subtitle => '<div class="col-sm-4"><div id="stocks_counts"></div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
-
-      <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
-
+        <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
   </&>
+
 
 
     <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", subtitle => '<div class="col-sm-4"><div id="seedlots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
@@ -133,7 +132,3 @@ $user_can_modify => undef
     <&| /page/info_section.mas, id=>"trial_entry_numbers", title=>"Entry Numbers", is_subsection=>1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_entry_numbers.mas, trial_id => $trial_id, trial_name => $trial_name &>
     </&>
-
-
-
-</div><!-- closes well -->
