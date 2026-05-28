@@ -748,6 +748,15 @@ Navbar
     background-color: var(--well-background-color);
 }
 
+.trial-header {
+    padding-top: 30px
+}
+@media only screen and (min-width: 768px) and (max-width: 913px) {
+    .trial-header.is-stuck {
+        top: 110px;
+    }
+}
+
 .navbar-default {
     box-shadow: var(--button-box-shadow);
 }
