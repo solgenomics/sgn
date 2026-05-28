@@ -983,7 +983,9 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         }
     };
 
-    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => 1 };
@@ -1116,7 +1118,9 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         }
     };
 
-    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
@@ -1247,7 +1251,9 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
         trial_id => $c->stash->{trial_id}
     });
 
-    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $add_subplots = $t->has_subplot_entries();
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $add_subplots)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading subplots." };
@@ -1382,7 +1388,9 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
         }
     };
 
-    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)) {
+    my $add_additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config, $add_additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants." };
@@ -1517,7 +1525,9 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
         }
     };
 
-    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
@@ -1649,7 +1659,9 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
         }
     };
 
-    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_subplots = $t->has_subplot_entries();
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_subplots)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading subplots." };
@@ -1783,7 +1795,9 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         }
     };
 
-    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)){
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config, $additional_plants)){
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants." };
@@ -1917,7 +1931,9 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         }
     };
 
-    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
@@ -2048,7 +2064,9 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         }
     };
 
-    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_subplots = $t->has_subplot_entries();
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_subplots)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading subplots." };
@@ -3319,6 +3337,8 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     }
 
     push @plant_entity_params, $phenotype_store_config;
+    my $additional_plants = $t->has_plant_entries();
+    push @plant_entity_params, $additional_plants;
 
     if ($t->create_plant_entities(@plant_entity_params)) {
 
@@ -3395,6 +3415,9 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
             date => $timestamp
         }
     };
+
+    my $additional_plants = $t->has_plant_entries();
+
     my @subplot_plant_entity_params = ($plants_per_subplot, $inherits_plot_treatments, $user_id, $plant_owner_username);
 
     if ($include_plant_coordinates) {
@@ -3417,6 +3440,7 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     }
 
     push @subplot_plant_entity_params, $phenotype_store_config;
+    push @subplot_plant_entity_params, $additional_plants;
 
     if ($t->create_plant_subplot_entities(@subplot_plant_entity_params)) {
 
@@ -3489,7 +3513,8 @@ sub create_subplot_entries : Chained('trial') PathPart('create_subplot_entries')
             date => $timestamp
         }
     };
-    if ($t->create_subplot_entities($subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_subplots = $t->has_subplot_entries();
+    if ($t->create_subplot_entities($subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_subplots)) {
 
 #        my $dbh = $c->dbc->dbh();
 #        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -5768,16 +5793,27 @@ sub delete_trial_plants_POST : Args(0) {
     }
 
     if (scalar(@mismatch_plants) > 0) {
+        print STDERR "Plants not found in trial on plant delete...\n";
         $c->stash->{rest} = {error => "The following plants are not found in this trial: ".join(", ", @mismatch_plants)};
         return;
     }
 
-    try {
+    eval {
         CXGN::Stock->bulk_hard_delete($c->dbic_schema("Bio::Chado::Schema"), \@delete_stock_ids);
-    } catch {
-        $c->stash->{rest} = {error => "An error occurred deleting stocks: $_"};
-        return;
+        if (scalar(@delete_plants) == scalar(@trial_plants)) {
+            my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'project_has_plant_entries', 'project_property')->cvterm_id();
+            my $plants_per_plot_row = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $trial_id
+            });
+            $plants_per_plot_row->delete();
+        }
     };
+    if ($@) {
+        print STDERR $@, "\n";
+        $c->stash->{rest} = {error => "An error occurred deleting stocks: $@"};
+        return;
+    }
 
     my $fieldmap = CXGN::Trial::FieldMap->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
@@ -5832,10 +5868,20 @@ sub delete_trial_subplots_POST : Args(0) {
         return;
     }
 
-    try {
+    eval {
         CXGN::Stock->bulk_hard_delete($c->dbic_schema("Bio::Chado::Schema"), \@delete_stock_ids);
-    } catch {
-        $c->stash->{rest} = {error => "An error occurred deleting stocks: $_"};
+        if (scalar(@delete_subplots) == scalar(@trial_subplots)) {
+            my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'project_has_subplot_entries', 'project_property')->cvterm_id();
+            my $subplots_per_plot_row = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Projectprop")->find({
+                type_id => $has_subplots_cvterm,
+                project_id => $trial_id
+            });
+            $subplots_per_plot_row->delete();
+        }
+    };
+    if ($@) {
+        print STDERR $@, "\n";
+        $c->stash->{rest} = {error => "An error occurred deleting stocks: $@"};
         return;
     };
 

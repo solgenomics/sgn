@@ -32,7 +32,7 @@ $trial_name => undef
       	      <div class="col-sm-7" >
                 <input name="add_rows_and_columns_to_plants" id="add_rows_and_columns_to_plants" type="checkbox"/>
                 <div id="plant_row_column_format_dialog" style="display:none">
-                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each plot.</i></p>
+                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a Cartesian pattern. Row and column numbers start at 1 within each plot. </i></p>
                     <table style="width:60%">
                         <tr>
                             <td>
@@ -91,7 +91,7 @@ $trial_name => undef
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Maximum number of plants per plot: </label>
+                            <label class="col-sm-4 control-label">Number of plants per plot: </label>
                             <div class="col-sm-8" >
                                 <input name="upload_plants_per_plot_number" id="upload_plants_per_plot_number" class="form-control" type="number" />
                             </div>
