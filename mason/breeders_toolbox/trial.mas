@@ -100,11 +100,11 @@ $project_id => undef
 <script  src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script  src="https://cdn.datatables.net/buttons/2.3.2/js/buttons.html5.min.js"></script>
 
-<div class="row">
-    <div class="col-sm-6">
+<div class="row flex-wrap-row">
+    <div class="col-auto">
         <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, label_design_btn_id => "label_designer_link", legacy_barcode_btn_id => "generate_trial_barcode_link" &>
     </div>
-    <div class="col-sm-6">
+    <div class="col-auto">
         <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-pencil", title => "Directly record phenotypes to database for this trial.", go_btn_id => "direct_phenotyping_link" &>
     </div>
 </div>
