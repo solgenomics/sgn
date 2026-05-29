@@ -475,7 +475,7 @@ sub kinship_cache_dir {
     my ( $self, $c ) = @_;
 
     my $kinship_analysis_id = $c->stash->{kinship_pop_id} || $c->stash->{trial_id};
-    my $cache_dir = catdir( $c->stash->{kinship_dir}, $kinship_analysis_id);
+    my $cache_dir = catdir( $c->stash->{kinship_dir}, $kinship_analysis_id, 'cache' );
     mkpath( $cache_dir, 0, 755 );
 
     return $cache_dir;
