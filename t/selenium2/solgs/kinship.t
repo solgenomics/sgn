@@ -13,12 +13,12 @@ my $f = SGN::Test::Fixture->new();
 my $solgs_data = SGN::Test::solGSData->new({
     'fixture' => $f, 
     'accessions_list_subset' => 60, 
-    'plots_list_subset' => 60
+    'plots_list_subset' => 60,
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
-
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
+print STDERR "\ncache dir: $cache_dir\n";
 my $accessions_list =  $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
 my $accessions_list_id = 'list_' . $accessions_list->{list_id};
@@ -155,17 +155,16 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
     sleep(3);
 
-
-    ######## trials page #######
+    ####### trials page #######
     $d->get_ok('/breeders/trial/139', 'trial detail home page');
     sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-150);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
     my $analysis_tools = $d->find_element('Kinship', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-60);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-150);", $analysis_tools);
     sleep(2);
     $d->find_element_ok('Kinship', 'partial_link_text', 'expand kinship')->click();
     sleep(5);
@@ -174,7 +173,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
     sleep(200);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
-    my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel);
+    my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -150);", $sel);
     sleep(2);
     $d->find_element_ok('//*[contains(text(), "Diag")]', 'xpath', 'check plot output')->click();
     sleep(4);
@@ -210,7 +209,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(15);
 
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait')->click();
+    sleep(1);
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
+    sleep(1);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(3);
     $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
@@ -232,12 +233,12 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
     my $analysis_tools = $d->find_element('Kinship', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship')->click();
-    sleep(2);
+    sleep(3);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(200);
+    sleep(220);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel);
     sleep(2);
@@ -249,16 +250,35 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(10);
 
-    my $clustering = $d->find_element('Models summary', 'partial_link_text', 'scroll up');
-    $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $clustering);
+    my $kinship = $d->find_element('Models summary', 'partial_link_text', 'scroll up');
+    $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $kinship);
     sleep(5);
     $d->find_element_ok('//table[@id="model_summary"]//*[contains(text(), "FRW")]', 'xpath', 'click training pop')->click();
     sleep(5);
-    my $analysis_tools = $d->find_element('Kinship', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
-    sleep(5);
+    $d->find_element_ok('//*[contains(text(), "Training population summary")]', 'xpath', 'collapse Training population summary')->click();
+    sleep(2);
+    $d->find_element_ok('//*[contains(text(), "Trait phenotype data")]', 'xpath', 'collapse Trait phenotype data')->click();
+    sleep(2);
+    $d->find_element_ok('//*[contains(text(), "Principal component analysis (PCA)")]', 'xpath', 'collapse Principal component analysis')->click();
+    sleep(2);
+    $d->find_element_ok('//*[contains(text(), "Clustering analysis")]', 'xpath', 'collapse Cluster analysis')->click();
+    sleep(2);
+    $d->find_element_ok('//*[contains(text(), "Variance components")]', 'xpath', 'collapse Variance components')->click();
+    sleep(2);
+    $d->find_element_ok('//*[contains(text(), "Model accuracy")]', 'xpath', 'collapse Model accuracy')->click();
+    sleep(2);
+    $d->find_element_ok('//*[contains(text(), "GEBVs vs observed")]', 'xpath', 'collapse GEBVs vs observed')->click();
+    sleep(2);
+    $d->find_element_ok('//*[contains(text(), "Genomic estimated breeding values")]', 'xpath', 'collapse Genomic estimated breeding values')->click();
+    sleep(2);
+
+    # my $analysis_tools = $d->find_element('Kinship', 'partial_link_text', 'toogle analysis tools');
+    # my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
+    # sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship')->click();
-    sleep(200);
+    sleep(2);
+    $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+    sleep(220);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel);
     sleep(2);
@@ -298,7 +318,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(200);
+    sleep(220);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
@@ -329,9 +349,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(1);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(10);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP-FRW modeling combo trials');
+    $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('Test DMCP-FRW modeling combo trials');
     sleep(2);
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
@@ -347,13 +367,13 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(10);
 
-    my $kin = $d->find_element('Kinship', 'partial_link_text', 'scroll up');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $kin);
+    my $kinship = $d->find_element('Kinship', 'partial_link_text', 'scroll up');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $kinship);
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -- multi models page')->click();
     sleep(2);
     $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
-    sleep(200);
+    sleep(220);
     my $sel = $d->find_element('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'scroll up');
     my $elem =$d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -100);", $sel);
     sleep(5);
@@ -367,13 +387,17 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//table[@id="model_summary"]//*[contains(text(), "FRW")]', 'xpath', 'click training pop')->click();
     sleep(5);
-    my $kin = $d->find_element('Kinship', 'partial_link_text', 'scroll up kinship section');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $kin);
+    my $kinship = $d->find_element('Kinship', 'partial_link_text', 'scroll up kinship section');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $kinship);
     sleep(5);
     $d->find_element_ok('//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -- FRW model page')->click();
-    sleep(200);
+    sleep(2);
+    $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+    sleep(220);
     $d->find_element_ok('//*[contains(text(), "Diag")]', 'xpath', 'check output')->click();
     sleep(4);
+    $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
+    sleep(2);
 
     foreach my $list_id ($trials_list_id, $accessions_list_id) {
         $list_id =~ s/\w+_//g;
