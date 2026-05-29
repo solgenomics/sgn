@@ -23,7 +23,7 @@ $stockref => undef
     }
 </style>
 
-<div class="well well-sm" id="nirs_analysis_plot_spectra_protocol_select">
+<div id="nirs_analysis_plot_spectra_protocol_select">
 </div>
 
 <center>

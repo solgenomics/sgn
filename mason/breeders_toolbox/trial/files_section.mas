@@ -4,10 +4,6 @@ $trial_stock_type => undef
 $for_analysis_page => undef
 </%args>
 
-<div class="well well-sm">
-
-    <div class="panel panel-default">
-        <div class="panel-body">
             <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
                 <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_spreadsheet_link">Create Spreadsheet</button>' &>
                 </&>
@@ -18,10 +14,7 @@ $for_analysis_page => undef
                 </&>
 %  }
             </&><!-- closes create new phenotyping file section -->
-        </div>
-    </div>
-    <div class="panel panel-default">
-        <div class="panel-body">
+
             <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
                 <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_spreadsheet_phenotypes_link">Upload</button>'&>
                 </&>
@@ -32,29 +25,20 @@ $for_analysis_page => undef
                 </&>
 %  }
             </&><!-- closes upload new phenotype file section -->
-        </div>
-    </div>
-    <div class="panel panel-default">
-        <div class="panel-body">
+
             <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0 &>
 
                 <table class="table table-bordered" id="trial_phenotype_files_datatables" alt="">
                 </table>
 
             </&><!-- closes uploaded file section -->
-        </div>
-    </div>
-    <div class="panel panel-default">
-        <div class="panel-body">
+
             <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_upload_additional_files_link">Upload Additional Files</button>' &>
 
             <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id &>
 
             </&><!-- closes uploaded additional file section -->
-        </div>
-    </div>
 
-</div><!-- closes well -->
 
 <script>
 jQuery(document).ready(function() {
@@ -62,6 +46,7 @@ jQuery(document).ready(function() {
 
         jQuery('#trial_phenotype_files_datatables').DataTable({
             'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/phenotype_metadata' },
+            'scrollX': true,
             columns: [
                 { title: "Filename", "data": null, "render": function ( data, type, row ) { return row[4]; } },
                 { title: "Date Uploaded", "data": null, "render": function ( data, type, row ) { return row[1]; } },

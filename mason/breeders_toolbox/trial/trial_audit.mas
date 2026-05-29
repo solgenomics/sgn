@@ -41,6 +41,7 @@ $project_id
             }
             jQuery('#audit_results').DataTable({
               data: json_object,
+              scrollX: true,
               columns: [
                   { title: 'Timestamp' },
                     { title: 'Operation' },

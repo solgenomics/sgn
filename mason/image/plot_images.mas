@@ -13,7 +13,6 @@ $stockref => undef
 <& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
 
 
-<div class="well well-sm table-responsive">
     <table id="plot_images_results" class="table table-hover table-striped">
     <thead>
         <tr>
@@ -26,7 +25,6 @@ $stockref => undef
     </tr>
     </thead>
     </table>
-</div>
             
 
 <script>
