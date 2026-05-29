@@ -223,6 +223,11 @@ html, body, #outercontainer {
     min-height: unset;
 }
 
+#main_row {
+    /* Use the full screen width minus parent padding */
+    max-width: calc(100vw - 45px);
+}
+
 /*
 -------------------------------------------------------------------------------
 Barcodes
