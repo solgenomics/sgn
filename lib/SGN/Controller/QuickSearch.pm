@@ -16,6 +16,7 @@ use CXGN::Tools::Text qw/to_tsquery_string trim/;
 use SGN::Model::Cvterm;
 use Bio::Chado::Schema;
 use CXGN::Marker::SearchMatView;
+use Try::Tiny;
 use Data::Dumper;
 
 =head1 NAME
@@ -191,20 +192,20 @@ sub execute_predefined_searches: Private {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     # execute all the searches and stash the results
     for my $search_name ( sort keys %searches ) {
-	print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";
-         my $search = $searches{$search_name};
-         my $b = time;
-         my $searchresults = $self->do_quick_search(
+	#print STDERR "performing quick search for $search_name (". Dumper($searches{$search_name}).")...\n";
+        my $search = $searches{$search_name};
+        my $b = time;
+        my $searchresults = $self->do_quick_search(
              $c->dbc->dbh,
              %$search,
              term => $c->stash->{term},
 	     schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
-           );
-         $c->stash->{results}{$search_name} = {
+          );
+        $c->stash->{results}{$search_name} = {
              result => $searchresults,
              time   => time - $b,
              exact  => $search->{exact}
-           };
+        };
 	print STDERR "SEARCH RESULTS: ".Dumper($searchresults);
     }
 }
@@ -224,11 +225,17 @@ sub do_quick_search {
     my ( $self, $db, %args ) = @_;
 
     if ($args{function}) { #just run legacy functions and return their results
-	print STDERR "INVOKING $args{function} with $args{term}\n";
-        return $args{function}->( $self, $db,$args{term}, $args{schema});
+	my $result;
+        try {
+	    $result = $args{function}->($self, $db, $args{term}, $args{schema})
+        } catch {
+	    warn "Search failed for term '$args{term}': $_";
+            $result = [undef, "0 results"];
+        };
+        return $result;
     } else {
-        my $classname = $args{sf_class}
-            or die 'Must provide a class name';
+        my $classname = $args{sf_class} or die 'Must provide a class name';
+	my $result_desc = $args{result_desc} or die "Must provide result_desc";
 
         Class::Load::load_class( $classname );
         $classname->isa( 'CXGN::Search::SearchI' )
@@ -248,22 +255,17 @@ sub do_quick_search {
 
             if ($count > 0) {
                 my $qstr = encode_entities($query->to_query_string());
-                return [ "$args{search_path}?$qstr", "$count $args{result_desc}" ];
+                return [ "$args{search_path}?$qstr", "$count $result_desc" ];
             }
         }
-        return [undef, "0 $args{result_desc}"];
+        return [undef, "0 $result_desc"];
     }
-
-    die 'this point should not be reached';
 }
 
 ###################### LEGACY QUICK SEARCH FUNCTIONS ##########################
 
 sub quick_est_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-
+    my ( $self, $db, $term ) = @_;
     my $est_link = [ undef, "0 EST identifiers" ];
 
     # the est quick search should support identifiers of the form SGN-E999999, SGN_E999999, SGNE999999
@@ -284,9 +286,7 @@ sub quick_est_search {
 }
 
 sub quick_clone_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
+    my ( $self, $db, $term ) = @_;
 
     # adjust if EST
     unless ($term =~ m|^ccc|) { # coffee clone name.
@@ -324,10 +324,7 @@ sub quick_clone_search {
 # For quick_search queries without the Version#-Release#- prefix, the version and release are
 # assumed to both be one. This is hardcoded below in two variables $version and $release.
 sub quick_array_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-
+    my ( $self, $db, $term ) = @_;
     my $version = 1; # default version is 1
     my $release = 1; # default release is 1
     my $spot = "";
@@ -375,9 +372,7 @@ sub quick_phenotype_search {
 }
 
 sub quick_marker_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
+    my ( $self, $db, $term ) = @_;
 
     # adjust if EST
     $term =~ s/([a-z]{4})(\d{1,2})([a-z]\d{1,2})/$1-$2-$3/i;
@@ -394,10 +389,7 @@ sub quick_marker_search {
 }
 
 sub quick_mapped_geno_marker_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
+    my ( $self, $db, $term, $schema ) = @_;
 
     my $count = 0;
     my $marker_link = [undef, "0 marker identifiers"];
@@ -423,9 +415,7 @@ sub quick_mapped_geno_marker_search {
 }
 
 sub quick_manual_annotation_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
+    my ( $self, $db, $term ) = @_;
 
     # It's a syntax error for whitespace to occur in tsquery query strings.  Replace with ampersands.
     my $cleaned_term = to_tsquery_string($term);
@@ -459,9 +449,7 @@ EOSQL
 }
 
 sub quick_automatic_annotation_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
+    my ( $self, $db, $term ) = @_;
     my $cleaned_term = to_tsquery_string($term);
     my $count = sql_query_count($db, "select count(*) from blast_defline where defline_fulltext @@ to_tsquery(?)",$cleaned_term);
 
@@ -488,11 +476,18 @@ EOSQL
 }
 
 sub sql_query_count {
-    my $db = shift;
-    my $query = shift;
-    my $qh = $db -> prepare_cached($query);
-    $qh -> execute(@_);
-    my ($count) = $qh -> fetchrow_array();
+    my ($db, $query, @bind) = @_;
+    my $count = try {
+        my $qh = $db -> prepare_cached($query);
+        $qh -> execute(@bind);
+        my ($result) = $qh -> fetchrow_array();
+        $qh->finish;
+	$result // 0;
+    } catch {
+	print STDERR "Query failed: $_";
+	return 0;
+    };
+
     return $count;
 }
 
@@ -536,10 +531,7 @@ sub google_search {
 }
 
 sub stock_search {
-    my $self = shift;
-    my $schema = shift;
-    my $type = shift;
-    my $term = shift;
+    my ( $self, $schema, $type, $term ) = @_;
 
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $type, 'stock_type')->cvterm_id();
     my $rs = $schema->resultset("Stock::Stock")->search( { uniquename => { ilike => $term} , type_id => $accession_type_id });
@@ -555,10 +547,7 @@ sub stock_search {
 }
 
 sub quick_accession_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
+    my ( $self, $db, $term, $schema ) = @_;
 
     my ($id, $name) = $self->stock_search($schema, 'accession', $term);
     if ($id) {
@@ -572,10 +561,7 @@ sub quick_accession_search {
 }
 
 sub quick_vector_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
+    my ( $self, $db, $term, $schema ) = @_;
 
     my ($id, $name) = $self->stock_search($schema, 'vector_construct', $term);
     if ($id) {
@@ -590,11 +576,7 @@ sub quick_vector_search {
 
 
 sub quick_plot_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
-
+    my ( $self, $db, $term, $schema ) = @_;
     my ($id, $name) = $self->stock_search($schema, 'plot', $term);
 
     if ($id) {
@@ -606,11 +588,7 @@ sub quick_plot_search {
 }
 
 sub quick_populations_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
-
+    my ( $self, $db, $term, $schema ) = @_;
     my ($id, $name) = $self->stock_search($schema, 'population', $term);
 
     if ($id) {
@@ -622,10 +600,7 @@ sub quick_populations_search {
 }
 
 sub quick_trials_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
+    my ( $self, $db, $term, $schema ) = @_;
 
     my $cv_rs = $schema->resultset("Cv::Cv")->search( { 'me.name' => 'project_type' }, { join => 'cvterms', '+select' => [ 'cvterms.name', 'cvterms.cvterm_id' ], '+as' => [ 'cvterm_name', 'cvterm_id' ]  });
 
@@ -653,10 +628,7 @@ sub quick_trials_search {
 }
 
 sub quick_locations_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
+    my ( $self, $db, $term, $schema ) = @_;
 
     print STDERR "LOCATION SEARCH!\n";
     my $rs = $schema->resultset("NaturalDiversity::NdGeolocation")->search( { description => { ilike => $term } });
@@ -666,11 +638,10 @@ sub quick_locations_search {
 	my $row = $rs->next();
 	$id = $row->nd_geolocation_id();
 	$name = $row->description();
-    }
-    else {
+	print STDERR "RETURNED: $id, $name\n";
+    } else {
 	print STDERR "LOCATION HAS ".$rs->count()." MATCHES!!!!\n";
     }
-    print STDERR "RETURNED: $id, $name\n";
     if ($id) {
 	return [ '/breeders/locations/', '1 location: '.$name ]; # just link to generic locations page
     }
@@ -680,10 +651,7 @@ sub quick_locations_search {
 }
 
 sub quick_traits_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
+    my ( $self, $db, $term, $schema ) = @_;
 
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
@@ -707,13 +675,19 @@ sub quick_traits_search {
 }
 
 sub quick_bp_search {
-    my $self = shift;
-    my $db = shift;
-    my $term = shift;
-    my $schema = shift;
+    my ( $self, $db, $term, $schema ) = @_;
 
     print STDERR "breeding program search... \n";
-    my $rs = $schema->resultset("Project::Project")->search( { 'me.name' => { ilike => $term }  } , { cvterm_name => 'breeding_program', join => 'projectprops' => { 'cvterms', '+select' => [ 'cvterm.name'], '+as' => ['cvterm_name'] } } );
+    my $rs = $schema->resultset("Project::Project")->search(
+        {
+            'me.name'   => { ilike => $term },
+            'type.name' => 'breeding_program',
+        },
+        {
+            join => { projectprops => 'type' },
+            distinct => 1,
+        }
+    );
 
     my ($id, $name);
 
@@ -722,30 +696,30 @@ sub quick_bp_search {
 	while (my $row = $rs->next()) {
 	    print STDERR join("\t", $row->name(), $row->project_id())."\n";
 	}
-	return [ '', 'too many hits' ];
+	return [ undef, 'too many hits' ];
     }
 
     elsif ($rs->count() == 1) {
 	my $row = $rs->next();
 	$id = $row->project_id();
 	$name = $row->name();
+	print STDERR "FOUND: $id\n";
     }
     else {
 	print STDERR "Sorry, no match!\n";
     }
 
-    print STDERR "FOUND: $id\n";
     if ($id) {
-	return [ '/breeders/program/'.$id, "1 breeding program: ".$name ];
+	return [ '/breeders/program/'.$id, "1 breeding program: $name" ];
     }
     else { 
-	return [ '', '0 breeding programs' ];
+	return [ undef, '0 breeding programs' ];
     }
 
 }
 
 sub quick_web_search {
-  my ($self, undef,$term) = @_;
+  my ($self, undef, $term) = @_;
   # works the same way as quick_page_search, except that the domain contraint is removed from the
   # search.
   print STDERR "Performing web search... ";

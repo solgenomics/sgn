@@ -6,7 +6,7 @@ $management_factor_types => ()
 $design_types => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker', 'flatpickr_min' ] &>
 
 <style>
 #container_field_map_view {display: none; }
@@ -1026,6 +1026,12 @@ Development Core Team, 2009).</p></center>
 <script>
 jQuery(document).ready(function(){
 
+    jQuery(document).on('focusin', function(e) {
+        if (jQuery(e.target).closest('.flatpickr-calendar').length) {
+            e.stopImmediatePropagation();
+        }
+    });
+
     jQuery('#trial_create_rows_and_columns_to_plants').click( function () {
         if (jQuery('#trial_create_rows_and_columns_to_plants').is(':checked')){
             jQuery('#trial_create_plant_row_column_format_dialog').show();
@@ -1057,16 +1063,9 @@ jQuery(document).ready(function(){
         }
     });
 
-    var planting_date_element = jQuery("#add_project_planting_date");
-    jQuery('input[title="planting_date"]').daterangepicker(
-        {
-            "singleDatePicker": true,
-            "showDropdowns": true,
-            "autoUpdateInput": false,
-        },
-        function(start){
-            planting_date_element.val(start.format('MM/DD/YYYY'));
-        }
-    );
+    flatpickr("#add_project_planting_date", {
+        allowInput: true,
+        dateFormat: "Y/m/d",
+    });
 });
 </script>

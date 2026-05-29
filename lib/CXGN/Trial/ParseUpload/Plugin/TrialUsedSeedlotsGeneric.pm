@@ -33,6 +33,7 @@ sub _validate_with_plugin {
             'num_seed_per_plot' => ['num seed per plot'],
             'weight_gram_seed_per_plot' => ['weight gram seed per plot'],
         },
+        unique_only_columns => [ 'plot_name' ]
     );
 
     my $parsed = $parser->parse();
