@@ -190,6 +190,12 @@ jQuery(document).ready(function () {
             jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
             solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
+                if (res.error) {
+                    jQuery(`${canvas} .multi-spinner-container`).hide();
+                    jQuery(corrMsgDiv).html(res.error).show();
+                    return;
+                }
+
                 if (res.corr_output_data) {
                     corrArgs["corr_table_file"] = res.corre_table_file;
                     var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
