@@ -349,6 +349,7 @@ export function initTrialAllocation() {
       `rotate-trial-cw${trialIndex}`,
       `rotate-trial-ccw${trialIndex}`
     ].forEach(id => lockControl(id, locked));
+    updateExistingTrialFormControls(trialIndex);
   }
 
   function lockExistingProjectForm(trialIndex) {
@@ -360,6 +361,51 @@ export function initTrialAllocation() {
       el.disabled = true;
       el.readOnly = true;
     });
+    updateExistingTrialFormControls(trialIndex);
+  }
+
+  function updateExistingTrialFormControls(trialIndex) {
+    const form = qs(`#tname${trialIndex}`)?.closest('.border.rounded');
+    if (!form) return;
+
+    const existingForm = existingProjectTrials.get(+trialIndex) || lockedTrialForms.get(+trialIndex);
+    const isExisting = !!(
+      existingProjectTrials.has(+trialIndex) ||
+      lockedTrialForms.has(+trialIndex) ||
+      databaseSavedTrialIndexes.has(String(trialIndex)) ||
+      form.dataset.existingProject === '1' ||
+      form.dataset.locked === '1' ||
+      existingForm?.existing_project_id ||
+      existingForm?.project_id
+    );
+    const generateContainer = form.querySelector('[data-generate-design-container="' + trialIndex + '"]');
+    if (generateContainer) {
+      if (isExisting) {
+        generateContainer.remove();
+      } else {
+        generateContainer.style.display = '';
+        generateContainer.querySelectorAll('button').forEach(button => {
+          button.disabled = false;
+          button.readOnly = false;
+        });
+      }
+    }
+
+    const removeContainer = form.querySelector(`[data-existing-trial-remove-container="${trialIndex}"]`);
+    if (!removeContainer) return;
+    removeContainer.innerHTML = '';
+
+    if (!existingProjectTrials.has(+trialIndex)) return;
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs';
+    remove.textContent = 'Remove';
+    remove.title = 'Remove this existing trial from the layout list';
+    remove.disabled = false;
+    remove.readOnly = false;
+    remove.addEventListener('click', () => removeTrialFromList(+trialIndex));
+    removeContainer.appendChild(remove);
   }
 
   function lockTrialVisuals(root, locked = true) {
@@ -518,18 +564,35 @@ export function initTrialAllocation() {
   viewport.style.position      = 'absolute';
   viewport.style.pointerEvents = 'auto';
   viewport.style.zIndex        = '5';
+  const headerLayer = document.createElement('div');
+  headerLayer.id = 'virtual-header-layer';
+  headerLayer.style.position = 'absolute';
+  headerLayer.style.left = '0';
+  headerLayer.style.top = '0';
+  headerLayer.style.pointerEvents = 'none';
+  headerLayer.style.zIndex = '40';
+  headerLayer.style.overflow = 'hidden';
+  (grid.parentElement || grid).appendChild(headerLayer);
   grid.appendChild(viewport);
 
   /* State ---------------------------------------------------------- */
   let totalRows = 0, totalCols = 0;
   let lastRow   = 0, lastCol   = 0;
 
+  function visibleRowCapacity() {
+    return Math.max(1, Math.min(VISIBLE_ROWS, Math.floor((grid.clientHeight - STEP) / STEP)));
+  }
+
+  function visibleColCapacity() {
+    return Math.max(1, Math.min(VISIBLE_COLS, Math.floor((grid.clientWidth - STEP) / STEP)));
+  }
+
   function maxStartRow() {
-    return Math.max(0, totalRows - VISIBLE_ROWS);
+    return Math.max(0, totalRows - visibleRowCapacity());
   }
 
   function maxStartCol() {
-    return Math.max(0, totalCols - VISIBLE_COLS);
+    return Math.max(0, totalCols - visibleColCapacity());
   }
 
   function clampScrollStart(row, col) {
@@ -543,8 +606,20 @@ export function initTrialAllocation() {
     const scroller = grid.querySelector('.fake-scroller');
     if (!scroller) return;
 
+    scroller.style.position = 'absolute';
+    scroller.style.left = '0';
+    scroller.style.top = '0';
+    scroller.style.pointerEvents = 'none';
     scroller.style.width = `${maxStartCol() * STEP + grid.clientWidth}px`;
     scroller.style.height = `${maxStartRow() * STEP + grid.clientHeight}px`;
+
+    viewport.style.overflow = 'hidden';
+    viewport.style.width = grid.clientWidth + 'px';
+    viewport.style.height = grid.clientHeight + 'px';
+    headerLayer.style.width = grid.clientWidth + 'px';
+    headerLayer.style.height = grid.clientHeight + 'px';
+    headerLayer.style.left = grid.offsetLeft + 'px';
+    headerLayer.style.top = grid.offsetTop + 'px';
   }
 
   /* One-time cell pool -------------------------------------------- */
@@ -574,14 +649,14 @@ export function initTrialAllocation() {
   rowLabelContainer.style.left = '0';            
   rowLabelContainer.style.top  = `${STEP}px`;    
   rowLabelContainer.style.pointerEvents = 'none';
-  viewport.appendChild(rowLabelContainer);
+  headerLayer.appendChild(rowLabelContainer);
 
   const colLabelContainer = document.createElement('div');
   colLabelContainer.style.position      = 'absolute';
   colLabelContainer.style.left = `${STEP}px`;    
   colLabelContainer.style.top  = '0';            
   colLabelContainer.style.pointerEvents = 'none';
-  viewport.appendChild(colLabelContainer);
+  headerLayer.appendChild(colLabelContainer);
 
   /* pools the renderer can re-use */
   const rowLabelPool = [], colLabelPool = [];
@@ -626,6 +701,8 @@ export function initTrialAllocation() {
         /* hide cells that are outside location bounds */
         if (gRow >= totalRows || gCol >= totalCols) {
           cell.style.display = 'none';
+          delete cell.dataset.row;
+          delete cell.dataset.col;
           continue;
         }
 
@@ -660,8 +737,11 @@ export function initTrialAllocation() {
     /* grid shell */
     grid.style.position = 'relative';
     grid.style.overflow = 'auto';
-    grid.style.width  = `${VISIBLE_COLS * STEP}px`;
-    grid.style.height = `${VISIBLE_ROWS * STEP}px`;
+    grid.style.width  = '100%';
+    grid.style.maxWidth = (VISIBLE_COLS * STEP) + 'px';
+    grid.style.height = '70vh';
+    grid.style.maxHeight = (VISIBLE_ROWS * STEP) + 'px';
+    grid.style.boxSizing = 'border-box';
     grid.style.paddingLeft = `${STEP}px`;   
     grid.style.paddingTop  = `${STEP}px`;   
 
@@ -699,8 +779,8 @@ export function initTrialAllocation() {
         renderVisibleCells(newRow, newCol);
         viewport.style.transform =
           `translate(${newCol * STEP}px, ${newRow * STEP}px)`;
-        rowLabelContainer.style.transform = `translateY(${newRow * STEP}px)`;
-        colLabelContainer.style.transform = `translateX(${newCol * STEP}px)`;
+        rowLabelContainer.style.transform = '';
+        colLabelContainer.style.transform = '';
         lastRow = newRow;
         lastCol = newCol;
       }
@@ -759,6 +839,10 @@ export function initTrialAllocation() {
     renderVisibleCells(newRow, newCol);
     viewport.style.transform =
       `translate(${newCol * STEP}px, ${newRow * STEP}px)`;
+    rowLabelContainer.style.transform = '';
+    colLabelContainer.style.transform = '';
+    lastRow = newRow;
+    lastCol = newCol;
 
     /* remember for next call */
     prevRows = rows;
@@ -902,8 +986,18 @@ export function initTrialAllocation() {
   function addTrialForm(i, selectedListId = null) {
     const d = document.createElement('div');
     d.className = 'border rounded p-4 mb-4 bg-gray-100';
+    const showGenerateDesign = !(existingProjectTrials.has(+i) || lockedTrialForms.has(+i) || databaseSavedTrialIndexes.has(String(i)));
+    const generateDesignHtml = showGenerateDesign ?
+      "<div class='mt-4 text-right' data-generate-design-container='" + i + "'>" +
+        "<button onclick='generateDesign(" + i + ", 0, 0, this)' class='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>" +
+          "Generate Design" +
+        "</button>" +
+      "</div>" : '';
     d.innerHTML = `
-      <h4 class='font-semibold mb-2'>Trial ${i}</h4>
+      <div class='flex items-center justify-between mb-2'>
+        <h4 class='font-semibold'>Trial ${i}</h4>
+        <span data-existing-trial-remove-container='${i}'></span>
+      </div>
       <label class='block mb-2'>Name
         <input id='tname${i}' class='w-full border rounded px-2 py-1' />
       </label>
@@ -990,15 +1084,12 @@ export function initTrialAllocation() {
         </label>
       </div>
 
-      <div class='mt-4 text-right'>
-        <button onclick='generateDesign(${i}, 0, 0, this)' class='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'>
-          Generate Design
-        </button>
-      </div>
+      ${generateDesignHtml}
     `;
 
     qs('#trial-details').appendChild(d);
     populateTrialMetadataSelects(d);
+    updateExistingTrialFormControls(i);
 
     // Design-specific toggles
     const designSelect = d.querySelector(`#tdesign${i}`);
@@ -1420,6 +1511,24 @@ export function initTrialAllocation() {
     box.draggable = true;
     box.ondragstart = startDrag;
 
+    const header = document.createElement('div');
+    header.className = 'flex items-start gap-2 mb-2';
+    header.appendChild(box);
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'h-5 w-5 flex items-center justify-center bg-red-600 text-white rounded hover:bg-red-700 text-xs leading-none';
+    remove.textContent = 'x';
+    remove.title = 'Remove trial from layout list';
+    remove.setAttribute('aria-label', 'Remove trial ' + i);
+    remove.addEventListener('click', () => removeTrialFromList(i));
+    if (lockedTrialForms.has(i) && !existingProjectTrials.has(i)) {
+      remove.disabled = true;
+      remove.classList.add('opacity-40', 'cursor-not-allowed');
+      remove.title = 'Saved layout trials cannot be removed from the list here';
+    }
+    header.appendChild(remove);
+
     const controls = document.createElement('div');
     controls.className = 'grid grid-cols-2 gap-2 text-xs';
     controls.innerHTML = `
@@ -1443,7 +1552,7 @@ export function initTrialAllocation() {
       </button>
     `;
 
-    wrap.appendChild(box);
+    wrap.appendChild(header);
     wrap.appendChild(controls);
     qs('#trial-boxes').appendChild(wrap);
     qs(`#rotate-trial-cw${i}`)?.addEventListener('click', () => rotateTrialFromPalette(i, 'cw'));
@@ -1587,6 +1696,12 @@ export function initTrialAllocation() {
 
   /******** Gereate trial Design *************/
   window.generateDesign = function(i, rowStart = 0, colStart = 0, btn) {
+    const formEl = qs('#tname' + i)?.closest('.border.rounded');
+    if (existingProjectTrials.has(+i) || lockedTrialForms.has(+i) || databaseSavedTrialIndexes.has(String(i)) || formEl?.dataset.existingProject === '1' || formEl?.dataset.locked === '1') {
+      if (btn) btn.disabled = true;
+      alert('Generate Design is not available for existing saved trials.');
+      return;
+    }
     const design  = $(`#tdesign${i}`).val();
     const layoutType = $(`#tlayout${i}`).val();
     const isRCBD  = design === 'RCBD';
@@ -2551,8 +2666,9 @@ export function initTrialAllocation() {
   }); }
 
   /******** boot ********/
-  function makeTrials(){
-    const currentForms = new Map(serializeTrialForms().map(form => [form.trial_index, form]));
+  function makeTrials(preferredForms = null){
+    const formSource = preferredForms || serializeTrialForms();
+    const currentForms = new Map(formSource.map(form => [form.trial_index, form]));
     qs('#trial-details').innerHTML='';
     qs('#trial-boxes').innerHTML='';
     const lockedMax = lockedTrialForms.size ? Math.max(...lockedTrialForms.keys()) : 0;
@@ -2914,6 +3030,94 @@ export function initTrialAllocation() {
       enablePal(trialIndex);
     }
     if (selectedRoot === root) selectedRoot = null;
+  }
+
+  function removeTrialFromList(trialIndex) {
+    trialIndex = +trialIndex;
+    if (!trialIndex) return;
+
+    if (lockedTrialForms.has(trialIndex) && !existingProjectTrials.has(trialIndex)) {
+      alert('This trial is part of a saved layout. Remove it from the saved layout view on the grid instead.');
+      return;
+    }
+
+    const hasPlacedTrial = !!qs(`.trial-group[data-trial="${trialIndex}"]`);
+    if (hasPlacedTrial && !window.confirm('Remove this trial from the layout list and field grid? This does not delete an existing trial from the database.')) {
+      return;
+    }
+
+    const compactedForms = compactFormsAfterRemoval(serializeTrialForms(), trialIndex);
+
+    qsa(`.trial-group[data-trial="${trialIndex}"]`).forEach(group => {
+      if (selectedRoot === group.dataset.root) selectedRoot = null;
+      lockedTrialRoots.delete(group.dataset.root);
+      group.remove();
+    });
+
+    existingProjectTrials.delete(trialIndex);
+    lockedTrialForms.delete(trialIndex);
+    delete trialDesignCache[trialIndex];
+
+    compactTrialIndexesAfterRemoval(trialIndex);
+    const currentCount = +qs('#num-trials')?.value || 0;
+    setInputValue('num-trials', Math.max(0, currentCount - 1));
+    makeTrials(compactedForms);
+    loadExistingTrialsForContext();
+  }
+
+  function removeExistingProjectTrial(trialIndex) {
+    removeTrialFromList(trialIndex);
+  }
+
+  function compactTrialIndexesAfterRemoval(removedIndex) {
+    existingProjectTrials = compactIndexedMap(existingProjectTrials, removedIndex);
+    lockedTrialForms = compactIndexedMap(lockedTrialForms, removedIndex);
+
+    Object.keys(trialDesignCache).map(Number).sort((a, b) => a - b).forEach(index => {
+      if (index === removedIndex) {
+        delete trialDesignCache[index];
+      } else if (index > removedIndex) {
+        trialDesignCache[index - 1] = trialDesignCache[index];
+        delete trialDesignCache[index];
+      }
+    });
+
+    databaseSavedTrialIndexes = new Set([...databaseSavedTrialIndexes]
+      .filter(index => +index !== removedIndex)
+      .map(index => {
+        const numeric = +index;
+        return String(numeric > removedIndex ? numeric - 1 : numeric);
+      }));
+
+    qsa('.trial-group').forEach(group => {
+      const current = +group.dataset.trial;
+      if (current > removedIndex) {
+        const next = current - 1;
+        group.dataset.trial = next;
+        group.querySelectorAll('.trial-box').forEach(box => applyPlotVisual(box, colourFor(next)));
+      }
+    });
+  }
+
+  function compactIndexedMap(map, removedIndex) {
+    const compacted = new Map();
+    map.forEach((value, keyValue) => {
+      const keyIndex = +keyValue;
+      if (keyIndex === removedIndex) return;
+      const nextIndex = keyIndex > removedIndex ? keyIndex - 1 : keyIndex;
+      compacted.set(nextIndex, Object.assign({}, value, { trial_index: nextIndex }));
+    });
+    return compacted;
+  }
+
+  function compactFormsAfterRemoval(forms, removedIndex) {
+    return (forms || [])
+      .filter(form => +form.trial_index !== +removedIndex)
+      .map(form => {
+        const trialIndex = +form.trial_index;
+        const nextIndex = trialIndex > +removedIndex ? trialIndex - 1 : trialIndex;
+        return Object.assign({}, form, { trial_index: nextIndex });
+      });
   }
 
   function handleRemoveTrialRoot(root, trialIndex) {

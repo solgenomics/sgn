@@ -51,7 +51,7 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
     --gap: 2px;
   }
   #farm-scroll {
-    overflow: auto;
+    overflow: visible;
     max-height: 70vh;
     position: relative;
   }
