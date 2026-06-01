@@ -209,7 +209,7 @@ sub get_layout_output {
     my $trial_treatments = $trial->get_treatments();
     my $trial_traits = $trial->get_traits_assayed();
     my @trial_treatment_names = map { $_->{trait_name} } @{$trial_treatments};
-    my @trial_trait_names = map {$_->[1] if $_->[1] !~ m/_TREATMENT/} @{$trial_traits};
+    my @trial_trait_names = map {$_->[1] !~ m/_TREATMENT/ ? $_->[1] : ()} @{$trial_traits};
     my %trial_trait_names_map = map { $_ => 1 } @trial_trait_names;
 
     my $t = CXGN::List::Transform->new();
