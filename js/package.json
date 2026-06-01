@@ -4,11 +4,11 @@
   "description": "node package containing all importable CXGN/SGN JavaScript files.",
   "main": "webpack.config.js",
   "scripts": {
-    "reset": "rm -r build/ || true && npm install .",
-    "build": "npm run reset && webpack --config build.webpack.config.js",
-    "build-watch": "npm run reset && webpack --config build.webpack.config.js -w",
-    "reset-test": "rm -r build_test/ || true && npm install .",
-    "build-test": "npm run reset-test && webpack --config test.webpack.config.js"
+    "reset": "rm -rf build/ && npm install",
+    "build": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js",
+    "build-watch": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js -w",
+    "reset-test": "rm -rf build_test/ && npm install",
+    "build-test": "npm run reset-test && NODE_OPTIONS=--openssl-legacy-provider webpack --config test.webpack.config.js"
   },
   "private": true,
   "author": "",
@@ -28,11 +28,11 @@
     "tape": "^4.10.1",
     "terser-webpack-plugin": "^4.2.3",
     "webpack": "^4.29",
-    "webpack-command": "^0.4.2"
+    "webpack-cli": "^4.10.0"
   },
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
-    "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",
+    "brapi-boxplotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",
     "core-js": "^3",
     "d3": "^7.3.0",
     "d3-array": "^2.11.0",
