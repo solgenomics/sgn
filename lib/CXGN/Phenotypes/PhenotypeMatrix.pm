@@ -229,6 +229,12 @@ has 'trait_repeat_types' => ( # returns the repeat type for every trait keyed by
     default => sub { return {} },
 );
 
+has 'include_trait_synonyms' => ( # when true, will set the column header as "SYN = TRAIT NAME|CO_xxx:yyyyyy"
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
 sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
@@ -236,6 +242,7 @@ sub get_phenotype_matrix {
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
     my $include_intercrop_stocks = $self->include_intercrop_stocks;
     my $include_entry_numbers = $self->include_entry_numbers;
+    my $include_trait_synonyms = $self->include_trait_synonyms;
     my %trial_entry_numbers;
 
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
@@ -272,12 +279,12 @@ sub get_phenotype_matrix {
         }
     );
 
-    my ($data, $unique_traits);
+    my ($data, $unique_traits, $trait_synonyms);
     my @info;
     my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
 
     if ($self->search_type eq 'MaterializedViewTable'){
-        ($data, $unique_traits) = $phenotypes_search->search();
+        ($data, $unique_traits, $trait_synonyms) = $phenotypes_search->search();
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -310,7 +317,10 @@ sub get_phenotype_matrix {
 
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
-            push @line, $trait;
+            my $trait_id = $unique_traits->{$trait};
+            my $trait_syn = $trait_synonyms->{$trait_id};
+
+            push @line, defined $trait_syn && $include_trait_synonyms ? "$trait_syn = $trait" : $trait;
             if ($include_phenotype_primary_key) {
                 push @line, $trait.'_phenotype_id';
             }
@@ -474,6 +484,7 @@ sub get_phenotype_matrix {
             push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
         }
 
+        my %trait_synonyms;
         foreach my $d (@$data) {
             my $obsunit_id = $d->{obsunit_stock_id};
             if (!exists($seen_obsunits{$obsunit_id})) {
@@ -551,6 +562,8 @@ sub get_phenotype_matrix {
             if ($cvterm){
                 my $timestamp_value = $d->{timestamp};
                 my $value = $d->{phenotype_value};
+                my $syn = $d->{trait_synonym};
+                $trait_synonyms{$cvterm} = $syn if $syn;
                 #my $cvterm = $trait."|".$cvterm_accession;
                 # if ($include_timestamp && $timestamp_value) {
                 #     $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
@@ -688,7 +701,8 @@ sub get_phenotype_matrix {
 
         my @sorted_traits = sort keys(%traits);
         foreach my $trait (@sorted_traits) {
-            push @line, $trait;
+            my $syn = $trait_synonyms{$trait};
+            push @line, defined $syn && $include_trait_synonyms ? "$syn = $trait" : $trait;
         }
         push @line, 'notes';
 

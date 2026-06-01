@@ -245,6 +245,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
 
     my $trial = CXGN::Trial->new({ bcs_schema => $schema,people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id => $trial_id });
     my $data = $trial->get_treatments();
+    my @treatments = map {$_->{trait_name}} @{$data};
 
     if ($empty) {
         unshift @$data, [ 0, "None" ];
@@ -252,7 +253,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
-      choices => $data,
+      choices => \@treatments,
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -2303,7 +2304,6 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
             LEFT JOIN stock_relationship AS icsr ON (icsr.subject_id=myplot.stock_id) AND icsr.type_id=?
             LEFT JOIN stock AS ics ON (ics.stock_id = icsr.object_id)
         WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)),
-
     stockprops AS (
         SELECT
             stock_id,
@@ -2351,10 +2351,14 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
                 $accession_list .= "</a>"
             }
         }
+        my $coords = 'NA';
+        if (defined($row) && defined($column)) {
+            $coords = "$row, $column";
+        }
 
         $accession_list .= "</td>";
 
-        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$row, $column</td><td>$rep</td><td>$block</td>$accession_list</tr>";
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$coords</td><td>$rep</td><td>$block</td>$accession_list</tr>";
     }
 
     $html .= "</tbody></table>";
@@ -2409,7 +2413,6 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
         (SELECT subject_id AS subplot_id, mysubplot.uniquename AS subplot_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name FROM stock_relationship
             JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
-
         WHERE stock_relationship.type_id=? AND mysubplot.stock_id = ANY(?)),
     plot AS
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
@@ -2420,8 +2423,6 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     JOIN plot ON plot.subplot_id=subplot.subplot_id
     LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?)
     GROUP BY 1,2,3,4,5,6;";
-
-
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
     $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
 
@@ -2499,7 +2500,6 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
 
         (SELECT object_id AS subplot_id, mysubplot.uniquename as subplot_name, subject_id as plant_id FROM stock_relationship
         JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id
-
         WHERE stock_relationship.type_id=$plant_of_subplot_id)";
         $subplot_join = "JOIN subplot ON subplot.plant_id=plant.plant_id";
         $subplot_header = "<th>Parent Subplot</th>";
@@ -2538,7 +2538,6 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     $subplot_join
     ;";
 
-
     my $h = $schema->storage()->dbh()->prepare($plants_q);
     $h->execute($plant_of_id, \@plants, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id);
 
@@ -2546,8 +2545,9 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
 
     while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $synonyms, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
+        $synonyms = $synonyms ? $synonyms : '';
         if ($row && $column){
-            $coordinates = "($row,$column)";
+            $coordinates = "$row, $column";
         }
         my $subplot_data = "";
         if ($subplot_id && $subplot_name) {
@@ -2762,7 +2762,7 @@ sub _clean_inputs {
 }
 
 
-sub get_related_attributes_select : Path('/ajax/html/select/related_attributes') Args(0) {
+sub get_transformant_related_attributes_select : Path('/ajax/html/select/transformant_related_attributes') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -2786,6 +2786,36 @@ sub get_related_attributes_select : Path('/ajax/html/select/related_attributes')
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_plot_related_attributes_select : Path('/ajax/html/select/plot_related_attributes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "related_attributes_select";
+    my $name = $c->req->param("name") || "related_attributes_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my @related_attributes;
+    push @related_attributes, ["", "Select Attribute"];
+    push @related_attributes, ['breedingProgram', 'breeding program'];
+    push @related_attributes, ['trialName', 'trial name'];
+    push @related_attributes, ['accessionName', 'accession name'];
+    push @related_attributes, ['plotNumber', 'plot number'];
+    push @related_attributes, ['blockNumber', 'block number'];
+    push @related_attributes, ['repNumber', 'rep number'];
+    push @related_attributes, ['rangeNumber', 'range number'];
+    push @related_attributes, ['rowNumber', 'row number'];
+    push @related_attributes, ['colNumber', 'col number'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@related_attributes,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 
 sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0) {
     my $self = shift;
