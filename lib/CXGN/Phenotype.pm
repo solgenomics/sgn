@@ -478,7 +478,7 @@ sub store_external_references {
 
     if (! $self->phenotype_id()) {
         #print STDERR "Can't store external references on this phenotype because there is no phenotype_id\n";
-        return undef;
+        return;
     }
 
     my $external_references_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_external_references', 'phenotype_property')->cvterm_id();
@@ -509,7 +509,7 @@ sub store_additional_info {
 
     if (! $self->phenotype_id()) {
         print STDERR "Can't store additional info on this phenotype because there is no phenotype_id\n";
-        return undef;
+        return;
     }
 
     my $phenotype_additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($self->schema(), 'phenotype_additional_info', 'phenotype_property')->cvterm_id();
