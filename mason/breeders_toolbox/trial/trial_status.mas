@@ -26,24 +26,16 @@ $user_can_modify => undef
 
 
 <&| /page/info_section.mas, title => "Trial Activities", collapsible=>1, collapsed=>0 &>
-    <div class = "well well-sm">
-        <div class = "panel panel-default">
-            <div class = "panel-body">
-                <table id = "trial_activities_table" class="table table-hover table-striped">
-                    <thead>
-                        <tr>
-                            <th>Status Type</th>
-                            <th>Date</th>
-                            <th>Updated by</th>
-                        </tr>
-                    </thead>
-                </table>
-            </div>
-        </div>
-    </div>
+    <table id = "trial_activities_table" class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th>Status Type</th>
+                <th>Date</th>
+                <th>Updated by</th>
+            </tr>
+        </thead>
+    </table>
 </&>
-
-<div class="panel-body">
 
 <&| /page/info_section.mas, id=>"trial_completion_layout_section", title=>"Field Design", collapsible=>1, collapsed=>1 &>
 %  if ($design_name) {
@@ -76,8 +68,6 @@ $user_can_modify => undef
 %  }
 -->
 </&>
-
-</div>
 
 <& /breeders_toolbox/trial/update_trial_status_dialog.mas, trial_id => $trial_id, trial_name => $trial_name, user_name => $user_name &>
 

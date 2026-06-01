@@ -27,11 +27,10 @@ $latest_trial_activity => undef
 
 </%args>
 
-
 <div class="row flex-wrap-row">
     <div class="col-auto">
 
-        <table class="table table-hover table-bordered" >
+        <table class="table table-hover table-bordered table-trial-details">
 
             <tr>
                 <td><b>Trial Name</b></td>
@@ -90,7 +89,7 @@ $latest_trial_activity => undef
             </tr>
 
             <tr>
-                <td><b>Stock Type Being Evaluated in This Trial</b></td>
+                <td><b>Stock Type in Trial</b></td>
                 <td>
                     <div id="stock_type_in_trial">
 % if ($trial_stock_type) {
@@ -103,7 +102,7 @@ $latest_trial_activity => undef
             </tr>
 
 	    <tr>
-                <td><b>Number of Stocks in This Trial</b></td>
+                <td><b>Number of Stocks</b></td>
                 <td>
                     <div id="stock_number_in_trial">
 % if ($trial_stock_count) {
@@ -166,7 +165,7 @@ $latest_trial_activity => undef
             <tr><td><b>Description</b></td>
                 <td>
 % if ($trial_description) {
-%  print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
+%  print "<div id='trial_description'>$trial_description</div>";
 % } else {
 %  print "<div id='trial_description'><span class='text-danger'>[No Description]</span></div>";
 % }

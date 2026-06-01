@@ -4,10 +4,10 @@ $trial_name
 $analysis_metadata
 </%args>
 
-<div class="row">
-    <div class="col-sm-12">
+<div class="row flex-wrap-row">
+    <div class="col-auto">
 
-        <table class="table table-hover table-bordered" >
+        <table class="table table-hover table-bordered table-trial-details" >
 
         <tr>
             <td><b>Model Name</b></td>

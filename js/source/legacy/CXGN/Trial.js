@@ -306,10 +306,12 @@ function edit_trial_details(){
     get_select_box('years', 'edit_trial_year', { 'default' : default_year, 'auto_generate': 1 });
     jQuery('#edit_trial_year').data("originalValue", default_year);
 
-    var default_year_0 = document.getElementById("edit_trial_year_0").getAttribute("value");
-    var select_year_0 = default_year_0 != '' ? default_year_0 : default_year;
-    get_select_box('years', 'edit_trial_year_0', { 'default' : select_year_0, 'auto_generate': 1, 'id': 'year_0_select', 'name': 'year_0_select' });
-    jQuery('#edit_trial_year_0').data("originalValue", default_year_0);
+    if (document.getElementById("edit_trial_year_0")) {
+        var default_year_0 = document.getElementById("edit_trial_year_0").getAttribute("value");
+        var select_year_0 = default_year_0 != '' ? default_year_0 : default_year;
+        get_select_box('years', 'edit_trial_year_0', { 'default' : select_year_0, 'auto_generate': 1, 'id': 'year_0_select', 'name': 'year_0_select' });
+        jQuery('#edit_trial_year_0').data("originalValue", default_year_0);
+    }
 
     var default_type = document.getElementById("edit_trial_type").getAttribute("value");
     get_select_box('trial_types', 'edit_trial_type',  { 'default' : default_type });

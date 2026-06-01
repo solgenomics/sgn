@@ -19,8 +19,8 @@
   <!-- START CONTENT WRAPPER -->
   <div id="wrapper" class="container-fluid">
     <div id="main_row" class="row">
-      <div class="col-md-1 col-lg-1 col-xl-2">
+      <div class="col-md-1 col-lg-1">
       </div>
-      <div class="col-sm-12 col-md-10 col-lg-10 col-xl-8">
+      <div class="col-sm-12 col-md-10 col-lg-10">
 
 <& /cookie_popup.mas &>
