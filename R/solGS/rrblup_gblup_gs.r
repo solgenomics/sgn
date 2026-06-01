@@ -40,6 +40,8 @@ output_files <- tryCatch({
     stop("Output files are missing or do not exist.")
 })
 
+message("input_files: ", paste(input_files, collapse = ", "))
+message("output_files: ", paste(output_files, collapse = ", "))
 # output_files <- scan(grep("output_files", allArgs, value = TRUE),
 #                     what = "character")
 
