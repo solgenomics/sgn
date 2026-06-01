@@ -1745,6 +1745,10 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
                     my $stored_tool_compatibility = $ds->tool_compatibility();
                     my $analysis_compatibility = $stored_tool_compatibility ? $stored_tool_compatibility->{$analysis_type} : undef;
 
+                    if (!$analysis_compatibility && $analysis_type eq "Environment Stratification" && $stored_tool_compatibility) {
+                        $analysis_compatibility = $stored_tool_compatibility->{"Dataset Analysis"};
+                    }
+
                     if (!$analysis_compatibility && $analysis_type eq 'Environment Stratification') {
                         my $trial_count = scalar(@{$info->{categories}->{trials} || []});
                         my $trait_count = scalar(@{$info->{categories}->{traits} || []});

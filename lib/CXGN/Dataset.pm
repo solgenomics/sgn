@@ -1300,9 +1300,6 @@ sub calculate_tool_compatibility {
         'Correlation' => {
             'compatible' => 0
         },
-        'Dataset Analysis' => {
-            'compatible' => 0
-        },
         'Environment Stratification' => {
             'compatible' => 0
         },
@@ -1350,12 +1347,10 @@ sub calculate_tool_compatibility {
         }
     }
 
-    foreach my $analysis_name ("Dataset Analysis", "Environment Stratification") {
-        push @{$tool_compatibility->{$analysis_name}->{"dataset requirements"}}, "Trials : ".scalar(@{$trials});
-        push @{$tool_compatibility->{$analysis_name}->{"dataset requirements"}}, "Traits : ".scalar(@{$all_traits});
-        if (scalar(@{$trials}) > 1 && scalar(@{$all_traits}) > 0) {
-            $tool_compatibility->{$analysis_name}->{"compatible"} = 1;
-        }
+    push @{$tool_compatibility->{"Environment Stratification"}->{"dataset requirements"}}, "Trials : ".scalar(@{$trials});
+    push @{$tool_compatibility->{"Environment Stratification"}->{"dataset requirements"}}, "Traits : ".scalar(@{$all_traits});
+    if (scalar(@{$trials}) > 1 && scalar(@{$all_traits}) > 0) {
+        $tool_compatibility->{"Environment Stratification"}->{"compatible"} = 1;
     }
 
     my $trial_designs = $self->retrieve_trial_designs();
