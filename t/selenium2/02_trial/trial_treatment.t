@@ -11,7 +11,7 @@ use File::Compare;
 # Create firefox profile for download options
 my $profile = Selenium::Firefox::Profile->new;
 $profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
-$profile->set_preference( 'browser.download.dir', '/home/production/cxgn/sgn/t/data/tmp' ); # Path to custom download folder
+$profile->set_preference( 'browser.download.dir', '/downloads' ); # Path to custom download folder on selenium host
 $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv' ); # Automatically download to disk
 
 # Create web driver
@@ -97,8 +97,11 @@ $w->while_logged_in_as("curator", sub {
     ok( wait_for sub { $w->find_element('create_fieldbook_ok_button_TrialLayout', 'id')->click() }, 'click submit button');
 
     sleep(2);
-    my $result = compare("/home/production/cxgn/sgn/t/data/trial/download_layout_expected.csv", "/home/production/cxgn/sgn/t/data/tmp/test_trial_layout.csv");
+    # Compare observed download to expected output.
+    # Reminder: the path /downloads on the selenium host is mapped to /selenium/downloads on the breedbase host
+    my $result = compare("/home/production/cxgn/sgn/t/data/trial/download_layout_expected.csv", "/selenium/downloads/test_trial_layout.csv");
     ok($result == 0, "observed trial layout matches expected");
+
 });
 
 # -----------------------------------------------------------------------------
