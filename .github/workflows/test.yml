@@ -61,6 +61,14 @@ jobs:
     steps:
       - name: Checkout sgn
         uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install JS deps
+        run: npm install
     
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
