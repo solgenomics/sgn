@@ -120,12 +120,19 @@ jQuery(document).ready( function() {
 
     jQuery(document).on('click', '.selected_item_remove', function() {
         jQuery(this).closest('tr').remove();
-        var name = jQuery(this).data("selected-item-name");
-        var item_index = selected_items.indexOf(name);
+        var remove_name = jQuery(this).data("selected-item-name");
+        var item_index = selected_items.indexOf(remove_name);
         selected_items.splice(item_index,1);
         if(selected_items.length == 0) {
             jQuery('#request_form_dialog').modal('hide');
         }
+
+        jQuery('input[name="catalog_item_select"]:checked').each(function() {
+            let item_name = jQuery(this).val();
+            if (item_name == remove_name) {
+                this.checked = false;
+            }
+        });
     })
 
     jQuery('#submit_request_form_button').click(function(){
