@@ -68,6 +68,7 @@ jobs:
           node-version: '18'
 
       - name: Install JS deps
+        working-directory: js
         run: npm install
     
       - name: Run unit tests
