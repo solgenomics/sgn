@@ -70,6 +70,16 @@ jobs:
       - name: Install JS deps
         working-directory: js
         run: npm install
+
+      - name: Pin Node binaries
+        run: |
+          NODE_BIN="$(dirname "$(which node)")"
+          for tool in node npm npx; do
+            ln -sf "$NODE_BIN/$tool" /usr/local/bin/$tool
+            ln -sf "$NODE_BIN/$tool" /usr/bin/$tool
+          done
+          node --version
+          npm --version
     
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
