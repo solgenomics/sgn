@@ -4,10 +4,10 @@
   "description": "node package containing all importable CXGN/SGN JavaScript files.",
   "main": "webpack.config.js",
   "scripts": {
-    "reset": "rm -rf build/ && npm ci",
+    "reset": "rm -rf build/ && npm install",
     "build": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js",
     "build-watch": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js -w",
-    "reset-test": "rm -rf build_test/ && npm ci",
+    "reset-test": "rm -rf build_test/ && npm install",
     "build-test": "npm run reset-test && NODE_OPTIONS=--openssl-legacy-provider webpack --config test.webpack.config.js"
   },
   "private": true,
