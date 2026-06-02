@@ -212,11 +212,12 @@ sub boxplot_file {
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
 
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $boxplot_id);
     my $cache_data = {
         key       => "boxplot_${boxplot_id}",
         file      => "genetic_gain_plot_${boxplot_id}.png",
         stash_key => "boxplot_file",
-        cache_dir => $c->stash->{solgs_cache_dir},
+        cache_dir => $cache_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -229,11 +230,12 @@ sub boxplot_data_file {
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
 
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $boxplot_id);
     my $cache_data = {
         key       => "boxplot_data_${boxplot_id}",
         file      => "genetic_gain_data_${boxplot_id}.txt",
         stash_key => "boxplot_data_file",
-        cache_dir => $c->stash->{solgs_cache_dir},
+        cache_dir => $cache_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -260,7 +262,7 @@ sub boxplot_input_files {
 
     my $files = join( "\t", @files_list );
 
-    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tmp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
@@ -287,7 +289,7 @@ sub boxplot_output_files {
 
     my $file_list = join( "\t", $boxplot_file, $error_file, $data_file, );
 
-    my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $tmp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);;
 
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
@@ -306,9 +308,10 @@ sub boxplot_error_file {
 
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $boxplot_id);
 
     $c->stash->{file_id}       = $boxplot_id;
-    $c->stash->{cache_dir}     = $c->stash->{solgs_cache_dir};
+    $c->stash->{cache_dir}     = $cache_dir;
     $c->stash->{analysis_type} = 'boxplot';
 
     $c->controller('solGS::Files')->analysis_error_file($c);
@@ -327,7 +330,7 @@ sub run_boxplot {
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{solgs_tempfiles_dir};
+    $c->stash->{analysis_tempfiles_dir} = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);;
 
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
