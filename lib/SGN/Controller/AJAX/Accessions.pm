@@ -32,9 +32,12 @@ use CXGN::Stock::ParseUpload;
 use CXGN::BreederSearch;
 use Encode;
 #use Encode::Detect;
-use JSON::XS qw | decode_json |;
+use JSON::XS qw | decode_json encode_json |;
 use utf8;
 use CXGN::Contact;
+use CXGN::Job;
+use CXGN::File;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -210,6 +213,8 @@ sub verify_accessions_file_POST : Args(0) {
 
     my $user_id;
     my $user_name;
+    my $user_first_name;
+    my $user_last_name;
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
 
@@ -222,6 +227,8 @@ sub verify_accessions_file_POST : Args(0) {
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
     } else {
@@ -231,6 +238,8 @@ sub verify_accessions_file_POST : Args(0) {
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         $user_role = $c->user->get_object->get_user_type();
     }
 
@@ -240,6 +249,7 @@ sub verify_accessions_file_POST : Args(0) {
     my $append_synonyms = !$c->req->param('append_synonyms') ? 0 : 1;
     my $create_accession_list = !$c->req->param('create_accession_list') ? 0 : 1;
     my $create_accession_list_name = $c->req->param('create_accession_list_name');
+    my $archived_file_id = $c->req->param("archived_file_id") || undef;
 
     #if ($user_role ne 'curator' && !$do_fuzzy_search) {
     #    $c->stash->{rest} = {error=>'Only a curator can add accessions without using the fuzzy search!'};
@@ -253,28 +263,60 @@ sub verify_accessions_file_POST : Args(0) {
     }
 
     my $subdirectory = "accessions_spreadsheet_upload";
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
+    my $archived_filename_with_path;
+    my $upload_original_name;
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        $c->detach();
+    if (!$archived_file_id) {
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+         ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = $archived_file->filename();
     }
-    unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." accession upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            is_validation => 1,
+            file_type => 'accessions',
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id,
+            file_name => $upload_original_name
+        }
+    });
+
+    $upload_job->update_status("submitted");
 
     my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my $parser = CXGN::Stock::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, editable_stock_props=>\@editable_stock_props, do_fuzzy_search=>$do_fuzzy_search, append_synonyms=>$append_synonyms);
@@ -286,6 +328,8 @@ sub verify_accessions_file_POST : Args(0) {
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $upload_job->additional_args->{error_messages} = "Could not get parsing errors";
+            $upload_job->update_status("failed");
             $c->detach();
         } else {
             $parse_errors = $parser->get_parse_errors();
@@ -296,6 +340,8 @@ sub verify_accessions_file_POST : Args(0) {
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_species => $parse_errors->{'missing_species'}};
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         $c->detach();
     }
 
@@ -311,7 +357,7 @@ sub verify_accessions_file_POST : Args(0) {
     if ( $create_accession_list ) {
         my $new_list_name = defined $create_accession_list_name && $create_accession_list_name ne '' ? 
             $create_accession_list_name : 
-            "AccessionsIn".$upload_original_name.$timestamp;
+            "Accessions_In_".$upload_original_name.$timestamp;
 
         my $check_list_id = CXGN::List::exists_list($c->dbc->dbh, $new_list_name, $user_id);
         if ($check_list_id->{list_id}){
@@ -336,12 +382,19 @@ sub verify_accessions_file_POST : Args(0) {
         fuzzy_organisms => $parsed_data->{fuzzy_organisms},
         found_organisms => $parsed_data->{found_organisms}
     );
+    my %found_accs_hash = map {$_ => 1} @{$parsed_data->{found_accessions}};
+    $upload_job->additional_args->{verify_accessions_report} = "<b>Accessions to modify:</b><br>"
+    .   join("<br>", @{$parsed_data->{found_accessions}})
+    .   "<br><b>New accessions to add:</b><br>"          
+    .   join("<br>", grep {!defined($found_accs_hash{$_})} keys(%full_accessions));
+    $upload_job->additional_args->{full_info} = encode_json([values(%full_accessions)]);
+    $upload_job->additional_args->{allowed_organisms} = encode_json([map {$full_accessions{$_}->{species}} keys(%full_accessions)]);
     print STDERR "verify_accessions_file returns: " . Dumper %return;
     if ($parsed_data->{error_string}){
         $return{error_string} = $parsed_data->{error_string};
     }
 
-
+    $upload_job->update_status("finished");
     $c->stash->{rest} = \%return;
 }
 
@@ -395,6 +448,8 @@ sub add_accession_list_POST : Args(0) {
     my ($self, $c) = @_;
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
     my $email_address = $c->req->param("email_address_upload");
     my $email_option_enabled = $c->req->param("email_option_enabled");
@@ -403,7 +458,12 @@ sub add_accession_list_POST : Args(0) {
     my $full_info = $c->req->param('full_info') ? _parse_list_from_json($c, $c->req->param('full_info')) : '';
     my $allowed_organisms = $c->req->param('allowed_organisms') ? _parse_list_from_json($c, $c->req->param('allowed_organisms')) : [];
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;
+    my $filename = $c->req->param('archived_filename') || '';
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
+
+    print STDERR Dumper $full_info;
+    print STDERR Dumper \%allowed_organisms;
+    sleep(30);
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };
@@ -421,6 +481,22 @@ sub add_accession_list_POST : Args(0) {
     my $main_production_site_url = $c->config->{main_production_site_url};
     my @added_fullinfo_stocks;
     my @added_stocks;
+
+    my $commit_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => "$filename accession upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            final_upload => 1,
+            file_type => 'accessions',
+            user_name => "$user_first_name $user_last_name"
+        }
+    });
+
+    $commit_job->update_status("submitted");
 
     my $coderef_bcs = sub {
         foreach (@$full_info){
@@ -541,6 +617,8 @@ sub add_accession_list_POST : Args(0) {
             # print STDERR Dumper \@added_fullinfo_stocks;
         };
     } catch {
+        $commit_job->additional_args->{error_messages} = $_;
+        $commit_job->update_status("failed");
         $transaction_error =  $_;
         my $error_message = "An error occurred while uploading accessions: $_\n";
         print STDERR $error_message;
@@ -556,6 +634,8 @@ sub add_accession_list_POST : Args(0) {
         $c->stash->{rest} = {error => $error_message};
     };
     if ($transaction_error) {
+        $commit_job->additional_args->{error_messages} = $transaction_error;
+        $commit_job->update_status("failed");
         $c->stash->{rest} = {error =>  "Transaction error storing stocks: $transaction_error" };
         print STDERR "Transaction error storing stocks: $transaction_error\n";
         return;
@@ -564,7 +644,9 @@ sub add_accession_list_POST : Args(0) {
 #    my $dbh = $c->dbc->dbh();
 #    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
 #    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
+    $commit_job->additional_args->{success_messages} = "Accessions uploaded successfully.";
+    $commit_job->update_status("finished");
+    $c->stash->{rest} = {success => 1};
     return;
 }
 

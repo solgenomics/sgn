@@ -353,6 +353,7 @@ jQuery(document).ready(function(){
         let success = '';
         let warnings = '';
         let errors = '';
+        let other = '';
         if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.success_messages) {
             success = `<p class="list-group-item-success" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.success_messages}</p>`;
         }
@@ -362,7 +363,10 @@ jQuery(document).ready(function(){
         if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.error_messages) {
             errors = `<p class="list-group-item-danger" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.error_messages}</p>`;
         }
-        jQuery('#report_content_div').html(`${success}${warnings}${errors}`);
+        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.verify_accessions_report) {
+            other = `<p>${jsMod["upload_factory"].job_dict[job_id].args.additional_args.verify_accessions_report}</p>`;
+        }
+        jQuery('#report_content_div').html(`${success}${warnings}${errors}${other}`);
     });
 
     jQuery('#dismiss_completed_uploads_btn').on('click', function(){

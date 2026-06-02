@@ -6,6 +6,8 @@
 *
 */
 
+import { create } from "d3";
+
 var upload_type_dict = {
     'trials' : "Multiple Trial Upload",
     'trial_metadata' : "Trial Metadata",
@@ -455,6 +457,13 @@ export function process_file(file_data, upload_type, config) {
             break;
         case 'accessions' : 
             display_accession_upload_choices(config.user_role);
+            jQuery('#create_accession_list').on('change', function() {
+                if (jQuery(this).prop('checked')) {
+                    jQuery('#create_accession_list_name').show();
+                } else {
+                    jQuery('#create_accession_list_name').hide();
+                }
+            });
             jQuery('#accession_upload_choices_next_btn').on('click', {file_data : file_data}, populate_accession_validate_submit_data);
             jQuery('#upload_type_choice_dialog').modal("show");
             break;
@@ -814,7 +823,6 @@ export function display_upload_formats(upload_type, config) {
 
 function display_validate_submit_modal(options) {
     let text = ""; 
-    console.dir(options);
     for (let key in options) {
         if (key == "parameters_json") {
             console.dir(options[key]);
@@ -1060,7 +1068,8 @@ function display_accession_upload_choices(user_role) {
         fuzzy_search = '<input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked></input>';
     }
 
-    jQuery('#upload_type_choices_div').html('<div class="form-group">' +
+    jQuery('#upload_type_choices_div').html(
+        '<div class="form-group">' +
         '<label class="col-sm-4 control-label">Use Fuzzy Search: </label>' + 
         '<div class="col-sm-8">' + 
         fuzzy_search + 
@@ -1074,6 +1083,14 @@ function display_accession_upload_choices(user_role) {
         '<input type="checkbox" id="append_synonyms" name="append_synonyms" checked />' + 
         '<br />' + 
         '<small>When checked, add synonyms of existing accession entries to the synonyms already stored in the database.  When not checked, remove any existing synonyms of existing accession entries and store only the synonyms in the upload file.</small>' + 
+        '</div>' + '</div>' + 
+        '<div class="form-group">' + 
+        '<label class="col-sm-4 control-label">Create Accession List:</label>' + 
+        '<div class="col-sm-8">' + 
+        '<input type="checkbox" id="create_accession_list" name="create_accession_list" checked />' + 
+        '<br />' + 
+        '<small>When checked, automatically create a new accession list with the accessions in your upload file.</small>' + 
+        '<input id="create_accession_list_name" name="create_accession_list_name" class="form-control input-sm" placeholder="New List Name" />' +
         '</div>' + '</div>' + 
         '<button class="btn btn-primary" id="accession_upload_choices_next_btn">Next</button>');
 }
@@ -1632,10 +1649,14 @@ function populate_accession_validate_submit_data(event) {
     let file_data = event.data.file_data;
     let fuzzy_search = jQuery('#fuzzy_check_upload_accessions').prop('checked');
     let append_synonyms = jQuery('#append_synonyms').prop('checked');
+    let create_accession_list = jQuery('#create_accession_list').prop('checked');
+    let list_name = jQuery('#create_accession_list_name').val();
 
     populate_validate_submit_data('accessions', file_data, {
         use_fuzzy_search : fuzzy_search,
-        append_synonyms : append_synonyms
+        append_synonyms : append_synonyms,
+        create_accession_list : create_accession_list,
+        list_name : list_name
     });
 }
 
@@ -2344,6 +2365,26 @@ export function submit_upload_job() {
         case 'locations' :
             break;
         case 'accessions' :
+            jQuery.ajax({
+                url : '/ajax/accessions/verify_accessions_file',
+                type: 'POST',
+                data : {
+                    'do_fuzzy_search' : submit_params.additional_args.use_fuzzy_search == "true" ? 1 : 0,
+                    'append_synonyms' : submit_params.additional_args.append_synonyms == "true" ? 1 : 0,
+                    'create_accession_list' : submit_params.additional_args.create_accession_list == "true" ? 1 : 0,
+                    'create_accession_list_name' : submit_params.additional_args.list_name,
+                    'archived_file_id' : submit_params.file_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(response.error)
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert('An error occurred uploading accessions. Check console.');
+                }
+            });
             break;
         case 'seedlots' :
             break;
@@ -2507,27 +2548,6 @@ export function submit_upload_job() {
         case 'transcriptomics' :
             break;
         case 'images' :
-            let image_file_ids = [submit_params.file_id];
-            for (file_id  in submit_params.additional_args.additional_files) {
-                image_file_ids.push(file_id);
-            }
-            jQuery.ajax({
-                url : '/ajax/image/verify_exif',
-                method : "POST",
-                data : {
-                    archived_file_ids : image_file_ids
-                },
-                success : function(response) {
-                    if (response.error) {
-                        console.log(response.error);
-                    }
-                    refresh_upload_tables();
-                },
-                error : function () {
-                    alert("An error occurred submitting images for validation, check console.");
-                    return;
-                }
-            })
             break;
         case 'images_barcodes' :
             break;
@@ -2605,7 +2625,7 @@ export function commit_upload_job(job_id) {
                     refresh_upload_tables();
                 },
                 error: function() { 
-                    alert("An error occurred submitting phenotype validation, check console.");
+                    alert("An error occurred storing phenotype data, check console.");
                     return;
                 }
             });
@@ -2636,7 +2656,7 @@ export function commit_upload_job(job_id) {
             break;
         case 'datacollector_spreadsheet' : 
             jQuery.ajax({
-                url: '/ajax/phenotype/upload_verify/datacollector',
+                url: '/ajax/phenotype/upload_store/datacollector',
                 type : 'POST',
                 data : {
                     'upload_datacollector_phenotype_timestamp_checkbox' : job.args.additional_args.upload_datacollector_phenotype_timestamp_checkbox,
@@ -2650,14 +2670,14 @@ export function commit_upload_job(job_id) {
                     refresh_upload_tables();
                 },
                 error: function() {
-                    alert("An error occurred submitting datacollector validation, check console.");
+                    alert("An error occurred storing datacollector file, check console.");
                     return;
                 }
             });
             break;
         case 'fieldbook_phenotypes' : 
             jQuery.ajax({
-                url: '/ajax/phenotype/upload_verify/fieldbook',
+                url: '/ajax/phenotype/upload_store/fieldbook',
                 type : 'POST',
                 data : {
                     'upload_fieldbook_phenotype_data_level' : job.args.additional_args.upload_fieldbook_phenotype_data_level,
@@ -2672,7 +2692,28 @@ export function commit_upload_job(job_id) {
                     refresh_upload_tables();
                 },
                 error: function() {
-                    alert("An error occurred submitting fieldbook validation, check console.");
+                    alert("An error occurred storing fieldbook data, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'accessions' :
+            jQuery.ajax({
+                url : '/ajax/accession_list/add',
+                type : 'POST',
+                data : {
+                    'full_info' : job.args.additional_args.full_info,
+                    'allowed_organisms' : job.args.additional_args.allowed_organisms,
+                    'archived_filename' : job.args.additional_args.file_name
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables()
+                },
+                error : function() {
+                    alert("An error occurred storing accessions, check console.");
                     return;
                 }
             });
