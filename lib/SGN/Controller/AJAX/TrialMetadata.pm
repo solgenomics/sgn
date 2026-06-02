@@ -540,7 +540,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
         GROUP BY trait, cvterm.cvterm_id $group_by_additional $treatment_group_by
         ORDER BY cvterm.name ASC
         $order_by_additional ";
-        
+
     my $h1 = $dbh->prepare($q1);
 
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
@@ -553,7 +553,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my %numeric_trait_ids;
 
     while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $treatment, $treatment_id) = $h1->fetchrow_array()) {
-	
+
         next if ($trait =~ m/_TREATMENT/);
 
         $numeric_trait_ids{$trait_id} = 1;
@@ -590,7 +590,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
-        
+
     }
 
     # get data from the non-numeric trait ids
@@ -755,6 +755,8 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
     my $user_name;
     my $user_role;
     my $session_id = $c->req->param("sgn_session_id");
+    my $trial_stock_type = $c->req->param('trial_stock_type');
+    my $trial_id = $c->stash->{trial_id};
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -802,8 +804,8 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
-    $parser->load_plugin('TrialUsedSeedlotsXLS');
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id, trial_stock_type => $trial_stock_type);
+    $parser->load_plugin('TrialUsedSeedlotsGeneric');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
 
@@ -996,11 +998,11 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_names}}, $_->{plant_name};
     }
 
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -1176,11 +1178,12 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         }
         push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_names}}, $_->{plant_name};
     }
+    
     my $t = CXGN::Trial->new({ 
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -1205,7 +1208,7 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
             date => $timestamp
         }
     };
-        
+
     if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
         $upload_job->update_status("finished");
         $c->stash->{rest} = { success => 1 };
@@ -1535,7 +1538,6 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
             push @{$plot_plant_hash{$_->{plot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
     }
-
     my $t = CXGN::Trial->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
@@ -1717,7 +1719,6 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
             push @{$subplot_plant_hash{$_->{subplot_stock_id}}->{plant_coords}}, $_->{row_num}.",".$_->{col_num};
         }
     }
-
     my $t = CXGN::Trial->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
@@ -2830,7 +2831,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         });
     my @layout = @{$trial_layout_download->get_layout_output()->{output}};
     shift @layout;
-    
+
     my $rep_hash = {};
 
     my $upload_change_plot_accessions_txn = sub {
@@ -2863,7 +2864,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
             my $new_plot_name = $val->{new_plot_name} ? $val->{new_plot_name} : undef;
             my $plot_number = $val->{plot_number};
 
-            
+
 
             if ($new_accession_id) {
                 $rep_hash->{$new_accession_id}->{add}->{$plot_id} = {
@@ -3092,6 +3093,71 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
     $c->stash->{rest} = { plots => \@data };
 }
 
+sub remove_filler_plots : Chained('trial') PathPart('remove_fillers') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $trial = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $stocks_rs = $schema->resultset('Stock::Stock')->search(
+        {
+            'project.project_id' => $trial_id,
+            'stockprops.type_id' => SGN::Model::Cvterm->get_cvterm_row(
+                $schema,
+                'filler_plot',
+                'stock_property'
+            )->cvterm_id(),
+        },
+        {
+            join => [
+                {
+                    nd_experiment_stocks => {
+                        nd_experiment => {
+                            nd_experiment_projects => 'project'
+                        }
+                    }
+                },
+                'stockprops'
+            ],
+            distinct => 1,
+        }
+    );
+
+    my @stock_ids = $stocks_rs->get_column('stock_id')->all;
+
+    my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
+
+    if (@stock_ids) {
+        $schema->resultset('Stock::Stock')->search({
+            stock_id => { -in => \@stock_ids }
+        })->delete;
+
+        my $pp_rs = $schema->resultset('Project::Projectprop')->search({
+            project_id => $trial_id,
+            type_id    => $trial_layout_cvterm_id,
+        });
+
+        while (my $row = $pp_rs->next) {
+            my $layout = decode_json($row->value);
+
+            # Remove filler plot numbers from projectprop.value json
+            my %filler_ids = map { $_ => 1 } @stock_ids;
+
+            foreach my $plot_number (keys %$layout) {
+                if ($filler_ids{ $layout->{$plot_number}->{plot_id} }) {
+                    delete $layout->{$plot_number};
+                }
+            }
+
+            $row->value(encode_json($layout));
+            $row->update;
+        }
+    }
+    $c->stash->{rest} = { success => 1, deleted => scalar(@stock_ids) };
+}
+
 sub trial_has_data_levels : Chained('trial') PathPart('has_data_levels') Args(0) {
     my $self = shift;
     my $c = shift;
@@ -3253,7 +3319,7 @@ sub trial_add_treatment : Chained('trial') PathPart('add_treatment') Args(0) { #
     }
 }
 
-sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) { 
+sub trial_remove_treatment : Chained('trial') PathPart('remove_treatment') Args(0) {
     my $self = shift;
     my $c = shift;
     my $treatment_id = $c->req->param('treatment_id');
@@ -3605,7 +3671,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     });
     my @layout = @{$trial_layout_download->get_layout_output()->{output}};
     shift @layout;
-    
+
     my $rep_hash = {};
     my $plot_hash = {};
 
@@ -3658,7 +3724,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     }
 
     my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
-    
+
     $replace_plot_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
     $replace_plot_accession_fieldmap->_regenerate_trial_layout_cache();
     my $dbh = $c->dbc->dbh();
@@ -3827,11 +3893,11 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
 
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $user_name = $c->user->get_object->get_username();
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -3925,11 +3991,11 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
 
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $user_name = $c->user->get_object->get_username();
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -4019,11 +4085,11 @@ sub create_subplot_entries : Chained('trial') PathPart('create_subplot_entries')
 
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $user_name = $c->user->get_object->get_username();
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -4102,11 +4168,11 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
 
     my $user_id = $c->user->get_object->get_sp_person_id();
     my $user_name = $c->user->get_object->get_username();
-    my $t = CXGN::Trial->new({ 
-        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id), 
+    my $t = CXGN::Trial->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $user_id),
         phenome_schema => $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id),
-        trial_id => $c->stash->{trial_id} 
+        trial_id => $c->stash->{trial_id}
     });
 
     my $temp_basedir = $c->config->{tempfiles_subdir};
@@ -4989,13 +5055,14 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
       my $image_img  = $image_ob->get_image_url("medium");
       my $small_image = $image_ob->get_image_url("thumbnail");
       my $image_page  = "/image/view/$image_id";
+      my $image_page_ref = "<a href=\"$image_page\">$image_name</a>";
 
       my $colorbox =
         qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
       my $fhtml =
         qq|<tr><td width=120>|
           . $colorbox
-            . $image_name
+            . $image_page_ref
               . "</td><td>"
                 . $image_description
                   . "</td></tr>";
@@ -7165,7 +7232,7 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
             $parent_stock_link = qq{<a href="/family/$parent_stock_id">$parent_stock_name</a>};
         }
 
-        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>}];
+        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, $plant_id ? qq{<a href="/stock/$plant_id/view">$plant_name</a>} : '', $tissue_sample_id ? qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>} : ''];
     }
 
 

@@ -12,11 +12,10 @@ $editable_stock_props_definitions
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Vectors may be uploaded in an Excel file (.xls or .xlsx)</b>
                     <br /><br />
                     <b>Header:</b>
                     <br>
-                    The first row (header) should contain the following:
+                    The first row (header) must contain the uniquename column. Additional information can be included by selecting optional column(s) (see below). : 
                     <br />
 
                     <table class="table table-hover table-bordered table-condensed" >
@@ -24,7 +23,6 @@ $editable_stock_props_definitions
                         <tbody>
                             <tr>
                                 <td>uniquename </td>
-                                <td>species_name</td>
 %  foreach my $editable_stockprop (@$editable_vector_props) {
 %                               print "<td>$editable_stockprop</td>";
 % }
@@ -32,16 +30,9 @@ $editable_stock_props_definitions
                         </tbody>
                     </table>
 
-                    <b>Comma Separated Fields:</b>
-                    <ul>
-                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: 
-                    </li>
-                    </ul>
-
                     <b>Required Fields:</b>
                     <ul>
-                    <li>name (must be unique)</li>
-                    <li>species_name (must exist in the database)</li>
+                    <li>uniquename (vector name must be unique)</li>
                     </ul>
                     <b>Optional Fields:</b>
                     <ul>

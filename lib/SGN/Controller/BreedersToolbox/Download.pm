@@ -252,6 +252,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
     my $include_intercrop_stocks = $c->req->param("intercrop") && $c->req->param("intercrop") ne 'null' && $c->req->param("intercrop") ne 'undefined' ? $c->req->param("intercrop") : 0;
     my $include_entry_numbers = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
+    my $include_trait_synonyms = $c->req->param("trait_synonyms") && $c->req->param("trait_synonyms") ne 'null' ? $c->req->param("trait_synonyms") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -437,6 +438,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         include_pedigree_parents=>$include_pedigree_parents,
         include_intercrop_stocks => $include_intercrop_stocks,
         include_entry_numbers => $include_entry_numbers,
+        include_trait_synonyms => $include_trait_synonyms,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
@@ -532,6 +534,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
     my $include_intercrop_stocks = $c->req->param("intercrop") || 0;
     my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
+    my $include_trait_synonyms = $c->req->param("trait_synonyms") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
 
     # parameters for outliers download
@@ -647,6 +650,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             dataset_excluded_outliers=>$dataset_outliers,
             include_intercrop_stocks=>$include_intercrop_stocks,
             include_entry_numbers=>$include_entry_numbers,
+            include_trait_synonyms=>$include_trait_synonyms,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();

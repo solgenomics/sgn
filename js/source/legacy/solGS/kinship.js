@@ -426,14 +426,14 @@ jQuery(document).ready(function () {
       solGS.kinship
         .checkCachedKinship(kinshipUrl, kinshipArgs)
         .done(function (res) {
-          if (res.data) {
+          if (res.kinship_output_data) {
             jQuery(kinshipMsgDiv).html("Generating heatmap... please wait...").show();
 
             kinshipPlotDivId = `${kinshipPlotDivId}_${res.kinship_file_id}`;
 
             var links = solGS.kinship.addDowloandLinks(res);
             var heatmapArgs = {
-              heatmap_input_data: res.data,
+              heatmap_input_data: res.kinship_output_data,
               canvas: canvas,
               plot_div_id: kinshipPlotDivId,
               download_links: links,
@@ -487,7 +487,7 @@ jQuery(document).ready(function () {
                     solGS.kinship
                       .runKinshipAnalysis(kinshipArgs)
                       .done(function (res) {
-                        if (res.data) {
+                        if (res.kinship_output_data) {
                           jQuery(kinshipMsgDiv)
                             .html("Generating heatmap... please wait...")
                             .show();
@@ -496,7 +496,7 @@ jQuery(document).ready(function () {
 
                           var links = solGS.kinship.addDowloandLinks(res);
                           var heatmapArgs = {
-                            heatmap_input_data: res.data,
+                            heatmap_input_data: res.kinship_output_data,
                             canvas: canvas,
                             plot_div_id: kinshipPlotDivId,
                             download_links: links,
@@ -561,7 +561,7 @@ jQuery(document).ready(function () {
         args["kinship_pop_id"] = args.data_structure + "_" + args.kinship_pop_id;
       }
       solGS.kinship.checkCachedKinship(url, args).done(function (res) {
-        if (res.data) {
+        if (res.kinship_output_data) {
           var kinshipMsgDiv = solGS.kinship.kinshipMsgDiv;
           var canvas = solGS.kinship.canvas;
 
@@ -573,7 +573,7 @@ jQuery(document).ready(function () {
 
           var links = solGS.kinship.addDowloandLinks(res);
           var heatMapArgs = {
-            heatmap_input_data: res.data,
+            heatmap_input_data: res.kinship_output_data,
             canvas: canvas,
             plot_div_id: kinshipPlotDivId,
             download_links: links,

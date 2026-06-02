@@ -234,7 +234,7 @@ jQuery(document).ready(function ($) {
             url: '/ajax/breeders/generategenotypetrial',
             method: 'POST',
             beforeSend: function(){
-                jQuery("working_modal").modal('show');
+                jQuery("#working_modal").modal('show');
             },
             data: {
                 'plate_data': JSON.stringify(plate_data)
@@ -258,7 +258,6 @@ jQuery(document).ready(function ($) {
 
     function submit_genotype_trial_upload(plate_data) {
         console.log('uploading genotype trial file');
-        plate_data = plate_data;
         jQuery('#upload_genotyping_trials_form').attr("action", "/ajax/breeders/parsegenotypetrial");
         jQuery("#upload_genotyping_trials_form").submit();
     }
@@ -427,6 +426,7 @@ jQuery(document).ready(function ($) {
     function submit_genotype_data_upload() {
         jQuery('#working_modal').modal('show');
         jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
+        jQuery('#upload_genotypes_missing_marker_div').hide();
         jQuery("#upload_genotypes_form").submit();
     }
 
@@ -462,6 +462,15 @@ jQuery(document).ready(function ($) {
                         selectText: true,
                         listType: 'accessions'
                     });
+                }
+                if (response.missing_markers && response.missing_markers.length > 0) {
+                    jQuery('#upload_genotypes_missing_marker_div').show();
+                    var missing_markers_html = "<div class='well well-sm'><h3>Markers not in selected protocol</h3><div class='missing-markers-list'></div></div><br/>";
+                    jQuery("#upload_genotypes_add_missing_marker_html").html(missing_markers_html);
+                    var missing_markers_html_text = "<div><strong>Missing markers:</strong><br/>" + response.missing_markers.join(', ') + "</div>";
+                    //jQuery("#upload_genotypes_add_missing_marker_html .missing-markers-list").html(missing_markers_html_text);
+                } else {
+                    jQuery('#upload_genotypes_missing_marker_div').hide();
                 }
                 return;
             } else {
@@ -583,7 +592,7 @@ function save_replace_well_accession () {
         jQuery('#replace_plate_accessions_dialog').modal("hide");
         jQuery('#working_modal').modal("show");
 
-        new jQuery.ajax({
+        jQuery.ajax({
             type: 'POST',
             url: '/ajax/breeders/trial/'+trial_id+'/replace_well_accessions',
             dataType: "json",
