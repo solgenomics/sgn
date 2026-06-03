@@ -855,6 +855,9 @@ Table
     max-width: 320px;
 }
 
+.dataTables_wrapper {
+    overflow: auto;
+}
 /*.table>tbody>tr>td, */
 
 /*
