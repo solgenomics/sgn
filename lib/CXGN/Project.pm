@@ -3118,7 +3118,7 @@ sub get_traits_assayed {
     if ($stock_type) {
         # print STDERR " the stock type here: = $stock_type\n";
         my $stock_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema(), $stock_type, 'stock_type')->cvterm_id();
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value), COALESCE(synonyms_table.synonyms, '[]'::jsonb)
             FROM cvterm
             $cvtermprop_join
             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
@@ -3127,15 +3127,16 @@ sub get_traits_assayed {
             JOIN nd_experiment_phenotype USING(phenotype_id)
             JOIN nd_experiment_project USING(nd_experiment_id)
             JOIN nd_experiment_stock USING(nd_experiment_id)
+            LEFT JOIN (SELECT cvterm_id, jsonb_agg(synonym) as synonyms FROM cvtermsynonym GROUP BY cvterm_id) AS synonyms_table ON (cvterm.cvterm_id = synonyms_table.cvterm_id)
             LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
             LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
             LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
             JOIN stock on (stock.stock_id = nd_experiment_stock.stock_id)
             WHERE stock.type_id=$stock_type_cvterm_id and nd_experiment_project.project_id=? $cvtermprop_where
-            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
+            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, synonyms_table.synonyms
             ORDER BY trait;";
     } else {
-        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value)
+        $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, count(phenotype.value), COALESCE(synonyms_table.synonyms, '[]'::jsonb)
             FROM cvterm
             $cvtermprop_join
             JOIN dbxref ON (cvterm.dbxref_id = dbxref.dbxref_id)
@@ -3143,21 +3144,23 @@ sub get_traits_assayed {
             JOIN phenotype ON (cvterm.cvterm_id=phenotype.cvalue_id)
             JOIN nd_experiment_phenotype USING(phenotype_id)
             JOIN nd_experiment_project USING(nd_experiment_id)
+            LEFT JOIN (SELECT cvterm_id, jsonb_agg(synonym) as synonyms FROM cvtermsynonym GROUP BY cvterm_id) AS synonyms_table ON (cvterm.cvterm_id = synonyms_table.cvterm_id)
             LEFT JOIN phenome.nd_experiment_md_images AS nd_experiment_md_images USING(nd_experiment_id)
             LEFT JOIN phenome.project_md_image AS project_md_image ON (nd_experiment_md_images.image_id=project_md_image.image_id)
             LEFT JOIN project AS imaging_project ON (project_md_image.project_id=imaging_project.project_id)
             WHERE nd_experiment_project.project_id=? $cvtermprop_where
-            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name
+            GROUP BY trait, cvterm.cvterm_id, imaging_project.project_id, imaging_project.name, synonyms_table.synonyms
             ORDER BY trait;";
     }
 
     my $component_q = "SELECT COALESCE(
-            json_agg(json_build_object('cvterm_id', component_cvterm.cvterm_id, 'name', component_cvterm.name, 'definition', component_cvterm.definition, 'cv_name', cv.name, 'cv_type', cv_type.name, 'cv_type_cvterm_id', cv_type.cvterm_id))
+            json_agg(json_build_object('cvterm_id', component_cvterm.cvterm_id, 'name', component_cvterm.name, 'definition', component_cvterm.definition, 'cv_name', cv.name, 'cv_type', cv_type.name, 'cv_type_cvterm_id', cv_type.cvterm_id, 'synonyms', COALESCE(synonyms_table.synonyms, '[]'::jsonb)))
             FILTER (WHERE component_cvterm.cvterm_id IS NOT NULL), '[]'
         ) AS components
         FROM cvterm
         LEFT JOIN cvterm_relationship on (cvterm.cvterm_id = cvterm_relationship.object_id AND cvterm_relationship.type_id = ?)
         LEFT JOIN cvterm AS component_cvterm on (cvterm_relationship.subject_id = component_cvterm.cvterm_id)
+        LEFT JOIN (SELECT cvterm_id, jsonb_agg(synonym) as synonyms FROM cvtermsynonym GROUP BY cvterm_id) AS synonyms_table ON (component_cvterm.cvterm_id = synonyms_table.cvterm_id)
         LEFT JOIN cv on (component_cvterm.cv_id = cv.cv_id)
         LEFT JOIN cvprop on (cv.cv_id = cvprop.cv_id)
         LEFT JOIN cvterm AS cv_type on (cv_type.cvterm_id = cvprop.type_id)
@@ -3169,10 +3172,11 @@ sub get_traits_assayed {
     my $component_h = $dbh->prepare($component_q);
 
     $traits_assayed_h->execute($self->get_trial_id());
-    while (my ($trait_name, $trait_id, $imaging_project_id, $imaging_project_name, $count) = $traits_assayed_h->fetchrow_array()) {
+    while (my ($trait_name, $trait_id, $imaging_project_id, $imaging_project_name, $count, $synonyms_json) = $traits_assayed_h->fetchrow_array()) {
         $component_h->execute($contains_relationship_cvterm_id, $trait_id);
         my ($component_terms) = $component_h->fetchrow_array();
         $component_terms = decode_json $component_terms;
+        my $synonyms = decode_json $synonyms_json;
         if ($contains_composable_cv_type) {
             my $has_composable_cv_type = 0;
             foreach (@$component_terms) {
@@ -3181,13 +3185,14 @@ sub get_traits_assayed {
                 }
             }
             if ($has_composable_cv_type == 1) {
-                push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
+                push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name, $synonyms];
             }
         }
         else {
-            push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name];
+            push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name, $synonyms];
         }
     }
+
     return \@traits_assayed;
 }
 

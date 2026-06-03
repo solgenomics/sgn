@@ -175,9 +175,20 @@ sub trial_phenotype_data {
     my $pheno_data = $model->phenotype_data($pop_id);
     my $metadata   = $model->trial_metadata();
 
+    my $synonyms_map;
+    if ($pop_id !~ /\D+/)
+    {
+        my $traits_raw = $model->trial_traits($pop_id);
+        my $clean = SGN::Controller::solGS::Utils->remove_ontology($traits_raw);
+        foreach my $tr (@$clean)
+        {
+            $synonyms_map->{$tr->{name}} = $tr->{synonyms};
+        }
+    }
+
     if ($pheno_data)
     {
-	my $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
+	my $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file, $synonyms_map);
 	write_file($pheno_file, {binmode => ':utf8'}, $pheno_data);
     }
 
@@ -222,7 +233,17 @@ sub plots_list_phenotype_data {
     my $pheno_data = $model->plots_list_phenotype_data($plots_ids);
     my $metadata = $model->trial_metadata();
 
-    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file);
+    my $synonyms_map;
+    if ($pheno_data && $$pheno_data) {
+        my @rows = split(/\n/, $$pheno_data, 2);
+        if (@rows) {
+            my @headers = split(/\t/, $rows[0]);
+            my @trait_names = grep { /\|/ } @headers;
+            $synonyms_map = $model->get_traits_synonyms(\@trait_names);
+        }
+    }
+
+    $pheno_data = SGN::Controller::solGS::solGS->format_phenotype_dataset($pheno_data, $metadata, $traits_file, $synonyms_map);
 
     write_file($pheno_file, {binmode => ':utf8'}, $pheno_data);
     write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));

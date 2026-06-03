@@ -160,7 +160,7 @@ print STDERR Dumper \@traits_assayed_sorted;
 is_deeply(\@traits_assayed_sorted, [
           [
             70741,
-            'dry matter content percentage|CO_334:0000092', [], 3, undef, undef
+            'dry matter content percentage|CO_334:0000092', [], 3, undef, undef, ['"dm" EXACT []', '"DMCt_Comp_r" EXACT []']
           ]
         ], "check upload worked");
 

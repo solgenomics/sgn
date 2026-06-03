@@ -118,7 +118,8 @@ my @traits_expected = (
             [],
             29,
             undef,
-            undef
+            undef,
+            ['"rtwt" EXACT []', '"RtWt_Wgh_kg" EXACT []'],
           ],
           [
             70741,
@@ -126,7 +127,8 @@ my @traits_expected = (
             [],
             29,
             undef,
-            undef
+            undef,
+            ['"dm" EXACT []','"DMCt_Comp_r" EXACT []'],
           ]
     );
 
@@ -244,7 +246,8 @@ is_deeply(\@traits_assayed_sorted, [
             [],
             29,
             undef,
-            undef
+            undef,
+            ['"rtwt" EXACT []', '"RtWt_Wgh_kg" EXACT []']
           ],
           [
             70727,
@@ -252,7 +255,8 @@ is_deeply(\@traits_assayed_sorted, [
             [],
             4,
             undef,
-            undef
+            undef,
+            ['"dyld" EXACT []','"RtYld_Dry_tha" EXACT []']
           ],
           [
             70741,
@@ -260,7 +264,8 @@ is_deeply(\@traits_assayed_sorted, [
             [],
             29,
             undef,
-            undef
+            undef,
+            ['"dm" EXACT []','"DMCt_Comp_r" EXACT []']
           ]
 	  ]
 

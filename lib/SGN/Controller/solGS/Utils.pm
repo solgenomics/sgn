@@ -199,9 +199,41 @@ sub abbreviate_term {
 
 }
 
+sub synonym_remove_obo {
+    my ($self, $synonym) = @_;
+
+    # Clean OBO format: "synonym" SCOPE [xrefs]
+    $synonym =~ s/\R/ /g; # Remove newlines
+    if ($synonym =~ /^"(.*)"/) {
+        $synonym = $1; # Extract content inside quotes
+    } else {
+        # Fallback: remove scope and xrefs if quotes are missing
+        $synonym =~ s/\s+(EXACT|BROAD|NARROW|RELATED).*$//i;
+    }
+    $synonym =~ s/^\s+|\s+$//g; # Trim
+
+    return $synonym;
+}
+
+sub get_short_synonym {
+    my ($self, $name, $synonyms) = @_;
+    my $best;
+
+    if ($synonyms && ref($synonyms) eq 'ARRAY') {
+        foreach my $s (@$synonyms) {
+            $s = $self->synonym_remove_obo($s);
+            if ($s && (!$best || length($s) < length($best))) {
+                $best = $s;
+            }
+        }
+    }
+    $best ||= $name;
+    return $best;
+}
 
 sub acronymize_traits {
-    my ($self, $traits) = @_;
+    my ($self, $traits, $synonyms_map) = @_;
+    $synonyms_map //= {};
 
     my $acronym_table = {};
     my $cnt = 0;
@@ -209,24 +241,34 @@ sub acronymize_traits {
 
     no warnings 'uninitialized';
 
-    foreach my $trait_name (@$traits)
+    foreach my $trait (@$traits)
     {
-	$cnt++;
+	    $cnt++;
 
-        my $abbr = $self->abbreviate_term($trait_name);
+        my ($trait_name, $syns);
+        if (ref($trait) eq 'HASH') {
+            $trait_name = $trait->{name};
+            $syns = $trait->{synonyms};
+        } else {
+            $trait_name = $trait;
+            $syns = $synonyms_map->{$trait_name};
+        }
 
-	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};
+        my $abbr = $self->get_short_synonym($trait_name, $syns);
+
+        if ($acronym_table->{$abbr}) {
+            $abbr = $abbr . ".$cnt";
+        }
 
         $acronymized_traits .= $abbr;
-	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
+	    $acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 
         $acronym_table->{$abbr} = $trait_name if $abbr;
-	my $tr_h = $acronym_table->{$abbr};
     }
 
     my $acronym_data = {
-	'acronymized_traits' => $acronymized_traits,
-	'acronym_table'      => $acronym_table
+        'acronymized_traits' => $acronymized_traits,
+        'acronym_table'      => $acronym_table
     };
 
     return $acronym_data;
@@ -263,11 +305,8 @@ sub remove_ontology {
 
     foreach my $tr (@$traits)
 	{
-		my $name = $tr->[1];
-		$name= $self->clean_traits($name);
-
-	my $id_nm = {'id' => $tr->[0], 'name' => $name};
- 	push @clean_traits, $id_nm;
+        my $id_nm = {'id' => $tr->[0], 'name' => $tr->[1], 'synonyms' => $tr->[6] || [] };
+        push @clean_traits, $id_nm;
     }
 
     return \@clean_traits;

@@ -159,10 +159,10 @@ sub save_single_trial_traits {
 
     if (!-s $traits_file)
     {
-	my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $pop_id);
+        my $trait_names = $c->controller('solGS::Utils')->get_clean_trial_trait_names($c, $pop_id);
 
-	$trait_names = join("\t", @$trait_names);
-	write_file($traits_file, {binmode => ':utf8'}, $trait_names);
+        $trait_names = join("\t", @$trait_names);
+        write_file($traits_file, {binmode => ':utf8'}, $trait_names);
     }
 
 }
@@ -178,11 +178,11 @@ sub get_all_traits {
 
     if (!-s $traits_file)
     {
-	my $page = $c->req->path;
-	if ($page =~ /solgs\/population\/|anova\/|correlation\/|acronyms/ && $pop_id !~ /\D+/)
-	{
-	    $self->save_single_trial_traits($c, $pop_id);
-	}
+        my $page = $c->req->path;
+        if ($page =~ /solgs\/population\/|anova\/|correlation\/|acronyms/ && $pop_id !~ /\D+/)
+        {
+            $self->save_single_trial_traits($c, $pop_id);
+        }
     }
 
     my $traits = read_file($traits_file, {binmode => ':utf8'});
@@ -192,11 +192,20 @@ sub get_all_traits {
 
     unless (-s $acronym_file)
     {
-	my @filtered_traits = split(/\t/, $traits);
-	my $acronymized_traits = $c->controller('solGS::Utils')->acronymize_traits(\@filtered_traits);
-	my $acronym_table = $acronymized_traits->{acronym_table};
+        my $acronym_data;
+        if ($pop_id !~ /\D+/) {
+            my $raw_traits = $c->controller('solGS::Search')->model($c)->trial_traits($pop_id);
+            my $clean_traits = $c->controller('solGS::Utils')->remove_ontology($raw_traits);
+            $acronym_data = $c->controller('solGS::Utils')->acronymize_traits($clean_traits);
+        } else {
+            my @filtered_traits = split(/\t/, $traits);
+            my $synonyms_map = $c->controller('solGS::Search')->model($c)->get_traits_synonyms(\@filtered_traits);
+            $acronym_data = $c->controller('solGS::Utils')->acronymize_traits(\@filtered_traits, $synonyms_map);
+        }
 
-	$self->traits_acronym_table($c, $acronym_table, $pop_id);
+        my $acronym_table = $acronym_data->{acronym_table};
+
+        $self->traits_acronym_table($c, $acronym_table, $pop_id);
     }
 
     $self->create_trait_data($c, $pop_id);

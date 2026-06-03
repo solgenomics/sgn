@@ -1335,14 +1335,14 @@ sub phenotype_file {
 }
 
 sub format_phenotype_dataset {
-    my ( $self, $data_ref, $metadata, $traits_file ) = @_;
+    my ( $self, $data_ref, $metadata, $traits_file, $synonyms_map ) = @_;
 
     my $data = $$data_ref;
     my @rows = split( /\n/, $data );
 
     my $formatted_headers =
       $self->format_phenotype_dataset_headers( $rows[0], $metadata,
-        $traits_file );
+        $traits_file, $synonyms_map );
     $rows[0] = $formatted_headers;
 
     my $formatted_dataset = $self->format_phenotype_dataset_rows( \@rows );
@@ -1360,9 +1360,7 @@ sub format_phenotype_dataset_rows {
 }
 
 sub format_phenotype_dataset_headers {
-    my ( $self, $all_headers, $meta_headers, $traits_file ) = @_;
-
-    $all_headers = SGN::Controller::solGS::Utils->clean_traits($all_headers);
+    my ( $self, $all_headers, $meta_headers, $traits_file, $synonyms_map ) = @_;
 
     my $traits = $all_headers;
 
@@ -1376,7 +1374,7 @@ sub format_phenotype_dataset_headers {
     my @filtered_traits = split( /\t/, $traits );
 
     my $acronymized_traits =
-      SGN::Controller::solGS::Utils->acronymize_traits( \@filtered_traits );
+      SGN::Controller::solGS::Utils->acronymize_traits( \@filtered_traits, $synonyms_map );
     my $acronym_table = $acronymized_traits->{acronym_table};
 
     my $formatted_headers;
@@ -1385,7 +1383,7 @@ sub format_phenotype_dataset_headers {
     foreach my $hd (@headers) {
         my $acronym;
         foreach my $acr ( keys %$acronym_table ) {
-            $acronym = $acr if $acronym_table->{$acr} =~ /$hd/;
+            $acronym = $acr if $acronym_table->{$acr} eq $hd;
             last if $acronym;
         }
 

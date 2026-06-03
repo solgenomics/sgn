@@ -2194,6 +2194,39 @@ sub get_dataset_genotype_data {
 
 }
 
+sub get_traits_synonyms {
+    my ($self, $trait_names) = @_;
+    return {} if !$trait_names || !@$trait_names;
+
+    my @names = uniq(@$trait_names);
+
+    my $q = "SELECT (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait_full, 
+                    cvterm.name as trait_short, 
+                    COALESCE(synonyms_table.synonyms, '[]'::jsonb)
+             FROM cvterm
+             JOIN dbxref USING (dbxref_id)
+             JOIN db USING (db_id)
+             LEFT JOIN (
+                 SELECT cvterm_id, jsonb_agg(synonym) as synonyms 
+                 FROM cvtermsynonym 
+                 GROUP BY cvterm_id
+             ) AS synonyms_table ON (cvterm.cvterm_id = synonyms_table.cvterm_id)
+             WHERE (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text IN (" . join(',', map { '?' } @names) . ")
+             OR cvterm.name IN (" . join(',', map { '?' } @names) . ");";
+
+    my $sth = $self->schema->storage->dbh->prepare($q);
+    $sth->execute(@names, @names);
+
+    my %map;
+    while (my ($full, $short, $syns_json) = $sth->fetchrow_array()) {
+        my $syns = JSON::Any->new->decode($syns_json);
+        $map{$full} = $syns;
+        $map{$short} = $syns;
+    }
+    return \%map;
+}
+
+
 __PACKAGE__->meta->make_immutable;
 
 #####

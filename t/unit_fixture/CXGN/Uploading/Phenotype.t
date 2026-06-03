@@ -172,7 +172,12 @@ my $traits_assayed  = $tn->get_traits_assayed(); # returns the counts assayed
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 print STDERR Dumper @traits_assayed_sorted;
 
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
+my @traits_assayed_check = (
+	[70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef, ['"rtwt" EXACT []','"RtWt_Wgh_kg" EXACT []']],
+	[70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef, ['"HI" EXACT []']],
+	[70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef, ['"dm" EXACT []','"DMCt_Comp_r" EXACT []']],
+	[70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef, ['"shtwt" EXACT []','"ShWt_Meas_kg" EXACT []']]
+);
 
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload 1' );
 
@@ -588,7 +593,12 @@ my $tn = CXGN::Trial->new( { bcs_schema => $f->bcs_schema(),
 my $traits_assayed  = $tn->get_traits_assayed(); # returns the counts assayed
 my @traits_assayed_sorted = sort {$a->[0] cmp $b->[0]} @$traits_assayed;
 print STDERR "TRAITS ASSAYED UPDATE 3: ".Dumper @traits_assayed_sorted;
-my @traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef], [70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef], [70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef], [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef]);
+my @traits_assayed_check = (
+	[70666,'fresh root weight|CO_334:0000012', [], 15,undef,undef, ['"rtwt" EXACT []','"RtWt_Wgh_kg" EXACT []']],
+	[70668,'harvest index variable|CO_334:0000015', [], 15,undef,undef, ['"HI" EXACT []']],
+	[70741,'dry matter content percentage|CO_334:0000092', [], 15,undef,undef, ['"dm" EXACT []','"DMCt_Comp_r" EXACT []']],
+	[70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef, ['"shtwt" EXACT []','"ShWt_Meas_kg" EXACT []']]
+);
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload update' );
 
 my @pheno_for_trait = $tn->get_phenotypes_for_trait(70666);
@@ -714,19 +724,19 @@ ok(!$image_error, "check no error in image upload");
  print STDERR "\n\nTRAITS ASSAYED SORTED UPLOAD 3: ". Dumper \@traits_assayed_sorted;
  @traits_assayed_check = ([
            70666,
-           'fresh root weight|CO_334:0000012', [], 15,undef,undef
+           'fresh root weight|CO_334:0000012', [], 15,undef,undef, ['"rtwt" EXACT []', '"RtWt_Wgh_kg" EXACT []']
          ],[
            70668,
-           'harvest index variable|CO_334:0000015', [], 15,undef,undef
+           'harvest index variable|CO_334:0000015', [], 15,undef,undef, ['"HI" EXACT []']
          ],[
            70727,
-           'dry yield|CO_334:0000014', [], 15,undef,undef
+           'dry yield|CO_334:0000014', [], 15,undef,undef, ['"dyld" EXACT []','"RtYld_Dry_tha" EXACT []']
          ],[
            70741,
-           'dry matter content percentage|CO_334:0000092', [], 15,undef,undef
+           'dry matter content percentage|CO_334:0000092', [], 15,undef,undef, ['"dm" EXACT []','"DMCt_Comp_r" EXACT []']
          ],[
            70773,
-           'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef
+           'fresh shoot weight measurement in kg|CO_334:0000016', [], 15,undef,undef, ['"shtwt" EXACT []','"ShWt_Meas_kg" EXACT []']
          ]);
 
  is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from phenotyping spreadsheet upload 3' );
@@ -1193,7 +1203,13 @@ print STDERR "DATA COLLECTOR CHECK STORED DATA: ". Dumper \@traits_assayed_sorte
 
 #         );
 
-@traits_assayed_check = ([70666,'fresh root weight|CO_334:0000012',[],14,undef,undef],[70668,'harvest index variable|CO_334:0000015',[],15,undef,undef],[70727,'dry yield|CO_334:0000014',[],15,undef,undef],[70741,'dry matter content percentage|CO_334:0000092',[],13,undef,undef],[70773,'fresh shoot weight measurement in kg|CO_334:0000016',[],15,undef,undef]);
+@traits_assayed_check = (
+	[70666,'fresh root weight|CO_334:0000012',[],14,undef,undef,['"rtwt" EXACT []', '"RtWt_Wgh_kg" EXACT []']],
+	[70668,'harvest index variable|CO_334:0000015',[],15,undef,undef,['"HI" EXACT []']],
+	[70727,'dry yield|CO_334:0000014',[],15,undef,undef,['"dyld" EXACT []','"RtYld_Dry_tha" EXACT []']],
+	[70741,'dry matter content percentage|CO_334:0000092',[],13,undef,undef,['"dm" EXACT []','"DMCt_Comp_r" EXACT []']],
+	[70773,'fresh shoot weight measurement in kg|CO_334:0000016',[],15,undef,undef,['"shtwt" EXACT []','"ShWt_Meas_kg" EXACT []']]
+);
 
 
 is_deeply(\@traits_assayed_sorted, \@traits_assayed_check, 'check traits assayed from data collector upload 4' );
