@@ -19,13 +19,9 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir    = $solgs_data->site_cluster_shared_dir();
-my $protocol_dir = $solgs_data->default_protocol_dir();
-my $pca_dir  = catdir( $protocol_dir, 'pca' );
-my $log_dir  = catdir( $protocol_dir, 'log' );
-
-# my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
+my $pca_dir = catdir( $cache_dir, 'pca' );
+print STDERR "\ncache_dir-- $cache_dir\n";
 
 my $accessions_list = $solgs_data->load_accessions_list();
 
@@ -65,14 +61,8 @@ my $plots_dt      = $solgs_data->load_plots_dataset();
 my $plots_dt_name = $plots_dt->{dataset_name};
 my $plots_dt_id   = 'dataset_' . $plots_dt->{dataset_id};
 
-#$accessions_dt_name = '' . $accessions_dt_name . '';
-print STDERR "\ntrials dt: $trials_dt_name -- $trials_dt_id\n";
-print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
-print STDERR "\nplots dt: $plots_dt_name -- $plots_dt_id\n";
 
-print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
-print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
-print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
+my @test_trials_ids = @{$solgs_data->trials_ids()};
 
 `rm -r $cache_dir`;
 
@@ -288,11 +278,10 @@ $d->while_logged_in_as("submitter", sub {
 
     `rm -r $cache_dir`;
 
-    $d->get_ok('/breeders/trial/139', 'trial detail home page');
+    $d->get_ok('/breeders/trial/' . $test_trials_ids[0], 'trial detail home page');
     sleep(10);
-
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis')->click();
     sleep(5);
@@ -316,7 +305,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
 
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis')->click();
     sleep(5);
@@ -348,7 +337,7 @@ $d->while_logged_in_as("submitter", sub {
     `rm -r $pca_dir`;
 
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
