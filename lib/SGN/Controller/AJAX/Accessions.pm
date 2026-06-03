@@ -281,7 +281,8 @@ sub verify_accessions_file_POST : Args(0) {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            file_type => 'accessions'
         });
         ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
@@ -304,7 +305,7 @@ sub verify_accessions_file_POST : Args(0) {
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
-        name => basename($archived_filename_with_path)." accession upload",
+        name => basename($archived_filename_with_path)." accession validation",
         job_type => 'upload',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
@@ -460,10 +461,6 @@ sub add_accession_list_POST : Args(0) {
     my %allowed_organisms = map {$_=>1} @$allowed_organisms;
     my $filename = $c->req->param('archived_filename') || '';
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $user_id);
-
-    print STDERR Dumper $full_info;
-    print STDERR Dumper \%allowed_organisms;
-    sleep(30);
 
     if (!$c->user()) {
         $c->stash->{rest} = {error => "You need to be logged in to submit accessions." };

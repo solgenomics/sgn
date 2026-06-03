@@ -2044,56 +2044,6 @@ export function submit_upload_job() {
     let submit_params = JSON.parse(jQuery('#upload_validation_parameters').text());
     let ignore_warnings = jQuery('#upload_submit_ignore_warnings').prop('checked');
 
-    // 'trial_metadata' : "Trial Metadata",
-    // 'trial_additional_file' : "Trial Additional File",
-    // 'plants_by_name' : "Plants by name",
-    // 'plants_by_index' : "Plants by index number",
-    // 'plants_per_plot' : "Plants by number of plants per plot",
-    // 'subplot_plants_by_name' : "Subplot plants by name",
-    // 'subplot_plants_by_index' : "Subplot plants by index number",
-    // 'plants_per_subplot' : "Plants by number of plants per subplot",
-    // 'subplots_by_name' : "Subplots by name",
-    // 'subplots_by_index' : "Subplots by index number",
-    // 'subplots_per_plot' : "Subplots by number of subplots per plot",
-    // 'genotyping_plate_excel' : "Genotyping plate design made in Excel",
-    // 'genotyping_plate_default_android' : "Default Coordinate Android Application plate design",
-    // 'genotyping_plate_custom_android' : "Custom Coordinate Android Application plate design",
-    // 'genotype_data_vcf' : "VCF genotyping data",
-    // 'genotype_data_tassel' : "Tassel HDF5 genotyping data",
-    // 'genotype_data_intertek' : "Intertek genotyping data",
-    // 'genotype_data_kasp' : "KASP genotyping data",
-    // 'genotype_data_ssr' : "SSR genotyping data",
-    // 'locations' : "Locations",
-    // 'accessions' : "Accessions",
-    // 'seedlots' : "Seedlots",
-    // 'seedlot_inventory' : "Seedlot inventory",
-    // 'seedlots_exist_to_exist' : "Transact existing seedlots to existing seedlots",
-    // 'seedlots_exist_to_new' : "Transact existing seedlots to new seedlots",
-    // 'seedlots_exist_to_plots' : "Transact existing seedlots to plots",
-    // 'seedlots_exist_to_unspecified' : "Transact existing seedlots to unspecified seeds/plots",
-    // 'pedigrees' : "Pedigrees",
-    // 'crosses' : "Crosses",
-    // 'gps_polygon' : "GPS coordinate polygons",
-    // 'gps_point' : "GPS coordinate points",
-    // 'spatial_layout' : "Trial spatial layout",
-    // 'change_accessions' : "Accession swap",
-    // 'entry_numbers' : "Entry numbers",
-    // 'new_progenies' : 'Progeny relationships for new accessions',
-    // 'existing_progenies' : 'Progeny relationships for existing accessions',
-    // 'family_names' : 'Family names of existing crosses',
-    // 'phenotyping_spreadsheet' : "Phenotyping spreadsheet",
-    // 'fieldbook_phenotypes' : "Field Book phenotypes",
-    // 'datacollector_spreadsheet' : "Datacollector spreadsheet",
-    // 'nirs' : "NIRS data",
-    // 'metabolomics' : "Metabolomic data",
-    // 'transcriptomics' : "Transcriptomic data",
-    // 'images' : "Images",
-    // 'images_barcodes' : "Images with barcodes",
-    // 'images_phenotypes' : "Images with associated phenotypes",
-    // 'soil_data' : "Soil data",
-    // 'vectors' : "Vector constructs",
-    // 'treatments' : "Treatments"
-
     jQuery('.modal.fade').each(function(index, element){
         jQuery(this).modal("hide");
     });
@@ -2399,6 +2349,24 @@ export function submit_upload_job() {
         case 'seedlots_exist_to_unspecified' :
             break;
         case 'pedigrees' :
+            jQuery.ajax({
+                url : '/ajax/pedigrees/upload_verify',
+                type : 'POST',
+                data : {
+                    'archived_file_id' : submit_params.file_id,
+                    'ignore_warnings' : ignore_warnings
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred verifying pedigrees, check console.");
+                    return;
+                }
+            });
             break;
         case 'crosses' :
             break;
@@ -2714,6 +2682,27 @@ export function commit_upload_job(job_id) {
                 },
                 error : function() {
                     alert("An error occurred storing accessions, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'pedigrees' : 
+            jQuery.ajax({
+                url : '/ajax/pedigrees/upload_store',
+                type : 'POST',
+                data : {
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'overwrite_pedigrees' : job.args.additional_args.ignore_warnings,
+                    'pedigree_data' : job.args.additional_args.pedigree_data
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred storing pedigrees, check console.");
                     return;
                 }
             });

@@ -12,6 +12,9 @@ use CXGN::List::Validate;
 use SGN::Model::Cvterm;
 use utf8;
 use JSON;
+use CXGN::Job;
+use CXGN::File;
+use File::Basename qw | basename dirname|;
 
 BEGIN { extends 'Catalyst::Controller::REST'; }
 
@@ -35,6 +38,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $user_id;
     my $user_name;
     my $user_role;
+    my $user_first_name;
+    my $user_last_name;
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -47,6 +52,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
     } else {
         if (!$c->user()){
             $c->stash->{rest} = {error=>'You must be logged in to upload pedigrees!'};
@@ -54,6 +61,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
         $user_role = $c->user->get_object->get_user_type();
     }
 
@@ -66,34 +75,64 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'pedigree_upload';
     my $upload = $c->req->upload('pedigrees_uploaded_file');
-    my $upload_tempfile  = $upload->tempname;
-    my $upload_original_name  = $upload->filename();
-
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $ignore_warnings = $c->req->param('ignore_warnings');
+    my $archived_filename_with_path;
+    my $upload_tempfile;
+    my $upload_original_name;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
-    my $md5;
 
-    my $params = {
-	tempfile => $upload_tempfile,
-	subdirectory => $subdirectory,
-	archive_path => $c->config->{archive_path},
-	archive_filename => $upload_original_name,
-	timestamp => $timestamp,
-	user_id => $user_id,
-	user_role => $user_role,
-    };
+    if (!$archived_file_id) {
+        $upload_tempfile  = $upload->tempname;
+        $upload_original_name  = $upload->filename();
+        my $params = {
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            file_type => 'pedigrees'
+        };
 
-    my $uploader = CXGN::UploadFile->new( $params );
-
-    my %upload_metadata;
-    my $archived_filename_with_path = $uploader->archive();
-
-    if (!$archived_filename_with_path) {
-	$c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-	return;
+        my $uploader = CXGN::UploadFile->new( $params );
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            $c->detach();
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = $archived_file->filename();
     }
 
-    $md5 = $uploader->get_md5($archived_filename_with_path);
-    unlink $upload_tempfile;
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." pedigree validation",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            is_validation => 1,
+            file_type => 'pedigrees',
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id,
+            file_name => $upload_original_name,
+            ignore_warnings => $ignore_warnings
+        }
+    });
+
+    $upload_job->update_status("submitted");
 
     my $parser = CXGN::Pedigree::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path);
     $parser->load_plugin('PedigreesGeneric');
@@ -103,6 +142,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         my $return_error = '';
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
+            $upload_job->additional_args->{error_messages} = "Pedigree parser failed, but did not return an error message.";
+            $upload_job->update_status("failed");
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
             $c->detach();
         } else {
@@ -112,6 +153,8 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
                 $return_error .= $error_string."<br>";
             }
         }
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {error_string => $return_error};
         $c->detach();
     }
@@ -128,8 +171,19 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         foreach my $pedigree (@$pedigree_check){
             $pedigree_info .= $pedigree."<br>";
         }
+        $upload_job->additional_args->{warning_messages} = $pedigree_info;
+        if ($ignore_warnings) {
+            $upload_job->additional_args->{pedigree_data} = $pedigree_string;
+            $upload_job->update_status("finished");
+        } else {
+            $upload_job->additional_args->{pedigree_data} = $pedigree_string;
+            $upload_job->update_status("failed");
+        }
         $c->stash->{rest} = {error => $pedigree_info, pedigree_data => $pedigree_string };
     } else {
+        $upload_job->additional_args->{pedigree_data} = $pedigree_string;
+        $upload_job->additional_args->{success_messages} = "Pedigrees valid.";
+        $upload_job->update_status("finished");
         $c->stash->{rest} = {pedigree_data => $pedigree_string};
     }
 
@@ -140,11 +194,42 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $c = shift;
     my $pedigree_data = $c->req->param('pedigree_data');
     my $overwrite_pedigrees = $c->req->param('overwrite_pedigrees') ne 'false' ? $c->req->param('overwrite_pedigrees') : 0;
+    my $archived_file_id = $c->req->param('archived_file_id') || '';
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $pedigree_hash = decode_json $pedigree_data;
     my $file_pedigree_info = $pedigree_hash->{'pedigrees'};
+
+    my $archived_file = CXGN::File->new({
+        file_id => $archived_file_id,
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+        archive_path => $c->config->{archive_path}
+    });
+
+    my $filename = $archived_file->filename();
+
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $sp_person_id,
+        name => "$filename pedigree upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            final_upload => 1,
+            file_type => 'pedigrees',
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id,
+            file_name => $filename,
+            overwrite_pedigrees => $overwrite_pedigrees
+        }
+    });
+
+    $upload_job->update_status("submitted");
 
     my $pedigrees = CXGN::Pedigree::AddPedigrees->new({ schema => $schema });
 
@@ -163,9 +248,14 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     }
 
     if ($error){
+        $upload_job->additional_args->{error_messages} = $error;
+        $upload_job->update_status("failed");
         $c->stash->{rest} = { error => $error };
         $c->detach();
     }
+    print STDERR "Finished uploading pedigrees.\n";
+    $upload_job->additional_args->{success_messages} = "Pedigrees uploaded.";
+    $upload_job->update_status("finished");
     $c->stash->{rest} = { success => 1 };
 }
 
