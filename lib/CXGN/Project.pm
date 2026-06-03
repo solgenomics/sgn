@@ -5084,12 +5084,18 @@ sub get_accessions {
 =cut
 
 sub get_trial_stock_count {
-	my $self = shift;
+    my $self = shift;
 
-	my $accessions = $self->get_accessions();
-	my $stock_count = scalar(@{$accessions});
+    my $accessions = $self->get_accessions();
+    my @accessions_no_filler;
+    while (my ($i, $el) = each @{$accessions}) {
+        if ($el->{accession_name} ne 'Filler'){
+            push(@accessions_no_filler, $el);
+        }
+    }
+    my $stock_count = scalar(@accessions_no_filler);
 
-	return $stock_count;
+    return $stock_count;
 }
 
 =head2 get_tissue_sources
