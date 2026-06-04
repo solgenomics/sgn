@@ -11,19 +11,13 @@ $location_id => 'not_provided'
     <div class="panel panel-default">
         <div class="panel-body">
             <table id="dataset_search_results" width="100%" class="table table-hover table-striped">
-            <&| /util/user.mas:logged_in &>
               <thead>
                 <tr>
                   <th>Dataset name</th>
                   <th>Description</th>
-              </tr>
+                  <th>Published</th>
+                </tr>
               </thead>
-            </&>
-            <&| /util/user.mas:logged_out &>
-              <tr>
-                <td><button class="btn btn-xs btn-primary" name="site_login_button">Log In</button> to see Datasets.</td>
-              </tr>
-            </&>
             </table>
         </div>
     </div>
@@ -35,7 +29,27 @@ jQuery(document).ready(function () {
 
    var trial_table = jQuery('#dataset_search_results').DataTable( {
        'ajax': '/ajax/dataset/by_user_html',
-       "scrollX": true
+       "scrollX": true,
+       "columnDefs": [
+          {
+            "targets": 2,
+            "render": (data = {}, type, row, meta) => {
+              let html = "";
+              if ( Object.keys(data.published || {}).length > 0 ) {
+                for ( const key of Object.keys(data.published) ) {
+                  const val = data.published[key] || {};
+                  console.log(val);
+                  if ( val.article?.is_public ) {
+                    html += `<span class="label label-primary">${val.service}</span>&nbsp;`;
+                    html += `<a href="${val.article?.figshare_url}" target="_blank">${val.article?.title}</a><br /><br />`;
+                  }
+                }
+              }
+
+              return html;
+            }
+          }
+       ]
    });
 
    jQuery('#dataset_search_results').on( 'draw.dt', function () {

@@ -437,8 +437,8 @@ sub get_datasets_by_user {
     my @datasets;
     my @datasets_id;
     while (my $row = $rs->next()) {
-	push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
-	push @datasets_id, $row->sp_dataset_id();
+        push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description(), $row->dataset() ];
+        push @datasets_id, $row->sp_dataset_id();
     }
 
     $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
@@ -451,7 +451,7 @@ sub get_datasets_by_user {
 	    }
 	}
         if (!$found) {
-            push @datasets,  [ $row->sp_dataset_id(), 'public - ' . $row->name(), $row->description() ];
+            push @datasets,  [ $row->sp_dataset_id(), 'public - ' . $row->name(), $row->description(), $row->dataset() ];
         }
     }
     return \@datasets;

@@ -609,7 +609,7 @@ async function displayIssues(issues = {}) {
             console.log(s);
             html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
             if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='uploadIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Upload</button>`;
-            if ( overallSubmitted && overallComplete ) html += `<button class='btn btn-warning btn-xs' onclick='publishIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-share'></span>&nbsp;&nbsp;Publish</button>`;
+            if ( overallSubmitted && overallComplete && s.published !== 1 ) html += `<button class='btn btn-warning btn-xs' onclick='publishIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-share'></span>&nbsp;&nbsp;Publish</button>`;
             if ( s.article?.id && (!s.article?.doi || s.article?.doi === '') ) html += `<button class='btn btn-info btn-xs' onclick='reserveDOI(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-barcode'></span>&nbsp;&nbsp;Reserve DOI</button>`;
             html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;Remove</button>`;
             html += `</div></td>`;

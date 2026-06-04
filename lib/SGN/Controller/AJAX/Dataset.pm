@@ -239,10 +239,11 @@ sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
     my $c = shift;
 
     my $user = $c->user();
-    if (!$user) {
-        $c->stash->{rest} = { error => "No logged in user to display dataset information for." };
-        return;
-    }
+    # display public datasets, even if the user is not logged in...
+    # if (!$user) {
+    #     $c->stash->{rest} = { error => "No logged in user to display dataset information for." };
+    #     return;
+    # }
 
     my $sp_person_id = $c->user() ? $c->user()->get_object->get_sp_person_id() : undef;
 
@@ -254,7 +255,7 @@ sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
     my @result;
     foreach (@$datasets) {
         my @res;
-        push @res, ("<a href=\"/dataset/$_->[0]\">$_->[1]</a>", $_->[2]);
+        push @res, ("<a href=\"/dataset/$_->[0]\">$_->[1]</a>", $_->[2], decode_json($_->[3] || '{}'));
         push @result , \@res;
     }
     $c->stash->{rest} = { data => \@result };
