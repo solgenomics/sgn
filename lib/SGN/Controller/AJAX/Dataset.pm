@@ -600,13 +600,15 @@ sub publish_dataset_connection_POST {
     # Get access token
     my $resp = $ua->post(
         $selected->{api_url} . '/token',
-        {
+        "Content-Type" => "application/json",
+        "Content" => encode_json({
             client_id => $selected->{client_id},
             client_secret => $selected->{client_secret},
             grant_type => "authorization_code",
             code => $code,
-        }
+        })
     );
+
     my $token = decode_json($resp->content || '{}');
     if ( $token->{error} ) {
         $c->stash->{rest} = { error => $token->{error} };
@@ -1222,6 +1224,68 @@ sub publish_dataset_issues : Path('/ajax/dataset/publish/issues') Args(1) {
     });
 
     $c->stash->{rest} = { published => $dataset->published() };
+    return;
+}
+
+#
+# Publish the specific set of archived files on the external dataset
+#
+sub publish_dataset_issues_publish : Path('/ajax/dataset/publish/issues/publish') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $ua = LWP::UserAgent->new();
+
+    # Get the selected dataset issue
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $issue = $dataset->published()->{$key};
+    if ( !defined $issue ) {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
+    my $article_id = $issue->{article}->{id};
+
+    # Get the selected external service
+    my $s = $issue->{service};
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$s") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$s} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $service = $config->{$s};
+
+    # Publish the article
+    my $published_resp = $ua->post(
+        $service->{api_url} . "/account/articles/$article_id/publish",
+        "Authorization" => "Bearer $token"
+    );
+    my $published = decode_json($published_resp->content || '{}');
+    if ( !defined $published || !defined $published->{location} ) {
+        $c->stash->{rest} = { error => 'Could not publish the selected article' };
+        return;
+    }
+
+    # Get the updated article metadata and update the stored info in the dataset
+    my $article_resp = $ua->get(
+        $published->{location},
+        "Authorization" => "Bearer $token"
+    );
+    my $article = decode_json($article_resp->content || '{}');
+
+    $issue->{article} = $article;
+    $dataset->update_published($key, $issue);
+
+    $c->stash->{rest} = { location => $published->{location}, article => $article };
     return;
 }
 
