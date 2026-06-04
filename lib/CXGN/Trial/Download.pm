@@ -213,6 +213,8 @@ has 'plot_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'plant_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'location_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'year_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
+has 'protocol_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
+has 'instance_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_pedigree_parents' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_intercrop_stocks' => (isa => 'Bool|Undef', is => 'ro', default => 0);

@@ -233,6 +233,79 @@ export function WizardDownloads(main_id,wizard){
 	          phenotype_end_date: phenotype_end_date
         });
       });
+
+    // Download Trial High Dimensional Phenotypes
+    var trials = categories.indexOf("trials")!=-1 ? selections["trials"] : [];
+    var plots = categories.indexOf("plots")!=-1 ? selections["plots"] : [];
+    var plants = categories.indexOf("plants")!=-1 ? selections["plants"] : [];
+    var locations = categories.indexOf("locations")!=-1 ? selections["locations"] : [];
+    var years = categories.indexOf("years")!=-1 ? selections["years"] : [];
+    var tissue_samples = categories.indexOf("tissue_sample")!=-1 ? selections["tissue_sample"] : [];
+    var protocols = categories.indexOf("protocols")!=-1 ? selections["protocols"] : [];
+    var instances = categories.indexOf("instances")!=-1 ? selections["instances"] : [];  
+
+    main.selectAll(".wizard-download-high-dim-phenotypes-info")
+      .attr("value",`${trials.length||"Too few"} trials`);
+    main.selectAll(".wizard-download-high-dim-phenotypes-protocol-info")
+      .attr("value", protocols.length === 1 ? `${protocols.length} protocols` : protocols.length > 1 ? "Please select only 1 protocol" : "No protocol selected");
+    main.selectAll(".wizard-download-high-dim-phenotypes")
+      .attr("disabled",trials.length>0 && protocols.length<=1 ? null:true)
+      .on("click",()=>{
+        var trial_ids = JSON.stringify(trials.map(d=>d.id));
+        var accession_ids = JSON.stringify(accessions.map(d=>d.id));
+        var tissue_sample_ids = JSON.stringify(tissue_samples.map(d=>d.id));
+        var plot_ids = JSON.stringify(plots.map(d=>d.id));
+        var plant_ids = JSON.stringify(plants.map(d=>d.id));
+        var location_ids = JSON.stringify(locations.map(d=>d.id));
+        var year_ids = JSON.stringify(years.map(d=>d.id));
+        var protocol_ids = JSON.stringify(protocols.map(d=>d.id));
+        var instance_ids = JSON.stringify(instances.map(d=>d.id));
+
+        var speed = d3.select(".wizard-download-high-dim-phenotypes-speed").node().value;
+        var format = d3.select(".wizard-download-high-dim-phenotypes-format").node().value;
+        //var level = d3.select(".wizard-download-high-dim-phenotypes-level").node().value;
+        var timestamp = d3.selectAll('.wizard-download-high-dim-phenotypes-timestamp').property('checked')?1:0;
+        var entry_numbers = d3.selectAll('.wizard-download-high-dim-phenotypes-entry-numbers').property('checked')?1:0;
+        var intercrop = d3.selectAll('.wizard-download-high-dim-phenotypes-intercrop').property('checked')?1:0;
+        //var outliers = d3.selectAll('.wizard-download-high-dim-phenotypes-outliers').property('checked')?1:0;
+        var min = d3.select(".wizard-download-high-dim-phenotypes-min").node().value;
+	      var max = d3.select(".wizard-download-high-dim-phenotypes-max").node().value;
+	      //var repetitive_measurements = d3.select(".wizard-download-repetitive-measurements-type").node().value;
+        //var hdp_type = d3.select(".wizard-download-high-dim-phenotypes-type").node().value;
+	      var phenotype_start_date = d3.select(".wizard-download-start-date").node().value;
+	      var phenotype_end_date = d3.select(".wizard-download-end-date").node().value;
+
+	  //alert('start date = '+phenotype_start_date);
+	  //alert('repetitive type = '+repetitive_measurements);
+	  
+        var url = document.location.origin+'/breeders/trials/phenotype/download';
+        openWindowWithPost(url, {
+            trial_list: trial_ids,
+            speed: speed,
+            format: format,
+            accession_list: tissue_sample_ids,
+            plot_list: plot_ids,
+            plant_list: plant_ids,
+            location_list: location_ids,
+            year_list: year_ids,
+            protocol_list: protocol_ids,
+            instance_list: instance_ids,
+            //dataLevel: level,
+            data_type: "high_dimensional",
+            phenotype_min_value: min,
+            phenotype_max_value: max,
+            timestamp: timestamp,
+            entry_numbers: entry_numbers,
+            intercrop: intercrop,
+            include_row_and_column_numbers: 1,
+            //exclude_phenotype_outlier: outliers,
+            include_pedigree_parents: 0,
+	          //repetitive_measurements: repetitive_measurements,
+            //hdp_type: hdp_type,
+	          phenotype_start_date: phenotype_start_date,
+	          phenotype_end_date: phenotype_end_date
+        });
+      });
 });
 
 

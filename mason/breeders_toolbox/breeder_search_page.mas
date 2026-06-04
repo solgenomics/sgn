@@ -492,6 +492,125 @@ $dataset_id => undef
           </div>
         </div>
       </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading" role="button" data-toggle="collapse" data-parent="#wiz-down-group" href="#wiz-down-4-c" aria-controls="wiz-down-4-c">
+          <span class="btnn btn-link">Related Trial High Dimensional Phenotypes</span>
+        </div>
+        <div id="wiz-down-4-c" class="panel-collapse collapse" role="tabpanel">
+          <table class="table">
+            <tr>
+              <td colspan="3">
+                <input class="wizard-download-high-dim-phenotypes-info form-control input-sm" type="text" disabled></input>
+                <input class="wizard-download-high-dim-phenotypes-protocol-info form-control input-sm" type="text" disabled></input>
+              </td>
+            </tr>
+            <tr>
+            <td colspan="1">
+              <select class="wizard-download-high-dim-phenotypes-speed form-control input-sm">
+                <option value="" disabled>Download Type</option>
+                <option selected value="Native">Default</option>
+                <option value="MaterializedViewTable">Fast (Improves speed but may miss recent changes)</option>
+              </select>
+            </td>
+              <td colspan="1">
+                <select class="wizard-download-high-dim-phenotypes-format form-control input-sm">
+                  <option value="" disabled>Download Format</option>
+                  <option selected value="csv">CSV</option>
+                  <option value="xlsx">XLSX</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-high-dim-phenotypes-timestamp" type="checkbox" />
+                    Include timestamps
+                  </label>
+                </div>
+              </td>
+              <td colspan="2">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-high-dim-phenotypes-entry-numbers" type="checkbox" checked />
+                    Include accession entry numbers
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <!--
+              <td style="border-top: none; padding-top: 0">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-high-dim-phenotypes-outliers" type="checkbox" />
+                    Supress user defined phenotype outliers
+                  </label>
+                </div>
+              </td>
+              !-->
+              <td colspan="2" style="border-top: none; padding-top: 0">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-high-dim-phenotypes-intercrop" type="checkbox" checked />
+                    Include intercrop accessions
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <!--
+            <tr>
+              <td colspan="3">
+                Repetitive measurements: <br />
+                <select class="wizard-download-repetitive-measurements-type form-control" disabled>
+                  <option value="first">First value</option>
+                  <option value="last">Last value</option>
+                  <option value="average" selected>Averaged value</option>
+                  <option value="sum">Sum values</option>
+                  <option value="all_values_single_line">All Values Single Line</option>
+                  <option value="all_values_multiple_line">All Values Multiple Line</option>
+                </select>
+              </td>
+            </tr>
+            !-->
+            <tr>
+              <td style="border-top: none; padding-top: 0">
+                From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
+              </td>
+              <td style="border-top: none; padding-top: 0">
+                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />	
+              </td>
+              <td style="border-top: none; padding-top: 0">
+                <input type="checkbox" id="include_dateless_items" checked="1" />
+                Include items without a date
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <span>High Dimensional Phenotype</span>
+              <select class="wizard-download-high-dim-phenotypes-type form-control input-sm">
+                <option selected value="NIRS">NIRS</option>
+              </select>
+              </td>
+              <td>
+                <span>Min Wavelength</span>
+                <input placeholder="-&#8734;" type="text" class="wizard-download-high-dim-phenotypes-min form-control">
+              </td>
+              <td>
+                <span>Max Wavelength</span>
+                <input placeholder="&#8734;" type="text" class="wizard-download-high-dim-phenotypes-max form-control">
+              </td>
+            </tr>
+          </table>
+          <div class="panel-footer" style="border-top: 1px solid #ddd;">
+            <button class="wizard-download-high-dim-phenotypes btn btn-sm btn-primary">
+                <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
+                Download Phenotypes
+            </button>
+          </div>
+        </div>
+      </div>
     </&>
   </div>
 
