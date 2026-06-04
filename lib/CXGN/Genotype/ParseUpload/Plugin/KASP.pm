@@ -249,13 +249,13 @@ sub _validate_with_plugin {
     $protocolprop_info{'markers'} = \%marker_info;
     my @file_marker_names = keys %seen_marker_names;
 
-    if (defined $protocol_id) {
-        foreach (@file_marker_names) {
-            if (!exists($stored_marker_info{$_})) {
-                push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
-            }
-        }
-    }
+    #if (defined $protocol_id) {
+    #    foreach (@file_marker_names) {
+    #        if (!exists($stored_marker_info{$_})) {
+    #            push @error_messages, "Marker $_ in the marker info file is not found in the selected protocol.";
+    #        }
+    #    }
+    #}
 
     my $csv = Text::CSV->new({ sep_char => ',' });
     my $F;
@@ -363,7 +363,7 @@ sub _validate_with_plugin {
             }
 
             if (!defined $yvalue){
-                push @error_messages, 'Y value is required for all value.';
+                push @error_messages, 'Y value is required for all rows.';
             }
 
             if ((defined $marker_name) && (defined $sample_name) && (defined $snpcall) && (defined $xvalue) && (defined $yvalue)) {
@@ -447,7 +447,7 @@ sub _parse_with_plugin {
         my $facility_identifiers_obj = CXGN::Stock::TissueSample::FacilityIdentifiers->new(bcs_schema => $schema, facility_identifier_list => \@facility_sample_list);
         my $db_sample_name_info = $facility_identifiers_obj->get_tissue_samples();
         %facility_sample_name_link = %{$db_sample_name_info};
-        @observation_unit_names = values %facility_sample_name_link
+        @observation_unit_names = values %facility_sample_name_link;
     } else {
         @observation_unit_names = keys %seen_samples;
     }

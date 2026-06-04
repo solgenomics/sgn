@@ -336,7 +336,7 @@ input[type="text"] {
             "buttons":  [
                 'pageLength','copy', 'excel', 'csv', 'pdf'
             ],
-            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
+            "ajax": '/ajax/breeders/trial/'+ trial_id + '/phenotypes?display='+jQuery('#display_trial_phenosummary').val() + '&trial_stock_type='+type + '&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1&split_by_treatments='+split_by_treatments,
             "processing": true,
             'language':{
                 "zeroRecords": " ",

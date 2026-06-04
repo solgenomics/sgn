@@ -47,7 +47,7 @@ $trial_id
   <li><span class="checks"></span> Checks</li>
   <li><span class="rep_odd_number"></span> Odd Rep Numbers (e.g. 1,3,...)</li>
   <li><span class="rep_even_number"></span> Even Rep Numbers (e.g. 2,4,...)</li>
-</ul> </br></br> <b>Field Layout Columns </b></div></p>
+</ul> </br><b>Field Layout Columns </b></div></p>
 
  <div id="container" ></div>
  <div id="trial_coords" >loading...</div>
