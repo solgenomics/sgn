@@ -1283,9 +1283,72 @@ sub publish_dataset_issues_publish : Path('/ajax/dataset/publish/issues/publish'
     my $article = decode_json($article_resp->content || '{}');
 
     $issue->{article} = $article;
+    $issue->{published} = 1;
     $dataset->update_published($key, $issue);
 
     $c->stash->{rest} = { location => $published->{location}, article => $article };
+    return;
+}
+
+#
+# Reserve a DOI for the selected issue
+#
+sub publish_dataset_reserve_doi : Path('/ajax/dataset/publish/issues/reserveDOI') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $ua = LWP::UserAgent->new();
+
+    # Get the selected dataset issue
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $issue = $dataset->published()->{$key};
+    if ( !defined $issue ) {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
+    my $article_id = $issue->{article}->{id};
+
+    # Get the selected external service
+    my $s = $issue->{service};
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$s") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$s} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $service = $config->{$s};
+
+    # Publish the article
+    my $doi_resp = $ua->post(
+        $service->{api_url} . "/account/articles/$article_id/reserve_doi",
+        "Authorization" => "Bearer $token"
+    );
+    my $doi = decode_json($doi_resp->content || '{}');
+    if ( !defined $doi || !defined $doi->{doi} ) {
+        $c->stash->{rest} = { error => 'Could not get a DOI for the selected article' };
+        return;
+    }
+
+    # Get the updated article metadata and update the stored info in the dataset
+    my $article_resp = $ua->get(
+        $service->{api_url} . '/account/articles/' . $article_id,
+        "Authorization" => "Bearer $token"
+    );
+    my $article = decode_json($article_resp->content || '{}');
+
+    $issue->{article} = $article;
+    $dataset->update_published($key, $issue);
+
+    $c->stash->{rest} = { doi => $doi->{doi}, article => $article };
     return;
 }
 

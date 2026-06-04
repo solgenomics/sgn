@@ -174,7 +174,7 @@ $is_dataset_public => 0
             <div class="warning-alert">
                 <span class="warning-alert-icon glyphicon glyphicon-exclamation-sign"></span>
                 <div>
-                    <p><strong>IMPORTANT!</strong> Once you make the external dataset public, all of the uploaded files and metadata become <em>permanently available</em> an cannot be removed or modified.  If you need to make later updates, changes can be made and new files can be uploaded but a new version of the external dataset will need to be published (and the original version will still be accessible).</p>
+                    <p><strong>IMPORTANT!</strong> Once you make the external dataset public, all of the uploaded files and metadata become <em>permanently available</em> and cannot be removed or modified from this version of the dataset.  If you need to make updates, changes can be made and new files can be uploaded and a new version of the external dataset will need to be published (the original version will still be accessible).</p>
                     <p><strong><em>Make sure everything is correct before publishing!</em></strong></p>
                 </div>
             </div>
@@ -601,14 +601,16 @@ async function displayIssues(issues = {}) {
                 html += `</div></td>`;
             }
             else {
-                html += `<td><em>Not published</em></td>`;
+                html += `<td><em>Not uploaded</em></td>`;
             }
 
             // Display actions only to owner
 % if ( $is_dataset_owner ) {
+            console.log(s);
             html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
             if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='uploadIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Upload</button>`;
             if ( overallSubmitted && overallComplete ) html += `<button class='btn btn-warning btn-xs' onclick='publishIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-share'></span>&nbsp;&nbsp;Publish</button>`;
+            if ( s.article?.id && (!s.article?.doi || s.article?.doi === '') ) html += `<button class='btn btn-info btn-xs' onclick='reserveDOI(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-barcode'></span>&nbsp;&nbsp;Reserve DOI</button>`;
             html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;Remove</button>`;
             html += `</div></td>`;
 % } else {
@@ -1007,10 +1009,11 @@ function makePublic() {
     }
 
     if ( confirm("Are you sure you want to publish this dataset now? This cannot be undone.") ) {
-        jQuery("#dataset-archive-publish-public").attr("disabled", true);
+        jQuery("#working_modal").modal("show");
         jQuery.ajax({
             url: `/ajax/dataset/publish/issues/publish/<% $dataset_id %>/${SELECTED_ISSUE.key}`,
             success: (resp) => {
+                jQuery("#working_modal").modal("hide");
                 if ( resp?.error ) {
                     alert(`Could not publish dataset [${resp.error}]`);
                 }
@@ -1020,16 +1023,47 @@ function makePublic() {
                         jQuery("#dataset-archive-publish-dialog").modal("hide");
                     }
                 }
-                jQuery("#dataset-archive-publish-public").attr("disabled", false);
             },
             error: () => {
+                jQuery("#working_modal").modal("hide");
                 alert("Could not publish dataset");
-                jQuery("#dataset-archive-publish-public").attr("disabled", false);
             }
         });
     }
 }
 
+/**
+ * Reserve a DOI for the specified dataset on the specified service
+ */
+function reserveDOI(key, service) {
+    SELECTED_ISSUE = ISSUES[key];
+    onServiceChanged(service);
+    if ( !SELECTED_ISSUE.article || !SELECTED_ISSUE.article.id ) {
+        alert("The selected dataset archive is not associated with an external article!");
+        return;
+    }
+
+    if ( confirm("Are you sure you want to reserve a DOI now?  If the external dataset is still private, the DOI will become active once it is published.  Once a DOI is active, it cannot be disabled.") ) {
+        jQuery("#working_modal").modal("show");
+        jQuery.ajax({
+            url: `/ajax/dataset/publish/issues/reserveDOI/<% $dataset_id %>/${SELECTED_ISSUE.key}`,
+            success: (resp) => {
+                jQuery("#working_modal").modal("hide");
+                if ( resp?.error ) {
+                    alert(`Could not reserve a DOI for this dataset [${resp.error}]`);
+                }
+                else {
+                    updateIssues();
+                    alert(`A DOI has been reserved for this dataset`);
+                }
+            },
+            error: () => {
+                jQuery("#working_modal").modal("hide");
+                alert("Could not reserve a DOI for this dataset");
+            }
+        });
+    }
+}
 
 /**
  * Set main progress and message
