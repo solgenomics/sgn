@@ -993,15 +993,17 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "pedigree_download_XXXXX", UNLINK=> 0);
 
     ## no critic (RequireBriefOpen)
-    open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
     my $filename;
 
     # Get the pedigrees
     my $stock = CXGN::Stock->new ( schema => $schema);
     my $pedigree_rows = $stock->get_pedigree_rows(\@accession_ids, $ped_format, $ped_include);
 
+    my $pedigrees_found = 0;
+
     # HELIUM FORMAT
     if ( $file_format eq ".helium" ) {
+        open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
         print $FILE "# $source_description\n";
         print $FILE "# Pedigree Format: $ped_format\n";
         print $FILE "# Include: " . join(' and ', split(/_/, $ped_include))  . "\n";
@@ -1013,32 +1015,55 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
         print $FILE "LineName\tFemaleParent\tMaleParent\n";
         foreach my $row (@$pedigree_rows) {
             my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+            # Note: Helium uses empty string to indicate missing data
             my $string = join ("\t", $progeny, $female_parent ? $female_parent : '', $male_parent ? $male_parent : '');
             print $FILE "$string\n";
+            $pedigrees_found++;
         }
 
         close $FILE;
         $filename = "pedigree.helium";
     }
+    elsif ( $file_format eq ".xlsx" ) {
 
-    # GENERAL TEXT FORMAT
-    else {
-        print $FILE "Accession\tFemale_Parent\tMale_Parent\tCross_Type\n";
-        my $pedigrees_found = 0;
+        my $workbook = Excel::Writer::XLSX->new( $tempfile . "xlsx" );
+        my $worksheet = $workbook->add_worksheet();
+
+        # Write header
+        my @header = ("Accession", "Female_Parent", "Male_Parent", "Cross_Type");
+        $worksheet->write_row(0, 0, \@header);
+
         foreach my $row (@$pedigree_rows) {
-            print $FILE $row;
+            chomp($row);
+            my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+            my @output_data = ($progeny, $female_parent ? $female_parent : '', $male_parent ? $male_parent : '', $cross_type ? $cross_type : '');
+            $worksheet->write_row($pedigrees_found + 1, 0, \@output_data);
             $pedigrees_found++;
         }
 
-        unless ($pedigrees_found > 0) {
-            print $FILE "$pedigrees_found pedigrees found in the database for the accessions searched. \n";
+        $workbook->close();
+
+        $filename = "pedigree.xlsx";
+    }
+    # OTHER TEXT FORMATS
+    else {
+        open(my $FILE, '> :encoding(UTF-8)', $tempfile) or die "Cannot open tempfile $tempfile: $!";
+        my $delim = $file_format eq ".csv" ? "," : "\t";
+        print $FILE "Accession" . $delim . "Female_Parent" . $delim . "Male_Parent" . $delim . "Cross_Type\n";
+
+        foreach my $row (@$pedigree_rows) {
+            chomp($row);
+            my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
+            my $string = join ($delim, $progeny, $female_parent ? $female_parent : '', $male_parent ? $male_parent : '', $cross_type ? $cross_type : '');
+            print $FILE "$string\n";
+            $pedigrees_found++;
         }
+
         close $FILE;
 
-        $filename = "pedigree.txt";
+        $filename = "pedigree" . $file_format;
     }
 
-    $c->res->content_type("application/text");
     $c->res->cookies->{$dl_cookie} = {
       value => $dl_token,
       expires => '+1m',
@@ -1046,18 +1071,21 @@ sub download_pedigree_action : Path('/breeders/download_pedigree_action') {
     $c->res->header("Filename", $filename);
     $c->res->header("Content-Disposition", qq[attachment; filename="$filename"]);
 
-
-    #my $output = read_file($tempfile, binmode => ':utf8' );
-
-    ### read_file does not read UTF-8 correctly, even with binmode :raw
-    my $output = "";
-    open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
-    while (<$F>) {
-        $output .= $_;
+    if ($file_format eq ".xlsx") {
+        $c->res->content_type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $c->response->header('Content-Disposition' => 'attachment; filename="pedigree.xlsx"');
+        my $output = read_file($tempfile . "xlsx");
+        $c->res->body($output);
+    } else {
+        $c->res->content_type("application/text");
+        my $output = "";
+        open(my $F, "< :encoding(UTF-8)", $tempfile) || die "Can't open file $tempfile for reading.";
+        while (<$F>) {
+            $output .= $_;
+        }
+        close($F);
+        $c->res->body($output);
     }
-    close($F);
-
-    $c->res->body($output);
 }
 
 # pedigree download -- end
