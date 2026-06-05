@@ -85,6 +85,13 @@ $is_dataset_public => 0
       </div>
       <div class="modal-body">
         <div class="container-fluid">
+            <div class="warning-alert">
+                <span class="warning-alert-icon glyphicon glyphicon-exclamation-sign"></span>
+                <div>
+                    <p><strong>IMPORTANT!</strong> By continuing to upload these files, you acknowledge that this data is allowed to be shared on <span class="dataset-archive-publish-service-name">the external service</span> and can be made publicly available (once the dataset on <span class="dataset-archive-publish-service-name">the external service</span> is published).</p>
+                </div>
+            </div>
+
             <ol id="dataset-archive-publish-instructions">
                 <li>
                     <p>Select the external service to upload this dataset to:</p>
@@ -219,6 +226,63 @@ $is_dataset_public => 0
   </div>
 </div>
 
+<!-- Reserve DOI Dialog -->
+<div class="modal modal-md fade" id="dataset-archive-doi-dialog" name="dataset-archive-doi-dialog" tabindex="-1" role="dialog" aria-labelledby="datasetArchiveDOIDialog" data-backdrop="static" data-keyboard="false">
+  <div class="modal-dialog modal-md" role="document">
+    <div class="modal-content ui-front">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="datasetArchiveDOIDialog">Reserve a DOI</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            <div id="dataset-archove-doi-private-warning" class="warning-alert">
+                <span class="warning-alert-icon glyphicon glyphicon-exclamation-sign"></span>
+                <div>
+                    <p>This dataset on <span class="dataset-archive-publish-service-name"></span> is still private. The generated DOI will become active once the dataset is published and made public.</p>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="dataset-archive-publish-connect">
+                <p>Grant <% $project_name %> access to your <span class="dataset-archive-publish-service-name"></span> account</p>
+                <button class="dataset-archive-publish-connect-btn btn btn-primary btn-sm">
+                    <span class="glyphicon glyphicon-resize-small"></span>&nbsp;&nbsp;Connect Accounts
+                </button>
+            </div>
+            <div class="dataset-archive-publish-connected">
+                <p>You are connected to this <span class="dataset-archive-publish-service-name"></span> account:</p>
+                <p><strong>Name:</strong> <span class="dataset-archive-publish-connected-name"></span></p>
+                <p><strong>Email:</strong> <span class="dataset-archive-publish-connected-email"></span></p>
+                <button class="dataset-archive-publish-disconnect-btn btn btn-danger btn-sm">
+                    <span class="glyphicon glyphicon-resize-full"></span>&nbsp;&nbsp;Disconnect Accounts
+                </button>
+            </div>
+
+            <hr />
+
+            <p><strong>Service:</strong> <span class="dataset-archive-publish-service-name"></span></p>
+            <p><strong>Title:</strong> <span id="dataset-archive-doi-title"></span></p>
+            <p><strong>Authors:</strong> <span id="dataset-archive-doi-authors"></span></p>
+            <p><strong>Description:</strong><br /><span id="dataset-archive-doi-description"></span></p>
+            <p><strong>Files:</strong> <span id="dataset-archive-doi-files"></span></p>
+            <p><a id="dataset-archive-doi-link" href="#" target="_blank">View Details on <span class="dataset-archive-publish-service-name"></span></a></p>
+
+            <hr />
+
+            <button id="dataset-archive-publish-doi" class="dataset-archive-publish-connected-btn btn btn-primary btn-sm">
+                <span class="glyphicon glyphicon-barcode"></span>&nbsp;&nbsp;<span id="dataset-archive-publish-send-label">Generate a DOI</span>
+            </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 var ISSUES = {};             // Status information about individual published issues of the dataset
 var SELECTED_ISSUE;          // The currently selected published issue
@@ -233,6 +297,7 @@ jQuery(document).ready(() => {
     jQuery(".dataset-archive-publish-disconnect-btn").click(disconnectService);
     jQuery("#dataset-archive-publish-send").click(sendArchive);
     jQuery("#dataset-archive-publish-public").click(makePublic);
+    jQuery("#dataset-archive-publish-doi").click(getDOI);
     jQuery("#dataset-archive-publish-articles").on("change", onArticleChanged);
 
     updateServices().then(updateIssues);
@@ -761,6 +826,28 @@ function publishIssue(key, service) {
 }
 
 /**
+ * Show the reserve DOI dialog for the specific issue (on the set external service)
+ */
+function reserveDOI(key, service) {
+    SELECTED_ISSUE = ISSUES[key];
+    onServiceChanged(service);
+    if ( !SELECTED_ISSUE.article || !SELECTED_ISSUE.article.id ) {
+        alert("The selected dataset archive is not associated with an external article!");
+        return;
+    }
+
+    // Update article metadata to display
+    !SELECTED_ISSUE.article.is_public ? jQuery("#dataset-archove-doi-private-warning").show() : jQuery("#dataset-archove-doi-private-warning").hide();
+    jQuery("#dataset-archive-doi-title").html(SELECTED_ISSUE.article.title);
+    jQuery("#dataset-archive-doi-authors").html((SELECTED_ISSUE.article.authors || []).map((e) => e.full_name).join(', '));
+    jQuery("#dataset-archive-doi-description").html(SELECTED_ISSUE.article.description);
+    jQuery("#dataset-archive-doi-files").html((SELECTED_ISSUE.article.files || []).map((e) => e.name).join(', '));
+    jQuery("#dataset-archive-doi-link").attr("href", SELECTED_ISSUE.article.url_private_html);
+
+    jQuery("#dataset-archive-doi-dialog").modal("show");
+}
+
+/**
  * Remove the issue from the dataset
  * - This removes the archived files and the metadata stored with the dataset
  * - Call updateIssues() when complete to reflect changes
@@ -793,7 +880,7 @@ function removeIssue(key) {
  * - Update the Issues when complete to reflect the changes
  */
 async function sendArchive() {
-    if ( confirm(`By continuing, you acknowledge that this data is allowed to be made available on ${SELECTED_SERVICE.display_name}`) ) {
+    if ( confirm(`Are you sure you want to upload the files to ${SELECTED_SERVICE.display_name} now?`) ) {
         try {
             jQuery(".dataset-archive-publish-connected-btn").attr("disabled", true);
             let article_id = jQuery("#dataset-archive-publish-articles").val();
@@ -1035,9 +1122,7 @@ function makePublic() {
 /**
  * Reserve a DOI for the specified dataset on the specified service
  */
-function reserveDOI(key, service) {
-    SELECTED_ISSUE = ISSUES[key];
-    onServiceChanged(service);
+function getDOI(key, service) {
     if ( !SELECTED_ISSUE.article || !SELECTED_ISSUE.article.id ) {
         alert("The selected dataset archive is not associated with an external article!");
         return;
@@ -1054,7 +1139,9 @@ function reserveDOI(key, service) {
                 }
                 else {
                     updateIssues();
-                    alert(`A DOI has been reserved for this dataset`);
+                    if ( confirm(`A DOI has been generated for this dataset on ${SELECTED_SERVICE.display_name}`) ) {
+                        jQuery("#dataset-archive-doi-dialog").modal("hide");
+                    }
                 }
             },
             error: () => {

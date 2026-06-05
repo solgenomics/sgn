@@ -1223,8 +1223,9 @@ sub publish_dataset_issues : Path('/ajax/dataset/publish/issues') Args(1) {
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_dataset_id => $dataset_id
     });
+    my $published = $dataset->published() || {};
 
-    $c->stash->{rest} = { published => $dataset->published() };
+    $c->stash->{rest} = { published => $published };
     return;
 }
 
