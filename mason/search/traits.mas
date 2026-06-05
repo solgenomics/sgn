@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min' ], entries => [ 'search_state' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
 <& /page/page_title.mas, title => "Trait Search" &>
@@ -50,7 +50,8 @@
         </div>
 
         <center>
-            <button class="btn btn-primary" id="submit_trait_search" />Search</button>
+            <button class="btn btn-default" id="reset_trait_search">Reset</button>
+            <button class="btn btn-primary" id="submit_trait_search">Search</button>
         </center>
     </&>
 
@@ -125,11 +126,7 @@ jQuery(document).ready(function () {
     jQuery('#trait_search_list_select').html(lo.listSelect('trait_search_list_select', [ 'traits' ], 'Leave blank to see all traits', undefined, undefined));
 
     jQuery(document).on('change', '#trait_search_list_select', function(){
-        _draw_trait_search_result_table();
-    });
-
-    jQuery('#submit_trait_search').click(function(){
-        _draw_trait_search_result_table();
+        jQuery('#submit_trait_search').click();
     });
 
     jQuery('#trait_search_form').keypress(function(e){
@@ -139,10 +136,35 @@ jQuery(document).ready(function () {
         }
     });
 
-    parseArgs();
-
     var trait_table;
-    _draw_trait_search_result_table();
+
+    const searchManager = window.jsMod['search_state'].create({
+        submitButtonSelector: '#submit_trait_search',
+        resetButtonSelector: '#reset_trait_search',
+        elements: {
+            name: { selector: '#trait_search_name' },
+            trait_id: { selector: '#trait_search_id' },
+            trait_synonym: { selector: '#trait_search_synonym' },
+            trait_definition: { selector: '#trait_search_definition' },
+            trait_search_list_id: { selector: '#trait_search_list_select_list_select', type: 'select' },
+            ontology_db_id: {
+                selector: 'input[name="trait_search_ontology_select_id"]',
+                type: 'multi-checkbox',
+                waitForElement: true
+            }
+        },
+        onSearch: function() {
+            _draw_trait_search_result_table();
+        }
+    });
+
+    searchManager.init().then((restoredKeys) => {
+        // If no parameters exist, we manually trigger the table draw to display a default, unfiltered
+        // "browse all" view of the results immediately on load.
+        if (restoredKeys.length === 0) {
+            _draw_trait_search_result_table();
+        }
+    });
 
     function _draw_trait_search_result_table (){
         var selectedontologies = [];
@@ -215,17 +237,6 @@ jQuery(document).ready(function () {
 
 });
 
-
-/**
- * Parse query params sent to the page
- * - name = trait name to search on
- */
-function parseArgs() {
-    const params = new URLSearchParams(window.location.search);
-    if ( params.has('name') ) {
-        jQuery("#trait_search_name").val(params.get('name'));
-    }
-}
 
 /**
  * Copy the specifed trait information to the user's clipboard

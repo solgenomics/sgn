@@ -20,6 +20,7 @@
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, entries => [ 'search_state' ] &>
 <& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'dataTables.colReorder-min'] &>
 
 <style>
@@ -82,7 +83,7 @@ my $breeding_programs_select = simple_selectbox_html(
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
-      	  <label class="col-sm-3 control-label">Stock Name or Description: </label>
+      	  <label class="col-sm-3 control-label" for="any_name">Stock Name or Description: </label>
           <div class="col-sm-9" >
             <div class="form-group form-group-sm">
               <div class="input-group">
@@ -113,7 +114,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1, id=>'advanced_search_panel' &>
 
-    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1, id=>'stock_search_properties_panel' &>
 
     <div class="row">
       <div class="form-group form-group-sm">
@@ -128,7 +129,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="row">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Organization:</label>
+        <label class="col-sm-4 control-label" for="organization">Organization:</label>
         <div class="col-sm-8" >
           <input type="text" class="form-control" id="organization" placeholder="Type to Autocomplete"/>
         </div>
@@ -139,7 +140,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <div class="row">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Search By Another Property:</label>
+        <label class="col-sm-4 control-label" for="editable_stockprop_search_term">Search By Another Property:</label>
         <div class="col-sm-8" >
           <div class="form-group">
             <div class="input-group">
@@ -164,7 +165,7 @@ my $breeding_programs_select = simple_selectbox_html(
     <br /><hr /><br />
     <div class="row">
       <div class="form-group form-group-sm">
-        <label class="col-sm-4 control-label">Is Obsolete?:</label>
+        <label class="col-sm-4 control-label" for="obsolete_stock_search_term">Is Obsolete?:</label>
         <div class="col-sm-8" >
           <div class="form-group">
             <select class="form-control" id="obsolete_stock_search_term" name="obsolete_stock_search_term">
@@ -179,12 +180,12 @@ my $breeding_programs_select = simple_selectbox_html(
 % }
 
     </&>
-    <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1, id=>'stock_search_usage_panel' &>
 
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Project Name: </label>
+          <label class="col-sm-3 control-label" for="project">Project Name: </label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="project" placeholder="Type to Autocomplete"/>
           </div>
@@ -192,7 +193,7 @@ my $breeding_programs_select = simple_selectbox_html(
       </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Project Location: </label>
+          <label class="col-sm-3 control-label" for="location">Project Location: </label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="location" placeholder="Type to Autocomplete"/>
           </div>
@@ -202,7 +203,7 @@ my $breeding_programs_select = simple_selectbox_html(
     <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Project Year: </label>
+          <label class="col-sm-3 control-label" for="year">Project Year: </label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="year" placeholder="Type to Autocomplete"/>
           </div>
@@ -219,12 +220,12 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
 
     </&>
-    <&| /page/info_section.mas, title => 'Phenotypes', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Phenotypes', collapsible=>1, collapsed=>1, id=>'stock_search_phenotypes_panel' &>
 
     <div class="row">
         <div class="col-sm-6">
           <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Trait: </label>
+            <label class="col-sm-3 control-label" for="trait">Trait: </label>
             <div class="col-sm-9" >
               <input type="text" class="form-control" id="trait" placeholder="Type to Autocomplete"/>
             </div>
@@ -232,7 +233,7 @@ my $breeding_programs_select = simple_selectbox_html(
         </div>
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Minimum Trait Value: </label>
+          <label class="col-sm-3 control-label" for="minimum_trait_value">Minimum Trait Value: </label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="minimum_trait_value" />
           </div>
@@ -242,7 +243,7 @@ my $breeding_programs_select = simple_selectbox_html(
       <div class="row">
       <div class="col-sm-6">
         <div class="form-group form-group-sm">
-          <label class="col-sm-3 control-label">Maximum Trait Value: </label>
+          <label class="col-sm-3 control-label" for="maximum_trait_value">Maximum Trait Value: </label>
           <div class="col-sm-9" >
             <input type="text" class="form-control" id="maximum_trait_value" />
           </div>
@@ -260,7 +261,8 @@ my $breeding_programs_select = simple_selectbox_html(
     </&> <!-- closes advanced search -->
 
     <center>
-    <button class="btn btn-primary" id="submit_stock_search" />Search</button>
+        <button class="btn btn-default" id="reset_stock_search">Reset</button>
+        <button class="btn btn-primary" id="submit_stock_search">Search</button>
     </center>
     <br/><br/>
   </div>
@@ -275,7 +277,7 @@ my $breeding_programs_select = simple_selectbox_html(
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
-          <label class="col-sm-4 control-label">View Another Property: </label>
+          <label class="col-sm-4 control-label" for="editable_stockprop_view_column_term">View Another Property: </label>
           <div class="col-sm-8" >
             <div class="form-group">
               <div class="input-group">
@@ -289,6 +291,7 @@ my $breeding_programs_select = simple_selectbox_html(
                   <span class="input-group-btn">
                     <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add">Add</button>
                     <button class="btn btn-sm btn-danger" id="editable_stockprop_view_column_remove">Remove</button>
+                    <button class="btn btn-sm btn-default" id="reset_stock_columns">Reset</button>
                 </span>
               </div>
             </div>
@@ -338,24 +341,28 @@ my $breeding_programs_select = simple_selectbox_html(
 
 <script>
 
-var stock_table;
+let stock_table;
 
 jQuery(document).ready(function () {
 
     window.addEventListener('load', () => {
+      // Skip reset routine if URL query parameters are present to protect deserialized values.
+      if (window.location.search.length > 1) {
+        return;
+      }
       // Reset the advanced search form parameters on load.
       // Very similar to later functionality but that one is for advanced search and on load trigger only.
-      var input_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('input');
-      for (let input_elem of input_list) {
+      const input_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('input');
+      for (const input_elem of input_list) {
         input_elem.value = '';
       }
 
-      var select_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('select');
-      for (let select_elem of select_list) {
+      const select_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('select');
+      for (const select_elem of select_list) {
         select_elem.selectedIndex = 0;
       }
 
-      var type_select = document.getElementById('stock_type_select');
+      const type_select = document.getElementById('stock_type_select');
       type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
     });
 
@@ -414,9 +421,8 @@ jQuery(document).ready(function () {
       }
     });
 
-    var editable_stockprops_search = {};
-    var params = {};
-    var matchtype = {};
+    const editable_stockprops_search = {};
+    let params = {};
     jQuery('#editable_stockprop_search_add').click( function(){
         // console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
         // console.log("Value is "+jQuery('#editable_stockprop_search_term').val());
@@ -444,13 +450,53 @@ jQuery(document).ready(function () {
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
-    function _draw_editable_stockprops_search_fields(){
-        jQuery('#editable_stockprop_search_div').html('');
-        for (var property in editable_stockprops_search) {
+    // Renders dynamic, search-by-property input fields (e.g. custom stock properties)
+    function _draw_editable_stockprops_search_fields() {
+        const $searchDiv = jQuery('#editable_stockprop_search_div');
+        $searchDiv.html('');
+        for (const property in editable_stockprops_search) {
             if (editable_stockprops_search.hasOwnProperty(property)) {
-                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-4 control-label">'+property+': </label><div class="col-sm-8"><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+property+'"><option title="contains" value="contains" selected="selected">contains</option><option title="starts with" value="starts_with">starts with</option><option title="ends with" value="ends_with">ends with</option><option title="exactly" value="exactly">exactly</option><option title="one of" value="one of">one of (separate multiple possibilities with commas)</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
+                // We filter out organization because it is handled directly as a first-class DOM element
+                if (property === 'organization') continue;
 
-                jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
+                const matchtype_val = editable_stockprops_search[property].matchtype || 'contains';
+                const input_val = editable_stockprops_search[property].value || '';
+                const safe_id = property.replace(/[^a-zA-Z0-9_-]/g, '_') + '_input_id';
+
+                // Draw input fields with corresponding selectors for custom mapping hooks
+                $searchDiv.append(`
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-4 control-label">${property}: </label>
+                        <div class="col-sm-8">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <span class="input-group-btn tw:w-[20%]">
+                                        <select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="${property}">
+                                            <option title="contains" value="contains">contains</option>
+                                            <option title="starts with" value="starts_with">starts with</option>
+                                            <option title="ends with" value="ends_with">ends with</option>
+                                            <option title="exactly" value="exactly">exactly</option>
+                                            <option title="one of" value="one of">one of (separate multiple possibilities with commas)</option>
+                                        </select>
+                                    </span>
+                                    <span class="input-group-btn">
+                                        <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="${safe_id}" data-property="${property}" placeholder="Type to Autocomplete"/>
+                                    </span>
+                                    <span class="input-group-btn">
+                                        <button name="editable_stockprop_search_remove" data-property="${property}" class="btn">
+                                            <span class="glyphicon glyphicon-remove"></span>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`);
+
+                // Assign value and match type properties dynamically
+                $searchDiv.find('select[data-property="'+property+'"]').val(matchtype_val);
+                $searchDiv.find('input[data-property="'+property+'"]').val(input_val);
+
+                $searchDiv.find('input[data-property="'+property+'"]').autocomplete({
                    source: '/ajax/stock/stockproperty_autocomplete?property='+property,
                 });
             }
@@ -458,11 +504,11 @@ jQuery(document).ready(function () {
     }
 
     //For adding stockprop columns to search result
-    var stockprop_extra_columns_view = { 'organization':1 };
-    var stockprop_extra_columns_view_array = [ 'organization' ];
+    let stockprop_extra_columns_view = { 'organization':1 };
+    let stockprop_extra_columns_view_array = [ 'organization' ];
 
     function updateResultsHeader() {
-        var table_header_html =
+        let table_header_html =
           '<table id="stock_search_results" class="table table-hover table-striped" width="100%">' +
             '<thead><tr>' +
               '<th>Stock Id</th>' +
@@ -470,7 +516,7 @@ jQuery(document).ready(function () {
               '<th>Stock Type</th>' +
               '<th>Organism</th>' +
               '<th>Synonyms</th>';
-        for (var i = 0; i < stockprop_extra_columns_view_array.length; i++) {
+        for (let i = 0; i < stockprop_extra_columns_view_array.length; i++) {
           table_header_html += '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
         }
         table_header_html +=
@@ -485,7 +531,7 @@ jQuery(document).ready(function () {
     }
 
     jQuery('#editable_stockprop_view_column_add').click(function(){
-        var selected_property = jQuery('#editable_stockprop_view_column_term').val();
+        const selected_property = jQuery('#editable_stockprop_view_column_term').val();
         if (!(selected_property in stockprop_extra_columns_view)){
             stockprop_extra_columns_view[selected_property] = 1;
             stockprop_extra_columns_view_array.push(selected_property);
@@ -494,10 +540,10 @@ jQuery(document).ready(function () {
         updateResultsRows();
     });
     jQuery('#editable_stockprop_view_column_remove').click(function(){
-        var selected_property = jQuery('#editable_stockprop_view_column_term').val();
+        const selected_property = jQuery('#editable_stockprop_view_column_term').val();
         if ((selected_property in stockprop_extra_columns_view)){
           delete stockprop_extra_columns_view[selected_property];
-          var selected_index = stockprop_extra_columns_view_array.indexOf(selected_property);
+          const selected_index = stockprop_extra_columns_view_array.indexOf(selected_property);
           if (selected_index !== -1) {
             stockprop_extra_columns_view_array.splice(selected_index, 1);
             updateResultsHeader();
@@ -506,11 +552,9 @@ jQuery(document).ready(function () {
         updateResultsRows();
     })
 
-    parseArgs(editable_stockprops_search);
-
     jQuery('#stock_search_results').on( 'draw.dt', function () {
         const name_links = stock_table.column(1).data();
-        let names = [];
+        const names = [];
         for (let i = 0; i < name_links.length; i++) { //extract text from anchor tags
             names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
         }
@@ -533,32 +577,113 @@ jQuery(document).ready(function () {
         });
     });
 
-   jQuery('#submit_stock_search').click( function() {
-        //stock_table.search("stock_search_results").draw();
-        var stock_type_selected = jQuery('#stock_type_select option:selected').text();
-        _load_stock_search_results(stock_type_selected, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
-   });
+    // Instantiate the unified Search State Manager configuration
+    const searchManager = window.jsMod['search_state'].create({
+        submitButtonSelector: '#submit_stock_search',
+        resetButtonSelector: '#reset_stock_search',
+        onReset: function() {
+            for (const key in editable_stockprops_search) {
+                delete editable_stockprops_search[key];
+            }
+            _draw_editable_stockprops_search_fields();
+
+            const type_select = document.getElementById('stock_type_select');
+            if (type_select) {
+                type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
+            }
+        },
+        elements: {
+            any_name: { selector: '#any_name' },
+            any_name_matchtype: { selector: '#any_name_matchtype' },
+            stock_type: { selector: '#stock_type_select' },
+            organism: { selector: '#organism_select' },
+            organization: { selector: '#organization' },
+            obsolete_stock_search_term: { selector: '#obsolete_stock_search_term' },
+            project: { selector: '#project' },
+            location: { selector: '#location' },
+            year: { selector: '#year' },
+            breeding_program: { selector: '#breeding_program' },
+            trait: { selector: '#trait' },
+            minimum_trait_value: { selector: '#minimum_trait_value' },
+            maximum_trait_value: { selector: '#maximum_trait_value' },
+            // Set custom JSON mapping hook for complex, dynamically built custom properties
+            editable_stockprops: {
+                selector: '#editable_stockprop_search_div',
+                type: 'json',
+                getValue: function() { return editable_stockprops_search; },
+                setValue: function(val) {
+                    for (const key in editable_stockprops_search) {
+                        delete editable_stockprops_search[key];
+                    }
+                    Object.assign(editable_stockprops_search, val);
+                    _draw_editable_stockprops_search_fields();
+                }
+            }
+        },
+        onSearch: function() {
+            // Standard search trigger reloads the DataTable using active criteria states
+            const stock_type_selected = jQuery('#stock_type_select option:selected').text();
+            _load_stock_search_results(stock_type_selected, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        }
+    });
+
+    // Instantiate a separate manager to independently persist and reset custom table columns
+    const columnManager = window.jsMod['search_state'].create({
+        submitButtonSelector: ['#editable_stockprop_view_column_add', '#editable_stockprop_view_column_remove'],
+        resetButtonSelector: '#reset_stock_columns',
+        elements: {
+            extra_columns: {
+                selector: '',
+                type: 'json',
+                getValue: function() { return stockprop_extra_columns_view_array; },
+                setValue: function(val) {
+                    if (Array.isArray(val)) {
+                        stockprop_extra_columns_view_array.length = 0;
+                        for (const key in stockprop_extra_columns_view) {
+                            delete stockprop_extra_columns_view[key];
+                        }
+                        val.forEach(col => {
+                            stockprop_extra_columns_view[col] = 1;
+                            stockprop_extra_columns_view_array.push(col);
+                        });
+                        updateResultsHeader();
+                    }
+                }
+            }
+        },
+        onReset: function() {
+            stockprop_extra_columns_view_array.length = 0;
+            stockprop_extra_columns_view = { 'organization': 1 };
+            stockprop_extra_columns_view_array.push('organization');
+            updateResultsHeader();
+            updateResultsRows();
+        }
+    });
+
+    // Initialize events, bindings and restore URL states
+    columnManager.init();
+    searchManager.init();
 
    jQuery('#stock_search_form').keypress( function( e ) {
-           var code = e.keyCode || e.which;
-           if( code == 13 ) {
+           const code = e.keyCode || e.which;
+           if( code === 13 ) {
                 jQuery('#submit_stock_search').click();
            }
     } );
 
 
     // For graphical filtering, using same search params
-    var run = false;
+    let run = false;
     jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
-        var stock_type = jQuery('#stock_type_select option:selected').text();
-        if (stock_type == 'accession'){
+        const stock_type = jQuery('#stock_type_select option:selected').text();
+        if (stock_type === 'accession'){
             jQuery.ajax ({
                 url : '/ajax/search/stocks',
                 data : {
                     minimal_info : 1,
                     any_name : jQuery('#any_name').val(),
                     any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                    stock_type : jQuery('#stock_type_select option:selected').text(),
+                    stock_type,
                     organism : jQuery('#organism_select').val(),
                     person : jQuery('#person').val(),
                     trait : jQuery('#trait').val(),
@@ -577,14 +702,15 @@ jQuery(document).ready(function () {
                 success: function(response){
                     //console.log(response);
                     jQuery("#working_modal").modal("hide");
-                    var stock_ids = [];
+                    const stock_ids = [];
                     for (var i=0; i<response.data.length; i++){
                         stock_ids.push(response.data[i][0]);
                     }
 
                     if (run) {
-                        jQuery("#stock_search_graphical_filter_results_div").DataTable().destroy();
-                        jQuery("#stock_search_graphical_filter_results_div").html("");
+                        const $filterResultsDiv = jQuery('#stock_search_graphical_filter_results_div');
+                        $filterResultsDiv.DataTable().destroy();
+                        $filterResultsDiv.html("");
                     }
                     run = true;
                     params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
@@ -605,24 +731,6 @@ jQuery(document).ready(function () {
 
 
 });
-
-function parseArgs(editable_stockprops_search) {
-  const params = new URLSearchParams(window.location.search);
-  if ( params.has('any_name') ) {
-    jQuery('#any_name').val(params.get('any_name'));
-    jQuery('#stock_type_select').val(0);
-  }
-  if ( params.has('stock_type') ) {
-    var type = params.get('stock_type');
-    var value =  jQuery("#stock_type_select option[title="+ type +"]").val();
-    jQuery('#stock_type_select').val(value);
-
-  }
-  if ( params.has('prop') & params.has('value') ) {
-    editable_stockprops_search[params.get('prop')] = {"matchtype": "exactly"};
-    editable_stockprops_search[params.get('prop')]["value"] = params.get('value');
-  }
-}
 
 function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
     console.log(stock_type);

@@ -31,6 +31,13 @@ results and returns the appropriate URL for going to that page of results
   $pagination_link_maker
 </%args>
 
+<%perl>
+  # Configure the form to natively submit GET requests to SGN's organism search path
+  # This will persist query parameters in the URL
+  $form->method('GET');
+  $form->action('/search/organisms');
+</%perl>
+
 <div class="container-fluid">
 
 <& /page/page_title.mas, title => 'Organism/Taxon Search' &>
@@ -121,6 +128,16 @@ div.paginate_nav {
       source: '/organism/autocomplete'
     });
 
+    // Dynamically insert the Reset button next to the Submit button
+    var $submitBtn = $('#organism_search_form [name="submit"]');
+    if ($submitBtn.length) {
+      $('<button type="button" class="btn btn-default tw:ml-2.5" id="reset_organism_search">Reset</button>')
+        .insertBefore($submitBtn)
+        .click(function(e) {
+          e.preventDefault();
+          window.location.href = window.location.pathname;
+        });
+    }
   });
 
 </script>

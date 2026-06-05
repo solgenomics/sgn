@@ -16,5 +16,6 @@
 	"include": [
 		"source/**/*.ts",
 		"source/**/*.tsx",
+		"test/**/*.ts",
 	]
 }

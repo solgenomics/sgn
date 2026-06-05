@@ -1,5 +1,5 @@
-
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, entries => [ 'search_state' ] &>
 
 <div class="well well-sm">
     <div class="panel panel-default">
@@ -99,6 +99,29 @@ jQuery(document).ready(function (){
             ],
         });
     });
+
+    const searchManager = window.jsMod['search_state'].create({
+        submitButtonSelector: '#search_parents',
+        elements: {
+            accession_list_id: { selector: '#accession_list_select', type: 'select' }
+        },
+        onRestore: function(restoredKeys) {
+            // Automatically expand the collapsible parent search accordion container in the UI
+            const $toggle = jQuery('#parent_search_section_onswitch');
+            const $content = jQuery('#parent_search_section_content');
+            const isCollapsed = $content.length ? (
+                $content[0].style.display === 'none' ||
+                ($content.hasClass('collapse') &&
+                    !$content.hasClass('in') &&
+                    !$content.hasClass('show'))
+            ) : true;
+            if (isCollapsed && $toggle.length) {
+                $toggle.trigger('click');
+            }
+            jQuery('#search_parents').trigger('click');
+        }
+    });
+    searchManager.init();
 
 });
 

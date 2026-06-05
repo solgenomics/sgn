@@ -8,7 +8,7 @@
 }
 </style>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ], entries => [ 'search_state' ] &>
 
 <& /page/page_title.mas, title => "Image Search" &>
 
@@ -55,7 +55,8 @@
         </div>
 
         <center>
-        <button class="btn btn-primary" id="image_search_submit" >Search</button>
+            <button class="btn btn-default" id="reset_image_search">Reset</button>
+            <button class="btn btn-primary" id="image_search_submit" >Search</button>
         </center>
     </div>
 </&>
@@ -88,8 +89,6 @@ var images_table;
 
 jQuery(document).ready(function () {
 
-    _load_image_search_results();
-
     jQuery("#image_submitter").autocomplete({
         source: '/ajax/people/autocomplete'
     });
@@ -100,10 +99,6 @@ jQuery(document).ready(function () {
 
     jQuery("#image_related_stock").autocomplete({
         source: '/ajax/stock/stock_autocomplete'
-    });
-
-    jQuery('#image_search_submit').click( function() {
-        _load_image_search_results();
     });
 
     jQuery('#image_search_form').keypress( function( e ) {
@@ -119,6 +114,28 @@ jQuery(document).ready(function () {
             var paddedWidth = titleWidth + 500;
             jQuery.colorbox.resize({width: paddedWidth + 'px'});
         }});
+    });
+
+    const searchManager = window.jsMod['search_state'].create({
+        submitButtonSelector: '#image_search_submit',
+        resetButtonSelector: '#reset_image_search',
+        elements: {
+            image_description_filename_composite: { selector: '#image_description_filename_composite' },
+            image_submitter: { selector: '#image_submitter' },
+            image_tag: { selector: '#image_tag' },
+            image_stock_uniquename: { selector: '#image_stock_uniquename' },
+            image_related_stock: { selector: '#image_related_stock' },
+            image_project_name: { selector: '#image_project_name' }
+        },
+        onSearch: function() {
+            _load_image_search_results();
+        }
+    });
+
+    searchManager.init().then((restoredKeys) => {
+        if (restoredKeys.length === 0) {
+            _load_image_search_results();
+        }
     });
 
 });

@@ -14,11 +14,12 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.0.0",
     "@babel/core": "^7",
     "@babel/preset-env": "^7",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/jquery": "^4.0.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "babel-loader": "^10",
@@ -26,6 +27,7 @@
     "deepmerge": "^4.3.1",
     "del": "^8.0.1",
     "glob": "^13.0.6",
+    "jquery": "^4.0.0",
     "jsdom": "^28",
     "loader-utils": "^3.3.1",
     "nock": "^14.0.11",
@@ -60,12 +62,12 @@
   "overrides": {
     "BrAPI-BoxPlotter": {
       "jsprim": "1.4.2 || 2.0.2",
-      "npm":    ">=7.5.2",
+      "npm": ">=7.5.2",
       "rollup": ">=0.66.2"
     },
     "@solgenomics/brapijs": {
       "node-fetch": ">2.6.6",
-      "rollup":     ">=2.79.2"
+      "rollup": ">=2.79.2"
     },
     "tape": {
       "glob": ">10.5.0"

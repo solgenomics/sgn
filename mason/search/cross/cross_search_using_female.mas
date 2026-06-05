@@ -1,4 +1,5 @@
 <& /page/page_title.mas, title=>'Search Cross Details Using Female Parents' &>
+<& /util/import_javascript.mas, entries => [ 'search_state', 'functions' ] &>
 <br>
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0&>
     <div class="row" id="cross_search_form" >
@@ -12,7 +13,6 @@
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="cross_female_parent" placeholder="Enter female parent">
                                     <div class="input-group-btn">
-                                        <button class="btn btn-info" id="search_cross_male_parents"><i class="glyphicon glyphicon-search"></i> Male Parent / Population</button>
                                         <button class="btn btn-primary" id="search_all_crosses_using_female"><i class="glyphicon glyphicon-search"></i> All Crosses </button>
                                     </div>
                                 </div>
@@ -79,32 +79,26 @@ jQuery(document).ready(function (){
     });
 
 
-    jQuery("#search_cross_male_parents").click(function(){
-
+    // Automatically populate male parents whenever female parent changes
+    jQuery('#cross_female_parent').on('change autocompletechange autocompleteselect', window.jsMod['functions'].debounce(function() {
+        const female = jQuery(this).val();
+        if (!female) {
+            jQuery('#cross_male_parent').html('<option value="">Choose female parent first</option>');
+            return;
+        }
         jQuery.ajax({
-            url:'/ajax/search/cross_male_parents',
-            data:{'female_parent':jQuery('#cross_female_parent').val()},
-            success: function(response){
-                console.log(response);
-                var html = '<select id = "cross_male_parent" >';
-                for (var i=0; i<response.data.length; i++) {
-                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+            url: '/ajax/search/cross_male_parents',
+            data: { 'female_parent': female },
+            success: function(response) {
+                var html = '<select id="cross_male_parent" class="form-control">';
+                for (var i = 0; i < response.data.length; i++) {
+                    html += "<option value='" + response.data[i][0] + "'>" + response.data[i][0] + "</option>";
                 }
-                html = html + "</select>";
-                console.log(html);
-
-                if(i ==''){
-                    alert("No male parent");
-                    return;
-                }
-
+                html += "</select>";
                 jQuery('#cross_male_parent').html(html);
-            },
-            error:function(response){
-                alert("An error occurred");
             }
         });
-    });
+    }, 150));
 
 
     jQuery('#search_crosses_female_male').click(function(){
@@ -165,6 +159,26 @@ jQuery(document).ready(function (){
         });
 
     });
+
+    const searchManager = window.jsMod['search_state'].create({
+        submitButtonSelector: ['#search_crosses_female_male', '#search_all_crosses_using_female'],
+        elements: {
+            female_parent: { selector: '#cross_female_parent' },
+            male_parent: {
+                selector: '#cross_male_parent',
+                type: 'select',
+                waitForOptions: true
+            }
+        },
+        onRestore: function(restoredKeys) {
+            if (restoredKeys.includes('male_parent')) {
+                jQuery('#search_crosses_female_male').click();
+            } else if (restoredKeys.includes('female_parent')) {
+                jQuery('#search_all_crosses_using_female').click();
+            }
+        }
+    });
+    searchManager.init();
 
 });
 

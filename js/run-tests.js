@@ -8,7 +8,6 @@ const JSDOM = require("jsdom").JSDOM;
 const test = require('tape');
 const { Console } = require('console');
 var fs = require('fs');
-const del = require('del');
 const path = require('path');
 const glob = require("glob");
 const nock = require('nock');
@@ -38,7 +37,8 @@ if(process.argv.length>2){
     .map(p=>path.resolve(p));
   if(!targets.length) return console.error("No tests specified.");
   webpackConfig.entry = targets.reduce((dict,elt)=>{
-    dict[elt] = elt
+    var rel = path.relative(__dirname, elt);
+    dict[rel] = elt;
     return dict;
   },{});
 }
@@ -47,7 +47,7 @@ if(process.argv.length>2){
 test('Webpack Build '+Object.keys(webpackConfig.entry).join(", "), function (t) {
   t.plan(1);
   // Remove old built tests
-  del.sync([path.resolve(buildPath)]);
+  fs.rmSync(path.resolve(buildPath), { recursive: true, force: true });
   // Run webpack
   webpack(webpackConfig).run((err,stats)=>{
     if(err) t.fail(err);

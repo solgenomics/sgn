@@ -1,5 +1,5 @@
-
 <& /page/page_title.mas, title=>'Search Progenies of Male Parents / Populations' &>
+<& /util/import_javascript.mas, entries => [ 'search_state', 'functions' ] &>
 <br>
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0&>
     <div class="row" id="progeny_search_form_male_parent" >
@@ -13,7 +13,6 @@
                                 <div class="input-group">
                                     <input type="text" class="form-control" id="male_parent" placeholder="Enter male parent">
                                     <div class="input-group-btn">
-                                        <button class="btn btn-info" id="search_pedigree_female_parents"><i class="glyphicon glyphicon-search"></i> Female Parent </button>
                                         <button class="btn btn-primary" id="search_all_progenies_using_male"><i class="glyphicon glyphicon-search"></i> All Progenies of this Male Parent </button>
                                     </div>
                                 </div>
@@ -78,31 +77,26 @@ jQuery(document).ready(function (){
     });
 
 
-    jQuery("#search_pedigree_female_parents").click(function(){
-
+    // Automatically populate female parents whenever male parent changes
+    jQuery('#male_parent').on('change autocompletechange autocompleteselect', window.jsMod['functions'].debounce(function() {
+        const male = jQuery(this).val();
+        if (!male) {
+            jQuery('#female_parent').html('<option value="">Choose male parent first</option>');
+            return;
+        }
         jQuery.ajax({
-            url:'/ajax/search/pedigree_female_parents',
-            data:{'pedigree_male_parent':jQuery('#male_parent').val()},
-            success: function(response){
-                console.log(response);
-                var html = '<select id = "female_parent" >';
-                for (var i=0; i<response.data.length; i++) {
-                    html = html + "<option value='"+response.data[i][0]+ "'>" + response.data[i][0] + "</option>";
+            url: '/ajax/search/pedigree_female_parents',
+            data: { 'pedigree_male_parent': male },
+            success: function(response) {
+                var html = '<select id="female_parent" class="form-control">';
+                for (var i = 0; i < response.data.length; i++) {
+                    html += "<option value='" + response.data[i][0] + "'>" + response.data[i][0] + "</option>";
                 }
-                html = html + "</select>";
-                console.log(html);
-                if(i ==''){
-                    alert("No female parent");
-                    return;
-                }
-
+                html += "</select>";
                 jQuery('#female_parent').html(html);
-            },
-            error:function(response){
-                alert("An error occurred");
             }
         });
-    });
+    }, 150));
 
 
     jQuery('#search_all_progenies_using_male').click(function(){
@@ -163,6 +157,26 @@ jQuery(document).ready(function (){
         });
     });
 
+
+    const searchManager = window.jsMod['search_state'].create({
+        submitButtonSelector: ['#search_pedigree_male_female', '#search_all_progenies_using_male'],
+        elements: {
+            male_parent: { selector: '#male_parent' },
+            female_parent: {
+                selector: '#female_parent',
+                type: 'select',
+                waitForOptions: true
+            }
+        },
+        onRestore: function(restoredKeys) {
+            if (restoredKeys.includes('female_parent')) {
+                jQuery('#search_pedigree_male_female').click();
+            } else if (restoredKeys.includes('male_parent')) {
+                jQuery('#search_all_progenies_using_male').click();
+            }
+        }
+    });
+    searchManager.init();
 
 });
 

@@ -11,8 +11,9 @@ const testBuildPath = path.resolve(__dirname, "test_build/");
 module.exports = merge(rootConfig,{
   entry: (() => {
       var entries = {};
-      glob.sync(path.resolve(testPath, "**/*.js")).forEach(val => {
-          entries[val] = val;
+      glob.sync(path.resolve(testPath, "**/*.{js,ts}")).forEach(val => {
+          var rel = path.relative(__dirname, val);
+          entries[rel] = val;
       });
       Object.setPrototypeOf(entries,null); //Make not a plain object
       return entries;

@@ -28,6 +28,9 @@ module.exports = {
         library: ["jsMod","[name]"],
         libraryTarget: "umd"
     },
+    resolve: {
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
+    },
     // Set up babel and JSAN processing
     module: {
         rules: [
