@@ -145,6 +145,9 @@ sub search {
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_additional_info', 'stock_property')->cvterm_id();
     my $plot_geo_json_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_geo_json', 'stock_property')->cvterm_id();
 
+    my $offspring_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
+
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
 
     #For performance reasons the number of joins to stock can be reduced if a trial is given.
@@ -176,14 +179,18 @@ sub search {
         LEFT JOIN stockprop AS additional_info ON (observationunit.stock_id=additional_info.stock_id AND additional_info.type_id = $additional_info_type_id)
         LEFT JOIN stockprop AS plot_geo_json ON (observationunit.stock_id=plot_geo_json.stock_id AND plot_geo_json.type_id = $plot_geo_json_type_id)
         LEFT JOIN phenome.stock_image ON (observationunit.stock_id = stock_image.stock_id)
-        left join metadata.md_image on (stock_image.image_id = md_image.image_id) ";
+        left join metadata.md_image on (stock_image.image_id = md_image.image_id)
+        left join stock_relationship r_cross on (germplasm.stock_id = r_cross.subject_id and r_cross.type_id = $offspring_of_type_id)
+        left join stock stock_cross on (stock_cross.stock_id = r_cross.object_id)
+        left join stock_relationship r_family on (r_family.subject_id = r_cross.object_id and r_family.type_id = $cross_member_of_type_id)
+        left join stock stock_family on (stock_family.stock_id = r_family.object_id) ";
 
 
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ',') ";
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, stock_cross.uniquename, stock_cross.stock_id, stock_family.uniquename, stock_family.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ',') ";
 
     my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
 
-    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename ";
+    my $group_by = " GROUP BY observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, stock_cross.uniquename, stock_cross.stock_id, stock_family.uniquename, stock_family.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description, rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename ";
 
     # WHERE
     my @where_clause;
@@ -255,7 +262,7 @@ sub search {
 
     my @observation_units;
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $germplasm_type_name, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description,
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $germplasm_type_name, $cross_name, $cross_stock_id, $family_name, $family_stock_id, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description,
     $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $seedlot_id, $seedlot_name, $full_count, $additional_info, $plot_geo_json, $image_ids, $intercrop_stock_id, $intercrop_stock_name) = $h->fetchrow_array()) {
 
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
@@ -268,11 +275,6 @@ sub search {
 
         my $accession_stock_id;
         my $accession_name;
-        my $cross_stock_id;
-        my $cross_name;
-        my $family_stock_id;
-        my $family_name;
-
 
         if ($germplasm_type_name eq 'cross') {
             $cross_stock_id = $germplasm_stock_id;
