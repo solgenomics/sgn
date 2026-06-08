@@ -49,7 +49,7 @@ input[type="text"] {
     <br/>
 
     <form class="form-horizontal" role="form" >
-        <div style="display: flex; align-items: center; justify-content: center; gap: 20px;">
+        <div style="display: flex; align-items: flex-start; gap: 25px; width: max-content; margin: 0 auto;">
             <div>
                 <label for="summary_start_date">Start Date: </label>
 	            <input type="text" id="summary_start_date" title="summary_start_date" />
@@ -58,31 +58,31 @@ input[type="text"] {
                 <label for="summary_end_date">End Date: </label>
 	            <input type="text" id="summary_end_date" title="summary_end_date" />
             </div>
-            <div style="display: flex; align-items: center;">
-                <label for="display_trial_phenosummary" style="margin-right: 10px;">Data Level: </label>
-                <div>
+            <div>
+                <label>Data Level: </label>
+                <div style="margin-top: 4px;">
 % if ($trial_stock_type eq 'analysis_instance') {
-                    <input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_analysis_level" value="analysis_instance" checked>
-                    <label for="pheno_summary_analysis_level">Analysis values</label><br>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_analysis_level" value="analysis_instance" checked> <label for="pheno_summary_analysis_level">Analysis values</label></div>
 % } else {
-                    <input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plot_level" value="plots" checked>
-                    <label for="pheno_summary_plot_level">Plots</label><br>
-                    <input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_subplot_level" value="subplots">
-                    <label for="pheno_summary_subplot_level">Subplots</label><br>
-                    <input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plant_level" value="plants">
-                    <label for="pheno_summary_plant_level">Plants</label><br>
-                    <input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_tissue_sample_level" value="tissue_samples">
-                    <label for="pheno_summary_tissue_sample_level">Tissue Samples</label><br>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plot_level" value="plots" checked> <label for="pheno_summary_plot_level">Plots</label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_subplot_level" value="subplots"> <label for="pheno_summary_subplot_level">Subplots</label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_plant_level" value="plants"> <label for="pheno_summary_plant_level">Plants</label></div>
+                    <div><input type="radio" name="pheno_summary_table_data_level" id="pheno_summary_tissue_sample_level" value="tissue_samples"> <label for="pheno_summary_tissue_sample_level">Tissue Samples</label></div>
+% }
                 </div>
-                &nbsp;&nbsp;&nbsp;
-                <label for="group_by_accession_check" style="margin-right: 10px;">Group by accession: </label>
-                <input type="checkbox" id="group_by_accession_check" title="group_by_accession_check" />
-                &nbsp;&nbsp;
-                <label for="group_by_treatments_check" style="margin-right: 10px;">Group by treatments: </label>
-                <input type="checkbox" id="group_by_treatments_check" title="group_by_treatments_check" />
-% } 
-                
             </div>
+% if ($trial_stock_type ne 'analysis_instance') {
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="group_by_accession_check" title="group_by_accession_check" />
+                    <label for="group_by_accession_check">Group by accession</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <input type="checkbox" id="group_by_treatments_check" title="group_by_treatments_check" />
+                    <label for="group_by_treatments_check">Group by treatments</label>
+                </div>
+            </div>
+% }
         </div>
     </form>
     <br>
@@ -265,6 +265,7 @@ input[type="text"] {
             datatables_display_phenosummary(type);
         });
         jQuery('input[name="pheno_summary_table_data_level"]').on('change', function() {
+            
             let level = jQuery('input[name="pheno_summary_table_data_level"]:checked').val();
 
             switch (level) {
@@ -273,6 +274,7 @@ input[type="text"] {
                     jQuery('#group_by_accession_check').prop('disabled', false);
                     break;
                 case 'subplots' :
+                    jQuery('#display_trial_phenosummary_hist').val('subplot').trigger('change');
                     jQuery('#group_by_accession_check').prop('checked', false);
                     jQuery('#group_by_accession_check').prop('disabled', true);
                     break;
@@ -306,6 +308,25 @@ input[type="text"] {
 
         jQuery("#display_trial_phenosummary_hist").change(function(){
             trait_summary_hist_display_change(this.value);
+            jQuery(`#pheno_summary_${this.value}_level`).prop('checked', true);
+            switch (this.value) {
+                case 'plot':
+                    jQuery('#group_by_accession_check').prop('disabled', false);
+                    break;
+                case 'tissue_sample':
+                    jQuery('#group_by_accession_check').prop('disabled', false);
+                    break;
+                case 'subplot':
+                    jQuery('#group_by_accession_check').prop('checked', false);
+                    jQuery('#group_by_accession_check').prop('disabled', true);
+                    break;
+                case 'plant':
+                    jQuery('#group_by_accession_check').prop('disabled', false);
+                    break;
+            }
+            var html = setup_tables(type);
+            jQuery('#pheno_summary_table_div').empty().html(html);
+            datatables_display_phenosummary(type);
         });
 
         jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
@@ -437,19 +458,19 @@ input[type="text"] {
                     }
                     traits_assayed_html = traits_assayed_html +"</select>";
                     jQuery("#traits_assayed_dropdown").html(traits_assayed_html);
-                    jQuery("#traits_assayed_dropdown>select").change(function(){
+                    jQuery("#trial_summary_hist_dropdown").change(function(){
                       trait_summary_hist_change(this.value);
                     });
 
                     jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+response.traits_assayed[0][0][0]+"/view'>Definition</a>");
 
 
-		    let trait_value = jQuery('#trial_summary_hist_dropdown').val();
+                let trait_value = jQuery('#trial_summary_hist_dropdown').val();
 
-		    if (trait_value == null) {
-			jQuery('#working_modal').modal("hide");
-			return;
-		    }			
+                if (trait_value == null) {
+                jQuery('#working_modal').modal("hide");
+                return;
+		        }			
 
                     jQuery.ajax( {
                         url : '/ajax/breeders/trial/'+ trial_id +'/trait_phenotypes/?trait='+trait_value+'&display='+value+'&start_date='+start_date+'&end_date='+end_date+'&include_dateless_items=1',
