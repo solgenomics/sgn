@@ -272,8 +272,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     const [plotLayout, setPlotLayout] = useState<'serpentine' | 'zigzag'>('serpentine');
     const [invertRows, setInvertRows] = useState(false);
-    const [colorVar, setColorVar] = useState<'parity' | 'germplasm' | 'block'>('parity');
-    const [labelVar, setLabelVar] = useState<'plot_number' | 'germplasm' | 'block'>('plot_number');
+    const [colorVar, setColorVar] = useState<'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('parity');
+    const [labelVar, setLabelVar] = useState<'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('plot_number');
     const [labelSize, setLabelSize] = useState(10);
 
     const [invertCols, setInvertCols] = useState(false);
@@ -316,7 +316,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         obsUnit: false,
         seedlot: false,
         plotId: false,
-        plotNum: false
+        plotNum: false,
+        familyName: false,
+        crossName: false,
     });
 
     const clickTimer = useRef<NodeJS.Timeout | null>(null);
@@ -594,6 +596,28 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         const mapping: Record<string, string> = {};
         blocks.sort().forEach((block, i) => {
             mapping[block] = palette[i % palette.length];
+        });
+        return mapping;
+    }, [plotList]);
+
+    const familyNamePalette = useMemo(() => {
+        const family_names = Array.from(new Set(plotList.map(p => {
+            return p.additionalInfo?.familyName || '';
+        }))).filter(b => b !== '');
+        const mapping: Record<string, string> = {};
+        family_names.sort().forEach((family_name, i) => {
+            mapping[family_name] = palette[i % palette.length];
+        });
+        return mapping;
+    }, [plotList]);
+
+    const crossNamePalette = useMemo(() => {
+        const cross_names = Array.from(new Set(plotList.map(p => {
+            return p.crossName || '';
+        }))).filter(b => b !== '');
+        const mapping: Record<string, string> = {};
+        cross_names.sort().forEach((cross_name, i) => {
+            mapping[cross_name] = palette[i % palette.length];
         });
         return mapping;
     }, [plotList]);
@@ -1300,6 +1324,12 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             if (csvDownloadOpts.plotNum && plot.observationUnitPosition.observationLevel?.levelCode) {
                 cellVal += (cellVal ? '\n' : '') + plot.observationUnitPosition.observationLevel.levelCode;
             }
+            if (csvDownloadOpts.familyName && plot.additionalInfo?.familyName) {
+                cellVal += (cellVal ? '\n' : '') + plot.additionalInfo?.familyName;
+            }
+            if (csvDownloadOpts.crossName && plot.crossName) {
+                cellVal += (cellVal ? '\n' : '') + plot.additionalInfo?.crossName;
+            }
 
             coord_matrix[r][c] = `"${cellVal}"`;
         });
@@ -1567,6 +1597,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                     <option value="parity">Default (Parity)</option>
                                     <option value="germplasm">{stockLabel}</option>
                                     <option value="block">Block Number</option>
+                                    <option value="family_name">Family</option>
+                                    <option value="cross_name">Cross</option>
                                 </select>
                             </div>
                             <div className="form-inline">
@@ -1575,6 +1607,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                     <option value="plot_number">Plot Number</option>
                                     <option value="germplasm">{stockLabel} Name</option>
                                     <option value="block">Block Number</option>
+                                    <option value="family_name">Family</option>
+                                    <option value="cross_name">Cross</option>
                                 </select>
                             </div>
                             <div className="form-inline">
@@ -1642,6 +1676,16 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                         const block = plot.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
                                                         if (block && blockPalette[block]) {
                                                             fill = blockPalette[block];
+                                                        }
+                                                    } else if (colorVar === 'family_name') {
+                                                        const family_name = plot.additionalInfo?.familyName || '';
+                                                        if (family_name && familyNamePalette[family_name]) {
+                                                            fill = familyNamePalette[family_name];
+                                                        }
+                                                    } else if (colorVar === 'cross_name') {
+                                                        const cross_name = plot.crossName || '';
+                                                        if (cross_name && crossNamePalette[cross_name]) {
+                                                            fill = crossNamePalette[cross_name];
                                                         }
                                                     } else {
                                                         // Replicate even/odd stroke coloring
@@ -1769,6 +1813,10 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                     if (labelText === 'Filler') labelText = '';
                                                 } else if (labelVar === 'block') {
                                                     labelText = plot.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
+                                                } else if (labelVar === 'family_name') {
+                                                    labelText = plot.additionalInfo?.familyName || '';
+                                                } else if (labelVar === 'cross_name') {
+                                                    labelText = plot.crossName || '';
                                                 }
 
                                                 if (!labelText) return null;
@@ -1929,7 +1977,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             </div>
                             <div className="modal-body">
                                 <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.accession} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, accession: e.target.checked })} /> Cross / Accession Name</label>
+                                    <label><input type="checkbox" checked={csvDownloadOpts.accession} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, accession: e.target.checked })} /> Accession Name</label>
                                 </div>
                                 <div className="checkbox">
                                     <label><input type="checkbox" checked={csvDownloadOpts.obsUnit} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, obsUnit: e.target.checked })} /> Plot Name</label>
@@ -1942,6 +1990,12 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 </div>
                                 <div className="checkbox">
                                     <label><input type="checkbox" checked={csvDownloadOpts.plotNum} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, plotNum: e.target.checked })} /> Plot Number</label>
+                                </div>
+                                <div className="checkbox">
+                                    <label><input type="checkbox" checked={csvDownloadOpts.familyName} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, familyName: e.target.checked })} /> Family</label>
+                                </div>
+                                <div className="checkbox">
+                                    <label><input type="checkbox" checked={csvDownloadOpts.crossName} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, crossName: e.target.checked })} /> Cross</label>
                                 </div>
                             </div>
                             <div className="modal-footer">
