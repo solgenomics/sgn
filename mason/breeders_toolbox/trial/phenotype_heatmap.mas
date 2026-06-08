@@ -18,13 +18,15 @@ jQuery(document).ready(function() {
     var auth_token = "<%  CXGN::Login->new($c->dbc->dbh)->get_login_cookie() %>";
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
 
-    window.jsMod['fieldmap_react'].init('fieldmap_react_root', {
-        trialId: '<% $trial_id %>',
-        trialStockType: '<% $trial_stock_type %>',
-        hasColAndRowNumbers: <% $has_col_and_row_numbers ? 'true' : 'false' %>,
-        hasSubplotEntries: <% $has_subplot_entries ? 'true' : 'false' %>,
-        hasPlantEntries: <% $has_plant_entries ? 'true' : 'false' %>,
-        authToken: auth_token
+    jQuery("#pheno_heatmap_onswitch").click(function() {
+        window.jsMod['fieldmap_react'].init('fieldmap_react_root', {
+            trialId: '<% $trial_id %>',
+            trialStockType: '<% $trial_stock_type %>',
+            hasColAndRowNumbers: <% $has_col_and_row_numbers ? 'true' : 'false' %>,
+            hasSubplotEntries: <% $has_subplot_entries ? 'true' : 'false' %>,
+            hasPlantEntries: <% $has_plant_entries ? 'true' : 'false' %>,
+            authToken: auth_token
+        });
     });
 });
 </script>
