@@ -307,6 +307,12 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       }
     }
 
+    if (solGS.listTypeSelectionPopulation) {
+      corrPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
+    }
+
     var menu = new SelectMenu(this.corrPopsDiv, this.corrPopsSelectMenuId);
 
     if (newPop){
