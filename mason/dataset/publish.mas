@@ -925,14 +925,14 @@ async function sendArchive() {
                 progress({ msg: `Sending data type: ${t}`, count, total });
                 subProgress({ clear: true });
                 const { parts = {}, file_id, upload_url } = await submitFile(article_id, t);
-                subTotal = Object.keys(parts).length + 1;
+                subTotal = Object.keys(parts).length;
                 subCount++;
 
                 // Upload each part of the file
                 const partNos = Object.keys(parts);
                 for ( const partNo of partNos ) {
                     const part = parts[partNo];
-                    subProgress({ msg: `Uploading chunk: ${partNo}`, count: subCount, total: subTotal });
+                    subProgress({ msg: `Uploading chunk: ${subCount}/${subTotal}`, count: subCount, total: subTotal+1 });
                     await submitPart(t, upload_url, part);
                     subCount++;
                 };
