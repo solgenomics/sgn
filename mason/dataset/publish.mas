@@ -35,8 +35,8 @@ $is_dataset_public => 0
 % }
 </div>
 
-<div id="dataset-archive-disabled" style="display: none">
-    <& /generic_message.mas, message=>"<p>Dataset Publishing has not been enabled on this database.</p><p>Contact an administrator to have this feature enabled.</p>" &>
+<div id="dataset-archive-no-services" style="display: none; margin-top: 50px">
+    <& /generic_message.mas, message=>"<p>Dataset Publishing has not been enabled on this database.</p><p>You may generate archive files but they cannot be published to an external service.  Contact an administrator to have this feature enabled.</p>" &>
 </div>
 
 <br /><br />
@@ -236,7 +236,7 @@ $is_dataset_public => 0
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-            <div id="dataset-archove-doi-private-warning" class="warning-alert">
+            <div id="dataset-archive-doi-private-warning" class="warning-alert">
                 <span class="warning-alert-icon glyphicon glyphicon-exclamation-sign"></span>
                 <div>
                     <p>This dataset on <span class="dataset-archive-publish-service-name"></span> is still private. The generated DOI will become active once the dataset is published and made public.</p>
@@ -334,15 +334,14 @@ function updateServices() {
 function displayServices(services = {}) {
     SERVICES = services;
 
+    jQuery("#dataset-archive-loading").hide();
+    jQuery("#dataset-archive-enabled").show();
+
     if ( Object.keys(SERVICES).length > 0 ) {
-        jQuery("#dataset-archive-loading").hide();
-        jQuery("#dataset-archive-disabled").hide();
-        jQuery("#dataset-archive-enabled").show();
+        jQuery("#dataset-archive-no-services").hide();
     }
     else {
-        jQuery("#dataset-archive-loading").hide();
-        jQuery("#dataset-archive-enabled").hide();
-        jQuery("#dataset-archive-disabled").show();
+        jQuery("#dataset-archive-no-services").show();
     }
 
     var html = "";
@@ -647,7 +646,9 @@ async function displayIssues(issues = {}) {
                 html += `<td><div style="display: flex; flex-direction: column; gap: 15px">`;
 
                 // Display Service Name
-                html += `<span><strong>${SERVICES[s.service]?.display_name}</strong></span>`;
+                if ( SERVICES.hasOwnProperty(s.service) ) {
+                    html += `<span><strong>${SERVICES[s.service].display_name}</strong></span>`;
+                }
 
                 // Display Public Link
                 if ( s.article.is_public ) {
@@ -671,11 +672,13 @@ async function displayIssues(issues = {}) {
 
             // Display actions only to owner
 % if ( $is_dataset_owner ) {
-            console.log(s);
             html += `<td><div style='display: flex; flex-wrap: wrap; gap: 5px;'>`
-            if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='uploadIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Upload</button>`;
-            if ( overallSubmitted && overallComplete && s.published !== 1 ) html += `<button class='btn btn-warning btn-xs' onclick='publishIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-share'></span>&nbsp;&nbsp;Publish</button>`;
-            if ( s.article?.id && (!s.article?.doi || s.article?.doi === '') ) html += `<button class='btn btn-info btn-xs' onclick='reserveDOI(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-barcode'></span>&nbsp;&nbsp;Reserve DOI</button>`;
+            if ( Object.keys(SERVICES).length > 0 ) {
+                if ( !overallSubmitted || !overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='uploadIssue(${s.key})'><span class='glyphicon glyphicon-export'></span>&nbsp;&nbsp;Upload</button>`;
+                if ( overallSubmitted && overallComplete ) html += `<button class='btn btn-primary btn-xs' onclick='editIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-pencil'></span>&nbsp;&nbsp;Edit on ${SERVICES[s.service]?.display_name}</button>`;
+                if ( overallSubmitted && overallComplete && s.published !== 1 ) html += `<button class='btn btn-warning btn-xs' onclick='publishIssue(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-share'></span>&nbsp;&nbsp;Publish</button>`;
+                if ( s.article?.id && (!s.article?.doi || s.article?.doi === '') ) html += `<button class='btn btn-primary btn-xs' onclick='reserveDOI(${s.key}, "${s.service}")'><span class='glyphicon glyphicon-barcode'></span>&nbsp;&nbsp;Reserve DOI</button>`;
+            }
             html += `<button class='btn btn-danger btn-xs' onclick='removeIssue(${s.key})'><span class='glyphicon glyphicon-trash'></span>&nbsp;&nbsp;Remove</button>`;
             html += `</div></td>`;
 % } else {
@@ -805,6 +808,17 @@ function uploadIssue(key) {
 }
 
 /**
+ * Open the Article edit page on the external service
+ */
+function editIssue(key, service) {
+    SELECTED_ISSUE = ISSUES[key];
+    onServiceChanged(service);
+    if ( SELECTED_ISSUE.article && SELECTED_ISSUE.article.id ) {
+        window.open(`${SELECTED_SERVICE.web_url}/account/items/${SELECTED_ISSUE.article.id}/edit`, "_blank");
+    }
+}
+
+/**
  * Show the publish dialog for the specific issue (on the set external service)
  */
 function publishIssue(key, service) {
@@ -837,7 +851,7 @@ function reserveDOI(key, service) {
     }
 
     // Update article metadata to display
-    !SELECTED_ISSUE.article.is_public ? jQuery("#dataset-archove-doi-private-warning").show() : jQuery("#dataset-archove-doi-private-warning").hide();
+    !SELECTED_ISSUE.article.is_public ? jQuery("#dataset-archive-doi-private-warning").show() : jQuery("#dataset-archive-doi-private-warning").hide();
     jQuery("#dataset-archive-doi-title").html(SELECTED_ISSUE.article.title);
     jQuery("#dataset-archive-doi-authors").html((SELECTED_ISSUE.article.authors || []).map((e) => e.full_name).join(', '));
     jQuery("#dataset-archive-doi-description").html(SELECTED_ISSUE.article.description);
