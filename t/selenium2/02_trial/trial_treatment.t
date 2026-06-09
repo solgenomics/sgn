@@ -22,79 +22,71 @@ $w->driver($driver);
 # Set up the DB connection
 my $f = SGN::Test::Fixture->new();
 
-# Lightweight wrapper around Selenium::Waiter::wait_until
-sub wait_for {
-    my $assert = shift;
-    return wait_until { $assert->() } timeout => 10, interval => 1;
-}
-
 $w->while_logged_in_as("curator", sub {
     sleep(2);
 
     # -------------------------------------------------------------------------
     # Create new treatment
 
-    ok( wait_for sub { $w->get('/treatments/design') }, 'open treatment design');
-    ok( wait_for sub { $w->find_element('new_treatment_name', 'id')->click() }, 'wait for page to load');
-    ok( wait_for sub { $w->find_element('new_treatment_name', 'id')->send_keys('Water') }, 'enter treatment name');
-    ok( wait_for sub { $w->find_element('new_treatment_definition', 'id')->send_keys('Apply water to a plot 0=no 1=yes') }, 'enter treatment definition');
-    ok( wait_for sub { $w->find_element('//select[@id="new_treatment_format_select"]/option[@value="boolean"]', 'xpath')->click() },  "select 'boolean' as value for treatment format");
-    ok( wait_for sub { $w->find_element('new_treatment_submit_btn', 'id')->click() }, 'submit new treatment');
-    ok( wait_for sub { $w->accept_alert }, 'accept new treatment saved');
+    $w->get_ok('/treatments/design', 'open treatment design');
+    $w->find_element_ok('new_treatment_name', 'id', 'wait for page to load');
+    $w->send_keys_ok('new_treatment_name', 'id', 'Water', 'enter treatment name');
+    $w->send_keys_ok('new_treatment_definition', 'id', 'Apply water to a plot 0=no 1=yes', 'enter treatment definition');
+    $w->click_ok('//select[@id="new_treatment_format_select"]/option[@value="boolean"]', 'xpath', 'select "boolean" as value for treatment format');
+    $w->click_ok('new_treatment_submit_btn', 'id', 'submit new treatment');
+    $w->accept_alert_ok('accept new treatment saved');
 
     # -------------------------------------------------------------------------
     # Open the trial page
     my $trial_id = $f->bcs_schema->resultset('Project::Project')->search({ name => 'test_trial' }, { order_by => { -desc => 'project_id' } })->first->project_id();
-    ok( wait_for sub { $w->get('/breeders/trial/' . $trial_id) }, 'open trial page');
+    $w->get_ok('/breeders/trial/' . $trial_id, 'open trial page');
 
     # -------------------------------------------------------------------------
     # Upload treatment
 
     # Open experimental design section
-    ok( wait_for sub { $w->find_element('trial_design_section_onswitch', 'id')->click() }, 'open experiment design section');
+    $w->click_ok('trial_design_section_onswitch', 'id', 'open experiment design section');
     sleep(2);
 
     # Open treatments section
-    ok( wait_for sub { $w->find_element('trial_treatments_onswitch', 'id')->click() }, 'open treatments section');
+    $w->click_ok('trial_treatments_onswitch', 'id', 'open treatments section');
     sleep(2);
-    ok( wait_for sub { $w->find_element('trial_detail_page_add_treatment', 'id')->click() }, 'click add treatments');
+    $w->click_ok('trial_detail_page_add_treatment', 'id', 'click add treatments');
 
     # Upload treatments excel
     my $filename = $f->config->{basepath} . "/t/data/trial/download_layout_treatments.xlsx";
-    ok( wait_for sub { $w->find_element('//select[@id="upload_spreadsheet_treatment_file_format"]/option[@value="simple"]', 'xpath')->click() },  "select 'simple' as value for spreadsheet format");
-    my $upload_input = $w->find_element_ok("upload_spreadsheet_treatment_file_input", "id", 'find file input');
+    $w->click_ok('//select[@id="upload_spreadsheet_treatment_file_format"]/option[@value="simple"]', 'xpath',  "select 'simple' as value for spreadsheet format");
     $w->driver()->upload_file($filename);
-    $upload_input->send_keys($filename);
-    ok( wait_for sub { $w->find_element('upload_spreadsheet_treatment_submit_verify', 'id')->click() }, 'click verify treatments');
-    ok( wait_for sub { $w->find_element('upload_spreadsheet_treatment_submit_store', 'id')->click() }, 'click store treatments');
+    $w->send_keys_ok("upload_spreadsheet_treatment_file_input", "id", $filename, 'input filename');
+    $w->click_ok('upload_spreadsheet_treatment_submit_verify', 'id', 'click verify treatments');
+    $w->click_ok('upload_spreadsheet_treatment_submit_store', 'id', 'click store treatments');
     $w->wait_for_working_dialog();
-    ok( wait_for sub { $w->find_element('upload_spreadsheet_treatment_close', 'id')->click() }, 'close treatments dialog');
+    $w->click_ok('upload_spreadsheet_treatment_close', 'id', 'close treatments dialog');
 
     # -------------------------------------------------------------------------
     # Upload trait
 
     # Open data files section
-    ok( wait_for sub { $w->find_element('trial_upload_files_onswitch', 'id')->click() }, 'open upload files section');
+    $w->click_ok('trial_upload_files_onswitch', 'id', 'open upload files section');
     sleep(2);
-    ok( wait_for sub { $w->find_element('upload_spreadsheet_phenotypes_link', 'id')->click() }, 'click upload phenotypes');
+    $w->click_ok('upload_spreadsheet_phenotypes_link', 'id', 'click upload phenotypes');
 
     # Upload traits excel
     my $filename = $f->config->{basepath} . "/t/data/trial/download_layout_traits.xlsx";
-    ok( wait_for sub { $w->find_element('//select[@id="upload_spreadsheet_phenotype_file_format"]/option[@value="simple"]', 'xpath')->click() },  "select 'simple' as value for spreadsheet format");
-    my $upload_input = $w->find_element_ok("upload_spreadsheet_phenotype_file_input", "id", 'find file input');
+    $w->click_ok('//select[@id="upload_spreadsheet_phenotype_file_format"]/option[@value="simple"]', 'xpath',  "select 'simple' as value for spreadsheet format");
     $w->driver()->upload_file($filename);
-    $upload_input->send_keys($filename);
-    ok( wait_for sub { $w->find_element('upload_spreadsheet_phenotype_submit_verify', 'id')->click() }, 'click verify phenotypes]');
-    ok( wait_for sub { $w->find_element('upload_spreadsheet_phenotype_submit_store', 'id')->click() }, 'click store phenotypes');
+    $w->send_keys_ok("upload_spreadsheet_phenotype_file_input", "id", $filename, 'input filename');
+    $w->click_ok('upload_spreadsheet_phenotype_submit_verify', 'id', 'click verify phenotypes]');
+    $w->click_ok('upload_spreadsheet_phenotype_submit_store', 'id', 'click store phenotypes');
     $w->wait_for_working_dialog();
-    ok( wait_for sub { $w->find_element('upload_spreadsheet_phenotype_close', 'id')->click() }, 'close phenotypes dialog');
+    $w->click_ok('upload_spreadsheet_phenotype_close', 'id', 'close phenotypes dialog');
 
     # -------------------------------------------------------------------------
     # Download Layout, Phenotypes, and Treatments
 
-    ok( wait_for sub { $w->find_element('trial_download_layout_button', 'id')->click() }, 'open download layout menu');
-    ok( wait_for sub { $w->find_element('//div[@data-toggle][input/@id = "create_fieldbook_include_measured_TrialLayout"]', 'xpath')->click()}, , 'enable phenotypes download');
-    ok( wait_for sub { $w->find_element('create_fieldbook_ok_button_TrialLayout', 'id')->click() }, 'click submit button');
+    $w->click_ok('trial_download_layout_button', 'id', 'open download layout menu');
+    $w->click_ok('//div[@data-toggle][input/@id = "create_fieldbook_include_measured_TrialLayout"]', 'xpath', 'enable phenotypes download');
+    $w->click_ok('create_fieldbook_ok_button_TrialLayout', 'id', 'click submit button');
 
     sleep(2);
     # Compare observed download to expected output.

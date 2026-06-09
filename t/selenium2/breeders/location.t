@@ -11,70 +11,32 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
     
     $t->get_ok('/breeders/locations');
-    sleep(5);
+    sleep(1); # FIXME Need to wait for button click handler to be registered
 
-    my $add_location_link = $t->find_element_ok(
-	"location_map",
-	"id",
-	"find location map on page add location link as submitter"
-	);
+    $t->click_ok("location_map", "id", "find location map on page add location link as submitter");
 
-    $add_location_link->click();
-
-    $t->find_element_ok(
-        'a[onclick*="add_from_map"]',
-        "css",
-        "find longitude input test")->click();
+    $t->click_ok('a[onclick*="add_from_map"]', "css", "find longitude input test");
 
     # fill a form for location and store values in variables to compare after upload to database
     my $location_name = "yet_another_test_location";
-    my $location_desc_input = $t->find_element_ok(
-        "location_name",
-        "id",
-        "find location name input");
-    $location_desc_input->send_keys($location_name);
+    $t->send_keys_ok("location_name", "id", $location_name, "input location name");
 
     my $location_abbr = "YATL";
-    my $location_abbr_input = $t->find_element_ok(
-        "location_abbreviation",
-        "id",
-        "find location abbreviation input");
-    $location_abbr_input->send_keys($location_abbr);
-
+    $t->send_keys_ok("location_abbreviation", "id", $location_abbr, "input location abbreviation");
 
     my $location_country = "PER";
 
-    $t->find_element_ok(
-        "location_country",
-        "id",
-        "find location country input")
-        ->click();
+    $t->click_ok("location_country", "id", "find location country input");
 
-    $t->find_element_ok(
-        "option[value=\"$location_country\"]",
-        "css",
-        "find location PERU country value")
-        ->click();
+    $t->click_ok("option[value=\"$location_country\"]", "css", "find location PERU country value");
 
-    $t->find_element_ok(
-        "breeding_program_select",
-        "id",
-        "find breeding program select and clear")
-        ->click();
+    $t->click_ok("breeding_program_select", "id", "find breeding program select and clear");
 
     my $location_program = "test";
-    $t->find_element_ok(
-        "breeding_program_select",
-        "id",
-        "find breeding program select and choose test")
-        ->send_keys($location_program);
+    $t->send_keys_ok("breeding_program_select", "id", $location_program, "find breeding program select and choose test");
 
     my $location_type = "Other";
-    my $location_type_select = $t->find_element_ok(
-        "location_type",
-        "id",
-        "find location type input");
-    $location_type_select->send_keys($location_type);
+    $t->send_keys_ok("location_type", "id", $location_type, "input location type");
 
     # Here are two options -> first to test if the leaflet correctly picks long and lat form a map - and later compare
     # it to stored values, but it can be sometimes problematic if some settings are off or the internet doesn't work?
@@ -107,15 +69,10 @@ $t->while_logged_in_as("submitter", sub {
     $location_altitude_input->clear();
     $location_altitude_input->send_keys($location_altitude);
 
-    $t->find_element_ok(
-        "store_location_submit",
-        "id",
-        "find location submit and click")
-        ->click();
-    sleep(2);
+    $t->click_ok("store_location_submit", "id", "find location submit and click");
 
-    ok($t->driver->get_alert_text() =~ m/location $location_name added successfully/i, 'new location was saved');
-    $t->driver->accept_alert();
+    ok($t->get_alert_text() =~ m/location $location_name added successfully/i, 'new location was saved');
+    $t->accept_alert();
 
     $t->get_ok('/breeders/locations');
     sleep(2);

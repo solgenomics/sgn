@@ -369,7 +369,7 @@ sub get_layout_output {
 
     if ($use_synonyms eq 'true') {
         print STDERR "Getting synonyms\n";
-        
+
         my $trait_id_list = $t->transform($schema, 'traits_2_trait_ids', [@traits]);
         my @trait_ids = @{$trait_id_list->{'transform'}};
         my $synonym_list = $t->transform($schema, 'trait_ids_2_synonyms', $trait_id_list->{'transform'});

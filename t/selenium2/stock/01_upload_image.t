@@ -1,6 +1,6 @@
 use lib 't/lib';
 
-use Test::More 'tests' => 12;
+use Test::More;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -9,52 +9,45 @@ my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->while_logged_in_as("submitter", sub {
-    sleep(2);
-
     $t->get_ok('stock/38879/view');
-    sleep(2);
 
+    $t->wait_for_network_idle();
     my $images_onswitch = $t->find_element_ok("stock_images_section_onswitch",  "id",  "click to open image panel");
     $images_onswitch->click();
-    sleep(3);
 
-    $t->find_element_ok("add_new_image_button", "id", "find add image button and click")->click();
-    sleep(1);
+    $t->click_ok("add_new_image_button", "id", "find add image button and click");
 
     # Add new image
-    my $upload_input = $t->find_element_ok("file", "name", "find image input");
     my $filename = $f->config->{basepath}."/t/data/cassava_image.jpg";
-
+    $t->send_keys_ok("file", "name", $filename, "input image filename");
     $t->driver()->upload_file($filename);
-    $upload_input->send_keys($filename);
-    sleep(1);
 
-    $t->find_element_ok("upload_image_submit", "id", "submit image upload")->click();
-    sleep(2);
-
-    $t->find_element_ok("store_image_submit", "id", "store image upload")->click();
-    sleep(3);
+    $t->click_ok("upload_image_submit", "id", "submit image upload");
+    $t->wait_for_network_idle();
+    $t->click_ok("store_image_submit", "id", "store image upload");
+    $t->wait_for_network_idle();
 
     # check image redirected page for image content
-    my $page_title = $t->find_element_ok(
+    my $page_title = $t->get_attribute_ok(
         'pagetitle',
         'id',
-        "find content of image name")->get_attribute('innerHTML');
+        'innerHTML',
+        "find content of image name");
 
     ok($page_title =~ /cassava_image.jpg/, "Verify page title name: cassava_image.jpg");
 
     # check image content on base page for stock view in image section
     $t->get_ok('stock/38879/view');
-    sleep(3);
 
-    $images_onswitch = $t->find_element_ok("stock_images_section_onswitch",  "id",  "click to open image panel");
-    $images_onswitch->click();
-    sleep(3);
+    $t->wait_for_network_idle();
+    $t->click_ok("stock_images_section_onswitch",  "id",  "click to open image panel");
+    $t->wait_for_network_idle();
 
-    my $image_section = $t->find_element_ok(
+    my $image_section = $t->get_attribute_ok(
         'stock_images_section_content',
         'id',
-        "find content of image section")->get_attribute('innerHTML');
+        'innerHTML',
+        "find content of image section");
 
     ok($image_section =~ /cassava_image.jpg/, "Verify image file name in image section: cassava_image.jpg");
 

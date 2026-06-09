@@ -31,7 +31,7 @@ TreeImprovementBase Modifications
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Other</li>
     <li><a href="/breeders/search">Wizard</a></li>
-    <li><a href="/search/bulk">Bulk Search</a></li>    
+    <li><a href="/search/bulk">Bulk Search</a></li>
     <li><a href="/search/images">Images</a></li>
     <li><a href="/search/people">People</a></li>
   </ul>

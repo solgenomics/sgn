@@ -13,53 +13,36 @@ my $t = SGN::Test::WWW::WebDriver->new();
 # Test for both xlsx and xls file. First upload is done with xlsx file and stored in db. Then file with exactly the same content but in .xls format is uploaded to check if values will be duplicated.
 
 $t->while_logged_in_as("submitter", sub {
-    sleep(1);
-
     $t->get_ok('/breeders/trial/137');
-    sleep(3);
 
     $t->wait_for_working_dialog();
 
-    my $trial_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
-    $trial_files_onswitch->click();
-    sleep(2);
+    $t->click_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
 
     $t->wait_for_working_dialog();
 
-    $t->find_element_ok("upload_datacollector_phenotypes_link", "id", "click on upload_trial_link ")->click();
-    sleep(2);
-
-    $t->find_element_ok("upload_phenotype_datacollector_data_level", "id", "find phenotype datacollector data level select")->click();
-    sleep(1);
-
-    $t->find_element_ok('//select[@id="upload_phenotype_datacollector_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of datacollector phenotype data level")->click();
-
-    my $upload_input = $t->find_element_ok("upload_datacollector_phenotype_file_input", "id", "find file input");
+    $t->click_ok("upload_datacollector_phenotypes_link", "id", "click on upload_trial_link ");
+    $t->click_ok("upload_phenotype_datacollector_data_level", "id", "find phenotype datacollector data level select");
+    $t->click_ok('//select[@id="upload_phenotype_datacollector_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of datacollector phenotype data level");
 
     # Test for .xlsx upload and store data
     my $filename = $f->config->{basepath}."/t/data/trial/data_collector_upload.xlsx";
     $t->driver()->upload_file($filename);
-    $upload_input->send_keys($filename);
-    sleep(1);
+    $t->send_keys_ok("upload_datacollector_phenotype_file_input", "id", $filename, "input file name");
 
-    $t->find_element_ok("upload_datacollector_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-    sleep(3);
+    $t->click_ok("upload_datacollector_phenotype_submit_verify", "id", "submit spreadsheet file for verification");
 
-    my $verify_status = $t->find_element_ok(
-        "upload_phenotype_datacollector_verify_status",
-        "id", "verify the verification")->get_attribute('innerHTML');
+    my $verify_status = $t->get_attribute_ok("upload_phenotype_datacollector_verify_status", "id", "innerHTML", "verify the verification");
 
     ok($verify_status =~ /File data_collector_upload.xlsx saved in archive./, "Verify the positive validation");
     ok($verify_status =~ /File valid: data_collector_upload.xlsx./, "Verify the positive validation");
     ok($verify_status =~ /File data successfully parsed./, "Verify the positive validation");
     ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify the positive validation");
 
-    $t->find_element_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-    sleep(10);
+    $t->click_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage");
+    $t->wait_for_working_dialog();
 
-    $verify_status = $t->find_element_ok(
-        "upload_phenotype_datacollector_verify_status",
-        "id", "verify the verification")->get_attribute('innerHTML');
+    $verify_status = $t->get_attribute_ok("upload_phenotype_datacollector_verify_status", "id", "innerHTML", "verify the verification");
 
     ok($verify_status =~ /File data successfully parsed./, "Verify the positive validation");
     ok($verify_status =~ /All values in your file have been successfully processed!/, "Verify the positive validation");
@@ -68,38 +51,25 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /Upload Successful!/, "Verify the positive validation");
 
     $t->get_ok('/breeders/trial/137');
-    sleep(3);
 
     $t->wait_for_working_dialog();
 
-    my $trial_files_onswitch = $t->find_element_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
-    $trial_files_onswitch->click();
-    sleep(2);
+    $t->click_ok("trial_upload_files_onswitch",  "id",  "find and open 'trial upload files onswitch' and click");
 
     $t->wait_for_working_dialog();
-    
-    $t->find_element_ok("upload_datacollector_phenotypes_link", "id", "click on upload_spreadsheet_link ")->click();
-    sleep(2);
 
-    $t->find_element_ok("upload_phenotype_datacollector_data_level", "id", "find phenotype datacollector data level select")->click();
-    sleep(1);
-
-    $t->find_element_ok('//select[@id="upload_phenotype_datacollector_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of datacollector phenotype data level")->click();
-
-    $upload_input = $t->find_element_ok("upload_datacollector_phenotype_file_input", "id", "find file input");
+    $t->click_ok("upload_datacollector_phenotypes_link", "id", "click on upload_spreadsheet_link ");
+    $t->click_ok("upload_phenotype_datacollector_data_level", "id", "find phenotype datacollector data level select");
+    $t->click_ok('//select[@id="upload_phenotype_datacollector_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of datacollector phenotype data level");
 
     # Test for .xls upload and if data is correctly parsed to return duplication result from .xlsx file
     $filename = $f->config->{basepath}."/t/data/trial/data_collector_upload.xls";
     $t->driver()->upload_file($filename);
-    $upload_input->send_keys($filename);
-    sleep(1);
+    $t->send_keys_ok("upload_datacollector_phenotype_file_input", "id", $filename, "input file name");
 
-    $t->find_element_ok("upload_datacollector_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-    sleep(3);
+    $t->click_ok("upload_datacollector_phenotype_submit_verify", "id", "submit spreadsheet file for verification");
 
-    $verify_status = $t->find_element_ok(
-        "upload_phenotype_datacollector_verify_status",
-        "id", "verify the verification")->get_attribute('innerHTML');
+    $verify_status = $t->get_attribute_ok("upload_phenotype_datacollector_verify_status", "id", "innerHTML", "verify the verification");
     print STDERR "verify_statues : $verify_status\n";
     ok($verify_status =~ /File data successfully parsed/, "Verify warnings after store validation 1");
     ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify warnings after store validation 2");
@@ -107,12 +77,10 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation 4");
     ok($verify_status =~ /There are 57 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation 5");
 
-    $t->find_element_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-    sleep(10);
+    $t->click_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage");
+    $t->wait_for_working_dialog();
 
-    $verify_status = $t->find_element_ok(
-        "upload_phenotype_datacollector_verify_status",
-        "id", "verify the verification")->get_attribute('innerHTML');
+    $verify_status = $t->get_attribute_ok("upload_phenotype_datacollector_verify_status", "id", "innerHTML", "verify the verification");
 
     print STDERR "VERFIY STATUS NOW: $verify_status\n";
     

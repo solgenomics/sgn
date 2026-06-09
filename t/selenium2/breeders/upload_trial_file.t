@@ -1,7 +1,6 @@
 use lib 't/lib';
 
-# use Test::More 'tests' => 40;
-use Test::More 'tests' => 80;
+use Test::More;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -16,108 +15,91 @@ $t->while_logged_in_as("submitter", sub {
 
 
     for my $extension ("xls", "xlsx") {
-        sleep(1);
-
         $t->get_ok('/breeders/trials');
-        sleep(3);
+        $t->wait_for_network_idle();
 
-        $t->find_element_ok("refresh_jstree_html", "name", "click on refresh_jstree_html ")->click();
-        sleep(5);
+        $t->click_ok("refresh_jstree_html", "name", "click on refresh_jstree_html");
+        $t->wait_for_network_idle();
 
-        $t->find_element_ok("upload_trial_link", "name", "click on upload_trial_link ")->click();
         sleep(2);
+        $t->click_ok("upload_trial_link", "name", "click on upload_trial_link");
 
         # SCREEN 1 /Intro/
-        $t->find_element_ok("next_step_upload_intro_button", "id", "click on next_step_upload_intro_button ")->click();
-        sleep(1);
+        $t->click_ok("next_step_upload_intro_button", "id", "click on next_step_upload_intro_button");
 
-        # SCREEN 2 /File formating/
-        $t->find_element_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)")->click();
-        sleep(1);
-        $t->find_element_ok('next_step_file_formatting_button', 'id', 'go to next screen - Intro')->click();
-        sleep(1);
+        # SCREEN 2 /File formatting/
+        $t->click_ok("upload_single_trial_design_tab", "id", "choose a single trial design tab (default)");
+        $t->click_ok('next_step_file_formatting_button', 'id', 'go to next screen - Intro');
 
         # SCREEN 3 /Enter trial information/
         my $trial_name = "selenium_test_upload_trial_file";
-        $t->find_element_ok("trial_upload_name", "id", "find trial name input")->send_keys($trial_name);
+        $t->send_keys_ok("trial_upload_name", "id", $trial_name, "find trial name input");
 
-        $t->find_element_ok("trial_upload_breeding_program", "id", "find breeding program select")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="trial_upload_breeding_program"]/option[@value="test"]', 'xpath', "Select 'test' as value for breeding program")->click();
+        $t->click_ok("trial_upload_breeding_program", "id", "find breeding program select");
+        $t->click_ok('//select[@id="trial_upload_breeding_program"]/option[@value="test"]', 'xpath', "Select 'test' as value for breeding program");
 
-        $t->find_element_ok("trial_upload_location", "id", "find location select")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="trial_upload_location"]/option[@value="test_location"]', 'xpath', "Select 'test_location' as value for trial location")->click();
+        $t->click_ok("trial_upload_location", "id", "find location select");
+        $t->click_ok('//select[@id="trial_upload_location"]/option[@value="test_location"]', 'xpath', "Select 'test_location' as value for trial location");
 
-        $t->find_element_ok("trial_upload_trial_type", "id", "find trial type select")->click();
-        sleep(1);
+        $t->click_ok("trial_upload_trial_type", "id", "find trial type select");
+        $t->click_ok('//select[@id="trial_upload_trial_type"]/option[@title="phenotyping_trial"]', 'xpath', "Select 'phenotyping_trial' as value for type of trial");
 
-        $t->find_element_ok('//select[@id="trial_upload_trial_type"]/option[@title="phenotyping_trial"]', 'xpath', "Select 'phenotyping_trial' as value for type of trial")->click();
+        $t->click_ok("trial_upload_year", "id", "find trial year input");
+        $t->click_ok('//select[@id="trial_upload_year"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year");
 
-        $t->find_element_ok("trial_upload_year", "id", "find trial year input")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="trial_upload_year"]/option[@value="2015"]', 'xpath', "Select '2016' as value for year")->click();
+        $t->send_keys_ok('trial_upload_plot_width', 'id', "10", "find trial plot width input");
+        $t->send_keys_ok('trial_upload_plot_length', 'id', "10", "find trial plot length input");
+        $t->send_keys_ok('trial_upload_field_size', 'id', "5", "find trial field size input");
+        $t->send_keys_ok('trial_upload_plant_entries', 'id', "10", "find trial plants per plot input");
 
-        $t->find_element_ok('trial_upload_plot_width', 'id', "find trial plot width input")->send_keys("10");
-        $t->find_element_ok('trial_upload_plot_length', 'id', "find trial plot length input")->send_keys("10");
-        $t->find_element_ok('trial_upload_field_size', 'id', "find trial field size input")->send_keys("5");
-        $t->find_element_ok('trial_upload_plant_entries', 'id', "find trial plants per plot input")->send_keys("10");
+        $t->send_keys_ok("trial_upload_description", "id", 'Test test upload trial file - description', "find trial description input");
 
-        $t->find_element_ok("trial_upload_description", "id", "find trial description input")->send_keys('Test test upload trial file - description');;
+        $t->click_ok("trial_upload_trial_stock_type", "id", "find trial design select");
+        $t->click_ok('//select[@id="trial_upload_trial_stock_type"]/option[@value="accession"]', 'xpath', "Select 'accession' as value for stock type");
 
-        $t->find_element_ok("trial_upload_trial_stock_type", "id", "find trial design select")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="trial_upload_trial_stock_type"]/option[@value="accession"]', 'xpath', "Select 'accession' as value for stock type")->click();
+        $t->click_ok("trial_upload_design_method", "id", "find trial design select");
+        $t->click_ok('//select[@id="trial_upload_design_method"]/option[@value="CRD"]', 'xpath', "Select 'CRD' as value for design method");
 
-        $t->find_element_ok("trial_upload_design_method", "id", "find trial design select")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="trial_upload_design_method"]/option[@value="CRD"]', 'xpath', "Select 'CRD' as value for design method")->click();
-
-        my $upload_input = $t->find_element_ok("trial_uploaded_file", "id", "find file input");
         my $filename = $f->config->{basepath} . "/t/data/trial/trial_layout_example_other_plots.$extension";
 
         $t->driver()->upload_file($filename);
-        $upload_input->send_keys($filename);
-        sleep(2);
+        $t->send_keys_ok("trial_uploaded_file", "id", $filename, "find file input");
 
-        $t->find_element_ok('next_step_trial_information_button', 'id', 'go to next screen - Intro')->click();
+        $t->click_ok('next_step_trial_information_button', 'id', 'go to next screen - Intro');
         # SCREEN 4 /Trial Linkage/
 
-        $t->find_element_ok("upload_trial_trial_sourced", "id", "find trial sourced select")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="upload_trial_trial_sourced"]/option[@value="no"]', 'xpath', "Select 'no' as value for trial sourced")->click();
+        $t->click_ok("upload_trial_trial_sourced", "id", "find trial sourced select");
+        $t->click_ok('//select[@id="upload_trial_trial_sourced"]/option[@value="no"]', 'xpath', "Select 'no' as value for trial sourced");
 
-        $t->find_element_ok("upload_trial_trial_will_be_genotyped", "id", "find 'trial will be genotyped' select")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="upload_trial_trial_will_be_genotyped"]/option[@value="no"]', 'xpath', "Select 'no' as value for trial will be genotyped")->click();
+        $t->click_ok("upload_trial_trial_will_be_genotyped", "id", "find 'trial will be genotyped' select");
+        $t->click_ok('//select[@id="upload_trial_trial_will_be_genotyped"]/option[@value="no"]', 'xpath', "Select 'no' as value for trial will be genotyped");
 
-        $t->find_element_ok("upload_trial_trial_will_be_crossed", "id", "find 'trial will be crossed' select")->click();
-        sleep(1);
-        $t->find_element_ok('//select[@id="upload_trial_trial_will_be_crossed"]/option[@value="no"]', 'xpath', "Select 'no' as value for trial will be crossed")->click();
+        $t->click_ok("upload_trial_trial_will_be_crossed", "id", "find 'trial will be crossed' select");
+        $t->click_ok('//select[@id="upload_trial_trial_will_be_crossed"]/option[@value="no"]', 'xpath', "Select 'no' as value for trial will be crossed");
 
-        $t->find_element_ok("upload_trial_validate_form_button", "id", "find and click trial validate form button")->click();
-        sleep(2);
+        $t->click_ok("upload_trial_validate_form_button", "id", "find and click trial validate form button");
+        $t->wait_for_network_idle();
 
-        $t->find_element_ok("upload_trial_submit_first", "name", "find and click upload trial submit button")->click();
+        $t->click_ok("upload_trial_submit_first", "name", "find and click upload trial submit button");
+        $t->wait_for_working_dialog();
+        $t->wait_for_network_idle();
+        sleep(10); # The above 2 waits are insufficient to give the backend enough time to finish processing
 
-        # important sleep 60 seconds for a functionality - it can take ages to save a trail depend of the machine
-        sleep(60);
-
-        $t->find_element_ok("close_trial_upload_dialog", "id", "find and click close trial upload button")->click();
+        $t->click_ok("close_trial_upload_dialog", "id", "find and click close trial upload button");
 
         $t->get_ok('/breeders/trials');
-        sleep(3);
+        sleep(1); # FIXME Need to wait for click handler to be registered
 
-        $t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
-        sleep(7);
+        $t->click_ok("refresh_jstree_html", "name", "refresh tree");
+        $t->wait_for_network_idle();
 
-        $t->find_element_ok("test", "partial_link_text", "check program in tree")->click();
-        sleep(3);
+        $t->click_ok("test", "partial_link_text", "check program in tree");
+        sleep(1);
 
-        $t->find_element_ok("jstree-icon", "class", "view drop down for program")->click();
-        sleep(5);
+        $t->click_ok("jstree-icon", "class", "view drop down for program");
+        sleep(1);
 
-        $t->find_element_ok("$trial_name", "partial_link_text", "check program in tree")->click();
+        $t->click_ok("$trial_name", "partial_link_text", "check program in tree");
         sleep(1);
 
         $f->clean_up_db();

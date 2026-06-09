@@ -17,6 +17,8 @@ $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application
 my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
 
 my $d = SGN::Test::WWW::WebDriver->new();
+$driver->set_timeout('implicit', $d->implicit_wait);
+$driver->set_timeout('page load', $d->implicit_wait);
 $d->driver($driver);
 
 $d->while_logged_in_as("submitter", sub {

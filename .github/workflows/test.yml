@@ -149,3 +149,12 @@ jobs:
         run: |
           ./run_test t/selenium2/tools
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
+
+      - name: Upload screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: |
+            data/selenium/screenshots/*
+          retention-days: 3
