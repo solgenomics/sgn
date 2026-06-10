@@ -351,7 +351,7 @@ sub update {
     my @folder_studies;
     my %additional_info;
     my $folder_id = $folder->folder_id;
-    my $folder_description = $folder->name; #description doesn't exist 
+    my $folder_description = $self->bcs_schema->resultset('Project::Project')->find({ project_id => $folder_id })->description() // '';
     my $breeding_program_id = $folder->breeding_program->project_id();
 
     # external references
