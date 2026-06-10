@@ -20,7 +20,6 @@ const initialtypes = [
     "trial_types",
     "years",
     "protocols",
-    "instances"
 ];
 
 const types = {
@@ -32,7 +31,7 @@ const types = {
   "genotyping_projects": "Genotyping Projects",
   "locations": "Locations",
   "protocols": "HDP Protocols",
-  "instances": "Instance Ids",
+  "instances": "HDP Upload Ids",
   "plots": "Plots",
   "subplots": "Subplots",
   "plants": "Plants",

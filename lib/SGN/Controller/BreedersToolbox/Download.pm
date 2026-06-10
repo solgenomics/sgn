@@ -270,6 +270,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_end_date = $c->req->param("phenotype_end_date");
     my $data_type = $c->req->param("data_type");
     my $hdp_type = $c->req->param("hdp_type");
+    print STDERR "hdp type test: $hdp_type";
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -436,6 +437,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $plugin;
     if ($data_type && $data_type eq 'high_dimensional') {
         $plugin = $format eq 'xlsx' ? "TrialHighDimensionalPhenotypeExcel" : "TrialHighDimensionalPhenotypeCSV";
+        $data_level = 'all';
     } else {
         $plugin = $format eq 'xlsx' ? "TrialPhenotypeExcel" : "TrialPhenotypeCSV";
     }
@@ -468,6 +470,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         plot_list => \@plot_list_int,
         plant_list => \@plant_list_int,
         protocol_list => \@protocol_list_int,
+        hdp_type => $hdp_type,
         instance_list => \@instance_list,
         filename => $tempfile,
         format => $plugin,

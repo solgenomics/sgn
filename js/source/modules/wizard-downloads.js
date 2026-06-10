@@ -273,9 +273,9 @@ export function WizardDownloads(main_id,wizard){
         var min = d3.select(".wizard-download-high-dim-phenotypes-min").node().value;
 	      var max = d3.select(".wizard-download-high-dim-phenotypes-max").node().value;
 	      //var repetitive_measurements = d3.select(".wizard-download-repetitive-measurements-type").node().value;
-        //var hdp_type = d3.select(".wizard-download-high-dim-phenotypes-type").node().value;
 	      var phenotype_start_date = d3.select(".wizard-download-start-date").node().value;
 	      var phenotype_end_date = d3.select(".wizard-download-end-date").node().value;
+        var hdp_type = d3.select(".wizard-download-high-dim-phenotypes-type").node().value;
 
 	  //alert('start date = '+phenotype_start_date);
 	  //alert('repetitive type = '+repetitive_measurements);
@@ -294,6 +294,7 @@ export function WizardDownloads(main_id,wizard){
             instance_list: instance_ids,
             //dataLevel: level,
             data_type: "high_dimensional",
+            hdp_type: hdp_type,
             phenotype_min_value: min,
             phenotype_max_value: max,
             timestamp: timestamp,
@@ -303,7 +304,6 @@ export function WizardDownloads(main_id,wizard){
             //exclude_phenotype_outlier: outliers,
             include_pedigree_parents: 0,
 	          //repetitive_measurements: repetitive_measurements,
-            //hdp_type: hdp_type,
 	          phenotype_start_date: phenotype_start_date,
 	          phenotype_end_date: phenotype_end_date
         });

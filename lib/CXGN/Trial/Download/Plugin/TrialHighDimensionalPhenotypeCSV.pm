@@ -59,12 +59,12 @@ sub download {
     my $phenotype_start_date      = $self->start_date();
     my $phenotype_end_date        = $self->end_date();
     my $repetitive_measurements   = $self->repetitive_measurements();
-    #my $hdp_type                  = $self->hdp_type();
+    my $hdp_type                  = $self->hdp_type();
 
     my $hdp_search = CXGN::Phenotypes::HighDimensionalPhenotypesSearch->new({
         bcs_schema                      => $schema,
         nd_protocol_id                  => $nd_protocol_id,
-        high_dimensional_phenotype_type => 'NIRS',
+        high_dimensional_phenotype_type => $hdp_type,
         accession_list                  => $self->accession_list,
         query_associated_stocks         => 0,
         plot_list                       => $self->plot_list,
@@ -121,7 +121,7 @@ sub download {
     my @data = @filtered_phenotype_data;
 
     my ($first_stock)   = values %$data_hash;
-    my @all_identifiers = $first_stock ? sort { $a <=> $b } keys %{ $first_stock->{spectra} } : ();
+    my @all_identifiers = $first_stock ? sort { $a cmp $b } keys %{ $first_stock->{spectra} } : ();
 
     # Filter identifiers by min/max wavelength
     my @identifiers = grep {
