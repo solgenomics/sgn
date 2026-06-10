@@ -3409,7 +3409,9 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     my $additional_plants = $t->has_plant_entries();
     push @plant_entity_params, $additional_plants;
 
-    if ($t->create_plant_entities(@plant_entity_params)) {
+    my $create_plant_entities = $t->create_plant_entities(@plant_entity_params);
+
+    if ($create_plant_entities->{success}) {
 
 #        my $dbh = $c->dbc->dbh();
 #        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3419,7 +3421,7 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
         $c->stash->{rest} = {success => 1};
         return;
     } else {
-        $c->stash->{rest} = { error => "Error creating plant entries in controller." };
+        $c->stash->{rest} = { error => $create_plant_entities->{error} };
     	return;
     }
 
@@ -3511,7 +3513,9 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     push @subplot_plant_entity_params, $phenotype_store_config;
     push @subplot_plant_entity_params, $additional_plants;
 
-    if ($t->create_plant_subplot_entities(@subplot_plant_entity_params)) {
+    my $create_plant_subplot_entities = $t->create_plant_subplot_entities(@subplot_plant_entity_params);
+
+    if ($create_plant_subplot_entities->{success}) {
 
 #        my $dbh = $c->dbc->dbh();
 #        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3520,7 +3524,7 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
         $c->stash->{rest} = {success => 1};
         return;
     } else {
-        $c->stash->{rest} = { error => "Error creating plant entries for subplots in controller." };
+        $c->stash->{rest} = { error => $create_plant_subplot_entities->{error} };
     	return;
     }
 

@@ -3471,11 +3471,11 @@ sub create_plant_entities {
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return 0;
+        return {error => "An error occurred creating the plant entities. $@"};
     }
 
     print STDERR "Plant entities created.\n";
-    return 1;
+    return {success => 1};
 }
 
 =head2 function save_plant_entries()
@@ -3938,11 +3938,11 @@ sub create_plant_subplot_entities {
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return 0;
+        return {error => "An error occurred creating the plant entities. $@"};
     }
 
     print STDERR "Plant entities created.\n";
-    return 1;
+    return {success => 1};
 }
 
 

@@ -32,7 +32,7 @@ $trial_name => undef
       	      <div class="col-sm-7" >
                 <input name="add_rows_and_columns_to_subplot_plants" id="add_rows_and_columns_to_subplot_plants" type="checkbox"/>
                 <div id="subplot_plant_row_column_format_dialog" style="display:none">
-                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a Cartesian pattern. Row and column numbers start at 1 within each subplot.</i></p>
+                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a Cartesian pattern. Row and column numbers start at 1 within each subplot. If adding additional plants, there must be enough spaces to accommodate both the previous plants and the new plants.</i></p>
                     <table style="width:60%">
                         <tr>
                             <td>
