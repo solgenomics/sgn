@@ -102,6 +102,7 @@ export class SearchStateManager {
     private readonly config: SearchStateConfig;
     private readonly submitSelectors: string[];
     private readonly resetSelectors?: string[] | Record<string, string[]>;
+    private lastClickedSubmitButton: string | null = null;
 
     constructor(config: SearchStateConfig) {
         this.config = config;
@@ -164,6 +165,11 @@ export class SearchStateManager {
                 }
             }
         }
+
+        if (this.lastClickedSubmitButton) {
+            params['submit_button'] = this.lastClickedSubmitButton;
+        }
+
         return params;
     }
 
@@ -176,6 +182,11 @@ export class SearchStateManager {
      */
     public async deserialize(): Promise<void> {
         const urlParams = new URLSearchParams(window.location.search);
+
+        const submitButtonParam = urlParams.get('submit_button');
+        if (submitButtonParam) {
+            this.lastClickedSubmitButton = submitButtonParam;
+        }
 
         for (const [key, element] of Object.entries(this.config.elements)) {
             const val = urlParams.get(key);
@@ -349,6 +360,10 @@ export class SearchStateManager {
             urlParams.delete(key);
         }
 
+        // Any reset should also clear the last clicked submit button
+        this.lastClickedSubmitButton = null;
+        urlParams.delete('submit_button');
+
         const qString = urlParams.toString();
         const nextUrl = qString ? '?' + qString : window.location.pathname;
 
@@ -375,6 +390,7 @@ export class SearchStateManager {
         // Intercept the search execution event to update query params and trigger callbacks
         this.submitSelectors.forEach(selector => {
             jQuery(selector).on('click', () => {
+                this.lastClickedSubmitButton = selector;
                 this.updateUrl();
                 if (this.config.onSearch) {
                     this.config.onSearch();
@@ -409,7 +425,10 @@ export class SearchStateManager {
             .filter(key => urlParams.has(key));
 
         if (restoredKeys.length > 0) {
-            if (this.config.onRestore) {
+            const restoredSubmitButton = urlParams.get('submit_button');
+            if (restoredSubmitButton && this.submitSelectors.includes(restoredSubmitButton)) {
+                jQuery(restoredSubmitButton).trigger('click');
+            } else if (this.config.onRestore) {
                 this.config.onRestore(restoredKeys);
             } else if (this.submitSelectors.length === 1) {
                 // Fall back to triggering the single submit button only if there is no ambiguity

@@ -243,3 +243,53 @@ test('SearchStateManager - Resetting Form State', async (t) => {
 
     t.end();
 });
+
+test('SearchStateManager - Multiple Submit Buttons Persistence & Restore', async (t) => {
+    document.body.innerHTML = `
+        <div id="test_form">
+            <input type="text" id="test_name" value="Solanum" />
+            <button id="btn_search_a">Search A</button>
+            <button id="btn_search_b">Search B</button>
+        </div>
+    `;
+    clearURL();
+
+    let searchCallbackCalled = false;
+    const manager = create({
+        submitButtonSelector: ['#btn_search_a', '#btn_search_b'],
+        onSearch: () => {
+            searchCallbackCalled = true;
+        },
+        elements: {
+            name: { selector: '#test_name' }
+        }
+    });
+
+    await manager.init();
+
+    // Click Search B
+    jQuery('#btn_search_b').trigger('click');
+
+    const updatedParams = new URLSearchParams(window.location.search);
+    t.equal(updatedParams.get('name'), 'Solanum', 'Commits state');
+    t.equal(updatedParams.get('submit_button'), '#btn_search_b', 'Persists clicked submit button selector to URL parameter');
+    t.ok(searchCallbackCalled, 'Callback called');
+
+    // Now test restore with that submit_button parameter
+    let restoredClickOnB = false;
+    jQuery('#btn_search_b').on('click', () => {
+        restoredClickOnB = true;
+    });
+
+    const managerRestore = create({
+        submitButtonSelector: ['#btn_search_a', '#btn_search_b'],
+        elements: {
+            name: { selector: '#test_name' }
+        }
+    });
+
+    await managerRestore.init();
+    t.ok(restoredClickOnB, 'Automatically triggers click on the restored submit button on load');
+
+    t.end();
+});

@@ -169,13 +169,6 @@ jQuery(document).ready(function (){
                 type: 'select',
                 waitForOptions: true
             }
-        },
-        onRestore: function(restoredKeys) {
-            if (restoredKeys.includes('male_parent')) {
-                jQuery('#search_crosses_female_male').click();
-            } else if (restoredKeys.includes('female_parent')) {
-                jQuery('#search_all_crosses_using_female').click();
-            }
         }
     });
     searchManager.init();

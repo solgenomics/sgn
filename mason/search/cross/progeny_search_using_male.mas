@@ -167,13 +167,6 @@ jQuery(document).ready(function (){
                 type: 'select',
                 waitForOptions: true
             }
-        },
-        onRestore: function(restoredKeys) {
-            if (restoredKeys.includes('female_parent')) {
-                jQuery('#search_pedigree_male_female').click();
-            } else if (restoredKeys.includes('male_parent')) {
-                jQuery('#search_all_progenies_using_male').click();
-            }
         }
     });
     searchManager.init();
