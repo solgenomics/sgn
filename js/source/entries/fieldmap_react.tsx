@@ -421,20 +421,20 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             .then(response => {
                 const units = response?.result?.data || [];
                 if (units.length > 0) {
-                    const first = units[0];
-                    if (first.additionalInfo) {
-                        setTopBorder(!!first.additionalInfo.top_border_selection);
-                        setLeftBorder(!!first.additionalInfo.left_border_selection);
-                        setRightBorder(!!first.additionalInfo.right_border_selection);
-                        setBottomBorder(!!first.additionalInfo.bottom_border_selection);
-                        setInvertRows(!!first.additionalInfo.invert_row_checkmark);
-                        setInvertCols(!!first.additionalInfo.invert_col_checkmark);
-                        if (first.additionalInfo.plot_layout) {
-                            setPlotLayout(first.additionalInfo.plot_layout);
+                    const firstInfo = units[0].additionalInfo;
+                    if (firstInfo) {
+                        setTopBorder(firstInfo.top_border_selection);
+                        setLeftBorder(firstInfo.left_border_selection);
+                        setRightBorder(firstInfo.right_border_selection);
+                        setBottomBorder(firstInfo.bottom_border_selection);
+                        setInvertRows(firstInfo.invert_row_checkmark);
+                        setInvertCols(firstInfo.invert_col_checkmark);
+                        if (firstInfo.plot_layout) {
+                            setPlotLayout(firstInfo.plot_layout);
                         }
-                        if (first.additionalInfo.plot_color_var) setColorVar(first.additionalInfo.plot_color_var);
-                        if (first.additionalInfo.plot_label_var) setLabelVar(first.additionalInfo.plot_label_var);
-                        if (first.additionalInfo.plot_label_size) setLabelSize(first.additionalInfo.plot_label_size);
+                        if (firstInfo.plot_color_var) setColorVar(firstInfo.plot_color_var);
+                        if (firstInfo.plot_label_var) setLabelVar(firstInfo.plot_label_var);
+                        if (firstInfo.plot_label_size) setLabelSize(firstInfo.plot_label_size);
                     }
                     parsePlotData(units);
                 }
