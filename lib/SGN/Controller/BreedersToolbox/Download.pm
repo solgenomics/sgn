@@ -261,11 +261,16 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $accession_list = $c->req->param("accession_list");
     my $plot_list = $c->req->param("plot_list");
     my $plant_list = $c->req->param("plant_list");
+    my $protocol_list = $c->req->param("protocol_list");
+    my $instance_list = $c->req->param("instance_list");
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
     my $phenotype_start_date = $c->req->param("phenotype_start_date");
     my $phenotype_end_date = $c->req->param("phenotype_end_date");
+    my $data_type = $c->req->param("data_type");
+    my $hdp_type = $c->req->param("hdp_type");
+    print STDERR "hdp type test: $hdp_type";
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -311,6 +316,16 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     if ($plant_list && $plant_list ne 'null') {
 	print STDERR "plant list: ".Dumper $plant_list."\n";
 	@plant_list = @{_parse_list_from_json($plant_list)};
+    }
+    my @protocol_list;
+    if ($protocol_list && $protocol_list ne 'null') {
+    print STDERR "protocol list: ".Dumper $protocol_list."\n";
+    @protocol_list = @{_parse_list_from_json($protocol_list)};
+    }
+    my @instance_list;
+    if ($instance_list && $instance_list ne 'null') {
+    print STDERR "instance list: ".Dumper $instance_list."\n";
+    @instance_list = @{_parse_list_from_json($instance_list)};
     }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
@@ -403,7 +418,30 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         }
     }
 
-    my $plugin = $format eq 'xlsx' ? "TrialPhenotypeExcel" : "TrialPhenotypeCSV";
+    my @protocol_list_int;
+    foreach (@protocol_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @protocol_list_int, $_;
+        } else {
+            my $q = "SELECT nd_protocol.nd_protocol_id FROM nd_protocol AND nd_protocol.name = ?;";
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($_);
+            my ($protocol_id) = $h->fetchrow_array();
+
+            if ($protocol_id) {
+                push @protocol_list_int, $protocol_id;
+            }
+        }
+    }
+
+    my $plugin;
+    if ($data_type && $data_type eq 'high_dimensional') {
+        $plugin = $format eq 'xlsx' ? "TrialHighDimensionalPhenotypeExcel" : "TrialHighDimensionalPhenotypeCSV";
+        $data_level = 'all';
+    } else {
+        $plugin = $format eq 'xlsx' ? "TrialPhenotypeExcel" : "TrialPhenotypeCSV";
+    }
+
     my $temp_file_name;
     my $download_file_name;
     my $dir = $c->tempfiles_subdir('download');
@@ -431,6 +469,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         accession_list => \@accession_list_int,
         plot_list => \@plot_list_int,
         plant_list => \@plant_list_int,
+        protocol_list => \@protocol_list_int,
+        hdp_type => $hdp_type,
+        instance_list => \@instance_list,
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
