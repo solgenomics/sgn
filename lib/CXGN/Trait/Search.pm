@@ -206,8 +206,8 @@ sub search {
             join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'}, 'cvtermsynonyms' ],
             where => \%where_join,
             order_by => { '-asc' => $order_by },
-            '+select' => ['db.name', 'dbxref.accession', 'type.name'],
-            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name'],
+            '+select' => ['db.name', 'dbxref.accession', 'type.name', 'cvtermsynonyms.synonym'],
+            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name', 'synonym'],
             distinct => 1
         }
     );
@@ -226,6 +226,7 @@ sub search {
         push @result, {
             trait_id => $t->cvterm_id,
             trait_name => $t->name,
+            synonym => $t->get_column('synonym'),
             trait_definition => $t->definition,
             db_name => $t->get_column('db_name'),
             accession=> $t->get_column('db_accession'),

@@ -153,6 +153,10 @@ sub search : Path('/ajax/search/traits') Args(0) {
             $trait_usage = "Trials:&nbsp;$trial_count<br />Plots:&nbsp;$plot_count";
         }
 
+        my $synonym = $_->{synonym} || '';
+        if ($synonym =~ /^"(.+?)"\s+\w+\s+\[/) {
+            $synonym = $1;
+        }
 
         push @result,
             [
@@ -160,6 +164,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
                 "<button class='btn btn-info btn-$_->{trait_id}' onclick='copy(\"$_->{trait_name}\", \"$trait_accession\", $_->{trait_id})'><span class='glyphicon glyphicon-copy'></span></button>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
                 "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
+                $synonym,
                 $_->{trait_definition},
                 $trait_usage,
                 $_->{trait_name},
