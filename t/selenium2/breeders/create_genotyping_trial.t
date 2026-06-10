@@ -111,7 +111,7 @@ $t->while_logged_in_as("submitter", sub {
 
 		# SCREEN 6 /Confirm/
 		$t->click_ok('add_geno_trial_submit', 'id', 'find "submit genotyping trial" and click');
-		$t->wait_for_working_dialog();
+		$t->accept_alert_ok('accept success alert');
 
 		$t->click_ok('close_trial_button', 'id', 'find "close trial button" and click');
 		$t->wait_for_network_idle();

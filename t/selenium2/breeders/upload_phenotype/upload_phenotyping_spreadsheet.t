@@ -123,6 +123,7 @@ $t->while_logged_in_as("curator", sub {
         $t->send_keys_ok("upload_spreadsheet_phenotype_file_input", "id", $filename, "input file name");
 
         $t->click_ok("upload_spreadsheet_phenotype_submit_verify", "id", "submit spreadsheet file for verification");
+        $t->wait_for_network_idle();
 
         $verify_status = $t->get_attribute_ok("upload_phenotype_spreadsheet_verify_status", "id", "innerHTML", "verify the verification");
 
@@ -135,6 +136,7 @@ $t->while_logged_in_as("curator", sub {
 
         $t->click_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage");
         $t->wait_for_working_dialog();
+        $t->wait_for_network_idle();
 
         $verify_status = $t->get_attribute_ok("upload_phenotype_spreadsheet_verify_status", "id", "innerHTML", "verify the verification");
 
@@ -199,6 +201,7 @@ $t->while_logged_in_as("curator", sub {
             $t->send_keys_ok("${obs_id}_value_input", "id", $new_value, "input value");
 
             $t->click_ok("${obs_id}_save_changes_btn", "id", "Click save button for first row");
+            $t->wait_for_network_idle();
 
             # Refresh page and return to raw data section
             $t->get_ok('/breeders/trial/137');

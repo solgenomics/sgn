@@ -86,6 +86,7 @@ $t->while_logged_in_as("submitter", sub {
 
 	# SCREEN 5 - Additional cross info
 	$t->click_ok('create_cross_submit', 'id', 'find "create cross submit" and click');
+	$t->wait_for_network_idle();
 
 	my $cross_submit_info = $t->get_attribute_ok(
 		'//div[@id="add_cross_workflow"]//div[contains(@class, "panel-body")]//div[contains(@class, "workflow-complete-message")]',
@@ -96,8 +97,10 @@ $t->while_logged_in_as("submitter", sub {
 	ok($cross_submit_info =~ /The cross was added successfully/, "Verify feedback after submission, looking for: 'The cross was added successfully'");
 
 	$t->click_ok('new_cross_close_modal', 'id', 'find "new cross close modal" and click');
+	$t->wait_for_network_idle();
 
 	$t->click_ok("refresh_crosses_jstree_html_trialtree_button", "id", "find and click 'refresh crosses trial jstree'");
+	$t->wait_for_network_idle();
 
 	$t->click_ok('//div[@id="crosses_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with crosses trial list');
 
