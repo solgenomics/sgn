@@ -168,10 +168,7 @@ is($order->{'order_status'}, 'submitted');
 is($order->{'order_from_name'}, 'Jane Doe');
 is($order->{'completion_date'}, undef);
 is($order->{'contact_person_comments'}, undef);
-
-my $clone_list = $order->{'clone_list'};
-my $vendor_num_items = @$clone_list;
-is($vendor_num_items, '2');
+is($order->{'formatted_clone_list'}, '<b>Item Name</b>:UG120001<br>Quantity:2<br>Comments:<br> <br><b>Item Name</b>:UG120002<br>Quantity:3<br>Comments:<br> ');
 
 #test updating order status by johndoe
 my $time = DateTime->now();
