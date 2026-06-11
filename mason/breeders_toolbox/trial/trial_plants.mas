@@ -63,6 +63,7 @@ jQuery(document).ready(function () {
                     paging: false,
                     searching: true,
                     ordering: true,
+                    order : [[1, 'asc']],
                     info: true,
                     scrollY: '250px',
                     scrollX : true,
