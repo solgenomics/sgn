@@ -1,0 +1,86 @@
+<%args>
+    $config
+    $goto_url => '/'
+</%args>
+
+<%perl>
+    if ( !defined $config ) {
+        $m->comp("/generic_message.mas", message => "Captcha has not been enabled on this server");
+        $m->abort();
+    }
+</%perl>
+
+<noscript>
+    <div id="sgn-captcha-nojs" style="max-width: 400px; margin: 15px auto; text-align: center;">
+        <p>
+            <strong>Verification Failed</strong>
+            <br />
+            Javascript is required for bot detection...
+        </p>
+    </div>
+</noscript>
+
+<div id="sgn-captcha" style="display: none; max-width: 400px; min-height: 250px; margin: 15px auto; text-align: center;">
+    <p id="sgn-captcha-status">Verifying your request...</p>
+    <progress id="sgn-captcha-loader" max="100" value="0"></progress>
+</div>
+
+
+<script type="module">
+    import "https://cdn.jsdelivr.net/npm/cap-widget@0.1.56";
+    const container = document.getElementById("sgn-captcha");
+    const status = document.getElementById("sgn-captcha-status");
+    const loader = document.getElementById("sgn-captcha-loader");
+
+    // reset the display
+    container.style.display = "block";
+    loader.style.display = "inline-block";
+    loader.setAttribute("value", 0);
+
+    // Initiate the captcha solve routine
+    const cap = new Cap({ apiEndpoint: "<% $config->{server} %>/<% $config->{client_id} %>" });
+    cap.solve();
+
+    // When the captcha has been solved...
+    // verify the token that has been returned
+    // if the token is valid, redirect to the original URL
+    cap.addEventListener("solve", (e) => {
+        jQuery.ajax({
+            url: '/ajax/captcha',
+            method: 'POST',
+            data: { token: e.detail.token },
+            dataType:'json',
+            beforeSend: function() {
+                status.innerHTML = "<strong>Saving verification token...</strong>";
+                loader.removeAttribute("value");
+            },
+            success: function(response) {
+                if ( response?.error || response?.success !== 1 ) {
+                    status.innerHTML = `<strong>Could not save verification token</strong><br />${response.error}`;
+                    loader.style.display = "none";
+                }
+                else {
+                    status.innerHTML = "<strong>Saved verification token!</strong><br />You should now be redirected to <a href='<% $goto_url %>'><% $goto_url %></a>";
+                    loader.style.display = "none";
+                    window.location = "<% $goto_url %>";
+                }
+            },
+            error: function() {
+                status.innerHTML = "<strong>Could not save verification token</strong>";
+                loader.style.display = "none";
+            }
+        });
+    });
+
+    // Update the progress of the captcha solve routine...
+    cap.addEventListener("progress", (e) => {
+        status.innerHTML = `<strong>Verifying your request...</strong>`;
+        loader.value = e.detail.progress;
+    });
+
+    // The captcha solve has failed...
+    cap.addEventListener("error", (e) => {
+        status.innerHTML = `<strong>Could not verify the token</strong><br />${e.detail.message}`;
+        loader.style.display = "none";
+    });
+</script>
