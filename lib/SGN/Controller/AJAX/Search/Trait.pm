@@ -110,12 +110,35 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
-    foreach (@$data){
-        my $db_name = $_->{db_name};
-        my $accession = $_->{accession};
-        my $trait_id = $_->{trait_id};
-        my $trait_accession = $db_name .":". $accession ;
-        my $trait_usage = "<em>None</em>";
+    my %seen;
+    my @ordered_ids;
+
+    foreach my $trait (@$data) {
+        my $id = $trait->{trait_id};
+        if (!$seen{$id}) {
+            $seen{$id} = {%$trait, synonyms => []};
+            push @ordered_ids, $id;
+        }
+        push @{$seen{$id}{synonyms}}, $trait->{synonym} if $trait->{synonym};
+    }
+
+    foreach my $id (@ordered_ids) {
+        my $trait = $seen{$id};
+        my $db_name = $trait->{db_name};
+        my $accession = $trait->{accession};
+        my $trait_id = $trait->{trait_id};
+        my $trait_accession = $db_name .":". $accession;        my $trait_usage = "<em>None</em>";
+
+        my @cleaned_synonyms;
+        foreach my $syn (@{$trait->{synonyms}}) {
+            if ($syn =~ /^"(.+?)"\s+\w+\s+\[/) {
+                push @cleaned_synonyms, $1;
+            } else {
+                push @cleaned_synonyms, $syn;
+            }
+        }
+
+        my $synonym = join(',', sort @cleaned_synonyms);
 
         # Get the number of trials that observed the trait
         my $trial_criteria_list  = ['traits', 'trials'];
@@ -152,22 +175,17 @@ sub search : Path('/ajax/search/traits') Args(0) {
 
             $trait_usage = "Trials:&nbsp;$trial_count<br />Plots:&nbsp;$plot_count";
         }
-
-        my $synonym = $_->{synonym} || '';
-        if ($synonym =~ /^"(.+?)"\s+\w+\s+\[/) {
-            $synonym = $1;
-        }
-
+        
         push @result,
             [
                 '',
-                "<button class='btn btn-info btn-$_->{trait_id}' onclick='copy(\"$_->{trait_name}\", \"$trait_accession\", $_->{trait_id})'><span class='glyphicon glyphicon-copy'></span></button>",
-                "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
-                "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
+                "<button class='btn btn-info btn-$trait->{trait_id}' onclick='copy(\"$trait->{trait_name}\", \"$trait_accession\", $trait->{trait_id})'><span class='glyphicon glyphicon-copy'></span></button>",
+                "<a href=\"/cvterm/$trait->{trait_id}/view\">$trait_accession</a>",
+                "<a href=\"/cvterm/$trait->{trait_id}/view\">$trait->{trait_name}</a>",
                 $synonym,
-                $_->{trait_definition},
+                $trait->{trait_definition},
                 $trait_usage,
-                $_->{trait_name},
+                $trait->{trait_name},
                 $trait_accession
             ];
     }
