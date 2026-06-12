@@ -1,6 +1,7 @@
 
 <%args>
 $trial_id
+$curator => undef
 </%args>
 
 <& /util/import_javascript.mas, classes => [  "jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "CXGN.BreederSearch", "CXGN.BreedersToolbox.HTMLSelect" ] &>
@@ -33,6 +34,10 @@ $trial_id
                     </td>
                 </tr>
             </table>
+% if ($curator) {
+            <br>
+            <button id="plant_select_delete_plants" class="btn btn-danger">Delete selected plants</button>
+% } 
         </&>
     </div>
 </div>
@@ -58,6 +63,7 @@ jQuery(document).ready(function () {
                     paging: false,
                     searching: true,
                     ordering: true,
+                    order : [[1, 'asc']],
                     info: true,
                     scrollY: '250px',
                     scrollX : true,
@@ -177,6 +183,42 @@ jQuery(document).ready(function () {
                 alert("Server error adding plants to list.");
             }
         });
+    });
+
+    jQuery('#plant_select_delete_plants').click(function() {
+        if (confirm("Are you sure you want to delete the selected plants? Any associated tissue samples will also be deleted. This action cannot be undone.")) {
+            let plant_ids = jQuery('.exp_design_plant_select:checkbox:checked')
+                .map(function() {
+                    return this.id.replace('select_plant_', '');
+                })
+                .get()
+                .join('\t');
+            let trial_id = "<% $trial_id %>";
+            jQuery.ajax({
+                url : `/ajax/breeders/trial/${trial_id}/delete_plants`,
+                method : 'POST',
+                data : {
+                    plants_list : plant_ids
+                },
+                beforeSend : function() {
+                    jQuery('#working_modal').modal("show");
+                },
+                success : function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    if (response.error) {
+                        alert("Error: " + response.error);
+                    } else {
+                        alert("Plants deleted.");
+                        window.location.reload();
+                    }
+                },
+                error : function(response) {
+                    jQuery('#working_modal').modal("hide");
+                    alert("A server error occurred, check console.");
+                }
+            });
+        } 
+        return;
     });
 
 });
