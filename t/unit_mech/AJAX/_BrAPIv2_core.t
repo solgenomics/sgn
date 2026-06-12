@@ -53,7 +53,7 @@ $mech->default_header("Content-Type" => "application/json");
 $mech->default_header('Authorization'=> 'Bearer ' . $access_token);
 
 
-$mech->get_ok('http://localhost:3010/brapi/v2/serverinfo'); 
+$mech->get_ok('http://localhost:3010/brapi/v2/serverinfo');
 $response = decode_json $mech->content;
 print STDERR "\n\nserverinfo response" . Dumper $response;
 #8
@@ -277,7 +277,7 @@ $data = '{ "active": "true","additionalInfo": {},"commonCropName": "Cassava","co
 $resp = $ua->put("http://localhost:3010/brapi/v2/trials/". $trial_id, Content => $data);
 $response = decode_json $resp->{_content};
 print STDERR "\n\n" . Dumper $response;
-is_deeply($response, {'result' => {'additionalInfo' => {},'publications' => undef,'endDate' => undef,'documentationURL' => undef,'startDate' => undef,'commonCropName' => 'Cassava','trialPUI' => undef,'trialDescription' => 'Peru Yield Trial 2020-1','programName' => 'test','programDbId' => '134','trialDbId' => $trial_id, 'active' => JSON::true, 'datasetAuthorships' => undef,'contacts' => undef,'externalReferences' => [],'trialName' => 'Peru Yield Trial 2020-1'},'metadata' => {'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Trials','messageType' => 'INFO'},{'message' => 'Trial detail result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10}}}, "Update trial test");
+is_deeply($response, {'result' => {'additionalInfo' => {},'publications' => undef,'endDate' => undef,'documentationURL' => undef,'startDate' => undef,'commonCropName' => 'Cassava','trialPUI' => undef,'trialDescription' => 'Trial initiated in Peru','programName' => 'test','programDbId' => '134','trialDbId' => $trial_id, 'active' => JSON::true, 'datasetAuthorships' => undef,'contacts' => undef,'externalReferences' => [],'trialName' => 'Peru Yield Trial 2020-1'},'metadata' => {'datafiles' => [],'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::Trials','messageType' => 'INFO'},{'message' => 'Trial detail result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10}}}, "Update trial test");
 
 $mech->get_ok('http://localhost:3010/brapi/v2/trials/' . $trial_id);
 $response = decode_json $mech->content;
@@ -309,5 +309,3 @@ $row->description("NA");
 $row->update();
 
 done_testing();
-
-
