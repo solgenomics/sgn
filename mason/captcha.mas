@@ -62,7 +62,11 @@
                 else {
                     status.innerHTML = "<strong>Saved verification token!</strong><br />You should now be redirected to <a href='<% $goto_url %>'><% $goto_url %></a>";
                     loader.style.display = "none";
-                    window.location = "<% $goto_url %>";
+                    const url = new URL("<% $goto_url %>", `${window.location.protocol}//${window.location.host}`);
+                    if ( !url.searchParams.has("captcha") ) {
+                        url.searchParams.append("captcha", "passed");
+                        window.location = url.pathname + url.search;
+                    }
                 }
             },
             error: function() {
