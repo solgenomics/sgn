@@ -44,11 +44,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
 
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
-    $name =~ s/_/ /g;
-    $name =~ s/[^\p{Alpha} ]//g;
-    if ($format ne "ontology") {
-        $name = lc($name);
-    }
+    $name =~ s/[^[:ascii:]]//g;
 
     $definition =~ s/^\s+//;
     $definition =~ s/\s+$//;
