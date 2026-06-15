@@ -289,7 +289,7 @@ sub boxplot_output_files {
 
     my $file_list = join( "\t", $boxplot_file, $error_file, $data_file, );
 
-    my $tmp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);;
+    my $tmp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
@@ -330,7 +330,7 @@ sub run_boxplot {
     $self->boxplot_id($c);
     my $boxplot_id = $c->stash->{boxplot_id};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);;
+    $c->stash->{analysis_tempfiles_dir} = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;

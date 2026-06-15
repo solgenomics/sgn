@@ -27,20 +27,20 @@ sub cache_clear : Path('/solgs/cache/clear') Args(0) {
     my $trial_id = $args->{trial_id};
     my $dataset_id = $args->{dataset_id};
 
-    my $trials_ids = [];
+    my @trials_ids = ();
     if ($trial_id) {
-        push @$trials_ids, $trial_id;
+        push @trials_ids, $trial_id;
     }
 
     if ($dataset_id) {
-        $trials_ids = $self->get_dataset_trials($c, $dataset_id);
+        @trials_ids = $self->get_dataset_trials($c, $dataset_id);
     }
 
     my $delete_dirs_result = 1; 
-    for my $trial_id (@$trials_ids) {
+    for my $trial_id (@trials_ids) {
         my $args = {
             trial_id => $trial_id,
-            analysis_types => [$analysis_type],
+            analysis_types => ($analysis_type),
             delete_all_analyses_output => 1,
         };
 
