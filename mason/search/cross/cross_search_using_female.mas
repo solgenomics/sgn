@@ -25,7 +25,6 @@
                                     <select class="form-control" id="cross_male_parent">
                                         <option value="">Choose female parent first</option>
                                     </select>
-                                    </select>
                                     <div class="input-group-btn">
                                         <button class="btn btn-info" id="search_crosses_female_male"><i class="glyphicon glyphicon-search"></i> Cross Info </button>
                                     </div>
@@ -90,11 +89,10 @@ jQuery(document).ready(function (){
             url: '/ajax/search/cross_male_parents',
             data: { 'female_parent': female },
             success: function(response) {
-                var html = '<select id="cross_male_parent" class="form-control">';
+                var html = '';
                 for (var i = 0; i < response.data.length; i++) {
                     html += "<option value='" + response.data[i][0] + "'>" + response.data[i][0] + "</option>";
                 }
-                html += "</select>";
                 jQuery('#cross_male_parent').html(html);
             }
         });

@@ -25,7 +25,6 @@
                                     <select class="form-control" id="female_parent">
                                         <option value="">Choose male parent first</option>
                                     </select>
-                                    </select>
                                     <div class="input-group-btn">
                                         <button class="btn btn-info" id="search_pedigree_male_female"><i class="glyphicon glyphicon-search"></i> Progenies of these Parents </button>
                                     </div>
@@ -88,11 +87,10 @@ jQuery(document).ready(function (){
             url: '/ajax/search/pedigree_female_parents',
             data: { 'pedigree_male_parent': male },
             success: function(response) {
-                var html = '<select id="female_parent" class="form-control">';
+                var html = '';
                 for (var i = 0; i < response.data.length; i++) {
                     html += "<option value='" + response.data[i][0] + "'>" + response.data[i][0] + "</option>";
                 }
-                html += "</select>";
                 jQuery('#female_parent').html(html);
             }
         });
