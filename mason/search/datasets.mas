@@ -52,7 +52,7 @@ jQuery(document).ready(function () {
             "render": (data) => {
               let html = "";
               if ( data && data === 1 ) {
-                html = `<span class="label label-primary">Public</span>`;
+                html = `&nbsp;<span class="label label-primary">Public</span>&nbsp;`;
               }
               return html;
             }
@@ -66,7 +66,7 @@ jQuery(document).ready(function () {
                   const val = data.published[key] || {};
                   if ( val.article?.is_public ) {
                     html += `<span class="label label-primary">${val.service}</span>&nbsp;`;
-                    html += `<a href="${val.article?.figshare_url}" target="_blank">${val.article?.title}</a><br /><br />`;
+                    html += `<a href="${val.article?.figshare_url}" target="_blank">${val.article?.title}</a>`;
                   }
                 }
               }
