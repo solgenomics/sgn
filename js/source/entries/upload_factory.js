@@ -2369,6 +2369,24 @@ export function submit_upload_job() {
             });
             break;
         case 'crosses' :
+            jQuery.ajax({
+                url : '/ajax/cross/upload_crosses_file',
+                type : 'POST',
+                data : {
+                    'archived_file_id' : submit_params.file_id,
+                    'experiment_id' : submit_params.additional_args.crossing_experiment_id
+                },
+                success : function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred uploading crosses, check console.");
+                    return;
+                }
+            }); 
             break;
         case 'gps_polygon' :
             jQuery.ajax({
@@ -2520,7 +2538,6 @@ export function submit_upload_job() {
         case 'images_barcodes' :
             break;
         case 'images_phenotypes' :
-            
             break;
         case 'soil_data' :
             break;

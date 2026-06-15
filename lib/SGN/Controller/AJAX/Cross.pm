@@ -56,6 +56,8 @@ use LWP::UserAgent;
 use HTML::Entities;
 use URI::Encode qw(uri_encode uri_decode);
 use Sort::Key::Natural qw(natsort);
+use CXGN::File;
+use CXGN::Job;
 
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -85,17 +87,20 @@ sub upload_cross_file_POST : Args(0) {
     my $crosses_upload = $c->req->upload('upload_crosses_file');
 
     my $upload;
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
     my $upload_type;
 
     if ($crosses_upload) {
         $upload = $crosses_upload;
         $upload_type = 'CrossesGeneric';
+    } elsif ($archived_file_id) {
+        $upload_type = 'CrossesGeneric';
     }
 
     my $parser;
     my $parsed_data;
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
+    my $upload_original_name;
+    my $upload_tempfile;
     my $subdirectory = "cross_upload";
     my $archived_filename_with_path;
     my $md5;
@@ -108,6 +113,8 @@ sub upload_cross_file_POST : Args(0) {
     my $user_role;
     my $user_id;
     my $user_name;
+    my $user_first_name;
+    my $user_last_name;
     my $owner_name;
     my $session_id = $c->req->param("sgn_session_id");
 
@@ -122,6 +129,8 @@ sub upload_cross_file_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload crosses!'};
@@ -130,6 +139,8 @@ sub upload_cross_file_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
@@ -137,24 +148,58 @@ sub upload_cross_file_POST : Args(0) {
         $c->detach();
     }
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
+    my $archived_filename_with_path;
+
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            metadata_schema => $metadata_schema,
+            file_type => 'crosses'
+        });
+
+        ## Store uploaded temporary file in arhive
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            return;
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+    }    
+
+    my $upload_job = CXGN::Job->new({
+        schema => $chado_schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." cross upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{finish_logfile},
+        additional_args => {
+            final_upload => 1,
+            file_type => 'crosses',
+            user_name => "$user_first_name $user_last_name",
+            crossing_experiment_id => $crossing_trial_id,
+            file_id => $archived_file_id
+        }
     });
 
-    ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
-    $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
-        return;
-    }
-    unlink $upload_tempfile;
+    $upload_job->update_status("submitted");
 
     my $cross_additional_info_string = $c->config->{cross_additional_info};
     my @additional_info = split ',', $cross_additional_info_string;
@@ -171,6 +216,8 @@ sub upload_cross_file_POST : Args(0) {
         my $parse_errors;
         if (!$parser->has_parse_errors() ){
             $c->stash->{rest} = {error_string => "Could not get parsing errors"};
+            $upload_job->additional_args->{error_messages} = "Could not get parsing errors";
+            $upload_job->update_status("failed");
         } else {
             $parse_errors = $parser->get_parse_errors();
             #print STDERR Dumper $parse_errors;
@@ -180,22 +227,24 @@ sub upload_cross_file_POST : Args(0) {
             }
         }
         $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}, missing_plots => $parse_errors->{'missing_plots'}, missing_accessions_or_crosses => $parse_errors->{'missing_accessions_or_crosses'}};
+        $upload_job->additional_args->{error_messages} = $return_error;
+        $upload_job->update_status("failed");
         $c->detach();
     }
 
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
-    my $md5checksum = $md5->hexdigest();
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => 'crosses',
-        md5checksum => $md5checksum,
-        metadata_id => $md_row->metadata_id(),
-    });
-    my $file_id = $file_row->file_id();
+    # my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
+    # $md_row->insert();
+    # my $upload_file = CXGN::UploadFile->new();
+    # my $md5 = $upload_file->get_md5($archived_filename_with_path);
+    # my $md5checksum = $md5->hexdigest();
+    # my $file_row = $metadata_schema->resultset("MdFiles")->create({
+    #     basename => basename($archived_filename_with_path),
+    #     dirname => dirname($archived_filename_with_path),
+    #     filetype => 'crosses',
+    #     md5checksum => $md5checksum,
+    #     metadata_id => $md_row->metadata_id(),
+    # });
+    # my $file_id = $file_row->file_id();
 
     my $cross_add = CXGN::Pedigree::AddCrosses->new({
         chado_schema => $chado_schema,
@@ -205,20 +254,29 @@ sub upload_cross_file_POST : Args(0) {
         crossing_trial_id => $crossing_trial_id,
         crosses =>  $parsed_data->{crosses},
         user_id => $user_id,
-        file_id => $file_id
+        file_id => $archived_file_id
     });
 
     #validate the crosses
     if (!$cross_add->validate_crosses()){
-        $c->stash->{rest} = {error_string => "Error validating crosses",};
+        $c->stash->{rest} = {error_string => "Error validating crosses"};
+        $upload_job->additional_args->{error_messages} = "Error validating crosses";
+        $upload_job->update_status("failed");
         return;
     }
 
     #add the crosses
     if (!$cross_add->add_crosses()){
-        $c->stash->{rest} = {error_string => "Error adding crosses",};
+        $c->stash->{rest} = {error_string => "Error adding crosses"};
+        $upload_job->additional_args->{error_messages} = "Error adding crosses";
+        $upload_job->update_status("failed");
         return;
     }
+
+    my @success_messages = ();
+
+    #By this point, the crosses have been saved but not the additional information
+    push @success_messages, "Crosses saved.";
 
     if ($parsed_data->{'additional_info'}) {
         my %cross_additional_info = %{$parsed_data->{additional_info}};
@@ -237,15 +295,22 @@ sub upload_cross_file_POST : Args(0) {
                $cross_add_info->add_info();
 
                if (!$cross_add_info->add_info()){
-                   $c->stash->{rest} = {error_string => "Error saving info",};
-                   return;
+                    $c->stash->{rest} = {error_string => "Error saving cross additional information."};
+                    $upload_job->additional_args->{error_messages} = "Error saving cross additional information.";
+                    $upload_job->update_status("failed");
+                    return;
                }
+
+               push @success_messages, "Cross additional information saved.";
 
             }
         }
     }
 
-    $c->stash->{rest} = {success => "1",};
+    $upload_job->additional_args->{success_messages} = join("<br>", @success_messages);
+    $upload_job->update_status("finished");
+
+    $c->stash->{rest} = {success => "1"};
 }
 
 
