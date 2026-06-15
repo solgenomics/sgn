@@ -139,8 +139,6 @@ sub prepare_response {
      }
     }
 
-    print STDERR Dumper $pc_scores_groups;
-
     my $ret->{result} = 'failed';
 
     my $plot_file = $c->stash->{"${cluster_type}_plot_file"};
@@ -219,7 +217,8 @@ sub cluster_result_file {
             key       => "${cluster_type}_result_newick_${file_id}",
             file      => "${cluster_type}_result_newick_${file_id}",
             ext       => 'tree',
-            stash_key => "${cluster_type}_result_newick_file"
+            stash_key => "${cluster_type}_result_newick_file",
+            cache_dir => $cluster_cache_dir
         };
 
         $c->controller('solGS::Files')->cache_file( $c, $cache_newick );
@@ -228,7 +227,8 @@ sub cluster_result_file {
         my $cache_kmeans = {
             key       => "${cluster_type}_result_${file_id}",
             file      => "${cluster_type}_result_${file_id}",
-            stash_key => "${cluster_type}_result_file"
+            stash_key => "${cluster_type}_result_file",
+            cache_dir => $cluster_cache_dir
         };
 
         $c->controller('solGS::Files')->cache_file( $c, $cache_kmeans );
@@ -241,7 +241,7 @@ sub cluster_plot_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data = {
         key       => "${cluster_type}_plot-${file_id}",
@@ -261,7 +261,7 @@ sub cluster_elbow_plot_file {
     my $file_id = $c->stash->{file_id};
     $file_id =~ s/-k-\d//;
     my $cluster_type = $c->stash->{cluster_type};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data = {
         key       => "${cluster_type}_elbow_plot-${file_id}",
@@ -280,7 +280,7 @@ sub cluster_means_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data = {
         key       => "${cluster_type}_means_${file_id}",
@@ -298,7 +298,7 @@ sub cluster_pc_scores_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data = {
         key       => "${cluster_type}_pc_scores_${file_id}",
@@ -316,7 +316,7 @@ sub cluster_variances_file {
 
     my $file_id      = $c->stash->{file_id};
     my $cluster_type = $c->stash->{cluster_type};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data = {
         key       => "${cluster_type}_variances_${file_id}",
@@ -333,7 +333,7 @@ sub kcluster_plot_pam_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
     my $cluster_type = $c->stash->{cluster_type};
 
     my $cache_data = {
@@ -352,7 +352,7 @@ sub hierarchical_result_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data = {
         key       => "hierarchical_result_${file_id}",
@@ -373,7 +373,7 @@ sub cluster_options_file {
     my $file_id   = $c->stash->{file_id};
 
     my $cluster_type = $c->stash->{cluster_type};
-    my $cluster_cache_dir = $self->cluster_cache_dir($c);;
+    my $cluster_cache_dir = $self->cluster_cache_dir($c);
 
     my $cache_data = {
         key       => "${cluster_type}_options_${file_id}",
@@ -803,8 +803,7 @@ sub cluster_r_jobs_file {
       ->create_tempfile( $temp_dir, "${cluster_type}-r-jobs-file" );
 
     nstore $jobs, $jobs_file
-      or croak
-"cluster r jobs : $! serializing $cluster_type cluster r jobs to $jobs_file";
+      or croak "cluster r jobs : $! serializing $cluster_type cluster r jobs to $jobs_file";
 
     $c->stash->{cluster_r_jobs_file} = $jobs_file;
 
@@ -854,8 +853,7 @@ sub cluster_cache_dir {
     my ($self, $c) = @_;
 
     my $cluster_analysis_id = $c->stash->{cluster_pop_id} || $c->stash->{trial_id};
-    my $cluster_cache_dir = catdir($c->stash->{cluster_dir}, $cluster_analysis_id);
-    print STDERR "cluster cache dir: $cluster_cache_dir\n";
+    my $cluster_cache_dir = catdir($c->stash->{cluster_dir}, $cluster_analysis_id, 'cache');
 
     return $cluster_cache_dir;
 
