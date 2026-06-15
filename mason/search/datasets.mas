@@ -15,6 +15,8 @@ $location_id => 'not_provided'
                 <tr>
                   <th>Dataset name</th>
                   <th>Description</th>
+                  <th>Owner</th>
+                  <th>Public</th>
                   <th>Published</th>
                 </tr>
               </thead>
@@ -30,22 +32,44 @@ jQuery(document).ready(function () {
    var trial_table = jQuery('#dataset_search_results').DataTable( {
        'ajax': '/ajax/dataset/by_user_html',
        "scrollX": true,
+       "order": [
+          [2, 'asc'],
+          [0, 'asc']
+      ],
        "columnDefs": [
           {
             "targets": 2,
+            "render": (data = {}) => {
+              let html = "";
+              if ( data.owner_id && data.owner_name ) {
+                html = `<a href="/solpeople/personal-info.pl?sp_person_id=${data.owner_id}">${data.owner_name}</a>`;
+              }
+              return html;
+            }
+          },
+          {
+            "targets": 3,
+            "render": (data) => {
+              let html = "";
+              if ( data && data === 1 ) {
+                html = `<span class="label label-primary">Public</span>`;
+              }
+              return html;
+            }
+          },
+          {
+            "targets": 4,
             "render": (data = {}, type, row, meta) => {
               let html = "";
               if ( Object.keys(data.published || {}).length > 0 ) {
                 for ( const key of Object.keys(data.published) ) {
                   const val = data.published[key] || {};
-                  console.log(val);
                   if ( val.article?.is_public ) {
                     html += `<span class="label label-primary">${val.service}</span>&nbsp;`;
                     html += `<a href="${val.article?.figshare_url}" target="_blank">${val.article?.title}</a><br /><br />`;
                   }
                 }
               }
-
               return html;
             }
           }

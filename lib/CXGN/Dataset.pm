@@ -432,28 +432,28 @@ sub get_datasets_by_user {
     my $sp_person_id = shift;
     my $found;
 
-    my $rs = $people_schema->resultset("SpDataset")->search( { sp_person_id => $sp_person_id });
+    my $rs = $people_schema->resultset("SpDataset")->search(
+        [ { sp_person_id => $sp_person_id }, { is_public => 1 } ],
+        {
+            join => 'sp_person'
+        }
+    );
 
     my @datasets;
-    my @datasets_id;
     while (my $row = $rs->next()) {
-        push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description(), $row->dataset(), $row->is_public() ];
-        push @datasets_id, $row->sp_dataset_id();
+        push @datasets, [ 
+            $row->sp_dataset_id(),
+            $row->name(),
+            $row->description(),
+            {
+                owner_id => $row->sp_person_id(),
+                owner_name => $row->sp_person->first_name() . ' ' . $row->sp_person->last_name(),
+            },
+            $row->is_public(),
+            decode_json($row->dataset() || '{}')
+        ];
     }
 
-    $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
-
-    while (my $row = $rs->next()) {
-	$found = 0;
-	for (@datasets_id) {
-	    if ( $_ == $row->sp_dataset_id() ) {
-	        $found = 1;
-	    }
-	}
-        if (!$found) {
-            push @datasets,  [ $row->sp_dataset_id(), 'public - ' . $row->name(), $row->description(), $row->dataset(), $row->is_public() ];
-        }
-    }
     return \@datasets;
 }
 
