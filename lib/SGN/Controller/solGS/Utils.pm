@@ -297,10 +297,9 @@ sub save_metadata {
     $c->controller('solGS::Files')->phenotype_metadata_file($c);
     my $metadata_file = $c->stash->{phenotype_metadata_file};
 
-    if (!-s $metadata_file)
-    {
-	my $metadata   = $c->controller('solGS::Search')->model($c)->trial_metadata();
-	write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
+    if (!-s $metadata_file) {
+	    my $metadata   = $c->controller('solGS::Search')->model($c)->trial_metadata();
+	    write_file($metadata_file, {binmode => ':utf8'}, join("\t", @$metadata));
     }
 
 }

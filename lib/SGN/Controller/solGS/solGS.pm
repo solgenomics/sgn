@@ -579,7 +579,7 @@ sub input_files {
             $model_info_file, $selection_population_file, );
 
         my $name     = "input_files_${trait_abbr}_${training_pop_id}";
-        my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);;
+        my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
         my $tempfile =
           $c->controller('solGS::Files')->create_tempfile( $temp_dir, $name );
         write_file( $tempfile, { binmode => ':utf8' }, $input_files );
@@ -658,7 +658,7 @@ sub output_files {
 
     my $name = "output_files_${trait_abbr}_${training_pop_id}";
     $name .= "_${selection_pop_id}" if $selection_pop_id;
-    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);;
+    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $tempfile =
       $c->controller('solGS::Files')->create_tempfile( $temp_dir, $name );
     write_file( $tempfile, { binmode => ':utf8' }, $file_list );
@@ -974,7 +974,7 @@ sub build_multiple_traits_models {
     }
 
     my $name     = "selected_traits_pop_${pop_id}";
-    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);;
+    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $file =
       $c->controller('solGS::Files')->create_tempfile( $temp_dir, $name );
 

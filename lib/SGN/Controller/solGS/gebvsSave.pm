@@ -162,8 +162,7 @@ sub get_genetic_values {
     my $genetic_values_file;
     if ($analysis_page =~ /training_model/) {
         $genetic_values_file = $c->controller('solGS::Files')->rrblup_training_genetic_values_file($c, $training_pop_id, $trait_id);
-    }
-    elsif ($analysis_page =~ /selection_prediction/) {
+    } elsif ($analysis_page =~ /selection_prediction/) {
         $genetic_values_file = $c->controller('solGS::Files')->rrblup_selection_genetic_values_file($c, $training_pop_id, $selection_pop_id, $trait_id);
     }
 
