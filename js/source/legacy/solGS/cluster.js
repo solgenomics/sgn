@@ -832,6 +832,12 @@ solGS.cluster = {
         clusterPops.push(trialSelPopsList);
       }
     }
+
+    if (solGS.listTypeSelectionPopulation) {
+      clusterPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
+    }
   
     var menu = new SelectMenu(this.clusterPopsDiv, this.clusterPopsSelectMenuId);
 
