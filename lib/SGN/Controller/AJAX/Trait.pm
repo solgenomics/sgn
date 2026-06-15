@@ -40,11 +40,12 @@ sub create_trait :Path('/ajax/trait/create') {
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
     my $category_details = $c->req->param('category_details') ? $c->req->param('category_details') : undef;
     my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
-    my $parent_term = $c->req->param('parent_term') ? $c->req->param('parent_term') : undef;
+    my $parent_terms = $c->req->param('parent_terms') ? $c->req->param('parent_terms') : undef;
 
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
     $name =~ s/[^[:ascii:]]//g;
+    $name =~ s/\|//g;
 
     $definition =~ s/^\s+//;
     $definition =~ s/\s+$//;
@@ -139,7 +140,7 @@ sub create_trait :Path('/ajax/trait/create') {
             $new_trait->default_value($default_value);
         }
 
-        $new_trait->interactive_store($parent_term);
+        $new_trait->interactive_store($parent_terms);
     };
 
     if ($@) {

@@ -42,20 +42,26 @@ sub BUILD {
 
 sub store {
     my $self = shift;
-    my $parent_term = shift;
+    my $parent_terms_json = shift;
 
     my $schema = $self->bcs_schema();
-    
-    my $lt = CXGN::List::Transform->new();
-    
-    my $transform = $lt->transform($schema, "traits_2_trait_ids", [$parent_term]);
 
-    if (@{$transform->{missing}}>0) { 
-	    die "Parent term $parent_term could not be found in the database.\n";
+    my $parent_terms = [];
+    if ($parent_terms_json) {
+        $parent_terms = decode_json($parent_terms_json);
+    }
+    if (!@$parent_terms) {
+        $parent_terms = ['Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000'];
     }
 
-    my @parent_id_list = @{$transform->{transform}};
-    my $parent_id = $parent_id_list[0];
+    my $lt = CXGN::List::Transform->new();
+    my $transform = $lt->transform($schema, "traits_2_trait_ids", $parent_terms);
+
+    if (@{$transform->{missing}} > 0) {
+        die "Parent term(s) " . join(", ", @{$transform->{missing}}) . " could not be found in the database.\n";
+    }
+
+    my @parent_ids = @{$transform->{transform}};
 
     my $name = $self->name() || die "No name found.\n";
     my $definition = $self->definition() || die "No definition found.\n";
@@ -166,18 +172,20 @@ sub store {
                 dbxref => "$zeroes"."$accession_num"
             })->cvterm_id();
 
-            if ($format eq "ontology") {
-                $schema->resultset("Cv::CvtermRelationship")->find_or_create({
-                    object_id => $parent_id,
-                    subject_id => $new_treatment_id,
-                    type_id => $isa_id
-                });
-            } else {
-                $schema->resultset("Cv::CvtermRelationship")->find_or_create({
-                    object_id => $parent_id,
-                    subject_id => $new_treatment_id,
-                    type_id => $variable_of_id
-                });
+            foreach my $pid (@parent_ids) {
+                if ($format eq "ontology") {
+                    $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                        object_id => $pid,
+                        subject_id => $new_treatment_id,
+                        type_id => $isa_id
+                    });
+                } else {
+                    $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                        object_id => $pid,
+                        subject_id => $new_treatment_id,
+                        type_id => $variable_of_id
+                    });
+                }
             }
 
             $new_treatment = $schema->resultset("Cv::Cvterm")->find({
