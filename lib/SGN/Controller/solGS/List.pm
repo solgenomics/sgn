@@ -585,7 +585,7 @@ sub genotypes_list_genotype_query_job {
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
-    my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $background_job = $c->stash->{background_job};
 
     my $report_file = $c->controller('solGS::Files')
@@ -670,7 +670,7 @@ sub plots_list_phenotype_query_job {
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
-    my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $background_job = $c->stash->{background_job};
 
     my $temp_data_files =
@@ -837,7 +837,7 @@ sub get_list_training_data_query_jobs_file {
     $self->get_list_training_data_query_jobs( $c, $protocol_id );
     my $query_jobs = $c->stash->{list_training_data_query_jobs};
 
-    my $temp_dir          = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir          = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $queries_args_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'list_training_data_query_args' );
 
