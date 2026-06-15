@@ -322,9 +322,9 @@ sub analysis_report_job_args {
     my ( $self, $c, $status_check_duration ) = @_;
 
     my $analysis_details = $c->stash->{bg_job_output_details};
+    my $solgs_tempfiles_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
-    my $temp_dir =
-      $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir = $c->stash->{analysis_tempfiles_dir} || $solgs_tempfiles_dir;
 
     my $temp_file_template = "analysis-status";
     my $cluster_files      = $c->controller('solGS::AsyncJob')
@@ -376,7 +376,7 @@ sub get_analysis_report_job_args_file {
     $self->analysis_report_job_args( $c, $status_check_duration );
     my $analysis_job_args = $c->stash->{analysis_report_job_args};
 
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     my $report_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'analysis-report-job-args' );
@@ -661,7 +661,7 @@ sub structure_training_modeling_output {
     foreach my $trait_id (@traits_ids) {
         $url_args->{trait_id} = $trait_id;
 
-        $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
+        $c->stash->{cache_dir} = $c->controller('solGS::Files')->solgs_cache_dir($c);
 
         $c->controller('solGS::Trait')->get_trait_details( $c, $trait_id );
         $c->controller('solGS::Files')->rrblup_training_gebvs_file($c);
@@ -1133,8 +1133,7 @@ sub predict_selection_traits {
     }
     elsif ( $referer =~ /\/combined\// ) {
         $c->stash->{data_set_type} = 'combined_populations';
-        $c->controller('solGS::combinedTrials')
-          ->predict_selection_pop_combined_pops_model($c);
+        $c->controller('solGS::combinedTrials')->predict_selection_pop_combined_pops_model($c);
     }
 
 }
@@ -1236,12 +1235,11 @@ sub analysis_log_file {
     $self->create_analysis_log_dir($c);
     my $log_dir = $c->stash->{analysis_log_dir};
 
-    $c->stash->{cache_dir} = $log_dir;
-
     my $cache_data = {
         key       => 'analysis_log',
         file      => 'analysis_log',
-        stash_key => 'analysis_log_file'
+        stash_key => 'analysis_log_file',
+        cache_dir => $log_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -1422,7 +1420,6 @@ sub create_analysis_log_dir {
     my $user_id = $c->user->id;
 
     $c->controller('solGS::Files')->get_solgs_dirs($c);
-
     my $log_dir = $c->stash->{analysis_log_dir};
 
     $log_dir = catdir( $log_dir, $user_id );
