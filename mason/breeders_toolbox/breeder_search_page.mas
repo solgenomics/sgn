@@ -10,6 +10,7 @@ $dataset_id => undef
   my $default_include_entry_numbers = $c->get_conf('pheno_download_default_include_entry_numbers');
   my $default_include_trait_synonyms = $c->get_conf('pheno_download_default_include_trait_synonyms');
   my $default_supress_outliers = $c->get_conf('exclude_phenotype_outliers');
+  my $default_include_pedigree_parents = $c->get_conf('pheno_download_default_include_pedigree_parents');
 </%once>
 
 <& /util/import_javascript.mas, entries => ["wizard"] &>
@@ -454,6 +455,16 @@ $dataset_id => undef
               </td>
             </tr>
             <tr>
+              <td style="border-top: none; padding-top: 0">
+                <div class="checkbox">
+                  <label>
+                    <input class="wizard-download-phenotypes-pedigree_parents" type="checkbox" />
+                    Include pedigrees
+                  </label>
+                </div>
+              </td>
+            </tr>
+            <tr>
               <td colspan="3">
                 Repetitive measurements: <br />
                 <select class="wizard-download-repetitive-measurements-type form-control" >
@@ -471,7 +482,7 @@ $dataset_id => undef
                 From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
               </td>
               <td style="border-top: none; padding-top: 0" colspan="2">
-                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />	
+                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />
               </td>
             </tr>
             <tr>
@@ -600,7 +611,7 @@ $dataset_id => undef
                 From:<br /><input type="text" class="wizard-download-start-date form-control" id="phenotype_start_date" title="phenotype_start_date"  />
               </td>
               <td style="border-top: none; padding-top: 0">
-                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />	
+                To:<br /><input type="text" class="wizard-download-end-date form-control" id="phenotype_end_date" title="phenotype_end_date" />
               </td>
               <td style="border-top: none; padding-top: 0">
                 <input type="checkbox" id="include_dateless_items" checked="1" />
@@ -684,6 +695,7 @@ $dataset_id => undef
     var default_include_entry_numbers = <% $default_include_entry_numbers %>;
     var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
     var default_supress_outliers = <% $default_supress_outliers %>;
+    var default_include_pedigree_parents = <% $default_include_pedigree_parents %>;
 
     jQuery(".wizard-download-repetitive-measurements-type").each(function() { jQuery(this).val(default_repeat_measurements) });
     jQuery(".wizard-download-phenotypes-timestamp").each(function() { jQuery(this).prop('checked', default_include_timestamps === 1) });
@@ -691,6 +703,7 @@ $dataset_id => undef
     jQuery(".wizard-download-phenotypes-trait-synonyms").each(function() { jQuery(this).prop('checked', default_include_trait_synonyms === 1) });
     jQuery(".wizard-download-phenotypes-intercrop").each(function() { jQuery(this).prop('checked', default_include_intercrop_accessions === 1) });
     jQuery(".wizard-download-phenotypes-outliers").each(function() { jQuery(this).prop('checked', default_supress_outliers === 1) });
+    jQuery(".wizard-download-phenotypes-pedigree_parents").each(function() { jQuery(this).prop('checked', default_include_pedigree_parents === 1) });
   }
 
   d3.select('#update_wizard_show').on('click', function () {
@@ -748,7 +761,7 @@ $dataset_id => undef
     }
   });
   updateArchivedVCFFiles({ no_geno_selected: true });
-  
+
   // Set the display of the Archived Genotype Data section
   function updateArchivedVCFFiles({ no_geno_selected = false, loading = false, error = false, data = {} } = {}) {
     let html = '';
@@ -870,7 +883,7 @@ $dataset_id => undef
               // console.log(genotyping_protocol[0]["protocol_name"]);
               if ( selected_genotyping_protocols.length < 1 ) {
                 $(".wizard-download-genotypes-info3").show();
-                $(".wizard-download-genotypes-info3").val("genotype protocol \"" + genotyping_protocol[0]["protocol_name"] + "\""); 
+                $(".wizard-download-genotypes-info3").val("genotype protocol \"" + genotyping_protocol[0]["protocol_name"] + "\"");
               }
             }
             jQuery.ajax({
@@ -916,7 +929,7 @@ $dataset_id => undef
     } else {
       var protocol_name = '<% $c->config->{default_genotyping_protocol} %>';
       $(".wizard-download-genotypes-info3").show();
-      $(".wizard-download-genotypes-info3").val("genotype protocol \"" + protocol_name + "\""); 
+      $(".wizard-download-genotypes-info3").val("genotype protocol \"" + protocol_name + "\"");
       jQuery.ajax({
           url: '/get/genotyping/protocols/',
           method: "POST",
@@ -988,7 +1001,7 @@ $dataset_id => undef
        "yearSelect" : true,
        "minDate": "1960-01-01",
        "maxDate": "2030-12-31",
-       locale: { 
+       locale: {
         format: 'YYYY-MM-DD'
       }
    },
@@ -1005,7 +1018,7 @@ jQuery('input[title="phenotype_end_date"]').daterangepicker(
        "yearSelect" : true,
        "minDate": "1960-01-01",
        "maxDate": "2030-12-31",
-       locale: { 
+       locale: {
         format: 'YYYY-MM-DD'
       }
    },

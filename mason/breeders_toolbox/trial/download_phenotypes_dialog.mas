@@ -12,6 +12,7 @@ $dialog_name => undef
     my $default_include_entry_numbers = $c->get_conf('pheno_download_default_include_entry_numbers');
     my $default_include_trait_synonyms = $c->get_conf('pheno_download_default_include_trait_synonyms');
     my $default_supress_outliers = $c->get_conf('exclude_phenotype_outliers');
+    my $default_include_pedigree_parents = $c->get_conf('pheno_download_default_include_pedigree_parents');
 </%once>
 
 <div class="modal fade" id="download_trial_phenotypes_dialog" name="download_trial_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadTrialPhenotypesDialog">
@@ -128,6 +129,16 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
+                <label class="col-sm-7 control-label">Include Pedigrees: </label>
+                <div class="col-sm-5" >
+                    <select class="form-control" id="download_trial_phenotypes_pedigrees_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
                 <label class="col-sm-7 control-label">Trait Name Contains: </label>
                 <div class="col-sm-5" >
                     <input id="download_trial_phenotype_trait_contains" name="download_trial_phenotype_trait_contains" type="text" class="form-control" placeholder="storage root,oxoglutarate" style="width: 100%"/>
@@ -208,8 +219,9 @@ jQuery(document).ready(function() {
     var phenotype_max_value = jQuery("#download_trial_phenotype_phenotype_max").val();
     var exclude_phenotype_outlier = jQuery("#download_trial_phenotypes_exclude_outliers").val();
     var include_trait_synonyms = jQuery("#download_trial_phenotypes_trait_synonyms_option").val();
+    var include_pedigree_parents = jQuery("#download_trial_phenotypes_pedigrees_option").val();
 
-    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&speed="+speed+"&format="+format+"&timestamp="+timestamp+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&trait_synonyms="+include_trait_synonyms);
+    window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&speed="+speed+"&format="+format+"&timestamp="+timestamp+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_component_list="+JSON.stringify(trait_components)+"&trait_list="+JSON.stringify(traits)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&trait_synonyms="+include_trait_synonyms+"&include_pedigree_parents="+include_pedigree_parents);
 
   });
 
@@ -227,6 +239,7 @@ function setDefaultOptions() {
     var default_include_entry_numbers = <% $default_include_entry_numbers %>;
     var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
     var default_supress_outliers = <% $default_supress_outliers %>;
+    var default_include_pedigree_parents = <% $default_include_pedigree_parents %>;
 
     jQuery("#download_trial_phenotypes_repetitive_measurements_option").val(default_repeat_measurements);
     jQuery("#download_trial_phenotypes_timestamp_option").val(default_include_timestamps);
@@ -234,5 +247,7 @@ function setDefaultOptions() {
     jQuery("#download_trial_phenotypes_entry_numbers_option").val(default_include_entry_numbers);
     jQuery("#download_trial_phenotypes_trait_synonyms_option").val(default_include_trait_synonyms);
     jQuery("#download_trial_phenotypes_exclude_outliers").val(default_supress_outliers);
+    jQuery("#download_trial_phenotypes_pedigrees_option").val(default_include_pedigree_parents);
+
 }
 </script>
