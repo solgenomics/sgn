@@ -199,6 +199,26 @@ sub upload_genotype_verify_POST : Args(0) {
         $parser_plugin = 'VCF';
 
         if ($transpose_vcf_for_loading) {
+            #archive a copy of the original (non-transposed) VCF file as uploaded, so that
+            #the website can later retrieve the original file instead of the transposed
+            #version that gets archived (and used for loading) below. It is archived using
+            #the same archive_filename/timestamp as the transposed file, so that it can be
+            #found later by swapping the genotype_vcf_upload directory for genotype_vcf_archive.
+            my $original_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile,
+                subdirectory => "genotype_vcf_archive",
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role
+            });
+            my $archived_original_vcf = $original_uploader->archive();
+            if (!$archived_original_vcf) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+
             my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
             my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
 
@@ -232,7 +252,10 @@ sub upload_genotype_verify_POST : Args(0) {
             close($F);
             close($Fout);
             $upload_tempfile = $temp_file_transposed;
-            $upload_original_name = basename($temp_file_transposed);
+            #NOTE: $upload_original_name is intentionally left as the original uploaded
+            #filename, so that the transposed file archived below (in genotype_vcf_upload)
+            #shares the same archive basename as the original file archived above (in
+            #genotype_vcf_archive).
             $parser_plugin = 'transposedVCF';
         }
     }
