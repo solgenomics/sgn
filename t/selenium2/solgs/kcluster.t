@@ -3,6 +3,7 @@ use strict;
 use lib 't/lib';
 
 use File::Spec::Functions qw / catfile catdir/;
+use File::Path qw /remove_tree/;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -57,7 +58,7 @@ print STDERR
   "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
-`rm -r $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
 
 $d->while_logged_in_as(
     "submitter",
@@ -72,14 +73,14 @@ $d->while_logged_in_as(
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $accessions_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run clones list (genotype) clustering')->click();
         sleep(5);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
-        sleep(90);
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
+        sleep(350);
 
         my $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
         my $elem = $d->driver->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0, -10);", $sel_pops);
-        sleep(90);
+        sleep(3);
         $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check accessions list geno  kmeans cluster plot');
-        sleep(10);
+        sleep(3);
 
         $d->driver->refresh();
         sleep(3);
@@ -92,7 +93,7 @@ $d->while_logged_in_as(
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $plots_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run plots list (phenotype) clustering')->click();
         sleep(3);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         sleep(350);
 
         $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
@@ -112,7 +113,7 @@ $d->while_logged_in_as(
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (genotype) clustering')->click();
         sleep(3);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         sleep(350);
 
         $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
@@ -132,7 +133,7 @@ $d->while_logged_in_as(
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials list (phenotype) clustering')->click();
         sleep(5);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         sleep(350);
 
         $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
@@ -144,7 +145,7 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        `rm -r $cache_dir`;
+        remove_tree($cache_dir, {safe => 1});
         sleep(5);
 
         $d->find_element_ok('//tr[@id="' . $trials_list_id . '"]//*[starts-with(@id, "cluster_type_select")]', 'xpath', 'select k-means')->send_keys('K-means');
@@ -193,7 +194,7 @@ $d->while_logged_in_as(
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (genotype) cluster')->click();
         sleep(3);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         sleep(350);
 
         $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
@@ -213,7 +214,7 @@ $d->while_logged_in_as(
         sleep(1);
         $d->find_element_ok('//tr[@id="' . $trials_dt_id . '"]//*[starts-with(@id, "run_cluster")]', 'xpath', 'run trials dataset (phenotype) cluster')->click();
         sleep(3);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         sleep(350);
 
         $sel_pops = $d->find_element('//*[contains(text(), "Clustering")]', 'xpath', 'scroll up');
@@ -222,7 +223,7 @@ $d->while_logged_in_as(
         $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials dataset pheno kmeans cluster plot');
         sleep(5);
 
-        `rm -r $cache_dir`;
+        remove_tree($cache_dir, {safe => 1});
         sleep(5);
 
         $d->get_ok('/breeders/trial/139', 'trial detail home page');
@@ -243,7 +244,7 @@ $d->while_logged_in_as(
         sleep(2);
         $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run phenotype cluster')->click();
         sleep(3);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         sleep(350);
         $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trial detail page pheno kmeans cluster plot');
         sleep(5);
@@ -267,14 +268,14 @@ $d->while_logged_in_as(
         sleep(1);
         $d->find_element_ok('//*[starts-with(@id, "run_cluster")]', 'xpath', 'run genotype cluster')->click();
         sleep(3);
-        $d->find_element_ok('no_queue', 'id', 'no job queueing');
+        $d->find_element_ok('no_queue', 'id', 'no job queueing')->click();
         sleep(350);
         $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check trials detail page geno kmeans cluster plot');
         sleep(5);
         }
 
         ############## solGS #####################
-        `rm -r $cache_dir`;
+        remove_tree($cache_dir, {safe => 1});
 
         $d->get_ok('/solgs', 'solgs homepage');
         sleep(4);
@@ -652,9 +653,9 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        `rm -r $cluster_dir`;
+        remove_tree($cluster_dir, {safe => 1});
         sleep(3);
-        `rm -r $log_dir`;
+        remove_tree($log_dir, {safe => 1});
         sleep(5);
 
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -856,9 +857,9 @@ $d->while_logged_in_as(
         $d->driver->refresh();
         sleep(3);
 
-        `rm -r $cluster_dir`;
+        remove_tree($cluster_dir, {safe => 1});
         sleep(3);
-        `rm -r $log_dir`;
+        remove_tree($log_dir, {safe => 1});
         sleep(5);
 
         $clustering = $d->find_element('Clustering', 'partial_link_text', 'scroll up');
@@ -913,7 +914,7 @@ $d->while_logged_in_as(
         $d->find_element_ok('//*[contains(text(), "Cluster variances")]', 'xpath', 'check solgs tr pop trait geno kmeans cluster plot');
         sleep(2);
 
-        `rm -r $cache_dir`;
+        remove_tree($cache_dir, {safe => 1});
         sleep(3);
 
         $d->get_ok('/solgs', 'solgs home page');
