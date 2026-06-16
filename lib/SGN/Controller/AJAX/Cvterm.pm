@@ -22,6 +22,7 @@ use List::MoreUtils qw /any /;
 use Try::Tiny;
 use CXGN::Page::FormattingHelpers qw/ columnar_table_html commify_number /;
 use CXGN::Chado::Cvterm;
+use CXGN::Cvterm;
 use Data::Dumper;
 use JSON;
 
@@ -434,6 +435,210 @@ sub delete_cvtermprop_GET {
 	    return;
     }
     $c->stash->{rest} = { message => "The cvterm prop was removed from the database." };
+}
+
+sub add_synonym : Path('/ajax/cvterm/add_synonym') : ActionClass('REST') { }
+
+sub add_synonym_POST {
+    my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to add synonyms." };
+        return;
+    }
+    if (!$c->user()->check_roles('curator')) {
+        $c->stash->{rest} = { error => "You must have curator privileges to add synonyms." };
+        return;
+    }
+
+    my $cvterm_id = $c->req->param('cvterm_id');
+    my $synonym   = $c->req->param('synonym');
+
+    $synonym =~ s/[^[:ascii:]]//g;
+    $synonym =~ s/\|//g;
+    $synonym =~ s/^\s+|\s+$//g;
+
+    if (!$synonym) {
+        $c->stash->{rest} = { error => "Synonym cannot be empty." };
+        return;
+    }
+
+    my $dbh = $c->dbc->dbh;
+
+    my $check_sth = $dbh->prepare("SELECT cvtermsynonym_id FROM cvtermsynonym WHERE synonym ilike ?");
+    $check_sth->execute($synonym);
+    my ($existing_id) = $check_sth->fetchrow_array();
+    if ($existing_id) {
+        $c->stash->{rest} = { error => "The synonym '$synonym' already exists in the database." };
+        return;
+    }
+
+    eval {
+        my $cvterm = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
+        $cvterm->add_synonym($synonym);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "Error adding synonym: $@" };
+        return;
+    }
+
+    $c->stash->{rest} = { message => "Synonym '$synonym' added successfully." };
+}
+
+
+sub delete_synonym : Path('/ajax/cvterm/delete_synonym') : ActionClass('REST') { }
+
+sub delete_synonym_POST {
+    my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to delete synonyms." };
+        return;
+    }
+    if (!$c->user()->check_roles('curator')) {
+        $c->stash->{rest} = { error => "You must have curator privileges to delete synonyms." };
+        return;
+    }
+
+    my $cvterm_id = $c->req->param('cvterm_id');
+    my $synonym   = $c->req->param('synonym');
+
+    if (!$synonym) {
+        $c->stash->{rest} = { error => "Synonym cannot be empty." };
+        return;
+    }
+
+    my $dbh = $c->dbc->dbh;
+
+    eval {
+        my $cvterm = CXGN::Chado::Cvterm->new($dbh, $cvterm_id);
+        $cvterm->delete_synonym($synonym);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "Error deleting synonym: $@" };
+        return;
+    }
+
+    $c->stash->{rest} = { message => "Synonym '$synonym' deleted successfully." };
+}
+
+sub cvterm_relationships : Path('/ajax/cvterm/cvterm_relationships') : ActionClass('REST') { }
+
+sub cvterm_relationships_GET {
+    my ($self, $c) = @_;
+
+    my $cvterm_id = $c->req->param('cvterm_id');
+    if (!$cvterm_id) {
+        $c->stash->{rest} = { error => "cvterm_id is required." };
+        return;
+    }
+
+    my $sth = $c->dbc->dbh->prepare(
+        "SELECT type.name AS relationship_name,
+                object.cvterm_id AS object_cvterm_id,
+                object.name AS object_name
+         FROM cvterm_relationship
+         JOIN cvterm AS type   ON (type.cvterm_id   = cvterm_relationship.type_id)
+         JOIN cvterm AS object ON (object.cvterm_id = cvterm_relationship.object_id)
+         WHERE subject_id = ?"
+    );
+
+    my @relationships;
+    eval {
+        $sth->execute($cvterm_id);
+        while (my ($rel_name, $obj_id, $obj_name) = $sth->fetchrow_array()) {
+            push @relationships, {
+                relationship_name => $rel_name,
+                object_cvterm_id  => $obj_id,
+                object_name       => $obj_name,
+            };
+        }
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "Error retrieving relationships: $@" };
+        return;
+    }
+
+    $c->stash->{rest} = { relationships => \@relationships };
+}
+
+sub add_parent_terms : Path('/ajax/cvterm/add_parent_terms') : ActionClass('REST') { }
+
+sub add_parent_terms_POST {
+    my ($self, $c) = @_;
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You must be logged in to add parent terms." };
+        return;
+    }
+    if (!$c->user()->check_roles('curator')) {
+        $c->stash->{rest} = { error => "You must have curator privileges to add parent terms." };
+        return;
+    }
+
+    my $cvterm_id         = $c->req->param('cvterm_id');
+    my $parent_terms_json = $c->req->param('parent_terms');
+
+    my $parent_terms;
+    eval { $parent_terms = decode_json($parent_terms_json); };
+    if ($@ || ref($parent_terms) ne 'ARRAY') {
+        $c->stash->{rest} = { error => "Invalid parent_terms parameter." };
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+
+    my @parent_ids;
+    for my $term_str (@$parent_terms) {
+        my ($name, $accession_str) = split(/\|/, $term_str, 2);
+        unless (defined $accession_str) {
+            $c->stash->{rest} = { error => "Could not parse parent term '$term_str'. Expected format: name|DB:accession." };
+            return;
+        }
+        my ($db_name_part, $accession) = split(/:/, $accession_str, 2);
+        unless (defined $db_name_part && defined $accession) {
+            $c->stash->{rest} = { error => "Could not parse accession from '$accession_str'." };
+            return;
+        }
+
+        my $dbxref = $schema->resultset("General::Dbxref")->find(
+            {
+                'db.name'      => $db_name_part,
+                'me.accession' => $accession,
+            },
+            { join => 'db' }
+        );
+        unless ($dbxref && $dbxref->cvterm) {
+            $c->stash->{rest} = { error => "Parent term '$term_str' not found in the database." };
+            return;
+        }
+
+        my $parent_cvterm_id = $dbxref->cvterm->cvterm_id;
+
+        my $existing = $schema->resultset("Cv::CvtermRelationship")->find({
+            subject_id => $cvterm_id,
+            object_id  => $parent_cvterm_id,
+        });
+        next if $existing;
+
+        push @parent_ids, $parent_cvterm_id;
+    }
+
+    if (!@parent_ids) {
+        $c->stash->{rest} = { error => "All specified parent terms are already parents of this cvterm." };
+        return;
+    }
+
+    eval {
+        my $cvterm_obj = CXGN::Cvterm->new({ schema => $schema, cvterm_id => $cvterm_id });
+        $cvterm_obj->add_parent_terms(\@parent_ids);
+    };
+    if ($@) {
+        $c->stash->{rest} = { error => "Error adding parent terms: $@" };
+        return;
+    }
+
+    $c->stash->{rest} = { message => scalar(@parent_ids) . " parent term(s) added successfully." };
 }
 
 ####
