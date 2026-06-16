@@ -426,7 +426,14 @@ jQuery(document).ready(function () {
     jQuery('#editable_stockprop_search_add').click( function(){
         // console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
         // console.log("Value is "+jQuery('#editable_stockprop_search_term').val());
-        editable_stockprops_search[jQuery('#editable_stockprop_search_term').val()] = {"matchtype": "contains"};
+        const selected_property = jQuery('#editable_stockprop_search_term').val();
+        const value = jQuery('#editable_stockprop_search_term').val();
+        if (!(selected_property in stockprop_extra_columns_view)){
+            stockprop_extra_columns_view[selected_property] = 1;
+            stockprop_extra_columns_view_array.push(selected_property);
+            updateResultsHeader();
+        }
+        editable_stockprops_search[value] = {"matchtype": "contains"};
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
         _draw_editable_stockprops_search_fields();
     });
@@ -508,21 +515,15 @@ jQuery(document).ready(function () {
     let stockprop_extra_columns_view_array = [ 'organization' ];
 
     function updateResultsHeader() {
-        let table_header_html =
-          '<table id="stock_search_results" class="table table-hover table-striped" width="100%">' +
-            '<thead><tr>' +
-              '<th>Stock Id</th>' +
-              '<th>Stock Name</th>' +
-              '<th>Stock Type</th>' +
-              '<th>Organism</th>' +
-              '<th>Synonyms</th>';
-        for (let i = 0; i < stockprop_extra_columns_view_array.length; i++) {
-          table_header_html += '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
-        }
-        table_header_html +=
-            '</tr></thead>' +
-          '</table>';
-        jQuery('#stock_search_results_div').html(table_header_html);
+      const table_colnames = ["Stock Id", "Stock Name", "Stock Type", "Organism", "Synonyms"];
+      for (let i = 0; i < stockprop_extra_columns_view_array.length; i++) {
+        table_colnames.push(stockprop_extra_columns_view_array[i]);
+      }
+
+      let table_header_html = '<table id="stock_search_results" class="table table-hover table-striped" width="100%"><thead><tr>';
+      table_colnames.forEach(function(col) { table_header_html += `<th>${col}</th>` });
+      table_header_html += '</tr></thead></table>';
+      jQuery('#stock_search_results_div').html(table_header_html);
     }
 
     function updateResultsRows() {
@@ -535,8 +536,8 @@ jQuery(document).ready(function () {
         if (!(selected_property in stockprop_extra_columns_view)){
             stockprop_extra_columns_view[selected_property] = 1;
             stockprop_extra_columns_view_array.push(selected_property);
-            updateResultsHeader();
         }
+        updateResultsHeader();
         updateResultsRows();
     });
     jQuery('#editable_stockprop_view_column_remove').click(function(){
@@ -546,9 +547,9 @@ jQuery(document).ready(function () {
           const selected_index = stockprop_extra_columns_view_array.indexOf(selected_property);
           if (selected_index !== -1) {
             stockprop_extra_columns_view_array.splice(selected_index, 1);
-            updateResultsHeader();
           }
         }
+        updateResultsHeader();
         updateResultsRows();
     })
 
@@ -747,6 +748,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
 
     var export_message = 'Stock data from ' + window.location.href;
     var export_suffix = ' Stocks';
+
     stock_table = jQuery('#stock_search_results').DataTable({
         'destroy' : true,
         'searching' : false,

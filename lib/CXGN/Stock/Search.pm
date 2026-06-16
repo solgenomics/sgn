@@ -463,14 +463,9 @@ sub search {
 
         my $index=0;
         foreach my $term_name (keys %{$self->stockprops_values}){
-            my $property_term = SGN::Model::Cvterm->get_cvterm_row($schema, $term_name, 'stock_property');
-            if ($property_term){
                 $index++;
-                my $type_id = $property_term->cvterm_id();
                 my $matchtype = $self->stockprops_values->{$term_name}->{'matchtype'};
                 my $value = $self->stockprops_values->{$term_name}->{'value'};
-
-		#push @stockprop_joins, "LEFT JOIN public.stockprop AS sp$index ON (stock.stock_id = sp$index.stock_id) AND sp$index.type_id = $type_id";
 
                 my $start = '%';
                 my $end = '%';
@@ -492,24 +487,20 @@ sub search {
                     s{^\s+|\s+$}{}g foreach @values;
                     #my $search_vals_sql = "'".join ("','" , @values)."'";
                     #push @stockprop_wheres, "sp$index.value IN ($search_vals_sql)";
-		    push @stockprop_wheres, " (type_id = $type_id and value in (" . join(" ", '?' x scalar(@values) ).") ) ";
+		    push @stockprop_wheres, " (stockprops->>'$term_name' in (" . join(",", ('?') x scalar(@values) ).") ) ";
 		    @placeholder_values = (@placeholder_values, @values);
 
                 } else {
 		    #print STDERR "START $start end $end SEARCH $value\n";
                     #push @stockprop_wheres, "sp$index.value ilike $search";
 
-		    push @stockprop_wheres, " (type_id = $type_id and value ilike ? ) ";
+		    push @stockprop_wheres, " (stockprops->>'$term_name' ilike ? ) ";
 		    push @placeholder_values, $start.$value.$end;
                 }
-
-            } else {
-                print STDERR "Stockprop $term_name is not in this database! Only use stock_property in system_cvterms.txt!\n";
-            }
         }
         #my $stockprop_join = join ' ', @stockprop_joins;
         my $stockprop_where = 'WHERE ' . join ' AND ', @stockprop_wheres;
-        my $stockprop_query = "SELECT stockprop.stock_id FROM public.stockprop $stockprop_where;";
+        my $stockprop_query = "SELECT stockprops.stock_id FROM public.stockprops $stockprop_where;";
 
 	print STDERR "STOCKPROP QUERY: $stockprop_query with placeholders ".join(", ", @placeholder_values)."\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);

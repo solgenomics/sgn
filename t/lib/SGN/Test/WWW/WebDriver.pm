@@ -188,6 +188,27 @@ sub click_ok {
     return $element;
 }
 
+sub clear {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->screenshot("clear_$name");
+        $self->driver->find_element($name, $method)->clear();
+    } timeout => $timeout;
+}
+
+sub clear_ok {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $test_name = shift || print STDERR "You can provide a test name parameter for clear_ok\n";
+    ok(my $element = $self->clear($name, $method), $test_name);
+    return $element;
+}
+
 =item click_until_ok($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, $test_name)
 Keeps clicking the button defined by $name_btn and $method_btn every second
 until the sentinel element defined by $name_sentinel and $method_sentinel appears.
