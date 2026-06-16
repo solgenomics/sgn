@@ -564,15 +564,11 @@ sub upload_genotype_verify_POST : Args(0) {
                 $c->detach();
             }
 
+            my @all_warnings;
+            my $previous_genotypes_exist;
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-                my $warning_string;
-                foreach my $error_string (@{$verified_errors->{'warning_messages'}}){
-                    $warning_string .= $error_string."<br>";
-                }
-                if (!$accept_warnings){
-                    $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-                    $c->detach();
-                }
+                push @all_warnings, @{$verified_errors->{warning_messages}};
+                $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
             }
 
             if ($protocol_id) {
@@ -593,7 +589,8 @@ sub upload_genotype_verify_POST : Args(0) {
                     while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
 			$total_marker_count++;
                         if (exists($compare_marker_names{$marker_name})) {
-                            while (my ($key, $value) = each %$new_marker_details) {
+                            for my $key (qw(chrom pos name ref alt)) {
+                                my $value = $new_marker_details->{$key};
                                 if ($value ne ($stored_markers->{$marker_name}->{$key})) {
                                     push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
                                 }
@@ -624,17 +621,14 @@ sub upload_genotype_verify_POST : Args(0) {
                     }
                 }
 
-                if (scalar(@protocol_match_errors) > 0){
-                    my $protocol_warning;
-                    foreach my $match_error (@protocol_match_errors) {
-                        $protocol_warning .= $match_error."<br>";
-                    }
-                    if (!$accept_warnings){
-                        $c->stash->{rest} = { warning => $protocol_warning };
-                        $c->detach();
-                    }
-                }
+                push @all_warnings, @protocol_match_errors;
 	    }
+
+            if (scalar(@all_warnings) > 0 && !$accept_warnings) {
+                my $warning_string = join("<br>", @all_warnings);
+                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+                $c->detach();
+            }
 
             $store_genotypes->store_metadata();
             $store_genotypes->store_identifiers();
@@ -704,15 +698,11 @@ sub upload_genotype_verify_POST : Args(0) {
             $c->detach();
         }
 
+        my @all_warnings;
+        my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            my $warning_string;
-            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
-                $warning_string .= $error_string."<br>";
-            }
-            if (!$accept_warnings){
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-                $c->detach();
-            }
+            push @all_warnings, @{$verified_errors->{warning_messages}};
+            $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
         }
 
         if ($protocol_id) {
@@ -732,7 +722,8 @@ sub upload_genotype_verify_POST : Args(0) {
                 while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
                     $total_marker_count++;
                     if (exists($compare_marker_names{$marker_name})) {
-                        while (my ($key, $value) = each %$new_marker_details) {
+                        for my $key (qw(chrom pos name ref alt)) {
+                            my $value = $new_marker_details->{$key};
                             if ($value ne ($stored_markers->{$marker_name}->{$key})) {
                                 push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
                             }
@@ -764,17 +755,14 @@ sub upload_genotype_verify_POST : Args(0) {
                 }
             }
 
-	    if (scalar(@protocol_match_errors) > 0){
-                my $protocol_warning;
-                foreach my $match_error (@protocol_match_errors) {
-                    $protocol_warning .= $match_error."<br>";
-                }
-                if (!$accept_warnings){
-                    $c->stash->{rest} = { warning => $protocol_warning };
-                    $c->detach();
-                }
-            }
+            push @all_warnings, @protocol_match_errors;
 	}
+
+        if (scalar(@all_warnings) > 0 && !$accept_warnings) {
+            my $warning_string = join("<br>", @all_warnings);
+            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+            $c->detach();
+        }
 
         $store_genotypes->store_metadata();
         $store_genotypes->store_identifiers();
