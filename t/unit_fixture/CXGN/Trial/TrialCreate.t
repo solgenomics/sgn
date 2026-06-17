@@ -603,7 +603,7 @@ ok(my $test_treatment = CXGN::Trait::Treatment->new({
     format => 'numeric'
 }), 'create a test treatment');
 
-my $exp_treatment_root_term = 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
+my $exp_treatment_root_term = encode_json(['Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000']);
 
 ok($test_treatment->store($exp_treatment_root_term), 'store test treatment');
 
