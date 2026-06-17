@@ -139,6 +139,12 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
 
         $error = $c->stash->{trial}->delete_phenotype_metadata($metadata_schema, $phenome_schema);
         $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
+    
+        my $trial_id = $c->stash->{trial_id};
+        print STDERR "NOW deleting cached analyses trial ($trial_id) output\n";
+        $c->controller('solGS::clearCache')->clear_cache_trial_analyses_data($c, $trial_id);
+        print STDERR "Clearing cache analyses output for trial ($trial_id) DONE\n";
+
     }
 
     elsif ($datatype eq 'layout') {
@@ -182,6 +188,7 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
         $c->stash->{rest} = { error => $error };
         return;
     }
+
     $c->stash->{rest} = { message => "Successfully deleted trial data.", success => 1 };
 }
 
@@ -4356,6 +4363,11 @@ sub delete_single_assayed_trait : Chained('trial') PathPart('delete_single_trait
     my $dir = $c->tempfiles_subdir('/delete_nd_experiment_ids');
     my $temp_file_nd_experiment_id = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'delete_nd_experiment_ids/fileXXXX');
     my $delete_trait_return_error = $trial->delete_assayed_trait($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id, $pheno_ids, $trait_ids);
+
+    my $trial_id = $trial->get_trial_id();
+    print STDERR "Clearing cached analyses output for trial ". $trial_id ."\n";
+    $c->controller('solGS::clearCache')->clear_cache_trial_analyses_data($c, $trial_id);
+    print STDERR "Clearing cached analyses output for trial ". $trial_id ." DONE\n";
 
     if ($delete_trait_return_error) {
         $c->stash->{rest} = { error => $delete_trait_return_error };
