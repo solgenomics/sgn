@@ -70,14 +70,15 @@ sub clear_cache_trial_data {
 }
 
 
-sub clear_cache_trial_analysis_data {
+sub clear_cache_trial_analyses_data {
     my ($self, $c, $trial_id, $analysis_type) = @_;
 
     my $args = {
         trial_id => $trial_id,
-        analysis_types => [$analysis_type],
+        analysis_types => ($analysis_type),
         delete_all_analyses_output => 1,
     };
+
     my $delete_dirs_result = $self->delete_cache_dirs($c, $args);
 
     return $delete_dirs_result;
@@ -139,18 +140,17 @@ sub delete_cache_dirs {
             "solgs", "solqtl","anova", "correlation", 
             "cluster", "kinship", "pca", "qualityControl", 
             "heritability", "selectionIndex", "histogram", 
-            "log"
         );
     }
 
     for my $analysis_type (@analysis_types) {
 
         my $analysis_cache_dir = $self->analysis_cache_dir($c, $trial_id, $analysis_type);
-        my $analysis_tempfiles_subdir = $self->analysis_tempfiles_subdir($c, $trial_id, $analysis_type);
+        my $analysis_tempfiles_dir = $self->analysis_tempfiles_dir($c, $trial_id, $analysis_type);
 
         my @dirs_to_delete = (
             $analysis_cache_dir, 
-            $analysis_tempfiles_subdir
+            $analysis_tempfiles_dir
         );
 
         remove_tree(@dirs_to_delete, {
@@ -171,15 +171,27 @@ sub delete_cache_dirs {
 sub analysis_cache_dir {
     my ($self, $c, $trial_id, $analysis_type) = @_;
 
-    my $analysis_cache_dir = catdir($c->stash->{"${analysis_type}_dir"}, $trial_id, 'cache');
-    return $analysis_cache_dir;
+    my $analysis_dir = $c->stash->{"${analysis_type}_dir"};
+
+    if (!$analysis_dir) {
+        $c->controller('solGS::Files')->get_solgs_dirs($c);
+        $analysis_dir = $c->stash->{"${analysis_type}_dir"};
+    }
+
+    return catdir($analysis_dir, $trial_id, 'cache');
 }
 
-sub analysis_tempfiles_subdir {
+sub analysis_tempfiles_dir {
     my ($self, $c, $trial_id, $analysis_type) = @_;
 
-    my $analysis_tempfiles_subdir = catdir($c->tempfiles_subdir, $analysis_type, $trial_id, 'tempfiles');
-    return $analysis_tempfiles_subdir;
+    my $analysis_dir = $c->stash->{"${analysis_type}_dir"};
+
+    if (!$analysis_dir) {
+        $c->controller('solGS::Files')->get_solgs_dirs($c);
+        $analysis_dir = $c->stash->{"${analysis_type}_dir"};
+    }
+
+    return catdir($analysis_dir, $trial_id, 'tempfiles');
 }
 
 
