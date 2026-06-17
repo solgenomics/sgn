@@ -139,7 +139,7 @@ $is_dataset_public => 0
                     <label>Additional Authors (one per line):</label>
                     <textarea id="dataset-archive-publish-article-authors" class="form-control dataset-archive-publish-article-details" placeholder="You will automatically be added as an Author"></textarea>
                     <br />
-                    <p><em>The dataset metadata can be updated later on <span class="dataset-archive-publish-service-name dataset-archive-publish-article-details"></span> until a DOI is generated</em></p>
+                    <p><em>The dataset metadata can be updated later on <span class="dataset-archive-publish-service-name dataset-archive-publish-article-details"></span> until the dataset on <span class="dataset-archive-publish-service-name"></span> is published and made public.</em></p>
                 </li>
                 <li class="dataset-archive-publish-connected">
                     <p>Send and attach the files to the selected <span class="dataset-archive-publish-service-name"></span> dataset.</p>
