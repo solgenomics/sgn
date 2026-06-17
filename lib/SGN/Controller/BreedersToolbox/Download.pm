@@ -577,6 +577,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
     my $include_trait_synonyms = $c->req->param("trait_synonyms") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
+    my $include_pedigree_parents = $c->req->param("pedigrees") || 0;
 
     # parameters for outliers download
     my @trait_ids     = split(',', $c->req->param("trait_ids_list"));
@@ -693,6 +694,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             include_entry_numbers=>$include_entry_numbers,
             include_trait_synonyms=>$include_trait_synonyms,
     		data_level=>$datalevel,
+            include_pedigree_parents=>$include_pedigree_parents,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
     }

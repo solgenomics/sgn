@@ -12,6 +12,7 @@ $stock_name => undef
     my $default_include_entry_numbers = $c->get_conf('pheno_download_default_include_entry_numbers');
     my $default_include_trait_synonyms = $c->get_conf('pheno_download_default_include_trait_synonyms');
     my $default_supress_outliers = $c->get_conf('exclude_phenotype_outliers');
+    my $default_include_pedigree_parents = $c->get_conf('pheno_download_default_include_pedigree_parents');
 </%once>
 
 
@@ -113,6 +114,16 @@ $stock_name => undef
             </div>
 
             <div class="row form-group">
+                <label class="col-sm-8 control-label">Include Pedigree Parents: </label>
+                <div class="col-sm-4" >
+                    <select class="form-control" id="download_stock_phenotypes_pedigrees_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row form-group">
                 <label class="col-sm-3 control-label">Traits:</label>
                 <div class="col-sm-9" >
                     <div id="download_stock_phenotypes_traits">
@@ -176,6 +187,7 @@ jQuery(document).ready(function() {
     var intercrop = jQuery("#download_stock_phenotypes_intercrop_accessions_option").val();
     var entry_numbers = jQuery("#download_stock_phenotypes_entry_numbers_option").val();
     var trait_synonyms = jQuery("#download_stock_phenotypes_trait_synonyms_option").val();
+    var pedigrees = jQuery("#download_stock_phenotypes_pedigrees_option").val();
     var traits = jQuery("#download_stock_phenotypes_traits_select").val();
     if (! Array.isArray(traits) ) {
        traits = [ traits ];
@@ -183,7 +195,7 @@ jQuery(document).ready(function() {
 
     var datalevel = jQuery("#download_stock_phenotypes_level_option").val();
     var exclude_phenotype_outlier = jQuery("#download_stock_phenotypes_exclude_outliers").val();
-    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms);
+    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms+"&include_pedigree_parents="+pedigrees);
   });
 
 });
@@ -195,6 +207,7 @@ function setDefaultOptions() {
     var default_include_entry_numbers = <% $default_include_entry_numbers %>;
     var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
     var default_supress_outliers = <% $default_supress_outliers %>;
+    var default_include_pedigree_parents = <% $default_include_pedigree_parents %>;
 
     jQuery("#download_stock_phenotypes_repetitive_measurements_option").val(default_repeat_measurements);
     jQuery("#download_stock_phenotypes_timestamp_option").val(default_include_timestamps);
@@ -202,6 +215,7 @@ function setDefaultOptions() {
     jQuery("#download_stock_phenotypes_entry_numbers_option").val(default_include_entry_numbers);
     jQuery("#download_stock_phenotypes_trait_synonyms_option").val(default_include_trait_synonyms);
     jQuery("#download_stock_phenotypes_exclude_outliers").val(default_supress_outliers);
+    jQuery("#download_stock_phenotypes_pedigrees_option").val(default_include_pedigree_parents);
 }
 
 function data_level_change_traits() {
