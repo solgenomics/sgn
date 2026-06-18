@@ -1767,29 +1767,38 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
                                     {/* Pass 2: Render Label Layer (Always on top) */}
                                     <g style={{ pointerEvents: 'none' }}>
-                                        {/* Column Axis Labels */}
+                                        {/* Column Axis Labels (Top and Bottom) */}
                                         {Array.from({ length: bounds.numCols }).map((_, idx) => {
                                             const colCoord = bounds.minCol + idx;
                                             const colIdx = colCoord - renderBounds.minCol;
                                             const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
-                                            const labelY = invertRows ? -10 : renderBounds.numRows * 52 + 20;
                                             return (
-                                                <text key={`col-lbl-${idx}`} x={displayX} y={labelY} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                                                    {colCoord}
-                                                </text>
+                                                <React.Fragment key={`col-lbl-grp-${idx}`}>
+                                                    <text x={displayX} y={-10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                                                        {colCoord}
+                                                    </text>
+                                                    <text x={displayX} y={renderBounds.numRows * 52 + 20} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                                                        {colCoord}
+                                                    </text>
+                                                </React.Fragment>
                                             );
                                         })}
 
-                                        {/* Row Axis Labels */}
+                                        {/* Row Axis Labels (Left and Right) */}
                                         {gridMatrix.map((row, rIdx) => {
                                             const rCoord = renderBounds.minRow + rIdx;
                                             const isDataRow = rCoord >= bounds.minRow && rCoord <= bounds.maxRow;
                                             const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
                                             if (!isDataRow) return null;
                                             return (
-                                                <text key={`row-lbl-${rIdx}`} x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                                                    {rCoord}
-                                                </text>
+                                                <React.Fragment key={`row-lbl-grp-${rIdx}`}>
+                                                    <text x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                                                        {rCoord}
+                                                    </text>
+                                                    <text x={renderBounds.numCols * 52 + 20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                                                        {rCoord}
+                                                    </text>
+                                                </React.Fragment>
                                             );
                                         })}
 
