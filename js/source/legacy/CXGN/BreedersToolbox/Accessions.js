@@ -440,6 +440,11 @@ jQuery(document).ready(function ($) {
                     }
                     jQuery('#add_accessions_saved_message').html(html);
                     jQuery('#add_accessions_saved_message_modal').modal('show');
+
+                    // Remove list_id from the URL query params, if present
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('list_id');
+                    history.replaceState({}, '', url);
                 }
             },
             error: function (response) {
