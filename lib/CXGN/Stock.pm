@@ -1586,26 +1586,27 @@ sub get_direct_parents {
     my $male_parent_id;
 
     eval {
-	$female_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
-	$male_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
+        $female_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+        $male_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
     };
     if ($@) {
-	die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
+        die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
     }
 
     my $rs = $self->get_schema()->resultset("Stock::StockRelationship")->search( { object_id => $stock_id, type_id => { -in => [ $female_parent_id, $male_parent_id ] } });
     my %parents;
     while (my $row = $rs->next()) {
-	print STDERR "Found parent...\n";
-	my $prs = $self->get_schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
-	my $parent_type = "";
-	if ($row->type_id() == $female_parent_id) {
-	    $parent_type = "female";
-	}
-	if ($row->type_id() == $male_parent_id) {
-	    $parent_type = "male";
-	}
-	push $parents{$parent_id} = [ $prs->stock_id(), $prs->uniquename()];
+        print STDERR "Found parent...\n";
+        my $prs = $self->get_schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
+        my $parent_type = "";
+        my $parent_id = $row->object_id();
+        if ($row->type_id() == $female_parent_id) {
+            $parent_type = "female";
+        }
+        if ($row->type_id() == $male_parent_id) {
+            $parent_type = "male";
+        }
+        $parents{$parent_id} = [ $prs->stock_id(), $prs->uniquename()];
     }
 
     return %parents;
@@ -2413,7 +2414,7 @@ sub merge {
     my $mother_identical = 0;
     my $father_identical = 0;
     if (! $skip_mother_comp) {
-	if ( (defined($other_parents{female}) && defined($this_parents{female}) && ($other_parents{female}->[0] == $this_parents{female}->[0])) {
+	if ( (defined($other_parents{female}) && defined($this_parents{female}) && ($other_parents{female}->[0] == $this_parents{female}->[0]))) {
 	    $mother_identical = 1;
 	}
     }
@@ -2433,7 +2434,7 @@ sub merge {
 	print STDERR "Skipping this comparison - not enough data! \n";
     }
     else {
-	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents{female}->[0], $other_parents{female}->[1], $this_parents{female]->[0], $this_parents{female}->[1], "FATHERS", $other_parents{male}->[0], $other_parents{male}->[1], $this_parents{male}->[0], $this_parents{male}->[1], "PARENTS DO NOT MATCH!")."\n";
+	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents{female}->[0], $other_parents{female}->[1], $this_parents{female}->[0], $this_parents{female}->[1], "FATHERS", $other_parents{male}->[0], $other_parents{male}->[1], $this_parents{male}->[0], $this_parents{male}->[1], "PARENTS DO NOT MATCH!")."\n";
     }
 
     # move stockprops
