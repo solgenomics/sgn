@@ -225,7 +225,13 @@ sub parse_genotype_trial_file_POST : Args(0) {
     );
 
     #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, facility_identifiers_included => $include_facility_identifiers);
+    my $allowed_tissue_types = $c->controller('solGS::Utils')->get_sample_tissue_types($c);
+    $parser = CXGN::Trial::ParseUpload->new(
+        chado_schema => $chado_schema,
+        filename => $archived_filename_with_path,
+        facility_identifiers_included => $include_facility_identifiers,
+        sample_tissue_types => $allowed_tissue_types
+    );
     $parser->load_plugin($upload_type);
     $parsed_data = $parser->parse(\%parse_args);
 

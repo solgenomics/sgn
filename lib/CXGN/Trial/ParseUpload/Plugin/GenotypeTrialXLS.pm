@@ -16,6 +16,8 @@ sub _validate_with_plugin {
     my @error_messages;
     my %missing_accessions;
 
+    my $sample_tissue_types = $self->get_sample_tissue_types();
+
     # Match a dot, followed by any number of non-dots until the
     # end of the line.
     my ($extension) = $filename =~ /(\.[^.]+)$/;
@@ -319,9 +321,9 @@ sub _validate_with_plugin {
                 push @error_messages, "Cell M$row_name: is_blank is not either 1, 0, or blank: $is_blank";
             }
         }
-        #tissue_type must not be blank and must be either leaf, root, stem, seed, fruit, tuber
-        if (!$tissue_type || $tissue_type eq '' || ($tissue_type ne 'leaf' && $tissue_type ne 'root' && $tissue_type ne 'stem' && $tissue_type ne 'seed' && $tissue_type ne 'fruit' && $tissue_type ne 'tuber')) {
-            push @error_messages, "Cell E$row_name: column tissue type and must be either stem, leaf, root, seed, fruit or tuber";
+        #tissue_type must not be blank and must be one of the configured types
+        if (!$tissue_type || $tissue_type eq '' || !(grep { $_ eq $tissue_type } @{$sample_tissue_types // []})) {
+            push @error_messages, "Cell J$row_name: column tissue type and must be one of: " . join(', ', @{$sample_tissue_types // []});
         }
 
         if ($include_facility_identifiers) {

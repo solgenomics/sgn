@@ -11,7 +11,7 @@ sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
     my $schema = $self->get_chado_schema();
-    my $sample_tissue_types_string = $self->get_allowed_tissue_list();
+    my $sample_tissue_types = $self->get_sample_tissue_types();
     my %errors;
     my @error_messages;
     my %missing_accessions;
@@ -259,9 +259,9 @@ sub _validate_with_plugin {
             push @error_messages, "Cell A$row_name: date must be YYYY-MM-DD format";
         }
         
-        my @sample_tissue_types = split ',',$sample_tissue_types_string;   #tissue_type must not be blank and must be in the list of allowed tissue types
-        if (!$tissue_type || $tissue_type eq '' || !(grep(/^$tissue_type$/, @sample_tissue_types))) {
-            push @error_messages, "Cell F$row_name: column tissue type and must be one of $sample_tissue_types_string";
+        #tissue_type must not be blank and must be in the list of allowed tissue types
+        if (!$tissue_type || $tissue_type eq '' || !(grep { $_ eq $tissue_type } @{$sample_tissue_types // []})) {
+            push @error_messages, "Cell F$row_name: column tissue type and must be one of: " . join(', ', @{$sample_tissue_types // []});
         }
 
     }

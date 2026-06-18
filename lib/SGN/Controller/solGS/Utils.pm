@@ -417,6 +417,12 @@ sub require_login {
 
 }
 
+sub get_sample_tissue_types {
+    my ($self, $c) = @_;
+    my $types_str = $c->config->{sample_tissue_types} || 'leaf,root,stem,seed,fruit,tuber';
+    return [ split /\s*,\s*/, $types_str ];
+}
+
 ####
 1;
 ####

@@ -236,13 +236,11 @@ $facilities => ();
                                     <div class="form-group form-group-sm">
                                         <label class="col-sm-7 control-label"><i>Optional</i> Tissue: <small>(If used the same tissue for all wells)</small> </label>
                                         <div class="col-sm-5">
+% my $allowed_tissue_types = $c->controller('solGS::Utils')->get_sample_tissue_types($c);
                                             <select class="form-control" id="genotyping_well_tissue">
-                                                <option value="leaf">Leaf</option>
-                                                <option value="root">Root</option>
-                                                <option value="stem">Stem</option>
-                                                <option value="seed">Seed</option>
-                                                <option value="fruit">Fruit</option>
-                                                <option value="tuber">Tuber</option>
+% foreach my $type (@$allowed_tissue_types) {
+                                                <option value="<% $type %>"><% ucfirst($type) %></option>
+% }
                                             </select>
                                         </div>
                                     </div>

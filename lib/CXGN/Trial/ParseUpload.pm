@@ -90,11 +90,11 @@ has 'facility_identifiers_included' => (
     default => 0,
 );
 
-has 'allowed_tissue_list' => (
+has 'sample_tissue_types' => (
     is => 'ro',
-    isa => 'Str',
-    writer => '_set_allowed_tissue_list',
-    reader => 'get_allowed_tissue_list',
+    isa => 'ArrayRef[Str]',
+    writer => '_set_sample_tissue_types',
+    reader => 'get_sample_tissue_types',
     required => 0
 );
 
