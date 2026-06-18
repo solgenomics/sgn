@@ -53,7 +53,7 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
+    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','variety','tier','plot_geo_json',);
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
@@ -122,6 +122,9 @@ sub retrieve {
                 } elsif ($_ eq 'synonyms'){
                     my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
                     push @$line, join ',', @{$accession->synonyms}
+                } elsif ($_ eq 'variety'){
+                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
+                    push @$line, $accession->variety;
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } else {
