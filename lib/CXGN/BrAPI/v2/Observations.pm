@@ -295,7 +295,7 @@ sub _search {
     my $counter = 0;
 
     foreach (@$data){
-        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || ($_->{phenotype_value} && $_->{phenotype_value} eq '0') ) {
+        if ( defined($_->{phenotype_value}) && $_->{phenotype_value} ne "" ) {
             my $observation_id = "$_->{phenotype_id}";
             my $additional_info;
             my $external_references;
@@ -360,5 +360,3 @@ sub _search {
 
 
 1;
-
-
