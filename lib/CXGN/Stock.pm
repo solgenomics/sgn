@@ -1567,6 +1567,52 @@ sub get_pedigree_rows {
     return $pedigree_rows;
 }
 
+=head1 get_direct_parents()
+
+    Args: stock_id
+    Returns: a hash such as $parent{female}->[ stock_id, uniquename ]
+    Note: moved from CXGN::Chado::Stock with the return type changed to hash
+          from listref
+
+=cut
+
+sub get_direct_parents {
+    my $self = shift;
+    my $stock_id = shift || $self->get_stock_id();
+
+    #print STDERR "get_direct_parents with $stock_id...\n";
+
+    my $female_parent_id;
+    my $male_parent_id;
+
+    eval {
+	$female_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+	$male_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
+    };
+    if ($@) {
+	die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
+    }
+
+    my $rs = $self->get_schema()->resultset("Stock::StockRelationship")->search( { object_id => $stock_id, type_id => { -in => [ $female_parent_id, $male_parent_id ] } });
+    my %parents;
+    while (my $row = $rs->next()) {
+	print STDERR "Found parent...\n";
+	my $prs = $self->get_schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
+	my $parent_type = "";
+	if ($row->type_id() == $female_parent_id) {
+	    $parent_type = "female";
+	}
+	if ($row->type_id() == $male_parent_id) {
+	    $parent_type = "male";
+	}
+	push $parents{$parent_id} = [ $prs->stock_id(), $prs->uniquename()];
+    }
+
+    return %parents;
+}
+
+
+
 =head2 get_pedigree_string()
 
  Usage:
@@ -2345,21 +2391,21 @@ sub merge {
     # check if parents are the same
     my $other_stock = CXGN::Stock->new( { schema => $self->schema(), stock_id => $other_stock_id });
 
-    my $other_parents = $other_stock->get_parents();
-    my $this_parents = $self->get_parents();
+    my %other_parents = $other_stock->get_direct_parents();
+    my %this_parents = $self->get_direct_parents();
 
-    print STDERR "OTHER parents: ".Dumper($other_parents);
-    print STDERR "This parents: ".Dumper($this_parents);
+    print STDERR "OTHER parents: ".Dumper(\%other_parents);
+    print STDERR "This parents: ".Dumper(\%this_parents);
 
     my $skip_mother_comp = 0;
     my $skip_father_comp = 0;
 
-    if (! defined($other_parents->{mother_id}) || ! defined($this_parents->{mother_id})) {
+    if (! defined($other_parents{female})) {
 	print STDERR "Can't compare mothers for these accessions.\n";
 	$skip_mother_comp =1;
     }
 
-    if (! defined($other_parents->{father_id}) || ! defined($this_parents->{father_id})) {
+    if (! defined($other_parents{male})) {
 	print STDERR "Can't compare fathers for this accession.\n";
 	$skip_father_comp = 1;
     }
@@ -2367,18 +2413,18 @@ sub merge {
     my $mother_identical = 0;
     my $father_identical = 0;
     if (! $skip_mother_comp) {
-	if ( (defined($other_parents->{mother_id}) && defined($this_parents->{mother_id})) && ($other_parents->{mother_id} == $this_parents->{mother_id})) {
+	if ( (defined($other_parents{female}) && defined($this_parents{female}) && ($other_parents{female}->[0] == $this_parents{female}->[0])) {
 	    $mother_identical = 1;
 	}
     }
     if (! $skip_father_comp) {
-	if ( (defined($other_parents->{father_id}) && defined($this_parents->{father_id})) && ( $other_parents->{father_id} == $this_parents->{father_id})) {
+	if ( (defined($other_parents{male}) && defined($this_parents{male})) && ( $other_parents{male}->[0] == $this_parents{male}->[0])) {
 	    $father_identical = 1;
 	}
     }
 
     if ( (!$skip_mother_comp && $mother_identical) && (!$skip_father_comp && $father_identical)) {
-	print STDERR "Mother and Father between this and other match ($other_parents->{mother_id} vs $this_parents->{mother_id}).\n";
+	print STDERR "Mother and Father between this and other match ($other_parents{female}->[0] vs $this_parents{female}->[0]).\n";
     }
     elsif ($skip_mother_comp && $father_identical || $skip_father_comp && $mother_identical) {
 	print STDERR "One parent undefined, the other matches...\n";
@@ -2387,7 +2433,7 @@ sub merge {
 	print STDERR "Skipping this comparison - not enough data! \n";
     }
     else {
-	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
+	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents{female}->[0], $other_parents{female}->[1], $this_parents{female]->[0], $this_parents{female}->[1], "FATHERS", $other_parents{male}->[0], $other_parents{male}->[1], $this_parents{male}->[0], $this_parents{male}->[1], "PARENTS DO NOT MATCH!")."\n";
     }
 
     # move stockprops
@@ -2413,7 +2459,7 @@ sub merge {
 	    my $value = $row->value();
 	    my $type_id = $row->type_id();
 
-	    my $rank_rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $type_id });
+    my $rank_rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $type_id });
 
 	    my $rank;
 	    if ($rank_rs->count() > 0) {
@@ -2699,11 +2745,11 @@ sub bulk_hard_delete {
 
     my $placeholders = join(',', ('?') x scalar(@{$stock_ids}));
 
-    my $q = "SELECT COUNT(DISTINCT(cvterm.cvterm_id)) FROM stock 
-    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) 
-    JOIN nd_experiment_phenotype USING(nd_experiment_id) 
-    JOIN phenotype USING (phenotype_id) 
-    JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) 
+    my $q = "SELECT COUNT(DISTINCT(cvterm.cvterm_id)) FROM stock
+    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
+    JOIN nd_experiment_phenotype USING(nd_experiment_id)
+    JOIN phenotype USING (phenotype_id)
+    JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id)
     WHERE stock.stock_id IN ($placeholders)";
     my $h = $schema->storage()->dbh()->prepare($q);
     $h->execute(@{$stock_ids});
