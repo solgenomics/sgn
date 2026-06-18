@@ -1578,9 +1578,9 @@ sub get_pedigree_rows {
 
 sub get_direct_parents {
     my $self = shift;
-    my $stock_id = shift || $self->get_stock_id();
+    my $stock_id = shift || $self->stock_id();
 
-    #print STDERR "get_direct_parents with $stock_id...\n";
+    print STDERR "get_direct_parents with $stock_id...\n";
 
     my $female_parent_id;
     my $male_parent_id;
@@ -1606,8 +1606,10 @@ sub get_direct_parents {
         if ($row->type_id() == $male_parent_id) {
             $parent_type = "male";
         }
-        $parents{$parent_id} = [ $prs->stock_id(), $prs->uniquename()];
+        $parents{$parent_type} = [ $prs->stock_id(), $prs->uniquename()];
     }
+
+    print STDERR "PARENTS: ".Dumper(\%parents);
 
     return %parents;
 }
@@ -2365,6 +2367,8 @@ sub merge {
     my $other_stock_id = shift;
     my $delete_other_stock = shift;
 
+    print STDERR "IN SUB MERGE with stock id $other_stock_id and delete or not ? $delete_other_stock!\n";
+    
     if ($other_stock_id == $self->stock_id()) {
 	print STDERR "Trying to merge stock into itself ($other_stock_id) Skipping...\n";
 	return "Error: cannot merge stock into itself";
