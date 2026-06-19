@@ -244,7 +244,6 @@ sub get_phenotype_matrix {
     my $include_entry_numbers = $self->include_entry_numbers;
     my $include_trait_synonyms = $self->include_trait_synonyms;
     my %trial_entry_numbers;
-
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -274,6 +273,7 @@ sub get_phenotype_matrix {
             end_date => $self->end_date(),
             include_dateless_items => $self->include_dateless_items(),
             include_intercrop_stocks => $include_intercrop_stocks,
+            include_pedigree_parents => $include_pedigree_parents,
             limit=>$self->limit,
             offset=>$self->offset
         }
@@ -445,6 +445,10 @@ sub get_phenotype_matrix {
         my @unique_obsunit_list = ();
         my %seen_obsunits;
 
+        if ($include_pedigree_parents){
+            push @metadata_headers, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
+        }
+
         # Add intercrop stock headers, if requested
         if ( $include_intercrop_stocks ) {
             push(@metadata_headers, 'intercropGermplasmDbId', 'intercropGermplasmName');
@@ -534,6 +538,12 @@ sub get_phenotype_matrix {
                 $entry_type,
                 $d->{plant_number}
             ];
+
+            if ($include_pedigree_parents) {
+                my $germplasm = CXGN::Stock->new({schema => $self->bcs_schema, stock_id=>$d->{accession_stock_id}});
+                my $parents = $germplasm->get_parents();
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, ($parents->{'mother'}, $parents->{'mother_id'}, $parents->{'father'}, $parents->{'father_id'}));
+            }
 
             # add intercrop stocks, if requested
             if ( $include_intercrop_stocks ) {
