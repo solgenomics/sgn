@@ -795,6 +795,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
                 alert("Error retrieving search results: ", response);
             },
         },
+        'stateSave': true,
         'colReorder': true,
         'dom': 'lBfrtip',
         'rowId': 'Stock Id',
