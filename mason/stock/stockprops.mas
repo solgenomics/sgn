@@ -59,8 +59,37 @@ my $prop_select = simple_selectbox_html(
 
 </%perl>
 
-<div id="<% $div_name %>_content">
-</div>
+<style>
+    #<% $div_name %>_content > tr > td {
+        padding-right: var(--padding-lg);
+        vertical-align: middle;
+    }
+    .stockprop-pill {
+        display: inline-block;
+        background-color: var(--gray-100);
+        color: var(--text-color);
+        padding: var(--padding-sm) var(--padding-lg);
+        border-radius: 15px;
+        margin-right: var( --padding-md);
+        margin-bottom: var(--padding-sm);
+        font-size: var(--font-size-sm);
+    }
+    .stockprop-delete,
+    .stockprop-delete:link {
+        color: var(--red-400);
+        margin-left: var(--padding-md);
+        font-weight: bold;
+        text-decoration: none;
+        line-height: 1;
+    }
+    .stockprop-delete:hover {
+        color: var(--red-500);
+        text-decoration: none;
+    }
+</style>
+
+<table id="<% $div_name %>_content">
+</table>
 
 
 <div class ="modal fade" id="<% $div_name %>_add_dialog" name="<% $div_name %>_add_dialog" tabindex="-1" role="dialog" aria-labelledby="add<% $div_name %>Dialog">
@@ -146,17 +175,19 @@ function <% $div_name %>_renderProps(props) {
       for(var i=0; i<props.length; i++) {
         if (n ===  props[i]['type_name']) {
           var lineStr = props[i]['value'];
+          var deleteLink = '';
           if (jQuery.cookie("sgn_session_id") && edit_privs === 1) {
-            lineStr = lineStr + '[<a href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['stockprop_id']+')">X</a>]';
+            deleteLink = '<a class="stockprop-delete" href="javascript:<% $div_name %>_deleteProp(\''+props[i]['value']+'\', '+props[i]['stockprop_id']+')">&times;</a>';
           }
-	  lines.push(lineStr);
+          lines.push('<span class="stockprop-pill">' + lineStr + deleteLink + '</span>');
         }
 
       }
-      html = html + '<b>'+n+'</b>&nbsp;&nbsp;';
+      html = html + '<tr>';
+      html = html + '<td><b>'+n+'</b></td>';
       //html  = html + lineStr;
-      html = html + lines.join(", ");
-      html = html + '<br />\n';
+      html = html + '<td>' + lines.join(" ") + '</td>';
+      html = html + '</tr>\n';
    }
    jQuery('#<% $div_name %>_content').html(html);
 

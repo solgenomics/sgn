@@ -63,7 +63,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->accept_alert();
     $t->wait_for_network_idle();
 
-    $t->click_ok('//div[@id="synonyms_content"]/a[text() = "X"]', "xpath", "find delete synonym link");
+    $t->click_ok('//*[@id="synonyms_content"]//a[contains(@class, "stockprop-delete")]', "xpath", "find delete synonym link");
 
     $t->accept_alert_ok('accept alert');
     $t->accept_alert_ok('accept alert');
