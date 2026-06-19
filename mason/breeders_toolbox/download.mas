@@ -7,16 +7,37 @@ $is_curator => 0
 
 <& /page/page_title.mas, title=>"Download Using Lists" &>
 
+<style>
+  /* Make table backgrounds and headers white, since nested in colored well */
+.table-download {
+  background-color: white;
+}
+.table-download thead {
+  background-color: white;
+}
+#phenotype_download_dataset_list thead {
+  background-color: white;
+}
+/* Allow text-wrapping in these tables for small scren sizes */
+#table_download_phenotypes tbody tr td,
+#table_download_pedigrees tbody tr td,
+#phenotype_download_dataset_list tbody tr td {
+  white-space: normal;
+}
+
+</style>
+
 <div class="container-fluid">
 
 <div class="well">
 Choose a list for each parameter and click "Download".
 </div>
 
-<div class="well well-sm">
-<h4>Download Phenotypes Using Lists</h4><p>Select Parameters:</p>
+<div class="well well-sm tw:mt-8!">
+<&|  /page/info_section.mas, title => "<b>Download Phenotypes Using Lists</b>", id => "download_phenotypes", collapsible => 1, collapsed => 1 &>
+<p>Select Parameters:</p>
 <form id="download_form" action="/breeders/download_action" method="POST" >
-<table class="table table-bordered" >
+<table class="table table-bordered table-download" id="table_download_phenotypes" >
   <thead>
   <tr>
     <th>
@@ -97,33 +118,22 @@ Choose a list for each parameter and click "Download".
   </tbody>
   </table>
 </form>
+</&>
 </div>
 
-<div class="well well-sm">
-<h4>Inspect Datasets</h4>
-<table class="table table-bordered" >
-  <thead>
-  <tr>
-    <th>
-      Datasets
-    </th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr>
-    <td>
+<div class="well well-sm tw:mt-8!">
+  <&|  /page/info_section.mas, title => "<b>Inspect Datasets</b>", id => "inspect_datasets", collapsible => 1, collapsed => 1 &>
       <div id="phenotype_download_dataset_list">
+        /* id="table_inspect_datasets" */
       </div>
-    </td>
-  </tr>
-  </tbody>
-  </table>
+  </&>
 </div>
 
-<div class="well well-sm">
-<h4>Download Metadata</h4><p>Select Parameters:</p>
+<div class="well well-sm tw:mt-8!">
+<&|  /page/info_section.mas, title => "<b>Trial Metadata</b>", id => "download_trial_metadata", collapsible => 1, collapsed => 1 &>
+<p>Select Parameters:</p>
 <form id="download_metadata_form" action="/breeders/download_action" method="POST" >
-<table class="table table-bordered" >
+<table class="table table-bordered table-download">
   <thead>
   <tr>
     <th>
@@ -165,6 +175,7 @@ Choose a list for each parameter and click "Download".
   </tbody>
   </table>
 </form>
+</&>
 </div>
 
 <script>
@@ -277,11 +288,12 @@ function download_phenotypes() {
 
 <!-- DOWNLOAD ACCESSION PROPERTIES -->
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+  <&|  /page/info_section.mas, title => "<b>Accession Properties</b>", id => "download_accession_properties", collapsible => 1, collapsed => 1 &>
+  <p>Select parameters:</p>
   <form id="download_accession_properties" action="/breeders/download_accession_properties_action" method="POST">
-    <table class="table"  cellpadding="10">
+    <table class="table table-download"  cellpadding="10">
       <thead>
-        <tr><td colspan="2"><h4>Download Accession Properties</h4><p>Select parameters:</p></tr>
         <tr>
           <th>Accessions</th>
           <th>Format</th>
@@ -307,6 +319,7 @@ function download_phenotypes() {
       </tbody>
   </table>
 </form>
+</&>
 </div>
 
 
@@ -358,11 +371,12 @@ $(document).ready(function() {
 
 <!-- start of code for pedigree download -->
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+<&|  /page/info_section.mas, title => "<b>Pedigrees</b>", id => "download_pedigrees", collapsible => 1, collapsed => 1 &>
+<p>Select parameter:</p>
 <form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
-<table class="table"  cellpadding="10">
+<table class="table table-download"  cellpadding="10" id="table_download_pedigrees">
   <thead>
-  <tr><td colspan="2"><h4>Download Pedigrees </h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -385,7 +399,7 @@ $(document).ready(function() {
       </div>
     </td>
     <td>
-      <div style="width: 175px">
+      <div>
         <p><strong>Depth:</strong></p>
         <div class="radio">
           <label><input type="radio" id="ped_format_parents" name="ped_format" value="parents_only" checked>Only One Generation</label>
@@ -418,6 +432,7 @@ $(document).ready(function() {
   </tbody>
   </table>
 </form>
+</&>
 </div>
 
 
@@ -456,11 +471,12 @@ $(document).ready(function() {
 
 <!-- start of code for cross and family download -->
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+<&|  /page/info_section.mas, title => "<b>Crosses and Families of Progenies</b>", id => "download_crosses_families_of_progenies", collapsible => 1, collapsed => 1 &>
+<p>Select parameters:</p>
     <form id="download_cross_family" action="/breeders/download_cross_family_of_progenies" method="POST">
-        <table class="table"  cellpadding="10">
+        <table class="table table-download"  cellpadding="10">
             <thead>
-                <tr><td colspan="2"><h4>Download Crosses and Families of Progenies </h4><p>Select parameters:</p></tr>
                 <tr>
                     <th>Accessions</th>
                     <th>Format</th>
@@ -486,6 +502,7 @@ $(document).ready(function() {
             </tbody>
         </table>
     </form>
+</&>
 </div>
 
 
@@ -520,11 +537,13 @@ $(document).ready(function() {
 
 <!-- start of code for seedlot details download -->
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+    <&|  /page/info_section.mas, title => "<b>Seedlot Details</b>", id => "download_seedlot_details", collapsible => 1, collapsed => 1 &>
+    <p>Select parameters:</p>
+
     <form id="download_seedlot_details" action="/list/download_details" method="POST">
-        <table class="table"  cellpadding="10">
+        <table class="table table-download"  cellpadding="10">
             <thead>
-                <tr><td colspan="2"><h4>Download Seedlot Details </h4><p>Select parameters:</p></tr>
                 <tr>
                     <th>Seedlots</th>
                     <th>Format</th>
@@ -550,6 +569,7 @@ $(document).ready(function() {
             </tbody>
         </table>
     </form>
+    </&>
 </div>
 
 
@@ -587,11 +607,12 @@ $(document).ready(function() {
 
 % if ( $seedlot_maintenance_enabled ) {
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+  <&|  /page/info_section.mas, title => "<b>Seedlot Maintenance Events</b>", id => "download_seedlot_maintenance_events", collapsible => 1, collapsed => 1 &>
+  <p>Select parameters:</p>
   <form id="download_seedlot_maintenance_events" action="/breeders/download_seedlot_maintenance_events_action" method="POST">
-      <table class="table"  cellpadding="10">
+      <table class="table table-download"  cellpadding="10">
         <thead>
-          <tr><td colspan="2"><h4>Download Seedlot Maintenance Events</h4><p>Select parameters:</p></tr>
           <tr>
             <th>Seedlots</th>
             <th>Format</th>
@@ -616,6 +637,7 @@ $(document).ready(function() {
         </tbody>
     </table>
   </form>
+  </&>
 </div>
 
 <script>
@@ -664,11 +686,12 @@ $(document).ready(function() {
 
 % if ($is_curator) {
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+    <&|  /page/info_section.mas, title => "<b>Obsolete Metadata</b>", id => "download_obsolete_metadata", collapsible => 1, collapsed => 1 &>
+    <p>Select parameters:</p>
     <form id="download_obsolete_metadata_action" action="/breeders/download_obsolete_metadata_action" method="POST">
-        <table class="table" cellpadding="10">
+        <table class="table table-download" cellpadding="10">
             <thead>
-                <tr><td colspan="2"><h4>Download Obsolete Metadata</h4><p>Select parameters:</p></tr>
                 <tr>
                     <th>Obsoleted Stocks</th>
                     <th>Format</th>
@@ -693,6 +716,7 @@ $(document).ready(function() {
             </tbody>
         </table>
     </form>
+    </&>
 </div>
 
 <script>
@@ -728,11 +752,12 @@ jQuery(document).ready(function() {
 <!-- end of code for obsolete metadata download -->
 
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+<&|  /page/info_section.mas, title => "<b>Genotypes</b>", id => "download_genotypes", collapsible => 1, collapsed => 1 &>
+<p>Select parameter:</p>
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
-<table class="table"  cellpadding="10">
+<table class="table table-download"  cellpadding="10">
   <thead>
-  <tr><td colspan="2"><h4>Download Genotypes </h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Accessions
@@ -763,6 +788,7 @@ jQuery(document).ready(function() {
   </tbody>
   </table>
 </form>
+</&>
 </div>
 
 <script>
@@ -805,11 +831,12 @@ jQuery(document).ready(function() {
   });
 </script>
 
-<div class="well well-sm">
+<div class="well well-sm tw:mt-8!">
+<&|  /page/info_section.mas, title => "<b>Genotyping QC</b>", id => "download_genotyping_qc", collapsible => 1, collapsed => 1 &>
+<p>Select parameter:</p>
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
 <table class="table" cellpadding="10">
   <thead>
-  <tr><td colspan="3"><h4>Genotyping QC</h4><p>Select parameter:</p></tr>
   <tr>
     <th>
       Trials
@@ -848,7 +875,7 @@ jQuery(document).ready(function() {
   </table>
 </form>
 </div>
-
+</&>
 </div>
 
 <script>

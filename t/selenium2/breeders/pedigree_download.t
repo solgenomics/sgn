@@ -5,10 +5,21 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use Selenium::Remote::WDKeys 'KEYS';
+use Selenium::Firefox::Profile;
 
 my $f = SGN::Test::Fixture->new();
 
 my $t = SGN::Test::WWW::WebDriver->new();
+
+# Create firefox profile for download options
+my $profile = Selenium::Firefox::Profile->new;
+$profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
+$profile->set_preference( 'browser.download.dir', '/downloads' ); # Path to custom download folder on selenium host
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'plain/text', 'application/text' ); # Automatically download to disk
+
+# Create web driver
+my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
+$t->driver($driver);
 
 $t->while_logged_in_as("submitter", sub {
     $t->get_ok('/breeders/accessions');
@@ -86,6 +97,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('/breeders/download');
     sleep(3); # FIXME Need to wait for page to settle / elements to register
 
+    $t->click_ok("download_pedigrees_onswitch", "id", "open download pedigrees section");
     $t->click_ok("pedigree_accession_list_list_select", "id", "select pedigrees accession download list");
 
     $t->click_ok(
