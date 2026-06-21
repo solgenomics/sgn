@@ -107,6 +107,7 @@ sub validate {
         plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
         plants   => [qw(plant_name ObservationUnitName)],
         subplots => [qw(subplot_name ObservationUnitName)],
+        tissue_samples => [qw(tissue_sample_name ObservationUnitName)],
     );
 
     my %header_column_info;
@@ -220,6 +221,7 @@ sub parse {
         plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
         plants   => [qw(plant_id plant_name ObservationUnitDbId ObservationUnitName)],
         subplots => [qw(subplot_id subplot_name ObservationUnitDbId ObservationUnitName)],
+        tissue_samples => [qw(tissue_sample_id tissue_sample_name ObservationUnitDbId ObservationUnitName)],
     );
 
     my $header_column_number = 0;
@@ -289,7 +291,7 @@ sub parse {
         $traits_seen{$trait} = 1;
 
         if (defined($value) && defined($timestamp)) {
-	    print STDERR "KEEPING $trait with value $value for plot $unit_value...\n";
+	    print STDERR "KEEPING $trait with value $value for stock $unit_value...\n";
             push @{$data{$unit_value}->{$trait}}, [$value, $timestamp, $collector, ''];
         }
 	else {
