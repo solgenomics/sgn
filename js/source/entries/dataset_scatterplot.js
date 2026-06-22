@@ -1,4 +1,4 @@
-export function init(datasetId, datasetName) {
+export function init(datasetId, datasetName, baseWidth) {
     class Dataset {
         constructor() {
             this.datasets = {};
@@ -17,6 +17,7 @@ export function init(datasetId, datasetName) {
             this.traitVals = [];
             this.storedOutliersIds = [];
             this.metricValue = document.querySelector('input[name="dataset_metric"]:checked').value;
+            this.baseWidth = baseWidth || 1180;
         }
 
         getPhenotypes() {
@@ -29,7 +30,7 @@ export function init(datasetId, datasetName) {
                     LocalThis.setDropDownTraits();
                 },
                 error: function (response) {
-                    alert('Error');
+                    console.log(response);
                 }
             })
         }
@@ -46,7 +47,7 @@ export function init(datasetId, datasetName) {
                     // console.log(LocalThis.traitsIds);
                 },
                 error: function (response) {
-                    alert('Error');
+                    console.log(response);
                 }
             })
         }
@@ -60,7 +61,7 @@ export function init(datasetId, datasetName) {
                     LocalThis.storedOutliersIds = response.outliers !== null ? response.outliers : [];
                 },
                 error: function (response) {
-                    alert('Error');
+                    console.log(response);
                 }
             })
         }
@@ -205,6 +206,7 @@ export function init(datasetId, datasetName) {
             // Handle Select Events
             let selection = document.getElementById("trait_selection");
             selection.addEventListener("change", (event) => {
+                jQuery(".hide_until_trait_selected").css("display", event.target.value === 'default' ? 'none' : 'flex');
                 d3.select("svg").remove();
                 LocalThis.selection = event.target.value;
                 LocalThis.setData();
@@ -235,7 +237,7 @@ export function init(datasetId, datasetName) {
                         LocalThis.render();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
             }
@@ -254,7 +256,7 @@ export function init(datasetId, datasetName) {
                         removeRosnserTable();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
             }
@@ -275,7 +277,7 @@ export function init(datasetId, datasetName) {
                         removeRosnserTable();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
             }
@@ -295,7 +297,7 @@ export function init(datasetId, datasetName) {
                         document.getElementById("loading-spinner").style.visibility = 'hidden';
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                         document.getElementById("loading-spinner").style.visibility = 'visible';
                     }
                 })
@@ -358,7 +360,7 @@ export function init(datasetId, datasetName) {
                         LocalThis.render();
                     },
                     error: function (response) {
-                        alert('Error');
+                        console.log(response);
                     }
                 })
 
@@ -432,7 +434,7 @@ export function init(datasetId, datasetName) {
                 this.outliers = [];
 
                 const margin = { top: 10, right: 30, bottom: 30, left: 60 },
-                    width = 1180 - margin.left - margin.right,
+                    width = this.baseWidth - margin.left - margin.right,
                     height = 600 - margin.top - margin.bottom;
 
                 var svg = d3.select("#trait_graph")

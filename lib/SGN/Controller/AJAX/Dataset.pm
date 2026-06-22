@@ -10,7 +10,14 @@ use Data::Dumper;
 use JSON::Any;
 use CXGN::Dataset;
 use CXGN::Job;
+use CXGN::DB::Connection;
+use CXGN::Page::UserPrefs;
 use Text::CSV ("csv");
+use LWP::UserAgent;
+use JSON qw| decode_json encode_json |;
+use Time::HiRes qw| time |;
+use Digest::MD5;
+use Try::Tiny;
 use strict;
 use warnings;
 
@@ -128,8 +135,8 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     my @columns = @{$phenotypes_data_ref->[0]};
     # print STDERR "columns: ", join(", ", @columns);
 
-    my ($trait_index) = grep { @columns[$_] eq $dataset_trait } (0 ..  scalar @columns -1);
-    my ($trait_id_index) = grep { @columns[$_] eq "${dataset_trait}_phenotype_id" } (0 ..  scalar @columns -1);
+    my ($trait_index) = grep { $columns[$_] eq $dataset_trait } (0 ..  scalar @columns -1);
+    my ($trait_id_index) = grep { $columns[$_] eq "${dataset_trait}_phenotype_id" } (0 ..  scalar @columns -1);
 
     $c->tempfiles_subdir("rosners_files");
     my ($trait_file_path, $temp_file) = $c->tempfile(TEMPLATE=>"rosners_files/trait_XXXXX", SUFFIX => '.csv');
@@ -232,10 +239,11 @@ sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
     my $c = shift;
 
     my $user = $c->user();
-    if (!$user) {
-        $c->stash->{rest} = { error => "No logged in user to display dataset information for." };
-        return;
-    }
+    # display public datasets, even if the user is not logged in...
+    # if (!$user) {
+    #     $c->stash->{rest} = { error => "No logged in user to display dataset information for." };
+    #     return;
+    # }
 
     my $sp_person_id = $c->user() ? $c->user()->get_object->get_sp_person_id() : undef;
 
@@ -247,7 +255,8 @@ sub get_datasets_by_user_html :Path('/ajax/dataset/by_user_html') Args(0) {
     my @result;
     foreach (@$datasets) {
         my @res;
-        push @res, ("<a href=\"/dataset/$_->[0]\">$_->[1]</a>", $_->[2]);
+        my $label = "<a href=\"/dataset/$_->[0]\">$_->[1]</a>";
+        push @res, ($label, $_->[2], $_->[3], $_->[4], $_->[5]);
         push @result , \@res;
     }
     $c->stash->{rest} = { data => \@result };
@@ -542,6 +551,909 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
     }
     else {
 	$c->stash->{rest} = { success => 1 };
+    }
+}
+
+#
+# Get the external services that are configured on this instance for publishing datasets
+# This reads the 'dataset_archive_clients' config key and returns some of the public-facing properties
+#
+sub publish_dataset_services : Path('/ajax/dataset/publish/services') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    my %rtn;
+    foreach my $k (keys %$config) {
+        $rtn{$k} = {
+            key => $k,
+            type => $config->{$k}->{type},
+            display_name => $config->{$k}->{display_name},
+            web_url => $config->{$k}->{web_url},
+            user_path => $config->{$k}->{user_path}
+        };
+    }
+
+    $c->stash->{rest} = \%rtn;
+    return;
+}
+
+#
+# Store the user's connection info for the specified service
+# This is called after the user has gone through the OAuth flow and has received an auth code
+# This will request an access token using the auth code and use the token to get the account profile info
+# The token and profile info are stored in the User Prefs (dataset_publish_${service} key)
+#
+sub publish_dataset_connection : Path('/ajax/dataset/publish/connection') : ActionClass('REST') { }
+sub publish_dataset_connection_POST {
+    my $self = shift;
+    my $c = shift;
+    my $code = $c->req->body_params->{code};
+    my $service = $c->req->body_params->{service};
+    my $ua = LWP::UserAgent->new();
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $selected = $config->{$service};
+
+    # Get access token
+    my $resp = $ua->post(
+        $selected->{api_url} . '/token',
+        "Content-Type" => "application/json",
+        "Content" => encode_json({
+            client_id => $selected->{client_id},
+            client_secret => $selected->{client_secret},
+            grant_type => "authorization_code",
+            code => $code,
+        })
+    );
+
+    my $token = decode_json($resp->content || '{}');
+    if ( $token->{error} ) {
+        $c->stash->{rest} = { error => $token->{error} };
+        return;
+    }
+
+    # Add token expiration to token data
+    my $now = time * 1000;
+    my $expiration = $now + $token->{expires_in};
+    $token->{expiration} = $expiration;
+
+    # Get user info with token
+    $resp = $ua->get(
+        $selected->{api_url} . '/account',
+        "Authorization" => "Bearer " . $token->{access_token},
+    );
+    my $profile = decode_json($resp->content || '{}');
+    if ( $profile->{error} ) {
+        $c->stash->{rest} = { error => $profile->{error} };
+        return;
+    }
+
+    # Store token and profile in User Prefs
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = {
+        token => $token,
+        profile => $profile
+    };
+    $prefs->set_pref("dataset_publish_$service", encode_json($stored));
+    $prefs->save();
+
+    # Return basic token and profile info
+    $c->stash->{rest} = {
+        token => {
+            expiration => $token->{expiration}
+        },
+        profile => {
+            first_name => $profile->{first_name},
+            last_name => $profile->{last_name},
+            email => $profile->{email},
+            id => $profile->{id},
+            user_id => $profile->{user_id}
+        }
+    };
+    return;
+}
+
+#
+# Get and check the validity of the stored connection info for the specified service
+# This reads the stored token and profile info from the User Prefs for the specified service and
+# checks to make sure the token has not expired and returns basic profile info if it is still valid
+#
+sub publish_dataset_connection_GET : Path('/ajax/dataset/publish/connection') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $service = shift;
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
+    my $rtn = {};
+
+    if ( exists $stored->{token}->{access_token} && exists $stored->{token}->{expiration} ) {
+        my $now = time * 1000;
+        my $cutoff = $now - 3600000;    # make sure token is good for at least another hour
+        if ( $cutoff <= $stored->{token}->{expiration} ) {
+            $rtn = {
+                token => {
+                    expiration => $stored->{token}->{expiration}
+                },
+                profile => {
+                    first_name => $stored->{profile}->{first_name},
+                    last_name => $stored->{profile}->{last_name},
+                    email => $stored->{profile}->{email},
+                    id => $stored->{profile}->{id},
+                    user_id => $stored->{profile}->{user_id}
+                }
+            }
+        }
+    }
+
+    $c->stash->{rest} = $rtn;
+    return;
+}
+
+#
+# Remove the stored connection preferences for the specified service
+# This removes the stored token and profile info from the User Prefs for the specified service
+#
+sub publish_dataset_connection_DELETE : Path('/ajax/dataset/publish/connection/remove') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $service = shift;
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    $prefs->set_pref("dataset_publish_$service", undef);
+    $prefs->save();
+
+    $c->stash->{rest} = { success => 1 };
+    return;
+}
+
+#
+# Get account articles from the user's account on the external service
+#
+sub publish_dataset_articles : Path('/ajax/dataset/publish/articles') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $service = shift;
+    my $ua = LWP::UserAgent->new();
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $selected = $config->{$service};
+
+    my $resp = $ua->get(
+        $selected->{api_url} . '/account/articles',
+        "Authorization" => "Bearer $token"
+    );
+    my $articles = decode_json($resp->content || '[]');
+    $c->stash->{rest} = { articles => $articles };
+    return;
+}
+
+#
+# Get details of specific article from user's account on external service
+#
+sub publish_dataset_articles_details : Path('/ajax/dataset/publish/articles') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $service = shift;
+    my $article = shift;
+    my $ua = LWP::UserAgent->new();
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $selected = $config->{$service};
+
+    # Get specific article
+    my $resp = $ua->get(
+        $selected->{api_url} . '/account/articles/' . $article,
+        "Authorization" => "Bearer $token"
+    );
+    my $details = decode_json($resp->content || '{}');
+    $c->stash->{rest} = { article => $details };
+    return;
+}
+
+#
+# Create a new article on the external service
+#
+sub publish_dataset_articles_new : Path('/ajax/dataset/publish/articles/new') : ActionClass('REST') { }
+sub publish_dataset_articles_new_POST {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->body_params->{dataset_id};
+    my $service = $c->req->body_params->{service};
+    my $title = $c->req->body_params->{title};
+    my $description = $c->req->body_params->{description};
+    my @authors = split('\n', $c->req->body_params->{'authors'});
+    my $ua = LWP::UserAgent->new();
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "Login required to perform requested action." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    if ($dataset->sp_person_id() != $user_id ) {
+        $c->stash->{rest} = { error => "Only the owner can publish a dataset" };
+        return;
+    }
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $project_name = $c->get_conf('project_name');
+    my $production_url = $c->get_conf('main_production_site_url');
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $selected = $config->{$service};
+
+    my @authors_hash;
+    foreach (@authors) {
+        push @authors_hash, { name => $_ };
+    }
+    my $body = {
+        title => $title,
+        description => $description,
+        authors => \@authors_hash,
+        keywords => [ "$project_name" ],
+        related_materials => [{
+            identifier => "$production_url/dataset/$dataset_id",
+            title => "$project_name Dataset [" . $dataset->name() . "]",
+            identifier_type => "URL"
+        }],
+        categories => [ int($selected->{category_id}) ],
+        defined_type => 'dataset'
+    };
+
+    # Create Article
+    my $resp = $ua->post(
+        $selected->{api_url} . '/account/articles',
+        "Authorization" => "Bearer $token",
+        "Content-Type" => "application/json",
+        "Content" => encode_json($body)
+    );
+    my $created = decode_json($resp->content || '{}');
+
+    if ( ! exists $created->{entity_id} || exists $created->{message} ) {
+        $c->stash->{rest} = { error => $created->{message} || 'No entity id returned' };
+        return;
+    }
+
+    $c->stash->{rest} = $created;
+    return;
+}
+
+#
+# Determine what files will be generated from the dataset and initialize the published metadata
+#
+sub publish_dataset_init : Path('/ajax/dataset/publish/init') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $dataset_archive_path = $c->config->{dataset_archive_path};
+
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    # Calculate the files that will be archived
+    my $pub = $dataset->init_published($dataset_archive_path, $user_id);
+    $c->stash->{rest} = {
+        error => $pub->{error},
+        key => $pub->{key},
+        data => $pub->{data}
+    };
+    return;
+}
+
+#
+# Generate the specified archived file for the dataset
+#
+sub publish_dataset_generate : Path('/ajax/dataset/publish/generate') : ActionClass('REST') { }
+sub publish_dataset_generate_POST {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = $c->req->body_params->{dataset_id};
+    my $key = $c->req->body_params->{key};
+    my $type = $c->req->body_params->{type};
+
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $resp = $dataset->generate_archive_file($key, $type, {
+        editable_stock_props => \@editable_stock_props,
+        cache_file_path => $c->config->{cache_file_path},
+        cluster_shared_tempdir => $c->config->{cluster_shared_tempdir},
+        backend => $c->config->{backend},
+        cluster_host => $c->config->{cluster_host},
+        web_cluster_queue => $c->config->{web_cluster_queue},
+        basepath => $c->config->{basepath}
+    });
+    if ( defined $resp->{error} ) {
+        $c->stash->{rest} = { error => $resp->{error} };
+        return;
+    }
+
+    if ( defined $resp->{file} ) {
+        $c->stash->{rest} = { file => $resp->{file} };
+        return;
+    }
+    else {
+        $c->stash->{rest} = { error => "Could not generate archive file" };
+        return;
+    }
+}
+
+#
+# Submit the arcived files to the specified article on the external service
+#
+sub publish_dataset_submit : Path('/ajax/dataset/publish/submit') : ActionClass('REST') { }
+sub publish_dataset_submit_POST {
+    my $self = shift;
+    my $c = shift;
+    my $service = $c->req->body_params->{service};
+    my $article_id = $c->req->body_params->{article_id};
+    my $dataset_id = $c->req->body_params->{dataset_id};
+    my $key = $c->req->body_params->{key};
+    my $type = $c->req->body_params->{type};
+    my $ua = LWP::UserAgent->new();
+
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $selected = $config->{$service};
+
+    my $published = $dataset->published();
+    if ( exists $published->{$key} ) {
+        my $dir = $published->{$key}->{directory};
+        my $file = $published->{$key}->{data}->{$type}->{file};
+        my $path = "$dir/$file";
+
+        # File exists, submit it via API
+        if ( -f "$path" ) {
+
+            # Get the MD5 checksum of the file contents
+            open (my $fh, '<', "$path") or return $c->stash->{rest} = { error => "Cannot open the $file file" };
+            binmode($fh);
+            my $md5 = Digest::MD5->new;
+            my $checksum = Digest::MD5->new->addfile($fh)->hexdigest;
+            close($fh);
+
+            # Get file size
+            my $size = -s $path;
+
+            # Initialize the file
+            my $init_resp = $ua->post(
+                $selected->{api_url} . "/account/articles/$article_id/files",
+                "Authorization" => "Bearer $token",
+                "Content-Type" => "application/json",
+                "Content" => encode_json({
+                    name => $file,
+                    md5 => $checksum,
+                    size => $size
+                })
+            );
+            my $init = decode_json($init_resp->content || '{}');
+            if ( ! exists $init->{location} ) {
+                $c->stash->{rest} = { error => "Could not initialize new file $file" };
+                return;
+            }
+            my $api_location = $init->{location};
+
+            # Fetch file metadata
+            my $metadata_resp = $ua->get(
+                $api_location,
+                "Authorization" => "Bearer $token"
+            );
+            my $metadata = decode_json($metadata_resp->content || '{}');
+            if ( ! exists $metadata->{upload_url} || ! exists $metadata->{id} ) {
+                $c->stash->{rest} = { error => "Could not get metadata for new file $file" };
+                return;
+            }
+            my $upload_url = $metadata->{upload_url};
+            my $file_id = $metadata->{id};
+
+            # Fetch upload metadata
+            my $upload_metadata_resp = $ua->get(
+                $upload_url,
+                "Authorization" => "Bearer $token"
+            );
+            my $upload_metadata = decode_json($upload_metadata_resp->content || '{}');
+            if ( ! exists $upload_metadata->{token} || ! exists $upload_metadata->{parts} ) {
+                $c->stash->{rest} = { error => "Could not get upload metadata for new file $file" };
+                return;
+            }
+            my $upload_token = $upload_metadata->{token};
+            my $parts = $upload_metadata->{parts};
+
+            # Return the parts info, so each part can be uploaded separately
+            my $submitted_file = {
+                file_id => $file_id,
+                upload_url => $upload_url,
+                parts => {}
+            };
+            foreach my $part (@$parts) {
+                my $partNo = $part->{partNo};
+                my $startOffset = $part->{startOffset};
+                my $endOffset = $part->{endOffset};
+
+                $submitted_file->{parts}->{$partNo} = {
+                    status => $part->{status},
+                    partNo => $part->{partNo},
+                    startOffset => $part->{startOffset},
+                    endOffset => $part->{endOffset},
+                };
+            }
+
+            # Fetch article metadata
+            my $article_resp = $ua->get(
+                $selected->{api_url} . '/account/articles/' . $article_id,
+                "Authorization" => "Bearer $token"
+            );
+            my $article = decode_json($article_resp->content || '{}');
+
+            # Update the stored dataset metadata
+            my $md = $published->{$key};
+            $md->{data}->{$type}->{submitted} = $submitted_file;
+            $md->{article} = $article;
+            $md->{service} = $service;
+            $dataset->update_published($key, $md);
+
+            $c->stash->{rest} = $submitted_file;
+            return;
+        }
+        else {
+            $c->stash->{rest} = { error => 'The specified file does not exist' };
+            return;
+        }
+    }
+    else {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
+}
+
+#
+# Upload a specific part of a file to the external service
+#
+sub publish_dataset_upload : Path('/ajax/dataset/publish/upload') : ActionClass('REST') { }
+sub publish_dataset_upload_POST {
+    my $self = shift;
+    my $c = shift;
+    my $service = $c->req->body_params->{service};
+    my $dataset_id = $c->req->body_params->{dataset_id};
+    my $key = $c->req->body_params->{key};
+    my $type = $c->req->body_params->{type};
+    my $partNo = $c->req->body_params->{partNo};
+    my $startOffset = $c->req->body_params->{startOffset};
+    my $endOffset = $c->req->body_params->{endOffset};
+    my $uploadUrl = $c->req->body_params->{uploadUrl};
+    my $ua = LWP::UserAgent->new();
+
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $selected = $config->{$service};
+
+    my $published = $dataset->published();
+    if ( exists $published->{$key} ) {
+        my $dir = $published->{$key}->{directory};
+        my $file = $published->{$key}->{data}->{$type}->{file};
+        my $path = "$dir/$file";
+
+        # File exists, upload the part via API
+        if ( -f "$path" ) {
+            my $limit = $endOffset - $startOffset + 1;
+
+            # Read the specific chunk of the file
+            my $buffer;
+            open(my $fh, '<', $path) or die "Cannot open $path: $!";
+            seek($fh, $startOffset, 0) or die "Cannot seek: $!";
+            read($fh, $buffer, $limit) or die "Cannot read: $!";
+            close($fh);
+
+            # Upload the chunk
+            my $upload_part_resp = $ua->put(
+                "$uploadUrl/$partNo",
+                "Authorization" => "Bearer $token",
+                "Content-Type" => "text/plain",
+                "Content" => $buffer
+            );
+
+            # Check for a 200 OK status
+            if ( !$upload_part_resp->is_success ) {
+                $c->stash->{rest} = { error => "Could not upload the file $file" };
+                return;
+            }
+
+            # Update the info in the dataset
+            my $md = $dataset->published()->{$key};
+            $md->{data}->{$type}->{submitted}->{parts}->{$partNo}->{status} = "COMPLETE";
+            $dataset->update_published($key, $md);
+
+            $c->stash->{rest} = { success => 1 };
+            return;
+        }
+        else {
+            $c->stash->{rest} = { error => 'The specified file does not exist' };
+            return;
+        }
+    }
+    else {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
+}
+
+#
+# Finalize the upload for a specific file
+# - Make sure all of the parts have been completed
+# - Finalize the file upload
+#
+sub publish_dataset_finalize : Path('/ajax/dataset/publish/finalize') : ActionClass('REST') { }
+sub publish_dataset_finalize_POST {
+    my $self = shift;
+    my $c = shift;
+    my $service = $c->req->body_params->{service};
+    my $dataset_id = $c->req->body_params->{dataset_id};
+    my $key = $c->req->body_params->{key};
+    my $type = $c->req->body_params->{type};
+    my $article_id = $c->req->body_params->{article_id};
+    my $file_id = $c->req->body_params->{file_id};
+    my $ua = LWP::UserAgent->new();
+
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$service") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$service} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $selected = $config->{$service};
+
+    # Check the status of each part and update the stored metadata
+    my $md = $dataset->published()->{$key};
+    my $parts = $md->{data}->{$type}->{submitted}->{parts};
+    my $iscomplete = 1;
+    foreach my $p (keys %$parts) {
+        if ( $parts->{$p}->{status} ne 'COMPLETE' ) {
+            $iscomplete = 0;
+        }
+    }
+    $md->{data}->{$type}->{complete} = $iscomplete;
+    $dataset->update_published($key, $md);
+
+    # Return an error if the upload was not completly successful
+    if ( !$iscomplete ) {
+        $c->stash->{rest} = { error => "The upload for $type was not complete" };
+        return;
+    }
+
+    # Set the file as finished via the API
+    my $finalize_resp = $ua->post(
+        $selected->{api_url} . "/account/articles/$article_id/files/$file_id",
+        "Authorization" => "Bearer $token"
+    );
+    if ( !$finalize_resp->is_success ) {
+        $c->stash->{rest} = { error => "Could not finalize the file upload for $type" };
+        return;
+    }
+
+    # File upload was successful
+    $c->stash->{rest} = { success => 1 };
+    return;
+}
+
+#
+# Get the published issues of the dataset
+#
+sub publish_dataset_issues : Path('/ajax/dataset/publish/issues') Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+    my $published = $dataset->published() || {};
+
+    $c->stash->{rest} = { published => $published };
+    return;
+}
+
+#
+# Publish the specific set of archived files on the external dataset
+#
+sub publish_dataset_issues_publish : Path('/ajax/dataset/publish/issues/publish') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $ua = LWP::UserAgent->new();
+
+    # Get the selected dataset issue
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $issue = $dataset->published()->{$key};
+    if ( !defined $issue ) {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
+    my $article_id = $issue->{article}->{id};
+
+    # Get the selected external service
+    my $s = $issue->{service};
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$s") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$s} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $service = $config->{$s};
+
+    # Publish the article
+    my $published_resp = $ua->post(
+        $service->{api_url} . "/account/articles/$article_id/publish",
+        "Authorization" => "Bearer $token"
+    );
+    my $published = decode_json($published_resp->content || '{}');
+    if ( !defined $published || !defined $published->{location} ) {
+        $c->stash->{rest} = { error => 'Could not publish the selected article' };
+        return;
+    }
+
+    # Get the updated article metadata and update the stored info in the dataset
+    my $article_resp = $ua->get(
+        $published->{location},
+        "Authorization" => "Bearer $token"
+    );
+    my $article = decode_json($article_resp->content || '{}');
+
+    $issue->{article} = $article;
+    $issue->{published} = 1;
+    $dataset->update_published($key, $issue);
+
+    $c->stash->{rest} = { location => $published->{location}, article => $article };
+    return;
+}
+
+#
+# Reserve a DOI for the selected issue
+#
+sub publish_dataset_reserve_doi : Path('/ajax/dataset/publish/issues/reserveDOI') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $ua = LWP::UserAgent->new();
+
+    # Get the selected dataset issue
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $issue = $dataset->published()->{$key};
+    if ( !defined $issue ) {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
+    my $article_id = $issue->{article}->{id};
+
+    # Get the selected external service
+    my $s = $issue->{service};
+    my $prefs = CXGN::Page::UserPrefs->new(CXGN::DB::Connection->new());
+    my $stored = decode_json( $prefs->get_pref("dataset_publish_$s") || '{}' );
+    my $token = $stored->{token}->{access_token};
+
+    my $config = $c->get_conf('dataset_archive_clients') || {};
+    if ( ! exists $config->{$s} ) {
+        $c->stash->{rest} = { error => 'The selected service does not exist in the server configuration' };
+        return;
+    }
+    my $service = $config->{$s};
+
+    # Publish the article
+    my $doi_resp = $ua->post(
+        $service->{api_url} . "/account/articles/$article_id/reserve_doi",
+        "Authorization" => "Bearer $token"
+    );
+    my $doi = decode_json($doi_resp->content || '{}');
+    if ( !defined $doi || !defined $doi->{doi} ) {
+        $c->stash->{rest} = { error => 'Could not get a DOI for the selected article' };
+        return;
+    }
+
+    # Get the updated article metadata and update the stored info in the dataset
+    my $article_resp = $ua->get(
+        $service->{api_url} . '/account/articles/' . $article_id,
+        "Authorization" => "Bearer $token"
+    );
+    my $article = decode_json($article_resp->content || '{}');
+
+    $issue->{article} = $article;
+    $dataset->update_published($key, $issue);
+
+    $c->stash->{rest} = { doi => $doi->{doi}, article => $article };
+    return;
+}
+
+#
+# Remove a specific set of archived files for the dataset
+#
+sub publish_dataset_remove : Path('/ajax/dataset/publish/issues/remove') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $dataset_archive_path = $c->config->{dataset_archive_path};
+
+    my ( $error, $dataset, $user_id ) = _setup_publish($c, $dataset_id);
+    if ( $error ) {
+        $c->stash->{rest} = { error => $error };
+        return;
+    }
+
+    my $resp = $dataset->remove_published($key, $dataset_archive_path);
+
+    $c->stash->{rest} = $resp;
+    return;
+}
+
+#
+# Download a specific archived file, specified by the publish key and file name
+#
+sub publish_dataset_file : Path('/ajax/dataset/publish/file') Args(3) {
+    my $self = shift;
+    my $c = shift;
+    my $dataset_id = shift;
+    my $key = shift;
+    my $type = shift;
+
+    my $dataset = CXGN::Dataset->new({
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_dataset_id => $dataset_id
+    });
+
+    my $published = $dataset->published();
+
+    if ( exists $published->{$key} ) {
+        my $dir = $published->{$key}->{directory};
+        my $file = $published->{$key}->{data}->{$type}->{file};
+        my $path = "$dir/$file";
+
+        if ( -f "$path" ) {
+            $c->res->content_type('text/plain');
+            $c->res->header('Content-Disposition', qq[attachment; filename="$file"]);
+
+            my $output = "";
+            open(my $F, "< :raw", $path) || return { error => 'Cannot open file to read contents' };
+            while (<$F>) {
+                $output .= $_;
+            }
+            close($F);
+
+            $c->res->body($output);
+        }
+        else {
+            $c->stash->{rest} = { error => 'The specified file does not exist' };
+            return;
+        }
+    }
+    else {
+        $c->stash->{rest} = { error => 'The specified published metadata does not exist' };
+        return;
+    }
+}
+
+#
+# Shared publish dataset setup function
+# - Get the dataset
+# - Make sure the user is logged in
+# - Make sure the user is the owner of the dataset
+# Returns (error message, dataset, user_id)
+#
+sub _setup_publish {
+    my $c = shift;
+    my $dataset_id = shift;
+
+    try {
+        my $dataset = CXGN::Dataset->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            sp_dataset_id => $dataset_id
+        });
+
+        if (!$c->user()) {
+            return ( "Login required to perform requested action." );
+        }
+
+        my $user_id = $c->user()->get_object()->get_sp_person_id();
+        if ($dataset->sp_person_id() != $user_id ) {
+            return ( "Only the owner can publish a dataset" );
+        }
+
+        return ( undef, $dataset, $user_id );
+    } catch {
+        return ( $_ );
     }
 }
 

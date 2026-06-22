@@ -55,13 +55,21 @@ use Moose::Util::TypeConstraints;
 #use Data::Dumper;
 use JSON::XS;
 use CXGN::BreederSearch;
+use CXGN::BreedersToolbox::Projects;
 use CXGN::People::Schema;
+use CXGN::Phenotypes::MetaDataMatrix;
 use CXGN::Phenotypes::PhenotypeMatrix;
 use CXGN::Genotype::Search;
 use CXGN::Genotype::Protocol;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
 use CXGN::Trial;
+use CXGN::Trial::TrialLayoutSearch;
 use CXGN::Trait;
+use POSIX qw(strftime);
+use File::Path qw(mkpath rmtree);
+use File::Basename;
+use File::Copy;
+use Text::CSV qw(csv);
 
 =head2 people_schema()
 
@@ -345,6 +353,12 @@ has 'tool_compatibility' => (
 
 has 'breeder_search' => (isa => 'CXGN::BreederSearch', is => 'rw');
 
+has 'published' => (
+    isa => 'Maybe[HashRef]',
+    is => 'rw',
+    default => sub { {} }
+);
+
 sub BUILD {
     my ($self, $args) = @_;
 
@@ -390,7 +404,7 @@ sub BUILD {
     $self->category_order($dataset->{category_order});
     $self->tool_compatibility($dataset->{tool_compatibility});
     $self->is_live($dataset->{is_live});
-    $self->is_public($dataset->{is_public}); 
+    $self->is_public($row->is_public); 
     if (exists $args->{outliers}) {
         $self->outliers($args->{outliers});
     } else {
@@ -401,6 +415,7 @@ sub BUILD {
     } else {
         $self->outlier_cutoffs($dataset->{outlier_cutoffs});
     }
+    $self->published($dataset->{published});
 }
 
 
@@ -417,28 +432,28 @@ sub get_datasets_by_user {
     my $sp_person_id = shift;
     my $found;
 
-    my $rs = $people_schema->resultset("SpDataset")->search( { sp_person_id => $sp_person_id });
+    my $rs = $people_schema->resultset("SpDataset")->search(
+        [ { sp_person_id => $sp_person_id }, { is_public => 1 } ],
+        {
+            join => 'sp_person'
+        }
+    );
 
     my @datasets;
-    my @datasets_id;
     while (my $row = $rs->next()) {
-	push @datasets,  [ $row->sp_dataset_id(), $row->name(), $row->description() ];
-	push @datasets_id, $row->sp_dataset_id();
+        push @datasets, [ 
+            $row->sp_dataset_id(),
+            $row->name(),
+            $row->description(),
+            {
+                owner_id => $row->sp_person_id(),
+                owner_name => $row->sp_person->first_name() . ' ' . $row->sp_person->last_name(),
+            },
+            $row->is_public(),
+            decode_json($row->dataset() || '{}')
+        ];
     }
 
-    $rs = $people_schema->resultset("SpDataset")->search( { is_public => 1 });
-
-    while (my $row = $rs->next()) {
-	$found = 0;
-	for (@datasets_id) {
-	    if ( $_ == $row->sp_dataset_id() ) {
-	        $found = 1;
-	    }
-	}
-        if (!$found) {
-            push @datasets,  [ $row->sp_dataset_id(), 'public - ' . $row->name(), $row->description() ];
-        }
-    }
     return \@datasets;
 }
 
@@ -617,6 +632,7 @@ sub get_dataset_data {
     $dataref->{outliers} = $self->outliers() if $self->outliers;
     $dataref->{outlier_cutoffs} = $self->outlier_cutoffs() if $self->outliers;
     $dataref->{tool_compatibility} = ($self->tool_compatibility) ? $self->tool_compatibility() : undef;
+    $dataref->{published} = $self->published;
     return $dataref;
 }
 
@@ -637,6 +653,7 @@ sub _get_dataref {
     $dataref->{trial_types} = join(",", @{$self->trial_types()}) if $self->trial_types && scalar(@{$self->trial_types})>0;
     $dataref->{locations} = join(",", @{$self->locations()}) if $self->locations && scalar(@{$self->locations})>0;
     $dataref->{tool_compatibility} = $self->tool_compatibility() if $self->tool_compatibility;
+    $dataref->{published} = $self->published() if $self->published;
     return $dataref;
 }
 
@@ -1714,6 +1731,472 @@ sub get_child_analyses {
     return join(" | ", @html);
 }
 
+#
+# Initialize a new issue of the published dataset metadata
+# - This will calculate the file types to archive and the ids of the items of each type
+# base_directory = path on the server where dataset archives are stored (read from config file)
+# user_id = sp_person_id of user publishing the dataset (should be dataset owner)
+#
+sub init_published {
+    my $self = shift;
+    my $base_directory = shift;
+    my $user_id = shift;
+    my $schema = $self->schema;
+    my $dbh = $schema->storage->dbh();
+    my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+    my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
 
+    my $categories = $self->data()->{categories};
+
+    # Phenotype Categories
+    my $breeding_programs = $categories->{breeding_programs};
+    my $locations = $categories->{locations};
+    my $trials = $categories->{trials};
+    my $traits = $categories->{traits};
+    my $observation_units = $categories->{plots};
+
+    # Genotype Categories
+    my $protocols = $categories->{genotyping_protocols};
+    my $projects = $categories->{genotyping_projects};
+
+    # Shared Categories
+    my $accessions = $categories->{accessions};
+
+    # Breeder Search to find missing associated data
+    my $bs = CXGN::BreederSearch->new({ dbh=>$dbh });
+
+    #
+    # PHENOTYPE DATA
+    # Fill in missing phenotype-related data if trials are in the dataset
+    #
+    if ( exists $categories->{trials} ) {
+
+        # Get breeding programs
+        if ( !defined $breeding_programs ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'breeding_programs' ],
+                { 'breeding_programs' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $breeding_programs = \@ids;
+        }
+
+        # Get locations
+        if ( !defined $locations ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'locations' ],
+                { 'locations' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $locations = \@ids;
+        }
+
+        # Get traits
+        if ( !defined $traits ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'traits' ],
+                { 'traits' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $traits = \@ids;
+        }
+
+        # Get accessions
+        if ( !defined $accessions ) {
+            my $results = $bs->metadata_query(
+                [ 'trials', 'accessions' ],
+                { 'accessions' => { 'trials' => "'" . join("', '", @$trials) . "'" } },
+                { 'trials' => 0 }
+            );
+            my @ids = map { $_->[0] } @{$results->{results}};
+            $accessions = \@ids;
+        }
+
+        # Get observation units (get stock ids of plots, plants, etc in trials)
+        # unless plots are explicitly defined in the dataset
+        if ( !defined $observation_units ) {
+            my $layout_search = CXGN::Trial::TrialLayoutSearch->new({
+                bcs_schema => $schema,
+                data_level => "all",
+                trial_list => $trials,
+                include_observations => 0,
+            });
+            my ($data) = $layout_search->search();
+            my @ids = map { $_->{obsunit_stock_id} } @$data;
+            $observation_units = \@ids;
+        }
+
+    }
+
+
+    #
+    # GENOTYPE DATA
+    # Get all genotype-related data if genotyping_protocols or genotyping_projects are in the dataset
+    #
+    if ( defined $protocols && !defined $accessions ) {
+        my $results = $bs->metadata_query(
+            [ 'genotyping_protocols', 'accessions' ],
+            { 'accessions' => { 'genotyping_protocols' => "'" . join("', '", @$protocols) . "'" } },
+            { 'genotyping_protocols' => 0 }
+        );
+        my @ids = map { $_->[0] } @{$results->{results}};
+        $accessions = \@ids;
+    }
+    if ( defined $projects && !defined $accessions ) {
+        my $results = $bs->metadata_query(
+            [ 'genotyping_projects', 'accessions' ],
+            { 'accessions' => { 'genotyping_projects' => "'" . join("', '", @$projects) . "'" } },
+            { 'genotyping_projects' => 0 }
+        );
+        my @ids = map { $_->[0] } @{$results->{results}};
+        $accessions = \@ids;
+    }
+
+    use Data::Dumper;
+    print STDERR "Programs = " . Dumper $breeding_programs;
+    print STDERR "Locations = " . Dumper $locations;
+    print STDERR "Trials = " . Dumper $trials;
+    print STDERR "Obs Units = " . Dumper $observation_units;
+    print STDERR "Traits = " . Dumper $traits;
+    print STDERR "Protocols = " . Dumper $protocols;
+    print STDERR "Projects = " . Dumper $projects;
+    print STDERR "Accessions = " . Dumper $accessions;
+
+    # Init the published metadata
+    my $data = {
+        breeding_programs => $breeding_programs,
+        locations => $locations,
+        trials => $trials,
+        traits => $traits,
+        observation_units => $observation_units,
+        protocols => $protocols,
+        projects => $projects,
+        accessions => $accessions
+    };
+    my $published = $self->add_published($user_id, $base_directory, $data);
+
+    return {
+        error => $published->{error},
+        key => $published->{key},
+        directory => $published->{directory},
+        data => $data
+    }
+}
+
+#
+# Generate an archived file for a specific data type
+# key = dataset issue key
+# type = data type to generate
+# params = other params, specific to each data type
+#
+sub generate_archive_file {
+    my $self = shift;
+    my $key = shift;
+    my $type = shift;
+    my $params = shift;
+    my $editable_stock_props = $params->{editable_stock_props};
+    my $cache_file_path = $params->{cache_file_path};
+    my $cluster_shared_tempdir = $params->{cluster_shared_tempdir};
+    my $backend = $params->{backend};
+    my $cluster_host = $params->{cluster_host};
+    my $web_cluster_queue = $params->{web_cluster_queue};
+    my $basepath = $params->{basepath};
+
+    my $schema = $self->schema;
+    my $BTProjects = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+    my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
+
+    # Get published metadata
+    my $published = $self->published();
+    if ( !exists $published->{$key} ) {
+        return { error => "This dataset archive has not been properly initialized" };
+    }
+    my $dir = $published->{$key}->{directory};
+    my $ids = $published->{$key}->{data}->{$type}->{ids};
+
+    # Check for base directory
+    return { error => "Archived dataset base path not set" } if !defined $dir;
+    return { error => "The dataset archive directory does not exist" } if ! -d $dir;
+
+    #
+    # EXPORT DATA
+    #
+    my $file_name;
+
+    # Save breeding programs
+    if ( $type eq 'breeding_programs' ) {
+        $file_name = "breeding_programs.csv";
+        my $results = $BTProjects->get_breeding_programs($ids);
+        my @header = ("id", "name", "description");
+        my @rows = (\@header, @$results);
+        csv(in => \@rows, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save locations
+    elsif ( $type eq 'locations' ) {
+        $file_name = 'locations.csv';
+        my $results = $BTProjects->get_locations($ids);
+        my @header = ("id", "name", "location_type", "latitude", "longitude", "altitude", "abbreviation", "country_code", "country_name", "noaa_station_id");
+        my @data;
+        foreach my $r (@$results) {
+            push @data, [$r->[0], $r->[1], $r->[9], $r->[2], $r->[3], $r->[4], $r->[6], $r->[7], $r->[8], $r->[10]];
+        }
+        my @rows = (\@header, @data);
+        csv(in => \@rows, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save accessions
+    elsif ( $type eq 'accessions' ) {
+        $file_name = 'accessions.csv';
+        my $results = $BTAccessions->export_properties($ids, $editable_stock_props);
+        csv(in => $results, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save trial metadata
+    elsif ( $type eq 'trials' ) {
+        $file_name = 'trials.csv';
+        my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
+            bcs_schema => $schema,
+            search_type => 'MetaData',
+            data_level => 'plot',
+            trial_list => $ids,
+        );
+        my @results = $metadata_search->get_metadata_matrix();
+        csv(in => \@results, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save trait metadata
+    elsif ( $type eq 'traits' ) {
+        $file_name = 'traits.csv';
+        my @header = ("id", "ontology_id", "name", "display_name", "synonyms", "definition");
+        my @data;
+        foreach my $id (@$ids) {
+            my $t = CXGN::Trait->new({
+                bcs_schema => $schema,
+                cvterm_id => $id
+            });
+            push @data, [
+                $t->cvterm_id(),
+                $t->db().":".$t->accession(),
+                $t->name(), $t->display_name(),
+                defined $t->synonyms() ? join(',', @{$t->synonyms()}) : '',
+                $t->definition()
+            ];
+        }
+        my @rows = (\@header, @data);
+        csv(in => \@rows, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save trait observations
+    elsif ( $type eq 'observation_units' ) {
+        $file_name = 'observations.csv';
+        my $data = $self->retrieve_phenotypes();
+        csv(in => $data, out => "$dir/$file_name", sep_char => ",");
+    }
+
+    # Save genotyping protocol
+    elsif ( $type eq 'protocols' ) {
+        $file_name = 'genotyping_protocols.vcf';
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate('VCF', {
+            bcs_schema => $schema,
+            people_schema => $self->people_schema(),
+            cache_root_dir => $cache_file_path,
+            protocol_id_list => $ids,
+            accession_list => $published->{$key}->{data}->{accessions}->{ids},
+            return_only_first_genotypeprop_for_stock => 0,
+        });
+        my $src = $geno->download($cluster_shared_tempdir, $backend, $cluster_host, $web_cluster_queue, $basepath);
+        copy($src, "$dir/$file_name") or return { error => "Could not copy $file_name file [$!]" };
+    }
+
+    # Save genotyping projects
+    elsif ( $type eq 'projects' ) {
+        $file_name = 'genotyping_projects.vcf';
+        my $geno = CXGN::Genotype::DownloadFactory->instantiate('VCF', {
+            bcs_schema => $schema,
+            people_schema => $self->people_schema(),
+            cache_root_dir => $cache_file_path,
+            genotype_data_project_list => $ids,
+            accession_list => $published->{$key}->{data}->{accessions}->{ids},
+            return_only_first_genotypeprop_for_stock => 0,
+        });
+        my $src = $geno->download($cluster_shared_tempdir, $backend, $cluster_host, $web_cluster_queue, $basepath);
+        copy($src, "$dir/$file_name") or return { error => "Could not copy $file_name file [$!]" };
+    }
+
+    # Unsupported data type
+    else {
+        return { error => "Data type $type is not supported" };
+    }
+
+    # Update the issue metadata
+    my $metadata = $self->published()->{$key};
+    $metadata->{data}->{$type}->{file} = $file_name;
+    $self->update_published($key, $metadata);
+
+    return { directory => $dir, file => $file_name };
+}
+
+#
+# Add a new issue of the published dataset metadata
+# sp_person_id = user id of the user creating the issue (should be the dataset owner)
+# base_directory = path to directory on the server where archived files will be stored (in dataset and issue subfolders)
+# data = hash of data to archive (key = data type, values = ids of items for that data type)
+#
+sub add_published {
+    my $self = shift;
+    my $sp_person_id = shift;
+    my $base_directory = shift;
+    my $data = shift;
+    my $dataset_id = $self->sp_dataset_id();
+    my $key = time();
+
+    # Set output directory
+    my $output_directory = "$base_directory/" . $self->sp_dataset_id . "/$key";
+    unless (-d $output_directory) {
+        mkpath($output_directory) or return { error => "Couldn't mkdir $output_directory: $!" };
+    }
+
+    # Set files data hash
+    my %files;
+    foreach my $t (keys %$data) {
+        $files{$t} = {
+            file => undef,
+            ids => $data->{$t},
+            submitted => {},
+            complete => 0
+        };
+    }
+
+    # Get user info
+    my $person = $self->people_schema()->resultset("SpPerson")->find({ sp_person_id => $sp_person_id });
+    my $person_name = $person->first_name." ".$person->last_name();
+
+    # Get existing dataset row
+    my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $dataset_id });
+    return { error => "Dataset with id $dataset_id does not exist" } unless $row;
+
+    # Get existing published data
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
+    my $published = $dataset->{published} || {};
+
+    # Add new published data
+    $published->{$key} = {
+        key => $key,
+        ts => $key*1000,
+        directory => $output_directory,
+        data => \%files,
+        service => undef,
+        article => {},
+        user => {
+            id => $sp_person_id,
+            name => $person_name
+        },
+    };
+    $dataset->{published} = $published;
+
+    # Store the updated dataset
+    eval {
+        $row->dataset(JSON::Any->encode($dataset));
+        $row->update();
+    };
+    if ($@) {
+        return { error => "Could not add to dataset published: $@" };
+    }
+
+    return { key => $key, directory => $output_directory };
+}
+
+#
+# Update the published metadata for a specific issue
+# key = issue key
+# data = updated metadata (this will replace the stored metadata)
+#
+sub update_published {
+    my $self = shift;
+    my $key = shift;
+    my $data = shift;
+    my $dataset_id = $self->sp_dataset_id();
+
+    # Get existing dataset row
+    my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $dataset_id });
+    return { error => "Dataset with id $dataset_id does not exist" } unless $row;
+
+    # Get existing published data
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
+    my $published = $dataset->{published} || {};
+
+    # Make sure key exists
+    if ( !exists $published->{$key} ) {
+        return { error => 'The specified key does not exist for this dataset' };
+    }
+
+    # Update the data in this key (replace with new data)
+    $dataset->{published}->{$key} = $data;
+
+    # Store the updated dataset
+    eval {
+        $row->dataset(JSON::Any->encode($dataset));
+        $row->update();
+    };
+    if ($@) {
+        return { error => "Could not update the dataset published: $@" };
+    }
+
+    return $dataset->{published}->{$key};
+}
+
+#
+# Remove the published metadata for a specific issue
+# key = issue key
+# base_directory = directory path on the server where archived files are stored
+#
+sub remove_published {
+    my $self = shift;
+    my $key = shift;
+    my $base_directory = shift;
+    my $dataset_id = $self->sp_dataset_id();
+
+    # Get existing dataset row
+    my $row = $self->people_schema()->resultset("SpDataset")->find({ sp_dataset_id => $dataset_id });
+    return { error => "Dataset with id $dataset_id does not exist" } unless $row;
+
+    # Get existing published data
+    my $dataset = eval { JSON::XS::decode_json($row->dataset) };
+    my $published = $dataset->{published} || {};
+
+    # Make sure key exists
+    if ( !exists $published->{$key} ) {
+        return { error => 'The specified key does not exist for this dataset' };
+    }
+
+    # remove the directory
+    my $directory = $published->{$key}->{'directory'};
+    my $re = qr/^$base_directory/;
+    if ( -d $directory && $directory =~ $re ) {
+        rmtree("$directory") or return { error => 'Failed to remove the archived files from the server' };
+    }
+    else {
+        return { error => 'Could not remove the archived files from the server' };
+    }
+
+    # remove from dataset
+    delete $published->{$key};
+    $dataset->{published} = $published;
+
+    # Store the updated dataset
+    eval {
+        $row->dataset(JSON::Any->encode($dataset));
+        $row->update();
+    };
+    if ($@) {
+        return { error => "Could not remove from published metadata from the dataset: $@" };
+    }
+
+    return { success => 1 };
+}
 
 1;

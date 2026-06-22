@@ -33,18 +33,10 @@ if (!$data_structure) {
 }
 
 my $url = $c->req->path;
-my $collapsed = 0;
-my $collapsible = 0;
 
 </%perl>
 
 <& /solgs/tools/base.mas &>
-
-<&| /page/info_section.mas,
-  collapsible => 1,
-  collapsed   => 0,
-  title       =>'Analysis Tools'
-&>
 
 <div id="dataset_trials_analysis" style="display: flex; align-items: center; justify-content-left: space-between;">
     <& /solgs/tools/trials_select.mas,
@@ -63,5 +55,3 @@ my $collapsible = 0;
 <div id="correlation_analysis_output" class="display:none">
     <& /solgs/tools/correlation/plot.mas &>
 </div>
-
-</&>
