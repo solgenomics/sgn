@@ -51,8 +51,11 @@ sub retrieve {
     my $all_stats = $self->all_stats;
     my @output;
     my $trial_stock_type = $self->trial_stock_type();
+    my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
+    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
+
+    $selected_cols{plot_order} = 1 if $include_plot_order;
 
     my @header;
     foreach (@possible_cols){
@@ -77,8 +80,21 @@ sub retrieve {
     my $trial_year = $trial->get_year ? $trial->get_year : '';
     my $trial_planting_date = $trial->get_planting_date ? $trial->get_planting_date : '';
 
+    # Add plot order to design, if requested by the user
+    if ( $include_plot_order ) {
+        my $results = CXGN::Trial->get_sorted_plots($schema, [$self->trial_id], $self->plot_order, $self->plot_start);
+        if ( $results->{plots} ) {
+            foreach (@{$results->{plots}}) {
+                $design{$_->{plot_number}}->{plot_order} = $_->{order};
+            }
+        }
+    }
+
     my @plot_design = values %design;
-    @plot_design = sort { $a->{plot_number} <=> $b->{plot_number} } @plot_design;
+
+    # sort plots by plot order, if requested, otherwise plot number
+    my $sort_key = $include_plot_order ? 'plot_order' : 'plot_number';
+    @plot_design = sort { $a->{$sort_key} <=> $b->{$sort_key} } @plot_design;
     my $pedigree_strings = $self->_get_all_pedigrees(\%design);
 
     my @overall_trait_names = sort keys %$overall_performance_hash;

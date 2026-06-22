@@ -85,7 +85,7 @@
 
 \title{Breedbase User Manual}
 \author{Breedbase team}
-\date{2026-06-18}
+\date{2026-04-02}
 
 \begin{document}
 \maketitle
@@ -1495,7 +1495,7 @@ This will create a separate trial for each selected location, but they will shar
 By default each trial design will have a fresh randomization, but if desired you may check the ``Use same randomization for all locations'' option.
 
 \hypertarget{email-alert-for-multiple-trial-design-upload}{%
-\subsection*{Email alert for multiple trial design upload}\label{email-alert-for-multiple-trial-design-upload}}
+\subsubsection*{Email alert for multiple trial design upload}\label{email-alert-for-multiple-trial-design-upload}}
 
 
 When uploading multiple trials from a file, you have the option to receive email notifications by clicking the ``Email Alert'' checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
@@ -1573,7 +1573,9 @@ For trials with spatial layout information and stored phenotypes, you can check 
 
 After you added a new trial to the database, you can edit trial details or add more information for that trial through the \emph{Trial Detail} page.
 
-\#\#\#\# Uploading Physical Trial Layout \{-\}
+\hypertarget{uploading-physical-trial-layout}{%
+\subsubsection*{Uploading Physical Trial Layout}\label{uploading-physical-trial-layout}}
+
 
 You can upload physical trial layout by clicking on the ``Upload Spatial Layout'' button on the \emph{Trial Detail} page.
 
@@ -1856,6 +1858,82 @@ To delete assayed trait data, click on ``Delete trait data'' link. On the appear
 To delete trial layout data, click on the ``Delete layout data'' link. Confirm deletion on the appeared dialog.
 
 To Delete trial entry, click on ``Delete trial entry'' link. Confirm deletion on the appeared dialog.
+
+\hypertarget{intercropping-support}{%
+\section{Intercropping Support}\label{intercropping-support}}
+
+Breedbase has started to add support for intercropping trials, allowing for more than one crop to be grown in a trial and more than one accession to be associated with a plot. Recent changes also allow for more than one trait ontology to be stored in the database, keeping the trait terms organized separately for each crop.
+
+\hypertarget{trial-creation}{%
+\subsection{Trial Creation}\label{trial-creation}}
+
+Currently, intercropping is only supported when uploading the trial design using a file (it is not yet supported in the interactive trial design tool).
+
+The trial upload template (both the single- and multiple-trial design formats) has an \texttt{accession\_name} column, which is used to specify the name of the primary accession for each plot (each plot must have a primary accession). The upload templates now support an optional \texttt{intercrop\_accession\_name} column, which can be used to add one or more additional accessions to a plot. You can include more than one intercropping accession by separating their names with a comma or leave the column empty when there is no intercropped accession in the plot.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2527}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1429}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.1758}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 8\tabcolsep) * \real{0.2857}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+trial\_name
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+plot\_name
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+plot\_number
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+accession\_name
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+intercrop\_accession\_name
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+B4I\_2025\_NY & B4I\_2025\_NY-PLOT\_5001 & 5001 & IL22-5365 & NDP160034Y \\
+B4I\_2025\_NY & B4I\_2025\_NY-PLOT\_5002 & 5002 & IL22-5365 & NDP250123Y,NDP250155Y \\
+B4I\_2025\_NY & B4I\_2025\_NY-PLOT\_5003 & 5003 & IL21-4364 & NDP250178Y \\
+B4I\_2025\_NY & B4I\_2025\_NY-PLOT\_5004 & 5004 & IL21-4020 & \\
+B4I\_2025\_NY & B4I\_2025\_NY-PLOT\_5005 & 5005 & IL23-1619 & NDP150221G \\
+\end{longtable}
+
+\textbf{An example multi-trial upload template that includes multiple accessions per plot}
+
+\emph{NOTE: some required columns are left out for clarity}
+
+\hypertarget{trial-details}{%
+\subsection{Trial Details}\label{trial-details}}
+
+The intercropped accessions are displayed as metadata in various parts of the trial detail page.
+
+The \emph{Experimental Design} section displays the intercropped accessions in the Accessions table as well as the Plots table.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/intercropping_plots_table} \end{center}
+
+The interactive field map tooltip (displayed when you hover the mouse pointer over a plot) will display all of the Accessions associated with the plot. The spatial layout download will list all of the Accessions in the plot as well.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/intercropping_fieldmap_tooltip} \end{center}
+
+\hypertarget{phenotype-downloads}{%
+\subsection{Phenotype Downloads}\label{phenotype-downloads}}
+
+All of the phenotype trait data downloads (from the trial detail page, search wizard, etc) still include the \texttt{germplasmDbId} and \texttt{germplasmName} columns, which include the the database id and name of the primary accession. The \texttt{intercropGermplasmDbId} and \texttt{intercropGermplasmName} columns will include the id(s) and name(s) of any intercropped germplasm added to the plots. If there are no intercropped germplasm for a particular plot, the columns will be empty. If there are more than one intercropped germplasm added to a plot, the IDs and names will be separated by a comma.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/intercropping_phenotype_download} \end{center}
+
+\textbf{An example phenotype download that includes multiple accessions per plot}
+
+\emph{NOTE: some columns are left out for clarity}
+
+\hypertarget{trait-ontologies}{%
+\subsection{Trait Ontologies}\label{trait-ontologies}}
+
+A separate trait ontology for each crop can be loaded into the database. This allows for the clear dilineation and separation of trait definitions between different crops.
+
+\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/intercropping_trait_search} \end{center}
 
 \hypertarget{managing-genotyping-plates}{%
 \chapter{Managing Genotyping Plates}\label{managing-genotyping-plates}}
@@ -2918,49 +2996,11 @@ A table of Sequence Metadata annotations are embedded on the Marker/Variant deta
 
 A publicly accessible RESTful API (Application Programming Interface) is available to query the database for Sequence Metadata directly from your programming environment (R, python, etc) to be used in analysis. The data is returned in a JSON format. Documentation for the API can be found on the \textbf{Manage \textgreater{} Sequence Metadata} page
 
-\hypertarget{managing-datasets}{%
-\chapter{Managing Datasets}\label{managing-datasets}}
+\hypertarget{managing-outliers-in-dataset}{%
+\chapter{Managing Outliers in Dataset}\label{managing-outliers-in-dataset}}
 
-\hypertarget{what-is-a-dataset}{%
-\section{What is a Dataset?}\label{what-is-a-dataset}}
-
-Similar to Lists, Datasets can be used to save selected data in the database to your account to be reused later or shared with other users. While Lists only contain items from a single data type (for example a selection of Accessions), Datasets contain selected items across multiple data types (for example a selection of Accessions, Locations, Phenotyping Trials, and Traits used in an analysis). Datasets can be created to make selections in the Search Wizard reusable, used as inputs in some of the analysis tools, shared with other users by making them public, and exported to FigShare to make the data more easily accessible to external users.
-
-\hypertarget{managing-datasets-1}{%
-\section{Managing Datasets}\label{managing-datasets-1}}
-
-\hypertarget{dataset-creation}{%
-\subsection{Dataset Creation}\label{dataset-creation}}
-
-Datasets are created from within the Search Wizard:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  First, make your selection in the Search Wizard. Select the data types you want saved in the dataset and the specific items to include for each data type.
-\item
-  Enter the name of the new Dataset and click the ``Create'' button to save the dataset.
-\end{enumerate}
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_creation} \end{center}
-
-\hypertarget{existing-datasets}{%
-\subsection{Existing Datasets}\label{existing-datasets}}
-
-To use a saved Dataset in the Search Wizard, select the Dataset name in the drop down menu below the Search Wizard columns and click the ``Load'' button. This will set the Search Wizard column selections to all of the data types and items in the selected Dataset.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_selection} \end{center}
-
-You can also view a table of all of your saved Datasets and any public Datasets from other users by clicking the Datasets button in the top right of the toolbar.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_table} \end{center}
-
-From this table, you can select an individual Dataset to modify its properties (description, visibility, etc), check for outliers, view the Dataset compatibility for analysis tools, run some analyses, and publish the Dataset to FigShare.
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_detail} \end{center}
-
-\hypertarget{outlier-detection}{%
-\section{Outlier Detection}\label{outlier-detection}}
+\hypertarget{what-is-outliers-functionality-in-dataset}{%
+\section{What is Outliers Functionality in Dataset ?}\label{what-is-outliers-functionality-in-dataset}}
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/outliers_dataset_icon} \end{center}
 
@@ -2973,14 +3013,14 @@ Each dataset stores a wholly unique set of outlier points, completely independen
 Each trait has its own set of defined outliers.
 
 \hypertarget{accessing-trait-visualization}{%
-\subsection{Accessing Trait Visualization}\label{accessing-trait-visualization}}
+\section{Accessing Trait Visualization}\label{accessing-trait-visualization}}
 
 Once you've selected a specific trait, the web application provides access to a visualization of the data points associated with that trait.
 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/outliers_dataset_basic_panel} \end{center}
 
 \hypertarget{interpreting-visual-elements}{%
-\subsection{Interpreting Visual Elements}\label{interpreting-visual-elements}}
+\section{Interpreting Visual Elements}\label{interpreting-visual-elements}}
 
 Once you've selected a specific trait, the web application provides access to a visualization of the data points associated with that trait.
 
@@ -2997,7 +3037,7 @@ Once you've selected a specific trait, the web application provides access to a 
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/outliers_dataset_full_visualisation} \end{center}
 
 \hypertarget{choosing-cut-off-values}{%
-\subsection{Choosing Cut-Off Values}\label{choosing-cut-off-values}}
+\section{Choosing Cut-Off Values}\label{choosing-cut-off-values}}
 
 You have two fundamental options for setting cut-off points:
 
@@ -3010,12 +3050,12 @@ You have two fundamental options for setting cut-off points:
 \end{itemize}
 
 \hypertarget{setting-deviation-multiplier}{%
-\subsection{Setting Deviation Multiplier}\label{setting-deviation-multiplier}}
+\section{Setting Deviation Multiplier}\label{setting-deviation-multiplier}}
 
 The slider allows you to specify the deviation multiplier from a central point, which influences the cut-off values.
 
 \hypertarget{utilizing-graph-controls}{%
-\subsection{Utilizing Graph Controls}\label{utilizing-graph-controls}}
+\section{Utilizing Graph Controls}\label{utilizing-graph-controls}}
 
 Beneath the graph, you'll find four buttons, each serving a distinct function:
 
@@ -3034,54 +3074,6 @@ Beneath the graph, you'll find four buttons, each serving a distinct function:
 \begin{center}\includegraphics[width=0.95\linewidth]{assets/images/outliers_dataset_actions} \end{center}
 
 These tools and functions are designed to provide you with control and insights when working with data visualization and outliers.
-
-\hypertarget{publishing-a-dataset}{%
-\section{Publishing a Dataset}\label{publishing-a-dataset}}
-
-The owner of a Dataset can generate a static snapshot of the data within their Dataset at the point in time when the archive is created. This creates plain-text files that are stored on the breedbase server and stay the same even if the underlying data in the database has changed. When enabled on the database, the owner can also export that snapshot to an external service, such as FigShare, to make the data more easily accessible to external users. In addition, a DOI (digital object identifier) can be generated to create a persistent link to the published data that can be used as a reference in a publication.
-
-To publish a Dataset:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\tightlist
-\item
-  \textbf{Generate the archived files} - this creates a static snapshot of the data within the dataset at the time when the files are generated. The data in this snapshot will stay the same even if the underlying data in the dataset is modified in the database. The snapshot consists of plain-text files (.csv, .vcf, etc) for all of the data contained within the Dataset. It also extrapolates to include relevant data types that are not explicitly defined by the Dataset. For example, if you have phenotyping trials selected in the Dataset but do not explicitly include locations or traits, the archive will include location and trait information for all of the locations of the selected trials in the datasets and all of the traits observed by the trials in the datasets. If you explicitly include traits in the dataset, then the archive will only include those defined traits.
-\end{enumerate}
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_generate_archive} \end{center}
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{1}
-\tightlist
-\item
-  \textbf{Upload the files to an external service} - this will upload the archived files to the external service. You will be given the option to upload the files to a new dataset or an existing dataset on the external service.
-\end{enumerate}
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_upload} \end{center}
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{2}
-\tightlist
-\item
-  \textbf{Publish the external dataset} - once the files have been uploaded to an external dataset, you can make the external dataset publicly available for others to find. This will make the data available to anyone that has access to the external service - it does not change any visibility settings on breedbase. \textbf{The external dataset cannot be removed onced it is published}.
-\end{enumerate}
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_uploaded} \end{center}
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\setcounter{enumi}{3}
-\tightlist
-\item
-  \textbf{Reserve a DOI} - generate a Digital Object Identifier (DOI) for the external dataset that can be used as a reference in publications. If the external dataset is still private, the DOI will become active once the external dataset is published and made public.
-\end{enumerate}
-
-\begin{center}\includegraphics[width=0.95\linewidth]{assets/images/dataset_has_doi} \end{center}
-
-You can make additional changes to the external dataset's metadata and uploaded files \emph{until the external dataset has been published}. There are more detailed edit options on the website for the external service - click the Edit button to open the external service's edit webpage. Once the external dataset has been published, all new changes will be made to a new version of the external dataset, which will have to be published again to make the changes public. Any previously published versions will be preserved and still accessible. \textbf{The external dataset cannot be removed onced it is published}.
 
 \hypertarget{data-analysis-tools}{%
 \chapter{Data Analysis Tools}\label{data-analysis-tools}}

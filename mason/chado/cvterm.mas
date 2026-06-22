@@ -204,7 +204,7 @@ my $edit_privs = $curator ;
 <&| /page/info_section.mas, title=>"Cvterm details" &>
 <table style="border-spacing:10px">
 % if ( $allow_edits ) {
-<tr><td><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit]</td><td><a href="javascript:deleteCvterm()" id="delete_cvterm_link" style="color:red;">[Delete]</a></td></tr>
+<tr><td colspan="2"><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit] <a href="javascript:deleteCvterm()" id="delete_cvterm_link" style="color:red;">[Delete]</a></td><td></td><td></td></tr>
 % }
 <tr><td>Term id</td><td width="10px">&nbsp;</td><td><b><% $accession %></b></td></tr>
 <tr><td>Term name</td><td>&nbsp;</td><td><b><% $cvterm_name %></b></td></tr>

@@ -390,7 +390,6 @@ has 'description' => (
 has 'is_obsolete' => (
     isa => 'Bool',
     is => 'rw',
-    default => 0,
 );
 
 =head2 accessor organization_name()
@@ -552,6 +551,9 @@ sub BUILD {
     $self->stock($stock);
     $self->stock_id($stock->stock_id);
     $self->create_date($stock->create_date);
+    if (!defined ($self->is_obsolete)) {
+        $self->is_obsolete($stock->is_obsolete);
+    }
 
     unless ($self->is_saving) {
         $self->organism_id($stock->organism_id);
@@ -675,7 +677,7 @@ sub store {
                 description => $self->description(),
                 type_id => $self->type_id(),
                 organism_id => $self->organism_id(),
-                is_obsolete => $self->is_obsolete(),
+                is_obsolete => 0,
             });
             $new_row->insert();
 

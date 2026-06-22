@@ -100,7 +100,7 @@ $c->stash->{rest} = { filename => $urlencode{$tempfile.".xls"} };
 For downloading a trial's layout (as used from CXGN::Trial::Download->trial_download):
 
 A trial's layout can optionally include treatment and phenotype summary
-information, mapping to treatment_project_ids and trait_list.
+information, mapping to treatment_ids and trait_list.
 These keys can be ignored if you don't need them in the layout.
 
 As a XLS:
@@ -118,7 +118,7 @@ my $download = CXGN::Trial::Download->new({
     filename => $tempfile,
     format => $plugin,
     data_level => $data_level,
-    treatment_project_ids => \@treatment_project_ids,
+    treatment_ids => \@treatment_ids,
     selected_columns => $selected_cols,
 });
 my $error = $download->download();
@@ -213,17 +213,21 @@ has 'plot_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'plant_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'location_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'year_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
+has 'protocol_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
+has 'hdp_type' => (isa => 'Str', is => 'rw');
+has 'instance_list' => (isa => 'ArrayRef[Int]|Undef', is => 'rw' );
 has 'include_timestamp' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_pedigree_parents' => (isa => 'Bool', is => 'ro', default => 0);
 has 'include_intercrop_stocks' => (isa => 'Bool|Undef', is => 'ro', default => 0);
 has 'include_entry_numbers' => (isa => 'Bool|Undef', is => 'ro', default => 0);
+has 'include_trait_synonyms' => (isa => 'Bool|Undef', is => 'ro', default => 0);
 has 'exclude_phenotype_outlier' => (isa => 'Bool', is => 'ro', default => 0);
 has 'has_header' => (isa => 'Bool', is => 'ro', default => 1);
 has 'trait_contains' => (isa => 'ArrayRef[Str]|Undef', is => 'rw');
 has 'phenotype_min_value' => (isa => 'Str', is => 'rw');
 has 'phenotype_max_value' => (isa => 'Str', is => 'rw');
 has 'search_type' => (isa => 'Str', is => 'rw');
-has 'treatment_project_ids' => (isa => 'ArrayRef[Int]|Undef', is => 'rw');
+has 'include_treatments' => (isa => 'Str', is => 'rw', default => 'true');
 has 'selected_columns' => (isa => 'HashRef|Undef', is => 'rw');
 has 'include_notes' => (isa => 'Str', is => 'rw');
 has 'filename' => (isa => 'Str', is => 'ro',
@@ -239,6 +243,9 @@ has 'people_schema' => ( isa => 'Ref', is => 'rw');
 has 'dbh' => (is  => 'rw');
 has 'start_date' => ( isa => 'Maybe[Str]', is => 'rw');
 has 'end_date' => (isa => 'Maybe[Str]', is => 'rw');
+has 'include_plot_order' => (is => 'rw', isa => 'Bool', default => 0);
+has 'plot_order' => (is => 'rw', isa => 'Maybe[Str]', default => undef);
+has 'plot_start' => (is => 'rw', isa => 'Maybe[Str]', default => undef);
 
 
 sub BUILD {

@@ -220,45 +220,45 @@ sub store {
     my $id = $self->SUPER::store();
 
     if ($self->Strain){
-        $self->_store_stockprop('Strain', $self->Strain);
+        $self->_update_stockprop('Strain', $self->Strain);
     }
 
     if ($self->Backbone){
-        $self->_store_stockprop('Backbone', $self->Backbone);
+        $self->_update_stockprop('Backbone', $self->Backbone);
     }
 
     if ($self->CloningOrganism){
-        $self->_store_stockprop('CloningOrganism', $self->CloningOrganism);
+        $self->_update_stockprop('CloningOrganism', $self->CloningOrganism);
     }
     if ($self->InherentMarker){
-        $self->_store_stockprop('InherentMarker', $self->InherentMarker);
+        $self->_update_stockprop('InherentMarker', $self->InherentMarker);
     }
     if ($self->SelectionMarker){
-        $self->_store_stockprop('SelectionMarker', $self->SelectionMarker);
+        $self->_update_stockprop('SelectionMarker', $self->SelectionMarker);
     }
 
     if ($self->CassetteName){
-        $self->_store_stockprop('CassetteName', $self->CassetteName);
+        $self->_update_stockprop('CassetteName', $self->CassetteName);
     }
     if ($self->VectorType){
-        $self->_store_stockprop('VectorType', $self->VectorType);
+        $self->_update_stockprop('VectorType', $self->VectorType);
     }
     if ($self->Gene){
-        $self->_store_stockprop('Gene', $self->Gene);
+        $self->_update_stockprop('Gene', $self->Gene);
     }
 
     if ($self->Promotors){
-        $self->_store_stockprop('Promotors', $self->Promotors);
+        $self->_update_stockprop('Promotors', $self->Promotors);
     }
     if ($self->Terminators){
-        $self->_store_stockprop('Terminators', $self->Terminators);
+        $self->_update_stockprop('Terminators', $self->Terminators);
     }
 
     if ($self->BacterialResistantMarker){
-        $self->_store_stockprop('BacterialResistantMarker', $self->BacterialResistantMarker);
+        $self->_update_stockprop('BacterialResistantMarker', $self->BacterialResistantMarker);
     }
     if ($self->PlantAntibioticResistantMarker){
-        $self->_store_stockprop('PlantAntibioticResistantMarker', $self->PlantAntibioticResistantMarker);
+        $self->_update_stockprop('PlantAntibioticResistantMarker', $self->PlantAntibioticResistantMarker);
     }
 
     if ($self->other_editable_stock_props){
@@ -277,7 +277,7 @@ sub store {
                 $cvterm_id = $new_term->cvterm_id();
             }
 
-            $self->_store_stockprop($key, $value);
+            $self->_update_stockprop($key, $value);
         }
     }
 
