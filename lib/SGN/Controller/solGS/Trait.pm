@@ -246,8 +246,8 @@ sub get_acronym_pairs {
     my @acronym_pairs;
     if (-f $acronyms_file)
     {
-        @acronym_pairs =  map { [ split(/\t/) ] }  read_file($acronyms_file, {binmode => ':utf8'});
-        shift(@acronym_pairs); # remove header;
+        @acronym_pairs = map { [ split(/\t/) ] } read_file($acronyms_file, {binmode => ':utf8'});
+        shift(@acronym_pairs); # remove header
     }
 
     @acronym_pairs = sort {uc $a->[0] cmp uc $b->[0] } @acronym_pairs;

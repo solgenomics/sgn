@@ -323,6 +323,13 @@ function edit_trial_details(){
     jQuery('#edit_trial_plan_to_cross option[value="'+default_type+'"]').attr('selected','selected');
 
     //create bootstrap daterangepickers for planting, transplanting and harvest dates
+
+    jQuery(document).on('focusin', function(e) {
+        if (jQuery(e.target).closest('.daterangepicker').length) {
+            e.stopImmediatePropagation();
+        }
+    });
+
     var planting_date_element = jQuery("#edit_trial_planting_date");
     set_daterangepicker_default (planting_date_element);
     jQuery('input[title="planting_date"]').daterangepicker({

@@ -83,6 +83,7 @@ export function init() {
             for (let plot of this.plot_arr.filter((plot) => plot.type == "filler")) {
                 brapi_post_plots.push({
                     additionalInfo: {
+                        filler_plot: 1,
                         invert_row_checkmark: document.getElementById(
                             "invert_row_checkmark"
                         ).checked,
@@ -568,7 +569,7 @@ export function init() {
             let tempNumCols = this.meta_data.num_cols;
             this.meta_data.num_cols = this.meta_data.num_rows;
             this.meta_data.num_rows = tempNumCols;
-            d3.select("svg").remove();
+            d3.select("#fieldmap_chart").selectAll("svg").remove();
             this.add_borders();
             this.render();
         }
@@ -678,7 +679,7 @@ export function init() {
                 if (plot.type == "data") {
 
                     var image_ids = plot.plotImageDbIds || [];
-                    var replace_accession = plot.germplasmName;
+                    var replace_accession = `<a href="/stock/${plot.germplasmDbId}/view">${plot.germplasmName}</a>`;
                     var replace_plot_id = plot.observationUnitDbId;
                     var replace_plot_name = plot.observationUnitName;
                     plot;
@@ -693,12 +694,12 @@ export function init() {
                     jQuery("#hm_edit_plot_information").html(
                         //"<b>Selected Plot Information: </b>"
                     );
-                    jQuery("#hm_plot_name").html(replace_plot_name);
+                    jQuery("#hm_plot_name").html(`<a href="/stock/${replace_plot_id}/view">${replace_plot_name}</a>`);
                     jQuery("#hm_plot_number").html(replace_plot_number);
                     var old_plot_id = jQuery("#hm_plot_id").html(replace_plot_id);
                     var old_plot_accession = jQuery("#hm_plot_accession").html(
                         plot.additionalInfo?.intercropGermplasm ? 
-                            [replace_accession, ...plot.additionalInfo.intercropGermplasm.map((e) => e.germplasmName)].join(', ') : 
+                            [replace_accession, ...plot.additionalInfo.intercropGermplasm.map((e) => `<a href="/stock/${e.germplasmDbId}/view">${e.germplasmName}</a>`)].join(', ') : 
                             replace_accession
                     );
 
@@ -744,7 +745,16 @@ export function init() {
                                                 nestedUl.classList.add("hidden");
                                                 li.appendChild(nestedUl);
                                             } else {
-                                                li.textContent = `${key}: ${obj[key]}`;
+                                                if (key == "name") {
+                                                    let label = document.createTextNode(`${key}: `);
+                                                    let a = document.createElement("a");
+                                                    a.href = `/stock/${obj['stock_id']}/view`;
+                                                    a.textContent = obj[key];
+                                                    li.appendChild(label);
+                                                    li.appendChild(a);
+                                                } else {
+                                                    li.textContent = `${key}: ${obj[key]}`;
+                                                }
                                             }
 
                                             ul.appendChild(li);
@@ -771,7 +781,7 @@ export function init() {
                                         }
                                     }
 
-                                    let subplot_map = ["<table style=\"border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+                                    let subplot_map = ["<table style=\"display:inline-table;border-collapse:separate;table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
 
                                     for (let subplot of Object.keys(obj["has"]).sort()) {
                                         subplot_map.push("<tr><td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">" + subplot + "<br>");
@@ -802,7 +812,7 @@ export function init() {
                                     
                                     // table will have max_row + 1 rows and max_col + 1 cols
 
-                                    let table_elems = ["<table style=\"aspect-ratio:"+(max_col+1)+"/"+(max_row+1)+"; border-collapse:separate; table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
+                                    let table_elems = ["<table style=\"display:inline-table;border-collapse:separate;table-layout:fixed;overflow:hidden;border-spacing:1px;\">"];
 
                                     for (let row = max_row; row >= 0; row--){
                                         table_elems.push("<tr>");
@@ -819,9 +829,9 @@ export function init() {
                                                 } else {// normal plant
                                                     let coord = "" + row + "," + col + "";
                                                     if (coord in coord_dictionary) {
-                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
+                                                        table_elems.push("<td style=\"border:1px solid black;padding:2px;border-radius:10px;text-align:center;vertical-align:middle;width:3em;aspect-ratio:1;\">"+coord_dictionary["" + row + "," + col + ""]+"</td>");
                                                     } else {
-                                                        table_elems.push("<td style=\"border: 1px solid black; padding:2px; border-radius:10px;text-align:center; vertical-align:middle;\">empty space</td>");
+                                                        table_elems.push("<td style=\"border:1px solid black;padding:2px;border-radius:10px;text-align:center;vertical-align:middle;width:3em;aspect-ratio:1;\">empty space</td>");
                                                     }
                                                 }
                                             }
@@ -1402,7 +1412,7 @@ export function init() {
         }
 
         load() {
-            d3.select("svg").remove();
+            d3.select("#fieldmap_chart").selectAll("svg").remove();
             this.change_dimensions(this.meta_data.num_cols, this.meta_data.num_rows);
             this.add_borders();
             this.render();

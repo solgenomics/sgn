@@ -990,7 +990,9 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         }
     };
 
-    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => 1 };
@@ -1123,7 +1125,9 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         }
     };
 
-    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
@@ -1254,7 +1258,9 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
         trial_id => $c->stash->{trial_id}
     });
 
-    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $add_subplots = $t->has_subplot_entries();
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $add_subplots)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading subplots." };
@@ -1389,7 +1395,9 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
         }
     };
 
-    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)) {
+    my $add_additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config, $add_additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants." };
@@ -1524,7 +1532,9 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
         }
     };
 
-    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
@@ -1656,7 +1666,9 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
         }
     };
 
-    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_subplots = $t->has_subplot_entries();
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_subplots)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading subplots." };
@@ -1790,7 +1802,9 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         }
     };
 
-    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config)){
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_entries(\%plot_plant_hash, $plants_per_plot, $inherits_plot_treatments, $user_id, $phenotype_store_config, $additional_plants)){
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants." };
@@ -1924,7 +1938,9 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         }
     };
 
-    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_plants = $t->has_plant_entries();
+
+    if ($t->save_plant_subplot_entries(\%subplot_plant_hash, $plants_per_subplot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_plants)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading plants to subplots." };
@@ -2055,7 +2071,9 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         }
     };
 
-    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_subplots = $t->has_subplot_entries();
+
+    if ($t->save_subplot_entries(\%plot_subplot_hash, $subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_subplots)) {
         $c->stash->{rest} = { success => 1 };
     } else {
         $c->stash->{rest} = { error => "An error occurred uploading subplots." };
@@ -2271,7 +2289,11 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         $c->detach();
     }
     unlink $upload_tempfile;
-    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_id => $trial_id);
+    my $parser = CXGN::Trial::ParseUpload->new(
+        chado_schema => $schema, 
+        filename => $archived_filename_with_path, 
+        trial_id => $trial_id
+    );
     $parser->load_plugin('TrialChangePlotAccessions');
     my $parsed_data = $parser->parse();
     #print STDERR Dumper $parsed_data;
@@ -2535,6 +2557,71 @@ sub trial_plots : Chained('trial') PathPart('plots') Args(0) {
 #    print STDERR "PLOTS =".Dumper(\@data)."\n";
 
     $c->stash->{rest} = { plots => \@data };
+}
+
+sub remove_filler_plots : Chained('trial') PathPart('remove_fillers') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $trial = $c->stash->{trial};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $stocks_rs = $schema->resultset('Stock::Stock')->search(
+        {
+            'project.project_id' => $trial_id,
+            'stockprops.type_id' => SGN::Model::Cvterm->get_cvterm_row(
+                $schema,
+                'filler_plot',
+                'stock_property'
+            )->cvterm_id(),
+        },
+        {
+            join => [
+                {
+                    nd_experiment_stocks => {
+                        nd_experiment => {
+                            nd_experiment_projects => 'project'
+                        }
+                    }
+                },
+                'stockprops'
+            ],
+            distinct => 1,
+        }
+    );
+
+    my @stock_ids = $stocks_rs->get_column('stock_id')->all;
+
+    my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
+
+    if (@stock_ids) {
+        $schema->resultset('Stock::Stock')->search({
+            stock_id => { -in => \@stock_ids }
+        })->delete;
+
+        my $pp_rs = $schema->resultset('Project::Projectprop')->search({
+            project_id => $trial_id,
+            type_id    => $trial_layout_cvterm_id,
+        });
+
+        while (my $row = $pp_rs->next) {
+            my $layout = decode_json($row->value);
+
+            # Remove filler plot numbers from projectprop.value json
+            my %filler_ids = map { $_ => 1 } @stock_ids;
+
+            foreach my $plot_number (keys %$layout) {
+                if ($filler_ids{ $layout->{$plot_number}->{plot_id} }) {
+                    delete $layout->{$plot_number};
+                }
+            }
+
+            $row->value(encode_json($layout));
+            $row->update;
+        }
+    }
+    $c->stash->{rest} = { success => 1, deleted => scalar(@stock_ids) };
 }
 
 sub trial_has_data_levels : Chained('trial') PathPart('has_data_levels') Args(0) {
@@ -3326,8 +3413,12 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
     }
 
     push @plant_entity_params, $phenotype_store_config;
+    my $additional_plants = $t->has_plant_entries();
+    push @plant_entity_params, $additional_plants;
 
-    if ($t->create_plant_entities(@plant_entity_params)) {
+    my $create_plant_entities = $t->create_plant_entities(@plant_entity_params);
+
+    if ($create_plant_entities->{success}) {
 
 #        my $dbh = $c->dbc->dbh();
 #        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3337,7 +3428,7 @@ sub create_plant_plot_entries : Chained('trial') PathPart('create_plant_entries'
         $c->stash->{rest} = {success => 1};
         return;
     } else {
-        $c->stash->{rest} = { error => "Error creating plant entries in controller." };
+        $c->stash->{rest} = { error => $create_plant_entities->{error} };
     	return;
     }
 
@@ -3402,6 +3493,9 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
             date => $timestamp
         }
     };
+
+    my $additional_plants = $t->has_plant_entries();
+
     my @subplot_plant_entity_params = ($plants_per_subplot, $inherits_plot_treatments, $user_id, $plant_owner_username);
 
     if ($include_plant_coordinates) {
@@ -3424,8 +3518,11 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
     }
 
     push @subplot_plant_entity_params, $phenotype_store_config;
+    push @subplot_plant_entity_params, $additional_plants;
 
-    if ($t->create_plant_subplot_entities(@subplot_plant_entity_params)) {
+    my $create_plant_subplot_entities = $t->create_plant_subplot_entities(@subplot_plant_entity_params);
+
+    if ($create_plant_subplot_entities->{success}) {
 
 #        my $dbh = $c->dbc->dbh();
 #        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3434,7 +3531,7 @@ sub create_plant_subplot_entries : Chained('trial') PathPart('create_plant_subpl
         $c->stash->{rest} = {success => 1};
         return;
     } else {
-        $c->stash->{rest} = { error => "Error creating plant entries for subplots in controller." };
+        $c->stash->{rest} = { error => $create_plant_subplot_entities->{error} };
     	return;
     }
 
@@ -3496,7 +3593,8 @@ sub create_subplot_entries : Chained('trial') PathPart('create_subplot_entries')
             date => $timestamp
         }
     };
-    if ($t->create_subplot_entities($subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config)) {
+    my $additional_subplots = $t->has_subplot_entries();
+    if ($t->create_subplot_entities($subplots_per_plot, $inherits_plot_treatments, $user_id, $user_name, $phenotype_store_config, $additional_subplots)) {
 
 #        my $dbh = $c->dbc->dbh();
 #        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3581,9 +3679,9 @@ sub create_tissue_samples : Chained('trial') PathPart('create_tissue_samples') A
     };
     if ($t->create_tissue_samples($tissue_names, $inherits_plot_treatments, $use_tissue_numbers, $user_id, $user_name, $phenotype_store_config)) {
 
-#        my $dbh = $c->dbc->dbh();
-#        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-#        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
+        my $dbh = $c->dbc->dbh();
+        my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
+        my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
 
         $c->stash->{rest} = {success => 1};
         $c->detach;;
@@ -4416,13 +4514,14 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
       my $image_img  = $image_ob->get_image_url("medium");
       my $small_image = $image_ob->get_image_url("thumbnail");
       my $image_page  = "/image/view/$image_id";
+      my $image_page_ref = "<a href=\"$image_page\">$image_name</a>";
 
       my $colorbox =
         qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
       my $fhtml =
         qq|<tr><td width=120>|
           . $colorbox
-            . $image_name
+            . $image_page_ref
               . "</td><td>"
                 . $image_description
                   . "</td></tr>";
@@ -5741,6 +5840,147 @@ sub delete_entry_numbers :Path('/ajax/breeders/trial_entry_numbers/delete') Args
     }
 }
 
+sub delete_trial_plants : Chained('trial') PathPart('delete_plants') : ActionClass('REST') {}
+
+sub delete_trial_plants_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $plants_liststr = $c->req->param('plants_list');
+    my @delete_plants = split("\t", $plants_liststr);
+
+    if (!$c->user() || !$c->user->check_roles("curator")) {
+        $c->stash->{rest} = {error => "Only curators can delete plants." };
+        return;
+    }
+
+    my $trial = $c->stash->{trial};
+
+    my @trial_plants = @{$trial->get_plants()};
+    my %trial_plants_map = map {$_->[1] => $_->[0]} @trial_plants;
+
+    my @delete_stock_ids = ();
+    
+    my @mismatch_plants = ();
+    foreach my $plant (@delete_plants) {
+        if (!defined($trial_plants_map{$plant})) {
+            push @mismatch_plants, $plant;
+        } else {
+            push @delete_stock_ids, $trial_plants_map{$plant};
+            my $plant_obj = CXGN::Stock->new({
+                schema => $c->dbic_schema("Bio::Chado::Schema"),
+                stock_id => $trial_plants_map{$plant}
+            });
+            my @child_stocks = @{$plant_obj->get_child_stocks_flat_list()};
+            foreach my $child (@child_stocks) {
+                push @delete_stock_ids, $child->{stock_id};
+            }
+        }
+    }
+
+    if (scalar(@mismatch_plants) > 0) {
+        print STDERR "Plants not found in trial on plant delete...\n";
+        $c->stash->{rest} = {error => "The following plants are not found in this trial: ".join(", ", @mismatch_plants)};
+        return;
+    }
+
+    eval {
+        CXGN::Stock->bulk_hard_delete($c->dbic_schema("Bio::Chado::Schema"), \@delete_stock_ids);
+        if (scalar(@delete_plants) == scalar(@trial_plants)) {
+            my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'project_has_plant_entries', 'project_property')->cvterm_id();
+            my $plants_per_plot_row = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $trial_id
+            });
+            $plants_per_plot_row->delete();
+        }
+    };
+    if ($@) {
+        print STDERR $@, "\n";
+        $c->stash->{rest} = {error => "An error occurred deleting stocks: $@"};
+        return;
+    }
+
+    my $fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        trial_id => $trial_id
+    });
+    $fieldmap->_regenerate_trial_layout_cache();
+
+    $c->stash->{rest} = {success => 1};
+    return;
+}
+
+sub delete_trial_subplots : Chained('trial') PathPart('delete_subplots') : ActionClass('REST') {}
+
+sub delete_trial_subplots_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $trial_id = $c->stash->{trial_id};
+    my $subplots_liststr = $c->req->param('subplots_list');
+    my @delete_subplots = split("\t", $subplots_liststr);
+
+    if (!$c->user() || !$c->user->check_roles("curator")) {
+        $c->stash->{rest} = {error => "Only curators can delete subplots." };
+        return;
+    }
+
+    my $trial = $c->stash->{trial};
+
+    my @trial_subplots = @{$trial->get_subplots()};
+    my %trial_subplots_map = map {$_->[1] => $_->[0]} @trial_subplots;
+
+    my @delete_stock_ids = ();
+    
+    my @mismatch_subplots = ();
+    foreach my $subplot (@delete_subplots) {
+        if (!defined($trial_subplots_map{$subplot})) {
+            push @mismatch_subplots, $subplot;
+        } else {
+            push @delete_stock_ids, $trial_subplots_map{$subplot};
+            my $subplot_obj = CXGN::Stock->new({
+                schema => $c->dbic_schema("Bio::Chado::Schema"),
+                stock_id => $trial_subplots_map{$subplot}
+            });
+            my @child_stocks = @{$subplot_obj->get_child_stocks_flat_list()};
+            foreach my $child (@child_stocks) {
+                push @delete_stock_ids, $child->{stock_id};
+            }
+        }
+    }
+
+    if (scalar(@mismatch_subplots) > 0) {
+        $c->stash->{rest} = {error => "The following subplots are not found in this trial: ".join(", ", @mismatch_subplots)};
+        return;
+    }
+
+    eval {
+        CXGN::Stock->bulk_hard_delete($c->dbic_schema("Bio::Chado::Schema"), \@delete_stock_ids);
+        if (scalar(@delete_subplots) == scalar(@trial_subplots)) {
+            my $has_subplots_cvterm = SGN::Model::Cvterm->get_cvterm_row($c->dbic_schema("Bio::Chado::Schema"), 'project_has_subplot_entries', 'project_property')->cvterm_id();
+            my $subplots_per_plot_row = $c->dbic_schema("Bio::Chado::Schema")->resultset("Project::Projectprop")->find({
+                type_id => $has_subplots_cvterm,
+                project_id => $trial_id
+            });
+            $subplots_per_plot_row->delete();
+        }
+    };
+    if ($@) {
+        print STDERR $@, "\n";
+        $c->stash->{rest} = {error => "An error occurred deleting stocks: $@"};
+        return;
+    };
+
+    my $fieldmap = CXGN::Trial::FieldMap->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema"),
+        trial_id => $trial_id
+    });
+    $fieldmap->_regenerate_trial_layout_cache();
+
+
+    $c->stash->{rest} = {success => 1};
+    return;
+}
 
 sub update_trial_status : Chained('trial') PathPart('update_trial_status') : ActionClass('REST'){ }
 
@@ -6549,8 +6789,7 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
             $parent_stock_link = qq{<a href="/family/$parent_stock_id">$parent_stock_name</a>};
         }
 
-        no warnings 'uninitialized';
-        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, qq{<a href="/stock/$plant_id/view">$plant_name</a>}, qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>}];
+        push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, $plant_id ? qq{<a href="/stock/$plant_id/view">$plant_name</a>} : '', $tissue_sample_id ? qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>} : ''];
     }
 
 
