@@ -460,7 +460,7 @@ sub correlation_temp_dir {
     my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id};
     my $corr_temp_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'tempfiles');
 
-    make_path($corr_temp_dir, {mode => "0755"});
+    make_path($corr_temp_dir, { mode => oct('0755') });
 
     return $corr_temp_dir;
 }

@@ -6,7 +6,7 @@ use namespace::autoclean;
 use Carp qw/ carp confess croak /;
 use File::Basename;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path  /;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file/;
 use JSON;
@@ -865,7 +865,7 @@ sub cluster_temp_dir {
 
     my $cluster_analysis_id = $c->stash->{cluster_pop_id} || $c->stash->{trial_id};
     my $cluster_temp_dir = catdir($c->stash->{cluster_dir}, $cluster_analysis_id, 'tempfiles');
-    mkpath($cluster_temp_dir, 0, 755);
+    make_path($cluster_temp_dir, { mode => oct('0755') });
 
     $c->stash->{cluster_temp_dir} = $cluster_temp_dir;
 

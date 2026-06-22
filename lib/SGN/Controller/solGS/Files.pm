@@ -798,7 +798,7 @@ sub copy_to_tempfiles_subdir {
     my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
     my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
 
-    make_path($base_tmp_dir, {mode => 0755});
+    make_path($base_tmp_dir, { mode => oct('0755') });
 
     $self->copy_file($file, $base_tmp_dir);
     $file = catfile($tmp_dir, basename($file));
@@ -943,7 +943,7 @@ sub create_tempfile {
 sub copy_file {
     my ($self, $file, $dir) = @_;
 
-    make_path($dir, {mode => "0755"});
+    make_path($dir, { mode => oct('0755') });
 
     copy($file, $dir)
 	or die "could not copy $file to $dir";
@@ -976,7 +976,7 @@ sub solgs_cache_dir {
     }
 
     my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id, 'cache');
-    make_path($cache_dir, {mode => "0755"});
+    make_path($cache_dir, { mode => oct('0755') });
 
     $c->stash->{solgs_cache_dir} = $cache_dir;
 
@@ -991,7 +991,7 @@ sub solgs_tempfiles_dir {
     }
 
     my $tempfiles_dir = catdir($c->stash->{solgs_dir}, $pop_id, 'tempfiles');
-    make_path($tempfiles_dir, {mode => "0755"});
+    make_path($tempfiles_dir, { mode => oct('0755') });
 
     $c->stash->{solgs_tempfiles_dir} = $tempfiles_dir;
 
@@ -1017,7 +1017,7 @@ sub get_solgs_dirs {
     for my $analysis_type (@analysis_types) {
         my $analysis_dir = catdir($cluster_shared_dir, $analysis_type, 'trials');
 
-        make_path($analysis_dir, {mode => "0755"});
+        make_path($analysis_dir, { mode => oct('0755') });
         $c->stash->{"${analysis_type}_dir"} = $analysis_dir;
     }
 
@@ -1027,7 +1027,7 @@ sub get_solgs_dirs {
     my $solgs_lists     = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'lists');
     my $solgs_datasets  = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'datasets');
 
-    make_path([$solgs_lists, $solgs_datasets, $analysis_log_dir], {mode => 0755});
+    make_path([$solgs_lists, $solgs_datasets, $analysis_log_dir], { mode => oct('0755') });
     $c->stash->{solgs_lists_dir} = $solgs_lists;
     $c->stash->{solgs_datasets_dir} = $solgs_datasets;
     $c->stash->{analysis_log_dir} = $analysis_log_dir;

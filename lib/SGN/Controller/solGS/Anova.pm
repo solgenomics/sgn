@@ -23,7 +23,7 @@ use File::Basename;
 use File::Copy;
 use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions;
-use File::Path qw /mkpath/;
+use File::Path qw /make_path/;
 use JSON;
 use List::Util qw/any uniq all/;
 use List::MoreUtils qw/firstidx/;
@@ -661,7 +661,7 @@ sub anova_trial_cache_dir {
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
     my $cache_dir = catdir( $c->stash->{anova_dir}, $trial_id, 'cache' );
-    mkpath($cache_dir, 0, 755) unless -d $cache_dir;
+    make_path($cache_dir, { mode => oct('0755') }) unless -d $cache_dir;
 
     return $cache_dir;
 
@@ -674,7 +674,7 @@ sub anova_trial_temp_dir {
     $trial_id = $c->stash->{trial_id} if !$trial_id;
 
     my $temp_dir = catdir( $c->stash->{anova_dir}, $trial_id, 'tempfiles' );
-    mkpath($temp_dir, 0, 755) unless -d $temp_dir;
+    make_path($temp_dir, { mode => oct('0755') }) unless -d $temp_dir;
 
     return $temp_dir;
 

@@ -1423,11 +1423,8 @@ sub create_analysis_log_dir {
     my $log_dir = $c->stash->{analysis_log_dir};
 
     $log_dir = catdir( $log_dir, $user_id );
-    # mkpath( $log_dir, 0, 0755 );
-    make_path($log_dir,{
-      verbose => 1,
-      chmod => "0755"
-    });
+
+    make_path($log_dir, { mode => oct('0755') });
 
     $c->stash->{analysis_log_dir} = $log_dir;
 

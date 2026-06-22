@@ -646,7 +646,7 @@ sub pca_cache_dir {
 
     my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
     my $pca_cache_dir = catdir( $c->stash->{pca_dir}, $pca_analysis_id, 'cache');
-    make_path( $pca_cache_dir, {mode => 0755} );
+    make_path( $pca_cache_dir, { mode => oct('0755') });
 
     return $pca_cache_dir;
 }
@@ -656,7 +656,7 @@ sub pca_temp_dir {
 
     my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
     my $pca_temp_dir = catdir($c->stash->{pca_dir}, $pca_analysis_id, 'tempfiles');
-    make_path($pca_temp_dir, {mode => 0755});
+    make_path($pca_temp_dir, { mode => oct('0755') });
 
     $c->stash->{pca_temp_dir} = $pca_temp_dir;
 
