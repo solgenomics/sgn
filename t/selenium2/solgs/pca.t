@@ -8,7 +8,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
-
+use File::Path qw /remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -64,7 +64,7 @@ my $plots_dt_id   = 'dataset_' . $plots_dt->{dataset_id};
 
 my @test_trials_ids = @{$solgs_data->trials_ids()};
 
-`rm -r $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
 
 $d->while_logged_in_as("submitter", sub {
 
@@ -105,7 +105,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(15);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
 
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(5);
@@ -140,8 +140,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(15);
 
-    `rm -r $cache_dir`;
-
+    remove_tree($cache_dir, {safe => 1});
 
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id,"pca_data_type_select")]/option[text()="Genotype"]', 'xpath', 'select genotype')->click();
     sleep(5);
@@ -176,7 +175,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(15);
 
-    `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
+
     $d->driver->refresh();
     sleep(5);
 
@@ -213,7 +214,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials list geno pca plot')->click();
     sleep(5);
 
-   `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
+
     $d->driver->refresh();
     sleep(5);
 
@@ -226,7 +229,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials list pheno pca plot')->click();
     sleep(5);
 
-    `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
 
     $d->driver->refresh();
     sleep(5);
@@ -276,7 +280,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials dataset pheno pca plot')->click();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
 
     $d->get_ok('/breeders/trial/' . $test_trials_ids[0], 'trial detail home page');
     sleep(10);
@@ -334,7 +339,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
 
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
@@ -354,7 +360,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check trials page geno pca plot')->click();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
 
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(10);
@@ -442,9 +449,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
 
-    
     my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
     sleep(5);
@@ -540,7 +547,8 @@ $d->while_logged_in_as("submitter", sub {
 	$d->driver->go_back();
 	sleep(15);
 
-    `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
 
     my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
@@ -554,7 +562,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot in selection pop page')->click();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
 
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
@@ -656,7 +665,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
 
     my $pca = $d->find_element('PCA', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $pca);
@@ -698,8 +708,8 @@ $d->while_logged_in_as("submitter", sub {
 	$d->driver->go_back();
 	sleep(15);
 
-
-    `rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
 
     my $sel_pred = $d->find_element('Predict', 'partial_link_text', 'scroll to selection pred');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
@@ -742,7 +752,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//*[contains(text(), "PC2")]', 'xpath', 'check geno pca plot in selection pop page')->click();
     sleep(5);
 
-    ` rm -r $pca_dir`;
+    remove_tree($pca_dir, {safe => 1});
+    sleep(5);
 
     $d->driver->refresh();
     sleep(5);

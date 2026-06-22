@@ -10,12 +10,19 @@ use SGN::Test::solGSData;
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-my $solgs_data = SGN::Test::solGSData->new({'fixture' => $f, 'accessions_list_subset' => 60, 'plots_list_subset' => 60});
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
+my $solgs_data = SGN::Test::solGSData->new({
+    'fixture' => $f, 
+    'accessions_list_subset' => 60, 
+    'plots_list_subset' => 60,
+    'user_id' => 40,
+});
+
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
 
 my $trait = "dry matter content percentage";
 
-`rm -r $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
+sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
 
@@ -59,7 +66,7 @@ $d->while_logged_in_as("submitter", sub {
 
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(3);
 
     $d->get_ok('/breeders/trial/139', 'trial detail home page');

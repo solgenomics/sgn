@@ -7,6 +7,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use File::Path qw/remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -18,7 +19,7 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
@@ -53,8 +54,8 @@ print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n"
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
-`rm -r $cache_dir`;
-
+remove_tree($cache_dir, {safe => 1});
+sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/solgs', 'solgs home page');
@@ -138,7 +139,7 @@ $d->while_logged_in_as("submitter", sub {
     #$d->get('/solgs/model/combined/populations/2804608595/trait/70741/gp/1', 'combo trials tr pop page');
    # sleep(2);
 
-   my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
+    my $sel_pred = $d->find_element('Model accuracy statistics', 'partial_link_text', 'scroll to accuracy');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $sel_pred);
     sleep(2);
     $d->find_element_ok('Download model accuracy', 'partial_link_text',  'download accuracy');
@@ -150,16 +151,16 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('download_gebvs_histo_plot', 'id',  'download gebvs');
     sleep(3);
 
-   my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
-   my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
-   sleep(2);
-   $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
-   sleep(120);
-   $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
-   sleep(20);
+    my $sel_pred = $d->find_element('GEBVs vs observed', 'partial_link_text', 'scroll to GEBvs');
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
+    sleep(2);
+    $d->find_element_ok('save_gebvs', 'id',  'store gebvs')->click();
+    sleep(120);
+    $d->find_element_ok('View stored GEBVs', 'partial_link_text',  'view store gebvs')->click();
+    sleep(20);
 
-   $d->driver->go_back();
-   sleep(15);
+    $d->driver->go_back();
+    sleep(15);
   
     my $sel_pred = $d->find_element('Marker effects', 'partial_link_text', 'scroll to marker effects');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $sel_pred);
@@ -391,7 +392,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'click list sel pred')->click();
     sleep(10);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
 
     $d->get_ok('/solgs', 'solgs home page');
     sleep(2);

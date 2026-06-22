@@ -7,6 +7,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use File::Path qw/remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -53,8 +54,8 @@ print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
 print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
-`rm -r $cache_dir`;
-
+remove_tree($cache_dir, {safe => 1});
+sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
 
@@ -283,12 +284,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
+
     $d->driver->refresh();
     sleep(5);
+
     $d->get('/solgs', 'solgs home page');
     sleep(4);
-
 
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click(); 
     sleep(3);
@@ -316,7 +319,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(5);
 
     $d->driver->refresh();

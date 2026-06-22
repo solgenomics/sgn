@@ -6,6 +6,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use File::Path qw/remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -17,7 +18,7 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
 
 my $plots_list =  $solgs_data->load_plots_list();
 my $plots_list_name = $plots_list->{list_name};
@@ -38,8 +39,7 @@ my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
 my @test_trials_ids = @{$solgs_data->trials_ids()};
 
 
-
-`rm -r  $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
@@ -95,7 +95,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
-   $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
+    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table'); 
     sleep(2);
@@ -113,7 +113,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
 
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
@@ -123,7 +124,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
 
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(3);
 
     ########## trial detail page ##########
@@ -143,7 +144,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
 
     ######### solGS ##########
     $d->get('/solgs', 'solgs home page');
@@ -277,7 +278,7 @@ $d->while_logged_in_as("submitter", sub {
    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(5);
 
     $d->get('/solgs');

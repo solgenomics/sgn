@@ -5,6 +5,7 @@ use lib 't/lib';
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+use File::Path qw/remove_tree/;
 use SGN::Test::solGSData;
 
 my $d = SGN::Test::WWW::WebDriver->new();
@@ -19,6 +20,7 @@ my $solgs_data = SGN::Test::solGSData->new({
 
 my $cache_dir = $solgs_data->base_analyses_cache_dir();
 print STDERR "\ncache dir: $cache_dir\n";
+
 my $accessions_list =  $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
 my $accessions_list_id = 'list_' . $accessions_list->{list_id};
@@ -41,8 +43,8 @@ print STDERR "\naccessions dt: $accessions_dt_name -- $accessions_dt_id\n";
 print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
 print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 
-
-`rm -r $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
+sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
     sleep(2);
@@ -79,8 +81,8 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->driver->refresh();
     sleep(3);
-    
-    `rm -r $cache_dir`;
+
+    remove_tree($cache_dir, {safe => 1});
     sleep(3);
 
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -queue- accessions list')->click();
@@ -129,7 +131,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(3);
     
     $d->find_element_ok('//tr[@id="' . $accessions_dt_id .'"]//*[starts-with(@id, "run_kinship")]', 'xpath', 'run kinship -queue- accessions dataset')->click();
@@ -180,7 +182,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output download')->click();
     sleep(2);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(3);
+
     $d->get_ok('/solgs', 'solgs homepage');
     sleep(4);
 
@@ -286,7 +290,6 @@ $d->while_logged_in_as("submitter", sub {
     sleep(4);
     $d->find_element_ok('//div[@id="kinship_div"]//*[contains(text(), "Download")]', 'xpath', 'check output')->click();
     sleep(4);
-
 
     #########
     $d->get_ok('/solgs', 'solgs homepage');
