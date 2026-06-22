@@ -21,7 +21,7 @@ use namespace::autoclean;
 
 use File::Copy;
 use File::Basename;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path /;
 use File::Spec::Functions;
 use File::Slurp qw /write_file read_file/;
 use JSON;
@@ -347,7 +347,7 @@ sub boxplot_download_files {
     my $tmp_dir = catfile( $c->config->{tempfiles_subdir}, 'genetic_gain' );
     my $base_tmp_dir = catfile( $c->config->{basepath}, $tmp_dir );
 
-    mkpath( [$base_tmp_dir], 0, "0755" );
+    make_path($base_tmp_dir, {mode => "0755"});
 
     $self->boxplot_file($c);
     my $boxplot_file = $c->stash->{boxplot_file};

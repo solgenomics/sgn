@@ -7,7 +7,7 @@ use Carp qw/ carp confess croak /;
 use DateTime;
 use Data::Dumper;
 use File::Find::Rule;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path /;
 
 use JSON;
 use Try::Tiny;

@@ -9,7 +9,7 @@ use File::Slurp qw /write_file read_file/;
 use File::Copy;
 use File::Basename;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path  /;
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
 
@@ -329,7 +329,7 @@ sub prep_download_kinship_files {
     my $tmp_dir      = catfile( $c->config->{tempfiles_subdir}, 'kinship' );
     my $base_tmp_dir = catfile( $c->config->{basepath},         $tmp_dir );
 
-    mkpath( [$base_tmp_dir], 0, '0o755' );
+    make_path($base_tmp_dir, {mode => '0755'} );
 
     $self->relationship_matrix_adjusted_file($c);
     my $kinship_txt_file = $c->stash->{relationship_matrix_adjusted_table_file};
@@ -476,7 +476,7 @@ sub kinship_cache_dir {
 
     my $kinship_analysis_id = $c->stash->{kinship_pop_id} || $c->stash->{trial_id};
     my $cache_dir = catdir( $c->stash->{kinship_dir}, $kinship_analysis_id, 'cache' );
-    mkpath( $cache_dir, 0, 755 );
+    make_path($cache_dir, {mode => 0755});
 
     return $cache_dir;
 }
@@ -486,7 +486,7 @@ sub kinship_temp_dir {
 
     my $kinship_analysis_id = $c->stash->{kinship_pop_id} || $c->stash->{trial_id};
     my $kinship_temp_dir = catdir($c->stash->{kinship_dir}, $kinship_analysis_id, 'tempfiles');
-    mkpath($kinship_temp_dir, 0, 755);
+    make_path($kinship_temp_dir, {mode => 0755});
 
     $c->stash->{kinship_temp_dir} = $kinship_temp_dir;
 

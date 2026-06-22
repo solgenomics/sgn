@@ -21,7 +21,7 @@ use namespace::autoclean;
 use Carp qw/ carp confess croak /;
 use CXGN::List::Transform;
 use CXGN::Tools::Run;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path  /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
 use File::Temp qw / tempfile tempdir /;

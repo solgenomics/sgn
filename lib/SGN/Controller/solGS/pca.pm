@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path  /;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
@@ -646,9 +646,7 @@ sub pca_cache_dir {
 
     my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
     my $pca_cache_dir = catdir( $c->stash->{pca_dir}, $pca_analysis_id, 'cache');
-    mkpath( $pca_cache_dir, 0, 755 );
-
-    # $c->stash->{pca_cache_dir} = $pca_cache_dir;
+    make_path( $pca_cache_dir, {mode => 0755} );
 
     return $pca_cache_dir;
 }
@@ -658,7 +656,7 @@ sub pca_temp_dir {
 
     my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
     my $pca_temp_dir = catdir($c->stash->{pca_dir}, $pca_analysis_id, 'tempfiles');
-    mkpath($pca_temp_dir, 0, 755);
+    make_path($pca_temp_dir, {mode => 0755});
 
     $c->stash->{pca_temp_dir} = $pca_temp_dir;
 

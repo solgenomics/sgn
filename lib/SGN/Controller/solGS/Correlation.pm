@@ -9,7 +9,7 @@ use CXGN::Tools::Run;
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path /;
 use File::Copy;
 use File::Basename;
 use CXGN::Phenome::Population;
@@ -460,7 +460,7 @@ sub correlation_temp_dir {
     my $corr_analysis_id = $c->stash->{corr_pop_id} || $c->stash->{trial_id};
     my $corr_temp_dir = catdir($c->stash->{correlation_dir}, $corr_analysis_id, 'tempfiles');
 
-    mkpath($corr_temp_dir, 0, 755);
+    make_path($corr_temp_dir, {mode => "0755"});
 
     return $corr_temp_dir;
 }
