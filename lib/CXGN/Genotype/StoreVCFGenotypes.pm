@@ -1426,4 +1426,146 @@ sub store_new_markers_in_protocolprop {
     return 1;
 }
 
+sub store_updated_markers_in_protocolprop {
+    my $self = shift;
+    my ($markers_to_update) = @_;
+
+    print STDERR "Updating mismatched markers in existing nd_protocolprop marker json...\n";
+
+    my $schema = $self->bcs_schema;
+    my $dbh = $schema->storage->dbh;
+    my $protocol_id = $self->protocol_id
+        or die "store_updated_markers_in_protocolprop() requires protocol_id";
+
+    my $cvterm_row = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers', 'protocol_property')
+        or die "Could not find cvterm row for vcf_map_details_markers";
+    my $marker_type_id = $cvterm_row->cvterm_id()
+        or die "Could not get cvterm_id for vcf_map_details_markers";
+
+    my $array_cvterm_row = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details_markers_array', 'protocol_property')
+        or die "Could not find cvterm row for vcf_map_details_markers_array";
+    my $array_type_id = $array_cvterm_row->cvterm_id()
+        or die "Could not get cvterm_id for vcf_map_details_markers_array";
+
+    my $protocol_info = $self->protocol_info
+        or die "store_updated_markers_in_protocolprop() requires protocol_info";
+
+    my $new_marker_data = $protocol_info->{markers}
+        or die "protocol_info->{markers} is missing";
+
+    $dbh->do('SET search_path TO public,sgn');
+
+    my $vcf_map_details_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vcf_map_details', 'protocol_property')->cvterm_id()
+        or die "Could not find cvterm for vcf_map_details";
+
+    # Load existing chromosome rank info from vcf_map_details so we know which
+    # protocolprop row (rank) holds each chromosome's markers
+    my $protocolprop = $schema->resultset('NaturalDiversity::NdProtocolprop')->find({
+        nd_protocol_id => $protocol_id,
+        type_id        => $vcf_map_details_id,
+        rank           => 0,
+    }) or die "Could not find vcf_map_details protocolprop for protocol_id=$protocol_id";
+
+    my $top_level_info = decode_json($protocolprop->value)
+        or die "Could not decode vcf_map_details value for protocol_id=$protocol_id";
+    my $chromosomes = $top_level_info->{chromosomes} || {};
+
+    my %chrom_rank = map {
+        $_ => $chromosomes->{$_}->{rank}
+    } keys %$chromosomes;
+
+    # Overwrite a single marker key's value in the markers hash for a chromosome
+    my $h_update_markers = $dbh->prepare(q{
+        UPDATE nd_protocolprop
+        SET value = jsonb_set(
+            COALESCE(value::jsonb, '{}'::jsonb),
+            ARRAY[?]::text[],
+            ?::jsonb,
+            true
+        )
+        WHERE nd_protocol_id = ?
+          AND type_id = ?
+          AND rank = ?
+    });
+
+    # Fetch the markers array for a chromosome so we can find the index to update in place
+    my $h_select_array = $dbh->prepare(q{
+        SELECT value FROM nd_protocolprop
+        WHERE nd_protocol_id = ?
+          AND type_id = ?
+          AND rank = ?
+    });
+
+    # Replace a single element (by index) in the markers array for a chromosome, so the
+    # array stays the same length/order (genotype calls are aligned to this array by index)
+    my $h_update_markers_array = $dbh->prepare(q{
+        UPDATE nd_protocolprop
+        SET value = jsonb_set(
+            value::jsonb,
+            ARRAY[?]::text[],
+            ?::jsonb,
+            true
+        )
+        WHERE nd_protocol_id = ?
+          AND type_id = ?
+          AND rank = ?
+    });
+
+    $schema->txn_do(sub {
+
+        for my $pair (@$markers_to_update) {
+            my ($chrom, $marker_name) = @$pair;
+
+            my $marker_details = $new_marker_data->{$chrom}{$marker_name}
+                or die "No marker details found for chrom=$chrom marker=$marker_name in protocol_info";
+
+            my $rank = $chrom_rank{$chrom};
+            die "No existing rank found for chrom=$chrom; marker $marker_name should already be stored"
+                unless defined $rank;
+
+            my $marker_json = encode_json($marker_details);
+
+            $h_update_markers->execute(
+                $marker_name,
+                $marker_json,
+                $protocol_id,
+                $marker_type_id,
+                $rank,
+            );
+
+            $h_select_array->execute($protocol_id, $array_type_id, $rank);
+            my ($array_value) = $h_select_array->fetchrow_array();
+            if ($array_value) {
+                my $markers_array = decode_json($array_value);
+                my $index;
+                for (my $i = 0; $i <= $#$markers_array; $i++) {
+                    if ($markers_array->[$i]->{name} eq $marker_name) {
+                        $index = $i;
+                        last;
+                    }
+                }
+                if (defined $index) {
+                    $h_update_markers_array->execute(
+                        $index,
+                        $marker_json,
+                        $protocol_id,
+                        $array_type_id,
+                        $rank,
+                    );
+                } else {
+                    print STDERR "Warning: marker '$marker_name' not found in markers array for chrom '$chrom', rank=$rank; array left unchanged\n";
+                }
+            }
+
+            print STDERR "Updated marker '$marker_name' on chrom '$chrom' rank=$rank\n";
+        }
+
+    });
+    if ($@) {
+        die "Error updating markers in nd_protocolprop: $@";
+    }
+
+    return 1;
+}
+
 1;
