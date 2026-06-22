@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use File::Basename;
-use File::Path qw / mkpath  /;
+use File::Path qw /make_path /;
 use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions qw / catfile catdir/;
 use List::MoreUtils qw /uniq/;
@@ -116,7 +116,7 @@ sub prep_download_si_files {
     my $tmp_dir = catfile($c->config->{tempfiles_subdir}, 'selectionindex');
     my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
 
-    mkpath ([$base_tmp_dir], 0, 0755);
+    make_path($base_tmp_dir, { mode => 0755 });
 
     $self->selection_index_file($c);
     my $sindex_file = $c->stash->{selection_index_only_file};
@@ -331,7 +331,7 @@ sub selection_index_cache_dir {
     $pop_id = $c->stash->{training_pop_id} if !$pop_id;
 
     my $cache_dir = catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'cache' );
-    mkpath($cache_dir, 0, 755) unless -d $cache_dir;
+    make_path($cache_dir, { mode => 0755 }) unless -d $cache_dir;
 
     return $cache_dir;
 
@@ -344,7 +344,7 @@ sub selection_index_temp_dir {
     $pop_id = $c->stash->{training_pop_id} if !$pop_id;
 
     my $temp_dir = catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'tempfiles' );
-    mkpath($temp_dir, 0, 755) unless -d $temp_dir;
+    make_path($temp_dir, { mode => 0755 }) unless -d $temp_dir;
 
     return $temp_dir;
 
