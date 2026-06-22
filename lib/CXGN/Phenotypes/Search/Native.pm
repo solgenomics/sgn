@@ -227,6 +227,8 @@ sub search {
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
+    my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
 
     my $include_timestamp = $self->include_timestamp;
     my $numeric_regex = '^-?[0-9]+([,.][0-9]+)?$';
@@ -274,7 +276,7 @@ sub search {
                 }
             }
 
-            
+
             #For performace reasons it is faster to include specific stock_ids in the query.
             if ($self->data_level eq 'analysis_instance'){
                 if (!$self->plot_list){
@@ -346,7 +348,7 @@ sub search {
             LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id) ";
         $design_layout_select = " ,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value";
     }
-    
+
     if ($self->exclude_phenotype_outlier) {
         $phenotypeprop_sql = "JOIN (
                 SELECT phenotype_id
@@ -360,13 +362,17 @@ sub search {
             ON not_outliers.phenotype_id = nd_experiment_phenotype.phenotype_id"
     };
 
-    my $from_clause = " FROM stock as observationunit 
+    my $from_clause = " FROM stock as observationunit
       LEFT JOIN stock_relationship ON (observationunit.stock_id=stock_relationship.subject_id) AND stock_relationship.type_id IN ($analysis_instance_of_type_id, $plot_of_type_id, $plant_of_type_id, $subplot_of_type_id, $tissue_sample_of_type_id)
       LEFT JOIN stock_relationship AS icsr ON (observationunit.stock_id=icsr.subject_id) AND icsr.type_id = $intercrop_plot_rel_type_id
       LEFT JOIN stock AS ics ON (icsr.object_id=ics.stock_id)
       LEFT JOIN cvterm as observationunit_type ON (observationunit_type.cvterm_id = observationunit.type_id)
       JOIN stock as germplasm ON (stock_relationship.object_id=germplasm.stock_id) AND germplasm.type_id IN ($accession_type_id, $analysis_result_type_id, $cross_type_id, $family_name_type_id)
       $design_layout_sql
+      LEFT JOIN stock_relationship AS female_relationship ON (germplasm.stock_id = female_relationship.object_id) AND female_relationship.type_id = $female_parent_type_id
+      LEFT JOIN stock AS female_parent ON (female_relationship.subject_id = female_parent.stock_id)
+      LEFT JOIN stock_relationship AS male_relationship ON (germplasm.stock_id = male_relationship.object_id) AND male_relationship.type_id = $male_parent_type_id
+      LEFT JOIN stock AS male_parent ON (male_relationship.subject_id = male_parent.stock_id)
       LEFT JOIN nd_experiment_stock ON(nd_experiment_stock.stock_id=observationunit.stock_id)
       LEFT JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_stock.nd_experiment_id)
       LEFT JOIN phenotype USING(phenotype_id)
@@ -395,80 +401,88 @@ sub search {
       LEFT JOIN project_relationship folder_rel ON (project.project_id = folder_rel.subject_project_id AND folder_rel.type_id = $folder_rel_type_id)
       LEFT JOIN project folder ON (folder.project_id = folder_rel.object_project_id)";
 
-    my $select_clause = "SELECT observationunit.stock_id, 
-                        observationunit.uniquename, 
-                        observationunit_type.name, 
-                        germplasm.uniquename, 
-                        germplasm.stock_id, 
-                        project.project_id, 
-                        project.name, 
-                        project.description, 
-                        plot_width.value, 
-                        plot_length.value, 
-                        field_size.value, 
-                        field_trial_is_planned_to_be_genotyped.value, 
-                        field_trial_is_planned_to_cross.value, 
-                        breeding_program.project_id, 
-                        breeding_program.name, 
-                        breeding_program.description, 
-                        year.value, 
-                        design.value, 
-                        location.value, 
-                        planting_date.value, 
-                        harvest_date.value, 
-                        folder.project_id, 
-                        folder.name, 
-                        folder.description, 
-                        cvterm.cvterm_id, 
-                        (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, 
+    my $select_clause = "SELECT observationunit.stock_id,
+                        observationunit.uniquename,
+                        observationunit_type.name,
+                        germplasm.uniquename,
+                        germplasm.stock_id,
+                        female_parent.uniquename,
+                        female_parent.stock_id,
+                        male_parent.uniquename,
+                        male_parent.stock_id,
+                        project.project_id,
+                        project.name,
+                        project.description,
+                        plot_width.value,
+                        plot_length.value,
+                        field_size.value,
+                        field_trial_is_planned_to_be_genotyped.value,
+                        field_trial_is_planned_to_cross.value,
+                        breeding_program.project_id,
+                        breeding_program.name,
+                        breeding_program.description,
+                        year.value,
+                        design.value,
+                        location.value,
+                        planting_date.value,
+                        harvest_date.value,
+                        folder.project_id,
+                        folder.name,
+                        folder.description,
+                        cvterm.cvterm_id,
+                        (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text,
                         MIN(cvtermsynonym.synonym),
-                        phenotype.value, 
-                        phenotype.uniquename, 
-                        phenotype.phenotype_id, 
-                        phenotype.collect_date, 
-                        phenotype.operator, 
-                        additional_info.value, 
-                        external_references.value, 
-                        count(phenotype.phenotype_id) OVER() AS full_count, 
+                        phenotype.value,
+                        phenotype.uniquename,
+                        phenotype.phenotype_id,
+                        phenotype.collect_date,
+                        phenotype.operator,
+                        additional_info.value,
+                        external_references.value,
+                        count(phenotype.phenotype_id) OVER() AS full_count,
                         string_agg(distinct(notes.value), ', ') AS notes,
-                        STRING_AGG(DISTINCT(ics.stock_id)::text, '|'), 
+                        STRING_AGG(DISTINCT(ics.stock_id)::text, '|'),
                         STRING_AGG(DISTINCT(ics.uniquename), ',')
                         ".$design_layout_select;
 
     my $order_clause = " ORDER BY 6, 2, 30";
 
-    my $group_by = " GROUP BY observationunit.stock_id, 
-                    observationunit.uniquename, 
-                    observationunit_type.name, 
-                    germplasm.uniquename, 
-                    germplasm.stock_id, 
-                    project.project_id, 
-                    project.name, 
+    my $group_by = " GROUP BY observationunit.stock_id,
+                    observationunit.uniquename,
+                    observationunit_type.name,
+                    germplasm.uniquename,
+                    germplasm.stock_id,
+                    female_parent.uniquename,
+                    female_parent.stock_id,
+                    male_parent.uniquename,
+                    male_parent.stock_id,
+                    project.project_id,
+                    project.name,
                     project.description,
-                    plot_width.value, 
-                    plot_length.value, 
-                    field_size.value, 
-                    field_trial_is_planned_to_be_genotyped.value, 
-                    field_trial_is_planned_to_cross.value, 
-                    breeding_program.project_id, 
-                    breeding_program.name, 
-                    breeding_program.description, 
-                    year.value, 
-                    design.value, 
-                    location.value, 
-                    planting_date.value, 
-                    harvest_date.value, 
-                    folder.project_id, 
-                    folder.name, 
-                    folder.description, 
-                    cvterm.cvterm_id, 
-                    (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text, 
-                    phenotype.value, 
-                    phenotype.uniquename, 
-                    phenotype.phenotype_id, 
-                    phenotype.collect_date, 
-                    phenotype.operator, 
-                    additional_info.value, 
+                    plot_width.value,
+                    plot_length.value,
+                    field_size.value,
+                    field_trial_is_planned_to_be_genotyped.value,
+                    field_trial_is_planned_to_cross.value,
+                    breeding_program.project_id,
+                    breeding_program.name,
+                    breeding_program.description,
+                    year.value,
+                    design.value,
+                    location.value,
+                    planting_date.value,
+                    harvest_date.value,
+                    folder.project_id,
+                    folder.name,
+                    folder.description,
+                    cvterm.cvterm_id,
+                    (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text,
+                    phenotype.value,
+                    phenotype.uniquename,
+                    phenotype.phenotype_id,
+                    phenotype.collect_date,
+                    phenotype.operator,
+                    additional_info.value,
                     external_references.value ".$design_layout_select;
 
     my @where_clause;
@@ -476,7 +490,7 @@ sub search {
     print STDERR "Native search Accession list is ".Dumper($accession_list)."\n";
 
     my $analysis_result_stock_list = $self->analysis_result_stock_list;
-    
+
     if ($self->analysis_result_stock_list && scalar(@{$self->analysis_result_stock_list})>0) {
         print STDERR "Native search adding analysis result_stock_list to sql\n";
         my $accession_sql = _sql_from_arrayref($self->analysis_result_stock_list);
@@ -607,10 +621,10 @@ sub search {
         my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, $data_level, 'stock_type')->cvterm_id();
         push @where_clause, "observationunit.type_id = $stock_type_id"; #ONLY plot or plant or subplot or tissue_sample
     } else {
-        push @where_clause, "(observationunit.type_id = $plot_type_id 
+        push @where_clause, "(observationunit.type_id = $plot_type_id
         OR observationunit.type_id = $plant_type_id
-        OR observationunit.type_id = $analysis_instance_id 
-        OR observationunit.type_id = $subplot_type_id 
+        OR observationunit.type_id = $analysis_instance_id
+        OR observationunit.type_id = $subplot_type_id
         OR observationunit.type_id = $tissue_sample_type_id)"; #plots AND plants AND subplots AND tissue_samples
     }
 
@@ -638,7 +652,7 @@ sub search {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $trait_synonym, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $phenotype_external_references, $full_count, $notes, $intercrop_stock_id, $intercrop_stock_name, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $female_parent_name, $female_parent_id, $male_parent_name, $male_parent_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $trait_synonym, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $phenotype_external_references, $full_count, $notes, $intercrop_stock_id, $intercrop_stock_name, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
         my $timestamp_value;
         my $operator_value;
         if ($include_timestamp) {
@@ -712,6 +726,10 @@ sub search {
             obsunit_type_name => $observationunit_type_name,
             accession_uniquename => $germplasm_uniquename,
             accession_stock_id => $germplasm_stock_id,
+            female_parent_name => $female_parent_name,
+            female_parent_id => $female_parent_id,
+            male_parent_name => $male_parent_name,
+            male_parent_id => $male_parent_id,
             synonyms => $synonyms,
             trial_id => $project_project_id,
             trial_name => $project_name,
