@@ -91,7 +91,7 @@
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Pedigrees: </label>
+                <label class="col-sm-7 control-label">Include Parents: </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trials_phenotypes_pedigrees_option">
                         <option value="0">No</option>

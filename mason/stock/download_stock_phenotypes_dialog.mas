@@ -114,7 +114,7 @@ $stock_name => undef
             </div>
 
             <div class="row form-group">
-                <label class="col-sm-8 control-label">Include Pedigree Parents: </label>
+                <label class="col-sm-8 control-label">Include Parents: </label>
                 <div class="col-sm-4" >
                     <select class="form-control" id="download_stock_phenotypes_pedigrees_option">
                         <option value="0">No</option>

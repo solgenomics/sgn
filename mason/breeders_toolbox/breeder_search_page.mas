@@ -459,7 +459,7 @@ $dataset_id => undef
                 <div class="checkbox">
                   <label>
                     <input class="wizard-download-phenotypes-pedigree_parents" type="checkbox" />
-                    Include pedigrees
+                    Include parents
                   </label>
                 </div>
               </td>

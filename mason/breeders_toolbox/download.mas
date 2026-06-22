@@ -89,7 +89,7 @@ Choose a list for each parameter and click "Download".
         <option value="1">Yes</option>
     </select>
     <br/>
-    <b>Include Pedigrees:</b><br/>
+    <b>Include Parents:</b><br/>
     <select class="form-control" id="pedigrees" name="pedigrees">
         <option value="0">No</option>
         <option value="1">Yes</option>
