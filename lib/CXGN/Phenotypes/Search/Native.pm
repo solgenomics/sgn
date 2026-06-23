@@ -406,10 +406,6 @@ sub search {
                         observationunit_type.name,
                         germplasm.uniquename,
                         germplasm.stock_id,
-                        female_parent.uniquename,
-                        female_parent.stock_id,
-                        male_parent.uniquename,
-                        male_parent.stock_id,
                         project.project_id,
                         project.name,
                         project.description,
@@ -438,6 +434,10 @@ sub search {
                         phenotype.collect_date,
                         phenotype.operator,
                         additional_info.value,
+                        female_parent.uniquename,
+                        female_parent.stock_id,
+                        male_parent.uniquename,
+                        male_parent.stock_id,
                         external_references.value,
                         count(phenotype.phenotype_id) OVER() AS full_count,
                         string_agg(distinct(notes.value), ', ') AS notes,
@@ -452,10 +452,6 @@ sub search {
                     observationunit_type.name,
                     germplasm.uniquename,
                     germplasm.stock_id,
-                    female_parent.uniquename,
-                    female_parent.stock_id,
-                    male_parent.uniquename,
-                    male_parent.stock_id,
                     project.project_id,
                     project.name,
                     project.description,
@@ -483,6 +479,10 @@ sub search {
                     phenotype.collect_date,
                     phenotype.operator,
                     additional_info.value,
+                    female_parent.uniquename,
+                    female_parent.stock_id,
+                    male_parent.uniquename,
+                    male_parent.stock_id,
                     external_references.value ".$design_layout_select;
 
     my @where_clause;
@@ -652,7 +652,7 @@ sub search {
 
     my $calendar_funcs = CXGN::Calendar->new({});
 
-    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $female_parent_name, $female_parent_id, $male_parent_name, $male_parent_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $trait_synonym, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $phenotype_external_references, $full_count, $notes, $intercrop_stock_id, $intercrop_stock_name, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
+    while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $project_project_id, $project_name, $project_description, $plot_width, $plot_length, $field_size, $field_trial_is_planned_to_be_genotyped, $field_trial_is_planned_to_cross, $breeding_program_project_id, $breeding_program_name, $breeding_program_description, $year, $design, $location_id, $planting_date, $harvest_date, $folder_id, $folder_name, $folder_description, $trait_id, $trait_name, $trait_synonym, $phenotype_value, $phenotype_uniquename, $phenotype_id, $phenotype_collect_date, $phenotype_operator, $phenotype_additional_info, $female_parent_name, $female_parent_id, $male_parent_name, $male_parent_id, $phenotype_external_references, $full_count, $notes, $intercrop_stock_id, $intercrop_stock_name, $rep_select, $block_number_select, $plot_number_select, $is_a_control_select, $row_number_select, $col_number_select, $plant_number) = $h->fetchrow_array()) {
         my $timestamp_value;
         my $operator_value;
         if ($include_timestamp) {
