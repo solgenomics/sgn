@@ -255,7 +255,7 @@ sub parse {
                 foreach my $v (@values) {
                     next unless defined $v;
 
-            if ( @trait_values && defined($timestamp) ) {
+            if ( @trait_values) {
                 foreach my $tv (@trait_values) {
                     my $tv0 = ref($tv) eq 'ARRAY' ? $tv->[0] : $tv;
                     if (defined $tv0 && $tv0 ne ".") {
