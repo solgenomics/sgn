@@ -242,9 +242,20 @@ sub get_acronym_pairs {
     $pop_id = $c->stash->{training_pop_id} if !$pop_id;
     #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
 
+    my @acronym_pairs;
     my $dir    = $c->stash->{solgs_cache_dir};
-    opendir my $dh, $dir
-        or die "can't open $dir: $!\n";
+
+    if ( !defined $dir || !-d $dir ) {
+        print STDERR "solgs cache dir does not exists: $dir";
+        $c->stash->{acronym} = \@acronym_pairs;
+        return \@acronym_pairs;
+    }
+
+    opendir my $dh, $dir or do {
+	print STDERR "can not open $dir: $!";
+        $c->stash->{acronym} = \@acronym_pairs;
+        return \@acronym_pairs;
+    };
 
     no warnings 'uninitialized';
 
@@ -256,8 +267,8 @@ sub get_acronym_pairs {
     my @acronym_pairs;
     if (-f $acronyms_file)
     {
-        @acronym_pairs =  map { [ split(/\t/) ] }  read_file($acronyms_file, {binmode => ':utf8'});
-        shift(@acronym_pairs); # remove header;
+        @acronym_pairs = map { [ split(/\t/) ] } read_file($acronyms_file, {binmode => ':utf8'});
+        shift(@acronym_pairs); # remove header
     }
 
     @acronym_pairs = sort {uc $a->[0] cmp uc $b->[0] } @acronym_pairs;

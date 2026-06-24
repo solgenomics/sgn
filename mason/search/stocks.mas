@@ -154,6 +154,7 @@ my $breeding_programs_select = simple_selectbox_html(
             <select class="form-control" id="obsolete_stock_search_term" name="obsolete_stock_search_term">
               <option value="false" selected>Not Obsolete</option>
               <option value="true">Is Obsolete</option>
+              <option value="include_obsolete">Include Obsolete</option>
             </select>
           </div>
         </div>
@@ -484,6 +485,8 @@ jQuery(document).ready(function () {
         let  list_type = '';
         if (is_obsolete == 'true') {
             list_type = 'obsoleted_stocks';
+        } else if (is_obsolete == 'include_obsolete') {
+            list_type = 'accessions_and_obsoleted_accessions';
         } else {
             list_type = jQuery('#stock_type_select option:selected').text()+'s' || 'null';
         }
@@ -587,6 +590,16 @@ function parseArgs(editable_stockprops_search) {
 function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
     console.log(stock_type);
     console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
+
+    let is_obsolete = '';
+    let include_obsolete = '';
+    const obsolete_stock_search_term = jQuery("#obsolete_stock_search_term option:selected").val();
+    if (obsolete_stock_search_term == 'true') {
+        is_obsolete = 'true';
+    } else if (obsolete_stock_search_term == 'include_obsolete') {
+        include_obsolete = 'true';
+    }
+
     stock_table = jQuery('#stock_search_results').DataTable({
         'destroy' : true,
         'searching' : false,
@@ -617,7 +630,8 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
               d.editable_stockprop_values = JSON.stringify(editable_stockprops_search);
               d.extra_stockprop_columns_view = JSON.stringify(stockprop_extra_columns_view);
               d.stockprop_extra_columns_view_array = JSON.stringify(stockprop_extra_columns_view_array);
-              d.is_obsolete = jQuery("#obsolete_stock_search_term option:selected").val()
+              d.is_obsolete = is_obsolete;
+              d.include_obsolete = include_obsolete;
             }
         }
     });

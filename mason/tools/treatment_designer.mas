@@ -16,7 +16,7 @@
         <div class="form-group">
                 <label class="col-sm-3 control-label"> New treatment name: </label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Special characters not allowed."/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="ASCII characters only. Non-ASCII characters will be removed."/>
                 </div>
             </div>
             <div class="form-group">

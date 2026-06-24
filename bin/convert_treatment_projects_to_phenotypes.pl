@@ -14,7 +14,7 @@ The host of the database.
 
 =item -D
 
-The name of the database. 
+The name of the database.
 
 =item -U
 
@@ -73,11 +73,11 @@ my $schema= Bio::Chado::Schema->connect( $dsn, $opt_U, $opt_P, {
  	RaiseError => 1
 } );
 my $dbh = $schema->storage()->dbh();
-my $metadata_schema = CXGN::Metadata::Schema->connect( 
-        sub { $dbh }, 
+my $metadata_schema = CXGN::Metadata::Schema->connect(
+        sub { $dbh },
         { on_connect_do => ['SET search_path TO public,metadata;'] }
     );
-my $phenome_schema = CXGN::Phenome::Schema->connect( 
+my $phenome_schema = CXGN::Phenome::Schema->connect(
 	sub { $dbh },
 	{ on_connect_do => ['SET search_path TO public,phenome;'] }
 );
@@ -91,20 +91,20 @@ if (! -d "$temp_basedir/delete_nd_experiment_ids/"){
 my $signing_user_id = CXGN::People::Person->get_person_by_username($dbh, $opt_e); #not the db user, but the name attached as operator of new phenotypes
 
 #definition of trials view
-my $all_trials_q = "SELECT trial.project_id AS trial_id, trial.name as trial_name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-    FROM (((project breeding_program                                                                                                                                                                                                                                                  
-      JOIN project_relationship ON (((breeding_program.project_id = project_relationship.object_project_id) AND (project_relationship.type_id = ( SELECT cvterm.cvterm_id                                                                                                             
-            FROM cvterm                                                                                                                                                                                                                                                               
-           WHERE ((cvterm.name)::text = 'breeding_program_trial_relationship'::text))))))                                                                                                                                                                                             
-      JOIN project trial ON ((project_relationship.subject_project_id = trial.project_id)))                                                                                                                                                                                           
-      JOIN projectprop ON ((trial.project_id = projectprop.project_id)))                                                                                                                                                                                                              
-   WHERE (NOT (projectprop.type_id IN ( SELECT cvterm.cvterm_id                                                                                                                                                                                                                       
-            FROM cvterm                                                                                                                                                                                                                                                               
+my $all_trials_q = "SELECT trial.project_id AS trial_id, trial.name as trial_name
+    FROM (((project breeding_program
+      JOIN project_relationship ON (((breeding_program.project_id = project_relationship.object_project_id) AND (project_relationship.type_id = ( SELECT cvterm.cvterm_id
+            FROM cvterm
+           WHERE ((cvterm.name)::text = 'breeding_program_trial_relationship'::text))))))
+      JOIN project trial ON ((project_relationship.subject_project_id = trial.project_id)))
+      JOIN projectprop ON ((trial.project_id = projectprop.project_id)))
+   WHERE (NOT (projectprop.type_id IN ( SELECT cvterm.cvterm_id
+            FROM cvterm
            WHERE (((cvterm.name)::text = 'cross'::text) OR ((cvterm.name)::text = 'trial_folder'::text) OR ((cvterm.name)::text = 'folder_for_trials'::text) OR ((cvterm.name)::text = 'folder_for_crosses'::text) OR ((cvterm.name)::text = 'folder_for_genotyping_trials'::text)))))
    GROUP BY trial.project_id, trial.name;";
 
 #Give a description to all new treatment cvterms
-my $update_new_treatment_sql = "UPDATE cvterm 
+my $update_new_treatment_sql = "UPDATE cvterm
 	SET definition = \'Legacy treatment from BreedBase before sgn-416.0 release. Binary value for treatment was/was not applied.\'
 	WHERE cvterm_id IN (SELECT unnest(string_to_array(?, ',')::int[]));";
 
@@ -259,7 +259,7 @@ while(my ($trial_id, $trial_name) = $h->fetchrow_array()) {
 			$phenotype_store_stock_list{$plot_name} = 1;
 
 			foreach my $child (@{$plot_contents}) {
-				next if ($child->{type} eq "accession"); #dont want to assign a phenotype to an accession, that would be bad
+			    next if ($child->{type} =~ /accession|cross|family_name/i ); #dont want to assign a phenotype to an accession, that would be bad
 				next if (! $child->{name}); # skip if we have no name
 				$treatment_values_hash->{$child->{name}}->{$treatment_full_name} = $treatment_values_hash->{$plot_name}->{$treatment_full_name};
 				$phenotype_store_stock_list{$child->{name}} = 1;

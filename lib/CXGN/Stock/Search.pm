@@ -475,8 +475,8 @@ sub search {
                 my $start = '%';
                 my $end = '%';
                 if ( $matchtype eq 'exactly' ) {
-                    $start = '%"';
-                    $end = '"%';
+                    $start = '';
+                    $end = '';
                 } elsif ( $matchtype eq 'starts_with' ) {
                     $start = '';
                 } elsif ( $matchtype eq 'ends_with' ) {
@@ -496,9 +496,11 @@ sub search {
 		    @placeholder_values = (@placeholder_values, @values);
 
                 } else {
+		    #print STDERR "START $start end $end SEARCH $value\n";
                     #push @stockprop_wheres, "sp$index.value ilike $search";
+
 		    push @stockprop_wheres, " (type_id = $type_id and value ilike ? ) ";
-		    push @placeholder_values, $value;
+		    push @placeholder_values, $start.$value.$end;
                 }
 
             } else {
@@ -509,7 +511,7 @@ sub search {
         my $stockprop_where = 'WHERE ' . join ' AND ', @stockprop_wheres;
         my $stockprop_query = "SELECT stockprop.stock_id FROM public.stockprop $stockprop_where;";
 
-	print STDERR "STOCKPROP QUERY: $stockprop_query\n";
+	print STDERR "STOCKPROP QUERY: $stockprop_query with placeholders ".join(", ", @placeholder_values)."\n";
         my $h = $schema->storage->dbh()->prepare($stockprop_query);
         $h->execute(@placeholder_values);
         while (my $stock_id = $h->fetchrow_array()) {
@@ -801,7 +803,7 @@ ORDER BY organism_id ASC;";
         $result_hash{$stock_id}{subtaxa} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa'} : undef;
         $result_hash{$stock_id}{subtaxaAuthority} = defined($organism_props{$organism_id}) ? $organism_props{$organism_id}->{'subtaxa authority'} : undef;
 
-	
+
 	$result_hash{$stock_id}{PUI} = join(",", @puis);
 	$result_hash{$stock_id}{population_name} = $family_name;
         $result_hash{$stock_id}{create_date} = $create_date;

@@ -306,6 +306,9 @@ has 'family_name_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'facility_identifier_cvterm_id' => (isa => 'Int', is => 'rw');
 
+#Whether obsoleted accessions are allowed to include in this trial (set by using 'allow_obsoleted_accessions' conf key)
+has 'allow_obsoleted_accessions' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
+
 sub BUILD {
     my $self = shift;
     my $chado_schema = $self->get_bcs_schema();
@@ -410,12 +413,13 @@ sub store {
     my %design = %{$self->get_design};
     my $trial_id = $self->get_trial_id;
     my $nd_geolocation_id = $self->get_nd_geolocation_id;
-
-
+    my $allow_obsoleted_accessions = $self->get_allow_obsoleted_accessions;
     my $nd_experiment_type_id = $self->get_nd_experiment_type_id();
     my $stock_type_id = $self->get_stock_type_id();
     my $stock_rel_type_id = $self->get_stock_relationship_type_id();
     my $additional_info_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stock_additional_info', 'stock_property')->cvterm_id();
+    my $intercrop_rel_type_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'intercrop_plot_of', 'stock_relationship')->cvterm_id();
+    my $filler_plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row( $chado_schema, 'filler_plot', 'stock_property' )->cvterm_id();
 
     my @source_stock_types = @{$self->get_source_stock_types()};
 
@@ -461,6 +465,11 @@ sub store {
         if ($design{$key}->{stock_name}) {
             my $stock_name = $design{$key}->{stock_name};
             $seen_accessions_hash{$stock_name}++;
+        }
+        if ($design{$key}->{intercrop_stock_name}) {
+            foreach my $stock_name (@{$design{$key}->{intercrop_stock_name}}) {
+                $seen_accessions_hash{$stock_name}++;
+            }
         }
         if ($design{$key}->{seedlot_name}) {
             my $stock_name = $design{$key}->{seedlot_name};
@@ -537,6 +546,12 @@ sub store {
             my $stock_name;
             if ($design{$key}->{stock_name}) {
                 $stock_name = $design{$key}->{stock_name};
+            }
+            my @intercrop_stock_names;
+            if ($design{$key}->{intercrop_stock_name}) {
+                foreach my $stock_name (@{$design{$key}->{intercrop_stock_name}}) {
+                    push @intercrop_stock_names, $stock_name;
+                }
             }
             my $seedlot_name;
             my $seedlot_stock_id;
@@ -618,6 +633,8 @@ sub store {
             }
             my $additional_info = $design{$key}->{additional_info} ? encode_json $design{$key}->{additional_info} : undef;
 
+            my $is_filler = $design{$key}->{additional_info}->{filler_plot};
+
             my $facility_identifier;
             if ($design{$key}->{facility_identifier}) {
                 $facility_identifier = $design{$key}->{facility_identifier};
@@ -634,7 +651,7 @@ sub store {
                 my $parent_stock;
                 my $stock_lookup = CXGN::Stock::StockLookup->new(schema => $chado_schema);
                 $stock_lookup->set_stock_name($stock_name);
-                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id());
+                my $accession_stock = $stock_lookup->get_stock($self->get_accession_cvterm_id(),undef,$allow_obsoleted_accessions);
                 my $cross_stock = $stock_lookup->get_stock($self->get_cross_cvterm_id());
                 my $family_name_stock = $stock_lookup->get_stock($self->get_family_name_cvterm_id());
                 if ($accession_stock) {
@@ -709,11 +726,21 @@ sub store {
                     push @plot_stock_props, { type_id => $self->get_facility_identifier_cvterm_id, value => $facility_identifier };
                 }
 
+                if ($is_filler) {
+                    push @plot_stock_props, { type_id => $filler_plot_cvterm_id, value => $is_filler };
+                }
+
                 my @plot_subjects;
                 my @plot_objects;
 
                 my $parent_stock;
                 push @plot_subjects, { type_id => $stock_rel_type_id, object_id => $stock_id_checked };
+
+                # Add intercrop stocks as plot subjects
+                foreach my $stock_name (@intercrop_stock_names) {
+                    my $stock_id = $stock_data{$stock_name}[0];
+                    push @plot_subjects, { type_id => $intercrop_rel_type_id, object_id => $stock_id };
+                }
 
                 # For genotyping plate, if the well tissue_sample is sourced from a plot, then we store relationships between the tissue_sample and the plot, and the tissue sample and the plot's accession if it exists.
                 if ($stock_type_checked == $self->get_plot_cvterm_id){

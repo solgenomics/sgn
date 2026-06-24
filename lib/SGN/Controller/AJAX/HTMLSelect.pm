@@ -245,6 +245,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
 
     my $trial = CXGN::Trial->new({ bcs_schema => $schema,people_schema=>$people_schema, metadata_schema=>$metadata_schema, phenome_schema=>$phenome_schema,trial_id => $trial_id });
     my $data = $trial->get_treatments();
+    my @treatments = map {$_->{trait_name}} @{$data};
 
     if ($empty) {
         unshift @$data, [ 0, "None" ];
@@ -252,7 +253,7 @@ sub get_treatments_select : Path('/ajax/html/select/treatments') Args(0) {
     my $html = simple_selectbox_html(
       name => $name,
       id => $id,
-      choices => $data,
+      choices => \@treatments,
     );
     $c->stash->{rest} = { select => $html };
 }
@@ -1742,18 +1743,30 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 
                 my $tool_compatibility;
                 if ($show_compatibility) {
-                    $tool_compatibility = $ds->tool_compatibility();
-                    if (!$tool_compatibility) {
-                        $tool_compatibility = '(not calculated)'
+                    my $stored_tool_compatibility = $ds->tool_compatibility();
+                    my $analysis_compatibility = $stored_tool_compatibility ? $stored_tool_compatibility->{$analysis_type} : undef;
+
+                    if (!$analysis_compatibility && $analysis_type eq "Environment Stratification" && $stored_tool_compatibility) {
+                        $analysis_compatibility = $stored_tool_compatibility->{"Dataset Analysis"};
+                    }
+
+                    if (!$analysis_compatibility && $analysis_type eq 'Environment Stratification') {
+                        my $trial_count = scalar(@{$info->{categories}->{trials} || []});
+                        my $trait_count = scalar(@{$info->{categories}->{traits} || []});
+                        $analysis_compatibility = {
+                            compatible => ($trial_count > 1 && $trait_count > 0) ? 1 : 0
+                        };
+                    }
+
+                    if (!$stored_tool_compatibility && !$analysis_compatibility) {
+                        $tool_compatibility = '(not calculated)';
+                    } elsif (!$analysis_compatibility || $analysis_compatibility->{'compatible'} == 0) {
+                        $tool_compatibility = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>';
                     } else {
-                        if ($tool_compatibility->{$analysis_type}->{'compatible'} == 0){
-                            $tool_compatibility = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>';
+                        if ($analysis_compatibility->{"warn"}) {
+                            $tool_compatibility = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="'.$analysis_compatibility->{'warn'}.'"></span></b>';
                         } else {
-                            if ($tool_compatibility->{$analysis_type}->{"warn"}) {
-                                $tool_compatibility = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="'.$tool_compatibility->{$analysis_type}->{'warn'}.'"></span></b>';
-                            } else {
-                                $tool_compatibility = '<b><span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
-                            }
+                            $tool_compatibility = '<b><span class="glyphicon glyphicon-ok" style="color:green"></span></b>';
                         }
                     }
                 }
@@ -2245,12 +2258,12 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ 
+    my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
-        people_schema=>$people_schema, 
-        metadata_schema=>$metadata_schema, 
+        people_schema=>$people_schema,
+        metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        trial_id => $trial_id 
+        trial_id => $trial_id
     });
 
     my $stock_relationship_cv_id = $schema->resultset("Cv::Cv")->find({
@@ -2262,6 +2275,14 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $plot_of_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'plot_of',
         cv_id => $stock_relationship_cv_id
+    })->cvterm_id();
+    my $intercrop_plot_of_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'intercrop_plot_of',
+        cv_id => $stock_relationship_cv_id
+    })->cvterm_id();
+    my $plot_num_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'plot number',
+        cv_id => $stockprop_cv_id
     })->cvterm_id();
     my $row_num_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'row_number',
@@ -2287,42 +2308,71 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my @plots = map {$_->[0]} @{$trial->get_plots()};
 
     my $plots_q = "
-    WITH plot AS 
-        (SELECT subject_id AS plot_id, myplot.name AS plot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
-            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id 
+    WITH plot AS
+        (SELECT stock_relationship.subject_id AS plot_id, myplot.uniquename AS plot_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name, ics.stock_id AS intercrop_accession_id, ics.uniquename AS intercrop_accession_name FROM stock_relationship
+            JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
             JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
-        WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)), 
+            LEFT JOIN stock_relationship AS icsr ON (icsr.subject_id=myplot.stock_id) AND icsr.type_id=?
+            LEFT JOIN stock AS ics ON (ics.stock_id = icsr.object_id)
+        WHERE stock_relationship.type_id=? AND myplot.stock_id=ANY(?)),
     stockprops AS (
         SELECT
             stock_id,
+            MAX(value) FILTER (WHERE type_id = ?) AS plot_number,
             MAX(value) FILTER (WHERE type_id = ?) AS row_number,
             MAX(value) FILTER (WHERE type_id = ?) AS col_number,
             MAX(value) FILTER (WHERE type_id = ?) AS rep,
             MAX(value) FILTER (WHERE type_id = ?) AS block,
-            MAX(value) FILTER (WHERE type_id = ?) AS synonyms
+            STRING_AGG(value, ', ') FILTER (WHERE type_id = ?) AS synonyms
         FROM stockprop
-        WHERE type_id IN (?, ?, ?, ?, ?)
+        WHERE type_id IN (?, ?, ?, ?, ?, ?)
         GROUP BY stock_id
     )
-    SELECT plot.plot_id, plot.plot_name, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms
-    FROM plot 
+    SELECT plot.plot_id, plot.plot_name, plotprops.plot_number, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms,
+        STRING_AGG(plot.intercrop_accession_id::text, ';'), STRING_AGG(plot.intercrop_accession_name, ';'), STRING_AGG(icsprops.synonyms, ';')
+    FROM plot
     LEFT JOIN stockprops AS plotprops ON plotprops.stock_id=plot.plot_id
-    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id;"; 
+    LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id
+    LEFT JOIN stockprops AS icsprops ON icsprops.stock_id=plot.intercrop_accession_id
+    GROUP BY 1,2,3,4,5,6,7,8,9,10;";
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
-    $h->execute($plot_of_id, \@plots, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
+    $h->execute($intercrop_plot_of_id, $plot_of_id, \@plots, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
 
-    my $html = "<table id=\"plots_from_trial_select_table\"><thead><tr><th></th><th>Plot</th><th>Field Coordinates (row,column)</th><th>Rep</th><th>Block</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Number</th><th>(Row, Column)</th><th>Rep</th><th>Block</th><th>Accession</th></tr></thead><tbody>";
 
-    while (my ($plot_id, $plot_name, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
-        my $coordinates = "NA";
-        if ($row && $column){
-            $coordinates = "($row,$column)";
+    while (my ($plot_id, $plot_name, $plot_number, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms, $intercrop_accession_id, $intercrop_accession_name, $intercrop_synonyms) = $h->fetchrow_array()) {
+
+        # Build text for accession name and synonyms
+        my $accession_list = "<td>";
+        $accession_list .= "<a href=\"/stock/$accession_id/view\">$accession_name";
+        $accession_list .= " ($synonyms)" if ($synonyms && $synonyms ne '');
+        $accession_list .= "</a>";
+
+        # Add intercrop accessions, if they're found
+        if ( $intercrop_accession_name && $intercrop_accession_name ne '' ) {
+            my @ics_ids = split(';', $intercrop_accession_id);
+            my @ics_names = split(';', $intercrop_accession_name);
+            my @ics_syns = split(';', $intercrop_synonyms);
+            while (my ($index, $id) = each @ics_ids) {
+                my $name = $ics_names[$index];
+                my $syns = $ics_syns[$index];
+                $accession_list .= "<br /><a href=\"/stock/$id/view\">$name";
+                $accession_list .= " ($syns)" if ( $syns && $syns ne '' );
+                $accession_list .= "</a>"
+            }
         }
-        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td>$rep</td><td>$block</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+        my $coords = 'NA';
+        if (defined($row) && defined($column)) {
+            $coords = "$row, $column";
+        }
+
+        $accession_list .= "</td>";
+
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$coords</td><td>$rep</td><td>$block</td>$accession_list</tr>";
     }
 
-    $html .= "</tbody></thead></table>";
+    $html .= "</tbody></table>";
 
     $c->stash->{rest} = { select => $html };
 }
@@ -2338,12 +2388,12 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ 
+    my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
-        people_schema=>$people_schema, 
-        metadata_schema=>$metadata_schema, 
+        people_schema=>$people_schema,
+        metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        trial_id => $trial_id 
+        trial_id => $trial_id
     });
 
     if (!$trial->has_subplot_entries()) {
@@ -2369,30 +2419,33 @@ sub get_trial_subplot_select : Path('/ajax/html/select/subplots_from_trial/') Ar
     my @subplots = map {$_->[0]} @{$trial->get_subplots()};
 
     my $subplots_q = "
-    WITH subplot AS 
-        (SELECT subject_id AS subplot_id, mysubplot.name AS subplot_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
-            JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id 
-            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
+    WITH subplot AS
+        (SELECT subject_id AS subplot_id, mysubplot.uniquename AS subplot_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name FROM stock_relationship
+            JOIN stock AS mysubplot ON stock_relationship.subject_id=mysubplot.stock_id
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
         WHERE stock_relationship.type_id=? AND mysubplot.stock_id = ANY(?)),
-    plot AS 
+    plot AS
         (SELECT subject_id AS plot_id, myplot.name AS plot_name, object_id AS subplot_id FROM stock_relationship
             JOIN stock AS myplot ON stock_relationship.subject_id=myplot.stock_id
         WHERE stock_relationship.type_id=?)
-    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name, stockprop.value
-    FROM subplot 
+    SELECT subplot.subplot_id, subplot.subplot_name, plot.plot_id, plot.plot_name, subplot.accession_id, subplot.accession_name, STRING_AGG(stockprop.value, ', ')
+    FROM subplot
     JOIN plot ON plot.subplot_id=subplot.subplot_id
-    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?);"; 
+    LEFT JOIN stockprop ON (stockprop.stock_id=subplot.accession_id AND stockprop.type_id=?)
+    GROUP BY 1,2,3,4,5,6;";
 
     my $h = $schema->storage()->dbh()->prepare($subplots_q);
     $h->execute($subplot_of_id,\@subplots, $subplot_of_id, $synonym_id);
 
-    my $html = "<table id=\"subplots_from_trial_select_table\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table id=\"subplots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Subplot</th><th>Parent Plot</th><th>Accession</th></tr></thead><tbody>";
 
     while (my ($subplot_id, $subplot_name, $plot_id, $plot_name, $accession_id, $accession_name, $synonyms) = $h->fetchrow_array()) {
-        $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
+        my $accession_label = $accession_name;
+        $accession_label .= " ($synonyms)" if ( $synonyms && $synonyms ne '' );
+        $html .= "<tr><td><input id=\"select_subplot_$subplot_name\" type=\"checkbox\" class=\"exp_design_subplot_select\"></td><td><a href=\"/stock/$subplot_id/view\">$subplot_name</a></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td><a href=\"/stock/$accession_id/view\">$accession_label</a></td></tr>";
     }
 
-    $html .= "</tbody></thead></table>";
+    $html .= "</tbody></table>";
 
     $c->stash->{rest} = { select => $html };
 }
@@ -2408,12 +2461,12 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
 
-    my $trial = CXGN::Trial->new({ 
+    my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
-        people_schema=>$people_schema, 
-        metadata_schema=>$metadata_schema, 
+        people_schema=>$people_schema,
+        metadata_schema=>$metadata_schema,
         phenome_schema=>$phenome_schema,
-        trial_id => $trial_id 
+        trial_id => $trial_id
     });
 
     if (!$trial->has_plant_entries()) {
@@ -2452,11 +2505,11 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     my $subplot_join = "";
     my $subplot_header = "";
     my $subplot_select = "";
-    
+
     if ($trial->has_subplot_entries()) {
         $subplot_q = ", subplot AS
-        (SELECT object_id AS subplot_id, mysubplot.name as subplot_name, subject_id as plant_id FROM stock_relationship
-        JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id 
+        (SELECT object_id AS subplot_id, mysubplot.uniquename as subplot_name, subject_id as plant_id FROM stock_relationship
+        JOIN stock as mysubplot ON stock_relationship.object_id=mysubplot.stock_id
         WHERE stock_relationship.type_id=$plant_of_subplot_id)";
         $subplot_join = "JOIN subplot ON subplot.plant_id=plant.plant_id";
         $subplot_header = "<th>Parent Subplot</th>";
@@ -2465,13 +2518,13 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
 
     my @plants = map {$_->[0]} @{$trial->get_plants()};
 
-    my $plants_q = "WITH plant AS 
-        (SELECT subject_id AS plant_id, myplant.name AS plant_name, accession.stock_id AS accession_id, accession.name AS accession_name FROM stock_relationship 
-            JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id 
-            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id 
-        WHERE stock_relationship.type_id=? AND myplant.stock_id = ANY(?)), 
-    plot AS 
-        (SELECT subject_id AS plot_id, myplot.name as plot_name, object_id as plant_id FROM stock_relationship
+    my $plants_q = "WITH plant AS
+        (SELECT subject_id AS plant_id, myplant.uniquename AS plant_name, accession.stock_id AS accession_id, accession.uniquename AS accession_name FROM stock_relationship
+            JOIN stock AS myplant ON stock_relationship.subject_id=myplant.stock_id
+            JOIN stock AS accession ON accession.stock_id=stock_relationship.object_id
+        WHERE stock_relationship.type_id=? AND myplant.stock_id = ANY(?)),
+    plot AS
+        (SELECT subject_id AS plot_id, myplot.uniquename as plot_name, object_id as plant_id FROM stock_relationship
             JOIN stock as myplot ON stock_relationship.subject_id=myplot.stock_id
             WHERE stock_relationship.type_id=?),
     stockprops AS (
@@ -2490,17 +2543,18 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
     LEFT JOIN stockprops AS plantprops ON (plant.plant_id=plantprops.stock_id)
     LEFT JOIN stockprops AS synonyms ON (synonyms.stock_id=plant.accession_id)
     $subplot_join
-    ;"; 
+    ;";
 
     my $h = $schema->storage()->dbh()->prepare($plants_q);
     $h->execute($plant_of_id, \@plants, $plant_of_id, $row_num_id, $col_num_id, $synonym_id, $row_num_id, $col_num_id, $synonym_id);
 
-    my $html = "<table id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Coordinates (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
+    my $html = "<table style=\"width:100%\" id=\"plants_from_trial_select_table\"><thead><tr><th></th><th>Plant</th>$subplot_header<th>Parent Plot</th><th>In-Plot Position (row,column)</th><th>Accession</th><th>Synonyms</th></tr></thead><tbody>";
 
     while (my ($plant_id, $plant_name, $plot_id, $plot_name, $row, $column, $accession_id, $accession_name, $synonyms, $subplot_id, $subplot_name) = $h->fetchrow_array()) {
         my $coordinates = "NA";
+        $synonyms = $synonyms ? $synonyms : '';
         if ($row && $column){
-            $coordinates = "($row,$column)";
+            $coordinates = "$row, $column";
         }
         my $subplot_data = "";
         if ($subplot_id && $subplot_name) {
@@ -2509,7 +2563,7 @@ sub get_trial_plant_select : Path('/ajax/html/select/plants_from_trial/') Args(0
         $html .= "<tr><td><input id=\"select_plant_$plant_name\" type=\"checkbox\" class=\"exp_design_plant_select\"></td><td><a href=\"/stock/$plant_id/view\">$plant_name</a></td>$subplot_data<td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$coordinates</td><td><a href=\"/stock/$accession_id/view\">$accession_name</a></td><td>$synonyms</td></tr>";
     }
 
-    $html .= "</tbody></thead></table>";
+    $html .= "</tbody></table>";
 
     $c->stash->{rest} = { select => $html};
 }
@@ -2715,7 +2769,7 @@ sub _clean_inputs {
 }
 
 
-sub get_related_attributes_select : Path('/ajax/html/select/related_attributes') Args(0) {
+sub get_transformant_related_attributes_select : Path('/ajax/html/select/transformant_related_attributes') Args(0) {
     my $self = shift;
     my $c = shift;
 
@@ -2739,6 +2793,36 @@ sub get_related_attributes_select : Path('/ajax/html/select/related_attributes')
     );
     $c->stash->{rest} = { select => $html };
 }
+
+
+sub get_plot_related_attributes_select : Path('/ajax/html/select/plot_related_attributes') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "related_attributes_select";
+    my $name = $c->req->param("name") || "related_attributes_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my @related_attributes;
+    push @related_attributes, ["", "Select Attribute"];
+    push @related_attributes, ['breedingProgram', 'breeding program'];
+    push @related_attributes, ['trialName', 'trial name'];
+    push @related_attributes, ['accessionName', 'accession name'];
+    push @related_attributes, ['plotNumber', 'plot number'];
+    push @related_attributes, ['blockNumber', 'block number'];
+    push @related_attributes, ['repNumber', 'rep number'];
+    push @related_attributes, ['rangeNumber', 'range number'];
+    push @related_attributes, ['rowNumber', 'row number'];
+    push @related_attributes, ['colNumber', 'col number'];
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@related_attributes,
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
 
 sub get_material_types_select : Path('/ajax/html/select/material_types') Args(0) {
     my $self = shift;

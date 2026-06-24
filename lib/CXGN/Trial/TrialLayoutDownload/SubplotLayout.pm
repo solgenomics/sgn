@@ -51,8 +51,11 @@ sub retrieve {
     my $all_stats = $self->all_stats;
     my @output;
     my $trial_stock_type = $self->trial_stock_type();
+    my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
+    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json','variety');
+
+    $selected_cols{plot_order} = 1 if $include_plot_order;
 
     my @header;
     foreach (@possible_cols){
@@ -82,6 +85,16 @@ sub retrieve {
     my @overall_trait_names = sort keys %$overall_performance_hash;
     my @exact_trait_names = sort keys %$exact_performance_hash;
 
+    # Add plot order to design, if requested by the user
+    if ( $include_plot_order ) {
+        my $results = CXGN::Trial->get_sorted_plots($schema, [$self->trial_id], $self->plot_order, $self->plot_start);
+        if ( $results->{plots} ) {
+            foreach (@{$results->{plots}}) {
+                $design{$_->{plot_number}}->{plot_order} = $_->{order};
+            }
+        }
+    }
+
     #Turn plot level design into a subplot level design that can be sorted on plot_number and then subplot index number..
     my @subplot_design;
     while (my($plot_number, $design_info) = each %design){
@@ -94,8 +107,14 @@ sub retrieve {
         if (exists($selected_cols{'pedigree'})){
             $acc_pedigree = $pedigree_strings->{$design_info->{"accession_name"}};
         }
+        my $acc_variety = '';
+        if (exists($selected_cols{'variety'})) {
+            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
+            $acc_variety = $accession->variety;
+        }
         $design_info->{synonyms} = $acc_synonyms;
         $design_info->{pedigree} = $acc_pedigree;
+        $design_info->{variety} = $acc_variety;
 
         my $subplot_names = $design_info->{'subplot_names'};
         my $subplot_ids = $design_info->{'subplot_ids'};
@@ -112,7 +131,9 @@ sub retrieve {
     }
     #print STDERR Dumper \@subplot_design;
 
-    @subplot_design = sort { $a->{plot_number} <=> $b->{plot_number} || $a->{subplot_number} <=> $b->{subplot_number} } @subplot_design;
+    # sort plots by plot order, if requested, otherwise plot number then by subplot number
+    my $sort_key = $include_plot_order ? 'plot_order' : 'plot_number';
+    @subplot_design = sort { $a->{$sort_key} <=> $b->{$sort_key} || $a->{subplot_number} <=> $b->{subplot_number} } @subplot_design;
 
     foreach my $design_info (@subplot_design) {
         my $line;

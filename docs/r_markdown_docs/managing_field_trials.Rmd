@@ -257,7 +257,7 @@ This will create a separate trial for each selected location, but they will shar
 By default each trial design will have a fresh randomization, but if desired you may check the "Use same randomization for all locations" option.
 
 
-### Email alert for multiple trial design upload {-}
+#### Email alert for multiple trial design upload {-}
 
 When uploading multiple trials from a file, you have the option to receive email notifications by clicking the "Email Alert" checkbox. By default, the system will use the email address associated with your account, but you have the option to enter a different email address if you prefer. After submitting, the upload process runs in the background, allowing you to continue using the interface without interruptions. Once the process completes, you will receive an email with the upload results.
 
@@ -341,7 +341,7 @@ knitr::include_graphics('assets/images/heatmap_spatial_correction_button.png')
 
 After you added a new trial to the database, you can edit trial details or add more information for that trial through the *Trial Detail* page.
 
- #### Uploading Physical Trial Layout {-}
+#### Uploading Physical Trial Layout {-}
 
 You can upload physical trial layout by clicking on the “Upload Spatial Layout” button on the *Trial Detail* page.
 
@@ -474,6 +474,7 @@ On the “Substitute Plot Accession” form, selecting the two plots that you wa
 knitr::include_graphics('assets/images/image282.png')
 ```
 -->
+
 ### Downloading the Trial Layout from the *Trial Detail* page
 
 Click on "Download Layout" on the *Trial Detail* page under "Experimental Design".
@@ -687,3 +688,62 @@ knitr::include_graphics('assets/images/trial_detail_page_delete_trait3.png')
 To delete trial layout data, click on the "Delete layout data" link. Confirm deletion on the appeared dialog.
 
 To Delete trial entry, click on "Delete trial entry" link. Confirm deletion on the appeared dialog.
+
+## Intercropping Support
+
+Breedbase has started to add support for intercropping trials, allowing for more than one crop to be grown in a trial and more than one accession to be associated with a plot.  Recent changes also allow for more than one trait ontology to be stored in the database, keeping the trait terms organized separately for each crop.
+
+### Trial Creation
+
+Currently, intercropping is only supported when uploading the trial design using a file (it is not yet supported in the interactive trial design tool).
+
+The trial upload template (both the single- and multiple-trial design formats) has an `accession_name` column, which is used to specify the name of the primary accession for each plot (each plot must have a primary accession).  The upload templates now support an optional `intercrop_accession_name` column, which can be used to add one or more additional accessions to a plot.  You can include more than one intercropping accession by separating their names with a comma or leave the column empty when there is no intercropped accession in the plot.
+
+
+| trial_name  | plot_name             | plot_number | accession_name | intercrop_accession_name |
+|-------------|-----------------------|-------------|----------------|--------------------------|
+| B4I_2025_NY | B4I_2025_NY-PLOT_5001 | 5001        | IL22-5365      | NDP160034Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5002 | 5002        | IL22-5365      | NDP250123Y,NDP250155Y    |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5003 | 5003        | IL21-4364      | NDP250178Y               |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5004 | 5004        | IL21-4020      |                          |
+| B4I_2025_NY | B4I_2025_NY-PLOT_5005 | 5005        | IL23-1619      | NDP150221G               |
+
+**An example multi-trial upload template that includes multiple accessions per plot**
+
+*NOTE: some required columns are left out for clarity*
+
+### Trial Details
+
+The intercropped accessions are displayed as metadata in various parts of the trial detail page.
+
+The *Experimental Design* section displays the intercropped accessions in the Accessions table as well as the Plots table.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_plots_table.png')
+```
+
+The interactive field map tooltip (displayed when you hover the mouse pointer over a plot) will display all of the Accessions associated with the plot.  The spatial layout download will list all of the Accessions in the plot as well.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_fieldmap_tooltip.png')
+```
+
+### Phenotype Downloads
+
+All of the phenotype trait data downloads (from the trial detail page, search wizard, etc) still include the `germplasmDbId` and `germplasmName` columns, which include the the database id and name of the primary accession.  The `intercropGermplasmDbId` and `intercropGermplasmName` columns will include the id(s) and name(s) of any intercropped germplasm added to the plots.  If there are no intercropped germplasm for a particular plot, the columns will be empty.  If there are more than one intercropped germplasm added to a plot, the IDs and names will be separated by a comma.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_phenotype_download.png')
+```
+
+**An example phenotype download that includes multiple accessions per plot**
+
+*NOTE: some columns are left out for clarity*
+
+### Trait Ontologies
+
+A separate trait ontology for each crop can be loaded into the database.  This allows for the clear dilineation and separation of trait definitions between different crops.
+
+```{r echo=FALSE, out.width='95%', fig.align='center'}
+knitr::include_graphics('assets/images/intercropping_trait_search.png')
+```

@@ -84,7 +84,9 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
         offset=>$offset,
         minimal_info=>$params->{minimal_info},
         display_pedigree=>0,
-        is_obsolete=>$params->{is_obsolete} eq 'true'
+        is_obsolete=>$params->{is_obsolete} eq 'true',
+        include_obsolete=>$params->{include_obsolete} eq 'true',
+
     });
     my ($result, $records_total) = $stock_search->search();
 

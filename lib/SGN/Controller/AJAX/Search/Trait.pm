@@ -22,11 +22,39 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
     my $params = $c->req->params() || {};
-    #print STDERR Dumper $params;
 
-    my $ontology_db_ids;
+    my $ontology_db_ids = [];
     if ($params->{'ontology_db_id[]'}){
         $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
+    }
+
+    my $observation_variables = CXGN::BrAPI::v2::ObservationVariables->new({
+        bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id),
+        phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id),
+        people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
+        page_size => 1000000,
+        page => 0,
+        status => [],
+        context => $c
+    });
+
+    my $name_spaces_str = $c->config->{onto_root_namespaces};
+    my @name_spaces_pairs = split(", ",$name_spaces_str);
+    my @name_spaces = map { s/ .*//r } @name_spaces_pairs;
+
+    my $result = $observation_variables->observation_variable_ontologies({
+        cvprop_type_names => ['trait_ontology', 'composed_trait_ontology'],
+        name_spaces => \@name_spaces
+    });
+
+    my @ontos;
+    if (scalar(@{$ontology_db_ids}) == 0) {
+        foreach my $o (@{$result->{result}->{data}}) {
+            push @ontos, $o->{ontologyDbId};
+        }
+    } else {
+        @ontos = @{$ontology_db_ids};
     }
 
     my $rows = $params->{length};
@@ -50,6 +78,16 @@ sub search : Path('/ajax/search/traits') Args(0) {
         push @$subset_traits, $params->{trait_any_name};
     }
 
+    my $trait_ids;
+    if ($params->{trait_id}){
+        push @$trait_ids, $params->{trait_id};
+    }
+
+    my $trait_synonyms;
+    if ($params->{trait_synonym}){
+        push @$trait_synonyms, $params->{trait_synonym};
+    }
+
     my $definitions;
     if ($params->{trait_definition}){
         push @$definitions, $params->{trait_definition};
@@ -58,10 +96,12 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $trait_search = CXGN::Trait::Search->new({
         bcs_schema=>$schema,
 	    is_variable=>1,
-        ontology_db_id_list => $ontology_db_ids,
+        ontology_db_id_list => \@ontos,
         limit => $limit,
         offset => $offset,
         trait_name_list => $subset_traits,
+        accession_list => $trait_ids,
+        trait_synonym_list => $trait_synonyms,
         trait_definition_list => $definitions
     });
     my ($data, $records_total) = $trait_search->search();
@@ -70,12 +110,35 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
-    foreach (@$data){
-        my $db_name = $_->{db_name};
-        my $accession = $_->{accession};
-        my $trait_id = $_->{trait_id};
-        my $trait_accession = $db_name .":". $accession ;
-        my $trait_usage = "<em>None</em>";
+    my %seen;
+    my @ordered_ids;
+
+    foreach my $trait (@$data) {
+        my $id = $trait->{trait_id};
+        if (!$seen{$id}) {
+            $seen{$id} = {%$trait, synonyms => []};
+            push @ordered_ids, $id;
+        }
+        push @{$seen{$id}{synonyms}}, $trait->{synonym} if $trait->{synonym};
+    }
+
+    foreach my $id (@ordered_ids) {
+        my $trait = $seen{$id};
+        my $db_name = $trait->{db_name};
+        my $accession = $trait->{accession};
+        my $trait_id = $trait->{trait_id};
+        my $trait_accession = $db_name .":". $accession;        my $trait_usage = "<em>None</em>";
+
+        my @cleaned_synonyms;
+        foreach my $syn (@{$trait->{synonyms}}) {
+            if ($syn =~ /^"(.+?)"\s+\w+\s+\[/) {
+                push @cleaned_synonyms, $1;
+            } else {
+                push @cleaned_synonyms, $syn;
+            }
+        }
+
+        my $synonym = join(',', sort @cleaned_synonyms);
 
         # Get the number of trials that observed the trait
         my $trial_criteria_list  = ['traits', 'trials'];
@@ -112,17 +175,17 @@ sub search : Path('/ajax/search/traits') Args(0) {
 
             $trait_usage = "Trials:&nbsp;$trial_count<br />Plots:&nbsp;$plot_count";
         }
-
-
+        
         push @result,
             [
                 '',
-                "<button class='btn btn-info btn-$_->{trait_id}' onclick='copy(\"$_->{trait_name}\", \"$trait_accession\", $_->{trait_id})'><span class='glyphicon glyphicon-copy'></span></button>",
-                "<a href=\"/cvterm/$_->{trait_id}/view\">$trait_accession</a>",
-                "<a href=\"/cvterm/$_->{trait_id}/view\">$_->{trait_name}</a>",
-                $_->{trait_definition},
+                "<button class='btn btn-info btn-$trait->{trait_id}' onclick='copy(\"$trait->{trait_name}\", \"$trait_accession\", $trait->{trait_id})'><span class='glyphicon glyphicon-copy'></span></button>",
+                "<a href=\"/cvterm/$trait->{trait_id}/view\">$trait_accession</a>",
+                "<a href=\"/cvterm/$trait->{trait_id}/view\">$trait->{trait_name}</a>",
+                $synonym,
+                $trait->{trait_definition},
                 $trait_usage,
-                $_->{trait_name},
+                $trait->{trait_name},
                 $trait_accession
             ];
     }

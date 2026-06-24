@@ -50,6 +50,7 @@ perl bin/load_genotypes_vcf_cxgn_postgres.pl -H localhost -D imagebreedv4 -U pos
   FLAGS
  -x delete old genotypes for accessions that have new genotypes
  -a add accessions that are not in the database
+ -M add markers that are not in the database protocol
  -z if sample names include an IGD number. sample names are in format 'sample_name:IGD_number'. The IGD number will be parsed and stored as a genotypeprop.
  -t Test run . Rolling back at the end. NOT IMPLEMENTED
  -w in the case that you have uploaded a normal VCF and you do not want to transpose it (because the transposition is memory intensive), use this flag
@@ -92,9 +93,9 @@ use File::Basename qw | basename dirname|;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::ParseUpload;
 
-our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_v, $opt_r, $opt_R, $opt_i, $opt_s, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B, $opt_T);
+our ($opt_H, $opt_D, $opt_U, $opt_c, $opt_o, $opt_v, $opt_r, $opt_R, $opt_i, $opt_s, $opt_t, $opt_p, $opf_f, $opt_y, $opt_g, $opt_a, $opt_x, $opt_m, $opt_k, $opt_l, $opt_q, $opt_z, $opt_u, $opt_b, $opt_n, $opt_e, $opt_f, $opt_d, $opt_h, $opt_j, $opt_w, $opt_A, $opt_B, $opt_T, $opt_M);
 
-getopts('H:U:i:s:r:R:u:c:o:v:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:T:');
+getopts('H:U:i:s:r:R:u:c:o:v:tD:p:y:g:axsm:k:l:q:zf:d:b:n:e:h:j:wAB:T:M:');
 
 if ($opt_j && !$opt_h && (!$opt_H || !$opt_U || !$opt_D || !$opt_c || (!$opt_i && !$opt_s) || !$opt_p || !$opt_y || !$opt_l || !$opt_q || !$opt_r || !$opt_R || !$opt_u || !$opt_f || !$opt_d || !$opt_b || !$opt_n || !$opt_e || !$opt_B) ) {
     pod2usage(-verbose => 2, -message => "When a protocol id is given (-j) you must provide options -H (hostname), -D (database name), -U (database username), -c VCF file type (transposedVCF or VCF), -i (input file VCF) or -s (input file Tassel HDF5), -r (archive path), -R (root path), -p (project name), -y (project year), -l (location name of project), -q (organism species), -u (database username), -f (reference genome name), -d (project description), -b (observation unit type name), -n (genotype facility name), -e (breeding program name), -B (temp file where SQL COPY is written. make sure thi file is a fresh file between loadings.)\n");
@@ -117,7 +118,7 @@ if ($opt_c ne 'transposedVCF' && $opt_c ne 'VCF') {
     die "Not a valid option c\n";
 }
 
-if ($opt_c eq 'VCF '&& !$opt_o) {
+if ($opt_c eq 'VCF' && !$opt_o) {
     die "When uploading a VCF e.g. option c is VCF, you must give a temporary file using option o, so that this script can transpose your file before loading. All VCF are transposed for speed of loading.\n";
 }
 
@@ -129,6 +130,10 @@ my $obs_type = $opt_b;
 my $add_accessions = 0;
 if ($opt_a){
     $add_accessions = 1;
+}
+my $add_markers = 0;
+if ($opt_M){
+    $add_markers = 1;
 }
 my $include_igd_numbers = 0;
 if ($opt_z){
@@ -153,9 +158,9 @@ $phenome_schema->storage->dbh->do('SET search_path TO phenome');
 my $time = DateTime->now();
 my $timestamp = $time->ymd()."_".$time->hms();
 
-my $q = "SELECT sp_person_id from sgn_people.sp_person where username = '$opt_u';";
+my $q = "SELECT sp_person_id from sgn_people.sp_person where username = ?";
 my $h = $dbh->prepare($q);
-$h->execute();
+$h->execute($opt_u);
 my ($sp_person_id) = $h->fetchrow_array();
 if (!$sp_person_id){
     die "Not a valid -u\n";
@@ -172,7 +177,7 @@ if ($opt_c eq 'VCF' && !$opt_w) {
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
     open (my $F, "<", $file) or die "Can't open file $file \n";
     my @outline;
-    my $lastcol = 0;
+    my $lastcol = -1;
     while (<$F>) {
         if ($_ =~ m/^\##/) {
             print $Fout $_;
@@ -181,7 +186,7 @@ if ($opt_c eq 'VCF' && !$opt_w) {
             my @line = split /\t/;
             my $oldlastcol = $lastcol;
             $lastcol = $#line if $#line > $lastcol;
-            for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+            for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
                 $outline[$i] = "\t" x $oldlastcol;
             }
             for (my $i=0; $i <=$lastcol; $i++) {
@@ -311,7 +316,6 @@ my $store_args = {
     protocol_id => $protocol_id,
     protocol_name=>$opt_m,
     protocol_description=>$opt_k,
-    protocol_name => $opt_m,
     organism_id=>$organism_id,
     igd_numbers_included=>$include_igd_numbers,
     user_id=>$sp_person_id,
@@ -351,6 +355,7 @@ if (scalar(keys %$genotype_info) > 0) {
     }
 
     my @protocol_match_errors;
+    my @mismatch_markers;
     if ($protocol_id) {
         my $new_marker_data = $protocol->{markers};
         my $stored_protocol = CXGN::Genotype::Protocol->new({
@@ -358,30 +363,47 @@ if (scalar(keys %$genotype_info) > 0) {
             nd_protocol_id => $protocol_id
         });
         my $stored_markers = $stored_protocol->markers();
+	my %stored_marker_names = map { $_ => 1 } keys %{$stored_markers};
 
-        my @all_stored_markers = keys %$stored_markers;
-        my %compare_marker_names = map {$_ => 1} @all_stored_markers;
-        my @mismatch_marker_names;
-        while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-            while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
-                if (exists($compare_marker_names{$marker_name})) {
-                    while (my ($key, $value) = each %$new_marker_details) {
-                        if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                            push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
-                        }
+        for my $chrom (keys %{$new_marker_data}) {
+            my $markers_on_chrom = $new_marker_data->{$chrom};
+
+            for my $marker_name (keys %{$markers_on_chrom}) {
+                my $new_marker_details = $markers_on_chrom->{$marker_name};
+
+                unless ($stored_marker_names{$marker_name}) {
+                    push @mismatch_markers, [$chrom, $marker_name];
+                    next;
+                }
+
+                my $stored_details = $stored_markers->{$marker_name};
+
+                for my $key (keys %{$new_marker_details}) {
+                    my $new_value    = defined $new_marker_details->{$key}
+                        ? $new_marker_details->{$key}
+                        : '';
+                    my $stored_value = defined $stored_details->{$key}
+                        ? $stored_details->{$key}
+                        : '';
+
+                    if ($new_value ne $stored_value) {
+                        push @protocol_match_errors,
+                            "Marker $marker_name in your file has $new_value for $key, "
+                          . "but in the previously stored protocol shows $stored_value";
                     }
-                } else {
-                    push @mismatch_marker_names, $marker_name;
                 }
             }
-        }
+	}
 
-        if (scalar(@mismatch_marker_names) > 0){
-            foreach my $error ( sort @mismatch_marker_names) {
-                print STDERR "$error\n";
+	if (@mismatch_markers) {
+            if ($add_markers) {
+		print STDERR "Adding new markers\n";
+                $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
+	    } else {
+		my $marker_name_error = join '<br>', map { $_->[0] . ': ' . $_->[1] } @mismatch_markers;
+                print STDERR "These marker names in your file are not in the selected protocol. $marker_name_error";
+                die; 
 	    }
-	    print STDERR "These marker names in your file are not in the selected protocol.\n";
-            die; 
         }
 
         if (scalar(@protocol_match_errors) > 0){

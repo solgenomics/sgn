@@ -2,8 +2,8 @@
 package CXGN::List::Validate::Plugin::Accessions;
 
 use Moose;
+#use Data::Dumper;
 
-use Data::Dumper;
 use SGN::Model::Cvterm;
 #use Hash::Case::Preserve;
 
@@ -21,7 +21,6 @@ sub validate {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
 
 
-    my @missing;
     my @wrong_case;
     my @multiple_wrong_case;
     my @synonyms;
@@ -43,7 +42,7 @@ sub validate {
     foreach my $item (@missing) {
 
         # find case-insensitive matches
-        my $rs = $schema->resultset("Stock::Stock")->search({
+        $rs = $schema->resultset("Stock::Stock")->search({
             'lower(uniquename)' => lc($item),
             'me.type_id' => $accession_type_id,
             is_obsolete => 'F'
@@ -67,6 +66,7 @@ sub validate {
             {
                 'lower(stockprops.value)' => lc($item),
                 'stockprops.type_id' => $synonym_type_id,
+                'me.is_obsolete' => 'F'
             }, 
             { 
                 join => 'stockprops', '+select' => [ 'stockprops.value' ], '+as' => [ 'stockprops_value' ] 

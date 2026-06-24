@@ -28,17 +28,25 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         $ontology_db_ids = ref($params->{'ontology_db_id[]'}) eq 'ARRAY' ? $params->{'ontology_db_id[]'} : [$params->{'ontology_db_id[]'}];
     }
 
-    my $observation_variables = CXGN::BrAPI::v1::ObservationVariables->new({
+    my $observation_variables = CXGN::BrAPI::v2::ObservationVariables->new({
         bcs_schema => $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id),
         metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id),
         phenome_schema=>$c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id),
         people_schema => $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id),
         page_size => 1000000,
         page => 0,
-        status => []
+        status => [],
+        context => $c
     });
 
-    my $result = $observation_variables->observation_variable_ontologies({cvprop_type_names => ['experiment_treatment_ontology', 'composed_experiment_treatment_ontology']});
+    my $name_spaces_str = $c->config->{onto_root_namespaces};
+    my @name_spaces_pairs = split(", ",$name_spaces_str);
+    my @name_spaces = map { s/ .*//r } @name_spaces_pairs;
+
+    my $result = $observation_variables->observation_variable_ontologies({
+        cvprop_type_names => ['experiment_treatment_ontology', 'composed_experiment_treatment_ontology'],
+        name_spaces => \@name_spaces
+    });
 
     my @ontos;
     if (scalar(@{$ontology_db_ids}) == 0) {
@@ -70,6 +78,16 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         push @$subset_treatments, $params->{treatment_any_name};
     }
 
+    my $treatment_ids;
+    if ($params->{treatment_id}){
+        push @$treatment_ids, $params->{treatment_id};
+    }
+
+    my $treatment_synonyms;
+    if ($params->{treatment_synonym}){
+        push @$treatment_synonyms, $params->{treatment_synonym};
+    }
+
     my $definitions;
     if ($params->{treatment_definition}){
         push @$definitions, $params->{treatment_definition};
@@ -82,6 +100,8 @@ sub search : Path('/ajax/search/treatments') Args(0) {
         limit => $limit,
         offset => $offset,
         trait_name_list => $subset_treatments,
+        accession_list => $treatment_ids,
+        trait_synonym_list => $treatment_synonyms,
         trait_definition_list => $definitions
     });
     my ($data, $records_total) = $trait_search->search();

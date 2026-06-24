@@ -40,7 +40,7 @@ is_deeply($response, {'data' => [['<a href="/cvterm/70741/view">dry matter conte
 
 		#	  '<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','26.02','15.00','500.00','22.61','86.89%',465,'32.8%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70741)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/cvterm/70666/view">fresh root weight|CO_334:0000012</a>','5.91','0.04','38.76','5.37','90.80%',469,'32.23%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70666)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','14.33','0.50','555.00','26.62','185.78%',494,'28.61%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>']]}, "check trial detail page");
 
-$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/phenotypes?display=plots_accession');
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/phenotypes?display=plots&group_by_accession=1');
 $response = decode_json $mech->content;
 my @response = @{$response->{data}};
 my @last_n = @response[-4..-1];
@@ -146,7 +146,7 @@ $response = decode_json $mech->content;
 my @accessions = @{$response->{accessions}->[0]};
 @last_n = @accessions[-4..-1];
 #print STDERR Dumper \@last_n;
-is_deeply($response, {'accessions' => [[{'accession_name' => 'test_accession1','stock_id' => 38840, 'stock_type' => 'accession'},{'stock_id' => 38841,'accession_name' => 'test_accession2', 'stock_type' => 'accession'},{'stock_id' => 38842,'accession_name' => 'test_accession3', 'stock_type' => 'accession'},{'stock_id' => 38843,'accession_name' => 'test_accession4', 'stock_type' => 'accession'},{'stock_id' => 38844,'accession_name' => 'test_accession5', 'stock_type' => 'accession'}]]});
+is_deeply($response, {'accessions' => [[{'stock_type' => 'accession','accession_name' => 'test_accession1','relationship_type' => 'plot_of','stock_id' => 38840,'organism' => 'Solanum lycopersicum'},{'organism' => 'Solanum lycopersicum','stock_id' => 38841,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession2'},{'relationship_type' => 'plot_of','stock_id' => 38842,'accession_name' => 'test_accession3','stock_type' => 'accession','organism' => 'Solanum lycopersicum'},{'stock_id' => 38843,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession4','organism' => 'Solanum lycopersicum'},{'organism' => 'Solanum lycopersicum','stock_id' => 38844,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession5'}]]});
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/controls', "get controls");
 $response = decode_json $mech->content;

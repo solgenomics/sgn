@@ -23,6 +23,10 @@ has 'trial_id' => (
     is => 'rw',
 );
 
+has 'stock_ids' => (
+    isa => 'ArrayRef|Undef',
+    is => 'rw',
+);
 
 
 sub get_trial_related_stock {
@@ -486,6 +490,49 @@ sub get_original_derived_from_stock {
 
     return \%original_stock_info;
 }
+
+
+sub get_plots_related_seedlots {
+    my $self = shift;
+    my $plot_ids = $self->stock_ids;
+    my $schema = $self->dbic_schema();
+    my $seed_transaction_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seed transaction', 'stock_relationship')->cvterm_id();
+    my @plot_array = @$plot_ids;
+    my $placeholder = join ",",("?") x @plot_array;
+
+    my $where_clause = "plot.stock_id in ($placeholder)";
+    my @related_seedlots;
+
+    my $q1 = "SELECT distinct(seedlot.stock_id), seedlot.uniquename, plot.stock_id, plot.uniquename
+            FROM stock_relationship
+            JOIN stock AS seedlot ON (stock_relationship.subject_id = seedlot.stock_id)
+            JOIN stock AS plot ON (stock_relationship.object_id = plot.stock_id)
+            WHERE $where_clause AND stock_relationship.type_id = ? ";
+
+    my $h1 = $schema->storage->dbh()->prepare($q1);
+    $h1->execute(@plot_array, $seed_transaction_type_id);
+
+    while(my($seedlot_id, $seedlot_name, $plot_id, $plot_name ) = $h1->fetchrow_array()){
+      push @related_seedlots, ['source of', $seedlot_id, $seedlot_name, $plot_id, $plot_name]
+    }
+
+    my $q2 = "SELECT distinct(seedlot.stock_id), seedlot.uniquename, plot.stock_id, plot.uniquename
+            FROM stock_relationship
+            JOIN stock AS seedlot ON (stock_relationship.object_id = seedlot.stock_id)
+            JOIN stock AS plot ON (stock_relationship.subject_id = plot.stock_id)
+            WHERE $where_clause AND stock_relationship.type_id = ? ";
+
+    my $h2 = $schema->storage->dbh()->prepare($q2);
+    $h2->execute(@plot_array, $seed_transaction_type_id);
+
+    while(my($seedlot_id, $seedlot_name, $plot_id, $plot_name) = $h2->fetchrow_array()){
+      push @related_seedlots, ['derived from', $seedlot_id, $seedlot_name, $plot_id, $plot_name]
+    }
+
+    return\@related_seedlots;
+
+}
+
 
 
 1;

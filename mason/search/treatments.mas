@@ -22,6 +22,18 @@
                 </div>
             </div>
             <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Treatment ID: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="treatment_search_id" placeholder="Search any trait ID or part of an ID"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
+                <label class="col-sm-3 control-label">Search Treatment Synonym: </label>
+                <div class="col-sm-9" >
+                    <input type="text" class="form-control" id="treatment_search_synonym" placeholder="Search any trait synonym or part of a synonym"/>
+                </div>
+            </div>
+            <div class="form-group form-group-sm">
                 <label class="col-sm-3 control-label">Search Definition: </label>
                 <div class="col-sm-9" >
                     <input type="text" class="form-control" id="treatment_search_definition" placeholder="Search any word or piece of definition"/>
@@ -142,6 +154,8 @@ jQuery(document).ready(function () {
                 'data': function(d) {
                     d.treatment_search_list_id  = jQuery('#treatment_search_list_select_list_select').val();
                     d.treatment_any_name  = jQuery('#treatment_search_name').val();
+                    d.treatment_id = jQuery('#treatment_search_id').val();
+                    d.treatment_synonym = jQuery('#treatment_search_synonym').val();
                     d.treatment_definition  = jQuery('#treatment_search_definition').val();
                     d.ontology_db_id = selectedontologies;
                 }

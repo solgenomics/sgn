@@ -167,6 +167,7 @@ has 'harvest_date' => (isa => 'Str', is => 'rw', predicate => 'has_harvest_date'
 has 'operator' => (isa => 'Str', is => 'rw', predicate => 'has_operator', required => 1);
 has 'trial_stock_type' => (isa => 'Str', is => 'rw', predicate => 'has_trial_stock_type', required => 0, default => 'accession');
 has 'additional_info' => (isa => 'Maybe[HashRef]', is => 'rw', required => 0);
+has 'allow_obsoleted_accessions' => (isa => 'Bool', is => 'rw', required => 0, default => 0);
 
 # Trial linkage when saving a field trial
 #
@@ -474,6 +475,7 @@ sub save_trial {
         is_sampling_trial => $self->get_is_sampling_trial(),
         operator => $self->get_operator,
         trial_stock_type => $self->get_trial_stock_type(),
+        allow_obsoleted_accessions => $self->get_allow_obsoleted_accessions(),
     });
     my $error;
     my $validate_design_error = $trial_design_store->validate_design();

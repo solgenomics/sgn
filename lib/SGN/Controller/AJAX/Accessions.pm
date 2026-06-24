@@ -91,7 +91,7 @@ sub verify_accession_list_POST : Args(0) {
     #    $c->detach();
     #}
 
-    if ($do_fuzzy_search) {
+    if ($do_fuzzy_search eq 'true') {
         $self->do_fuzzy_search($c, \@accession_list, \@organism_list);
     }
     else {

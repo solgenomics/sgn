@@ -29,7 +29,8 @@ sub parse {
       },
       column_arrays => {
         'Program' => '&'
-      }
+      },
+      unique_only_columns => [ 'Name', 'Abbreviation' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};

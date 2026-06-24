@@ -12,6 +12,8 @@ use Test::WWW::Mechanize;
 use CXGN::Cross;
 use JSON;
 use LWP::UserAgent;
+use CXGN::Stock::Seedlot;
+use CXGN::Trial::ParseUpload;
 
 my $fix = SGN::Test::Fixture->new();
 
@@ -38,9 +40,9 @@ for my $extension ("xls", "xlsx") {
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
 
-    my @cross_ids;
+    my @cross_unique_ids;
     for (my $i = 1; $i <= 5; $i++) {
-        push(@cross_ids, "cross_for_trial" . $i);
+        push(@cross_unique_ids, "cross_for_trial" . $i);
     }
 
     my @family_names;
@@ -54,12 +56,12 @@ for my $extension ("xls", "xlsx") {
         species => 'Test_genus test_species',
     },));
 
-    foreach my $cross_id (@cross_ids) {
+    foreach my $cross_unique_id (@cross_unique_ids) {
         my $cross_for_trial = $schema->resultset('Stock::Stock')
             ->create({
             organism_id => $organism->organism_id,
-            name        => $cross_id,
-            uniquename  => $cross_id,
+            name        => $cross_unique_id,
+            uniquename  => $cross_unique_id,
             type_id     => $cross_type_id,
         });
     };
@@ -74,13 +76,59 @@ for my $extension ("xls", "xlsx") {
         });
     };
 
+    #add a cross member for family_name_fro_trial1
+    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my $family_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+    my $cross_member_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross_member_of', 'stock_relationship')->cvterm_id();
+    my $family_1_rs = $schema->resultset("Stock::Stock")->find({ uniquename => 'family_name_for_trial1', type_id => $family_cvterm_id });
+    my $cross_1_rs = $schema->resultset("Stock::Stock")->find({ uniquename => 'cross_for_trial1', type_id => $cross_cvterm_id });
+    my $cross_1_id = $cross_1_rs->stock_id();
+
+    $family_1_rs->find_or_create_related('stock_relationship_objects', {
+        type_id => $cross_member_of_cvterm_id,
+        object_id => $family_1_rs->stock_id(),
+        subject_id => $cross_1_rs->stock_id(),
+    });
+    #add seedlot for cross
+    my $seedlot_uniquename = 'cross_for_trial1_seedlot1';
+    my $seedlot_material_type = 'seed';
+    my $seedlot_location = 'seedlot1_location';
+    my $seedlot_box_name = 'box1';
+    my $seedlot_cross_name = 'cross_for_trial1';
+    my $seedlot_cross_id = $cross_1_id;
+    my $seedlot_breeding_program_name = "test";
+    my $seedlot_breeding_program_id = $schema->resultset('Project::Project')->find({name=>$seedlot_breeding_program_name})->project_id();
+
+    my $sl = CXGN::Stock::Seedlot->new( schema=>$schema );
+    $sl->uniquename($seedlot_uniquename);
+    $sl->material_type($seedlot_material_type);
+    $sl->location_code($seedlot_location);
+    $sl->box_name($seedlot_box_name);
+    $sl->cross_stock_id($seedlot_cross_id);
+    $sl->breeding_program_id($seedlot_breeding_program_id);
+
+    my $return = $sl->store();
+    my $seedlot_id = $return->{seedlot_id};
+
+    my $trans = CXGN::Stock::Seedlot::Transaction->new(
+        schema => $schema,
+    );
+    $trans->from_stock([ $cross_1_id, 'cross_for_trial1', $cross_cvterm_id ]);
+    $trans->to_stock([ $seedlot_id,   $seedlot_uniquename,   $seedlot_cvterm_id ]);
+    $trans->amount(50);
+    $trans->timestamp( scalar localtime );
+    $trans->description('test');
+    $trans->operator('janedoe');
+
+
     #add accession stock type for testing mixed types
-    push(@cross_ids, 'UG120001');
+    push(@cross_unique_ids, 'UG120001');
 
     # create trial with cross stock type
     ok(my $cross_trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
     ok($cross_trial_design->set_trial_name("cross_to_trial1"), "set trial name");
-    ok($cross_trial_design->set_stock_list(\@cross_ids), "set stock list");
+    ok($cross_trial_design->set_stock_list(\@cross_unique_ids), "set stock list");
     ok($cross_trial_design->set_plot_start_number(1), "set plot start number");
     ok($cross_trial_design->set_plot_number_increment(1), "set plot increment");
     ok($cross_trial_design->set_number_of_blocks(2), "set block number");
@@ -132,7 +180,7 @@ for my $extension ("xls", "xlsx") {
     my @cross_block_nums;
     my @cross_plot_names;
 
-    print STDERR "CROSS LAYOUT = " . Dumper($cross_trial_design);
+#    print STDERR "CROSS LAYOUT = " . Dumper($cross_trial_design);
 
     # note:cross and family_name stock types use the same accession_name key as accession stock type in trial design
     foreach my $cross_plot_num (keys %$cross_trial_design) {
@@ -251,7 +299,7 @@ for my $extension ("xls", "xlsx") {
     my @fam_rep_nums;
     my @fam_plot_names;
 
-    print STDERR "FAMILY TRIAL DESIGN: " . Dumper($fam_trial_design);
+#    print STDERR "FAMILY TRIAL DESIGN: " . Dumper($fam_trial_design);
     # note:cross and family_name stock types use the same accession_name key as accession stock type in trial design
     foreach my $fam_plot_num (keys %$fam_trial_design) {
         push @fam_plot_nums, $fam_plot_num;
@@ -345,7 +393,7 @@ for my $extension ("xls", "xlsx") {
     is($field_book_columns[3][1], 'cross_unique_id');
     is($field_book_columns[4][1], 'plot_number');
     is($field_book_columns[5][1], 'block_number');
-    print STDERR "FIELDBOOK COLUMNS =" . Dumper($columns) . "\n";
+#    print STDERR "FIELDBOOK COLUMNS =" . Dumper($columns) . "\n";
 
 
     # create family_name trial Fieldbook
@@ -380,7 +428,7 @@ for my $extension ("xls", "xlsx") {
     is($family_field_book_columns[3][1], 'family_name');
     is($family_field_book_columns[4][1], 'plot_number');
     is($family_field_book_columns[5][1], 'rep_number');
-    print STDERR "FAMILY FIELDBOOK COLUMNS =" . Dumper($family_columns) . "\n";
+#    print STDERR "FAMILY FIELDBOOK COLUMNS =" . Dumper($family_columns) . "\n";
 
 
     #create westcott trial design_type using cross_unique_ids
@@ -406,7 +454,7 @@ for my $extension ("xls", "xlsx") {
         push @accessions_westcott, "check_accession_for_westcott_trial" . $i;
     }
 
-    print STDERR "ACCESSIONS WESTCOTT: " . Dumper(\@accessions_westcott);
+#    print STDERR "ACCESSIONS WESTCOTT: " . Dumper(\@accessions_westcott);
 
     foreach my $accession (@accessions_westcott) {
         my $accession_stock = $schema->resultset('Stock::Stock')->create(
@@ -417,7 +465,7 @@ for my $extension ("xls", "xlsx") {
                 #type_id     => $accession_type_id,
                 type_id     => $cross_type_id,
             });
-        print STDERR "Created accession $accession with type_id $accession_type_id\n";
+#        print STDERR "Created accession $accession with type_id $accession_type_id\n";
     }
 
     ok(my $trial_design = CXGN::Trial::TrialDesign->new(), "create trial design object");
@@ -467,7 +515,7 @@ for my $extension ("xls", "xlsx") {
 
     ok(my $stock_names = $trial_layout->get_accession_names(), "retrieve cross_unique_ids");
 
-    print STDERR "STOCK NAMES IN WESTCOTT = " . Dumper($stock_names);
+#    print STDERR "STOCK NAMES IN WESTCOTT = " . Dumper($stock_names);
 
     my %stocks = map {$_ => 1} @cross_unique_ids_westcott;
     my @crosses;
@@ -487,8 +535,64 @@ for my $extension ("xls", "xlsx") {
     my $sgn_session_id = $response->{access_token};
     print STDERR $sgn_session_id . "\n";
 
+    #test family trial upload with seedlot
+    my %upload_metadata;
+	my $file_name = "t/data/trial/family_trial_layout_with_seedlot_1.xlsx";
+	my $time = DateTime->now();
+	my $timestamp = $time->ymd() . "_" . $time->hms();
+
+	my $uploader = CXGN::UploadFile->new({
+		tempfile         => $file_name,
+		subdirectory     => 'temp_trial_upload',
+		archive_path     => '/tmp',
+		archive_filename => "family_trial_layout_with_seedlot_1.xlsx",
+		timestamp        => $timestamp,
+		user_id          => 41, #janedoe in fixture
+		user_role        => 'curator'
+	});
+
+	## Store uploaded temporary file in archive
+	my $archived_filename_with_path = $uploader->archive();
+	my $md5 = $uploader->get_md5($archived_filename_with_path);
+	ok($archived_filename_with_path);
+	ok($md5);
+
+	$upload_metadata{'archived_file'} = $archived_filename_with_path;
+	$upload_metadata{'archived_file_type'} = "trial upload file";
+	$upload_metadata{'user_id'} = 41;
+	$upload_metadata{'date'} = "2014-02-14_09:10:11";
+
+	#parse uploaded file with appropriate plugin
+	my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_stock_type => 'family_name');
+	$parser->load_plugin('TrialGeneric');
+	my $return = $parser->parse();
+	my $parsed_data = $return->{'design'};
+	ok($parsed_data, "Check if parse validate excel file works");
+	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
+
+    my $trial_create = CXGN::Trial::TrialCreate
+        ->new({
+        chado_schema      => $schema,
+        dbh               => $dbh,
+        owner_id          => 41,
+        trial_year        => "2026",
+        trial_description => "Test family trial Upload with seedlot",
+        trial_stock_type  => "family_name",
+        trial_location    => "test_location",
+        trial_name        => "family_trial_with_seedlot",
+        design_type       => "RCBD",
+        design            => $parsed_data,
+        program           => "test",
+        upload_trial_file => $archived_filename_with_path,
+        operator          => "janedoe"
+    });
+
+    $trial_create->save_trial();
+
+    ok($trial_create, "check that trial_create worked");
+
     #test deleting a cross using in trial
-    my $cross_in_trial_id = $schema->resultset("Stock::Stock")->find({ name => 'cross_for_trial1' })->stock_id;
+    my $cross_in_trial_id = $schema->resultset("Stock::Stock")->find({ name => 'cross_for_trial2' })->stock_id;
     $mech->post_ok('http://localhost:3010/ajax/cross/delete', [ 'cross_id' => $cross_in_trial_id ]);
     $response = decode_json $mech->content;
     is_deeply($response, { 'error' => 'An error occurred attempting to delete a cross. (Cross has associated trial: cross_to_trial1. Cannot delete.

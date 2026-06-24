@@ -57,7 +57,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $trial_id = $c->req->param('trial_id');
     my $data_level = $c->req->param('data_level') || 'plots';
-    my $treatment_project_ids = $c->req->param('treatment_project_id') ? [$c->req->param('treatment_project_id')] : [];
+    my $include_treatments = $c->req->param('treatments') || 'true';
     my $include_plot_order = $c->req->param('include_plot_order') eq 'true';
     my $plot_order = $c->req->param('plot_order');
     my $plot_start = $c->req->param('plot_start');
@@ -151,7 +151,7 @@ sub create_fieldbook_from_trial_POST : Args(0) {
         user_id => $c->user()->get_object()->get_sp_person_id(),
         user_name => $c->user()->get_object()->get_username(),
         data_level => $data_level,
-        treatment_project_ids => $treatment_project_ids,
+        include_treatments => $include_treatments,
         selected_columns => $selected_columns,
         include_measured => $include_measured,
         all_stats => $all_stats,

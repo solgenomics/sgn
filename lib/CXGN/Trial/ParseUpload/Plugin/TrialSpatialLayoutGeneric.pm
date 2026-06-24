@@ -32,7 +32,8 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new(
         file => $filename,
         required_columns => \@REQUIRED_COLUMNS,
-        optional_columns => \@OPTIONAL_COLUMNS
+        optional_columns => \@OPTIONAL_COLUMNS,
+        unique_only_columns => [ 'plot_name' ]
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{'errors'};

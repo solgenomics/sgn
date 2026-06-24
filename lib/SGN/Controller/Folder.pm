@@ -23,9 +23,30 @@ sub folder_page :Path("/folder") Args(1) {
     my $c = shift;
     my $folder_id = shift;
 
-    #print STDERR Dumper $folder_id;
-
     my $folder_project = $self->schema->resultset("Project::Project")->find( { project_id => $folder_id } );
+    if (!$folder_project) {
+        $c->stash->{message} = "The requested folder ($folder_id) does not exist or has been deleted.";
+        $c->stash->{template} = 'generic_message.mas';
+        return;
+    }
+
+    # If the requested id is actually a breeding program, redirect to the program page
+    # rather than treating it as a folder. The trial detail mason template renders an
+    # unconditional /folder/{folder_id} link for the Folder cell; for trials whose
+    # recorded parent is the breeding program directly (no intermediate folder), that
+    # link resolves to /folder/{breeding_program_id} and used to 500 here.
+    my $breeding_program_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'breeding_program', 'project_property');
+    if ($breeding_program_cvterm) {
+        my $is_program = $self->schema->resultset('Project::Projectprop')->find({
+            project_id => $folder_id,
+            type_id    => $breeding_program_cvterm->cvterm_id(),
+        });
+        if ($is_program) {
+            $c->res->redirect("/breeders/program/$folder_id");
+            return;
+        }
+    }
+
     my $folder = CXGN::Trial::Folder->new({ bcs_schema => $self->schema, folder_id => $folder_id });
 
     my $children = $folder->children();

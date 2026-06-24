@@ -82,6 +82,11 @@ has 'plant_list' => (
     is => 'rw',
 );
 
+has 'instance_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 sub search {
     my $self = shift;
     my $schema = $self->bcs_schema();
@@ -91,15 +96,23 @@ sub search {
     my $accession_ids = $self->accession_list();
     my $plot_ids = $self->plot_list();
     my $plant_ids = $self->plant_list();
+    my $instance_ids = $self->instance_list();
     my $query_associated_stocks = $self->query_associated_stocks();
     my $dbh = $schema->storage->dbh();
 
-    if (!$accession_ids && !$plot_ids && !$plant_ids) {
-        return { error => "No accessions or plots or plants in your selected dataset!" };
-    }
-
     my @all_stock_ids;
-    if ($query_associated_stocks) {
+
+    if ($instance_ids && scalar(@$instance_ids) > 0 && scalar(@$accession_ids) == 0 && scalar(@$plot_ids) == 0 && scalar(@$plant_ids) == 0) {
+        print STDERR "only instance ids triggered";
+        my $instance_ids_sql = join ',', @$instance_ids;
+        my $stock_q = "SELECT DISTINCT nes.stock_id FROM nd_experiment_stock nes JOIN phenome.nd_experiment_md_files ef ON nes.nd_experiment_id = ef.nd_experiment_id JOIN metadata.md_files m ON ef.file_id = m.file_id WHERE m.file_id IN ($instance_ids_sql);";
+        my $stock_h = $dbh->prepare($stock_q);
+        $stock_h->execute();
+        while (my ($stock_id) = $stock_h->fetchrow_array()) {
+            push @all_stock_ids, $stock_id;
+        }
+
+    } elsif ($query_associated_stocks) {
         if ($accession_ids && scalar(@$accession_ids) > 0) {
             push @all_stock_ids, @$accession_ids;
         }
@@ -165,6 +178,16 @@ sub search {
         }
     }
 
+    my $instance_sql;
+    if ($instance_ids && scalar(@$instance_ids) > 0 ) {
+        my $instance_ids_sql = join ',', @$instance_ids;
+        $instance_sql = "AND nd_experiment.nd_experiment_id IN (
+            SELECT ef.nd_experiment_id
+            FROM phenome.nd_experiment_md_files ef
+            JOIN metadata.md_files m ON ef.file_id = m.file_id
+            WHERE m.file_id IN ($instance_ids_sql))";
+    }
+
     # print STDERR Dumper \@all_stock_ids;
     my $stock_ids_sql = join ',', @all_stock_ids;
 
@@ -172,22 +195,25 @@ sub search {
     my $protocol_type_cvterm_id;
 
     if ($high_dimensional_phenotype_type eq 'NIRS') {
-        my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type'
+        my $q = "SELECT stock.uniquename, stock.stock_id, metadata.md_json.json->>'spectra', metadata.md_json.json->>'device_type', m.file_id
             FROM stock
             JOIN nd_experiment_stock USING(stock_id)
             JOIN nd_experiment USING(nd_experiment_id)
             JOIN nd_experiment_protocol USING(nd_experiment_id)
-            JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)
+            JOIN phenome.nd_experiment_md_json USING(nd_experiment_id)            
             JOIN metadata.md_json USING(json_id)
-            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'nirs_spectra';";
+            JOIN phenome.nd_experiment_md_files ef USING(nd_experiment_id)
+            JOIN metadata.md_files m ON ef.file_id = m.file_id
+            WHERE stock.stock_id IN ($stock_ids_sql) AND nd_experiment_protocol.nd_protocol_id = ? AND metadata.md_json.json_type = 'nirs_spectra' $instance_sql;";
         print STDERR Dumper $q;
         my $h = $dbh->prepare($q);
         $h->execute($nd_protocol_id);
-        while (my ($stock_uniquename, $stock_id, $spectra, $device_type) = $h->fetchrow_array()) {
+        while (my ($stock_uniquename, $stock_id, $spectra, $device_type, $file_id) = $h->fetchrow_array()) {
             eval {
                 $spectra = decode_json $spectra;
                 $data_matrix{$stock_id}->{spectra} = $spectra;
                 $data_matrix{$stock_id}->{device_type} = $device_type;
+                $data_matrix{$stock_id}->{instance_id} = $file_id;
             };
         }
 
