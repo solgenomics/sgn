@@ -218,6 +218,19 @@ solGS.cluster = {
       dataTypes = this.getDataTypeOpts();
     }
 
+    var protocolId;
+
+    if (dataStr.match(/dataset/)) {
+        datasetId = popId;
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+    }
+
+    if (!protocolId) {
+      protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+    }
+
+    clusterPop.protocol_id = protocolId;
+
     var dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypes, clusterPopId);
     var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId) || this.defaultKNum;
     var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
@@ -287,7 +300,18 @@ solGS.cluster = {
 
     dataType = dataType.toLowerCase();
     clusterType = clusterType.toLowerCase();
-    var protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+
+    var protocolId;
+    var datasetId;
+
+    if (dataStr.match(/dataset/)) {
+        datasetId = clusterPopId.replace(/dataset_/, "");
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+    }
+
+    if (!protocolId) {
+      protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+    }
 
     if (!protocolId) {
       protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
