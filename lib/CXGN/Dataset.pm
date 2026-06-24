@@ -1300,6 +1300,9 @@ sub calculate_tool_compatibility {
         'Correlation' => {
             'compatible' => 0
         },
+        'Environment Stratification' => {
+            'compatible' => 0
+        },
         'NIRS' => {
             'compatible' => 0
         },
@@ -1342,6 +1345,12 @@ sub calculate_tool_compatibility {
         if ($trait_obj->categories eq ""){# ??? Not sure how to filter properly
             push @{$traits}, $trait;
         }
+    }
+
+    push @{$tool_compatibility->{"Environment Stratification"}->{"dataset requirements"}}, "Trials : ".scalar(@{$trials});
+    push @{$tool_compatibility->{"Environment Stratification"}->{"dataset requirements"}}, "Traits : ".scalar(@{$all_traits});
+    if (scalar(@{$trials}) > 1 && scalar(@{$all_traits}) > 0) {
+        $tool_compatibility->{"Environment Stratification"}->{"compatible"} = 1;
     }
 
     my $trial_designs = $self->retrieve_trial_designs();
