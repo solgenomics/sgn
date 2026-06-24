@@ -19,7 +19,8 @@ const initialtypes = [
     "trials",
     "trial_designs",
     "trial_types",
-    "years"
+    "years",
+    "protocols",
 ];
 
 const types = {
@@ -30,6 +31,8 @@ const types = {
   "genotyping_protocols": "Genotyping Protocols",
   "genotyping_projects": "Genotyping Projects",
   "locations": "Locations",
+  "protocols": "HDP Protocols",
+  "instances": "HDP Upload Ids",
   "plots": "Plots",
   "subplots": "Subplots",
   "plants": "Plants",
@@ -41,7 +44,7 @@ const types = {
   "trials": "Trials",
   "trial_designs": "Trial Designs",
   "trial_types": "Trial Types",
-  "years": "Years"
+  "years": "Years",
 };
 
 // Helper: UI/validation uses canonical plural
@@ -83,6 +86,8 @@ function makeURL(target, id) {
         case "trial_designs":
         case "trial_types":
         case "years":
+        case "protocols":
+        case "instances":
         default:
           return null;
     }

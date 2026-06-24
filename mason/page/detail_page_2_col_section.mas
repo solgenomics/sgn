@@ -88,7 +88,6 @@ $is_obsolete => undef
 $derived_accession_relationship => undef
 $related_stock_link => undef
 $original_stock_link => undef
-$is_in_trial => undef
 $vector_related_genes => undef
 $vector_analyzed_tissue_types => undef
 $number_of_insertions => undef
@@ -224,7 +223,7 @@ $logged_in_name => undef
                                 <& /breeders_toolbox/trial/phenotype_heatmap.mas, trial_id => $trial_id, data_level => $data_level, has_col_and_row_numbers => $has_col_and_row_numbers, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, trial_stock_type => $trial_stock_type &>
 % } #End pheno_heatmap
 % if ($info_section_id eq 'trial_design_section'){
-                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
+                                <& /breeders_toolbox/trial/design_section.mas, trial_id => $trial_id, trial_name => $trial_name, has_subplot_entries => $has_subplot_entries, has_plant_entries => $has_plant_entries, has_tissue_sample_entries => $has_tissue_sample_entries, design_name => $design_name, trial_stock_type => $trial_stock_type,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify, curator => $curator &>
 % } #End trial_design_section
 % if ($info_section_id eq 'trial_detail_traits_assayed'){
 
@@ -245,9 +244,9 @@ $logged_in_name => undef
 % }
 
 % if ($info_section_id eq 'trial_analysis_tools') {
-    <& /breeders_toolbox/analysis_tools_section.mas, 
-        trial_id => $trial_id, 
-        trial_name => $trial_name 
+    <& /breeders_toolbox/analysis_tools_section.mas,
+        trial_id => $trial_id,
+        trial_name => $trial_name
     &>
 
 % if ($hidap_enabled) {
@@ -416,7 +415,7 @@ $logged_in_name => undef
                                 <& /page/comments.mas, object_type=>'stock', object_id=>$stock_id, referer=>$referer &>
 % } #End stock_comments_section
 % if ($info_section_id eq 'stock_delete_section'){
-                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete, is_in_trial=>$is_in_trial, is_a_parent=>$is_a_parent &>
+                                <& /stock/delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename, is_obsolete=>$is_obsolete, is_a_parent=>$is_a_parent &>
 % } #End stock_delete_section
 % if ($info_section_id eq 'population_delete_section'){
                                 <& /stock/population_delete.mas, stock_id=>$stock_id, stock_uniquename=>$stock_uniquename &>

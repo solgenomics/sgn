@@ -252,6 +252,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
     my $include_intercrop_stocks = $c->req->param("intercrop") && $c->req->param("intercrop") ne 'null' && $c->req->param("intercrop") ne 'undefined' ? $c->req->param("intercrop") : 0;
     my $include_entry_numbers = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
+    my $include_trait_synonyms = $c->req->param("trait_synonyms") && $c->req->param("trait_synonyms") ne 'null' ? $c->req->param("trait_synonyms") : 0;
     my $trait_list = $c->req->param("trait_list");
     my $trait_component_list = $c->req->param("trait_component_list");
     my $year_list = $c->req->param("year_list");
@@ -260,11 +261,16 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $accession_list = $c->req->param("accession_list");
     my $plot_list = $c->req->param("plot_list");
     my $plant_list = $c->req->param("plant_list");
+    my $protocol_list = $c->req->param("protocol_list");
+    my $instance_list = $c->req->param("instance_list");
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
     my $phenotype_start_date = $c->req->param("phenotype_start_date");
     my $phenotype_end_date = $c->req->param("phenotype_end_date");
+    my $data_type = $c->req->param("data_type");
+    my $hdp_type = $c->req->param("hdp_type");
+    print STDERR "hdp type test: $hdp_type";
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -310,6 +316,16 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     if ($plant_list && $plant_list ne 'null') {
 	print STDERR "plant list: ".Dumper $plant_list."\n";
 	@plant_list = @{_parse_list_from_json($plant_list)};
+    }
+    my @protocol_list;
+    if ($protocol_list && $protocol_list ne 'null') {
+    print STDERR "protocol list: ".Dumper $protocol_list."\n";
+    @protocol_list = @{_parse_list_from_json($protocol_list)};
+    }
+    my @instance_list;
+    if ($instance_list && $instance_list ne 'null') {
+    print STDERR "instance list: ".Dumper $instance_list."\n";
+    @instance_list = @{_parse_list_from_json($instance_list)};
     }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
@@ -402,7 +418,30 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         }
     }
 
-    my $plugin = $format eq 'xlsx' ? "TrialPhenotypeExcel" : "TrialPhenotypeCSV";
+    my @protocol_list_int;
+    foreach (@protocol_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @protocol_list_int, $_;
+        } else {
+            my $q = "SELECT nd_protocol.nd_protocol_id FROM nd_protocol AND nd_protocol.name = ?;";
+            my $h = $schema->storage->dbh()->prepare($q);
+            $h->execute($_);
+            my ($protocol_id) = $h->fetchrow_array();
+
+            if ($protocol_id) {
+                push @protocol_list_int, $protocol_id;
+            }
+        }
+    }
+
+    my $plugin;
+    if ($data_type && $data_type eq 'high_dimensional') {
+        $plugin = $format eq 'xlsx' ? "TrialHighDimensionalPhenotypeExcel" : "TrialHighDimensionalPhenotypeCSV";
+        $data_level = 'all';
+    } else {
+        $plugin = $format eq 'xlsx' ? "TrialPhenotypeExcel" : "TrialPhenotypeCSV";
+    }
+
     my $temp_file_name;
     my $download_file_name;
     my $dir = $c->tempfiles_subdir('download');
@@ -430,6 +469,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         accession_list => \@accession_list_int,
         plot_list => \@plot_list_int,
         plant_list => \@plant_list_int,
+        protocol_list => \@protocol_list_int,
+        hdp_type => $hdp_type,
+        instance_list => \@instance_list,
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,
@@ -437,6 +479,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         include_pedigree_parents=>$include_pedigree_parents,
         include_intercrop_stocks => $include_intercrop_stocks,
         include_entry_numbers => $include_entry_numbers,
+        include_trait_synonyms => $include_trait_synonyms,
         exclude_phenotype_outlier => $exclude_phenotype_outlier,
         trait_contains => \@trait_contains_list,
         phenotype_min_value => $phenotype_min_value,
@@ -532,6 +575,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") || 0;
     my $include_intercrop_stocks = $c->req->param("intercrop") || 0;
     my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
+    my $include_trait_synonyms = $c->req->param("trait_synonyms") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
 
     # parameters for outliers download
@@ -647,6 +691,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             dataset_excluded_outliers=>$dataset_outliers,
             include_intercrop_stocks=>$include_intercrop_stocks,
             include_entry_numbers=>$include_entry_numbers,
+            include_trait_synonyms=>$include_trait_synonyms,
     		data_level=>$datalevel,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();

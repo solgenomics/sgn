@@ -229,6 +229,12 @@ has 'trait_repeat_types' => ( # returns the repeat type for every trait keyed by
     default => sub { return {} },
 );
 
+has 'include_trait_synonyms' => ( # when true, will set the column header as "SYN = TRAIT NAME|CO_xxx:yyyyyy"
+    isa => 'Bool',
+    is => 'rw',
+    default => 0
+);
+
 sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
@@ -236,6 +242,7 @@ sub get_phenotype_matrix {
     my $include_phenotype_primary_key = $self->include_phenotype_primary_key;
     my $include_intercrop_stocks = $self->include_intercrop_stocks;
     my $include_entry_numbers = $self->include_entry_numbers;
+    my $include_trait_synonyms = $self->include_trait_synonyms;
     my %trial_entry_numbers;
 
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
@@ -272,12 +279,12 @@ sub get_phenotype_matrix {
         }
     );
 
-    my ($data, $unique_traits);
+    my ($data, $unique_traits, $trait_synonyms);
     my @info;
     my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
 
     if ($self->search_type eq 'MaterializedViewTable'){
-        ($data, $unique_traits) = $phenotypes_search->search();
+        ($data, $unique_traits, $trait_synonyms) = $phenotypes_search->search();
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -310,7 +317,10 @@ sub get_phenotype_matrix {
 
         my @sorted_traits = sort keys(%$unique_traits);
         foreach my $trait (@sorted_traits) {
-            push @line, $trait;
+            my $trait_id = $unique_traits->{$trait};
+            my $trait_syn = $trait_synonyms->{$trait_id};
+
+            push @line, defined $trait_syn && $include_trait_synonyms ? "$trait_syn = $trait" : $trait;
             if ($include_phenotype_primary_key) {
                 push @line, $trait.'_phenotype_id';
             }
@@ -474,6 +484,7 @@ sub get_phenotype_matrix {
             push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
         }
 
+        my %trait_synonyms;
         foreach my $d (@$data) {
             my $obsunit_id = $d->{obsunit_stock_id};
             if (!exists($seen_obsunits{$obsunit_id})) {
@@ -551,6 +562,8 @@ sub get_phenotype_matrix {
             if ($cvterm){
                 my $timestamp_value = $d->{timestamp};
                 my $value = $d->{phenotype_value};
+                my $syn = $d->{trait_synonym};
+                $trait_synonyms{$cvterm} = $syn if $syn;
                 #my $cvterm = $trait."|".$cvterm_accession;
                 # if ($include_timestamp && $timestamp_value) {
                 #     $obsunit_data{$obsunit_id}->{$cvterm} = "$value,$timestamp_value";
@@ -581,27 +594,33 @@ sub get_phenotype_matrix {
                     if ($self->repetitive_measurements() eq "average") {
                         my $count = 0;
                         my $sum = 0;
+                        my $has_non_numeric = 0;
+
                         foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
-                            # print STDERR "the value of v  in the average = $v\n";
                             my ($value, $timestamp);
                             if (defined($v)) {
-                                ($value, $timestamp) = split(',', $v);
+                                ($value, $timestamp) = split(',', $v, 2);
                             }
-                            #if timestamp is undefined, $v is the last measurement
                             $value = $v unless defined $timestamp;
-                            if (defined($value)) {
+
+                            next unless defined $value;
+                            $value =~ s/^\s+|\s+$//g;
+
+                            if ($value =~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) {
                                 $sum += $value;
                                 $count++;
                             }
+                            else {
+                                $has_non_numeric = 1;
+                            }
                         }
-                        if($count >0) {
+
+                        if ($count > 0 && !$has_non_numeric) {
                             my $averaged_values = $sum/$count;
-                            #  the timestamp for the average values, will be the latest (or the last measurement, timestamp). Therefore, am retreving the timestamp of the last measurement !!
                             my $last_measurement = $sorted_measurements[-1];
-                            # since, the values are stored with the timestamp, need to split them to get the timestamp of the last_measurment !!
-                            my ($last_value, $last_timestamp) = split(',', $last_measurement);
+                            my ($last_value, $last_timestamp) = split(',', $last_measurement, 2);
                             $last_value = $last_measurement unless defined $last_timestamp;
-                            # conditionally include, if the timestamp !!
+
                             if ($include_timestamp && defined $last_timestamp) {
                                 $obsunit_data{$obsunit_id}->{$cvterm} = "$averaged_values, $last_timestamp";
                             } else {
@@ -609,40 +628,51 @@ sub get_phenotype_matrix {
                             }
                         }
                         else {
-                            $obsunit_data{$obsunit_id}->{$cvterm} = undef;
+                            # fallback for non-numeric repeated values such as dates
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[-1];
                         }
-
                     }
-
                     if ($self->repetitive_measurements() eq "sum") {
                         my $sum_all_values = 0;
+                        my $has_numeric = 0;
+                        my $has_non_numeric = 0;
+
                         foreach my $v (@{ $obsunit_data{$obsunit_id}->{$cvterm}}) {
-                            # print STDERR "the value of v in the sum = $v\n";
                             my ($value, $timestamp);
                             if (defined($v)) {
-                                ($value, $timestamp) = split(',', $v);
+                                ($value, $timestamp) = split(',', $v, 2);
                             }
-                            if (defined($value)) {
+                            $value = $v unless defined $timestamp;
+
+                            next unless defined $value;
+                            $value =~ s/^\s+|\s+$//g;
+
+                            if ($value =~ /^-?(?:\d+(?:\.\d*)?|\.\d+)$/) {
                                 $sum_all_values += $value;
+                                $has_numeric = 1;
+                            }
+                            else {
+                                $has_non_numeric = 1;
                             }
                         }
-                        # It's same as in the average above, retrieve the last_measurement timestamp !!
-                        my $last_measurement = $sorted_measurements[-1];
 
-                        my ($last_value, $last_timestamp) = (undef, undef);
+                        if ($has_numeric && !$has_non_numeric) {
+                            my $last_measurement = $sorted_measurements[-1];
+                            my ($last_value, $last_timestamp) = (undef, undef);
 
-                        if ($last_measurement) {
-                            ($last_value, $last_timestamp) = split(',', $last_measurement);
+                            if ($last_measurement) {
+                                ($last_value, $last_timestamp) = split(',', $last_measurement, 2);
+                            }
+
+                            if ($include_timestamp && defined $last_timestamp) {
+                                $obsunit_data{$obsunit_id}->{$cvterm} = "$sum_all_values, $last_timestamp";
+                            } else {
+                                $obsunit_data{$obsunit_id}->{$cvterm} = $sum_all_values;
+                            }
                         }
-
-                        #$last_value = $last_measurement unless defined $last_timestamp;
-
-                        # Store the sum of all values, with the last_measurement timestamp !!
-                        # Conditionally include the timestamp
-                        if ($include_timestamp && defined $last_timestamp) {
-                            $obsunit_data{$obsunit_id}->{$cvterm} = "$sum_all_values, $last_timestamp";
-                        } else {
-                            $obsunit_data{$obsunit_id}->{$cvterm} = $sum_all_values;
+                        else {
+                            # fallback for non-numeric repeated values such as dates
+                            $obsunit_data{$obsunit_id}->{$cvterm} = $sorted_measurements[-1];
                         }
                     }
 
@@ -671,7 +701,8 @@ sub get_phenotype_matrix {
 
         my @sorted_traits = sort keys(%traits);
         foreach my $trait (@sorted_traits) {
-            push @line, $trait;
+            my $syn = $trait_synonyms{$trait};
+            push @line, defined $syn && $include_trait_synonyms ? "$syn = $trait" : $trait;
         }
         push @line, 'notes';
 
@@ -801,7 +832,7 @@ sub format_observations {
 	        if (ref($observation->{value}) eq 'ARRAY') {
 		    #print STDERR "processing OBSERVATION with collect_date: "; #Dumper($observation);
 	    	    $observation->{value} = join("|", map {$_->{value}.",".$collect_date} @$observation);
-		    $trait_observations{$observation->{trait_name}} = $$observation->{value};
+		    $trait_observations{$observation->{trait_name}} = $observation->{value};
 	        }
 		else {
 		    $trait_observations{$observation->{trait_name}} = "$observation->{value},$collect_date";

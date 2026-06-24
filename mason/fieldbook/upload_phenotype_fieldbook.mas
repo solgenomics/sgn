@@ -30,6 +30,7 @@
                             <option value="plots">Plots</option>
                             <option value="plants">Plants</option>
                             <option value="subplots">Subplots</option>
+                            <option value="tissue_samples">Tissue Samples</option>
                         </select>
                     </div>
                 </div>
@@ -74,7 +75,7 @@
 
             <ul>
 
-                <li><strong>plot_id</strong> or <strong>plant_id</strong> or <strong>subplot_id</strong>: This should be one of these stock IDs that already exist in the database.</li>
+                <li><strong>plot_id</strong> or <strong>plant_id</strong> or <strong>subplot_id</strong> or <strong>tissue_sample_id</strong>: This should be one of these stock IDs that already exist in the database.</li>
                 <li><strong>trait</strong>: A trait that exists in the database.</li>
                 <li><strong>value</strong>: Corresponding value for the observed trait.</li>
                 <li><strong>observationTimeStamp</strong>: Timestamp of the observation.</li>

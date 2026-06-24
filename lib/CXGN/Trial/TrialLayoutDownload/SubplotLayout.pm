@@ -53,7 +53,7 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
+    my @possible_cols = ('subplot_name','subplot_id','plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','subplot_number','pedigree','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json','variety');
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
@@ -107,8 +107,14 @@ sub retrieve {
         if (exists($selected_cols{'pedigree'})){
             $acc_pedigree = $pedigree_strings->{$design_info->{"accession_name"}};
         }
+        my $acc_variety = '';
+        if (exists($selected_cols{'variety'})) {
+            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
+            $acc_variety = $accession->variety;
+        }
         $design_info->{synonyms} = $acc_synonyms;
         $design_info->{pedigree} = $acc_pedigree;
+        $design_info->{variety} = $acc_variety;
 
         my $subplot_names = $design_info->{'subplot_names'};
         my $subplot_ids = $design_info->{'subplot_ids'};
