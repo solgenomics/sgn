@@ -19,6 +19,7 @@ use CXGN::Trial::TrialLayoutDownload;
 use CXGN::Cross;
 use SGN::Model::Cvterm;
 use Sort::Naturally;
+use CXGN::BreederSearch;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -457,11 +458,36 @@ __PACKAGE__->config(
             }
             elsif ( $data_type eq 'Lists' ) {
                 my $list = CXGN::List->new({ dbh => $schema->storage->dbh(), list_id => $source_id });
+                my $list_type = $list->type();
                 my $list_elements = $list->retrieve_elements_with_ids($source_id);
-                my @trial_names = map { $_->[1] } @$list_elements;
-                my $lt = CXGN::List::Transform->new();
-                my $tr = $lt->transform($schema, "projects_2_project_ids", \@trial_names);
-                @trial_ids = @{$tr->{transform}};
+
+                if ( $list_type eq 'trials' ) {
+                    my @trial_names = map { $_->[1] } @$list_elements;
+                    my $lt = CXGN::List::Transform->new();
+                    my $tr = $lt->transform($schema, "projects_2_project_ids", \@trial_names);
+                    @trial_ids = @{$tr->{transform}};
+                }
+                elsif ( $list_type eq 'plots' ) {
+                    my @plot_names = map { $_->[1] } @$list_elements;
+                    my $lt = CXGN::List::Transform->new();
+                    my $tr = $lt->transform($schema, "stocks_2_stock_ids", \@plot_names);
+                    my @plot_ids = @{$tr->{transform}};
+
+                    my $bs = CXGN::BreederSearch->new({ dbh => $schema->storage->dbh() });
+                    my $criteria_list = [ 'plots', 'trials' ];
+                    my $dataref = {
+                        'trials' => {
+                            'plots' => join(', ', map { qq\'$_'\ } @plot_ids)
+                        }
+                    };
+                    my $queryref = {
+                        'trials' => {
+                            'plots' => 0
+                        }
+                    };
+                    my $results_ref = $bs->metadata_query($criteria_list, $dataref, $queryref);
+                    @trial_ids = map { $_->[0] } @{$results_ref->{results}};
+                }
             }
 
             # Get the sorted plots, individually by trial
