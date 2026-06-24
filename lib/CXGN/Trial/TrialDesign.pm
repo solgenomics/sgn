@@ -41,6 +41,10 @@ with 'MooseX::Object::Pluggable';
 
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
 
+has 'plot_name_template' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_template');
+
+has 'breeding_program_name' => (isa => 'Str', is => 'rw', predicate => 'has_breeding_program_name');
+
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
 
 has 'seedlot_hash' => (isa => 'HashRef', is => 'rw', predicate => 'has_seedlot_hash', clearer => 'clear_seedlot_hash');
@@ -279,6 +283,32 @@ sub _build_plot_names {
     my $self = shift;
     my $design_ref = shift;
     my %design = %{$design_ref};
+
+    if ($self->has_plot_name_template()) {
+        my @attributes = split(/_/, $self->get_plot_name_template());
+        my $trial_name = $self->get_trial_name() || '';
+        my $bp_name    = $self->has_breeding_program_name() ? $self->get_breeding_program_name() : '';
+        my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+
+        foreach my $key (sort { $a <=> $b } keys %design) {
+            $design{$key}->{plot_number} = $key;
+            my %source_info = (
+                breedingProgram => $bp_name,
+                trialName       => $trial_name,
+                accessionName   => $design{$key}->{stock_name}   // '',
+                plotNumber      => $key,
+                blockNumber     => $design{$key}->{block_number}  // '',
+                repNumber       => $design{$key}->{rep_number}    // '',
+                rangeNumber     => $design{$key}->{range_number}  // '',
+                rowNumber       => $design{$key}->{row_number}    // '',
+                colNumber       => $design{$key}->{col_number}    // '',
+            );
+            my @components = map { $valid_attrs{$_} ? ($source_info{$_} // '') : $_ } @attributes;
+            $design{$key}->{plot_name} = join('_', @components);
+        }
+        return \%design;
+    }
+
     my $prefix = '';
     my $suffix = '';
     my $trial_name = $self->get_trial_name;

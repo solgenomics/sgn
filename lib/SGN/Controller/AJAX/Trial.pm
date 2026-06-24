@@ -145,6 +145,19 @@ sub generate_experimental_design_POST : Args(0) {
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
 
+    my $breeding_program_name_param = $c->req->param('breeding_program_name');
+    if ($breeding_program_name_param) {
+        $trial_design->set_breeding_program_name($breeding_program_name_param);
+    }
+
+    my $plot_name_template_param = $c->req->param('plot_name_template');
+    if ($plot_name_template_param) {
+        my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+        my @tokens = split(/_/, $plot_name_template_param);
+        my $attrs_ok = !grep { !$valid_attrs{$_} } @tokens;
+        $trial_design->set_plot_name_template($plot_name_template_param) if $attrs_ok;
+    }
+
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
 
