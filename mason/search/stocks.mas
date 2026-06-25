@@ -71,6 +71,11 @@ my $breeding_programs_select = simple_selectbox_html(
     choices => $breeding_programs,
     id      => "breeding_program" ,
 );
+
+# View columns are the configured editable stock props merged with "organism" and "synonyms"
+# which appear in the View Another Property dropdown but are handled as special cases
+my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synonyms');
+@view_column_options = sort { "\L$a" cmp "\L$b" } @view_column_options;
 </%perl>
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
@@ -283,7 +288,7 @@ my $breeding_programs_select = simple_selectbox_html(
               <div class="input-group">
                 <span class="input-group-btn">
                   <select class="form-control" id="editable_stockprop_view_column_term" name="editable_stockprop_view_column_term">
-%  foreach my $stockprop (sort { "\L$a" cmp "\L$b" } @$editable_stock_props){
+%  foreach my $stockprop (@view_column_options){
                     <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
                   </select>
@@ -309,8 +314,6 @@ my $breeding_programs_select = simple_selectbox_html(
                     <th>Stock Id</th>
                     <th>Stock Name</th>
                     <th>Stock Type</th>
-                    <th>Organism</th>
-                    <th>Synonyms</th>
                     <th>Organization</th>
                 </tr>
                 </thead>
@@ -515,7 +518,7 @@ jQuery(document).ready(function () {
     let stockprop_extra_columns_view_array = [ 'organization' ];
 
     function updateResultsHeader() {
-      const table_colnames = ["Stock Id", "Stock Name", "Stock Type", "Organism", "Synonyms"];
+      const table_colnames = ["Stock Id", "Stock Name", "Stock Type"];
       for (let i = 0; i < stockprop_extra_columns_view_array.length; i++) {
         table_colnames.push(stockprop_extra_columns_view_array[i]);
       }

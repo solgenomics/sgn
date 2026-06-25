@@ -119,11 +119,17 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             }
 
             # Start the row with Stock Id first, then the name link, etc.
-            my @return_row = ( $stock_id, $name_link, $type, $organism, $synonym_string );
+            my @return_row = ( $stock_id, $name_link, $type );
 
             # Append extra stockprop columns in the exact order requested by the client
             foreach my $property (@$stockprop_columns_view_array){
-                push @return_row, $_->{$property};
+                if ($property eq 'organism') {
+                    push @return_row, $organism;
+                } elsif ($property eq 'synonyms') {
+                    push @return_row, $synonym_string;
+                } else {
+                    push @return_row, $_->{$property};
+                }
             }
 
             push @return, \@return_row;

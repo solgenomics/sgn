@@ -104,8 +104,8 @@ $mech->post_ok(
     'http://localhost:3010/ajax/search/stocks',
     [
         'length'=>10, 'start'=>0,
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ],
     "basic stock search test"
 );
@@ -144,8 +144,8 @@ $mech->post_ok(
         "any_name_matchtype" => "contains",
         "any_name" => "test",
         "stock_type"=>'accession',
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ],
     "search accession test"
 );
@@ -178,8 +178,8 @@ $mech->post_ok(
         "any_name_matchtype" => "contains",
         "any_name" => "test",
         "stock_type"=>"plot",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ],
     "search plot test"
 
@@ -213,8 +213,8 @@ $mech->post_ok(
         "any_name_matchtype" => "contains",
         "any_name" => "test",
         "stock_type"=>"cross",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ],
     "stock search test with cross"
 );
@@ -247,8 +247,8 @@ $mech->post_ok(
         "any_name_matchtype" => "contains",
         "any_name" => "test",
         "stock_type"=>"population",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -275,8 +275,8 @@ $mech->post_ok(
         "any_name_matchtype" => "starts_with",
         "any_name" => "test5",
         "stock_type"=>"accession",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -304,8 +304,8 @@ $mech->post_ok(
         "any_name" => "001",
         "stock_type"=>"accession",
         "trait"=>"fresh root weight",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -332,8 +332,8 @@ $mech->post_ok(
         "any_name" => "g",
         "stock_type"=>"accession",
         "breeding_program" => $test_bp_id,
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ],
     "test search any type contains"
 );
@@ -367,8 +367,8 @@ $mech->post_ok(
         "any_name" => "t",
         "stock_type"=>"accession",
         "project" => "test_trial",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ],
     "test contains with test_trial"
 );
@@ -395,8 +395,8 @@ $mech->post_ok(
         'length'=>10, 'start'=>0,
         "stock_type"=>"accession",
         "year" => "2014",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -430,8 +430,8 @@ $mech->post_ok(
         "stock_type"=>"accession",
         "breeding_program" => $test_bp_id,
         "location"=>"test_location",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -464,8 +464,8 @@ $mech->post_ok(
         "any_name" => "t",
         "stock_type"=>"plot",
         "project" => "test_trial",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -496,8 +496,8 @@ $mech->post_ok(
         'length'=>10, 'start'=>0,
         "stock_type"=>"plot",
         "year" => "2014",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -530,8 +530,8 @@ $mech->post_ok(
         "any_name" => "g",
         "stock_type"=>"plot",
         "breeding_program" => $test_bp_id,
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -562,8 +562,8 @@ $mech->post_ok(
         'length'=>10, 'start'=>0,
         "stock_type"=>"plot",
         "location"=>"test_location",
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
@@ -599,7 +599,11 @@ print STDERR "CONTENTS: ".$mech->content;
 $response = decode_json $mech->content;
 print STDERR "AFTER ORGANIZATION ADD: ". Dumper $response;
 
-$mech->post_ok('http://localhost:3010/ajax/search/stocks',["editable_stockprop_values" => encode_json({"organization"=>{"matchtype"=>"contains", "value"=>"organization_name_1"}})] );
+$mech->post_ok('http://localhost:3010/ajax/search/stocks',[
+    "editable_stockprop_values" => encode_json({"organization"=>{"matchtype"=>"contains", "value"=>"organization_name_1"}}),
+    "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1}),
+    "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms"])
+] );
 $response = decode_json $mech->content;
 $response = _fix_response_links($response);
 print STDERR Dumper $response;
@@ -617,8 +621,8 @@ $mech->post_ok(
     'http://localhost:3010/ajax/search/stocks',
     [
         "editable_stockprop_values"         => encode_json({"organization"=>{"matchtype"=>"contains", "value"=>"organization_name_1"}}),
-        "extra_stockprop_columns_view"      => encode_json({"organization"=>1}),
-        "stockprop_extra_columns_view_array"=> encode_json(["organization"])
+        "extra_stockprop_columns_view"      => encode_json({"organism"=>1, "synonyms"=>1, "organization"=>1}),
+        "stockprop_extra_columns_view_array"=> encode_json(["organism", "synonyms", "organization"])
     ]
 );
 $response = decode_json $mech->content;
