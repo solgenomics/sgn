@@ -5,6 +5,7 @@ use Moose;
 use CXGN::People::Login;
 use CXGN::People::Person;
 use CXGN::Login;
+use CXGN::Cookie;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -92,7 +93,11 @@ sub log_out :Path('/user/logout') Args(0) {
     my $self = shift;
     my $c = shift;
 
-    # implement
+    $c->res->status(200);
+    $c->res->content_type('text/plain; charset=utf-8');
+    CXGN::Cookie::set_cookie( $CXGN::Login::LOGIN_COOKIE_NAME, "" );
+    $c->res->body('Logged out');
+    $c->detach();
 
 }
 
