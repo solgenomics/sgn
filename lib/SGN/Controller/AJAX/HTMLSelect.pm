@@ -2769,7 +2769,7 @@ sub get_transformant_related_attributes_select : Path('/ajax/html/select/transfo
     push @related_attributes, ["", "Select Attribute"];
     push @related_attributes, ['breedingProgram', 'breeding program'];
     push @related_attributes, ['transformationProject', 'transformation project'];
-    push @related_attributes, ['transfomationID', 'transformation id'];
+    push @related_attributes, ['transformationID', 'transformation id'];
     push @related_attributes, ['vectorConstruct', 'vector construct'];
     push @related_attributes, ['plantMaterial', 'plant material'];
     push @related_attributes, ['text', 'text'];
