@@ -456,7 +456,7 @@ __PACKAGE__->config(
             if ( $data_type eq 'Field Trials' ) {
                 push(@trial_ids, $source_id);
             }
-            elsif ( $data_type eq 'Lists' ) {
+            elsif ( $data_type eq 'Lists' || $data_type eq 'Public Lists' ) {
                 my $list = CXGN::List->new({ dbh => $schema->storage->dbh(), list_id => $source_id });
                 my $list_type = $list->type();
                 my $list_elements = $list->retrieve_elements_with_ids($source_id);
