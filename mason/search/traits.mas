@@ -67,6 +67,7 @@
                         <th>Copy Name|ID</th>
                         <th>Trait ID</th>
                         <th>Trait Name</th>
+                        <th>Synonym</th>
                         <th>Definition</th>
                         <th>Trait&nbsp;Usage</th>
                       </tr>
