@@ -359,6 +359,19 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     }, [activeTrialIds]);
 
     useEffect(() => {
+        const handleExternalClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (target && (target.id === 'trial_fieldmap_download_layout_button' || target.closest('#trial_fieldmap_download_layout_button'))) {
+                setShowDownloadCSVModal(true);
+            }
+        };
+        document.addEventListener('click', handleExternalClick);
+        return () => {
+            document.removeEventListener('click', handleExternalClick);
+        };
+    }, []);
+
+    useEffect(() => {
         fetch(`/ajax/breeders/trial/${trialId}/controls`)
             .then(res => res.json())
             .then(response => {
@@ -1328,7 +1341,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 cellVal += (cellVal ? '\n' : '') + plot.additionalInfo?.familyName;
             }
             if (csvDownloadOpts.crossName && plot.crossName) {
-                cellVal += (cellVal ? '\n' : '') + plot.additionalInfo?.crossName;
+                cellVal += (cellVal ? '\n' : '') + plot.crossName;
             }
 
             coord_matrix[r][c] = `"${cellVal}"`;
