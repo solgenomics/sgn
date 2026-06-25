@@ -152,10 +152,14 @@ sub generate_experimental_design_POST : Args(0) {
 
     my $plot_name_template_param = $c->req->param('plot_name_template');
     if ($plot_name_template_param) {
-        my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
-        my @tokens = split(/_/, $plot_name_template_param);
-        my $attrs_ok = !grep { !$valid_attrs{$_} } @tokens;
-        $trial_design->set_plot_name_template($plot_name_template_param) if $attrs_ok;
+        my $template = eval { $json->decode($plot_name_template_param) };
+        if ($template) {
+            my ($format_name) = keys %$template;
+            my $name_attributes = $template->{$format_name}->{'name_attributes'} || [];
+            my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+            my $attrs_ok = !grep { ref $_ eq 'HASH' ? 0 : !$valid_attrs{$_} } @$name_attributes;
+            $trial_design->set_plot_name_template($plot_name_template_param) if $attrs_ok;
+        }
     }
 
     if ( !$start_number ) {
@@ -686,6 +690,10 @@ sub save_experimental_design_POST : Args(0) {
         }
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
+        }
+        my $plot_name_template = $c->req->param('plot_name_template');
+        if ($plot_name_template) {
+            $trial_info_hash{plot_name_template} = $plot_name_template;
         }
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 

@@ -2802,6 +2802,7 @@ sub get_plot_related_attributes_select : Path('/ajax/html/select/plot_related_at
     push @related_attributes, ['rangeNumber', 'range number'];
     push @related_attributes, ['rowNumber', 'row number'];
     push @related_attributes, ['colNumber', 'col number'];
+    push @related_attributes, ['text', 'text'];
 
     my $html = simple_selectbox_html(
         name => $name,
