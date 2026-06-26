@@ -147,14 +147,10 @@ sub add_info {
         unless ($attrs{trialName}) {
             return {error => "Plot name template must include 'trialName' to produce globally unique stock names.\n"};
         }
-        unless ($attrs{plotNumber} || ($attrs{rowNumber} && $attrs{colNumber})) {
-            return {error => "Plot name template must include 'plotNumber', or both 'rowNumber' and 'colNumber', to produce globally unique stock names.\n"};
+        unless ($attrs{plotNumber} || ($attrs{rowNumber} && $attrs{colNumber}) || ($attrs{accessionName} && $attrs{repNumber})) {
+            return {error => "Plot name template must include 'plotNumber', or both 'rowNumber' and 'colNumber', or both 'accessionName' and 'repNumber' to produce globally unique stock names.\n"};
         }
-    } elsif ($name_type eq 'transformant') {
-        unless ($attrs{transformationProject} || $attrs{transformationID}) {
-            return {error => "Transformant name template must include 'transformationProject' or 'transformationID' to produce globally unique stock names.\n"};
-        }
-    }
+    } 
 
     my $name_metadata_cvterm;
     if ($name_type eq 'transformant') {
