@@ -20,6 +20,7 @@ use Moose;
 use File::Slurp;
 use Text::CSV;
 use Data::Dumper;
+use JSON qw(decode_json);
 
 sub name {
     return "field book";
@@ -107,6 +108,7 @@ sub validate {
         plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
         plants   => [qw(plant_name ObservationUnitName)],
         subplots => [qw(subplot_name ObservationUnitName)],
+        tissue_samples => [qw(tissue_sample_name ObservationUnitName)],
     );
 
     my %header_column_info;
@@ -220,6 +222,7 @@ sub parse {
         plots    => [qw(plot_id plot_name ObservationUnitDbId ObservationUnitName)],
         plants   => [qw(plant_id plant_name ObservationUnitDbId ObservationUnitName)],
         subplots => [qw(subplot_id subplot_name ObservationUnitDbId ObservationUnitName)],
+        tissue_samples => [qw(tissue_sample_id tissue_sample_name ObservationUnitDbId ObservationUnitName)],
     );
 
     my $header_column_number = 0;
@@ -261,7 +264,7 @@ sub parse {
 
         my $unit_value = $row[$header_column_info{$unit_col}];
         my $trait = $row[$header_column_info{'trait'}];
-        my $value = $row[$header_column_info{'value'}];
+        my $value = _normalize_fieldbook_value($row[$header_column_info{'value'}]);
         my $timestamp = defined $header_column_info{'timestamp'} ? $row[$header_column_info{'timestamp'}] : '';
         my $collector = defined $header_column_info{'person'} ? $row[$header_column_info{'person'}] : '';
 
@@ -289,7 +292,7 @@ sub parse {
         $traits_seen{$trait} = 1;
 
         if (defined($value) && defined($timestamp)) {
-	    print STDERR "KEEPING $trait with value $value for plot $unit_value...\n";
+	    print STDERR "KEEPING $trait with value $value for stock $unit_value...\n";
             push @{$data{$unit_value}->{$trait}}, [$value, $timestamp, $collector, ''];
         }
 	else {
@@ -312,6 +315,36 @@ sub parse {
     $parse_result{'variables'} = \@traits;
 
     return \%parse_result;
+}
+
+sub _normalize_fieldbook_value {
+    my $value = shift;
+    return $value if !defined($value) || $value !~ /^\s*[\[\{]/;
+
+    my $decoded = eval { decode_json($value) };
+    return $value if $@;
+
+    if (ref($decoded) eq "ARRAY") {
+        my @values = map { _fieldbook_json_value($_) } @$decoded;
+        @values = grep { defined($_) && $_ ne "" } @values;
+        return @values ? join(":", @values) : "";
+    }
+
+    my $decoded_value = _fieldbook_json_value($decoded);
+    return defined($decoded_value) ? $decoded_value : $value;
+}
+
+sub _fieldbook_json_value {
+    my $entry = shift;
+    return if !defined($entry);
+
+    if (ref($entry) eq "HASH") {
+        return $entry->{value} if defined($entry->{value});
+        return $entry->{label} if defined($entry->{label});
+        return;
+    }
+
+    return ref($entry) ? undef : $entry;
 }
 
 1;

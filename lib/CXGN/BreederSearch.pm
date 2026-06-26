@@ -101,22 +101,23 @@ sub metadata_query {
     print STDERR "criteria_list=" . Dumper($criteria_list);
     print STDERR "dataref=" . Dumper($dataref);
     print STDERR "queryref=" . Dumper($queryref);
-    
+
     my $target_table = $criteria_list->[-1];
     # print STDERR "target_table=". $target_table . "\n";
     my $target = $target_table;
     $target =~ s/s$//;
     # print STDERR "target=$target\n";
-    
+
     my $select = "SELECT ".$target."_id, ".$target."_name ";
     my $group = "GROUP BY ".$target."_id, ".$target."_name ";
-    
+
     my $full_query;
     if (!$dataref->{"$target_table"}) {
 	my $from = "FROM public.". $target_table;
 	my $where = " WHERE ".$target."_id IS NOT NULL";
 	$full_query = $select . $from . $where;
     }
+
     else {
 	my @queries;
 	foreach my $category (@$criteria_list) {
@@ -127,27 +128,27 @@ sub metadata_query {
 	    }
 	}
 
-	if (ref($limit_to_breeding_programs) eq 'ARRAY' && scalar(@$limit_to_breeding_programs)>0 ) { 
+	if (ref($limit_to_breeding_programs) eq 'ARRAY' && scalar(@$limit_to_breeding_programs)>0 ) {
 	    my $limit_bp_query = $self->build_subquery( join(",", map{ "'$_'" } @$limit_to_breeding_programs), 0, $target_table, $target, "breeding_programs", $select, $group);
 
 	    push @queries, $limit_bp_query;
 
 	}
-	
+
 	$full_query = join (" INTERSECT ", @queries);
     }
     $full_query .= " ORDER BY 2";
     print STDERR "FULL QUERY: $full_query\n";
     $h = $self->dbh->prepare($full_query);
     $h->execute();
-    
+
     my @results;
     while (my ($id, $name) = $h->fetchrow_array()) {
 	push @results, [ $id, $name ];
     }
-    
+
     return { results => \@results };
-    
+
 }
 
 sub build_subquery {
@@ -173,18 +174,18 @@ sub build_subquery {
     if ( !$match ) {
 	$match = 0;
     }
-    
+
     # print STDERR "... Match: $match\n";
-    
+
     my $total = scalar(split(',', $data_id_str));
     my $inner_select = $select . ", COUNT(" . $criterion . "_id)/" . $total . "::decimal AS match ";
     my $where = "WHERE ". $criterion. "_id IN (" . $data_id_str.")"; #$dataref->{$criteria_list->[-1]}->{$category} . ") ";
     $query = $inner_select . $from . $where . $group;
-    
+
     my $outer_query = "SELECT i." . $target . "_id, i." . $target . "_name, i.match ";
     $outer_query .= "FROM ($query) AS i ";
     $outer_query .= "WHERE i.match >= " . $match;
-    
+
     my $outest_query = "SELECT j." . $target . "_id, j." . $target . "_name ";
     $outest_query .= "FROM ($outer_query) AS j ";
 

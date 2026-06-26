@@ -184,3 +184,103 @@ export function format_html_tree(treehtml, tree_type) {
 
     });
 }
+
+
+var trialTreeSearchTimer = null;
+
+function filterMeetingTrials(rawHtml) {
+    var $container = $('<div><ul>' + rawHtml + '</ul></div>');
+
+    $container.find('li[data-design="Meeting"]').remove();
+
+    $container.find('li').each(function() {
+        var $li = $(this);
+        var dataJstree = $li.attr('data-jstree') || '';
+        var $childUl = $li.children('ul');
+
+        if (!$childUl.length) {
+            return;
+        }
+
+        var childCount = $childUl.children('li').length;
+        var isFolder = dataJstree.indexOf('"type":"folder"') > -1;
+        var isProgram = dataJstree.indexOf('"type":"breeding_program"') > -1;
+
+        if (childCount === 0 && isProgram) {
+            $li.remove();
+        }
+    });
+
+    return $container.children('ul').html();
+}
+
+function buildTrialTree(rawHtml) {
+    var filteredHtml = filterMeetingTrials(rawHtml);
+    var finalHtml = '<ul>' + filteredHtml + '</ul>';
+
+    $('#trial_tree_search').val('');
+
+    if ($.jstree.reference('#trial_list')) {
+        $('#trial_list').jstree('destroy');
+    }
+
+    $('#trial_list').empty().html(finalHtml);
+
+    $('#trial_list').jstree({
+        "core": {
+            "themes": {
+		"name": "proton",
+		"responsive": true
+            }
+        },
+        "valid_children": [ "folder", "trial", "breeding_program", "analyses", "sampling_trial" ],
+        "types": {
+            "breeding_program": {
+		"icon": "glyphicon glyphicon-briefcase text-info"
+            },
+            "folder": {
+		"icon": "glyphicon glyphicon-folder-open text-danger"
+            },
+            "trial": {
+		"icon": "glyphicon glyphicon-leaf text-success"
+            },
+            "analyses": {
+		"icon": "glyphicon glyphicon-stats text-success"
+            },
+            "sampling_trial": {
+		"icon": "glyphicon glyphicon-th text-success"
+            }
+        },
+        "search": {
+            "case_insensitive": true,
+            "show_only_matches": false
+        },
+        "plugins": ["html_data", "types", "search"]
+    });
+}
+
+function loadTrialTree(forceRefresh) {
+    var url = '/ajax/breeders/get_trials_with_folders_cached?type=trial';
+
+    if (forceRefresh) {
+        url += '&refresh=1&_=' + new Date().getTime();
+    }
+
+    $.ajax({
+        url: url,
+        cache: false,
+        success: function(response) {
+            buildTrialTree(response.html || '');
+        },
+        error: function(xhr) {
+            console.log('Trial tree load failed:', xhr.status, xhr.responseText);
+            alert("An error occurred while loading the trial data.");
+        }
+    });
+}
+
+loadTrialTree(false);
+
+$('#refresh_jstree_html_trialtree_button').off('click').on('click', function() {
+    loadTrialTree(true);
+});

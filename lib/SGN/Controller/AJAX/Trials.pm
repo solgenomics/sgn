@@ -42,14 +42,17 @@ sub get_trials : Path('/ajax/breeders/get_trials') Args(0) {
 sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Args(0) {
     my $self = shift;
     my $c = shift;
-    my $treetype = $c->req->param('type');
+
+    my $tree_type = $c->req->param('type') || 'trial';
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     print STDERR "get_trials_with_folders using TREETYPE: $treetype\n";
     my $p = CXGN::BreedersToolbox::Projects->new( { schema => $c->stash->{bcs_schema}  } );
     my $breeding_programs = $p->get_breeding_programs();
 
     my $html = "";
-    
+
     print STDERR "BREEDING PROGRAMS NOW: ".Dumper($breeding_programs);
 
     my @user_breeding_programs;
@@ -58,13 +61,14 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     if ($treetype eq "phenotyping_trial" || $treetype eq "transformation_trial" || $treetype eq "tracking_trial") {
 	$priv_check = "trials";
     }
+
     if ($treetype eq "genotyping_trial" || $treetype eq "genotyping_project") {
 	$priv_check = "genotyping";
     }
     if ($treetype eq "crossing_trial") {
 	$priv_check = "crosses";
     }
-    
+
     my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $priv_check);
     if (exists($privs->{read})) {
      	print STDERR "We can read trials!\n";
@@ -74,29 +78,28 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
 
 	    $breeding_programs = \@user_breeding_programs; # limit the breeding programs to the one the user has access to
 	}
-	
+
     }
 
-    
-    if (@$breeding_programs == 0) { 
+    if (@$breeding_programs == 0) {
 	$html = "NOTHING TO DISPLAY";
     }
-    else { 
+    else {
 	my $breeding_program_id = ref($breeding_programs) ? $breeding_programs->[0]->[0] : 0;
 
 	my $folder_obj;
-	if ($breeding_program_id) { 
+	if ($breeding_program_id) {
 	    $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $c->stash->{bcs_schema}, folder_id => $breeding_program_id });
 	}
-	
+
 	print STDERR "Starting trial tree refresh for $treetype at time ".localtime()."\n";
 	foreach my $project (@$breeding_programs) {
 	    my %project = ( "id" => $project->[0], "name" => $project->[1]);
 	    $html .= $folder_obj->get_jstree_html(\%project, $c->stash->{bcs_schema}, 'breeding_program', $treetype);
 	}
-	
+
 	print STDERR "Finished trial tree refresh for $treetype at time ".localtime()."\n";
-    }	
+    }
 
     print STDERR "HTML CREATED: $html\n";
     $c->stash->{rest} =  { html => $html };
@@ -115,7 +118,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     # if ($tree_type eq "trialtree") { $resource = "trials"; }
     # if ($tree_type eq "genotyping_trial") { $resource = "genotyping"; }
     # if ($tree_type eq "crosstrial") { $resource = "crosses"; }
-    
+
     # print STDERR "Figuring out user privileges for $tree_type tree...\n";
     # my $privs =  $c->stash->{access}->user_privileges($c->stash->{user_id}, $resource);
     # print STDERR "PRIVS: ".Dumper($privs);
@@ -125,15 +128,15 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     # 	    print STDERR "Requiring breeding program for reading, so limiting programs to user programs...\n";
     # 	    @breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
     # 	}
-	
+
     # 	else {
     # 	    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
     # 	    my $projects = $p->get_breeding_programs();
-	    
+
     # 	    @breeding_programs = @$projects;
     # 	}
     # }
-	
+
     # print STDERR "BREEDING PROGRAMS NOW: ".Dumper(\@breeding_programs);
     # my $dir = catdir($c->config->{static_content_path}, "folder");
     # eval { make_path($dir) };
@@ -147,9 +150,49 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     # $c->stash->{rest} = { html => $html,  status => 1 };
 }
 
+sub _get_trial_designs_by_ids {
+    my ($schema, $trial_ids_ref) = @_;
+
+    my %design_by_trial_id;
+    return \%design_by_trial_id unless $trial_ids_ref && @$trial_ids_ref;
+
+    my $design_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property');
+    return \%design_by_trial_id unless $design_cvterm;
+
+    my $design_cvterm_id = $design_cvterm->cvterm_id();
+
+    my $projects_rs = $schema->resultset('Project::Project')->search(
+        { 'me.project_id' => { -in => $trial_ids_ref } },
+        { prefetch => 'projectprops' }
+    );
+
+    while (my $project = $projects_rs->next) {
+        my $project_id = $project->project_id;
+        my $design = '';
+
+        my @props = $project->projectprops;
+        foreach my $pp (@props) {
+            if ($pp->type_id == $design_cvterm_id) {
+                $design = $pp->value // '';
+                last;
+            }
+        }
+
+        $design_by_trial_id{$project_id} = $design;
+    }
+
+    return \%design_by_trial_id;
+}
+
 sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folders_cached') Args(0) {
     my $self = shift;
     my $c = shift;
+
+    my $tree_type = $c->req->param('type') || 'trial';
+    my $force_refresh = $c->req->param('refresh') ? 1 : 0;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     print STDERR "GET TRIALS WITH FOLDERS CACHED!\n";
     my $tree_type = $c->req->param('type') || 'trial'; #can be 'trial','genotyping_trial', 'cross', 'genotyping_project', 'activity'
@@ -157,7 +200,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     #    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
     my $schema = $c->stash->{bcs_schema};
-    
+
     my @breeding_programs;
     if ($c->stash->{access}->grant($c->stash->{user_id}, "read", "trials")) {
 	@breeding_programs = $c->stash->{access}->get_breeding_program_ids_for_user($c->stash->{user_id});
@@ -171,26 +214,60 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     }
 
     print STDERR "WORKING WITH BREEDING PROGRAMS 2: ".Dumper(\@breeding_programs);
-    
+
     my $dir = catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
         print STDERR "Couldn't create $dir: $@";
     }
-    my $filename = $dir."/entire_jstree_html_$tree_type.txt";
+
+    my $filename = $dir . "/entire_jstree_html_$tree_type.txt";
     my $html = '';
-    open(my $fh, '< :encoding(UTF-8)', $filename) or warn "cannot open file $filename $!";
-    {
+
+    if (!$force_refresh && open(my $fh, '<:encoding(UTF-8)', $filename)) {
         local $/;
         $html = <$fh>;
+        close($fh);
     }
-    close($fh);
+    elsif (!$force_refresh) {
+        warn "cannot open file $filename $!";
+    }
 
-    if (!$html) {
+
+    if ($force_refresh || !$html) {
         $html = _write_cached_folder_tree($schema, $tree_type, \@breeding_programs, $filename);
     }
 
-    #print STDERR $html;
+    if ($tree_type eq 'trial' && $html) {
+        my %trial_ids;
+        while ($html =~ m{/breeders/trial/(\d+)}g) {
+            $trial_ids{$1} = 1;
+        }
+
+        if (%trial_ids) {
+            my @trial_ids = sort { $a <=> $b } keys %trial_ids;
+            my $design_by_trial_id = _get_trial_designs_by_ids($schema, \@trial_ids);
+
+            $html =~ s{(<li\b[^>]*data-jstree='{"type":"trial"}'[^>]*\bid="(\d+)"[^>]*)(>)}{
+                my $start_tag = $1;
+                my $trial_id  = $2;
+                my $end_tag   = $3;
+                my $design    = $design_by_trial_id->{$trial_id} // '';
+
+                $design =~ s/&/&amp;/g;
+                $design =~ s/"/&quot;/g;
+                $design =~ s/</&lt;/g;
+                $design =~ s/>/&gt;/g;
+
+                if ($start_tag =~ /\bdata-design=/) {
+                    $start_tag . $end_tag;
+                } else {
+                    $start_tag . qq{ data-design="$design"} . $end_tag;
+                }
+            }gex;
+        }
+    }
+
     $c->stash->{rest} = { html => $html };
 }
 
@@ -199,36 +276,27 @@ sub _write_cached_folder_tree {
     my $tree_type = shift;
     my $breeding_programs = shift;
     my $filename = shift;
-    
-    my $p = CXGN::BreedersToolbox::Projects->new( { schema => $schema  } );
-    my $html = "";
-    
-    print STDERR "BREEDING PROGRAMS NOW: ".Dumper($breeding_programs);
 
-    
-    if (@$breeding_programs == 0) { 
-	$html = "NOTHING TO DISPLAY";
+    my $p = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+    my $projects = $p->get_breeding_programs();
+
+    my $html = "";
+    my $folder_obj = CXGN::Trial::Folder->new({ bcs_schema => $schema, folder_id => @$projects[0]->[0] });
+
+    print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
+    foreach my $project (@$projects) {
+        my %project = ("id" => $project->[0], "name" => $project->[1]);
+        $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
     }
-    else { 
-	my $breeding_program_id = ref($breeding_programs) ? $breeding_programs->[0]->[0] : 0;
-	
-	my $folder_obj;
-	if ($breeding_program_id) { 
-	    $folder_obj = CXGN::Trial::Folder->new( { bcs_schema => $schema, folder_id => $breeding_program_id });
-	}
-	
-	print STDERR "Starting trial tree refresh for $tree_type at time ".localtime()."\n";
-	foreach my $project (@$breeding_programs) {
-	    my %project = ( "id" => $project->[0], "name" => $project->[1]);
-	    $html .= $folder_obj->get_jstree_html(\%project, $schema, 'breeding_program', $tree_type);
-	}
-	print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
-    }	
-    my $OUTFILE;
-    open $OUTFILE, '> :encoding(UTF-8)', $filename or die "Error opening $filename: $!";
-    print { $OUTFILE } $html or croak "Cannot write to $filename: $!";
-    close $OUTFILE or croak "Cannot close $filename: $!";
-    
+    print STDERR "Finished trial tree refresh for $tree_type at time ".localtime()."\n";
+
+    my $tmpfile = $filename . ".tmp";
+    open(my $OUTFILE, '>:encoding(UTF-8)', $tmpfile) or die "Error opening $tmpfile: $!";
+    print {$OUTFILE} $html or croak "Cannot write to $tmpfile: $!";
+    close($OUTFILE) or croak "Cannot close $tmpfile: $!";
+
+    rename($tmpfile, $filename) or die "Cannot rename $tmpfile to $filename: $!";
+
     return $html;
 }
 
@@ -291,17 +359,17 @@ sub trial_lookup : Path('/ajax/breeders/trial_lookup') Args(0) {
 
   Params: a string indicating the interval - one of 'day', 'week', 'month' or 'year'
   Returns: a list of of recently created trials
-     The list contains lists with the following info: link for the trial, 
+     The list contains lists with the following info: link for the trial,
      the trial type, the breeding program and the creation date.
 
-=cut  
+=cut
 
 sub get_recent_trials : Path('/ajax/breeders/recent_trials') Args(1) {
     my $self = shift;
     my $c = shift;
     my $interval = shift; # 1 day, week, month, or year
-    my $type = $c->req->param('type') || 'phenotyping_trial'; # can be phenotyping_trial, crossing, genotyping_plates, genotyping_project 
-    
+    my $type = $c->req->param('type') || 'phenotyping_trial'; # can be phenotyping_trial, crossing, genotyping_plates, genotyping_project
+
     my $trial_table = CXGN::Project::get_recently_added_trials($c->dbic_schema('Bio::Chado::Schema'),  $c->dbic_schema("CXGN::Phenome::Schema"),  $c->dbic_schema("CXGN::People::Schema"), $c->dbic_schema("CXGN::Metadata::Schema"), $interval, $type);
 
     $c->stash->{rest} =  { data => $trial_table }
@@ -312,11 +380,11 @@ sub get_recent_trials : Path('/ajax/breeders/recent_trials') Args(1) {
   Params: a string indicating the interval - one of 'day', 'week', 'month' or 'year'
   Returns: a list of of recently modified trials, defined here narrowly as new
      phenotypes that have been uploaded.
-     The list contains lists with the following info: link for the trial, 
+     The list contains lists with the following info: link for the trial,
      the trial type, the breeding program and the last modified date date
      (the create_date of the phenotypes falling in the interval).
 
-=cut  
+=cut
 
 sub get_recently_modified_trials : Path('/ajax/breeders/recently_modified_trials') Args(1) {
     my $self = shift;
@@ -332,14 +400,14 @@ sub get_recently_modified_trials : Path('/ajax/breeders/recently_modified_trials
 
   Params: interval - one of 'day', 'week', 'month', or 'year'
   Returns: a list of accessions that have been added in that interval.
-     
+
 =cut
 
 sub get_recently_created_accessions : Path('/ajax/breeders/recently_added_accessions') Args(1) {
     my $self = shift;
     my $c = shift;
     my $interval = shift;
-    
+
     my $s = CXGN::Stock->new( { schema => $c->dbic_schema('Bio::Chado::Schema') } );
 
     my $accession_table = CXGN::Project::get_recently_added_accessions($c->dbic_schema('Bio::Chado::Schema'), $interval);
@@ -353,7 +421,7 @@ sub get_recently_created_accessions : Path('/ajax/breeders/recently_added_access
   Summary: function used in the trial tree pages to determine if there
            were any changes in the database that should trigger a refresh
   Returns: a list of project_ids that where added
-  Notes:   may not detect deletions or renaming. Used by htmltree.js to 
+  Notes:   may not detect deletions or renaming. Used by htmltree.js to
            display trial, crossing, etc trees on respective manage pages.
 
 =cut

@@ -29,6 +29,7 @@ logfile*.txt
 MANIFEST*
 ./cgi-bin/secretom
 MYMETA.json
+db/delete_nd_experiment_ids/
 tags
 .prove
 .Rhistory

@@ -12,13 +12,15 @@ const initialtypes = [
     "genotyping_protocols",
     "genotyping_projects",
     "locations",
+    "populations",
     "seedlots",
     "trait_components",
     "traits",
     "trials",
     "trial_designs",
     "trial_types",
-    "years"
+    "years",
+    "protocols",
 ];
 
 const types = {
@@ -29,17 +31,20 @@ const types = {
   "genotyping_protocols": "Genotyping Protocols",
   "genotyping_projects": "Genotyping Projects",
   "locations": "Locations",
+  "protocols": "HDP Protocols",
+  "instances": "HDP Upload Ids",
   "plots": "Plots",
   "subplots": "Subplots",
   "plants": "Plants",
   "tissue_sample": "Tissue Samples",
+  "populations": "Populations",
   "seedlots": "Seedlots",
   "trait_components": "Trait Components",
   "traits": "Traits",
   "trials": "Trials",
   "trial_designs": "Trial Designs",
   "trial_types": "Trial Types",
-  "years": "Years"
+  "years": "Years",
 };
 
 // Helper: UI/validation uses canonical plural
@@ -76,9 +81,13 @@ function makeURL(target, id) {
         case "genotyping_plates":
         case "genotyping_projects":
           return document.location.origin + `/breeders/trial/${id}`;
+        case "populations":
+          return document.location.origin + `/stock/${id}/view`;
         case "trial_designs":
         case "trial_types":
         case "years":
+        case "protocols":
+        case "instances":
         default:
           return null;
     }
