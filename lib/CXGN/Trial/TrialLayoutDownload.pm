@@ -474,6 +474,8 @@ sub _get_all_pedigrees {
                 my ($progeny, $female_parent, $male_parent, $cross_type) = split "\t", $row;
                 my $string = join ('/', $female_parent ? $female_parent : 'NA', $male_parent ? $male_parent : 'NA');
                 $pedigree_strings{$progeny} = $string;
+                $pedigree_strings{$progeny . "_female_parent"} = $female_parent || 'NA';
+                $pedigree_strings{$progeny . "_male_parent"} = $male_parent || 'NA';
             }
         }
 

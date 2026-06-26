@@ -42,7 +42,7 @@ sub retrieve {
     my %design = %{$self->design};
     my $trial = $self->trial;
     my @output;
-    my @possible_cols = ('genotyping_project_name', 'genotyping_facility', 'trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'accession_id', 'synonyms', 'pedigree', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank', 'year', 'location_name', 'facility_identifier');
+    my @possible_cols = ('genotyping_project_name', 'genotyping_facility', 'trial_name', 'acquisition_date', 'exported_tissue_sample_name', 'tissue_sample_name', 'well_A01', 'row_number', 'col_number', 'source_observation_unit_name', 'accession_name', 'accession_id', 'synonyms', 'pedigree', 'female_parent', 'male_parent', 'dna_person', 'notes', 'tissue_type', 'extraction', 'concentration', 'volume', 'is_blank', 'year', 'location_name', 'facility_identifier');
 
     my @header;
     foreach (@possible_cols){
@@ -101,6 +101,10 @@ sub retrieve {
                     push @$line, join ',', @{$accession->synonyms}
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
+                } elsif ($_ eq 'female_parent'){
+                    push @$line, $pedigree_strings->{$design_info->{"accession_name"} . "_female_parent"};
+                } elsif ($_ eq 'male_parent'){
+                    push @$line, $pedigree_strings->{$design_info->{"accession_name"} . "_male_parent"};
                 } elsif ($_ eq 'genotyping_project_name'){
                     push @$line, $genotyping_project_name;
                 }else {
