@@ -10,6 +10,24 @@ $order_properties_dialog => undef
     <a href="/order/stocks/view"><p>Go to Manage Order Page</p></a>
 </td>
 
+<&| /page/info_section.mas, title => 'Order Form', collapsible=>1, collapsed=>0 &>
+    <div class = "well well-sm">
+        <div class = "panel panel-default">
+            <center>
+                <div id="item_form_div"></div>
+            </center>
+            <div class = "panel-body">
+                <div id="request_form_div"></div>
+            </div>
+            <div class="modal-footer">
+                <center>
+                    <button id="submit_request_form_button" type="button" class="btn btn-primary" >Submit</button>
+                </center>
+            </div>
+        </div>
+    </div>
+</&>
+
 <&| /page/info_section.mas, title => 'Catalog Items (Accessions)', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">
@@ -86,6 +104,8 @@ jQuery(document).ready( function() {
     var property_dialog_keys = order_properties_dialog.split(",");
     var selected_items = [];
     var item;
+    itemForm (selected_items);
+    requestForm(order_properties_dialog);
 
     jQuery('#catalog_transgenic_lines_table').DataTable( {
         'autoWidth': false,
@@ -100,6 +120,17 @@ jQuery(document).ready( function() {
         if (jQuery(e.target).closest('.flatpickr-calendar').length) {
             e.stopImmediatePropagation();
         }
+    });
+
+    jQuery(function() {
+        jQuery('input:checkbox[name="catalog_item_select"]').on('change', function() {
+            var item_name;
+            var item_index;
+            item_name = jQuery(this).val();
+            item_index = selected_items.indexOf(item_name);
+            jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
+            itemForm (selected_items);
+        });
     });
 
     jQuery('#order_form_link').click(function(){
@@ -198,15 +229,20 @@ jQuery(document).ready( function() {
 });
 
 function itemForm (selected_items) {
-    var html = '<div class="well well-lg"><table class="table table-bordered" style="width: 70%;" id="item_info_table"><thead><tr><th>Accession Name</th><th>Quantity</th></tr></thead><tbody>';
-    for(var i=0; i<selected_items.length; i++){
-        item = selected_items[i];
-        html = html + '<tr><td>' + selected_items[i] + '</td>';
-        html +=  '<td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="" placeholder=""/></td>';
-        html += '<td><span data-selected-item-name="'+selected_items[i]+'" class="selected_item_remove btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove</span></td>'
-        html += '</tr>';
-    };
-    html = html + '</tbody></table></div>';
+    var html;
+    if (selected_items.length === 0) {
+        html = '<body><h4 style="color:red;">Please select items that you would like to order from the catalog below</h4></body>';
+    } else {
+        var html = '<div class="well well-lg"><table class="table table-bordered" style="width: 70%;" id="item_info_table"><thead><tr><th>Accession Name</th><th>Quantity</th></tr></thead><tbody>';
+        for(var i=0; i<selected_items.length; i++){
+            item = selected_items[i];
+            html = html + '<tr><td>' + selected_items[i] + '</td>';
+            html +=  '<td><input class="form-control" item_name="' + selected_items[i] + '" name ="quantity" id="quantity_'+ i +'" value="" placeholder=""/></td>';
+            html += '<td><span data-selected-item-name="'+selected_items[i]+'" class="selected_item_remove btn btn-danger btn-xs"><span class="glyphicon glyphicon-trash"></span>&nbsp;&nbsp;Remove</span></td>'
+            html += '</tr>';
+        };
+        html = html + '</tbody></table></div>';
+    }
 
     jQuery('#item_form_div').html(html);
 };

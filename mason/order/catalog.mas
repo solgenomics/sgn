@@ -14,7 +14,7 @@ $catalog_stock_property => undef
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
-<& /page/page_title.mas, title => "Catalog" &>
+<& /page/page_title.mas, title => "Order Form and Catalog" &>
 
 % if ($catalog_stock_property eq 'transgenic') {
     <& /order/catalog_transgenic_lines.mas, order_properties_dialog => $order_properties_dialog, order_properties => $order_properties &>
