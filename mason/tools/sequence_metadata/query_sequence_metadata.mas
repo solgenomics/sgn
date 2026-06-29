@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'jquery.dataTables-buttons-bootstrap-min', 'jquery.dataTables-buttons-html5-min' ],  &>
 
 <p>Filter the sequence metadata by position, sequence metadata type and/or protocol, and/or by protocol attribute value(s).</p>
 

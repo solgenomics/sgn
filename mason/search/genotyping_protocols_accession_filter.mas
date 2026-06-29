@@ -1,4 +1,4 @@
-<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'jquery.dataTables-buttons-bootstrap-min', 'jquery.dataTables-buttons-html5-min' ],  &>
 
 <p style="padding: 12px">Starting with a list of Accessions, this tool will identify the genotyping protocols that contain the highest number of your accessions.</p>
 
