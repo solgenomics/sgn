@@ -47,7 +47,9 @@ $order_properties_dialog => undef
                 </div>
             </div>
         </div>
+        <!--
         <center><button class="btn btn-primary" style="margin:3px" id="order_form_link">Add Items</button></center>
+        -->
     </div>
 </&>
 
@@ -133,21 +135,21 @@ jQuery(document).ready( function() {
         });
     });
 
-    jQuery('#order_form_link').click(function(){
-        jQuery('input[name="catalog_item_select"]:checked').each(function() {
-            let item_name = jQuery(this).val();
-            if(!selected_items.includes(item_name)) {
-                selected_items.push(jQuery(this).val());
-            }
-        });
-        if (selected_items.length == 0){
-            alert('Please select what you would like to request');
-        } else {
-            itemForm(selected_items);
-            requestForm(order_properties_dialog);
-            jQuery('#request_form_dialog').modal('show');
-        }
-    });
+//    jQuery('#order_form_link').click(function(){
+//        jQuery('input[name="catalog_item_select"]:checked').each(function() {
+//            let item_name = jQuery(this).val();
+//            if(!selected_items.includes(item_name)) {
+//                selected_items.push(jQuery(this).val());
+//            }
+//        });
+//        if (selected_items.length == 0){
+//            alert('Please select what you would like to request');
+//        } else {
+//            itemForm(selected_items);
+//            requestForm(order_properties_dialog);
+//            jQuery('#request_form_dialog').modal('show');
+//        }
+//    });
 
     jQuery(document).on('click', '.selected_item_remove', function() {
         jQuery(this).closest('tr').remove();
@@ -224,6 +226,10 @@ jQuery(document).ready( function() {
                 alert('An error occurred saving your request');
             }
         });
+    });
+
+    jQuery("#dismiss_submit_response_dialog").click(function(){
+        location.reload();
     });
 
 });
