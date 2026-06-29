@@ -858,6 +858,14 @@ Table
 .dataTables_wrapper {
     overflow: auto;
 }
+
+/* Left align numbers and dates (right aligned by default since datatables 2.0+) */
+table.dataTable th.dt-type-numeric,
+table.dataTable th.dt-type-date,
+table.dataTable td.dt-type-numeric,
+table.dataTable td.dt-type-date {
+    text-align: left !important;
+}
 /*.table>tbody>tr>td, */
 
 /*
