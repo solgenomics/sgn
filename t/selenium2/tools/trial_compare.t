@@ -24,7 +24,7 @@ $d->while_logged_in_as('submitter', sub {
     $add_list_button->click();
 
     $d->find_element_ok(
-         '//div[@id="private_list_data_table_filter"]//input[@type="search"]',
+         '//div[@id="private_list_data_table_wrapper"]//input[@type="search"]',
          "xpath",
          "find search in table and find 'new_trial_list'")->send_keys("new_trial_list");
 
