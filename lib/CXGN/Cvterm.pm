@@ -415,6 +415,43 @@ sub _store_cvtermprop {
 
 
 
+sub add_parent_terms {
+    my $self       = shift;
+    my $parent_ids = shift;
+
+    my $schema    = $self->schema();
+    my $cvterm_id = $self->cvterm_id();
+
+    my $relationship_cv = $schema->resultset("Cv::Cv")->find({ name => 'relationship' });
+    die "No 'relationship' CV found in the database.\n" unless $relationship_cv;
+    my $rel_cv_id = $relationship_cv->cv_id();
+
+    my $variable_of = $schema->resultset("Cv::Cvterm")->find({ name => 'VARIABLE_OF', cv_id => $rel_cv_id });
+    my $isa         = $schema->resultset("Cv::Cvterm")->find({ name => 'is_a',        cv_id => $rel_cv_id });
+    die "No 'is_a' relationship type found.\n" unless $isa;
+
+    my $type_id = $isa->cvterm_id();
+    if ($variable_of) {
+        my $has_variable_of = $schema->resultset("Cv::CvtermRelationship")->search({
+            subject_id => $cvterm_id,
+            type_id    => $variable_of->cvterm_id(),
+        })->count();
+        if ($has_variable_of > 0) {
+            $type_id = $variable_of->cvterm_id();
+        }
+    }
+
+    $schema->txn_do(sub {
+        for my $parent_id (@$parent_ids) {
+            $schema->resultset("Cv::CvtermRelationship")->find_or_create({
+                subject_id => $cvterm_id,
+                object_id  => $parent_id,
+                type_id    => $type_id,
+            });
+        }
+    });
+}
+
 __PACKAGE__->meta->make_immutable;
 
 ##########
