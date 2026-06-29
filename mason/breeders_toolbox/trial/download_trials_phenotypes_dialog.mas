@@ -8,6 +8,7 @@
   my $default_include_entry_numbers = $c->get_conf('pheno_download_default_include_entry_numbers');
   my $default_include_trait_synonyms = $c->get_conf('pheno_download_default_include_trait_synonyms');
   my $default_supress_outliers = $c->get_conf('exclude_phenotype_outliers');
+  my $default_include_pedigree_parents = $c->get_conf('pheno_download_default_include_pedigree_parents');
 </%once>
 
 <div class="modal fade" id="download_trials_phenotypes_dialog" name="download_trials_phenotypes_dialog" tabindex="-1" role="dialog" aria-labelledby="downloadTrialsPhenotypesDialog">
@@ -83,6 +84,16 @@
                 <label class="col-sm-7 control-label">Include Entry Numbers: </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trials_phenotypes_entry_numbers_option">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="col-sm-7 control-label">Include Parents: </label>
+                <div class="col-sm-5" >
+                    <select class="form-control" id="download_trials_phenotypes_pedigrees_option">
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -212,8 +223,9 @@ jQuery(document).ready(function() {
         var intercrop_accessions = jQuery("#download_trials_phenotypes_intercrop_accessions_option").val();
         var entry_numbers = jQuery("#download_trials_phenotypes_entry_numbers_option").val();
         var trait_synonyms = jQuery("#download_trials_phenotypes_trait_synonyms_option").val();
+        var pedigrees = jQuery("#download_trials_phenotypes_pedigrees_option").val();
         var traits = [];
-        
+
         if (jQuery("#download_trials_phenotypes_traits_list_select").val()) {
             traits = list.getList(jQuery("#download_trials_phenotypes_traits_list_select").val());
         }
@@ -231,7 +243,7 @@ jQuery(document).ready(function() {
         }
 
         if (selected.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop_accessions+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms);
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop_accessions+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms+"&include_pedigree_parents="+pedigrees);
         }
         else { alert("No leaf nodes selected for download."); }
     });
@@ -245,6 +257,7 @@ function setDefaultOptions() {
     var default_include_entry_numbers = <% $default_include_entry_numbers %>;
     var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
     var default_supress_outliers = <% $default_supress_outliers %>;
+    var default_include_pedigree_parents = <% $default_include_pedigree_parents %>;
 
     jQuery("#download_repetitive_measurements_trials_option").val(default_repeat_measurements);
     jQuery("#download_trials_phenotypes_timestamp_option").val(default_include_timestamps);
@@ -252,6 +265,7 @@ function setDefaultOptions() {
     jQuery("#download_trials_phenotypes_entry_numbers_option").val(default_include_entry_numbers);
     jQuery("#download_trials_phenotypes_trait_synonyms_option").val(default_include_trait_synonyms);
     jQuery("#download_trials_phenotype_exclude_outliers").val(default_supress_outliers);
+    jQuery("#download_trials_phenotypes_pedigrees_option").val(default_include_pedigree_parents);
 }
 
 </script>

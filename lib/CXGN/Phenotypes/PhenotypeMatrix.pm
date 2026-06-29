@@ -244,7 +244,6 @@ sub get_phenotype_matrix {
     my $include_entry_numbers = $self->include_entry_numbers;
     my $include_trait_synonyms = $self->include_trait_synonyms;
     my %trial_entry_numbers;
-
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
     print STDERR "GET PHENOMATRIX ".$self->search_type."\n";
 
@@ -274,6 +273,7 @@ sub get_phenotype_matrix {
             end_date => $self->end_date(),
             include_dateless_items => $self->include_dateless_items(),
             include_intercrop_stocks => $include_intercrop_stocks,
+            include_pedigree_parents => $include_pedigree_parents,
             limit=>$self->limit,
             offset=>$self->offset
         }
@@ -435,7 +435,7 @@ sub get_phenotype_matrix {
     else {  ### NATIVE ??!!
 
         $data = $phenotypes_search->search();
-        #print STDERR "the download data structure =". Dumper($data)."\n";
+#        print STDERR "the download data structure =". Dumper($data)."\n";
 
         my %obsunit_data;
         my %traits;
@@ -444,6 +444,10 @@ sub get_phenotype_matrix {
         print STDERR "PhenotypeMatrix Construct Pheno Matrix Start:".localtime."\n";
         my @unique_obsunit_list = ();
         my %seen_obsunits;
+
+        if ($include_pedigree_parents){
+            push @metadata_headers, ('germplasmPedigreeFemaleParentName', 'germplasmPedigreeFemaleParentDbId', 'germplasmPedigreeMaleParentName', 'germplasmPedigreeMaleParentDbId');
+        }
 
         # Add intercrop stock headers, if requested
         if ( $include_intercrop_stocks ) {
@@ -534,6 +538,10 @@ sub get_phenotype_matrix {
                 $entry_type,
                 $d->{plant_number}
             ];
+
+            if ($include_pedigree_parents) {
+                push(@{$obsunit_data{$obsunit_id}->{metadata}}, ($d->{'female_parent_name'}, $d->{'female_parent_id'}, $d->{'male_parent_name'}, $d->{'male_parent_id'}));
+            }
 
             # add intercrop stocks, if requested
             if ( $include_intercrop_stocks ) {
