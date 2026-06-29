@@ -43,7 +43,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $self = shift;
     my $c = shift;
 
-    my $tree_type = $c->req->param('type') || 'trial';
+    my $treetype = $c->req->param('type') || 'trial';
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
@@ -248,7 +248,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
             my @trial_ids = sort { $a <=> $b } keys %trial_ids;
             my $design_by_trial_id = _get_trial_designs_by_ids($schema, \@trial_ids);
 
-            $html =~ s{(<li\b[^>]*data-jstree='{"type":"trial"}'[^>]*\bid="(\d+)"[^>]*)(>)}{
+            $html =~ s{(<li\b[^>]*data-jstree='\{"type":"trial"\}'[^>]*\bid="(\d+)"[^>]*)(>)}{
                 my $start_tag = $1;
                 my $trial_id  = $2;
                 my $end_tag   = $3;
