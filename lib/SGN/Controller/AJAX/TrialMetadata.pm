@@ -3258,7 +3258,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
             $template_name_attributes = $tmpl->{$fmt}->{name_attributes};
             my $program_object = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
             my $bp_data = $program_object->get_breeding_programs_by_trial($trial_id);
-            $bp_name = $bp_data->[0]->[1] // '';
+            $bp_name = $bp_data->[0]->[1] || '';
         }
     }
 
@@ -3322,7 +3322,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
             );
             my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
             $effective_new_name = join('_', @parts);
-        }
+        } 
 
         if ($effective_new_name && $effective_new_name ne $current_plot_name) {
             my $err = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($affected_id, $current_plot_name, $effective_new_name);
