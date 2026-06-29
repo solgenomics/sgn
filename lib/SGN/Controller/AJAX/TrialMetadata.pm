@@ -2457,6 +2457,13 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
                 );
                 my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
                 $effective_new_name = join('_', @parts);
+            } else {
+                my $old_acc_name = $plot_info_by_id{$affected_id}->{accession_name};
+                my $new_acc_name = exists $swapped_plots{$affected_id} ? $swapped_plots{$affected_id} : $old_acc_name;
+                if ($new_acc_name ne $old_acc_name) {
+                    (my $candidate = $current_plot_name) =~ s/\Q$old_acc_name\E/$new_acc_name/;
+                    $effective_new_name = $candidate if $candidate ne $current_plot_name;
+                }
             }
 
             if ($effective_new_name && $effective_new_name ne $current_plot_name) {
@@ -3322,7 +3329,14 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
             );
             my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
             $effective_new_name = join('_', @parts);
-        } 
+        } else {
+            my $old_acc_name = $plot_info{$affected_id}->{accession_name};
+            my $new_acc_name = ($affected_id == $plot_id) ? $new_accession : $old_acc_name;
+            if ($new_acc_name ne $old_acc_name) {
+                (my $candidate = $current_plot_name) =~ s/\Q$old_acc_name\E/$new_acc_name/;
+                $effective_new_name = $candidate if $candidate ne $current_plot_name;
+            }
+        }
 
         if ($effective_new_name && $effective_new_name ne $current_plot_name) {
             my $err = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($affected_id, $current_plot_name, $effective_new_name);
