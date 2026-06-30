@@ -18,7 +18,8 @@ eval {
     my $other_stock_id = 38844;
     
     my $stock = CXGN::Stock->new( { schema => $schema, stock_id => $this_stock_id } );
-    
+    my $other_stock = CXGN::Stock->new( { schema => $schema, stock_id => $other_stock_id } );
+
     my $initial_counts = get_counts($this_stock_id);
     
     # try self merge, should fail:
@@ -26,23 +27,37 @@ eval {
     is($error, "Error: cannot merge stock into itself", "merge stock into itself test");
     
     my $initial_counts_other = get_counts($other_stock_id);
-    
-    $error = $stock->merge(38844);
+
+    # merge two stocks with different parents
+    #
+    $error = $stock->merge($other_stock_id);
+
+    print STDERR "ERROR $error\n";
+
+    like($error, qr/PARENTS DO NOT MATCH/, "parents do not match error");
+
+    $stock->add_parent('test_accession3', 'female', undef);
+
+    # now both have the same parents and it should work...
+    #
+    $error = $stock->merge($other_stock_id);
+
     is($error, undef, "merge stock should give no error");
     
     # all data should be transferred, so these need to add up
     my $combined_counts = get_counts($this_stock_id);
-	
+
     $initial_counts_other->{prop_count}++; # take added synonym into account
     
     foreach my $k (keys %$combined_counts) {
-	print STDERR "Checking key $k...\n";
+	print STDERR "Checking key $k... COMBINED ".Dumper($combined_counts)."\n INITIAL: ".Dumper($initial_counts)."\nOTHER: ".Dumper($initial_counts_other)."\n";
 	is($combined_counts->{$k}, ($initial_counts->{$k} + $initial_counts_other->{$k}), "$k test");
     }  
 };
 
 print STDERR "ERROR = $@\n";
-$schema->txn_rollback();
+#$schema->txn_rollback();
+$schema->txn_commit();
     
 done_testing();
 
@@ -61,7 +76,7 @@ sub get_counts {
 	prop_count => $stock_prop_count,
     };
 
-    print STDERR Dumper($data);
+    print STDERR "COUNTS: ". Dumper($data);
 
     return $data;
 }
