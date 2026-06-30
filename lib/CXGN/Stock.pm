@@ -1567,6 +1567,132 @@ sub get_pedigree_rows {
     return $pedigree_rows;
 }
 
+=head1 add_parent()
+
+=cut
+
+sub add_parent {
+    my $self = shift;
+    my $parent_name = shift;
+    my $parent_type = shift;
+    my $cross_type = shift;
+    
+    print STDERR "Add_stock_parent function...\n";
+
+    my $cvterm_name = "";
+    my $cross_type = "";
+    if ($parent_type eq "male") {
+        $cvterm_name = "male_parent";
+    }
+    elsif ($parent_type eq "female") {
+        $cvterm_name = "female_parent";	
+    }
+
+    my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($self->schema(), $cvterm_name, "stock_relationship" )->cvterm_id();
+
+    # check if a parent of this parent_type is already associated with this stock
+    #
+    my $previous_parent = $self->schema()->resultset("Stock::StockRelationship")->find({
+        type_id => $type_id_row,
+        object_id => $self->stock_id(),
+    });
+
+    my $error;
+    
+    if ($previous_parent) {
+	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock ".$self->stock_id()." - returning.\n";
+	$error = "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent.";
+	return $error;
+    }
+
+    print STDERR "PARENT_NAME = $parent_name STOCK_ID ".$self->stock_id()."  $cvterm_name\n";
+
+#    my $stock = $self->schema()->resultset("Stock::Stock")->find( { stock_id => $self->stock_id() });
+
+   my $parent = $self->schema()->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
+
+
+
+    if (!$self->stock_id()) {
+	$error = "Stock with ".$self->stock_id()." is not found in the database!";
+	return $error;
+    }
+    if (!$parent) {
+	$error = "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!";
+	return $error;
+    }
+
+    my $new_row = $self->schema()->resultset("Stock::StockRelationship")->new(
+	{
+	    subject_id => $parent->stock_id,
+	    object_id  => $self->stock_id,
+	    type_id    => $type_id_row,
+	    value => $cross_type
+	});
+
+    eval {
+	$new_row->insert();
+    };
+
+    if ($@) {
+	$error = "An error occurred: $@";
+    }
+    else {
+	$error = undef;
+    }
+    return $error;
+}
+
+
+=head1 get_direct_parents()
+
+    Args: stock_id
+    Returns: a hash such as $parent{female}->[ stock_id, uniquename ]
+    Note: moved from CXGN::Chado::Stock with the return type changed to hash
+          from listref
+
+=cut
+
+sub get_direct_parents {
+    my $self = shift;
+    my $stock_id = shift || $self->stock_id();
+
+    print STDERR "get_direct_parents with $stock_id...\n";
+
+    my $female_parent_id;
+    my $male_parent_id;
+
+    eval {
+        $female_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'female_parent' })->cvterm_id();
+        $male_parent_id = $self->get_schema()->resultset("Cv::Cvterm")->find( { name => 'male_parent' }) ->cvterm_id();
+    };
+    if ($@) {
+        die "Cvterm for female_parent and/or male_parent seem to be missing in the database\n";
+    }
+
+    my $rs = $self->get_schema()->resultset("Stock::StockRelationship")->search( { object_id => $stock_id, type_id => { -in => [ $female_parent_id, $male_parent_id ] } });
+    my %parents;
+    while (my $row = $rs->next()) {
+        print STDERR "Found parent...\n";
+        my $prs = $self->get_schema()->resultset("Stock::Stock")->find( { stock_id => $row->subject_id() });
+        my $parent_type = "";
+        my $parent_id = $row->object_id();
+        if ($row->type_id() == $female_parent_id) {
+            $parent_type = "female";
+        }
+        if ($row->type_id() == $male_parent_id) {
+            $parent_type = "male";
+        }
+        $parents{$parent_type} = [ $prs->stock_id(), $prs->uniquename()];
+    }
+
+    print STDERR "PARENTS: ".Dumper(\%parents);
+
+    return %parents;
+}
+
+
+
 =head2 get_pedigree_string()
 
  Usage:
@@ -2318,6 +2444,8 @@ sub merge {
     my $other_stock_id = shift;
     my $delete_other_stock = shift;
 
+    print STDERR "IN SUB MERGE with stock id $other_stock_id and delete or not ? $delete_other_stock!\n";
+    
     if ($other_stock_id == $self->stock_id()) {
 	print STDERR "Trying to merge stock into itself ($other_stock_id) Skipping...\n";
 	return "Error: cannot merge stock into itself";
@@ -2345,21 +2473,21 @@ sub merge {
     # check if parents are the same
     my $other_stock = CXGN::Stock->new( { schema => $self->schema(), stock_id => $other_stock_id });
 
-    my $other_parents = $other_stock->get_parents();
-    my $this_parents = $self->get_parents();
+    my %other_parents = $other_stock->get_direct_parents();
+    my %this_parents = $self->get_direct_parents();
 
-    print STDERR "OTHER parents: ".Dumper($other_parents);
-    print STDERR "This parents: ".Dumper($this_parents);
+    print STDERR "OTHER parents: ".Dumper(\%other_parents);
+    print STDERR "This parents: ".Dumper(\%this_parents);
 
     my $skip_mother_comp = 0;
     my $skip_father_comp = 0;
 
-    if (! defined($other_parents->{mother_id}) || ! defined($this_parents->{mother_id})) {
+    if (! defined($other_parents{female})) {
 	print STDERR "Can't compare mothers for these accessions.\n";
 	$skip_mother_comp =1;
     }
 
-    if (! defined($other_parents->{father_id}) || ! defined($this_parents->{father_id})) {
+    if (! defined($other_parents{male})) {
 	print STDERR "Can't compare fathers for this accession.\n";
 	$skip_father_comp = 1;
     }
@@ -2367,27 +2495,31 @@ sub merge {
     my $mother_identical = 0;
     my $father_identical = 0;
     if (! $skip_mother_comp) {
-	if ( (defined($other_parents->{mother_id}) && defined($this_parents->{mother_id})) && ($other_parents->{mother_id} == $this_parents->{mother_id})) {
+	if ( (defined($other_parents{female}) && defined($this_parents{female}) && ($other_parents{female}->[0] == $this_parents{female}->[0]))) {
+	    print STDERR "MOTHER IDENTICAL!\n";
 	    $mother_identical = 1;
 	}
     }
     if (! $skip_father_comp) {
-	if ( (defined($other_parents->{father_id}) && defined($this_parents->{father_id})) && ( $other_parents->{father_id} == $this_parents->{father_id})) {
+	if ( (defined($other_parents{male}) && defined($this_parents{male})) && ( $other_parents{male}->[0] == $this_parents{male}->[0])) {
+	    print STDERR "FATHER IDENTICAL!\n";
 	    $father_identical = 1;
 	}
     }
 
     if ( (!$skip_mother_comp && $mother_identical) && (!$skip_father_comp && $father_identical)) {
-	print STDERR "Mother and Father between this and other match ($other_parents->{mother_id} vs $this_parents->{mother_id}).\n";
+	print STDERR "Mother and Father between this and other match ($other_parents{female}->[0] vs $this_parents{female}->[0]).\n";
     }
-    elsif ($skip_mother_comp && $father_identical || $skip_father_comp && $mother_identical) {
+    elsif ( ($skip_mother_comp && $father_identical)  || ($skip_father_comp && $mother_identical) ) {
 	print STDERR "One parent undefined, the other matches...\n";
     }
     elsif ($skip_mother_comp && $skip_father_comp) {
 	print STDERR "Skipping this comparison - not enough data! \n";
     }
     else {
-	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents->{mother_id}, $other_parents->{mother}, $this_parents->{mother_id}, $this_parents->{mother}, "FATHERS", $other_parents->{father_id}, $other_parents->{father}, $this_parents->{father_id}, $this_parents->{father}, "PARENTS DO NOT MATCH!")."\n";
+	print STDERR "THIS: ".Dumper(\%this_parents);
+	print STDERR "THAT: ".Dumper(\%other_parents);
+	return join ("\t", $self->uniquename(), $other_stock->uniquename(), "MOTHERS", $other_parents{female}->[0], $other_parents{female}->[1], $this_parents{female}->[0], $this_parents{female}->[1], "FATHERS", $other_parents{male}->[0], $other_parents{male}->[1], $this_parents{male}->[0], $this_parents{male}->[1], "PARENTS DO NOT MATCH!")."\n";
     }
 
     # move stockprops
@@ -2414,7 +2546,6 @@ sub merge {
 	    my $type_id = $row->type_id();
 
 	    my $rank_rs = $schema->resultset("Stock::Stockprop")->search( { stock_id => $self->stock_id(), type_id => $type_id });
-
 	    my $rank;
 	    if ($rank_rs->count() > 0) {
 		$rank = $rank_rs->get_column("rank")->max();
@@ -2422,6 +2553,7 @@ sub merge {
 
 	    $rank++;
 	    $row->rank($rank);
+
 	    $row->stock_id($self->stock_id());
 
 	    $row->update();
@@ -2434,6 +2566,8 @@ sub merge {
 
     # move subject relationships
     #
+    print STDERR "MOVING SUBJECT RELATIONSHIPS...\n";
+    
     my $ssrs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $other_stock_id });
 
     while (my $row = $ssrs->next()) {
@@ -2442,10 +2576,10 @@ sub merge {
 	# Only if the info is not already there can we safely add it. This will for example
 	# prevent us from ending up with 4 parents etc.
 	#
-	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $other_stock_id, type_id => $row->type_id() });
+	my $this_subject_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { subject_id => $self->stock_id(), object_id => $row->object_id(), type_id => $row->type_id() });
 
-	if ($this_subject_rel_rs->count() != 0) { # this stock does not have the relationship
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship (".$this_subject_rel_rs->count()." counts)\n";
+	if ($this_subject_rel_rs->count() > 0) { # this stock does not have the relationship
+	    print STDERR "Target object ".$row->uniquename()." already has this relationship of type ".$row->type_id()."(".$this_subject_rel_rs->count()." counts)\n";
 	}
 	else {
 	    # get the max rank
@@ -2463,12 +2597,15 @@ sub merge {
 	}
     }
 
+    print STDERR "MOVING OBJECT RELATIONSHIPS...\n";
+    
     my $osrs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $other_stock_id });
     while (my $row = $osrs->next()) {
-	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $other_stock_id, type_id => $row->type_id() });
+	my $this_object_rel_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id, subject_id => $row->subject_id(), type_id => $row->type_id() });
 
-	if ($this_object_rel_rs->count() != 0) {
-	    print STDERR "Target object ".$row->uniquename()." already has this relationship with ".$this_object_rel_rs->count()." counts\n";;
+	if ($this_object_rel_rs->count() > 0) {
+	    print STDERR "Target object ".$row->uniquename()." already has this relationship of ".$row->type_id()." with ".$this_object_rel_rs->count()." counts\n";;
+	    
 	}
 	else {
 	    my $rank_rs = $schema->resultset("Stock::StockRelationship")->search( { object_id => $self->stock_id(), type_id => $row->type_id() });
@@ -2699,11 +2836,11 @@ sub bulk_hard_delete {
 
     my $placeholders = join(',', ('?') x scalar(@{$stock_ids}));
 
-    my $q = "SELECT COUNT(DISTINCT(cvterm.cvterm_id)) FROM stock 
-    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) 
-    JOIN nd_experiment_phenotype USING(nd_experiment_id) 
-    JOIN phenotype USING (phenotype_id) 
-    JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) 
+    my $q = "SELECT COUNT(DISTINCT(cvterm.cvterm_id)) FROM stock
+    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id)
+    JOIN nd_experiment_phenotype USING(nd_experiment_id)
+    JOIN phenotype USING (phenotype_id)
+    JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id)
     WHERE stock.stock_id IN ($placeholders)";
     my $h = $schema->storage()->dbh()->prepare($q);
     $h->execute(@{$stock_ids});
