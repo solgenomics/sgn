@@ -56,8 +56,8 @@ eval {
 };
 
 print STDERR "ERROR = $@\n";
-#$schema->txn_rollback();
-$schema->txn_commit();
+$schema->txn_rollback();
+
     
 done_testing();
 
