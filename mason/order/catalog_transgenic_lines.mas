@@ -30,6 +30,25 @@ $order_properties_dialog => undef
 
 <&| /page/info_section.mas, title => 'Catalog Items (Accessions)', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
+    <div class="row">
+        <div class="col-sm-11">
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Item Type (wild type or transgenic plants): </label>
+                    <div class="col-sm-5">
+                        <select class="form-control" id="item_type">
+                            <option value="">Please Select</option>
+                            <option value="wild_type">Wild Type Plants</option>
+                            <option value="transgenic">Transgenic Plants</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-11">
+                <input name="catalog_item_select" id="hidden_catalog_item_select" type="hidden" value=" ">
+            </div>
+        </div>
+        </br>
+        </br>
         <div class = "panel panel-default">
             <div class = "panel-body">
                 <div style="overflow:scroll">
@@ -109,13 +128,23 @@ jQuery(document).ready( function() {
     itemForm (selected_items);
     requestForm(order_properties_dialog);
 
-    jQuery('#catalog_transgenic_lines_table').DataTable( {
-        'autoWidth': false,
-        'search':'applied',
-        'paging': false,
-        'scrollY': '500px',
-        'scrollX' : true,
-        'ajax': '/ajax/catalog/items',
+    jQuery("#item_type").change(function() {
+        var item_type = jQuery("#item_type").val();
+        jQuery('#catalog_transgenic_lines_table').DataTable( {
+            'autoWidth': false,
+            'search':'applied',
+            'paging': false,
+            'scrollY': '500px',
+            'scrollX' : true,
+            'destroy': true,
+//            'ajax': '/ajax/catalog/items',
+
+            'ajax': { 'url':  '/ajax/catalog/items',
+                'data': function(d) {
+                  d.item_type  = item_type;
+                }
+            }
+        });
     });
 
     jQuery(document).on('focusin', function(e) {
@@ -124,16 +153,26 @@ jQuery(document).ready( function() {
         }
     });
 
-    jQuery(function() {
-        jQuery('input:checkbox[name="catalog_item_select"]').on('change', function() {
-            var item_name;
-            var item_index;
-            item_name = jQuery(this).val();
-            item_index = selected_items.indexOf(item_name);
-            jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
-            itemForm (selected_items);
-        });
-    });
+    jQuery(document).on("change", "input[name='catalog_item_select']", function() {
+        var item_name;
+        var item_index;
+        item_name = jQuery(this).val();
+        item_index = selected_items.indexOf(item_name);
+        jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
+        itemForm (selected_items);
+    })
+
+//    jQuery(function() {
+//        jQuery('input:checkbox[name="catalog_item_select"]').on('change', function() {
+//            alert('test');
+//            var item_name;
+//            var item_index;
+//            item_name = jQuery(this).val();
+//            item_index = selected_items.indexOf(item_name);
+//            jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
+//            itemForm (selected_items);
+//        });
+//    });
 
 //    jQuery('#order_form_link').click(function(){
 //        jQuery('input[name="catalog_item_select"]:checked').each(function() {
