@@ -30,24 +30,36 @@ $order_properties_dialog => undef
 
 <&| /page/info_section.mas, title => 'Catalog Items (Accessions)', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
-    <div class="row">
-        <div class="col-sm-11">
+        <div class="row">
             <div class="form-group">
-                <label class="col-sm-6 control-label">Item Type (wild type or transgenic plants): </label>
-                    <div class="col-sm-5">
-                        <select class="form-control" id="item_type">
-                            <option value="">Please Select</option>
-                            <option value="wild_type">Wild Type Plants</option>
-                            <option value="transgenic">Transgenic Plants</option>
-                        </select>
-                    </div>
+                <label class="col-sm-6 control-label">Filter by Item Type (wild type or transgenic plants): </label>
+                <div class="col-sm-4">
+                    <select class="form-control" id="filter_by_item_type">
+                        <option value="">Please Select</option>
+                        <option value="wild_type">Wild Type Plants</option>
+                        <option value="transgenic">Transgenic Plants</option>
+                    </select>
                 </div>
-            </div>
-            <div class="col-sm-11">
-                <input name="catalog_item_select" id="hidden_catalog_item_select" type="hidden" value=" ">
             </div>
         </div>
         </br>
+        <div id="vector_construct_section" style="display:none">
+            <div class="row">
+                <div class="form-group">
+                    <label class="col-sm-6 control-label">Filter by Vector Construct: </label>
+                    <div class="col-sm-4">
+                        <input class="form-control" type="text" id="filter_by_vector_construct" name="filter_by_vector_construct" placeholder="Type to Autocomplete"  />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <center>
+                    <button id="filter_by_vector_construct_submit" type="button" class="btn btn-primary" >Get Transgenic lines</button>
+                </center>
+            </div>
+        </div>
+
+
         </br>
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -66,9 +78,6 @@ $order_properties_dialog => undef
                 </div>
             </div>
         </div>
-        <!--
-        <center><button class="btn btn-primary" style="margin:3px" id="order_form_link">Add Items</button></center>
-        -->
     </div>
 </&>
 
@@ -128,8 +137,24 @@ jQuery(document).ready( function() {
     itemForm (selected_items);
     requestForm(order_properties_dialog);
 
-    jQuery("#item_type").change(function() {
-        var item_type = jQuery("#item_type").val();
+    jQuery("#filter_by_vector_construct").autocomplete({
+       source: '/ajax/stock/vector_construct_autocomplete',
+    });
+
+    jQuery("#filter_by_item_type").val('');
+
+    jQuery("#filter_by_item_type").change(function() {
+        var item_type = jQuery("#filter_by_item_type").val();
+        if (item_type == 'transgenic') {
+            jQuery("#vector_construct_section").show()
+        } else {
+            jQuery("#vector_construct_section").hide()
+        }
+    });
+
+
+    jQuery("#filter_by_item_type").change(function() {
+        var item_type = jQuery("#filter_by_item_type").val();
         jQuery('#catalog_transgenic_lines_table').DataTable( {
             'autoWidth': false,
             'search':'applied',
@@ -137,8 +162,6 @@ jQuery(document).ready( function() {
             'scrollY': '500px',
             'scrollX' : true,
             'destroy': true,
-//            'ajax': '/ajax/catalog/items',
-
             'ajax': { 'url':  '/ajax/catalog/items',
                 'data': function(d) {
                   d.item_type  = item_type;
