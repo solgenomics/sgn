@@ -249,7 +249,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $repetitive_measurements = $c->req->param("repetitive_measurements") || "average";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
-    my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
+    my $include_pedigree_parents = $c->req->param("include_pedigree_parents") && $c->req->param("include_pedigree_parents") ne 'null' && $c->req->param("include_pedigree_parents") ne 'undefined' ? $c->req->param("include_pedigree_parents") : 0;
     my $include_intercrop_stocks = $c->req->param("intercrop") && $c->req->param("intercrop") ne 'null' && $c->req->param("intercrop") ne 'undefined' ? $c->req->param("intercrop") : 0;
     my $include_entry_numbers = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $include_trait_synonyms = $c->req->param("trait_synonyms") && $c->req->param("trait_synonyms") ne 'null' ? $c->req->param("trait_synonyms") : 0;
@@ -577,6 +577,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
     my $include_trait_synonyms = $c->req->param("trait_synonyms") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
+    my $include_pedigree_parents = $c->req->param("pedigrees") || 0;
 
     # parameters for outliers download
     my @trait_ids     = split(',', $c->req->param("trait_ids_list"));
@@ -693,6 +694,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             include_entry_numbers=>$include_entry_numbers,
             include_trait_synonyms=>$include_trait_synonyms,
     		data_level=>$datalevel,
+            include_pedigree_parents=>$include_pedigree_parents,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
     }

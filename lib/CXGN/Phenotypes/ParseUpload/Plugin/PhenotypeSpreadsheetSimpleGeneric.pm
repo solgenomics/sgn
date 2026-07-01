@@ -18,10 +18,18 @@ package CXGN::Phenotypes::ParseUpload::Plugin::PhenotypeSpreadsheetSimpleGeneric
 use Moose;
 #use File::Slurp;
 use CXGN::File::Parse;
+use CXGN::List::Transform;
 use JSON;
 use Data::Dumper;
 
 my @oun_aliases = qw|plot_name subplot_name plant_name observationUnitName plotName subplotName plantName|;
+my @oun_id_aliases = qw|observationUnitDbId|;
+my %observationunit_columns = map { lc($_) => 1 } (
+    'observationunit_name',
+    'observationunit_id',
+    @oun_aliases,
+    @oun_id_aliases,
+);
 
 sub _parse_measurements {
     my ($value_string, $timestamp_included) = @_;
@@ -29,7 +37,7 @@ sub _parse_measurements {
     $value_string = '' unless defined $value_string;
 
     my @measurements;
-    my @raw_measurements = $timestamp_included ? split(/\|/, $value_string) : ($value_string);
+    my @raw_measurements = $timestamp_included ? split(/\|/, $value_string, -1) : ($value_string);
 
     for my $raw_measurement (@raw_measurements) {
         next unless defined $raw_measurement;
@@ -48,12 +56,31 @@ sub _parse_measurements {
         $trait_value =~ s/^\s+|\s+$//g;
         $timestamp =~ s/^\s+|\s+$//g;
 
-        next if $trait_value eq '' || $trait_value eq '.';
+        next if $timestamp_included && $trait_value eq '' && $timestamp eq '';
+        next if $trait_value eq '.';
 
         push @measurements, [ $trait_value, $timestamp ];
     }
 
     return \@measurements;
+}
+
+sub _trait_columns {
+    my $columns = shift || [];
+
+    return [
+        grep {
+            defined($_)
+              && $_ ne ''
+              && !$observationunit_columns{lc($_)}
+              && $_ ne '_row'
+        } @$columns
+    ];
+}
+
+sub _error_result {
+    my $message = shift;
+    return { error => $message };
 }
 
 sub name {
@@ -75,13 +102,13 @@ sub validate {
         file => $filename,
         required_columns => [ 'observationunit_name' ],
         column_aliases => {
-            'observationunit_name' => [ 'plot_name', 'subplot_name', 'plant_name', 'observationUnitName', 'plotName', 'subplotName', 'plantName', 'observationUnitDbId' ]
+            'observationunit_name' => [ @oun_aliases, @oun_id_aliases ]
         }
     );
     my $parsed = $parser->parse();
     my $parsed_errors = $parsed->{errors};
     my $parsed_data = $parsed->{data};
-    my $trait_columns = $parsed->{optional_columns};
+    my $trait_columns = _trait_columns($parsed->{optional_columns});
     my %parse_result;
 
     # Return parsing error(s)
@@ -132,87 +159,76 @@ sub parse {
     # Try parsing with observationUnitDbId first
     my $parser = CXGN::File::Parse->new(
         file             => $filename,
-        required_columns => ["observationunit_id"],
+        required_columns => [ 'observationunit_id' ],
         column_aliases   => {
-            'observationunit_id' => ['observationUnitDbId']
+            'observationunit_id' => \@oun_id_aliases
         }
     );
     my $parsed = $parser->parse();
+    my $observationunit_type = 'id';
 
     if ( $parsed->{errors} && scalar( @{ $parsed->{errors} } ) > 0 ) {
 
         # Fall back to name-based parsing
         $parser = CXGN::File::Parse->new(
             file             => $filename,
-            required_columns => ["observationunit_name"],
+            required_columns => [ 'observationunit_name' ],
             column_aliases   => {
-                'observationunit_name' => [
-                    'plot_name',    'subplot_name',
-                    'plant_name',   'observationUnitName',
-                    'plotName',     'subplotName',
-                    'plantName'
-                ]
+                'observationunit_name' => \@oun_aliases
             }
         );
         $parsed = $parser->parse();
+        $observationunit_type = 'name';
 
         # If name-based also fails, return the errors
         if ( $parsed->{errors} && scalar( @{ $parsed->{errors} } ) > 0 ) {
-            my %parse_result;
-            $parse_result{'error'} =
-              "File must have a plot name or observationUnitDbId column. Errors: "
-              . join( ", ", @{ $parsed->{errors} } );
-            return \%parse_result;
+            return _error_result(
+                "File must have a plot name or observationUnitDbId column. Errors: "
+                  . join( ", ", @{ $parsed->{errors} } )
+            );
         }
     }
 
     my $parsed_data = $parsed->{data};
-    my $parsed_values = $parsed->{values};
-    my $trait_columns = $parsed->{optional_columns};
+    my $trait_columns = _trait_columns($parsed->{optional_columns});
     my $columns = $parsed->{columns};
 
-    my $observationunit_type;
-    if ( grep { $_ eq 'observationunit_id' } @$columns ) {
-        $observationunit_type = 'id';
-    }
-    elsif ( grep { $_ eq 'observationunit_name' } @$columns ) {
-        $observationunit_type = 'name';
-    }
-    else {
-        my %parse_result;
-        $parse_result{'error'} =
-          "File must have a plot name or observationUnitDbId column.";
-        return \%parse_result;
+    if ( !grep { $_ eq 'observationunit_id' || $_ eq 'observationunit_name' } @$columns ) {
+        return _error_result("File must have a plot name or observationUnitDbId column.");
     }
 
-    print STDERR "obsunit type: $observationunit_type\n";
+    if ( scalar(@$trait_columns) < 1 ) {
+        return _error_result("Spreadsheet must have at least one trait in the header.");
+    }
 
     # If IDs used, convert to uniquenames
     my %id_to_name;
     if ( $observationunit_type eq 'id' ) {
+        return _error_result("A database schema is required to parse observationUnitDbId values.")
+          if !$schema;
 
         # Collect all stock ids from the parsed data
-        my @stock_ids =
-          map  { $_->{'observationunit_id'} }
-          grep { $_ && ref($_) eq 'HASH' && defined $_->{'observationunit_id'} }
-          @$parsed_data;
+        my %stock_ids_seen;
+        my @stock_ids;
+        for my $row (@$parsed_data) {
+            next unless $row && ref($row) eq 'HASH' && defined $row->{'observationunit_id'};
+            my $stock_id = $row->{'observationunit_id'};
+            next if $stock_id eq '' || $stock_ids_seen{$stock_id}++;
+            push @stock_ids, $stock_id;
+        }
 
         if ( !@stock_ids ) {
-            my %parse_result;
-            $parse_result{'error'} =
-              "No valid observationUnitDbId values found in the file.";
-            return \%parse_result;
+            return _error_result("No valid observationUnitDbId values found in the file.");
         }
 
         my $transform_plugin = CXGN::List::Transform->new();
         my $transform_result = $transform_plugin->transform( $schema, 'stock_ids_2_stocks', \@stock_ids );
 
         if ( $transform_result->{missing} && @{ $transform_result->{missing} } ) {
-            my %parse_result;
-            $parse_result{'error'} =
+            return _error_result(
                 "The following observationUnitDbId values could not be found in the database: "
-              . join( ", ", @{ $transform_result->{missing} } );
-            return \%parse_result;
+                  . join( ", ", @{ $transform_result->{missing} } )
+            );
         }
 
         my @transformed_names = @{ $transform_result->{transform} };
@@ -247,38 +263,10 @@ sub parse {
             next unless defined $trait_name && $trait_name ne '';
 
             my $value_string = defined($row->{$trait_name}) ? $row->{$trait_name} : '';
-            my @trait_values;
+            my $trait_values = _parse_measurements($value_string, $timestamp_included);
 
-            if ($timestamp_included) {
-                my @values = split(/\|/, $value_string, -1);
-
-                foreach my $v (@values) {
-                    next unless defined $v;
-
-                    my ($trait_value, $timestamp) = split(/,/, $v, 2);
-
-                    $trait_value = '' unless defined $trait_value;
-                    $timestamp   = '' unless defined $timestamp;
-
-                    # Skip only fully empty timestamp tokens.
-                    # Keep empty values when they have timestamps.
-                    next if $trait_value eq '' && $timestamp eq '';
-
-                    next if $trait_value eq '.';
-
-                    push @trait_values, [ $trait_value, $timestamp ];
-                }
-            }
-            else {
-                # Simple trait without timestamp:
-                # keep empty values, but still skip "." missing marker.
-                if ($value_string ne '.') {
-                    push @trait_values, [ $value_string, '' ];
-                }
-            }
-
-            push @{ $data{$observationunit_name}->{$trait_name} }, @trait_values
-              if @trait_values;
+            push @{ $data{$observationunit_name}->{$trait_name} }, @$trait_values
+              if @$trait_values;
         }
     }
 

@@ -174,6 +174,21 @@ if ($opt_s) {
 }
 
 if ($opt_c eq 'VCF' && !$opt_w) {
+    my $original_uploader = CXGN::UploadFile->new({
+        tempfile => $file,
+        subdirectory => "genotype_vcf_archive",
+        archive_path => $opt_r,
+        archive_filename => basename($file),
+        timestamp => $timestamp,
+        user_id => $sp_person_id,
+        user_role => 'curator'
+    });
+    my $archived_original = $original_uploader->archive();
+    if (!$archived_original) {
+        die "Could not archive original VCF file!\n";
+    }
+    print STDERR "Original VCF saved in archive.\n";
+
     open (my $Fout, ">", $opt_o) || die "Can't open file $opt_o\n";
     open (my $F, "<", $file) or die "Can't open file $file \n";
     my @outline;
@@ -378,7 +393,7 @@ if (scalar(keys %$genotype_info) > 0) {
 
                 my $stored_details = $stored_markers->{$marker_name};
 
-                for my $key (keys %{$new_marker_details}) {
+                for my $key (qw(chrom pos name ref alt)) {
                     my $new_value    = defined $new_marker_details->{$key}
                         ? $new_marker_details->{$key}
                         : '';

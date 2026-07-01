@@ -36,6 +36,12 @@ sub cluster_analysis : Path('/correlation/analysis/') Args() {
 sub pheno_correlation_analysis :Path('/phenotypic/correlation/analysis') Args(0) {
     my ($self, $c) = @_;
 
+    if (!$c->user()) {
+        $c->res->content_type('application/json');
+        $c->res->body(to_json({ error => 'You must be logged in to run this analysis.', login_required => 1 }));
+        return;
+    }
+
     my $args = $c->req->param('arguments');
     $c->controller('solGS::Utils')->stash_json_args($c, $args);
     

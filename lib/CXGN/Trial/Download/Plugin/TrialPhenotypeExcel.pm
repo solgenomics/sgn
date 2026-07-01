@@ -100,11 +100,11 @@ sub download {
     my $phenotype_start_date = $self->start_date();
     my $phenotype_end_date = $self->end_date();
     my $repetitive_measurements = $self->repetitive_measurements();
-
+    my $include_pedigree_parents = $self->include_pedigree_parents();
 
     $self->trial_download_log($trial_id, "trial phenotypes");
 
-    
+
     my @data;
     if ($self->data_level() eq 'metadata'){
         my $metadata_search = CXGN::Phenotypes::MetaDataMatrix->new(
@@ -137,7 +137,8 @@ sub download {
             include_trait_synonyms=>$include_trait_synonyms,
             phenotype_start_date => $phenotype_start_date,
             phenotype_end_date => $phenotype_end_date,
-            repetitive_measurements => $repetitive_measurements
+            repetitive_measurements => $repetitive_measurements,
+            include_pedigree_parents=>$include_pedigree_parents,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }
