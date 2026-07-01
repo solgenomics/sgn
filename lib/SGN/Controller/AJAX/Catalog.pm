@@ -333,10 +333,13 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $catalog_stock_property = $catalog_info[1];
     my $catalog_stock_property_value = $catalog_info[2];
     my $item_type = $c->req->param('item_type');
+    my $vector_construct = $c->req->param('vector_construct');
+    print STDERR "AJAX VECTOR CONSTRUCT =".Dumper($vector_construct);
     my @catalog_items;
+    my %return;
 
     if ($catalog_stock_property eq 'transgenic') {
-        my $catalog_obj = CXGN::Stock::CompileCatalogItems->new({schema => $schema, dbh => $dbh, catalog_stock_type => $catalog_stock_type, catalog_stock_property => $catalog_stock_property, catalog_stock_property_value => $catalog_stock_property_value});
+        my $catalog_obj = CXGN::Stock::CompileCatalogItems->new({schema => $schema, dbh => $dbh, catalog_stock_type => $catalog_stock_type, catalog_stock_property => $catalog_stock_property, catalog_stock_property_value => $catalog_stock_property_value, vector_construct => $vector_construct});
         if ($item_type eq 'wild_type') {
             my $results_specified_items = $catalog_obj->compile_specified_catalog_items();
             my @sorted_specified_items = natkeysort {($_->[1])} @$results_specified_items;
@@ -346,7 +349,22 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
                 my $species = $item->[2];
                 push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>}, '', '', $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
             }
-        } elsif ($item_type eq 'transgenic') {
+        } elsif (($item_type eq 'transgenic') || (defined $vector_construct)) {
+            my $vector_construct_stock_id;
+            if (defined $vector_construct) {
+                my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
+                my $vector_construct_stock = $schema->resultset("Stock::Stock")->find ({
+                    uniquename => $vector_construct,
+                    type_id => $vector_construct_cvterm_id,
+                });
+                if (!$vector_construct_stock) {
+                    $return{error} = "Vector construct cound not be found in the database: $vector_construct!";
+                    return \%return;
+                } else {
+                    $vector_construct_stock_id = $vector_construct_stock->stock_id();
+                }
+            }
+
             my $results_based_on_type = $catalog_obj->compile_catalog_items_based_on_type();
             my @sorted_items_based_on_type = natkeysort {($_->[1])} @$results_based_on_type;
             foreach my $item (@sorted_items_based_on_type) {

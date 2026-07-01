@@ -45,6 +45,11 @@ has 'catalog_stock_property_value' => (
     is => 'rw',
 );
 
+has 'vector_construct' => (
+    isa => "Str|Undef",
+    is => 'rw',
+);
+
 
 sub compile_catalog_items_based_on_type {
     my $self = shift;
@@ -52,6 +57,8 @@ sub compile_catalog_items_based_on_type {
     my $catalog_stock_type = $self->catalog_stock_type();
     my $catalog_stock_property = $self->catalog_stock_property();
     my $catalog_stock_property_value = $self->catalog_stock_property_value();
+    my $vector_construct = $self->vector_construct();
+    print STDERR "VECTOR CONSTRUCT =".Dumper($vector_construct)."\n";
     my @catalog_items = ();
 
     if (($catalog_stock_type eq 'accession') && ($catalog_stock_property eq 'transgenic') && ($catalog_stock_property_value eq '1')) {
@@ -61,6 +68,16 @@ sub compile_catalog_items_based_on_type {
         my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'male_parent', 'stock_relationship')->cvterm_id();
         my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
         my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'female_parent', 'stock_relationship')->cvterm_id();
+        my @where_clause;
+        push @where_clause, "transformant.type_id = $accession_type_id";
+        push @where_clause, "stockprop.value = '$catalog_stock_property_value'";
+        push @where_clause, "transformant.is_obsolete = 'F'";
+        if (defined $vector_construct) {
+            push @where_clause, "vector.uniquename = '$vector_construct'";
+        }
+        my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
+        print STDERR "WHERE CLAUSE =".Dumper($where_clause)."\n";
+
 
         my $q = "SELECT transformant.stock_id, transformant.uniquename, plant.stock_id, plant.uniquename, vector.stock_id, vector.uniquename, organism.species
             FROM stock AS transformant
@@ -70,11 +87,11 @@ sub compile_catalog_items_based_on_type {
             JOIN stock_relationship AS vector_relationship ON (transformant.stock_id = vector_relationship.object_id) AND vector_relationship.type_id = ?
             JOIN stock AS vector ON (vector.stock_id = vector_relationship.subject_id) AND vector.type_id = ?
             JOIN organism ON (transformant.organism_id = organism.organism_id)
-            WHERE transformant.type_id = ? AND stockprop.value = ? AND transformant.is_obsolete = 'F' ";
+            $where_clause";
 
         my $h = $schema->storage->dbh()->prepare($q);
 
-        $h->execute($stock_property_type_id, $female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id, $accession_type_id, $catalog_stock_property_value);
+        $h->execute($stock_property_type_id, $female_parent_type_id, $accession_type_id, $male_parent_type_id, $vector_construct_type_id);
 
         while (my ($transformant_id,  $transformant_name, $plant_id, $plant_name, $vector_id, $vector_name, $species) = $h->fetchrow_array()){
             push @catalog_items, [$transformant_id,  $transformant_name, $plant_id, $plant_name, $vector_id, $vector_name, $species];

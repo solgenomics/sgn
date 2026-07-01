@@ -142,6 +142,7 @@ jQuery(document).ready( function() {
     });
 
     jQuery("#filter_by_item_type").val('');
+    jQuery("#filter_by_vector_construct").val('');
 
     jQuery("#filter_by_item_type").change(function() {
         var item_type = jQuery("#filter_by_item_type").val();
@@ -151,7 +152,6 @@ jQuery(document).ready( function() {
             jQuery("#vector_construct_section").hide()
         }
     });
-
 
     jQuery("#filter_by_item_type").change(function() {
         var item_type = jQuery("#filter_by_item_type").val();
@@ -165,6 +165,25 @@ jQuery(document).ready( function() {
             'ajax': { 'url':  '/ajax/catalog/items',
                 'data': function(d) {
                   d.item_type  = item_type;
+                }
+            }
+        });
+    });
+
+    jQuery("#filter_by_vector_construct_submit").click(function() {
+        var vector_construct = jQuery("#filter_by_vector_construct").val();
+        var item_type = jQuery("#filter_by_item_type").val();
+        jQuery('#catalog_transgenic_lines_table').DataTable( {
+            'autoWidth': false,
+            'search':'applied',
+            'paging': false,
+            'scrollY': '500px',
+            'scrollX' : true,
+            'destroy': true,
+            'ajax': { 'url':  '/ajax/catalog/items',
+                'data': function(d) {
+                  d.vector_construct  = vector_construct;
+                  d.item_type = item_type
                 }
             }
         });
