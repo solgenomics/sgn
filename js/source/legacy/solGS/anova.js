@@ -12,6 +12,8 @@ solGS.anova = {
   runDiv: "#run_anova",
   anovaTraitsDiv: "#anova_select_a_trait_div",
   anovaTraitsSelectMenuId: "#anova_select_traits",
+  anovaTableDiv: "#anova_table",
+  clearCacheAnova: "#clear_cache_anova",
 
   checkTrialDesign: function () {
     var trialId = this.getTrialId();
@@ -67,7 +69,7 @@ solGS.anova = {
 
   runAnovaAnalysis: function (traits) {
     var trialId = this.getTrialId();
-    var captions = jQuery("#anova_table table").find("caption").text();
+    var captions = jQuery(`${this.anovaTableDiv} table`).find("caption").text();
     var analyzedTraits = captions.replace(/ANOVA result:/g, " ");
 
     var traitAbbr = traits.trait_abbr;
@@ -187,7 +189,7 @@ jQuery(document).ready(function () {
         } else {
           var traitsAbbrs = queryRes.traits_abbrs;
           traitsAbbrs = JSON.parse(traitsAbbrs);
-          solGS.anova.showMessage("Validated trait data...now running ANOVA...");
+          solGS.anova.showMessage("Validated trait data...now running ANOVA...please wait...");
 
           solGS.anova
             .runAnovaAnalysis(traitsAbbrs)
@@ -197,10 +199,12 @@ jQuery(document).ready(function () {
                 jQuery(solGS.anova.msgDiv).empty();
                 solGS.anova.showMessage(analysisRes.Error);
                 jQuery(runDiv).show();
+                jQuery(solGS.anova.anovaTableDiv).hide();
               } else {
                 jQuery(`${canvas} .multi-spinner-container`).hide();
                 jQuery(solGS.anova.msgDiv).empty();
                 jQuery(runDiv).show();
+                jQuery(solGS.anova.anovaTableDiv).show();
 
                 var anovaHtmlTable = analysisRes.anova_table_html_file;
                 if (anovaHtmlTable) {
@@ -227,7 +231,7 @@ jQuery(document).ready(function () {
                     fileNameDiagnostics +
                     ">Model diagnostics</a>";
 
-                  jQuery("#anova_table")
+                  jQuery(solGS.anova.anovaTableDiv)
                     .prepend(
                       '<div style="margin-top: 20px">' +
                         anovaHtmlTable +
@@ -242,6 +246,7 @@ jQuery(document).ready(function () {
                         AdjMeansFile
                     )
                     .show();
+                    jQuery(solGS.anova.clearCacheAnova).removeClass('hidden').show();
                 } else {
                   jQuery(`${canvas} .multi-spinner-container`).hide();
                   solGS.anova.showMessage("There is no anova output for this dataset.");

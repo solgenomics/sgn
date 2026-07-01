@@ -531,17 +531,31 @@ sub delete_dataset :Path('/ajax/dataset/delete') Args(1) {
 
 #    print STDERR "Dataset owner: ".$dataset->sp_person_id.", logged in: $logged_in_user\n";
     if ($dataset->sp_person_id() != $logged_in_user) {
-	$c->stash->{rest} = { error => "Only the owner can delete a dataset" };
-	return;
+        $c->stash->{rest} = { error => "Only the owner can delete a dataset" };
+        return;
     }
 
+    my $trials = $dataset->retrieve_trials();
+    my @trial_ids = ();
+
+    foreach my $trial (@$trials){
+        push @trial_ids, $trial->[0];
+    }
+    
+    my $analysis_cache_args = {
+        dataset_id => $dataset_id,
+        data_structure => 'dataset',
+        trials => \@trial_ids
+    };
+
+    ### remove cached analyses result from this dataset
+    $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, $analysis_cache_args);
     my $error = $dataset->delete();
 
     if ($error) {
-	$c->stash->{rest} = { error => $error };
-    }
-    else {
-	$c->stash->{rest} = { success => 1 };
+        $c->stash->{rest} = { error => $error };
+    } else {
+        $c->stash->{rest} = { success => 1 };
     }
 }
 

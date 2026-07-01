@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path  /;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use JSON;
@@ -262,12 +262,13 @@ sub pca_scores_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
+    my $cache_dir = $self->pca_cache_dir($c);
 
     my $cache_data = {
         key       => "pca_scores_${file_id}",
         file      => "pca_scores_${file_id}",
-        stash_key => 'pca_scores_file'
+        stash_key => 'pca_scores_file',
+        cache_dir => $cache_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -278,12 +279,13 @@ sub pca_scree_data_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
+    my $cache_dir = $self->pca_cache_dir($c);
 
     my $cache_data = {
         key       => "pca_scree_data_${file_id}",
         file      => "pca_scree_data_${file_id}",
-        stash_key => 'pca_scree_data_file'
+        stash_key => 'pca_scree_data_file',
+        cache_dir => $cache_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -294,13 +296,14 @@ sub pca_scree_plot_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
+    my $cache_dir = $self->pca_cache_dir($c);
 
     my $cache_data = {
         key       => "pca_scree_plot_${file_id}",
         file      => "pca_scree_plot_${file_id}",
         ext       => 'png',
-        stash_key => 'pca_scree_plot_file'
+        stash_key => 'pca_scree_plot_file',
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -311,12 +314,13 @@ sub pca_variances_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
+    my $cache_dir = $self->pca_cache_dir($c);
 
     my $cache_data = {
         key       => "pca_variances_${file_id}",
         file      => "pca_variances_${file_id}",
-        stash_key => 'pca_variances_file'
+        stash_key => 'pca_variances_file',
+        cache_dir => $cache_dir,
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -327,12 +331,13 @@ sub pca_loadings_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    $c->stash->{cache_dir} = $c->stash->{pca_cache_dir};
+    my $cache_dir = $self->pca_cache_dir($c);
 
     my $cache_data = {
         key       => "pca_loadings_${file_id}",
         file      => "pca_loadings_${file_id}",
-        stash_key => 'pca_loadings_file'
+        stash_key => 'pca_loadings_file',
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file( $c, $cache_data );
@@ -359,7 +364,7 @@ sub pca_output_files {
         $c->{stash}->{"pca_analysis_report_file"}
     );
 
-    my $tmp_dir = $c->stash->{pca_temp_dir};
+    my $tmp_dir = $self->pca_temp_dir($c);
     my $name    = "pca_output_files_${file_id}";
     my $tempfile =
       $c->controller('solGS::Files')->create_tempfile( $tmp_dir, $name );
@@ -373,7 +378,7 @@ sub combined_pca_trials_data_file {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    my $tmp_dir = $c->stash->{pca_temp_dir};
+    my $tmp_dir = $self->pca_temp_dir($c);
     my $name    = "combined_pca_data_file_${file_id}";
     my $tempfile =
       $c->controller('solGS::Files')->create_tempfile( $tmp_dir, $name );
@@ -407,7 +412,7 @@ sub pca_input_files {
     my ( $self, $c ) = @_;
 
     my $file_id = $c->stash->{file_id};
-    my $tmp_dir = $c->stash->{pca_temp_dir};
+    my $tmp_dir = $self->pca_temp_dir($c);
 
     my $name = "pca_input_files_${file_id}";
     my $tempfile =
@@ -545,7 +550,7 @@ sub pca_r_jobs {
     $self->pca_input_files($c);
     my $input_file = $c->stash->{pca_input_files};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{pca_temp_dir};
+    $c->stash->{analysis_tempfiles_dir} = $self->pca_temp_dir($c);
 
     $c->stash->{input_files}  = $input_file;
     $c->stash->{output_files} = $output_file;
@@ -569,7 +574,7 @@ sub pca_r_jobs_file {
     $self->pca_r_jobs($c);
     my $jobs = $c->stash->{pca_r_jobs};
 
-    my $temp_dir  = $c->stash->{pca_temp_dir};
+    my $temp_dir  = $self->pca_temp_dir($c);
     my $jobs_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'pca-r-jobs-file' );
 
@@ -586,7 +591,7 @@ sub pca_query_jobs_file {
     $self->pca_query_jobs($c);
     my $jobs = $c->stash->{pca_query_jobs};
 
-    my $temp_dir  = $c->stash->{pca_temp_dir};
+    my $temp_dir  = $self->pca_temp_dir($c);
     my $jobs_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'pca-query-jobs-file' );
 
@@ -634,6 +639,28 @@ sub prep_pca_download_files {
     $c->stash->{download_variances}  = $variances_file;
     $c->stash->{download_report_file}= $analysis_report_file;
 
+}
+
+sub pca_cache_dir {
+    my ( $self, $c ) = @_;
+
+    my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
+    my $pca_cache_dir = catdir( $c->stash->{pca_dir}, $pca_analysis_id, 'cache');
+    make_path( $pca_cache_dir, { mode => oct('0755') });
+
+    return $pca_cache_dir;
+}
+
+sub pca_temp_dir {
+    my ($self, $c) = @_;
+
+    my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
+    my $pca_temp_dir = catdir($c->stash->{pca_dir}, $pca_analysis_id, 'tempfiles');
+    make_path($pca_temp_dir, { mode => oct('0755') });
+
+    $c->stash->{pca_temp_dir} = $pca_temp_dir;
+
+    return $pca_temp_dir;
 }
 
 sub begin : Private {

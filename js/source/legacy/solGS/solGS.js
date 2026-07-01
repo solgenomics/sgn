@@ -213,12 +213,13 @@ solGS.submitJob = {
 
   getTraitsSelectionId: function (page, args) {
     var traitIds = args.training_traits_ids;
+    var trainingPopId = args.training_pop_id;
     var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId();
 
     jQuery.ajax({
       dataType: "json",
       type: "POST",
-      data: { trait_ids: traitIds },
+      data: { trait_ids: traitIds, training_pop_id: trainingPopId},
       url: "/solgs/get/traits/selection/id",
       success: function (res) {
         var traitsSelectionId = res.traits_selection_id;

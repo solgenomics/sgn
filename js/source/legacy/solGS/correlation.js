@@ -40,6 +40,7 @@ solGS.correlation = {
   getPhenoCorrArgs: function () {
     var corrPopId = jQuery("#corr_pop_id").val();
     var dataSetType = jQuery("#data_set_type").val();
+    var trainingPopId = jQuery("#training_pop_id").val();
     var dataStr = jQuery("#data_structure").val();
     var corrPopName = this.getCorrPopName();
     
@@ -58,6 +59,7 @@ solGS.correlation = {
       corr_pop_id: corrPopId,
       corr_pop_name: corrPopName,
       data_set_type: dataSetType,
+      training_pop_id: trainingPopId,
       data_structure: dataStr,
       dataset_id: datasetId,
       list_id: listId,
@@ -245,7 +247,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 5,
+      'pageLength': 15,
       'rowId': function (a) {
         return a[6]
       }
@@ -303,6 +305,12 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       if (trialSelPopsList) {
         corrPops.push(trialSelPopsList);
       }
+    }
+
+    if (solGS.listTypeSelectionPopulation) {
+      corrPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
     }
 
     var menu = new SelectMenu(this.corrPopsDiv, this.corrPopsSelectMenuId);
@@ -494,7 +502,18 @@ jQuery(document).ready(function () {
             jQuery(corrMsgDiv).html((res.status || "Error.") + " There is no correlation output for this dataset.").fadeOut(8400);
         }
 
-  
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).empty();
+        jQuery(runCorrBtnId).show();
+      })
+      .fail(function (res) {
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).html(res.status + " Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(runCorrBtnId).show();
+      });
+    }
+  });
+
   jQuery(document).on("click", "#run_genetic_correlation", function () {
     var corrPopId = jQuery("#corr_selected_pop_id").val();
     var popType = jQuery("#corr_selected_pop_type").val();

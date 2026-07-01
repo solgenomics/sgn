@@ -28,6 +28,9 @@ outputFiles <- scan(outputFiles, what = "character")
 inputFiles <- grep("input_files", allArgs, value = TRUE)
 inputFiles <- scan(inputFiles, what = "character")
 
+message("input files: ", paste(inputFiles, collapse = ", "))
+message("output files: ", paste(outputFiles, collapse = ", "))
+
 optionsFile <- grep("options", inputFiles, value = TRUE)
 clusterOptions <- read.table(optionsFile, header = TRUE, sep = "\t", stringsAsFactors = FALSE,
     na.strings = "")
@@ -85,8 +88,10 @@ extractGenotype <- function(inputFiles) {
             genoData <- fread(filteredGenoFile, header = TRUE)
         }
 
+        
         genoData <- unique(genoData, by = "V1")
         genoData <- data.frame(genoData)
+        genoData <- genoData[!is.na(genoData$V1), ]
         genoData <- column_to_rownames(genoData, "V1")
     }
 

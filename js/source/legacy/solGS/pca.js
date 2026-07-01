@@ -42,8 +42,7 @@ solGS.pca = {
     },
 
     getArgsFromOtherUrls: function () {
-        var protocolId =
-            solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+        
 
         var pcaPopId;
         var selectionPopId;
@@ -51,6 +50,8 @@ solGS.pca = {
         var dataStr;
 
         var page = location.pathname;
+        var protocolId;
+
         if ( page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\/|\/breeders\/trial\//)
 ) {
             trainingPopId = jQuery("#training_pop_id").val();
@@ -72,6 +73,8 @@ solGS.pca = {
                 dataStr = "list";
             } else if (pcaPopId.match(/dataset/)) {
                 dataStr = "dataset";
+                var datasetId = selectionPopId.replace(/dataset_/, "");
+                protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
             }
         } else if (
             page.match(
@@ -89,6 +92,10 @@ solGS.pca = {
             if (comboPopsId) {
                 var dataSetType = "combined_populations";
             }
+        }
+
+        if (!protocolId) {
+            protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
         }
 
         var dataType = this.getSelectedDataType(pcaPopId);
@@ -243,14 +250,18 @@ solGS.pca = {
 
     var listId;
     var datasetId;
+    var protocolId;
 
     if (dataStr.match(/dataset/)) {
         datasetId = popId;
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
     } else if (dataStr.match(/list/)) {
         listId = popId;
     }
-    var protocolId =
-        solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+
+    if (!protocolId) {
+        protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+    }
 
     var pcaArgs = {
         pca_pop_id: pcaPopId,
@@ -297,19 +308,19 @@ solGS.pca = {
         if (dataStr.match(/dataset/)) {
             if (toolCompatibility == null || toolCompatibility == "(not calculated)"){
             compatibilityMessage = "(not calculated)";
-        } else {
-            if (toolCompatibility["Population Structure"]['compatible'] == 0) {
-            compatibilityMessage = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
             } else {
-                if ('warn' in toolCompatibility["Population Structure"]) {
-                    compatibilityMessage = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + toolCompatibility["Population Structure"]['warn'] + '"></span></b>';
+                if (toolCompatibility["Population Structure"]['compatible'] == 0) {
+                compatibilityMessage = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
                 } else {
-                    compatibilityMessage = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+toolCompatibility["Population Structure"]['types']+'"></span></b>';
+                    if ('warn' in toolCompatibility["Population Structure"]) {
+                        compatibilityMessage = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + toolCompatibility["Population Structure"]['warn'] + '"></span></b>';
+                    } else {
+                        compatibilityMessage = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+toolCompatibility["Population Structure"]['types']+'"></span></b>';
+                    }
                 }
             }
         }
-        }
-        console.log(`compatibilityMessage: ${compatibilityMessage}`);
+
         return compatibilityMessage;
     },
 

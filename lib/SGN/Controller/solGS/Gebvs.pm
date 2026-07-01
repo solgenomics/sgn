@@ -8,7 +8,7 @@ use Cache::File;
 use File::Temp qw / tempfile tempdir /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file/;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path /;
 use File::Copy;
 use File::Basename;
 use JSON;
@@ -72,7 +72,9 @@ sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
     my ($self, $c) = @_;
 
     my @traits_ids = $c->req->param('trait_ids[]');
+    $c->stash->{training_pop_id} = $c->req->param('training_pop_id[]');
 
+    my $training_pop_id = $c->stash->{training_pop_id};
     $c->stash->{rest}{status} = 0;
     if (@traits_ids > 1) {
         $self->catalogue_traits_selection($c, \@traits_ids);
@@ -106,7 +108,7 @@ sub combine_gebvs_jobs_args {
         }
 
         my $identifier = $self->combined_gebvs_file_id($c);
-        my $tmp_dir = $c->stash->{solgs_tempfiles_dir};
+        my $tmp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
         $self->combined_gebvs_file($c);
         my  $combined_gebvs_file = $c->stash->{combined_gebvs_file};
@@ -140,12 +142,13 @@ sub combined_gebvs_file {
     my ($self, $c) = @_;
 
     my $identifier = $self->combined_gebvs_file_id($c);
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c);
 
     my $cache_data = {
            key => "combined_gebvs_${identifier}",
            file      => "combined_gebvs_${identifier}" . '.txt',
            stash_key => 'combined_gebvs_file',
-           cache_dir => $c->stash->{solgs_cache_dir}
+           cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -186,7 +189,7 @@ sub get_gebv_files_of_traits {
     my $training_pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{corre_pop_id};
     $c->stash->{model_id} = $training_pop_id;
     my $selection_pop_id = $c->stash->{selection_pop_id};
-    my $dir = $c->stash->{solgs_cache_dir};
+    my $dir = $c->controller('solGS::Files')->solgs_cache_dir($c);
 
     my $gebv_files;
     my $valid_gebv_files;
@@ -203,7 +206,7 @@ sub get_gebv_files_of_traits {
     my $pred_file_suffix;    
     $pred_file_suffix =   '_' . $selection_pop_id if $selection_pop_id;
     my $name = "gebv_files_of_traits_${training_pop_id}${pred_file_suffix}";
-    my $temp_dir = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
 
     write_file($file, {binmode => ':utf8'}, $gebv_files);
@@ -222,10 +225,14 @@ sub get_gebv_files_of_traits {
 sub traits_selection_catalogue_file {
     my ($self, $c) = @_;
 
-    my $cache_data = {key       => 'traits_selection_catalogue_file',
-                      file      => 'traits_selection_catalogue_file.txt',
-                      stash_key => 'traits_selection_catalogue_file',
-              cache_dir => $c->stash->{solgs_cache_dir}
+    my $training_pop_id = $c->stash->{training_pop_id} || $c->stash->{model_id} || $c->stash->{combo_pops_id} || $c->stash->{corre_pop_id};
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c);
+
+    my $cache_data = {
+        key       => 'traits_selection_catalogue_file',
+        file      => 'traits_selection_catalogue_file.txt',
+        stash_key => 'traits_selection_catalogue_file',
+        cache_dir => $cache_dir
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -349,7 +356,7 @@ sub selection_pop_analyzed_traits {
 
     no warnings 'uninitialized';
 
-    my $dir = $c->stash->{solgs_cache_dir};
+    my $dir = $c->controller('solGS::Files')->solgs_cache_dir($c, $training_pop_id);
     opendir my $dh, $dir or die "can't open $dir: $!\n";
 
     my @files;

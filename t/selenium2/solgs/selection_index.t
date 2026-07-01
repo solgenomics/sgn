@@ -6,6 +6,7 @@ use lib 't/lib';
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+use File::Path qw /remove_tree/;
 use SGN::Test::solGSData;
 
 my $d = SGN::Test::WWW::WebDriver->new();
@@ -18,8 +19,8 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
+print STDERR "\nbase_analyses_cache_dir-- $cache_dir\n";
 
 
 my $accessions_list =  $solgs_data->load_accessions_list();
@@ -63,7 +64,7 @@ print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
 print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
-`rm -r $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
@@ -187,7 +188,7 @@ $d->while_logged_in_as("submitter", sub {
     # sleep(2);
 
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     $d->get('/solgs');
 
     sleep(2);

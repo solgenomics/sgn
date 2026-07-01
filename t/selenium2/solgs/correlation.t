@@ -6,6 +6,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use File::Path qw/remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -17,7 +18,7 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
 
 my $plots_list =  $solgs_data->load_plots_list();
 my $plots_list_name = $plots_list->{list_name};
@@ -38,8 +39,7 @@ my $plots_dt_id = 'dataset_' . $plots_dt->{dataset_id};
 my @test_trials_ids = @{$solgs_data->trials_ids()};
 
 
-
-`rm -r  $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
@@ -50,7 +50,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('//select[@id="trial_select"]//option[contains(text(), "' . $trials_dt_name . '")]', 'xpath', 'select dataset')->click();
     sleep(2); 
@@ -67,7 +67,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('//select[@id="trial_select"]//option[@value="'. $test_trials_ids[0]. '"]', 'xpath', 'select a trial')->click();
     sleep(2); 
@@ -95,7 +95,7 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
-   $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
+    $d->find_element_ok('//div[@id="corr_canvas"]//*[contains(text(), "DMCP")]', 'xpath', 'check corr plot');
     sleep(5);
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table'); 
     sleep(2);
@@ -113,7 +113,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
 
     $d->find_element_ok('//tr[@id="' . $trials_dt_id .'"]//*[starts-with(@id, "run_correlation")]', 'xpath', 'run correlation')->click();
     sleep(200);
@@ -123,14 +124,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(2);
 
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(3);
 
     ########## trial detail page ##########
     $d->get_ok('/breeders/trial/' . $test_trials_ids[0], 'trial detail home page');
     sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
@@ -143,9 +144,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
 
-    ########## solGS ##########
+    ######### solGS ##########
     $d->get('/solgs', 'solgs home page');
     sleep(3);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -209,15 +210,15 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
     sleep(10);
 
-    # # # ###############################################################
-    #   $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
-    #   sleep(15);
-    # # ######################################################################
-    #
+    # # ###############################################################
+      $d->get_ok('solgs/traits/all/population/139/traits/1971973596/gp/1', 'models page');
+      sleep(15);
+    # ######################################################################
+    
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(2);
     $d->find_element_ok('search_selection_pop', 'id', 'search for selection pop')->click();
-    sleep(3);
+    sleep(10);
     $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
     $d->find_element_ok('queue_job', 'id', 'selection prediction job queueing')->click();
@@ -277,7 +278,7 @@ $d->while_logged_in_as("submitter", sub {
    $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(5);
 
     $d->get('/solgs');
@@ -385,7 +386,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP-FRW selection pred nacrri');
     sleep(2);
     $d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
-	  sleep(2);
+	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(350);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
@@ -404,7 +405,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     $d->driver->refresh();
-    sleep(2);
+    sleep(5);
 
     my $cor = $d->find_element('Genetic correlation', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-200);", $cor);
@@ -432,13 +433,12 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
     sleep(350);
     my $si = $d->find_element('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'scroll up');
-   sleep(1);
+    sleep(2);
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(2);
     $d->find_element_ok('coefficients', 'partial_link_text',  'download corr coef table');
     sleep(2);
 
-   
     foreach my $list_id ($trials_list_id,  $plots_list_id) {
         $list_id =~ s/\w+_//g;
         $solgs_data->delete_list($list_id);
