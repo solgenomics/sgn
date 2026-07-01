@@ -304,7 +304,7 @@ solGS.cluster = {
     var protocolId;
     var datasetId;
 
-    if (dataStr.match(/dataset/)) {
+    if (dataStr && dataStr.match(/dataset/)) {
         datasetId = clusterPopId.replace(/dataset_/, "");
         protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
     }
