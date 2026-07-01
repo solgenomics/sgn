@@ -502,7 +502,18 @@ jQuery(document).ready(function () {
             jQuery(corrMsgDiv).html((res.status || "Error.") + " There is no correlation output for this dataset.").fadeOut(8400);
         }
 
-  
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).empty();
+        jQuery(runCorrBtnId).show();
+      })
+      .fail(function (res) {
+        jQuery(`${canvas} .multi-spinner-container`).hide();
+        jQuery(corrMsgDiv).html(res.status + " Error occured running correlation analysis.").fadeOut(8400);
+        jQuery(runCorrBtnId).show();
+      });
+    }
+  });
+
   jQuery(document).on("click", "#run_genetic_correlation", function () {
     var corrPopId = jQuery("#corr_selected_pop_id").val();
     var popType = jQuery("#corr_selected_pop_type").val();
