@@ -620,7 +620,8 @@ sub check_measurement {
     if (ref($value_array) eq 'ARRAY') {
         # the entry represents trait + timestamp
         #
-        $trait_value = $value_array->[0];
+        $trait_value = _normalize_json_trait_value($value_array->[0]);
+        $value_array->[0] = $trait_value;
         $timestamp = $value_array->[1];
     }
     elsif (ref($value_array) eq "HASH") {
@@ -631,7 +632,7 @@ sub check_measurement {
     else {
         # it's a scalar. It really shouldn't be I guess?
         #
-        $trait_value = $value_array;
+        $trait_value = _normalize_json_trait_value($value_array);
     }
     #print STDERR "$plot_name, $trait_name, $trait_value\n";
     if ( $trait_name ne "notes" ) {
@@ -997,7 +998,8 @@ sub store {
 
                         my $phenotype_object = CXGN::Phenotype->new( { schema => $schema });
 
-                        my $trait_value = $value_array->[0];
+                        my $trait_value = _normalize_json_trait_value($value_array->[0]);
+                        $value_array->[0] = $trait_value;
 
                         $phenotype_object->value($trait_value);
                         my $timestamp = $value_array->[1];
@@ -1615,6 +1617,36 @@ sub get_trait_props {
     }
     # print STDERR "PROPERTIES FROM $property_name: ".Dumper(\%property_by_cvterm_id);
     return \%property_by_cvterm_id;
+}
+
+sub _normalize_json_trait_value {
+    my $value = shift;
+    return $value if !defined($value) || $value !~ /^\s*[\[\{]/;
+
+    my $decoded = eval { decode_json($value) };
+    return $value if $@;
+
+    if (ref($decoded) eq "ARRAY") {
+        my @values = map { _json_trait_entry_value($_) } @$decoded;
+        @values = grep { defined($_) && $_ ne "" } @values;
+        return @values ? join(":", @values) : "";
+    }
+
+    my $decoded_value = _json_trait_entry_value($decoded);
+    return defined($decoded_value) ? $decoded_value : $value;
+}
+
+sub _json_trait_entry_value {
+    my $entry = shift;
+    return if !defined($entry);
+
+    if (ref($entry) eq "HASH") {
+        return $entry->{value} if defined($entry->{value});
+        return $entry->{label} if defined($entry->{label});
+        return;
+    }
+
+    return ref($entry) ? undef : $entry;
 }
 
 ###

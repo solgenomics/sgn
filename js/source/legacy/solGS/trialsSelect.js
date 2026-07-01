@@ -99,8 +99,7 @@ jQuery(document).ready(function () {
                 // Process and display the trials
                 console.log("Trials for dataset " + datasetName + ": ", trials);
                 var trialSelect = jQuery("#trial_select");
-                // trialSelect.empty(); 
-
+                trialSelect.empty();
                 var datasetOption = jQuery("<option></option>")
                     .attr("value", datasetId)
                     .text("Dataset: " + datasetName);
@@ -121,7 +120,6 @@ jQuery(document).ready(function () {
         });
 
     }
-
 });
 
 jQuery(document).on("change", "#trial_select", function () {
@@ -140,8 +138,8 @@ jQuery(document).on("change", "#trial_select", function () {
             jQuery("#analysis_pop_id").val(`dataset_${selectedTrial}`);
             jQuery("#analysis_pop_name").val(jQuery("#dataset_name").val());
             console.log("Data structure set to 'dataset'");
+            console.log("Data structure set to 'dataset'");
         }
-    
         console.log("You have selected trial with ID: " + selectedTrial);
     } else {
         console.log("No trial selected.");

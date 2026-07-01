@@ -223,9 +223,29 @@ sub upload_genotype_verify_POST : Args(0) {
             $subdirectory = "genotype_vcf_upload";
             $parser_plugin = 'VCF';
 
-            if ($transpose_vcf_for_loading) {
-                my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
-                my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
+        if ($transpose_vcf_for_loading) {
+            #archive a copy of the original (non-transposed) VCF file as uploaded, so that
+            #the website can later retrieve the original file instead of the transposed
+            #version that gets archived (and used for loading) below. It is archived using
+            #the same archive_filename/timestamp as the transposed file, so that it can be
+            #found later by swapping the genotype_vcf_upload directory for genotype_vcf_archive.
+            my $original_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile,
+                subdirectory => "genotype_vcf_archive",
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role
+            });
+            my $archived_original_vcf = $original_uploader->archive();
+            if (!$archived_original_vcf) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+
+            my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
+            my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
 
                 open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
                 open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
@@ -748,6 +768,8 @@ sub upload_genotype_verify_POST : Args(0) {
                 $c->detach();
             }
 
+            my @all_warnings;
+            my $previous_genotypes_exist;
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
                 my $warning_string;
                 foreach my $error_string (@{$verified_errors->{'warning_messages'}}){
@@ -763,6 +785,8 @@ sub upload_genotype_verify_POST : Args(0) {
                     $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                     $c->detach();
                 }
+                push @all_warnings, @{$verified_errors->{warning_messages}};
+                $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
             }
 
             if ($protocol_id) {
@@ -783,7 +807,8 @@ sub upload_genotype_verify_POST : Args(0) {
                     while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
 			$total_marker_count++;
                         if (exists($compare_marker_names{$marker_name})) {
-                            while (my ($key, $value) = each %$new_marker_details) {
+                            for my $key (qw(chrom pos name ref alt)) {
+                                my $value = $new_marker_details->{$key};
                                 if ($value ne ($stored_markers->{$marker_name}->{$key})) {
                                     push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
                                 }
@@ -838,7 +863,14 @@ sub upload_genotype_verify_POST : Args(0) {
                         $c->detach();
                     }
                 }
+                push @all_warnings, @protocol_match_errors;
 	    }
+
+            if (scalar(@all_warnings) > 0 && !$accept_warnings) {
+                my $warning_string = join("<br>", @all_warnings);
+                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+                $c->detach();
+            }
 
             $store_genotypes->store_metadata();
             $store_genotypes->store_identifiers();
@@ -916,6 +948,8 @@ sub upload_genotype_verify_POST : Args(0) {
             $c->detach();
         }
 
+        my @all_warnings;
+        my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
             my $warning_string;
             foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
@@ -931,6 +965,8 @@ sub upload_genotype_verify_POST : Args(0) {
                 $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
                 $c->detach();
             }
+            push @all_warnings, @{$verified_errors->{warning_messages}};
+            $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
         }
 
         if ($protocol_id) {
@@ -950,7 +986,8 @@ sub upload_genotype_verify_POST : Args(0) {
                 while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
                     $total_marker_count++;
                     if (exists($compare_marker_names{$marker_name})) {
-                        while (my ($key, $value) = each %$new_marker_details) {
+                        for my $key (qw(chrom pos name ref alt)) {
+                            my $value = $new_marker_details->{$key};
                             if ($value ne ($stored_markers->{$marker_name}->{$key})) {
                                 push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
                             }
@@ -1006,7 +1043,14 @@ sub upload_genotype_verify_POST : Args(0) {
                     $c->detach();
                 }
             }
+            push @all_warnings, @protocol_match_errors;
 	}
+
+        if (scalar(@all_warnings) > 0 && !$accept_warnings) {
+            my $warning_string = join("<br>", @all_warnings);
+            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+            $c->detach();
+        }
 
         $store_genotypes->store_metadata();
         $store_genotypes->store_identifiers();
