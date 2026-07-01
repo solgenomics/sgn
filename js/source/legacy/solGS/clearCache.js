@@ -1,13 +1,13 @@
 jQuery(document).ready(function() {
     var clearCacheArgs = {
-        analysis_type: jQuery('#analysis_type').val(),
+        analysis_types: jQuery('#analysis_type').val(),
         data_structure: jQuery('#data_structure').val(),
-        trial_id: jQuery('#trial_id').val(),
+        trials: jQuery('#trial_id').val(),
         dataset_id: jQuery('#dataset_id').val()
     };
 
     jQuery('[id^="clear_cache_"]').click(function(e) {
-        clearCacheArgs.analysis_type = e.target.id.replace('clear_cache_', '');
+        clearCacheArgs.analysis_types = e.target.id.replace('clear_cache_', '');
 
         jQuery.ajax({
             url: '/solgs/cache/clear',
