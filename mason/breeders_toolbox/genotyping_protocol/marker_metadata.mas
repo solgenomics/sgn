@@ -80,7 +80,12 @@
             jQuery("#marker_metadata_delete").show();
             new jQuery("#marker_metadata_table").DataTable({
                 destroy: true,
-                dom: 'Bfrtip',
+                layout: {
+                    topStart: 'buttons',
+                    topEnd: 'search',
+                    bottomStart: 'info',
+                    bottomEnd: 'paging'
+                },
                 buttons: [
                     'pageLength',
                     {

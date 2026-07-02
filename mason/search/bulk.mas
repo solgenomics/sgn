@@ -87,7 +87,12 @@ jQuery(document).ready(function() {
 
     // Init DataTables
     jQuery('#bulk_search_existing').DataTable({
-        dom: 'Bfrtip',
+        layout: {
+            topStart: 'buttons',
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         autoWidth: false,
         data: [],
         columns: [{ title: "Name" }],
@@ -103,7 +108,12 @@ jQuery(document).ready(function() {
         ]
     });
     jQuery('#bulk_search_missing').DataTable({
-        dom: 'Bfrtip',
+        layout: {
+            topStart: 'buttons',
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         autoWidth: false,
         data: [],
         columns: [{ title: "Name" }],

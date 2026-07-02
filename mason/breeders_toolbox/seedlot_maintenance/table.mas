@@ -333,7 +333,12 @@ function setupDataTable() {
 
     // Init DataTable
     DT = jQuery('#seedlot_maintenance_events').DataTable({
-        dom: 'Brt',
+        layout: {
+            topStart: 'buttons',
+            topEnd: null,
+            bottomStart: null,
+            bottomEnd: null
+        },
         autoWidth: false,
         pageLength: PAGE_SIZE,
         data: [],

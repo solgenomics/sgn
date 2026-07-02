@@ -199,7 +199,12 @@ jQuery(document).ready( function() {
     jQuery('#activity_summary_table').DataTable({
         'autoWidth': false,
         'searching' : false,
-        'dom': 'rtip',
+        layout: {
+            topStart: null,
+            topEnd: null,
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         'ordering': false,
         'paging': false,
         'info': false,

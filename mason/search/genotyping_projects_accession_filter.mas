@@ -175,7 +175,12 @@ function displayResults(results) {
     jQuery("#genotyping_project_filter_usage").empty();
     jQuery("#genotyping_project_filter_usage").html(table);
     jQuery('#genotyping_project_filter_usage').dataTable({
-        dom: 'lfBrtip',
+        layout: {
+            topStart: 'pageLength',
+            topEnd: ['search', 'buttons'],
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         buttons: DT_BUTTONS,
         pageLength: 25
     });

@@ -798,7 +798,12 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
         },
         'stateSave': true,
         'colReorder': true,
-        'dom': 'lBfrtip',
+        'layout': {
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         'rowId': 'Stock Id',
         'buttons': [ 'colvis',
             {

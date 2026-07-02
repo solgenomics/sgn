@@ -337,7 +337,12 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
           { 'title': 'Moran P Value' },
           { 'title': 'Spatial Correction Needed' },
         ],
-        'dom': 'Bfrtip',
+        layout: {
+          topStart: 'buttons',
+          topEnd: 'search',
+          bottomStart: 'info',
+          bottomEnd: 'paging'
+        },
         'buttons': [
           'csv', 'excel'
         ]
@@ -423,7 +428,12 @@ jQuery("#correct_spatial").click(function() {
             { 'title': 'Corrected' },
             { 'title': 'Adjustment'}
           ],
-          'dom': 'Bfrtip',
+          layout: {
+            topStart: 'buttons',
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+          },
           'buttons': [
           'csv', 'excel'
         ]

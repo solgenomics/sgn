@@ -60,7 +60,12 @@ $trial_name
 
         // Init DataTable
         jQuery('#trial_entry_numbers_table').DataTable({
-            dom: 'Bfrtip',
+            layout: {
+                topStart: 'buttons',
+                topEnd: 'search',
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+            },
             autoWidth: false,
             data: [],
             columns: [
