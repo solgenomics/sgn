@@ -30,7 +30,23 @@
    MochiKit = {__export__: false};
 </script>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
+<& /util/import_javascript.mas, classes => [
+    "jquery",
+    "jqueryui",
+    "sgn",
+    "jquery.simpletooltip",
+    "jquery.cookie",
+    "CXGN.Effects",
+    "CXGN.Dataset",
+    "CXGN.Page.FormattingHelpers",
+    "CXGN.UserPrefs",
+    "CXGN.Page.Toolbar",
+    "CXGN.List",
+    "CXGN.Login",
+    "bootstrap_min",
+    "CXGN.BreedersToolbox.HTMLSelect",
+    "bootstrap-toggle_min"
+] &>
 % if ($c->config->{production_server}) {
     <& /util/import_javascript.mas, classes => [ "jquerymigrate-min", "jquery.dataTables", "jquery.dataTables-buttons-min", "jszip-min", "pdfmake.pdfmake-min", "pdfmake.vfs_fonts", "jquery.dataTables-buttons-bootstrap-min", "jquery.dataTables-buttons-html5-min", "jquery.dataTables-buttons-print-min", "jquery.dataTables-colReorder-min", "jquery.dataTables-select-min" ] &>
 % } else {
