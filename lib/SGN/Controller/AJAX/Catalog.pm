@@ -340,7 +340,29 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
 
     if ($catalog_stock_property eq 'transgenic') {
         my $catalog_obj = CXGN::Stock::CompileCatalogItems->new({schema => $schema, dbh => $dbh, catalog_stock_type => $catalog_stock_type, catalog_stock_property => $catalog_stock_property, catalog_stock_property_value => $catalog_stock_property_value, vector_construct => $vector_construct});
-        if ($item_type eq 'wild_type') {
+        if ($item_type eq 'all') {
+            my $results_specified_items = $catalog_obj->compile_specified_catalog_items();
+            my @sorted_specified_items = natkeysort {($_->[1])} @$results_specified_items;
+            foreach my $item (@sorted_specified_items) {
+                my $item_id = $item->[0];
+                my $item_name = $item->[1];
+                my $species = $item->[2];
+                push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>}, '', '', $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
+            }
+            my $results_based_on_type = $catalog_obj->compile_catalog_items_based_on_type();
+            my @sorted_items_based_on_type = natkeysort {($_->[1])} @$results_based_on_type;
+            foreach my $item (@sorted_items_based_on_type) {
+                my $item_id = $item->[0];
+                my $item_name = $item->[1];
+                my $plant_id = $item->[2];
+                my $plant_name = $item->[3];
+                my $vector_id = $item->[4];
+                my $vector_name = $item->[5];
+                my $species = $item->[6];
+
+                push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>},  qq{<a href="/stock/$vector_id/view">$vector_name</a>},  qq{<a href="/stock/$plant_id/view">$plant_name</a>}, $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
+            }
+        } elsif ($item_type eq 'wild_type') {
             my $results_specified_items = $catalog_obj->compile_specified_catalog_items();
             my @sorted_specified_items = natkeysort {($_->[1])} @$results_specified_items;
             foreach my $item (@sorted_specified_items) {

@@ -137,6 +137,20 @@ jQuery(document).ready( function() {
     itemForm (selected_items);
     requestForm(order_properties_dialog);
 
+    jQuery('#catalog_transgenic_lines_table').DataTable( {
+        'autoWidth': false,
+        'search':'applied',
+        'paging': false,
+        'scrollY': '500px',
+        'scrollX' : true,
+        'destroy': true,
+        'ajax': { 'url':  '/ajax/catalog/items',
+            'data': function(d) {
+              d.item_type  = 'all';
+            }
+        }
+    });
+
     jQuery("#filter_by_vector_construct").autocomplete({
        source: '/ajax/stock/vector_construct_autocomplete',
     });
