@@ -14,9 +14,7 @@ $check_vendor_role =>undef
 
 </%args>
 
-
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [] &>
 
 <& /page/page_title.mas, title => "Details for Order Number: $order_id" &>
 

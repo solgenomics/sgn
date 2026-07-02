@@ -3,8 +3,6 @@
 $location_id => 'not_provided'
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <& /page/page_title.mas, title => "Dataset Search -<a class='btn btn-link' href=/help/datasets>Help <span class='glyphicon glyphicon-question-sign'></a>" &>
 
 <div class="well well-sm">

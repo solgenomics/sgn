@@ -9,9 +9,7 @@
 =cut
 
 </%doc>
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
+<& /util/import_javascript.mas, classes => [] &>
 <table class="table table-hover table-bordered" id="marker_sets">
 
 </table>

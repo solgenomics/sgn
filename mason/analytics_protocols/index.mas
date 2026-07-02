@@ -17,9 +17,6 @@ Displays a page with a table of all the analytics run by the currently logged in
 =cut
 
 </%doc>
-
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => [] &>
-
 <& /page/page_title.mas, title => "Your Analytics Protocols" &>
 
 <button class='btn btn-success' style='margin:3px;float:right' id='drone_imagery_analytics_link'>Drone Imagery Analytics</button><br />

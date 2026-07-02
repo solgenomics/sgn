@@ -20,7 +20,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%perl>
 
 
- <& /util/import_javascript.mas, classes => [ "jquery.dataTables"] &>
+ <& /util/import_javascript.mas, classes => [] &>
 
 <div class="bin_elements" style="display:none">
 

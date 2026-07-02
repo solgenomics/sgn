@@ -10,7 +10,7 @@ $stockref => undef
 }
 </style>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'thickbox' ] &>
 
 
     <table id="plot_images_results" class="table table-hover table-striped">

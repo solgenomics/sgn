@@ -1,7 +1,5 @@
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ],  &>
-
-<p>View sequence metadata protocols associated with each sequence metadata data type.  Click the name of the sequence 
+<p>View sequence metadata protocols associated with each sequence metadata data type.  Click the name of the sequence
 metadata protocol to query data from that protocol.</p>
 
 <div id="sequence_metadata_protocol_types"></div>

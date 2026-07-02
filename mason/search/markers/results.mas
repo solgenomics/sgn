@@ -17,8 +17,6 @@ David Waring <djw64@cornell.edu>
 
 </%doc>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <& /page/page_title.mas, title=>"Marker Search Results" &>
 
 

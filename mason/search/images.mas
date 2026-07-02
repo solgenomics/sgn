@@ -8,7 +8,7 @@
 }
 </style>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ], entries => [ 'search_state' ] &>
+<& /util/import_javascript.mas, classes => [ 'thickbox' ], entries => [ 'search_state' ] &>
 
 <& /page/page_title.mas, title => "Image Search" &>
 

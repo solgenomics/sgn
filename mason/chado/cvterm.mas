@@ -115,7 +115,7 @@ my $edit_privs = $curator ;
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  CXGN.Phenome.Qtl thickbox jquery  jquery.dataTables] ] &>
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  CXGN.Phenome.Qtl thickbox] ] &>
 
 
 <script language="javascript">

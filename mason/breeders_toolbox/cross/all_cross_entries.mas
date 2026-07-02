@@ -2,8 +2,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [] &>
 
 <a href="/search/download_cross_entries" class="btn btn-sm btn-default">Download All Cross Entries</a>
 </br>

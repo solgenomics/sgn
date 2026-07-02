@@ -23,7 +23,7 @@ $training_pop_id => undef;
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.loadAcronyms", "jquery.dataTables"] &>
+<& /util/import_javascript.mas, classes => ["solGS.loadAcronyms"] &>
 
 <&| /page/info_section.mas,
     collapsible => 1,

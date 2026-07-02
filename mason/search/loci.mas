@@ -4,8 +4,6 @@ $organism_ref => undef
 $lg_names_ref       => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <div class="container-fluid">
 
 <& /page/page_title.mas, title=>'Search Genes and Loci' &>
