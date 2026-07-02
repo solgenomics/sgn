@@ -90,22 +90,19 @@ $project_id => undef
 %     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
 % }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<& /util/import_javascript.mas, classes => [
+    'jszip-min',
+    'pdfmake.pdfmake-min',
+    'pdfmake.vfs_fonts',
 
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.3.8/css/dataTables.bootstrap.min.css"/>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.2.6/css/buttons.bootstrap.min.css">
+    'jquery.dataTables-min',
 
-<script type="text/javascript" src="https://cdn.datatables.net/2.3.8/js/dataTables.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/2.3.8/js/dataTables.bootstrap.min.js"></script>
+    'jquery.dataTables-buttons-min',
+    'jquery.dataTables-buttons-print-min',
+    'jquery.dataTables-buttons-html5-min',
 
-<script src="https://cdn.datatables.net/buttons/3.2.6/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/3.2.6/js/buttons.bootstrap.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/3.2.6/js/buttons.print.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/3.2.6/js/buttons.html5.min.js"></script>
-
-<script src="https://cdn.datatables.net/select/3.1.3/js/dataTables.select.min.js"></script>
+    'jquery.dataTables-select-min',
+] &>
 
 <div class="row flex-wrap-row">
     <div class="col-auto">

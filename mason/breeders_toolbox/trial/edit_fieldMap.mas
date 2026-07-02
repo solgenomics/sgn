@@ -4,19 +4,6 @@ $trial_name
 $trial_stock_type => undef
 </%args>
 
-
-<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js' ] &>
-
-
-<!-- Load DataTables CSS and JS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.3.8/css/dataTables.bootstrap.min.css">
-<script type="text/javascript" src="https://cdn.datatables.net/2.3.8/js/dataTables.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/2.3.8/js/dataTables.bootstrap.min.js"></script>
-
-<!-- Load Buttons CSS and JS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/3.2.6/css/buttons.bootstrap.min.css">
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/3.2.6/js/dataTables.buttons.min.js"></script>
-
 <& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="modal  fade" id="edit_field_map_dialog" name="edit_field_map_dialog" tabindex="-1" role="dialog" aria-labelledby="EditFieldMapDialog">
