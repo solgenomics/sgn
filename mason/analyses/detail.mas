@@ -34,7 +34,7 @@ $analysis_metadata
 $has_col_and_row_numbers
 </%args>
 
-<& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Trial' ],  &>
+<& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'CXGN.Trial' ] &>
 
 <& /page/page_title.mas, title => "Analysis <span id=\"analyis_name_title\">$analysis_name</span>" &>
 

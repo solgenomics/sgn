@@ -20,7 +20,7 @@ Lukas Mueller <lam87@cornell.edu>
 
 </%doc>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => ['analyses' ] &>
+<& /util/import_javascript.mas, entries => ['analyses'] &>
 
 <& /page/page_title.mas, title => "Your Analyses and Analysis Models" &>
 

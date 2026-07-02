@@ -237,8 +237,6 @@ if ($person_id && ($submitter || $curator || $sequencer)) { $released_variety_li
 
 </%perl>
 
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 <& /util/import_javascript.mas,
    classes => ["d3.d3v4Min", "thickbox", "CXGN.Stock" ],
   entries => ["sequenced_accessions"  ]

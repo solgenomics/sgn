@@ -8,7 +8,7 @@ $dataset_contents => ''
 </%args>
 
 <& /page/page_title.mas, title => "Dataset $dataset_name" &>
-<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|jqueryui.js jquery.js dataset jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers jquery.dataTables| ] &>
+<& /util/import_javascript.mas, entries => [qw|dataset_scatterplot dataset|], classes => [ qw|dataset jstree.dist.jstree thickbox CXGN.Page.FormattingHelpers| ] &>
 <& /util/import_css.mas, paths => ['wizard.css'] &>
 
 <style>

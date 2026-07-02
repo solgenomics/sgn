@@ -2,8 +2,6 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <h4>Field Trials With Tissue Samples</h4>
 
 <div class="well well-sm">

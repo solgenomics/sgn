@@ -3,9 +3,6 @@
 $program_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 <table id="accession_summary_data" class="display">
     <thead>
         <tr>

@@ -47,11 +47,16 @@
     "CXGN.BreedersToolbox.HTMLSelect",
     "bootstrap-toggle_min"
 ] &>
-% if ($c->config->{production_server}) {
-    <& /util/import_javascript.mas, classes => [ "jquerymigrate-min", "jquery.dataTables", "jquery.dataTables-buttons-min", "jszip-min", "pdfmake.pdfmake-min", "pdfmake.vfs_fonts", "jquery.dataTables-buttons-bootstrap-min", "jquery.dataTables-buttons-html5-min", "jquery.dataTables-buttons-print-min", "jquery.dataTables-colReorder-min", "jquery.dataTables-select-min" ] &>
-% } else {
-    <& /util/import_javascript.mas, classes => [ "jquerymigrate", "jquery.dataTables-min", "jquery.dataTables-buttons-min", "jszip-min", "pdfmake.pdfmake-min", "pdfmake.vfs_fonts", "jquery.dataTables-buttons-bootstrap-min", "jquery.dataTables-buttons-html5-min", "jquery.dataTables-buttons-print-min", "jquery.dataTables-colReorder-min", "jquery.dataTables-select-min" ] &>
-% }
+
+<%perl>
+    my @datatables_classes = qw(
+        jquery.dataTables-buttons-min jszip-min pdfmake.pdfmake-min pdfmake.vfs_fonts
+        jquery.dataTables-buttons-bootstrap-min jquery.dataTables-buttons-html5-min
+        jquery.dataTables-buttons-print-min jquery.dataTables-colReorder-min jquery.dataTables-select-min
+    );
+    my @dt_migrate = $c->config->{production_server} ? qw(jquerymigrate-min jquery.dataTables-min) : qw(jquerymigrate jquery.dataTables);
+</%perl>
+<& /util/import_javascript.mas, classes => [ @dt_migrate, @datatables_classes ] &>
 
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">

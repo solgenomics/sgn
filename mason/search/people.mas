@@ -82,10 +82,6 @@
 
 </table>
 
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-
-
 <script>
 
 jQuery(document).ready(function () {
