@@ -67,6 +67,15 @@ has '_location_code_map' => (
     required => 0
 );
 
+has '_plot_name_template_map' => (
+    is => 'ro',
+    isa => 'HashRef',
+    writer => '_set_plot_name_template_map',
+    reader => '_get_plot_name_template_map',
+    predicate => '_has_plot_name_template_map',
+    required => 0
+);
+
 has 'trial_stock_type' => (
     isa => 'Str',
     is => 'rw',
