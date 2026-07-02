@@ -65,7 +65,6 @@ $identifier_prefix => ''
 </div>
 
 
-<& /util/import_javascript.mas, classes => [] &>
 <&| /page/info_section.mas, title => 'Member of', collapsible=>1, collapsed=>0 &>
     <div class = "well well-sm">
         <div class = "panel panel-default">

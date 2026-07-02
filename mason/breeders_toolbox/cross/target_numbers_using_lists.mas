@@ -2,7 +2,6 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 
 <style>

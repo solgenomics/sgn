@@ -2,7 +2,6 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 
 <&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate(s)', subtitle => '<font color="red">Deletion cannot be undone. Cannot delete any plate associated with genotyping data</font>', collapsible=>1, collapsed=>1 &>

@@ -6,7 +6,6 @@ $stock_types     => []
 $editable_vector_props => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
 
 <div class="container-fluid">
 

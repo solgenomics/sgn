@@ -2,7 +2,6 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 <a href="/search/download_cross_entries" class="btn btn-sm btn-default">Download All Cross Entries</a>
 </br>

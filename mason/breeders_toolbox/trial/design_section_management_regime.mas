@@ -4,7 +4,6 @@ $management_factor_types => (),
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 <div class="well well-sm">
 

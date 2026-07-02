@@ -44,7 +44,6 @@ $stock_id
 </div>
 
 <table class="table table-hover table-bordered" id="stock_audit_results"> </table>
-<& /util/import_javascript.mas, classes => [] &>
 
 <script>
 

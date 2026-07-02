@@ -14,7 +14,6 @@ $check_vendor_role =>undef
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 <& /page/page_title.mas, title => "Details for Order Number: $order_id" &>
 

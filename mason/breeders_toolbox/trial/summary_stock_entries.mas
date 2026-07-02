@@ -3,7 +3,6 @@ $trial_id
 $trial_stock_type
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 <div class="well well-sm">
     <div class="panel panel-default">

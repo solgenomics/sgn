@@ -3,7 +3,6 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
 
 <& /page/page_title.mas, title=>'Accession Usage' &>
 

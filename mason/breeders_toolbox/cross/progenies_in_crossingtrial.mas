@@ -2,7 +2,6 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 <div class="well well-sm">
     <div class="panel panel-default">

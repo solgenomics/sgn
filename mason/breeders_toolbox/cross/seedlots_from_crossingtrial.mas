@@ -6,7 +6,6 @@ $timestamp => localtime()
 $locations_by_program_json
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 <table class="table table-hover table-bordered" id="seedlots_from_crossingtrial_table">
 </table>

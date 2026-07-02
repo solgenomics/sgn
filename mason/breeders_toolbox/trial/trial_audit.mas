@@ -3,7 +3,6 @@ $trial_id
 $project_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 
 <table class="table table-hover table-bordered" id="audit_results">
