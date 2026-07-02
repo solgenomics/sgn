@@ -145,6 +145,23 @@ sub generate_experimental_design_POST : Args(0) {
     my $plot_width = $c->req->param('plot_width');
     my $plot_length = $c->req->param('plot_length');
 
+    my $breeding_program_name_param = $c->req->param('breeding_program_name');
+    if ($breeding_program_name_param) {
+        $trial_design->set_breeding_program_name($breeding_program_name_param);
+    }
+
+    my $plot_name_template_param = $c->req->param('plot_name_template');
+    if ($plot_name_template_param) {
+        my $template = eval { $json->decode($plot_name_template_param) };
+        if ($template) {
+            my ($format_name) = keys %$template;
+            my $name_attributes = $template->{$format_name}->{'name_attributes'} || [];
+            my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+            my $attrs_ok = !grep { ref $_ eq 'HASH' ? 0 : !$valid_attrs{$_} } @$name_attributes;
+            $trial_design->set_plot_name_template($plot_name_template_param) if $attrs_ok;
+        }
+    }
+
     if ( !$start_number ) {
         $c->stash->{rest} = { error => "You need to select the starting plot number."};
 
@@ -673,6 +690,10 @@ sub save_experimental_design_POST : Args(0) {
         }
         if ($plot_length){
             $trial_info_hash{plot_length} = $plot_length;
+        }
+        my $plot_name_template = $c->req->param('plot_name_template');
+        if ($plot_name_template) {
+            $trial_info_hash{plot_name_template} = $plot_name_template;
         }
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
 
