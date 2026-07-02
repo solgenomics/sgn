@@ -186,7 +186,7 @@ jQuery(document).ready( function() {
 
     jQuery("#filter_by_vector_construct_submit").click(function() {
         var vector_construct = jQuery("#filter_by_vector_construct").val();
-        var item_type = jQuery("#filter_by_item_type").val();
+        var item_type = 'transgenic';
         jQuery('#catalog_transgenic_lines_table').DataTable( {
             'autoWidth': false,
             'search':'applied',

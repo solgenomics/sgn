@@ -334,7 +334,9 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
     my $catalog_stock_property_value = $catalog_info[2];
     my $item_type = $c->req->param('item_type');
     my $vector_construct = $c->req->param('vector_construct');
-    print STDERR "AJAX VECTOR CONSTRUCT =".Dumper($vector_construct);
+    if ($vector_construct eq '') {
+        $vector_construct = undef;
+    }
     my @catalog_items;
     my %return;
 
