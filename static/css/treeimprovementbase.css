@@ -866,6 +866,11 @@ table.dataTable td.dt-type-numeric,
 table.dataTable td.dt-type-date {
     text-align: left !important;
 }
+
+.dt-scroll {
+    background-color: white;
+}
+
 /*.table>tbody>tr>td, */
 
 /*
