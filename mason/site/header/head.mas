@@ -50,9 +50,13 @@
 
 <%perl>
     my @all_environments = qw(
-        jquery.dataTables-buttons-min jszip-min pdfmake.pdfmake-min pdfmake.vfs_fonts
-        jquery.dataTables-buttons-bootstrap-min jquery.dataTables-buttons-html5-min
-        jquery.dataTables-buttons-print-min jquery.dataTables-colReorder-min jquery.dataTables-select-min
+        jszip-min pdfmake.pdfmake-min pdfmake.vfs_fonts
+        jquery.dataTables-buttons-min
+        jquery.dataTables-buttons-bootstrap-min
+        jquery.dataTables-buttons-html5-min
+        jquery.dataTables-buttons-print-min
+        jquery.dataTables-colReorder-min
+        jquery.dataTables-select-min
     );
     my @current_environment = $c->config->{production_server} ? qw(jquerymigrate-min jquery.dataTables-min) : qw(jquerymigrate jquery.dataTables);
 </%perl>
