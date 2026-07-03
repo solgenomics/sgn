@@ -174,7 +174,8 @@ jQuery(document).ready( function() {
                             <button class="btn btn-success edit_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-pencil"></span></button>`;
                         }
                     }
-                ]
+                ],
+                'scrollX': true,
             });
 
         } catch (error) {

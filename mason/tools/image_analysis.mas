@@ -508,7 +508,12 @@ jQuery(document).ready(function(){
                         var table = jQuery('#image_analysis_result_table').DataTable( {
                             "destroy" : true,
                             "data": response.results.table_data,
-                            "dom": 'Bfrtip',
+                            "layout": {
+                                topStart: 'buttons',
+                                topEnd: 'search',
+                                bottomStart: 'info',
+                                bottomEnd: 'paging'
+                            },
                             "buttons":  [
                                 'copy', 'excel', 'csv', 'pdf'
                             ],

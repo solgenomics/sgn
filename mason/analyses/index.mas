@@ -95,11 +95,13 @@ Lukas Mueller <lam87@cornell.edu>
 <script>
 jQuery(document).ready(function(){
     jQuery('#analyses_by_user_table').DataTable({
-        'ajax': { 'url': '/ajax/analyses/by_user' }
+        'ajax': { 'url': '/ajax/analyses/by_user' },
+        'scrollX': true,
     });
 
     jQuery('#models_by_user_table').DataTable({
-        'ajax': { 'url': '/ajax/analyses/models/by_user' }
+        'ajax': { 'url': '/ajax/analyses/models/by_user' },
+        'scrollX': true,
     });
 });
 </script>

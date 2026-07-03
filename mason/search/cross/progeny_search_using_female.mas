@@ -108,7 +108,8 @@ jQuery(document).ready(function (){
                 data:{'pedigree_female_parent':jQuery('#pedigree_female_parent').val(),
                     'pedigree_male_parent':jQuery('#pedigree_male_parent').val(),
                     }
-            }
+            },
+            'scrollX': true,
         });
 
         jQuery('#pedigree_female_male_search_results').on( 'draw.dt', function (){
@@ -137,7 +138,8 @@ jQuery(document).ready(function (){
             'destroy': true,
             'ajax': {'url':'/ajax/search/progenies',
                 'data':{'pedigree_female_parent':jQuery('#pedigree_female_parent').val()},
-            }
+            },
+            'scrollX': true,
         });
 
         jQuery('#pedigree_female_male_search_results').on( 'draw.dt', function (){

@@ -108,7 +108,8 @@ jQuery(document).ready(function (){
             'ajax':{'url':'/ajax/search/crosses',
                 'data':{'female_parent':jQuery('#cross_female_parent').val(),
                     'male_parent':jQuery('#cross_male_parent').val()},
-            }
+            },
+            'scrollX': true,
         });
 
         jQuery('#cross_female_male_search_results').on( 'draw.dt', function (){
@@ -137,7 +138,8 @@ jQuery(document).ready(function (){
             'destroy': true,
             'ajax':{'url':'/ajax/search/crosses',
                 data:{'female_parent':jQuery('#cross_female_parent').val()},
-            }
+            },
+            'scrollX': true,
         });
 
         jQuery('#cross_female_male_search_results').on( 'draw.dt', function (){

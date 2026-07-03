@@ -64,6 +64,7 @@ jQuery(document).ready(function (){
                     'accession_list_id': accession_list_id,
                 }
             },
+            'scrollX': true,
             columns: [
                 {
                     title: "Female Parent",

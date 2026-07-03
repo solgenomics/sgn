@@ -133,12 +133,14 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
                   bottomEnd: 'paging'
               },
               "columns": tableCols,
-              "buttons": buttons
+              "buttons": buttons,
+              "scrollX": true,
         });
       } else {
         gfilter.results_table = $(table_selector).DataTable({
             data: data,
             "columns": tableCols,
+            "scrollX": true,
         });
       }
 

@@ -91,7 +91,8 @@ jQuery(document).ready(function (){
                     html += "<option value='" + response.data[i][0] + "'>" + response.data[i][0] + "</option>";
                 }
                 jQuery('#female_parent').html(html);
-            }
+            },
+            scrollX: true,
         });
     }, 150));
 
@@ -105,7 +106,8 @@ jQuery(document).ready(function (){
             'destroy': true,
             'ajax': {'url':'/ajax/search/progenies',
                 data:{'pedigree_male_parent':jQuery('#male_parent').val()},
-            }
+            },
+            'scrollX': true
         });
 
         jQuery('#pedigree_male_female_search_results').on( 'draw.dt', function (){
@@ -135,7 +137,8 @@ jQuery(document).ready(function (){
                 data:{'pedigree_female_parent':jQuery('#female_parent').val(),
                     'pedigree_male_parent':jQuery('#male_parent').val(),
                     }
-            }
+            },
+            'scrollX': true
         });
 
         jQuery('#pedigree_male_female_search_results').on( 'draw.dt', function (){

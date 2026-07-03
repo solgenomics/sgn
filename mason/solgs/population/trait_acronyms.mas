@@ -31,8 +31,7 @@ $training_pop_id => undef;
     title       => "Acronyms legend",
   &>
 
-  
-  <div id="trait_acronyms_div" style="display:none">
+  <div id="trait_acronyms_div" style="display:none; overflow-x: auto">
     <div id="acronyms_message"  class="message"></div>
 
       <table class="table" id="trait_acronyms_table" style="text-align: left;">
