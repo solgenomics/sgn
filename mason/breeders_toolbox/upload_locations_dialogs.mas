@@ -1,7 +1,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jquery.iframe-post-form', 'jszip-min','buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min'] &>
+<& /util/import_javascript.mas, classes => ['jquery.iframe-post-form'] &>
 
 <div class="modal fade" id="upload_locations_dialog" name="upload_locations_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadLocationsDialog">
   <div class="modal-dialog modal-lg" role="document">

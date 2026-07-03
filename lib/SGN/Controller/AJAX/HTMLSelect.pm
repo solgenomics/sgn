@@ -1830,7 +1830,7 @@ sub get_datasets_select :Path('/ajax/html/select/datasets') Args(0) {
 
     $html .= "</tbody></table>";
 
-    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table-".$num."').DataTable({ 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
+    $html .= "<script>jQuery(document).ready(function() { jQuery('#html-select-dataset-table-".$num."').DataTable({ 'scrollX': true, 'lengthMenu': [[2, 4, 6, 8, 10, 25, 50, -1], [2, 4, 6, 8, 10, 25, 50, 'All']] }); } );</script>";
 
     $c->stash->{rest} = { select => $html };
 }

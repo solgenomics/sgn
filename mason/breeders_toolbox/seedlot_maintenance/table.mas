@@ -14,7 +14,7 @@
     }
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.List', 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.List' ],  &>
 
 <br /><br />
 
@@ -333,7 +333,12 @@ function setupDataTable() {
 
     // Init DataTable
     DT = jQuery('#seedlot_maintenance_events').DataTable({
-        dom: 'Brt',
+        layout: {
+            topStart: 'buttons',
+            topEnd: null,
+            bottomStart: null,
+            bottomEnd: null
+        },
         autoWidth: false,
         pageLength: PAGE_SIZE,
         data: [],

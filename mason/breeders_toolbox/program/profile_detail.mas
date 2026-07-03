@@ -3,11 +3,6 @@ $user_id => undef
 $profile_id
 $profile_name
 </%args>
-
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-
 <& /page/page_title.mas, title => "Profile: '$profile_name'" &>
 
 <&| /page/info_section.mas, title => 'Details', collapsible=>1, collapsed=>0 &>

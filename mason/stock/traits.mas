@@ -3,8 +3,6 @@
 $stock_id
 </%args>
 
-<!-- & /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] & -->
-
 <table class="table table-hover table-bordered" id="traitlist_summary_data" >
 <thead>
   <tr>
@@ -17,8 +15,6 @@ $stock_id
 </thead>
 
 </table>
-
-<!-- link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css" -->
 
 <script>
 

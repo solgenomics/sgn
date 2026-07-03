@@ -2,8 +2,6 @@
 $trial_id
 </%args>
 
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
 
 
 <&| /page/info_section.mas, id=>'delete_genotyping_plate_section', title => 'Delete Genotyping Plate(s)', subtitle => '<font color="red">Deletion cannot be undone. Cannot delete any plate associated with genotyping data</font>', collapsible=>1, collapsed=>1 &>

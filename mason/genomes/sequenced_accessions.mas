@@ -2,8 +2,6 @@
 <%args>
 </%args>
 
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 <& /util/import_javascript.mas,
   entries => ["sequenced_accessions"]
 &>

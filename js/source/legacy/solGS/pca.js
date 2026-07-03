@@ -326,7 +326,8 @@ solGS.pca = {
             ],
             'rowId': function (a) {
                 return a[6];
-            }
+            },
+            'scrollX': true,
        
         });
 

@@ -6,8 +6,6 @@ $timestamp => localtime()
 $locations_by_program_json
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <table class="table table-hover table-bordered" id="seedlots_from_crossingtrial_table">
 </table>

@@ -3,7 +3,7 @@ $trial_id
 $trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect', 'jquery.iframe-post-form', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min', 'jquery', 'jquery.dataTables', 'jquery.dataTables-select-min', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'] &>
+<& /util/import_javascript.mas, classes => ['jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'] &>
 
 <script>
 
@@ -98,8 +98,6 @@ const regression = d3.regressionLinear()
         </div>
     </div>
 </div>
-
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <script>
 

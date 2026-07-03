@@ -760,7 +760,8 @@ solGS.cluster = {
       'pageLength': 5,
       'rowId': function (a) {
         return a[8]
-      }
+      },
+      'scrollX': true,
     });
 
     table.rows.add(data).draw();

@@ -9,8 +9,6 @@
     }
 </%perl>
 
-<& /util/import_javascript.mas, entries => [], classes => [ 'jquery', 'jquery.dataTables','jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
-
 <div id="marker_metadata_loading">
     <p>Loading...</p>
 </div>
@@ -82,7 +80,12 @@
             jQuery("#marker_metadata_delete").show();
             new jQuery("#marker_metadata_table").DataTable({
                 destroy: true,
-                dom: 'Bfrtip',
+                layout: {
+                    topStart: 'buttons',
+                    topEnd: 'search',
+                    bottomStart: 'info',
+                    bottomEnd: 'paging'
+                },
                 buttons: [
                     'pageLength',
                     {

@@ -10,7 +10,7 @@ $trial_name => undef
 <script type="text/javascript" async
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
 </script>
-<& /util/import_javascript.mas, classes => [ 'jqueryui', 'jquery.dataTables-min', 'jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreederSearch', 'CXGN.SelectionIndex' ] &>
 <& /page/page_title.mas, title=>"Build a Selection Index" &>
 
 <div class="panel panel-default">

@@ -5,9 +5,6 @@ $default_plant_material_id
 $default_plant_material_name
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 <div class="modal fade" id="add_transformation_identifier_dialog" tabindex="-1" role="dialog" aria-labelledby="addTransformationIdentifierDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content ui-front">

@@ -2,8 +2,6 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
 
@@ -38,7 +36,8 @@ jQuery(document).ready(function () {
             { title: "Soil Data", "data": "soil_data" },
             { title: "Download", "data": "download_link" },
             { title: "Delete", "data": "null", "render": function ( data, type, row ) { return "<a onclick='deleteSoilData("+row.prop_id+")'>Delete</a>"; } },
-        ]
+        ],
+        'scrollX': true,
     });
 
 });
