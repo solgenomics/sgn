@@ -305,8 +305,8 @@ a.btn {
 .btn:hover,
 button.modesel:hover,
 button.modesel_hi:hover,
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+div.dt-container .dt-paging .dt-paging-button.current:hover,
+div.dt-container .dt-paging .dt-paging-button:hover {
     background:       var(--button-hover-background);
     border-color:     var(--button-hover-border-color);
     box-shadow:       var(--button-hover-box-shadow);
@@ -400,8 +400,8 @@ button.modesel_hi {
     border-color:     var(--green-800);
 }
 
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button {
+div.dt-container .dt-paging .dt-paging-button.current,
+div.dt-container .dt-paging .dt-paging-button {
     border-radius:    var(--border-radius);
     padding:          0px;
 }
