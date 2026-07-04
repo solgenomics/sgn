@@ -169,7 +169,7 @@ jQuery(document).ready( function() {
 
     jQuery("#filter_by_item_type").change(function() {
         var item_type = jQuery("#filter_by_item_type").val();
-        jQuery('#catalog_transgenic_lines_table').DataTable( {
+        var catalog_table = jQuery('#catalog_transgenic_lines_table').DataTable( {
             'autoWidth': false,
             'search':'applied',
             'paging': false,
@@ -181,6 +181,18 @@ jQuery(document).ready( function() {
                   d.item_type  = item_type;
                 }
             }
+        });
+
+        catalog_table.on('draw', function() {
+            const checkbox = document.getElementsByName("catalog_item_select");
+            for (const each_item of selected_items) {
+                jQuery('input[name="catalog_item_select"]').each(function() {
+                    let item_name = jQuery(this).val();
+                    if (item_name == each_item) {
+                        this.checked = true;
+                    }
+                });
+             }
         });
     });
 
@@ -201,6 +213,18 @@ jQuery(document).ready( function() {
                 }
             }
         });
+
+        catalog_table.on('draw', function() {
+            const checkbox = document.getElementsByName("catalog_item_select");
+            for (const each_item of selected_items) {
+                jQuery('input[name="catalog_item_select"]').each(function() {
+                    let item_name = jQuery(this).val();
+                    if (item_name == each_item) {
+                        this.checked = true;
+                    }
+                });
+             }
+        });        
     });
 
     jQuery(document).on('focusin', function(e) {
