@@ -132,7 +132,7 @@ sub validate {
                 foreach my $measurement (@$measurements) {
                     my ($value, $timestamp) = @$measurement;
                     next if !$timestamp;
-                    if ($timestamp !~ m/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:[+-]\d{4})?$/) {
+                    if ($timestamp !~ m/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?(?:[+-]\d{4})?$/) {
                         $parse_result{'error'} = "Timestamp needs to be of form YYYY-MM-DD HH:MM:SS-0000 or YYYY-MM-DD HH:MM:SS+0000";
                         return \%parse_result;
                     }
