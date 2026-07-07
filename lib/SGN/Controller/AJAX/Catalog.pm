@@ -374,21 +374,6 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
                 push @catalog_items, [ qq{<a href="/stock/$item_id/view">$item_name</a>}, '', '', $species, "<input type='checkbox' name='catalog_item_select' value=$item_name>"]
             }
         } elsif (($item_type eq 'transgenic') || (defined $vector_construct)) {
-            my $vector_construct_stock_id;
-            if (defined $vector_construct) {
-                my $vector_construct_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'vector_construct', 'stock_type')->cvterm_id();
-                my $vector_construct_stock = $schema->resultset("Stock::Stock")->find ({
-                    uniquename => $vector_construct,
-                    type_id => $vector_construct_cvterm_id,
-                });
-                if (!$vector_construct_stock) {
-                    $return{error} = "Vector construct cound not be found in the database: $vector_construct!";
-                    return \%return;
-                } else {
-                    $vector_construct_stock_id = $vector_construct_stock->stock_id();
-                }
-            }
-
             my $results_based_on_type = $catalog_obj->compile_catalog_items_based_on_type();
             my @sorted_items_based_on_type = natkeysort {($_->[1])} @$results_based_on_type;
             foreach my $item (@sorted_items_based_on_type) {
@@ -407,7 +392,6 @@ sub get_catalog :Path('/ajax/catalog/items') :Args(0) {
 
         my $catalog_obj = CXGN::Stock::Catalog->new({ bcs_schema => $schema});
         my $catalog_ref = $catalog_obj->get_catalog_items();
-#    print STDERR "ITEM RESULTS =".Dumper($catalog_ref)."\n";
         my @catalog_list = @$catalog_ref;
         foreach my $catalog_item (@catalog_list) {
             my @item_details = ();
