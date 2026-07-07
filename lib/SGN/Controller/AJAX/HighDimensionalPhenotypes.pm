@@ -18,6 +18,10 @@ use JSON::XS;
 use List::Util qw(shuffle);
 use CXGN::AnalysisModel::GetModel;
 use CXGN::UploadFile;
+use CXGN::File;
+use CXGN::Job;
+use CXGN::Login;
+use CXGN::People::Person;
 use DateTime;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::Phenotypes::HighDimensionalPhenotypesSearch;
@@ -39,6 +43,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
@@ -49,6 +54,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $metadata_file_type = "nirs spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
+    my $ignore_warnings = $c->req->param('ignore_warnings') ? 1 : 0;
 
     my $protocol_id = $c->req->param('upload_nirs_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_nirs_spreadsheet_protocol_name');
@@ -77,38 +83,80 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     }
 
     my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'tissue_samples';
-    my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
 
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
+    my $archived_filename_with_path;
+    my $upload_original_name;
+    if (!$archived_file_id) {
+        my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'nirs',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            push @error_status, "Could not save file $upload_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
     } else {
-        push @success_status, "File $upload_original_name saved in archive.";
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = basename($archived_filename_with_path);
     }
-    unlink $upload_tempfile;
+
+    my $validation_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." nirs validation",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            is_validation => 1,
+            file_type => 'nirs',
+            user_name => $user_name,
+            file_id => $archived_file_id,
+            ignore_warnings => $ignore_warnings,
+            protocol_params => {
+                upload_nirs_spreadsheet_protocol_id => $protocol_id,
+                upload_nirs_spreadsheet_protocol_name => $protocol_name,
+                upload_nirs_spreadsheet_protocol_desc => $protocol_desc,
+                upload_nirs_spreadsheet_protocol_device_type => $protocol_device_type,
+                upload_nirs_spreadsheet_data_level => $data_level
+            }
+        }
+    });
+    $validation_job->update_status("submitted");
 
     my $archived_image_zipfile_with_path;
     my $nd_protocol_filename;
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $nd_protocol_filename);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -118,6 +166,8 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -132,11 +182,15 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file->{'error'}) {
         push @error_status, $parsed_file->{'error'};
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -190,11 +244,15 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $parsed_file_agg = $parser->parse($validate_type, $output_csv_filepath, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file_agg) {
         push @error_status, "Error parsing aggregated file.";
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file_agg->{'error'}) {
         push @error_status, $parsed_file_agg->{'error'};
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -232,17 +290,26 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         composable_validation_check_name=>$c->config->{composable_validation_check_name}
     });
 
-    my $warning_status;
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     if ($verified_error) {
         push @error_status, $verified_error;
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($verified_warning) {
         push @warning_status, $verified_warning;
+        $validation_job->additional_args->{warning_messages} = join("<br>", @warning_status);
     }
     push @success_status, "Aggregated file data verified. Plot names and trait names are valid.";
+    $validation_job->additional_args->{success_messages} = join("<br>", @success_status);
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $validation_job->update_status("failed");
+    } else {
+        $validation_job->update_status("finished");
+    }
 
     # print STDERR Dumper \@success_status;
     # print STDERR Dumper \@warning_status;
@@ -258,6 +325,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
@@ -268,6 +336,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $metadata_file_type = "nirs spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
+    my $ignore_warnings = $c->req->param('ignore_warnings') ? 1 : 0;
 
     my $protocol_id = $c->req->param('upload_nirs_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_nirs_spreadsheet_protocol_name');
@@ -296,38 +365,72 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     }
 
     my $data_level = $c->req->param('upload_nirs_spreadsheet_data_level') || 'tissue_samples';
-    my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
 
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
+    my $archived_filename_with_path;
+    my $upload_original_name;
+    if (!$archived_file_id) {
+        my $upload = $c->req->upload('upload_nirs_spreadsheet_file_input');
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'nirs',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            push @error_status, "Could not save file $upload_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
     } else {
-        push @success_status, "File $upload_original_name saved in archive.";
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = basename($archived_filename_with_path);
     }
-    unlink $upload_tempfile;
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." nirs upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            final_upload => 1,
+            file_type => 'nirs',
+            user_name => $user_name,
+            file_id => $archived_file_id
+        }
+    });
+    $upload_job->update_status("submitted");
 
     my $archived_image_zipfile_with_path;
     my $nd_protocol_filename;
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $nd_protocol_filename);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -337,6 +440,8 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -344,11 +449,15 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file->{'error'}) {
         push @error_status, $parsed_file->{'error'};
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -419,12 +528,16 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         archive_filename => $agg_file_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_type
+        user_role => $user_type,
+        file_type => 'nirs',
+        metadata_schema => $metadata_schema
     });
-    my $archived_agg_filename_with_path = $uploader->archive();
+    my (undef, $archived_agg_filename_with_path) = $uploader_agg->archive();
     my $md5_agg = $uploader_agg->get_md5($archived_agg_filename_with_path);
     if (!$archived_agg_filename_with_path) {
         push @error_status, "Could not save file $agg_file_name in archive.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     } else {
@@ -436,11 +549,15 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $parsed_file_agg = $parser->parse($validate_type, $archived_agg_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file_agg) {
         push @error_status, "Error parsing aggregated file.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file_agg->{'error'}) {
         push @error_status, $parsed_file_agg->{'error'};
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -517,10 +634,11 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         allow_repeat_measures=>$c->config->{allow_repeat_measures}
     });
 
-    my $warning_status;
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     if ($verified_error) {
         push @error_status, $verified_error;
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -532,6 +650,8 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
     if ($stored_phenotype_error) {
         push @error_status, $stored_phenotype_error;
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status};
         $c->detach();
     }
@@ -543,7 +663,18 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname}, } );
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status, figure => $output_plot_filepath_string, nd_protocol_id => $protocol_id};
+    if (scalar(@warning_status) > 0) {
+        $upload_job->additional_args->{warning_messages} = join("<br>", @warning_status);
+    }
+    $upload_job->additional_args->{success_messages} = join("<br>", @success_status);
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $upload_job->update_status("failed");
+    } else {
+        $upload_job->update_status("finished");
+    }
+
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, figure => $output_plot_filepath_string, nd_protocol_id => $protocol_id};
 }
 
 sub high_dimensional_phenotypes_transcriptomics_upload_verify : Path('/ajax/highdimensionalphenotypes/transcriptomics_upload_verify') : ActionClass('REST') { }
@@ -554,6 +685,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
@@ -564,6 +696,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $metadata_file_type = "transcriptomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
+    my $ignore_warnings = $c->req->param('ignore_warnings') ? 1 : 0;
 
     my $protocol_id = $c->req->param('upload_transcriptomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_transcriptomics_spreadsheet_protocol_name');
@@ -586,61 +719,121 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $high_dim_transcriptomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
     my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'tissue_samples';
-    my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
-    my $transcript_metadata_upload = $c->req->upload('upload_transcriptomics_transcript_metadata_spreadsheet_file_input');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $archived_metadata_file_id = $c->req->param('archived_metadata_file_id') || undef;
 
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    } else {
-        push @success_status, "File $upload_original_name saved in archive.";
-    }
-    unlink $upload_tempfile;
+    my $archived_filename_with_path;
+    my $upload_original_name;
+    if (!$archived_file_id) {
+        my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
 
-    my $upload_transcripts_original_name = $transcript_metadata_upload->filename();
-    my $upload_transcripts_tempfile = $transcript_metadata_upload->tempname;
-
-    my $uploader_transcripts = CXGN::UploadFile->new({
-        tempfile => $upload_transcripts_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_transcripts_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
-    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
-    if (!$archived_filename_transcripts_with_path) {
-        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'transcriptomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            push @error_status, "Could not save file $upload_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
     } else {
-        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = basename($archived_filename_with_path);
     }
-    unlink $upload_transcripts_tempfile;
+
+    my $archived_filename_transcripts_with_path;
+    my $upload_transcripts_original_name;
+    if (!$archived_metadata_file_id) {
+        my $transcript_metadata_upload = $c->req->upload('upload_transcriptomics_transcript_metadata_spreadsheet_file_input');
+        $upload_transcripts_original_name = $transcript_metadata_upload->filename();
+        my $upload_transcripts_tempfile = $transcript_metadata_upload->tempname;
+
+        my $uploader_transcripts = CXGN::UploadFile->new({
+            tempfile => $upload_transcripts_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_transcripts_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'transcriptomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_metadata_file_id, $archived_filename_transcripts_with_path) = $uploader_transcripts->archive();
+        my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+        if (!$archived_filename_transcripts_with_path) {
+            push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        }
+        unlink $upload_transcripts_tempfile;
+    } else {
+        my $archived_metadata_file = CXGN::File->new({
+            file_id => $archived_metadata_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_transcripts_with_path = $archived_metadata_file->get_path();
+        $upload_transcripts_original_name = basename($archived_filename_transcripts_with_path);
+    }
+
+    my $validation_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." transcriptomics validation",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            is_validation => 1,
+            file_type => 'transcriptomics',
+            user_name => $user_name,
+            file_id => $archived_file_id,
+            metadata_file_id => $archived_metadata_file_id,
+            ignore_warnings => $ignore_warnings,
+            protocol_params => {
+                upload_transcriptomics_spreadsheet_protocol_id => $protocol_id,
+                upload_transcriptomics_spreadsheet_protocol_name => $protocol_name,
+                upload_transcriptomics_spreadsheet_protocol_desc => $protocol_desc,
+                upload_transcriptomics_spreadsheet_protocol_unit => $protocol_unit,
+                upload_transcriptomics_spreadsheet_protocol_genome => $protocol_genome_version,
+                upload_transcriptomics_spreadsheet_protocol_annotation => $protocol_genome_annotation_version,
+                upload_transcriptomics_spreadsheet_data_level => $data_level
+            }
+        }
+    });
+    $validation_job->update_status("submitted");
 
     my $archived_image_zipfile_with_path;
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -650,6 +843,8 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -664,11 +859,15 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file->{'error'}) {
         push @error_status, $parsed_file->{'error'};
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -708,17 +907,26 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         composable_validation_check_name=>$c->config->{composable_validation_check_name}
     });
 
-    my $warning_status;
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     if ($verified_error) {
         push @error_status, $verified_error;
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($verified_warning) {
         push @warning_status, $verified_warning;
+        $validation_job->additional_args->{warning_messages} = join("<br>", @warning_status);
     }
     push @success_status, "File data verified. Plot names and trait names are valid.";
+    $validation_job->additional_args->{success_messages} = join("<br>", @success_status);
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $validation_job->update_status("failed");
+    } else {
+        $validation_job->update_status("finished");
+    }
 
     # print STDERR Dumper \@success_status;
     # print STDERR Dumper \@warning_status;
@@ -734,6 +942,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
@@ -744,6 +953,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $metadata_file_type = "transcriptomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
+    my $ignore_warnings = $c->req->param('ignore_warnings') ? 1 : 0;
 
     my $protocol_id = $c->req->param('upload_transcriptomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_transcriptomics_spreadsheet_protocol_name');
@@ -774,61 +984,111 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $high_dim_transcriptomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
     my $data_level = $c->req->param('upload_transcriptomics_spreadsheet_data_level') || 'tissue_samples';
-    my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
-    my $transcript_metadata_upload = $c->req->upload('upload_transcriptomics_transcript_metadata_spreadsheet_file_input');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $archived_metadata_file_id = $c->req->param('archived_metadata_file_id') || undef;
 
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    } else {
-        push @success_status, "File $upload_original_name saved in archive.";
-    }
-    unlink $upload_tempfile;
+    my $archived_filename_with_path;
+    my $upload_original_name;
+    if (!$archived_file_id) {
+        my $upload = $c->req->upload('upload_transcriptomics_spreadsheet_file_input');
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
 
-    my $upload_transcripts_original_name = $transcript_metadata_upload->filename();
-    my $upload_transcripts_tempfile = $transcript_metadata_upload->tempname;
-
-    my $uploader_transcripts = CXGN::UploadFile->new({
-        tempfile => $upload_transcripts_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_transcripts_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
-    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
-    if (!$archived_filename_transcripts_with_path) {
-        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'transcriptomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            push @error_status, "Could not save file $upload_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
     } else {
-        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = basename($archived_filename_with_path);
     }
-    unlink $upload_transcripts_tempfile;
+
+    my $archived_filename_transcripts_with_path;
+    my $upload_transcripts_original_name;
+    if (!$archived_metadata_file_id) {
+        my $transcript_metadata_upload = $c->req->upload('upload_transcriptomics_transcript_metadata_spreadsheet_file_input');
+        $upload_transcripts_original_name = $transcript_metadata_upload->filename();
+        my $upload_transcripts_tempfile = $transcript_metadata_upload->tempname;
+
+        my $uploader_transcripts = CXGN::UploadFile->new({
+            tempfile => $upload_transcripts_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_transcripts_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'transcriptomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_metadata_file_id, $archived_filename_transcripts_with_path) = $uploader_transcripts->archive();
+        my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+        if (!$archived_filename_transcripts_with_path) {
+            push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        }
+        unlink $upload_transcripts_tempfile;
+    } else {
+        my $archived_metadata_file = CXGN::File->new({
+            file_id => $archived_metadata_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_transcripts_with_path = $archived_metadata_file->get_path();
+        $upload_transcripts_original_name = basename($archived_filename_transcripts_with_path);
+    }
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." transcriptomics upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            final_upload => 1,
+            file_type => 'transcriptomics',
+            user_name => $user_name,
+            file_id => $archived_file_id,
+            metadata_file_id => $archived_metadata_file_id
+        }
+    });
+    $upload_job->update_status("submitted");
 
     my $archived_image_zipfile_with_path;
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -838,6 +1098,8 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -845,11 +1107,15 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file->{'error'}) {
         push @error_status, $parsed_file->{'error'};
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -938,10 +1204,11 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         allow_repeat_measures=>$c->config->{allow_repeat_measures}
     });
 
-    my $warning_status;
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     if ($verified_error) {
         push @error_status, $verified_error;
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -953,6 +1220,8 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
     if ($stored_phenotype_error) {
         push @error_status, $stored_phenotype_error;
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status};
         $c->detach();
     }
@@ -964,7 +1233,18 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new({ dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname} });
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status, nd_protocol_id => $protocol_id};
+    if (scalar(@warning_status) > 0) {
+        $upload_job->additional_args->{warning_messages} = join("<br>", @warning_status);
+    }
+    $upload_job->additional_args->{success_messages} = join("<br>", @success_status);
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $upload_job->update_status("failed");
+    } else {
+        $upload_job->update_status("finished");
+    }
+
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, nd_protocol_id => $protocol_id};
 }
 
 sub high_dimensional_phenotypes_metabolomics_upload_verify : Path('/ajax/highdimensionalphenotypes/metabolomics_upload_verify') : ActionClass('REST') { }
@@ -975,6 +1255,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
@@ -985,6 +1266,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $metadata_file_type = "metabolomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
+    my $ignore_warnings = $c->req->param('ignore_warnings') ? 1 : 0;
 
     my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
@@ -1038,61 +1320,141 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $high_dim_metabolomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
     my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'tissue_samples';
-    my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
-    my $metabolite_details_upload = $c->req->upload('upload_metabolomics_metabolite_details_spreadsheet_file_input');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $archived_metadata_file_id = $c->req->param('archived_metadata_file_id') || undef;
 
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    } else {
-        push @success_status, "File $upload_original_name saved in archive.";
-    }
-    unlink $upload_tempfile;
+    my $archived_filename_with_path;
+    my $upload_original_name;
+    if (!$archived_file_id) {
+        my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
 
-    my $upload_transcripts_original_name = $metabolite_details_upload->filename();
-    my $upload_transcripts_tempfile = $metabolite_details_upload->tempname;
-
-    my $uploader_transcripts = CXGN::UploadFile->new({
-        tempfile => $upload_transcripts_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_transcripts_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
-    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
-    if (!$archived_filename_transcripts_with_path) {
-        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'metabolomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            push @error_status, "Could not save file $upload_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
     } else {
-        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = basename($archived_filename_with_path);
     }
-    unlink $upload_transcripts_tempfile;
+
+    my $archived_filename_transcripts_with_path;
+    my $upload_transcripts_original_name;
+    if (!$archived_metadata_file_id) {
+        my $metabolite_details_upload = $c->req->upload('upload_metabolomics_metabolite_details_spreadsheet_file_input');
+        $upload_transcripts_original_name = $metabolite_details_upload->filename();
+        my $upload_transcripts_tempfile = $metabolite_details_upload->tempname;
+
+        my $uploader_transcripts = CXGN::UploadFile->new({
+            tempfile => $upload_transcripts_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_transcripts_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'metabolomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_metadata_file_id, $archived_filename_transcripts_with_path) = $uploader_transcripts->archive();
+        my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+        if (!$archived_filename_transcripts_with_path) {
+            push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        }
+        unlink $upload_transcripts_tempfile;
+    } else {
+        my $archived_metadata_file = CXGN::File->new({
+            file_id => $archived_metadata_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_transcripts_with_path = $archived_metadata_file->get_path();
+        $upload_transcripts_original_name = basename($archived_filename_transcripts_with_path);
+    }
+
+    my $validation_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." metabolomics validation",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            is_validation => 1,
+            file_type => 'metabolomics',
+            user_name => $user_name,
+            file_id => $archived_file_id,
+            metadata_file_id => $archived_metadata_file_id,
+            ignore_warnings => $ignore_warnings,
+            protocol_params => {
+                upload_metabolomics_spreadsheet_protocol_id => $protocol_id,
+                upload_metabolomics_spreadsheet_protocol_name => $protocol_name,
+                upload_metabolomics_spreadsheet_protocol_desc => $protocol_desc,
+                upload_metabolomics_spreadsheet_protocol_equipment_type => $protocol_equipment_type,
+                upload_metabolomics_spreadsheet_protocol_target => $protocol_target,
+                upload_metabolomics_spreadsheet_protocol_sample_collection_protocol => $protocol_sample_collection,
+                upload_metabolomics_spreadsheet_protocol_sample_extraction_protocol => $protocol_sample_extraction,
+                upload_metabolomics_spreadsheet_protocol_rawdata_transformation_protocol => $protocol_rawdata_transformation,
+                upload_metabolomics_spreadsheet_protocol_metabolite_identification_protocol => $protocol_metabolite_identification,
+                upload_metabolomics_spreadsheet_protocol_equipment_description => $protocol_equipment_desc,
+                upload_metabolomics_spreadsheet_protocol_data_process_description => $protocol_data_process_desc,
+                upload_metabolomics_spreadsheet_protocol_phenotype_type => $protocol_phenotype_type,
+                upload_metabolomics_spreadsheet_protocol_phenotype_units => $protocol_phenotype_units,
+                upload_metabolomics_spreadsheet_protocol_chromatography_system_brand => $protocol_chromatography_system_brand,
+                upload_metabolomics_spreadsheet_protocol_chromatography_column_brand => $protocol_chromatography_column_brand,
+                upload_metabolomics_spreadsheet_protocol_chromatography_type => $protocol_chromatography_type,
+                upload_metabolomics_spreadsheet_protocol_chromatography_AutoSampler_Model => $protocol_chromatography_autosampler_model,
+                upload_metabolomics_spreadsheet_protocol_chromatography_column_type => $protocol_chromatography_column_type,
+                upload_metabolomics_spreadsheet_protocol_chromatography_protocol => $protocol_chromatography_protocol,
+                upload_metabolomics_spreadsheet_protocol_mass_spectrometry_protocol => $protocol_mass_spectrometry_protocol,
+                upload_metabolomics_spreadsheet_protocol_ms_brand => $protocol_ms_brand,
+                upload_metabolomics_spreadsheet_protocol_ms_mass_analyzer => $protocol_ms_type,
+                upload_metabolomics_spreadsheet_protocol_ms_scan_polarity => $protocol_ms_instrument_type,
+                upload_metabolomics_spreadsheet_protocol_ms_ion_source => $protocol_ms_ion_mode,
+                upload_metabolomics_spreadsheet_protocol_ms_scan_MZ_Range => $protocol_ms_scan_mz_range,
+                upload_metabolomics_spreadsheet_protocol_publication => $protocol_publication,
+                upload_metabolomics_spreadsheet_data_level => $data_level
+            }
+        }
+    });
+    $validation_job->update_status("submitted");
 
     my $archived_image_zipfile_with_path;
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -1102,6 +1464,8 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -1116,11 +1480,15 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file->{'error'}) {
         push @error_status, $parsed_file->{'error'};
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -1158,17 +1526,26 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         composable_validation_check_name=>$c->config->{composable_validation_check_name}
     });
 
-    my $warning_status;
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     if ($verified_error) {
         push @error_status, $verified_error;
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($verified_warning) {
         push @warning_status, $verified_warning;
+        $validation_job->additional_args->{warning_messages} = join("<br>", @warning_status);
     }
     push @success_status, "File data verified. Plot names and trait names are valid.";
+    $validation_job->additional_args->{success_messages} = join("<br>", @success_status);
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $validation_job->update_status("failed");
+    } else {
+        $validation_job->update_status("finished");
+    }
 
     # print STDERR Dumper \@success_status;
     # print STDERR Dumper \@warning_status;
@@ -1184,6 +1561,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema");
     my ($user_id, $user_name, $user_type) = _check_user_login($c);
     my @success_status;
     my @error_status;
@@ -1194,6 +1572,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $metadata_file_type = "metabolomics spreadsheet";
     my $subdirectory = "spreadsheet_phenotype_upload";
     my $timestamp_included;
+    my $ignore_warnings = $c->req->param('ignore_warnings') ? 1 : 0;
 
     my $protocol_id = $c->req->param('upload_metabolomics_spreadsheet_protocol_id');
     my $protocol_name = $c->req->param('upload_metabolomics_spreadsheet_protocol_name');
@@ -1247,61 +1626,111 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $high_dim_metabolomics_protocol_prop_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'high_dimensional_phenotype_protocol_properties', 'protocol_property')->cvterm_id();
 
     my $data_level = $c->req->param('upload_metabolomics_spreadsheet_data_level') || 'tissue_samples';
-    my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
-    my $metabolite_details_upload = $c->req->upload('upload_metabolomics_metabolite_details_spreadsheet_file_input');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $archived_metadata_file_id = $c->req->param('archived_metadata_file_id') || undef;
 
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
 
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    my $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
-    } else {
-        push @success_status, "File $upload_original_name saved in archive.";
-    }
-    unlink $upload_tempfile;
+    my $archived_filename_with_path;
+    my $upload_original_name;
+    if (!$archived_file_id) {
+        my $upload = $c->req->upload('upload_metabolomics_spreadsheet_file_input');
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
 
-    my $upload_transcripts_original_name = $metabolite_details_upload->filename();
-    my $upload_transcripts_tempfile = $metabolite_details_upload->tempname;
-
-    my $uploader_transcripts = CXGN::UploadFile->new({
-        tempfile => $upload_transcripts_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_transcripts_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_type
-    });
-    my $archived_filename_transcripts_with_path = $uploader_transcripts->archive();
-    my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
-    if (!$archived_filename_transcripts_with_path) {
-        push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
-        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
-        $c->detach();
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'metabolomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            push @error_status, "Could not save file $upload_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_original_name saved in archive.";
+        }
+        unlink $upload_tempfile;
     } else {
-        push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = basename($archived_filename_with_path);
     }
-    unlink $upload_transcripts_tempfile;
+
+    my $archived_filename_transcripts_with_path;
+    my $upload_transcripts_original_name;
+    if (!$archived_metadata_file_id) {
+        my $metabolite_details_upload = $c->req->upload('upload_metabolomics_metabolite_details_spreadsheet_file_input');
+        $upload_transcripts_original_name = $metabolite_details_upload->filename();
+        my $upload_transcripts_tempfile = $metabolite_details_upload->tempname;
+
+        my $uploader_transcripts = CXGN::UploadFile->new({
+            tempfile => $upload_transcripts_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_transcripts_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_type,
+            file_type => 'metabolomics',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_metadata_file_id, $archived_filename_transcripts_with_path) = $uploader_transcripts->archive();
+        my $md5_transcripts = $uploader_transcripts->get_md5($archived_filename_transcripts_with_path);
+        if (!$archived_filename_transcripts_with_path) {
+            push @error_status, "Could not save file $upload_transcripts_original_name in archive.";
+            $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+            $c->detach();
+        } else {
+            push @success_status, "File $upload_transcripts_original_name saved in archive.";
+        }
+        unlink $upload_transcripts_tempfile;
+    } else {
+        my $archived_metadata_file = CXGN::File->new({
+            file_id => $archived_metadata_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_transcripts_with_path = $archived_metadata_file->get_path();
+        $upload_transcripts_original_name = basename($archived_filename_transcripts_with_path);
+    }
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        name => basename($archived_filename_with_path)." metabolomics upload",
+        job_type => 'upload',
+        finish_logfile => $c->config->{job_finish_log},
+        additional_args => {
+            final_upload => 1,
+            file_type => 'metabolomics',
+            user_name => $user_name,
+            file_id => $archived_file_id,
+            metadata_file_id => $archived_metadata_file_id
+        }
+    });
+    $upload_job->update_status("submitted");
 
     my $archived_image_zipfile_with_path;
     my $validate_file = $parser->validate($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$validate_file) {
         push @error_status, "Archived file not valid: $upload_original_name.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -1311,6 +1740,8 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         if ($validate_file->{'error'}) {
             push @error_status, $validate_file->{'error'};
         }
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -1318,11 +1749,15 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $parsed_file = $parser->parse($validate_type, $archived_filename_with_path, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $archived_filename_transcripts_with_path);
     if (!$parsed_file) {
         push @error_status, "Error parsing file $upload_original_name.";
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
     if ($parsed_file->{'error'}) {
         push @error_status, $parsed_file->{'error'};
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -1428,10 +1863,11 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         allow_repeat_measures=>$c->config->{allow_repeat_measures}
     });
 
-    my $warning_status;
     my ($verified_warning, $verified_error) = $store_phenotypes->verify();
     if ($verified_error) {
         push @error_status, $verified_error;
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status };
         $c->detach();
     }
@@ -1443,6 +1879,8 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my ($stored_phenotype_error, $stored_phenotype_success) = $store_phenotypes->store();
     if ($stored_phenotype_error) {
         push @error_status, $stored_phenotype_error;
+        $upload_job->additional_args->{error_messages} = join("<br>", @error_status);
+        $upload_job->update_status("failed");
         $c->stash->{rest} = {success => \@success_status, error => \@error_status};
         $c->detach();
     }
@@ -1454,7 +1892,18 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
     my $bs = CXGN::BreederSearch->new({ dbh=>$c->dbc->dbh, dbname=>$c->config->{dbname} });
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'fullview', 'concurrent', $c->config->{basepath});
 
-    $c->stash->{rest} = {success => \@success_status, error => \@error_status, nd_protocol_id => $protocol_id};
+    if (scalar(@warning_status) > 0) {
+        $upload_job->additional_args->{warning_messages} = join("<br>", @warning_status);
+    }
+    $upload_job->additional_args->{success_messages} = join("<br>", @success_status);
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $upload_job->update_status("failed");
+    } else {
+        $upload_job->update_status("finished");
+    }
+
+    $c->stash->{rest} = {success => \@success_status, warning => \@warning_status, error => \@error_status, nd_protocol_id => $protocol_id};
 }
 
 sub high_dimensional_phenotypes_download_file : Path('/ajax/highdimensionalphenotypes/download_file') : ActionClass('REST') { }

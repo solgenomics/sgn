@@ -2792,10 +2792,69 @@ export function submit_upload_job() {
             });
             break;
         case 'nirs' :
+            jQuery.ajax({
+                url: '/ajax/highdimensionalphenotypes/nirs_upload_verify',
+                type : 'POST',
+                data : {
+                    'archived_file_id' : submit_params.file_id,
+                    'upload_nirs_spreadsheet_protocol_id' : submit_params.additional_args.nirs_protocol_id,
+                    'ignore_warnings' : ignore_warnings ? 1 : 0
+                },
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting NIRS validation, check console.");
+                    return;
+                }
+            });
             break;
         case 'metabolomics' :
+            jQuery.ajax({
+                url: '/ajax/highdimensionalphenotypes/metabolomics_upload_verify',
+                type : 'POST',
+                data : {
+                    'archived_file_id' : submit_params.file_id,
+                    'archived_metadata_file_id' : submit_params.additional_args.details_file_id,
+                    'upload_metabolomics_spreadsheet_protocol_id' : submit_params.additional_args.metabolomics_protocol_id,
+                    'ignore_warnings' : ignore_warnings ? 1 : 0
+                },
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting metabolomics validation, check console.");
+                    return;
+                }
+            });
             break;
         case 'transcriptomics' :
+            jQuery.ajax({
+                url: '/ajax/highdimensionalphenotypes/transcriptomics_upload_verify',
+                type : 'POST',
+                data : {
+                    'archived_file_id' : submit_params.file_id,
+                    'archived_metadata_file_id' : submit_params.additional_args.details_file_id,
+                    'upload_transcriptomics_spreadsheet_protocol_id' : submit_params.additional_args.transcriptomics_protocol_id,
+                    'ignore_warnings' : ignore_warnings ? 1 : 0
+                },
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting transcriptomics validation, check console.");
+                    return;
+                }
+            });
             break;
         case 'images' :
             break;
@@ -2984,6 +3043,68 @@ export function commit_upload_job(job_id) {
                 },
                 error : function() {
                     alert("An error occurred storing pedigrees, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'nirs' :
+            jQuery.ajax({
+                url: '/ajax/highdimensionalphenotypes/nirs_upload_store',
+                type : 'POST',
+                data : Object.assign({
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                }, job.args.additional_args.protocol_params),
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred storing NIRS data, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'metabolomics' :
+            jQuery.ajax({
+                url: '/ajax/highdimensionalphenotypes/metabolomics_upload_store',
+                type : 'POST',
+                data : Object.assign({
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'archived_metadata_file_id' : job.args.additional_args.metadata_file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                }, job.args.additional_args.protocol_params),
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred storing metabolomics data, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'transcriptomics' :
+            jQuery.ajax({
+                url: '/ajax/highdimensionalphenotypes/transcriptomics_upload_store',
+                type : 'POST',
+                data : Object.assign({
+                    'archived_file_id' : job.args.additional_args.file_id,
+                    'archived_metadata_file_id' : job.args.additional_args.metadata_file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                }, job.args.additional_args.protocol_params),
+                success: function(response) {
+                    if (response.error) {
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred storing transcriptomics data, check console.");
                     return;
                 }
             });
