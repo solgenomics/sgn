@@ -16,7 +16,7 @@
         <div class="form-group">
                 <label class="col-sm-3 control-label"> New treatment name: </label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="ASCII characters only. Non-ASCII characters will be removed."/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="ASCII characters only. Non-ASCII characters and pipes (|)  will be removed."/>
                 </div>
             </div>
             <div class="form-group">
@@ -84,10 +84,17 @@
                 </div>
             </div>
             <div class="form-group" id="chain_parent_term_container">
-                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term. 
-Will be the treatment root term by default."></span>&nbsp;Chain to an existing term:</label>
+                <label class="col-sm-3 control-label" id="chain_parent_term"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="Should not be a variable term.
+Will be the treatment root term by default if none are added."></span>&nbsp;Chain to existing term(s):</label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_parent_term" name="new_treatment_parent_term" type="text" placeholder="Full name, as in 'Legacy experiment treatment|EXPERIMENT_TREATMENT:0000001'"/>
+                    <table style="width:70%;">
+                        <tr>
+                            <td><input class="form-control" id="new_treatment_parent_term" name="new_treatment_parent_term" type="text" placeholder="Full name, as in 'Legacy experiment treatment|EXPERIMENT_TREATMENT:0000001'"/></td>
+                            <td><button id="new_treatment_add_parent_btn" class="btn btn-small btn-success">+</button></td>
+                        </tr>
+                    </table>
+                    <ul id="new_treatment_parents" style="text-align:left;width:70%;padding-left:1em;list-style-type:disc;"></ul>
+                    <button id="new_treatment_remove_parent_btn" class="btn btn-small btn-danger" style="display:none;float:left;"><span class="glyphicon glyphicon-trash"></span></button>
                 </div>
             </div>
         </form>
@@ -123,7 +130,11 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
             });
             categories = cat_list.join('/');
             let category_details = cat_details_list.join('/');
-            let parent_term = jQuery('#new_treatment_parent_term').val();
+            let parent_terms = [];
+            jQuery('#new_treatment_parents li').each(function() {
+                parent_terms.push(jQuery(this).text());
+            });
+            let parent_terms_json = JSON.stringify(parent_terms);
 
             jQuery.ajax({
                 url: '/ajax/treatment/create',
@@ -136,7 +147,7 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
                     maximum : maximum,
                     categories : categories,
                     category_details : category_details,
-                    parent_term : parent_term,
+                    parent_terms : parent_terms_json,
                     repeat_type : repeat_type
                 },
                 success: function(response) { 
@@ -158,6 +169,24 @@ Will be the treatment root term by default."></span>&nbsp;Chain to an existing t
 
         jQuery('#new_treatment_parent_term').autocomplete({
             source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
+        });
+
+        jQuery('#new_treatment_add_parent_btn').on('click', function(e) {
+            e.preventDefault();
+            let parent_term = jQuery('#new_treatment_parent_term').val().trim();
+            if (parent_term) {
+                jQuery('<li>').text(parent_term).appendTo('#new_treatment_parents');
+                jQuery('#new_treatment_remove_parent_btn').show();
+                jQuery('#new_treatment_parent_term').val('');
+            }
+        });
+
+        jQuery('#new_treatment_remove_parent_btn').on('click', function(e) {
+            e.preventDefault();
+            jQuery('#new_treatment_parents li:last').remove();
+            if (jQuery('#new_treatment_parents li').length === 0) {
+                jQuery('#new_treatment_remove_parent_btn').hide();
+            }
         });
 
         jQuery('#new_treatment_format_select').on('change', function () {
