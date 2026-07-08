@@ -2064,7 +2064,11 @@ sub add_published {
     my $key = time();
 
     # Set output directory
-    my $output_directory = "$base_directory/" . $self->sp_dataset_id . "/$key";
+    my $dataset_directory = "$base_directory/" . $self->sp_dataset_id;
+    unless (-d $dataset_directory) {
+        mkpath($dataset_directory) or return { error => "Couldn't mkdir $dataset_directory: $!" };
+    }
+    my $output_directory = "$dataset_directory/$key";
     unless (-d $output_directory) {
         mkpath($output_directory) or return { error => "Couldn't mkdir $output_directory: $!" };
     }
