@@ -58,8 +58,6 @@ $order_properties_dialog => undef
                 </center>
             </div>
         </div>
-
-
         </br>
         <div class = "panel panel-default">
             <div class = "panel-body">
@@ -224,7 +222,7 @@ jQuery(document).ready( function() {
                     }
                 });
              }
-        });        
+        });
     });
 
     jQuery(document).on('focusin', function(e) {
@@ -241,34 +239,6 @@ jQuery(document).ready( function() {
         jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
         itemForm (selected_items);
     })
-
-//    jQuery(function() {
-//        jQuery('input:checkbox[name="catalog_item_select"]').on('change', function() {
-//            alert('test');
-//            var item_name;
-//            var item_index;
-//            item_name = jQuery(this).val();
-//            item_index = selected_items.indexOf(item_name);
-//            jQuery(this).is(":checked") ? selected_items.push(item_name) : selected_items.splice(item_index,1);
-//            itemForm (selected_items);
-//        });
-//    });
-
-//    jQuery('#order_form_link').click(function(){
-//        jQuery('input[name="catalog_item_select"]:checked').each(function() {
-//            let item_name = jQuery(this).val();
-//            if(!selected_items.includes(item_name)) {
-//                selected_items.push(jQuery(this).val());
-//            }
-//        });
-//        if (selected_items.length == 0){
-//            alert('Please select what you would like to request');
-//        } else {
-//            itemForm(selected_items);
-//            requestForm(order_properties_dialog);
-//            jQuery('#request_form_dialog').modal('show');
-//        }
-//    });
 
     jQuery(document).on('click', '.selected_item_remove', function() {
         jQuery(this).closest('tr').remove();
