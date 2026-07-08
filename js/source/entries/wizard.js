@@ -12,6 +12,7 @@ const initialtypes = [
     "genotyping_protocols",
     "genotyping_projects",
     "locations",
+    "populations",
     "seedlots",
     "trait_components",
     "traits",
@@ -36,6 +37,7 @@ const types = {
   "subplots": "Subplots",
   "plants": "Plants",
   "tissue_sample": "Tissue Samples",
+  "populations": "Populations",
   "seedlots": "Seedlots",
   "trait_components": "Trait Components",
   "traits": "Traits",
@@ -79,6 +81,8 @@ function makeURL(target, id) {
         case "genotyping_plates":
         case "genotyping_projects":
           return document.location.origin + `/breeders/trial/${id}`;
+        case "populations":
+          return document.location.origin + `/stock/${id}/view`;
         case "trial_designs":
         case "trial_types":
         case "years":

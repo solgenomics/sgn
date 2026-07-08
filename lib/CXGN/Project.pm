@@ -3279,7 +3279,8 @@ sub create_plant_entities {
     my $plant_owner_username = shift;
     my $rows_per_plot = shift;
     my $cols_per_plot = shift;
-    my $phenotype_store_config = shift; 
+    my $phenotype_store_config = shift;
+    my $additional_plants = shift;
 
     my $chado_schema = $self->bcs_schema();
 
@@ -3321,23 +3322,63 @@ sub create_plant_entities {
         # my $row_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'row_number', 'stock_property')->cvterm_id();
         #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
+        if (!$additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $plants_per_plot });
+            }
+        }
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
         foreach my $plot (keys %$design) {
             #print STDERR " ... creating plants for plot $plot...\n";
             my $plot_row = $chado_schema->resultset("Stock::Stock")->find( { uniquename => $design->{$plot}->{plot_name}, type_id=>$plot_cvterm });
+            my $existing_count = 0;
+            if ($additional_plants) {
+                my $existing_plants = $design->{$plot}->{plant_names};
+                $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+            }
+
             my @plant_coords = ();
 
             if ($rows_per_plot && $cols_per_plot) { #if these are defined then we need to record row col data for plants
                 foreach my $row (1..$rows_per_plot) {
                     foreach my $col (1..$cols_per_plot) {
                         push @plant_coords, "$row,$col";
+                    }
+                }
+                if ($additional_plants) {
+                    my $total_capacity = $rows_per_plot * $cols_per_plot;
+                    if ($existing_count + $plants_per_plot > $total_capacity) {
+                        die "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_plot rows x $cols_per_plot cols).";
+                    }
+                    my %occupied_coords;
+                    my $existing_plants_ref = $design->{$plot}->{plant_names} // [];
+                    if (@$existing_plants_ref) {
+                        my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                            { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                        );
+                        while (my $ep = $ep_rs->next()) {
+                            my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                            my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                            if ($rp && $cp) {
+                                $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                            }
+                        }
+                    }
+                    @plant_coords = grep { !$occupied_coords{$_} } @plant_coords;
+                    if (scalar(@plant_coords) < $plants_per_plot) {
+                        die "Cannot add $plants_per_plot plant(s) to plot $design->{$plot}->{plot_name}: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_plot}x${cols_per_plot} grid.";
                     }
                 }
             }
@@ -3351,7 +3392,9 @@ sub create_plant_entities {
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            foreach my $plant_index_number (1..$plants_per_plot) {
+            my $start_index = $existing_count + 1;
+            my $end_index   = $existing_count + $plants_per_plot;
+            foreach my $plant_index_number ($start_index..$end_index) {
                 my $plant_name = $parent_plot_name."_plant_$plant_index_number";
                 #print STDERR "... ... creating plant $plant_name...\n";
 
@@ -3428,16 +3471,16 @@ sub create_plant_entities {
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return 0;
+        return {error => "An error occurred creating the plant entities. $@"};
     }
 
     print STDERR "Plant entities created.\n";
-    return 1;
+    return {success => 1};
 }
 
 =head2 function save_plant_entries()
 
- Usage:        $trial->save_plant_entries(\%data, $plants_per_plot, $inherits_plot_treatments, $owner_id, $phenotype_store_config);
+ Usage:        $trial->save_plant_entries(\%data, $plants_per_plot, $inherits_plot_treatments, $owner_id, $phenotype_store_config, $add_additional_plants);
  Desc:         Some trials require plant-level data. It is possible to upload
                 plant_names to save.
  Ret:
@@ -3495,7 +3538,7 @@ sub save_plant_entries {
         my $col_num_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'col_number', 'stock_property')->cvterm_id();
         my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property')->cvterm_id();
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
-        #my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
+        # my $plants_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plants_per_plot', 'project_property')->cvterm_id();
 
         # my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
         #     type_id => $has_plants_cvterm,
@@ -3509,9 +3552,19 @@ sub save_plant_entries {
                 value => $plants_per_plot,
                 project_id => $self->get_trial_id(),
             });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $plants_per_plot });
+            }
         }
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
+
+        my %design_by_plot_name = map { $design->{$_}->{plot_name} => $design->{$_} } keys %$design;
 
         while( my ($key, $val) = each %$parsed_data){
             my $plot_stock_id = $key;
@@ -3528,7 +3581,36 @@ sub save_plant_entries {
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            my $plant_index_number = 1;
+            my $existing_count = 0;
+            if ($add_additional_plants) {
+                my $design_entry = $design_by_plot_name{$parent_plot_name};
+                my $existing_plants = $design_entry ? $design_entry->{plant_names} : undef;
+                $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+            }
+
+            if ($add_additional_plants && $val->{plant_coords}) {
+                my $existing_plants_ref = $design_by_plot_name{$parent_plot_name} ? ($design_by_plot_name{$parent_plot_name}->{plant_names} // []) : [];
+                if (@$existing_plants_ref) {
+                    my %occupied_coords;
+                    my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                        { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                    );
+                    while (my $ep = $ep_rs->next()) {
+                        my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                        my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                        if ($rp && $cp) {
+                            $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                        }
+                    }
+                    my @filtered_coords = grep { !$occupied_coords{$_} } @{$val->{plant_coords}};
+                    if (scalar(@filtered_coords) < scalar(@{$val->{plant_names}})) {
+                        die "Cannot add plants to plot $parent_plot_name: insufficient unoccupied grid positions after filtering occupied coordinates.";
+                    }
+                    $val->{plant_coords} = \@filtered_coords;
+                }
+            }
+
+            my $plant_index_number = $existing_count + 1;
             my $plant_names = $val->{plant_names};
             my $plant_index_numbers = $val->{plant_index_numbers};
             my $increment = 0;
@@ -3637,6 +3719,7 @@ sub create_plant_subplot_entities {
     my $rows_per_subplot = shift;
     my $cols_per_subplot = shift;
     my $phenotype_store_config = shift;
+    my $additional_plants = shift;
 
     my $chado_schema = $self->bcs_schema();
 
@@ -3688,11 +3771,21 @@ sub create_plant_subplot_entities {
         my $subplots_per_plot = $subplots_per_plot_row->value();
         my $plants_per_plot = $subplots_per_plot * $plants_per_subplot;
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
+        if (!$additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + ($plants_per_subplot * $subplots_per_plot) });
+            }
+        }
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
@@ -3722,6 +3815,12 @@ sub create_plant_subplot_entities {
 
                 my $parent_subplot = $subplot_row->stock_id();
 
+                my $existing_count = 0;
+                if ($additional_plants) {
+                    my $existing_plants = $design->{$plot}->{subplots_plant_names}->{$subplot};
+                    $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+                }
+
                 my @plant_coords = ();
 
                 if ($rows_per_subplot && $cols_per_subplot) { #if these are defined then we need to record row col data for plants
@@ -3730,9 +3829,38 @@ sub create_plant_subplot_entities {
                             push @plant_coords, "$row,$col";
                         }
                     }
+                    if ($additional_plants) {
+                        my $total_capacity = $rows_per_subplot * $cols_per_subplot;
+                        if ($existing_count + $plants_per_subplot > $total_capacity) {
+                            die "Cannot add $plants_per_subplot plant(s) to subplot $subplot: $existing_count plant(s) already exist and the grid capacity is $total_capacity ($rows_per_subplot rows x $cols_per_subplot cols).";
+                        }
+                        # Query the actual row/col coordinates of existing plants so we exclude
+                        # only the slots that are genuinely occupied (the old grid may have had
+                        # different dimensions, so a positional splice would remove the wrong slots).
+                        my %occupied_coords;
+                        my $existing_plants_ref = $design->{$plot}->{subplots_plant_names}->{$subplot} // [];
+                        if (@$existing_plants_ref) {
+                            my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                                { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                            );
+                            while (my $ep = $ep_rs->next()) {
+                                my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                                my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                                if ($rp && $cp) {
+                                    $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                                }
+                            }
+                        }
+                        @plant_coords = grep { !$occupied_coords{$_} } @plant_coords;
+                        if (scalar(@plant_coords) < $plants_per_subplot) {
+                            die "Cannot add $plants_per_subplot plant(s) to subplot $subplot: only " . scalar(@plant_coords) . " unoccupied grid position(s) available within the ${rows_per_subplot}x${cols_per_subplot} grid.";
+                        }
+                    }
                 }
 
-                foreach my $plant_index_number (1..$plants_per_subplot) {
+                my $start_index = $existing_count + 1;
+                my $end_index   = $existing_count + $plants_per_subplot;
+                foreach my $plant_index_number ($start_index..$end_index) {
                     my $plant_name = $subplot."_plant_$plant_index_number";
                     # print STDERR "... ... ... creating plant $plant_name...\n";
                     foreach my $treatment (@{$treatments}) {
@@ -3810,17 +3938,17 @@ sub create_plant_subplot_entities {
     };
     if ($@) {
         print STDERR "An error occurred creating the plant entities. $@\n";
-        return 0;
+        return {error => "An error occurred creating the plant entities. $@"};
     }
 
     print STDERR "Plant entities created.\n";
-    return 1;
+    return {success => 1};
 }
 
 
 =head2 function save_plant_subplot_entries()
 
- Usage:        $trial->save_plant_subplot_entries(\%data, $plants_per_subplot, $inherits_plot_treatments);
+ Usage:        $trial->save_plant_subplot_entries(\%data, $plants_per_subplot, $inherits_plot_treatments, $add_additional_plants);
  Desc:         Some trials require plant-level data. It is possible to upload
                 plant_names to save.
  Ret:
@@ -3840,6 +3968,7 @@ sub save_plant_subplot_entries {
     my $plant_owner = shift;
     my $plant_owner_username = shift;
     my $phenotype_store_config = shift;
+    my $add_additional_plants = shift;
 
     my $chado_schema = $self->bcs_schema();
 
@@ -3891,14 +4020,33 @@ sub save_plant_subplot_entries {
         my $subplots_per_plot = $subplots_per_plot_row->value();
         my $plants_per_plot = $subplots_per_plot * $plants_per_subplot;
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_plants_cvterm,
-            value => $plants_per_plot,
-            project_id => $self->get_trial_id(),
-        });
-
+        if (!$add_additional_plants) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_plants_cvterm,
+                value => $plants_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_plants_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + ($plants_per_subplot * $subplots_per_plot) });
+            }
+        }
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
+
+        my %subplot_existing_plants;
+        foreach my $plot_num (keys %$design) {
+            my $spn = $design->{$plot_num}->{subplots_plant_names};
+            if ($spn) {
+                foreach my $sn (keys %$spn) {
+                    $subplot_existing_plants{$sn} = $spn->{$sn};
+                }
+            }
+        }
 
         while( my ($key, $val) = each %$parsed_data){
             my $subplot_stock_id = $key;
@@ -3929,7 +4077,35 @@ sub save_plant_subplot_entries {
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            my $plant_index_number = 1;
+            my $existing_count = 0;
+            if ($add_additional_plants) {
+                my $existing_plants = $subplot_existing_plants{$subplot_name};
+                $existing_count = $existing_plants ? scalar(@$existing_plants) : 0;
+            }
+
+            if ($add_additional_plants && $val->{plant_coords}) {
+                my $existing_plants_ref = $subplot_existing_plants{$subplot_name} // [];
+                if (@$existing_plants_ref) {
+                    my %occupied_coords;
+                    my $ep_rs = $chado_schema->resultset("Stock::Stock")->search(
+                        { uniquename => { -in => $existing_plants_ref }, type_id => $plant_cvterm }
+                    );
+                    while (my $ep = $ep_rs->next()) {
+                        my $rp = $ep->search_related('stockprops', { type_id => $row_num_cvterm })->first();
+                        my $cp = $ep->search_related('stockprops', { type_id => $col_num_cvterm })->first();
+                        if ($rp && $cp) {
+                            $occupied_coords{ $rp->value() . ',' . $cp->value() } = 1;
+                        }
+                    }
+                    my @filtered_coords = grep { !$occupied_coords{$_} } @{$val->{plant_coords}};
+                    if (scalar(@filtered_coords) < scalar(@{$val->{plant_names}})) {
+                        die "Cannot add plants to subplot $subplot_name: insufficient unoccupied grid positions after filtering occupied coordinates.";
+                    }
+                    $val->{plant_coords} = \@filtered_coords;
+                }
+            }
+
+            my $plant_index_number = $existing_count + 1;
             my $plant_names = $val->{plant_names};
             my $plant_index_numbers = $val->{plant_index_numbers};
             my $increment = 0;
@@ -4482,6 +4658,7 @@ sub create_subplot_entities {
     my $subplot_owner = shift;
     my $subplot_owner_username = shift;
     my $phenotype_store_config = shift;
+    my $additional_subplots = shift;
 
     my $chado_schema = $self->bcs_schema();
 
@@ -4520,11 +4697,21 @@ sub create_subplot_entities {
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         #my $subplots_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplots_per_plot', 'project_property')->cvterm_id();
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_subplots_cvterm,
-            value => $subplots_per_plot,
-            project_id => $self->get_trial_id(),
-        });
+        if (!$additional_subplots) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_subplots_cvterm,
+                value => $subplots_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_subplots_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $subplots_per_plot });
+            }
+        }
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
 
@@ -4541,7 +4728,15 @@ sub create_subplot_entities {
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            foreach my $subplot_index_number (1..$subplots_per_plot) {
+            my $existing_count = 0;
+            if ($additional_subplots) {
+                my $existing_subplots = $design->{$plot}->{subplot_names};
+                $existing_count = $existing_subplots ? scalar(@$existing_subplots) : 0;
+            }
+
+            my $start_index = $existing_count + 1;
+            my $end_index   = $existing_count + $subplots_per_plot;
+            foreach my $subplot_index_number ($start_index..$end_index) {
                 my $subplot_name = $parent_plot_name."_subplot_$subplot_index_number";
 
                 foreach my $treatment (@{$treatments}) {
@@ -4621,7 +4816,7 @@ sub create_subplot_entities {
 
 =head2 function save_subplot_entries()
 
- Usage:        $trial->save_subplot_entries(\%data, $subplots_per_plot, $inherits_plot_treatments);
+ Usage:        $trial->save_subplot_entries(\%data, $subplots_per_plot, $inherits_plot_treatments, $add_additional_subplots);
  Desc:         Some trials require subplot-level data. It is possible to upload
                 subplot_names to save.
  Ret:
@@ -4641,6 +4836,7 @@ sub save_subplot_entries {
     my $owner_id = shift;
     my $owner_name = shift;
     my $phenotype_store_config = shift;
+    my $add_additional_subplots = shift;
 
     my $chado_schema = $self->bcs_schema();
 
@@ -4679,14 +4875,25 @@ sub save_subplot_entries {
         my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'field_layout', 'experiment_type')->cvterm_id();
         #my $subplots_per_plot_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'subplots_per_plot', 'project_property')->cvterm_id();
 
-        my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
-            type_id => $has_subplots_cvterm,
-            value => $subplots_per_plot,
-            project_id => $self->get_trial_id(),
-        });
-
+        if (!$add_additional_subplots) {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find_or_create({
+                type_id => $has_subplots_cvterm,
+                value => $subplots_per_plot,
+                project_id => $self->get_trial_id(),
+            });
+        } else {
+            my $rs = $chado_schema->resultset("Project::Projectprop")->find({
+                type_id => $has_subplots_cvterm,
+                project_id => $self->get_trial_id(),
+            });
+            if ($rs) {
+                $rs->update({ value => $rs->value() + $subplots_per_plot });
+            }
+        }
 
         my $field_layout_experiment = $chado_schema->resultset("Project::Project")->search( { 'me.project_id' => $self->get_trial_id() }, {select=>['nd_experiment.nd_experiment_id']})->search_related('nd_experiment_projects')->search_related('nd_experiment', { 'nd_experiment.type_id' => $field_layout_cvterm })->single();
+
+        my %design_by_plot_name = map { $design->{$_}->{plot_name} => $design->{$_} } keys %$design;
 
         while( my ($key, $val) = each %$parsed_data){
             my $plot_stock_id = $key;
@@ -4703,7 +4910,14 @@ sub save_subplot_entries {
             my $parent_plot_name = $plot_row->uniquename();
             my $parent_plot_organism = $plot_row->organism_id();
 
-            my $subplot_index_number = 1;
+            my $existing_count = 0;
+            if ($add_additional_subplots) {
+                my $design_entry = $design_by_plot_name{$parent_plot_name};
+                my $existing_subplots = $design_entry ? $design_entry->{subplot_names} : undef;
+                $existing_count = $existing_subplots ? scalar(@$existing_subplots) : 0;
+            }
+
+            my $subplot_index_number = $existing_count + 1;
             my $subplot_names = $val->{subplot_names};
             my $subplot_index_numbers = $val->{subplot_index_numbers};
             my $increment = 0;

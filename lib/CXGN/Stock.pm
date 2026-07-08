@@ -2679,9 +2679,54 @@ sub hard_delete {
 
     # delete stock entry
     #
-    my $q = "DELETE FROM stock WHERE stock_id=?";
-    my $h = $self->schema()->storage()->dbh()->prepare($q);
+    $q = "DELETE FROM stock WHERE stock_id=?";
+    $h = $self->schema()->storage()->dbh()->prepare($q);
     $h->execute($self->stock_id());
+}
+
+=head2 bulk_hard_delete()
+
+Same behavior as hard_delete, but it is a class method that takes a list of stock_ids as an argument
+
+CXGN::Stock->bulk_hard_delete($schema, $stock_ids);
+
+=cut
+
+sub bulk_hard_delete {
+    my $class = shift;
+    my $schema = shift;
+    my $stock_ids = shift;
+
+    my $placeholders = join(',', ('?') x scalar(@{$stock_ids}));
+
+    my $q = "SELECT COUNT(DISTINCT(cvterm.cvterm_id)) FROM stock 
+    JOIN nd_experiment_stock ON (stock.stock_id=nd_experiment_stock.stock_id) 
+    JOIN nd_experiment_phenotype USING(nd_experiment_id) 
+    JOIN phenotype USING (phenotype_id) 
+    JOIN cvterm ON (phenotype.cvalue_id = cvterm.cvterm_id) 
+    WHERE stock.stock_id IN ($placeholders)";
+    my $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
+    my ($count) = $h->fetchrow_array();
+    if ($count > 0) {
+        die "There are traits observed for these stock entries - delete phenotypes before deleting stocks.\n";
+    }
+
+    my $q = "DELETE FROM phenome.stock_owner WHERE stock_id IN ($placeholders)";
+    my $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
+
+    # delete sgn.stock_image entry
+    #
+    $q = "DELETE FROM phenome.stock_image WHERE stock_id IN ($placeholders)";
+    $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
+
+    # delete stock entry
+    #
+    $q = "DELETE FROM stock WHERE stock_id IN ($placeholders)";
+    $h = $schema->storage()->dbh()->prepare($q);
+    $h->execute(@{$stock_ids});
 }
 
 __PACKAGE__->meta->make_immutable;

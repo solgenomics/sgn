@@ -115,7 +115,7 @@ my $edit_privs = $curator ;
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  CXGN.Phenome.Qtl thickbox jquery  jquery.dataTables] ] &>
+<& /util/import_javascript.mas, classes => [qw [CXGN.AJAX.Ontology  CXGN.Phenome.Qtl thickbox jquery  jquery.dataTables jqueryui] ] &>
 
 
 <script language="javascript">
@@ -134,6 +134,17 @@ my $edit_privs = $curator ;
 
   function displayCvtermEditDialog() {
     jQuery('#edit_cvterm').modal('show');
+  }
+
+  function displaySynonymEditDialog() {
+    jQuery('#edit_synonym').modal('show');
+  }
+
+  function displayAddParentTermsDialog() {
+    jQuery('#new_parent_terms_list').empty();
+    jQuery('#new_parent_term_input').val('');
+    jQuery('#remove_parent_term_btn').hide();
+    jQuery('#edit_parents').modal('show');
   }
 
   function deleteCvterm() {
@@ -201,10 +212,214 @@ my $edit_privs = $curator ;
     </div>
 </div>
 
+<div class="modal fade" id="edit_synonym" name="edit_synonym" tabindex="-1" role="dialog" aria-labelledby="editSynonymDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editSynonymDialog">Edit Synonyms</h4>
+            </div>
+            <div class="modal-body">
+                <div id="synonym_list">
+% foreach my $synonym (@synonyms) {
+                <div class="form-group">
+                    <span><% $synonym | h %></span>
+                    &nbsp;
+                    <button type="button" class="btn btn-danger btn-sm delete_synonym_btn" data-synonym="<% $synonym | h %>"><span class="glyphicon glyphicon-trash"></span></button>
+                </div>
+% }
+                </div>
+                <hr/>
+                <div class="form-inline">
+                    <input type="text" id="new_synonym_input" class="form-control" placeholder="New synonym"/>
+                    &nbsp;
+                    <button type="button" id="add_synonym_btn" class="btn btn-primary">Add Synonym</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="edit_parents" name="edit_parents" tabindex="-1" role="dialog" aria-labelledby="editParentsDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editParentsDialog">Add Parent Terms</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="form-group">
+                        <label>Parent term:</label>
+                        <div class="input-group">
+                            <input class="form-control" id="new_parent_term_input" type="text" placeholder="Start typing a term name..."/>
+                            <span class="input-group-btn">
+                                <button id="add_parent_term_btn" class="btn btn-success">+</button>
+                            </span>
+                        </div>
+                        <ul id="new_parent_terms_list" style="text-align:left; padding-left:1em; list-style-type:disc; margin-top:0.5em;"></ul>
+                        <button id="remove_parent_term_btn" class="btn btn-sm btn-danger" style="display:none;"><span class="glyphicon glyphicon-trash"></span> Remove last</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add_parent_terms_submit_btn">Submit</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  jQuery(document).ready(function () {
+
+    jQuery('#edit_synonym').on('click', '.delete_synonym_btn', function() {
+      var synonym = jQuery(this).data('synonym');
+      jQuery('#working_modal').modal('show');
+      jQuery.ajax({
+        url: '/ajax/cvterm/delete_synonym',
+        method: 'POST',
+        data: {
+          cvterm_id : <% $cvterm_id %>,
+          synonym   : synonym
+        },
+        success: function(response) {
+          jQuery('#working_modal').modal('hide');
+          if (response.error) {
+            alert(response.error);
+          } else {
+            alert(response.message);
+            window.location.reload();
+          }
+        },
+        error: function() {
+          jQuery('#working_modal').modal('hide');
+          alert("An error occurred deleting the synonym.");
+        }
+      });
+    });
+
+    jQuery('#add_synonym_btn').click(function() {
+      var synonym = jQuery('#new_synonym_input').val();
+      if (!synonym) {
+        alert("Please enter a synonym.");
+        return;
+      }
+      jQuery('#working_modal').modal('show');
+      jQuery.ajax({
+        url: '/ajax/cvterm/add_synonym',
+        method: 'POST',
+        data: {
+          cvterm_id : <% $cvterm_id %>,
+          synonym   : synonym
+        },
+        success: function(response) {
+          jQuery('#working_modal').modal('hide');
+          if (response.error) {
+            alert(response.error);
+          } else {
+            alert(response.message);
+            window.location.reload();
+          }
+        },
+        error: function() {
+          jQuery('#working_modal').modal('hide');
+          alert("An error occurred adding the synonym.");
+        }
+      });
+    });
+
+    jQuery('#new_parent_term_input').autocomplete({
+      source: '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>",
+      appendTo: 'body'
+    }).autocomplete('widget').css('z-index', 9999);
+
+    jQuery('#add_parent_term_btn').on('click', function(e) {
+      e.preventDefault();
+      var term = jQuery('#new_parent_term_input').val().trim();
+      if (term) {
+        jQuery('<li>').text(term).appendTo('#new_parent_terms_list');
+        jQuery('#remove_parent_term_btn').show();
+        jQuery('#new_parent_term_input').val('');
+      }
+    });
+
+    jQuery('#remove_parent_term_btn').on('click', function(e) {
+      e.preventDefault();
+      jQuery('#new_parent_terms_list li:last').remove();
+      if (jQuery('#new_parent_terms_list li').length === 0) {
+        jQuery('#remove_parent_term_btn').hide();
+      }
+    });
+
+    jQuery('#add_parent_terms_submit_btn').click(function() {
+      var parent_terms = [];
+      jQuery('#new_parent_terms_list li').each(function() {
+        parent_terms.push(jQuery(this).text());
+      });
+      if (parent_terms.length === 0) {
+        alert("Please add at least one parent term.");
+        return;
+      }
+      jQuery('#working_modal').modal('show');
+      jQuery.ajax({
+        url: '/ajax/cvterm/add_parent_terms',
+        method: 'POST',
+        data: {
+          cvterm_id: <% $cvterm_id %>,
+          parent_terms: JSON.stringify(parent_terms)
+        },
+        success: function(response) {
+          jQuery('#working_modal').modal('hide');
+          if (response.error) {
+            alert(response.error);
+          } else {
+            alert(response.message);
+            window.location.reload();
+          }
+        },
+        error: function() {
+          jQuery('#working_modal').modal('hide');
+          alert("An error occurred adding parent terms.");
+        }
+      });
+    });
+
+    jQuery.ajax({
+      url: '/ajax/cvterm/cvterm_relationships',
+      method: 'GET',
+      data: { cvterm_id: <% $cvterm_id %> },
+      success: function(response) {
+        if (response.error) {
+          jQuery('#relationships_div').html(response.error);
+          return;
+        }
+        var rels = response.relationships;
+        if (!rels || rels.length === 0) {
+          jQuery('#relationships_div').html('None');
+          return;
+        }
+        var html = '';
+        jQuery.each(rels, function(i, r) {
+          html += r.relationship_name + ' <a href="/cvterm/' + r.object_cvterm_id + '/view">' + r.object_name + '</a><br />';
+        });
+        jQuery('#relationships_div').html(html);
+      },
+      error: function() {
+        jQuery('#relationships_div').html('Error loading relationships.');
+      }
+    });
+
+  });
+</script>
+
 <&| /page/info_section.mas, title=>"Cvterm details" &>
 <table style="border-spacing:10px">
-% if ( $allow_edits ) {
-<tr><td colspan="2"><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit] <a href="javascript:deleteCvterm()" id="delete_cvterm_link" style="color:red;">[Delete]</a></td><td></td><td></td></tr>
+% if ( $allow_edits && $edit_privs ) {
+<tr><td colspan="2"><a href="javascript:displayCvtermEditDialog()" id="edit_cvterm_link">[Edit]</a> <a href="javascript:deleteCvterm()" id="delete_cvterm_link" style="color:red;">[Delete]</a></td><td></td><td></td></tr>
 % }
 <tr><td>Term id</td><td width="10px">&nbsp;</td><td><b><% $accession %></b></td></tr>
 <tr><td>Term name</td><td>&nbsp;</td><td><b><% $cvterm_name %></b></td></tr>
@@ -216,10 +431,23 @@ my $edit_privs = $curator ;
 <b>Obsolete:</b> TRUE <br />
 % }
 
-<br /><b>Synonyms</b><br />
+<br />
+% if ( $allow_edits && $edit_privs ) {
+<a href="javascript:displaySynonymEditDialog()" id="edit_synonym_link">[Edit]</a>
+<br>
+% }
+<b>Synonyms</b><br />
 % foreach my $synonym (@synonyms) {
 <% $synonym %> <br />
 % }
+
+<br />
+% if ( $allow_edits && $edit_privs ) {
+<a href="javascript:displayAddParentTermsDialog()" id="add_parent_terms_link">[Add parent terms]</a>
+<br>
+% }
+<b> Relationships</b><br />
+<div id="relationships_div"></div>
 
 <br /><b> Definition dbxrefs</b><br />
 % foreach my $da (@def_accessions) {

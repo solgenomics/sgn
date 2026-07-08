@@ -200,32 +200,67 @@ sub search {
         push @joins, 'cvtermsynonyms';
     }
 
-    my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
-        \%and_conditions, 
+    my @filter_joins = (
+        {'cvterm_relationship_subjects' => 'type'},
+        {'dbxref' => 'db'}
+    );
+
+    # Add cvtermsynonyms to filter join only if searching by synonym
+    if ($self->trait_synonym_list && scalar(@{$self->trait_synonym_list}) > 0) {
+        push @filter_joins, 'cvtermsynonyms';
+    }
+
+    # Get correct total count
+    my $records_total = $schema->resultset("Cv::Cvterm")->search(
+        \%and_conditions,
         {
-            join => [{'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'}, 'cvtermsynonyms' ],
-            where => \%where_join,
-            order_by => { '-asc' => $order_by },
-            '+select' => ['db.name', 'dbxref.accession', 'type.name'],
-            '+as' => ['db_name', 'db_accession', 'cvterm_relationship_name'],
+            join     => \@filter_joins,
+            where    => \%where_join,
             distinct => 1
+        }
+    )->count();
+
+    # Get correct page of unique trait_ids
+    my $limit = $self->limit;
+    my $offset = $self->offset;
+
+    my $id_rs = $schema->resultset("Cv::Cvterm")->search(
+        \%and_conditions,
+        {
+            join     => \@filter_joins,
+            where    => \%where_join,
+            columns  => ['me.cvterm_id'],
+            distinct => 1,
+            order_by => { '-asc' => 'me.name' },
         }
     );
 
-    my @result;
-    my %traits = ();
-
-    my $limit = $self->limit;
-    my $offset = $self->offset;
-    my $records_total = $trait_rs->count();
-    if (defined($limit) && defined($offset)){
-        $trait_rs = $trait_rs->slice($offset, $limit);
+    if (defined($limit) && defined($offset)) {
+        $id_rs = $id_rs->slice($offset, $limit);
     }
 
+    my @paged_ids = $id_rs->get_column('me.cvterm_id')->all();
+
+    if (!@paged_ids) {
+        return ([], $records_total);
+    }
+
+    # Fetch full trait data WITH synonyms for paged ids only
+    my $trait_rs = $schema->resultset("Cv::Cvterm")->search(
+        { 'me.cvterm_id' => { '-in' => \@paged_ids } },
+        {
+            join => [ {'cvterm_relationship_subjects' => 'type'}, {'dbxref' => 'db'}, 'cvtermsynonyms' ],
+            '+select' => [ 'db.name', 'dbxref.accession', 'type.name', 'cvtermsynonyms.synonym' ],
+            '+as' => [ 'db_name', 'db_accession', 'cvterm_relationship_name', 'synonym' ],
+            order_by => { '-asc' => 'me.name' },
+        }
+    );
+    my @result;
     while ( my $t = $trait_rs->next() ) {
         push @result, {
             trait_id => $t->cvterm_id,
             trait_name => $t->name,
+            synonym => $t->get_column('synonym'),
             trait_definition => $t->definition,
             db_name => $t->get_column('db_name'),
             accession=> $t->get_column('db_accession'),
