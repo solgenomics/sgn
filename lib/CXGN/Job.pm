@@ -328,25 +328,21 @@ sub check_status {
                 }
             }
         } else { #job has no backend ID and no finish timestamp.
-            if ($self->cmd()) { #if it has a cmd and no backend ID, it probably failed. 
+            if (!$self->create_timestamp()) { #something is weird if it has no create timestamp. 
                 $self->status("failed");
                 $self->store();
-            } else { # If no cmd, it was just a reporting entry, and it is either submitted or timed out. Reporting entries should save the fail state manually, so we won't consider that here. 
-                if (!$self->create_timestamp()) { #something is weird if it has no create timestamp. 
-                    $self->status("failed");
+            } else { # no backend id, but has a create timestamp and no finish timestamp. 
+                my $now = DateTime->now(time_zone => 'local');
+                my $create_timestamp = $self->create_timestamp();
+                $create_timestamp =~ s/ /T/;
+                my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+                my $age = ( $now->epoch - $start_time->epoch ) / 86400;
+                if ($age > 1) {
+                    $self->status("timed_out");
                     $self->store();
-                } else { # no cmd, no backend id, but has a create timestamp and no finish timestamp. 
-                    my $now = DateTime->now(time_zone => 'local');
-                    my $create_timestamp = $self->create_timestamp();
-                    my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-                    my $age = ( $now->epoch - $start_time->epoch ) / 86400;
-                    if ($age > 1) {
-                        $self->status("timed_out");
-                        $self->store();
-                    } else { # no cmd, no backend, create timestamp, no finish timestamp, but hasnt been running long
-                        $self->status("submitted");
-                        $self->store();
-                    }
+                } else { # no backend, no create timestamp, no finish timestamp, but hasnt been running long
+                    $self->status("submitted");
+                    $self->store();
                 }
             }
         }
@@ -771,7 +767,7 @@ sub delete_jobs_older_than {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
                 my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-                my $now = DateTime->now();
+                my $now = DateTime->now(time_zone => 'local');
                 my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
                 if ($age > $time_limit) {
@@ -797,7 +793,7 @@ sub delete_jobs_older_than {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
                 my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-                my $now = DateTime->now();
+                my $now = DateTime->now(time_zone => 'local');
                 my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
                 if ($age > $time_limit) {
