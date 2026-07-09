@@ -398,7 +398,7 @@ sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
     $self->send_forgot_username_email_message($c, $email, \@person_ids);
 
     $c->stash->{rest} = {
-        message => "Username email sent. Please check your email for a message containing the username(s) of any accounts associated with your email address."
+        message => "Username email sent. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
     };
 }
 
@@ -487,14 +487,16 @@ sub send_forgot_username_email_message {
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         push(@usernames, $person->get_username());
     }
-    my $username_message = @usernames > 0 ? "The following username(s) are associated with your email address: " . join(', ', @usernames)
-        : "There are no accounts associated with your email address.";
 
-    my $project_name = $c->config->{project_name};
-    my $subject = "[$project_name] Forgot Username Request";
-    my $main_url = $c->config->{main_production_site_url};
+    # Only send a message if there is an account associated with the specified email address
+    if ( @usernames > 0 ) {
+        my $username_message = "The following username(s) are associated with your email address: " . join(', ', @usernames);
 
-    my $body = <<END_HEREDOC;
+        my $project_name = $c->config->{project_name};
+        my $subject = "[$project_name] Forgot Username Request";
+        my $main_url = $c->config->{main_production_site_url};
+
+        my $body = <<END_HEREDOC;
 
 Hi,
 
@@ -512,7 +514,8 @@ Your friends at $project_name
 
 END_HEREDOC
 
-   CXGN::Contact::send_email($subject, $body, $email);
+        CXGN::Contact::send_email($subject, $body, $email);
+    }
 }
 
 sub send_reset_email_message {
