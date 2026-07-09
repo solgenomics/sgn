@@ -168,11 +168,15 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         results_page => "/dataset/$dataset_id",
         job_type => 'phenotypic_analysis',
         cmd => $cmd_str,
-        cxgn_tools_run_config => $cxgn_tools_run_config,
-        finish_logfile => $c->config->{job_finish_log}
+        cxgn_tools_run_config => $cxgn_tools_run_config
     });
 
-    $job->submit();
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
 
     while($job->alive()) {
         sleep(1);
@@ -491,11 +495,10 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             name => $dataset->name()." tool compatibility check",
             results_page => "/dataset/$dataset_id",
             job_type => 'tool_compatibility',
-            cmd => $cmd,
-            finish_logfile => $c->config->{job_finish_log}
+            cmd => $cmd
         });
 
-        $job->submit();
+        $job->submit($dbhost, $dbname, $dbuser, $dbpass);
     };
 
     if ($@){

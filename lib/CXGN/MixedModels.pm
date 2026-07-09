@@ -527,11 +527,10 @@ sub run_model {
 		cmd => $cmd,
 		cxgn_tools_run_config => $cxgn_tools_run_config,
 		name => $job_config->{name},
-		job_type => 'mixed_model_analysis',
-		finish_logfile => $job_config->{finish_logfile}
+		job_type => 'mixed_model_analysis'
 	});
 
-	$job->submit();
+	$job->submit($job_config->{dbhost},$job_config->{dbname},$job_config->{dbuser},$job_config->{dbpass});
 
 	# $job_record->update_status("submitted");
 	# $ctr->run_cluster($cmd.$job_record->generate_finish_timestamp_cmd());
@@ -544,7 +543,7 @@ sub run_model {
 		sleep (1);
 	}
 
-	my $finished = $job->read_finish_timestamp();
+	my $finished = $job->finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {

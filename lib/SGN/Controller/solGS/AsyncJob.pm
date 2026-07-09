@@ -836,7 +836,6 @@ sub record_job_submission {
                 results_page => $job_args->{analysis_page},
                 cmd => $args->{cmd},
                 cxgn_tools_run_config => $args->{config},
-                finish_logfile => $c->config->{job_finish_log},
                 additional_args => $job_args
             });
 
@@ -857,13 +856,18 @@ sub record_job_submission {
 sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+
     my $job_records = $self->record_job_submission($c, $args);
     my $finish_timestamp_cmd;
     my @finish_timestamp_cmds;
 
     if (@$job_records) {
         foreach my $job_record (@$job_records) {
-            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
+            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass);
             push @finish_timestamp_cmds, $finish_timestamp_cmd;
         }
     }

@@ -187,8 +187,7 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
         cmd => $cmd_str,
         name => "Trial $trial_id spatial analysis",
         results_page => "/breeders/trial/$trial_id",
-        cxgn_tools_run_config => $cxgn_tools_run_config,
-        finish_logfile => $c->config->{job_finish_log}
+        cxgn_tools_run_config => $cxgn_tools_run_config
     });
 
     # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
@@ -206,7 +205,12 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
 	# sleep(1);
     # }
 
-    $job->submit();
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
     while($job->alive()){
         sleep(1);
     }

@@ -294,8 +294,7 @@ sub run : Path('/tools/blast/run') Args(0) {
         name => $params->{program}.' analysis',
         job_type => 'sequence_analysis',
         cmd => join(' ', @command),
-        cxgn_tools_run_config => $config,
-        finish_logfile => $c->config->{job_finish_log}
+        cxgn_tools_run_config => $config
     });
 
     $job_record->update_status('submitted');
@@ -345,8 +344,7 @@ sub check : Path('/tools/blast/check') Args(2) {
     my $job_record = CXGN::Job->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_job_id => $job_record_id,
-        finish_logfile => $c->config->{job_finish_log}
+        sp_job_id => $job_record_id
     });
 
     # my $t0 = [gettimeofday]; #-------------------------- TIME CHECK

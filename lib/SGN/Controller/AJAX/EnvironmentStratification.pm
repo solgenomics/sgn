@@ -193,16 +193,20 @@ sub generate_results : Path('/ajax/environment_stratification/generate_results')
         name => $ds->name() . " environment stratification",
         job_type => 'environment_stratification',
         cmd => $cmd_str,
-        cxgn_tools_run_config => $cxgn_tools_run_config,
-        finish_logfile => $c->config->{job_finish_log},
+        cxgn_tools_run_config => $cxgn_tools_run_config
     });
 
-    $job->submit();
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
     while ($job->alive()) {
         sleep(1);
     }
 
-    my $finished = $job->read_finish_timestamp();
+    my $finished = $job->finish_timestamp();
     if (!$finished) {
         $job->update_status("failed");
         my $message = -e $message_file ? read_file($message_file) : 'Environment stratification failed before producing results.';

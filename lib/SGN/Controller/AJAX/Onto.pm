@@ -86,13 +86,12 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
             schema => $schema,
             sp_person_id => $sp_person_id,
             cmd => $cmd,
-            finish_logfile => $c->config->{job_finish_log},
             name => "$db_name ontology download",
             job_type => 'download',
             submit_page => $c->req->path
         });
 
-        $obo_downloader->submit();
+        $obo_downloader->submit($dbhost, $dbname, $dbuser, $dbpass);
 
     };
 

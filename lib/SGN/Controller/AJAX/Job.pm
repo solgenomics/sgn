@@ -82,8 +82,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             $job = CXGN::Job->new({
                 schema => $bcs_schema,
                 people_schema => $people_schema,
-                sp_job_id => $job_id,
-                finish_logfile => $c->config->{job_finish_log}
+                sp_job_id => $job_id
             });
         };
         if ($@) {
@@ -188,8 +187,7 @@ sub delete :Path('/ajax/job/delete') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id,
-            finish_logfile => $c->config->{job_finish_log}
+            sp_job_id => $sp_job_id
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
@@ -214,8 +212,7 @@ sub cancel :Path('/ajax/job/cancel') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id,
-            finish_logfile => $c->config->{job_finish_log}
+            sp_job_id => $sp_job_id
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {

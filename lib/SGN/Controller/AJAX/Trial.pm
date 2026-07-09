@@ -1417,12 +1417,11 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         cmd => $cmd,
         name => "$upload_original_name multiple trial designs upload",
         results_page => '/breeders/trials',
-        job_type => 'upload',
-        finish_logfile => $c->config->{job_finish_log}
+        job_type => 'upload'
     });
     if ( $email_option_enabled && $email_address ) {
         #$runner->run_async($cmd);
-        $job->submit();
+        $job->submit($dbhost, $dbname, $dbuser, $dbpass);
         #my $err = $runner->err();
         #my $out = $runner->out();
 
@@ -1441,7 +1440,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         #my $err = $runner->err();
         #my $out = $runner->out();
 
-        $job->submit();
+        $job->submit($dbhost, $dbname, $dbuser, $dbpass);
 
         while($job->alive()) {
             sleep(1);

@@ -127,13 +127,12 @@ sub genotyping_project_delete_POST : Args(1) {
             schema => $bcs_schema,
             sp_person_id => $user_id,
             cmd => $cmd,
-            finish_logfile => $c->config->{job_finish_log},
             name => "genotyping project deletion",
             job_type => 'deletion',
             submit_page => ($c->req->referer ? $c->req->referer->as_string : undef)
         });
         eval {
-            $async_delete->submit();
+            $async_delete->submit($dbhost, $dbname, $dbuser, $dbpass);
         };
         if ($@) {
             $c->stash->{rest} = {error => "Failed to submit background job: $@"};

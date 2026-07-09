@@ -183,7 +183,6 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         name => $ds->name().' heritability analysis',
         cmd => $cmd_str,
         cxgn_tools_run_config => $cxgn_tools_run_config,
-        finish_logfile => $c->config->{job_finish_log},
         results_page =>  '/tools/heritability'
     });
     # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
@@ -206,13 +205,18 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     # $cmd->is_cluster(1);
     # $cmd->wait;
 
-    $job->submit();
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
 
     while ($job->alive()) {
         sleep(1);
     }
 
-    my $finished = $job->read_finish_timestamp();
+    my $finished = $job->finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {
