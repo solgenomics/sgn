@@ -64,6 +64,7 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $transformation_notes = $info->[0]->[4];
 
     my $is_a_control = $info->[0]->[5];
+    print STDERR "IS A CONTROL =".Dumper($is_a_control)."\n";
     if ($is_a_control) {
         $is_a_control = 'is a control';
     }
@@ -126,14 +127,6 @@ sub transformation_page : Path('/transformation') Args(1) {
         $identifier_name = 'NA';
     }
 
-    my $source_info_hash = {};
-    $source_info_hash->{'breedingProgram'} = $program_name;
-    $source_info_hash->{'transformationProject'} = $project_name;
-    $source_info_hash->{'transformationID'} = $transformation_name;
-    $source_info_hash->{'vectorConstruct'} = $vector_name;
-    $source_info_hash->{'plantMaterial'} = $plant_material_name;
-    my $source_info_string = encode_json $source_info_hash;
-
     my $can_obsolete;
     my @user_roles = $c->user->roles();
     my %has_roles = ();
@@ -154,6 +147,16 @@ sub transformation_page : Path('/transformation') Args(1) {
         my @assay_tissue_types = sort keys (%$metadata_hash);
         $vector_analyzed_tissue_types = join(",",@assay_tissue_types);
     }
+
+    my $source_info_hash = {};
+    $source_info_hash->{'breedingProgram'} = $program_name;
+    $source_info_hash->{'transformationProject'} = $project_name;
+    $source_info_hash->{'transformationID'} = $transformation_name;
+    $source_info_hash->{'vectorConstruct'} = $vector_name;
+    $source_info_hash->{'plantMaterial'} = $plant_material_name;
+    $source_info_hash->{'isAcontrol'} = $is_a_control;
+    $source_info_hash->{'vectorRelatedGenes'} = $vector_related_genes;
+    my $source_info_string = encode_json $source_info_hash;
 
     $c->stash->{transformation_id} = $transformation_id;
     $c->stash->{transformation_name} = $transformation_name;
