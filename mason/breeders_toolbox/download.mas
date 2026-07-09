@@ -530,7 +530,7 @@ $(document).ready(function() {
                    alert("The accession list did not pass validation. Please correct the list and try again");
                 }
                 else {
-                    jQuery("#progeny_list_id").val(seedlot_list_id);
+                    jQuery("#progeny_list_id").val(progeny_list_id);
                     jQuery('#download_cross_family').submit();
                 }
             });

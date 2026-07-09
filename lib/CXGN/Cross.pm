@@ -1721,7 +1721,6 @@ sub get_progeny_cross_family_info {
     my $self = shift;
     my $schema = shift;
     my $progeny_stock_ids = shift;
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "accession", "stock_type")->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
     my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
     my $female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "female_parent", "stock_relationship")->cvterm_id();
@@ -1735,15 +1734,16 @@ sub get_progeny_cross_family_info {
     my $placeholder = join ",",("?") x @progeny_array;
     my $where_clause = "stock.stock_id IN ($placeholder)";
 
-    my $q ="SELECT stock.stock_id, stock.uniquename, female_accession.stock_id, female_accession.uniquename, male_accession.stock_id, male_accession.uniquename,
-        female_relationship.value, cross_unique_id.stock_id, cross_unique_id.uniquename, family_name.stock_id, family_name.uniquename, stockprop.value, project.project_id, project.name
+    my $q ="SELECT stock.stock_id, stock.uniquename, female_parent.stock_id, female_parent.uniquename, male_parent.stock_id, male_parent.uniquename,
+        COALESCE(cross_female_relationship.value, female_relationship.value), cross_unique_id.stock_id, cross_unique_id.uniquename, family_name.stock_id, family_name.uniquename, stockprop.value, project.project_id, project.name
         FROM stock
         LEFT JOIN stock_relationship AS female_relationship ON (stock.stock_id = female_relationship.object_id) AND female_relationship.type_id = ?
-        LEFT JOIN stock AS female_accession ON (female_relationship.subject_id = female_accession.stock_id) AND female_accession.type_id = ?
+        LEFT JOIN stock AS female_parent ON (female_relationship.subject_id = female_parent.stock_id)
         LEFT JOIN stock_relationship AS male_relationship ON (stock.stock_id = male_relationship.object_id) AND male_relationship.type_id = ?
-        LEFT JOIN stock AS male_accession ON (male_relationship.subject_id = male_accession.stock_id) AND male_accession.type_id = ?
+        LEFT JOIN stock AS male_parent ON (male_relationship.subject_id = male_parent.stock_id)
         LEFT JOIN stock_relationship AS cross_relationship ON (stock.stock_id = cross_relationship.subject_id) AND cross_relationship.type_id = ?
         LEFT JOIN stock AS cross_unique_id ON (cross_relationship.object_id = cross_unique_id.stock_id) AND cross_unique_id.type_id = ?
+        LEFT JOIN stock_relationship AS cross_female_relationship ON (cross_unique_id.stock_id = cross_female_relationship.object_id) AND cross_female_relationship.type_id = ?
         LEFT JOIN stock_relationship AS cross_family_relationship ON (cross_family_relationship.subject_id = cross_unique_id.stock_id) AND cross_family_relationship.type_id = ?
         LEFT JOIN stock AS family_name ON (cross_family_relationship.object_id = family_name.stock_id) AND family_name.type_id = ?
         LEFT JOIN stockprop ON (stockprop.stock_id = family_name.stock_id) AND stockprop.type_id = ?
@@ -1753,7 +1753,7 @@ sub get_progeny_cross_family_info {
         WHERE $where_clause";
 
         my $h = $schema->storage->dbh()->prepare($q);
-        $h->execute($female_parent_type_id, $accession_type_id, $male_parent_type_id, $accession_type_id, $offspring_of_type_id, $cross_type_id, $cross_member_of_type_id, $family_type_id, $family_stockprop_type_id, $cross_experiment_type_id, @progeny_array);
+        $h->execute($female_parent_type_id, $male_parent_type_id, $offspring_of_type_id, $cross_type_id, $female_parent_type_id, $cross_member_of_type_id, $family_type_id, $family_stockprop_type_id, $cross_experiment_type_id, @progeny_array);
 
         my @progeny_cross_family_info = ();
         while(my ($progeny_id, $progeny_name, $female_parent_id, $female_parent_name, $male_parent_id, $male_parent_name, $cross_type, $cross_id, $cross_name, $family_id, $family_name, $family_type, $project_id, $project_name) = $h->fetchrow_array()){
