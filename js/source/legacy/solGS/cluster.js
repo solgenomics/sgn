@@ -13,6 +13,7 @@ solGS.cluster = {
   clusterPopsDiv: "#cluster_pops_select_div",
   clusterPopsSelectMenuId: "#cluster_pops_select",
   clusterPopsDataDiv: "#cluster_pops_data_div",
+  defaultKNum: 3,
 
   getClusterArgsFromUrl: function () {
     var page = location.pathname;
@@ -217,8 +218,21 @@ solGS.cluster = {
       dataTypes = this.getDataTypeOpts();
     }
 
+    var protocolId;
+
+    if (dataStr.match(/dataset/)) {
+        datasetId = popId;
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+    }
+
+    if (!protocolId) {
+      protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+    }
+
+    clusterPop.protocol_id = protocolId;
+
     var dataTypeOpts = solGS.cluster.createDataTypeSelect(dataTypes, clusterPopId);
-    var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId);
+    var kNumId = solGS.cluster.clusterKnumSelectId(clusterPopId) || this.defaultKNum;
     var runClusterBtnId = solGS.cluster.getRunClusterBtnId(clusterPopId);
 
     var kNum = '<input class="form-control" type="text" placeholder="default" id="' + kNumId + '"/>';
@@ -286,7 +300,18 @@ solGS.cluster = {
 
     dataType = dataType.toLowerCase();
     clusterType = clusterType.toLowerCase();
-    var protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+
+    var protocolId;
+    var datasetId;
+
+    if (dataStr && dataStr.match(/dataset/)) {
+        datasetId = clusterPopId.replace(/dataset_/, "");
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+    }
+
+    if (!protocolId) {
+      protocolId = jQuery("#cluster_div #genotyping_protocol #genotyping_protocol_id").val();
+    }
 
     if (!protocolId) {
       protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
@@ -704,7 +729,7 @@ solGS.cluster = {
     var clusterPopId = this.getClusterPopId(selectedId, dataStr);
     var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
     var clusterType = clusterOpts.cluster_type || "k-means";
-    var kNumber = clusterOpts.k_number || 3;
+    var kNumber = clusterOpts.k_number || this.defaultKNum;
     var dataType = clusterOpts.data_type || "genotype";
 
     var clusterArgs = {
@@ -726,15 +751,17 @@ solGS.cluster = {
     var dataTypeId = this.clusterDataTypeSelectId(clusterPopId);
     var selectionPropId = this.clusterSelPropSelectId(clusterPopId);
 
+
     var dataType = jQuery("#" + dataTypeId).val() || "genotype";
     var clusterType = jQuery("#" + clusterTypeId).val() || "k-means";
-    var kNumber = jQuery("#" + kNumId).val() || 'default';
-    var selectionProp = jQuery("#" + selectionPropId).val();
+    var kNumber = jQuery("#" + kNumId).val();
+    kNumber = kNumber.replace(/\s+/g, "");
 
-    if (typeof kNumber === "string") {
-      kNumber = kNumber.replace(/\s+/g, "");
+    if (kNumber == "") {
+      kNumber = this.defaultKNum;
     }
 
+    var selectionProp = jQuery("#" + selectionPropId).val();
     if (selectionProp) {
       selectionProp = selectionProp.replace(/%/, "");
       selectionProp = selectionProp.replace(/\s+/g, "");
@@ -828,6 +855,12 @@ solGS.cluster = {
       if (trialSelPopsList) {
         clusterPops.push(trialSelPopsList);
       }
+    }
+
+    if (solGS.listTypeSelectionPopulation) {
+      clusterPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
     }
   
     var menu = new SelectMenu(this.clusterPopsDiv, this.clusterPopsSelectMenuId);
@@ -1227,6 +1260,7 @@ jQuery(document).ready(function () {
       var clusterOptsId = "cluster_options";
       var clusterPopId = solGS.cluster.getClusterPopId(selectedId, dataStr);
       var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
+      var kNumber = clusterOpts.k_number || solGS.cluster.defaultKNum;
 
       var clusterArgs = {
         selected_id: selectedId,
@@ -1235,7 +1269,7 @@ jQuery(document).ready(function () {
         cluster_pop_id: clusterPopId,
         cluster_type: clusterOpts.cluster_type,
         data_type: clusterOpts.data_type,
-        k_number: clusterOpts.k_number,
+        k_number: kNumber,
         selection_proportion: clusterOpts.selection_proportion,
       };
 

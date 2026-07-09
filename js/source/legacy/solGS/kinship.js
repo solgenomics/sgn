@@ -48,28 +48,21 @@ solGS.kinship = {
     var listId;
     var datasetId;
     var datasetName;
+    var protocolId;
 
-      if (String(kinshipPopId).match(/list/)) {
+    if (String(kinshipPopId).match(/list/)) {
         dataStr = "list";
-      } else if (String(kinshipPopId).match(/dataset/)) {
+        listId = kinshipPopId.replace(/list_/, "");
+    } else if (String(kinshipPopId).match(/dataset/)) {
         dataStr = "dataset";
-      }
+        datasetId = kinshipPopId.replace(/dataset_/, "");
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+    }
 
-      if (dataStr == "list") {
-        if (isNaN(kinshipPopId)) {
-          listId = kinshipPopId.replace("list_", "");
-        } else {
-          listId = kinshipPopId;
-        }
-      } else if (dataStr == "dataset") {
-        if (isNaN(kinshipPopId)) {
-          datasetId = kinshipPopId.replace("dataset_", "");
-        } else {
-          datasetId = kinshipPopId;
-        }
-      }
+    if (!protocolId) {
+      protocolId = jQuery("#genotyping_protocol_id").val();
+    }
 
-    var protocolId = jQuery("#genotyping_protocol_id").val();
     var traitId = jQuery("#trait_id").val();
 
     return {
@@ -170,13 +163,18 @@ solGS.kinship = {
 
     var listId;
     var datasetId;
+    var protocolId;
 
     if (dataStr.match(/dataset/)) {
-      datasetId = popId;
+        datasetId = popId;
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
     } else if (dataStr.match(/list/)) {
       listId = popId;
     }
-    var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
+
+    if (!protocolId) {
+      protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
+    }
 
     var kinshipArgs = {
       kinship_pop_id: kinshipPopId,
@@ -294,7 +292,16 @@ solGS.kinship = {
       kinshipArgs = JSON.parse(selectedPopData.selectedPop);
       var kinshipPopId = kinshipArgs.data_str + "_" + kinshipArgs.id;
 
-      var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
+      var protocolId;
+      if (kinshipArgs.data_str == 'dataset') {
+        datasetId = kinshipArgs.id;
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+      }
+
+      if (!protocolId) {
+        protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
+      }
+
       var page = `/kinship/analysis/${kinshipPopId}/gp/${protocolId}`;
 
       kinshipArgs["analysis_type"] = "kinship analysis";
@@ -526,6 +533,7 @@ jQuery(document).ready(function () {
                           .fadeOut(8400);
 
                         jQuery(`${canvas} .multi-spinner-container`).hide();
+                        jQuery(runKinshipBtnId).show();
                       });
                   },
                 },
@@ -546,6 +554,7 @@ jQuery(document).ready(function () {
         .fail(function () {
           jQuery(kinshipMsgDiv).html("Error occured running the kinship.").show().fadeOut(8400);
           jQuery(`${canvas} .multi-spinner-container`).hide();
+          jQuery(runKinshipBtnId).show();
         });
     }
   });
