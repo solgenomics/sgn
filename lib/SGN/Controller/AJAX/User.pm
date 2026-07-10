@@ -398,7 +398,7 @@ sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
     $self->send_forgot_username_email_message($c, $email, \@person_ids);
 
     $c->stash->{rest} = {
-        message => "Username email sent. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
+        message => "Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
     };
 }
 
@@ -410,16 +410,6 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     my $email = $c->req->param('password_reset_email');
 
     my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
-
-    if (!@person_ids) {
-	$c->stash->{rest} = { error => "The provided email ($email) is not associated with any account." };
-	return;
-    }
-
-    if (@person_ids > 1) {
-	$c->stash->{rest} = { message => "The provided email ($email) is associated with multiple accounts. An email is sent for each account. Please notify the database team using the contact form to consolidate the accounts." };
-    }
-
     my @reset_links;
     my @reset_tokens;
     foreach my $pid (@person_ids) {
@@ -434,7 +424,7 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     }
 
     $c->stash->{rest} = {
-        message => "Reset link sent. Please check your email and click on the link.",
+        message => "Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.",
         reset_links => \@reset_links,
         reset_tokens => \@reset_tokens
     };
