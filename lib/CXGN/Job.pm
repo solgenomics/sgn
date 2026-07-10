@@ -426,8 +426,8 @@ sub submit {
         die "Background jobs must have a command to run.\n";
     }
 
-    if (!$dbhost || !$dbname || !$dbuser || !$dbpass) {
-        die "Need DB connection parameters to make finish timestamp."
+    if (!$dbhost || !$dbname || !$dbuser || !$dbpass || !$basepath) {
+        die "Need DB connection parameters and site basepath to make finish timestamp."
     }
 
     my $cmd = $self->cmd();
@@ -549,6 +549,10 @@ sub generate_finish_timestamp_cmd {
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
     } 
+
+    if (!$dbhost || !$dbname || !$dbuser || !$dbpass || !$basepath) {
+        die "Need DB connection parameters and site basepath to make finish timestamp."
+    }
 
     my $sp_job_id = $self->sp_job_id();
 
