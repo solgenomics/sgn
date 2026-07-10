@@ -203,8 +203,9 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
     my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
 
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
     # my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
     # $job_record->update_status("submitted");
@@ -231,7 +232,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         sleep(1);
     }
 
-    my $finished = $job->finish_timestamp();
+    my $finished = $job->retrieve_finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {

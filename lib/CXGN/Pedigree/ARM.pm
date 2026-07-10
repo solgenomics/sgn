@@ -603,7 +603,7 @@ sub download_arm {
                 cxgn_tools_run_config => $cxgn_tools_run_config
             });
 
-            $download->submit($job_record_config->{dbhost},$job_record_config->{dbname},$job_record_config->{dbuser},$job_record_config->{dbpass});
+            $download->submit($job_record_config->{dbhost},$job_record_config->{dbname},$job_record_config->{dbuser},$job_record_config->{dbpass}, $job_record_config->{basepath});
             # Do the GRM on the cluster (currently not called anywhere)
             # my $plot_cmd = CXGN::Tools::Run->new(
             #    $cxgn_tools_run_config
@@ -618,7 +618,7 @@ sub download_arm {
                 sleep(1);
             }
 
-            my $finished = $download->finish_timestamp();
+            my $finished = $download->retrieve_finish_timestamp();
             if (!$finished) {
                 $download->update_status("failed");
             } else {

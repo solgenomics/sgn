@@ -209,8 +209,9 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
     my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
 
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
     while($job->alive()){
         sleep(1);
     }

@@ -33,7 +33,7 @@ my $job = CXGN::Job->new({
     additional_args => {$more_stuff}
 });
 
-my $job_id = $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+my $job_id = $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
 ...
 
@@ -416,6 +416,7 @@ sub submit {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
+    my $basepath = shift;
 
     if ($self->has_sp_job_id()) {
         die "This job has already been submitted!\n";
@@ -440,7 +441,7 @@ sub submit {
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass);
+    my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
     my $job;
     my $backend_id;
@@ -531,7 +532,7 @@ sub store {
     return $self->sp_job_id();
 }
 
-=head2 generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass);
+=head2 generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
 Generates a command that gives the finish timestamp. Use to append to a cmd before submitting a job. 
 
@@ -543,6 +544,7 @@ sub generate_finish_timestamp_cmd {
     my $dbname = shift;
     my $dbuser = shift;
     my $dbpass = shift;
+    my $basepath = shift;
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
@@ -552,9 +554,26 @@ sub generate_finish_timestamp_cmd {
 
     return ";
 
-perl bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id ;
+perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id ;
 
 ";
+}
+
+=head2 retrieve_finish_timestamp()
+
+Check the database for a finish timestamp. Useful if you created a job object for job submission, and want to 
+check for a finish timestamp before the object has been destroyed and reformed. 
+
+=cut
+
+sub retrieve_finish_timestamp {
+    my $self = shift;
+
+    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+
+    my $finish_timestamp = $row->finish_timestamp() ? $row->finish_timestamp() : "";
+    $self->finish_timestamp($finish_timestamp);
+    return $finish_timestamp;
 }
 
 =head2 update_status($status)

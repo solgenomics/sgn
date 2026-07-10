@@ -15,6 +15,7 @@ my $dbhost = $t->config->{dbhost};
 my $dbname = $t->config->{dbname};
 my $dbuser = $t->config->{dbuser};
 my $dbpass = $t->config->{dbpass};
+my $basepath = $t->config->{basepath};
 
 eval {
     $job = CXGN::Job->new({
@@ -45,7 +46,7 @@ ok($@ eq '', "Check for successful object creation");
 ok($job->name() eq "unit_fixture test job", 'Check for correct arg parsing');
 ok($job->create_timestamp() ne "", 'Check for create timestamp');
 eval {
-    $job->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass);
+    $job->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 };
 ok($@, 'Check for refusal to generate finish timestamp due to no job ID');
 
@@ -53,7 +54,7 @@ my $SYSTEM_MODE = $ENV{SYSTEM};
 # The following tests wont work on github, but you can run them locally
 SKIP: {
     skip "Skip if run under git", 4 unless $SYSTEM_MODE ne "GITACTION";
-    my $job_id = $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+    my $job_id = $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
     ok($job_id, 'Check for successful job submission');
     ok($job->check_status() eq "submitted", 'Check for proper job status');

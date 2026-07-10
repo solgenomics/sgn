@@ -132,7 +132,7 @@ sub genotyping_project_delete_POST : Args(1) {
             submit_page => ($c->req->referer ? $c->req->referer->as_string : undef)
         });
         eval {
-            $async_delete->submit($dbhost, $dbname, $dbuser, $dbpass);
+            $async_delete->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
         };
         if ($@) {
             $c->stash->{rest} = {error => "Failed to submit background job: $@"};

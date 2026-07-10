@@ -60,6 +60,7 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
     my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
@@ -91,7 +92,7 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
             submit_page => $c->req->path
         });
 
-        $obo_downloader->submit($dbhost, $dbname, $dbuser, $dbpass);
+        $obo_downloader->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
     };
 

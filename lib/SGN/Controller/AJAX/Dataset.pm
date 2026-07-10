@@ -175,8 +175,9 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
     my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
 
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
     while($job->alive()) {
         sleep(1);
@@ -476,6 +477,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
     my $dbuser = $c->config->{dbuser};
     my $dbname = $c->config->{dbname};
     my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
     
     my $cmd = "mx-run CXGN::Dataset::ToolCompatibility".
                 " --dataset_id $dataset_id".
@@ -498,7 +500,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             cmd => $cmd
         });
 
-        $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+        $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
     };
 
     if ($@){

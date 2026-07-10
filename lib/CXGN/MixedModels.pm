@@ -530,7 +530,7 @@ sub run_model {
 		job_type => 'mixed_model_analysis'
 	});
 
-	$job->submit($job_config->{dbhost},$job_config->{dbname},$job_config->{dbuser},$job_config->{dbpass});
+	$job->submit($job_config->{dbhost},$job_config->{dbname},$job_config->{dbuser},$job_config->{dbpass}, $job_config->{basepath});
 
 	# $job_record->update_status("submitted");
 	# $ctr->run_cluster($cmd.$job_record->generate_finish_timestamp_cmd());
@@ -543,7 +543,7 @@ sub run_model {
 		sleep (1);
 	}
 
-	my $finished = $job->finish_timestamp();
+	my $finished = $job->retrieve_finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {

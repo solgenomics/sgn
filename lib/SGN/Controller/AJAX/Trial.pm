@@ -1421,7 +1421,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     });
     if ( $email_option_enabled && $email_address ) {
         #$runner->run_async($cmd);
-        $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+        $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
         #my $err = $runner->err();
         #my $out = $runner->out();
 
@@ -1440,7 +1440,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         #my $err = $runner->err();
         #my $out = $runner->out();
 
-        $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+        $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
         while($job->alive()) {
             sleep(1);

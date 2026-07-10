@@ -504,6 +504,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
     my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
 
     my $job = CXGN::Job->new({
         schema => $schema,
@@ -516,7 +517,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         results_page => '/tools/solgwas'
     });
 
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass);
+    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
 
     while($job->alive()){
         sleep(1);
@@ -543,7 +544,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     # $cmd->is_cluster(1);
     # $cmd->wait;
 
-    my $finished = $job->finish_timestamp();
+    my $finished = $job->retrieve_finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {
