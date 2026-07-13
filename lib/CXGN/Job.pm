@@ -140,7 +140,7 @@ Current status of the job. May be stored in DB or may be gathered from Slurm (an
 
 has 'status' => ( 
     isa => 'Maybe[Str]',
-    isa => enum([qw( submitted finished failed timeout canceled )]), 
+    isa => enum([qw( submitted finished failed timed_out canceled )]), 
     is => 'rw'
 );
 
