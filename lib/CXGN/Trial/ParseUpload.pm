@@ -93,6 +93,22 @@ has 'trial_name' => (
     required => 0
 );
 
+has 'plot_name_template' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_plot_name_template',
+    required => 0,
+    default => ''
+);
+
+has 'breeding_program_name' => (
+    isa => 'Str',
+    is => 'rw',
+    predicate => 'has_breeding_program_name',
+    required => 0,
+    default => ''
+);
+
 has 'facility_identifiers_included' => (
     isa => 'Bool',
     is => 'ro',
