@@ -64,7 +64,6 @@ sub transformation_page : Path('/transformation') Args(1) {
     my $transformation_notes = $info->[0]->[4];
 
     my $is_a_control = $info->[0]->[5];
-    print STDERR "IS A CONTROL =".Dumper($is_a_control)."\n";
     if ($is_a_control) {
         $is_a_control = 'is a control';
     }

@@ -8,6 +8,7 @@ use CXGN::TrackingActivity::TrackingIdentifier;
 use CXGN::Stock::Status;
 use CXGN::People::Person;
 use CXGN::Transformation::Transformation;
+use CXGN::Stock::Vector;
 use JSON;
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -100,13 +101,18 @@ sub activity_details :Path('/activity/details') : Args(1) {
         my $plant_material_name = $info->[0]->[1];
         $vector_id = $info->[0]->[2];
         my $vector_name = $info->[0]->[3];
+        my $vector_construct_obj = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
+        my $vector_related_genes = $vector_construct_obj->Gene;
         my $transformation_project_name = $associated_projects->[0]->[5];
+        my $is_a_control = $info->[0]->[5];
         my $source_info_hash = {};
         $source_info_hash->{'breedingProgram'} = $program_name;
         $source_info_hash->{'transformationProject'} = $transformation_project_name;
         $source_info_hash->{'transformationID'} = $material_name;
         $source_info_hash->{'vectorConstruct'} = $vector_name;
         $source_info_hash->{'plantMaterial'} = $plant_material_name;
+        $source_info_hash->{'isAcontrol'} = $is_a_control;
+        $source_info_hash->{'vectorRelatedGenes'} = $vector_related_genes;
         $source_info_string = encode_json $source_info_hash;
     }
 
@@ -196,7 +202,11 @@ sub record_activity :Path('/activity/record') :Args(0) {
             my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$material_stock_id});
             my $info = $transformation_obj->get_transformation_info();
             my $plant_material_name = $info->[0]->[1];
+            my $vector_id = $info->[0]->[2];
             my $vector_name = $info->[0]->[3];
+            my $vector_construct_obj = CXGN::Stock::Vector->new(schema=>$schema, stock_id=>$vector_id);
+            my $vector_related_genes = $vector_construct_obj->Gene;
+            my $is_a_control = $info->[0]->[5];
             my $transformation_project_name = $associated_projects->[0]->[5];
             my $source_info_hash = {};
             $source_info_hash->{'breedingProgram'} = $program_name;
@@ -204,6 +214,8 @@ sub record_activity :Path('/activity/record') :Args(0) {
             $source_info_hash->{'transformationID'} = $material_name;
             $source_info_hash->{'vectorConstruct'} = $vector_name;
             $source_info_hash->{'plantMaterial'} = $plant_material_name;
+            $source_info_hash->{'isAcontrol'} = $is_a_control;
+            $source_info_hash->{'vectorRelatedGenes'} = $vector_related_genes;
             $source_info_string = encode_json $source_info_hash;
         }
 
