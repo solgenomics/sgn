@@ -41,26 +41,33 @@ around 'finalize' => sub {
             my $cookies = $c->req->cookies;
             my $cookie = $cookies->{'captcha-token'};
             my $cookie_value = $cookie ? $cookie->value : undef;
+            my $query_value = $c->req->param('captcha-token');
+            my $check_value = $query_value || $cookie_value;
 
-            # If cookie is not provided, redirect to captcha page
-            if ( !defined $cookie_value || $cookie_value eq '' ) {
+            # If token is not provided, redirect to captcha page
+            if ( !defined $check_value || $check_value eq '' ) {
                 $c->res->redirect( uri( path => '/captcha', query => { goto_url => $c->req->uri->path_query } ) );
             }
 
-            # If the cookie is provided, verify its signature
+            # If the token is provided, verify its signature
             else {
 
-                # Get the token and signature from the cookie
-                my @parts = split(':', $cookie_value);
+                # Get the token and signature from the value
+                my @parts = split(':', $check_value);
                 my $c_token = join(':', @parts[0..2]);
                 my $c_signature = $parts[3];
 
-                # Get the true signature to comapre to the one in the cookie
+                # Get the true signature to compare to the one in the value
                 my $t_signature = hmac_sha256_base64($c_token, $config->{signing_key});
 
-                # cookie signature check fails, redirect to captcha page
+                # value signature check fails, redirect to captcha page
                 if ( !defined $c_signature || !defined $t_signature || $c_signature ne $t_signature ) {
                     $c->res->redirect( uri( path => '/captcha', query => { goto_url => $c->req->uri->path_query } ) );
+                }
+
+                # If the token is sent as a query param, save it as a cookie for future requests
+                if ( defined $query_value ) {
+                    CXGN::Cookie::set_cookie('captcha-token', $query_value);
                 }
 
             }

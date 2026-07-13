@@ -65,6 +65,7 @@
                     const url = new URL("<% $goto_url %>", `${window.location.protocol}//${window.location.host}`);
                     if ( !url.searchParams.has("captcha") ) {
                         url.searchParams.append("captcha", "passed");
+                        url.searchParams.delete("captcha-token");
                         window.location = url.pathname + url.search;
                     }
                 }
