@@ -161,6 +161,7 @@ $design_types => ()
                                             <option value="">Default plot naming: {trialName}-PLOT_{plotNumber}</option>
                                         </select>
                                         <p id="trial_upload_plot_name_template_preview" class="help-block"></p>
+                                        <button type="button" class="btn btn-sm btn-default" id="trial_upload_add_plot_name_template_button" style="margin-top:5px">Create New Plot Name Template</button>
                                     </div>
                                 </div>
                                 <div class="form-group">

@@ -812,6 +812,8 @@ rect.bordered {
                                         <div id="plot_template_radios">
                                             <p><em>Loading available templates...</em></p>
                                         </div>
+                                        <br>
+                                        <button type="button" class="btn btn-sm btn-primary" id="trial_design_add_plot_name_template_button" style="margin-top:5px">Create New Plot Name Template</button>
                                     </div>
                                     <div id="plot_naming_tab_custom" class="tab-pane">
                                         <p>It is recommended to allow the database to create the plot prefixes, so leave the prefix blank unless necessary.</p>
