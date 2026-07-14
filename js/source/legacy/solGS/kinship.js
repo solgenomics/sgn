@@ -174,6 +174,7 @@ solGS.kinship = {
 
     if (!protocolId) {
       protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("kinship_div");
+      console.log(`createRowElements kinshipArgs.protocolId: ${protocolId}`);
     }
 
     var kinshipArgs = {
@@ -290,11 +291,11 @@ solGS.kinship = {
       var selectedPopData = selectedPopDiv.dataset;
 
       kinshipArgs = JSON.parse(selectedPopData.selectedPop);
-      var kinshipPopId = kinshipArgs.data_str + "_" + kinshipArgs.id;
+      var kinshipPopId = kinshipArgs.data_structure + "_" + kinshipArgs.id;
 
       var protocolId;
-      if (kinshipArgs.data_str == 'dataset') {
-        datasetId = kinshipArgs.id;
+      if (kinshipArgs.data_structure == 'dataset') {
+        datasetId = kinshipArgs.dataset_id;
         protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
       }
 

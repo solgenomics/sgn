@@ -198,6 +198,7 @@ solGS.pca = {
         var pcaArgs;
         var selectedPopDiv = document.getElementById(runPcaElemId);
 
+        var protocolId;
         if (selectedPopDiv) {
             var selectedPopData = selectedPopDiv.dataset;
             var selectedPop = JSON.parse(selectedPopData.selectedPop);
@@ -205,6 +206,23 @@ solGS.pca = {
 
             var pcaArgs = selectedPopData.selectedPop;
             pcaArgs = JSON.parse(pcaArgs);
+            if (pcaArgs.data_structure.match(/dataset/)) {
+                var datasetId = pcaPopId.replace(/dataset_/, "");
+                protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+            }
+
+            if (!protocolId) {
+                console.log(`No protocolId found, using default`);
+                protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+                console.log(`pca div protocolId: ${protocolId}`);
+            }
+
+            var page = `/pca/analysis/${pcaPopId}/gp/${protocolId}`;
+            
+            pcaArgs["analysis_type"] = "pca analysis";
+            pcaArgs["genotyping_protocol_id"] = protocolId;
+            pcaArgs["analysis_page"] = page;
+
             if (!selectedPop.data_type) {
                 pcaArgs["data_type"] = this.getSelectedDataType(pcaPopId);
             }
@@ -213,6 +231,9 @@ solGS.pca = {
                 pcaArgs["analysis_page"] = this.generatePcaUrl(pcaPopId);
             }
         }
+
+
+        console.log(`getSelectedPopPcaArgs pcaArgs return : ${pcaArgs}`);
 
         return pcaArgs;
     },
