@@ -560,8 +560,11 @@ $family_type => undef
 
 % if ($info_section_id eq 'family_parents_section'){
                                 <& /breeders_toolbox/cross/family_parents.mas, family_id => $family_id, family_type => $family_type  &>
-%} #End intercross_section
+%} #End family_parents_section
 
+% if ($info_section_id eq 'crosses_in_family_section'){
+                                <& /breeders_toolbox/cross/crosses_in_family.mas, family_id => $family_id &>
+%} #End crosses_in_family_section
 
 
 

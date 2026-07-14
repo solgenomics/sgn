@@ -29,7 +29,6 @@ $family_type
     </table>
 </div>
 
-
 <script>
 
 jQuery(document).ready(function(){
