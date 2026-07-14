@@ -566,6 +566,9 @@ $family_type => undef
                                 <& /breeders_toolbox/cross/crosses_in_family.mas, family_id => $family_id &>
 %} #End crosses_in_family_section
 
+% if ($info_section_id eq 'progenies_from_family_section'){
+                                <& /breeders_toolbox/cross/progenies_from_family.mas, family_id => $family_id &>
+%} #End progenies_from_family_section
 
 
 

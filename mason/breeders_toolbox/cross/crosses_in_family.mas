@@ -27,6 +27,7 @@ jQuery(document).ready(function(){
     const crosses_in_family = jQuery('#crosses_in_family_table').DataTable({
         'ajax': '/ajax/family/members/'+family_id,
         'destroy': true,
+        'autoWidth': false,
         columns: [
             { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
             { title: "Cross Type", "data": "cross_type" },

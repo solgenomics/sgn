@@ -40,6 +40,7 @@ jQuery(document).ready(function(){
         'destroy' : true,
         "bLengthChange" : false,
         'bInfo' : false,
+        'autoWidth': false,
     });
 
 });
