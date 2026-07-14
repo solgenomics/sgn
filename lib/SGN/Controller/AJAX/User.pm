@@ -410,23 +410,16 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     my $email = $c->req->param('password_reset_email');
 
     my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
-    my @reset_links;
-    my @reset_tokens;
     foreach my $pid (@person_ids) {
         my $email_reset_token = $self->tempname();
         my $reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
-        print STDERR "Sending reset link $reset_link\n";
         $self->send_reset_email_message($c, $pid, $email, $reset_link, $person->{username});
-        push @reset_links, $reset_link;
-        push @reset_tokens, $email_reset_token;
     }
 
     $c->stash->{rest} = {
         message => "Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.",
-        reset_links => \@reset_links,
-        reset_tokens => \@reset_tokens
     };
 }
 
