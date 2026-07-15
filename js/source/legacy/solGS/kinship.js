@@ -406,10 +406,10 @@ jQuery(document).ready(function () {
     var runKinshipBtnId = e.target.id;
     if (runKinshipBtnId.match(/run_kinship/)) {
     
-        jQuery(runKinshipBtnId).hide();
+        jQuery(`#${runKinshipBtnId}`).hide();
+        var kinshipMsgDiv = solGS.kinship.kinshipMsgDiv;
         jQuery(kinshipMsgDiv).text("Running kinship... please wait...it may take minutes.").show();
-
-         jQuery(`${canvas} .multi-spinner-container`).show();
+        jQuery(`${canvas} .multi-spinner-container`).show();
 
         var kinshipArgs = solGS.kinship.getKinshipArgs();
         var kinshipPopId = kinshipArgs.kinship_pop_id;
@@ -426,7 +426,6 @@ jQuery(document).ready(function () {
     
         var canvas = solGS.kinship.canvas;
         var kinshipPlotDivId = solGS.kinship.kinshipPlotDivPrefix;
-        var kinshipMsgDiv = solGS.kinship.kinshipMsgDiv;
         runKinshipBtnId = `#${runKinshipBtnId}`;
         var kinshipUrl = kinshipArgs.analysis_page;
     
