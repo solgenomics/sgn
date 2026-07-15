@@ -25,78 +25,158 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok("/about/index.pl", "get root url test");
     sleep(2);
 
-    $d->click_ok("lists_link", "name", "find lists_link");
+    my $out = $d->find_element_ok("lists_link", "name", "find lists_link")->click();
 
     sleep(2);
 
     # Revert to original sorting: by list name, ascending
-    $d->click_ok("(//div[\@id='private_list_data_table_wrapper']//thead/tr/th)[1]", "xpath", "Sort table by List Name");
-    $d->click_ok("list_select_checkbox_808", "id", "checkbox select list");
-    $d->click_ok("list_select_checkbox_810", "id", "checkbox select list");
-    $d->click_ok("make_public_selected_list_group", "id", "make public selected list group");
+    $d->find_element_ok("(//div[\@id='private_list_data_table_wrapper']//thead/tr/th)[1]", "xpath", "Sort table by List Name")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("make_public_selected_list_group", "id", "make public selected list group")->click();
+
+    sleep(1);
 
     $d->accept_alert_ok();
 
-    $d->click_ok("view_public_lists_button", "id", "view public lists");
+    sleep(1);
+
+    $d->find_element_ok("view_public_lists_button", "id", "view public lists")->click();
 
     sleep(1);
 
     $d->find_element_ok("view_public_list_johndoe_1_private", "id", "check view public lists");
 
-    $d->click_ok("close_public_list_item_dialog", "id", "close public lists");
-    $d->click_ok("list_select_checkbox_808", "id", "checkbox select list");
-    $d->click_ok("list_select_checkbox_810", "id", "checkbox select list");
-    $d->click_ok("make_private_selected_list_group", "id", "make private selected list group");
+    sleep(1);
 
-    $d->accept_alert_ok();
+    $d->find_element_ok("close_public_list_item_dialog", "id", "close public lists")->click();
 
-    ## Combine two lists using union
+    sleep(1);
 
-    $d->click_ok("list_select_checkbox_808", "id", "checkbox select list 808");
-    $d->click_ok("list_select_checkbox_810", "id", "checkbox select list 810");
-    $d->send_keys_ok("new_combined_list_name", "id", "combined_list_union", "name selected list group - union");
-    $d->click_ok("combine_selected_list_group_union", "id", "combine selected list group - union");
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("make_private_selected_list_group", "id", "make private selected list group")->click();
+
+    sleep(1);
 
     $d->accept_alert_ok();
 
     sleep(1);
+
+    ## Combine two lists using union
+
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list 808")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list 810")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("new_combined_list_name", "id", "name selected list group - union")->send_keys("combined_list_union");
+
+    $d->find_element_ok("combine_selected_list_group_union", "id", "combine selected list group - union")->click();
+
+    sleep(1);
+
+    $d->accept_alert_ok();
+
+    sleep(1);
+
     ok($d->driver->get_alert_text() =~ m/Added 4 items to the new List combined_list_union/i, 'created selected list group - union');
     $d->accept_alert_ok();
 
+    sleep(1);
+
     $d->find_element_ok("view_list_combined_list_union", "id", "check view combined list - union");
+
+    sleep(1);
 
     ## Combine two lists using intersection
 
-    $d->click_ok("list_select_checkbox_808", "id", "checkbox select list 808");
-    $d->click_ok("list_select_checkbox_4", "id", "checkbox select list 4");
-    $d->send_keys_ok("new_combined_list_name", "id", "combined_list_intersection", "name selected list group - intersection");
-    $d->click_ok("combine_selected_list_group_intersection", "id", "combine selected list group - intersection");
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list 808")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_4", "id", "checkbox select list 4")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("new_combined_list_name", "id", "name selected list group - intersection")->send_keys("combined_list_intersection");
+
+    $d->find_element_ok("combine_selected_list_group_intersection", "id", "combine selected list group - intersection")->click();
+
+    sleep(1);
 
     $d->accept_alert_ok();
+
+    sleep(1);
 
     # Accept alert about mismatched list types (one list doesn't have it's type set)
     $d->accept_alert_ok();
 
     sleep(1);
+
     ok($d->driver->get_alert_text() =~ m/Added 2 items to the new List combined_list_intersection/i, 'created selected list group - intersection');
     $d->accept_alert_ok();
 
+    sleep(1);
+
     $d->find_element_ok("view_list_combined_list_intersection", "id", "check view combined list - intersection");
 
+    sleep(1);
+
     # Compare two lists
-    $d->click_ok("list_select_checkbox_808", "id", "checkbox select list 808");
-    $d->click_ok("list_select_checkbox_810", "id", "checkbox select list 810");
-    $d->click_ok("compare_selected_list_group", "id", "compare selected list group");
-    $d->click_ok("download_comparison_column", "id", "find download comparison column button");
-    $d->click_ok("close_list_comparison_modal", "id", "find close comparison dialog button");
+
+    $d->find_element_ok("list_select_checkbox_808", "id", "checkbox select list 808")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("list_select_checkbox_810", "id", "checkbox select list 810")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("compare_selected_list_group", "id", "compare selected list group")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("download_comparison_column", "id", "find download comparison column button")->click();
+
+    sleep(1);
+
+    $d->find_element_ok("close_list_comparison_modal", "id", "find close comparison dialog button")->click();
+
+    sleep(1);
 
     ## Delete list group
-    $d->click_ok("delete_selected_list_group", "id", "delete selected list group");
+
+    $d->find_element_ok("delete_selected_list_group", "id", "delete selected list group")->click();
+
+    sleep(1);
 
     $d->accept_alert_ok();
-    $d->click_ok("close_list_dialog_button", "id", "find close dialog button");
+
+    sleep(1);
+
+
+    $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
+
 });
 
 $d->driver->close();
 done_testing();
-

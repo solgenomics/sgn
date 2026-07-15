@@ -232,14 +232,14 @@ $t->while_logged_in_as("curator", sub {
             'id',
             "find content of list to check details")->get_attribute('innerHTML');
 
-        ok($trial_details =~ /T100_plot_(xlsx_)?01/, "Verify plots");
-        ok($trial_details =~ /T100_plot_(xlsx_)?02/, "Verify plots");
-        ok($trial_details =~ /T100_plot_(xlsx_)?03/, "Verify plots");
-        ok($trial_details =~ /T100_plot_(xlsx_)?04/, "Verify plots");
-        ok($trial_details =~ /T100_plot_(xlsx_)?05/, "Verify plots");
-        ok($trial_details =~ /T100_plot_(xlsx_)?06/, "Verify plots");
-        ok($trial_details =~ /T100_plot_(xlsx_)?07/, "Verify plots");
-        ok($trial_details =~ /T100_plot_(xlsx_)?08/, "Verify plots");
+        ok($trial_details =~ /T100_plot_01/, "Verify plots");
+        ok($trial_details =~ /T100_plot_02/, "Verify plots");
+        ok($trial_details =~ /T100_plot_03/, "Verify plots");
+        ok($trial_details =~ /T100_plot_04/, "Verify plots");
+        ok($trial_details =~ /T100_plot_05/, "Verify plots");
+        ok($trial_details =~ /T100_plot_06/, "Verify plots");
+        ok($trial_details =~ /T100_plot_07/, "Verify plots");
+        ok($trial_details =~ /T100_plot_08/, "Verify plots");
     }
 });
 
