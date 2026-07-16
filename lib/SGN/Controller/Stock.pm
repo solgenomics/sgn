@@ -306,6 +306,22 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         }
     }
 
+    my $family_type_string;
+    my $family_type;
+    if ($stock_type eq 'family_name') {
+        my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
+        my $family_prop = $schema->resultset("Stock::Stockprop")->find({ stock_id => $stock_id, type_id => $family_type_id});
+
+        if ($family_prop){
+            $family_type = $family_prop->value();
+            if ($family_type eq 'same_parents'){
+                $family_type_string = 'This family includes only crosses having the same female parent and the same male parent';
+            } elsif ($family_type eq 'reciprocal_parents'){
+                $family_type_string = 'This family includes reciprocal crosses';
+            }
+        }
+    }
+
     my $derived_accession_relationship;
     my $related_stock_link;
     my $original_stock_link;
@@ -393,6 +409,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         vector_analyzed_tissue_types => $vector_analyzed_tissue_types,
         number_of_insertions => $number_of_insertions,
         is_a_parent => $is_a_parent,
+        family_type_string => $family_type_string,
+        family_type => $family_type,
 	    },
 	    locus_add_uri  => $c->uri_for( '/ajax/stock/associate_locus' ),
 	    cvterm_add_uri => $c->uri_for( '/ajax/stock/associate_ontology'),
