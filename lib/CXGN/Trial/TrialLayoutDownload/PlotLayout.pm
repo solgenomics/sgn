@@ -100,6 +100,30 @@ sub retrieve {
     my @overall_trait_names = sort keys %$overall_performance_hash;
     my @exact_trait_names = sort keys %$exact_performance_hash;
 
+    # for accession stockprops like synonym and variety, it is way too slow to create a CXGN::Stock::Accession for each plot.
+    # Instead, there needs to be one big call at the start to retrieve these stockprops and index them for the next loop
+    my %accessionprops = ();
+    if ($selected_cols{"variety"} || $selected_cols{"synonyms"}) {
+        my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+        my $variety_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+        my @all_accession_ids = map {$_->{accession_id}} @plot_design;
+        my $q = "SELECT stock_id,
+        string_agg(value, ',' ORDER BY rank) FILTER (WHERE type_id = $variety_cvterm_id) AS variety_names,
+        string_agg(value, ',' ORDER BY rank) FILTER (WHERE type_id = $synonym_cvterm_id) AS synonyms
+        FROM stockprop
+        WHERE stock_id IN (".join(",",@all_accession_ids).")
+        AND type_id IN ($synonym_cvterm_id, $variety_cvterm_id)
+        GROUP BY stock_id";
+        my $h = $schema->storage->dbh->prepare($q);
+        $h->execute();
+        while (my ($accession_id, $variety_names, $synonyms) = $h->fetchrow_array) {
+            $accessionprops{$accession_id} = {
+                variety => $variety_names,
+                synonyms => $synonyms,
+            };
+        }
+    }
+
     foreach my $design_info (@plot_design) {
         my $line;
         foreach (@possible_cols){
@@ -120,11 +144,9 @@ sub retrieve {
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
                     push @$line, $row."/".$col;
                 } elsif ($_ eq 'synonyms'){
-                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, join ',', @{$accession->synonyms}
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{synonyms} // "";
                 } elsif ($_ eq 'variety'){
-                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, $accession->variety;
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{variety} // "";
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } else {

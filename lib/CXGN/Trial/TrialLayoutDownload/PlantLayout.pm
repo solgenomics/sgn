@@ -92,26 +92,40 @@ sub retrieve {
         }
     }
 
+    # for accession stockprops like synonym and variety, it is way too slow to create a CXGN::Stock::Accession for each plot.
+    # Instead, there needs to be one big call at the start to retrieve these stockprops and index them for the next loop
+    my %accessionprops = ();
+    if ($selected_cols{"variety"} || $selected_cols{"synonyms"}) {
+        my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+        my $variety_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+        my @all_accession_ids = map {$design{$_}->{accession_id}} keys %design;
+        my $q = "SELECT stock_id,
+        string_agg(value, ',' ORDER BY rank) FILTER (WHERE type_id = $variety_cvterm_id) AS variety_names,
+        string_agg(value, ',' ORDER BY rank) FILTER (WHERE type_id = $synonym_cvterm_id) AS synonyms
+        FROM stockprop
+        WHERE stock_id IN (".join(",",@all_accession_ids).")
+        AND type_id IN ($synonym_cvterm_id, $variety_cvterm_id)
+        GROUP BY stock_id";
+        my $h = $schema->storage->dbh->prepare($q);
+        $h->execute();
+        while (my ($accession_id, $variety_names, $synonyms) = $h->fetchrow_array) {
+            $accessionprops{$accession_id} = {
+                variety => $variety_names,
+                synonyms => $synonyms,
+            };
+        }
+    }
+
     #Turn plot level design into a plant level design that can be sorted on plot_number and then plant index number..
     my @plant_design;
     while (my($plot_number, $design_info) = each %design){
-        my $acc_synonyms = '';
-        if (exists($selected_cols{'synonyms'})){
-            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-            $acc_synonyms = join ',', @{$accession->synonyms};
-        }
         my $acc_pedigree = '';
         if (exists($selected_cols{'pedigree'})){
             $acc_pedigree = $pedigree_strings->{$design_info->{"accession_name"}};
         }
-        my $acc_variety = '';
-        if (exists($selected_cols{'variety'})) {
-            my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-            $acc_variety = $accession->variety;
-        }
-        $design_info->{synonyms} = $acc_synonyms;
+        $design_info->{synonyms} = $accessionprops{$design_info->{accession_id}}->{synonyms} // "";
         $design_info->{pedigree} = $acc_pedigree;
-        $design_info->{variety} = $acc_variety;
+        $design_info->{variety} = $accessionprops{$design_info->{accession_id}}->{variety} // "";
 
         my $subplot_plant_names = $design_info->{'subplots_plant_names'};
         my $subplot_names = $design_info->{'subplot_names'};
