@@ -229,6 +229,32 @@ tr.shown td.details-control {
       </div>
     </div>
 
+    <div class="modal fade" id="runNameModal" tabindex="-1" role="dialog" aria-labelledby="runNameModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="runNameModalTitle">Name This Image Analysis Run</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label for="run_name_input">Run Name</label>
+                    <input type="text" class="form-control" id="run_name_input"
+                        placeholder="e.g. Seed size analysis March 2025" />
+                    <p class="text-muted" style="font-size:12px;margin-top:6px;">
+                        This name will identify the analysis run in the database.
+                    </p>
+                    <div id="run_name_error" class="text-danger" style="display:none;margin-top:6px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="run_name_confirm">Save Results</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -269,6 +295,65 @@ tr.shown td.details-control {
     </div>
 </&>
 
+<&| /page/info_section.mas, title=>"Image Analysis Run Search Criteria", collapsible => 1, collapsed=>0, subtitle => "Search saved image analysis runs." &>
+
+    <div id="run_search_form" class="well well-sm">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Run name: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_run_name"
+                           name="run_search_run_name" placeholder="e.g. Seed size March 2025" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Source image filename: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_image_filename"
+                           name="run_search_image_filename" placeholder="e.g. 42200_branching" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Source stock name: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_stock_name"
+                           name="run_search_stock_name" placeholder="e.g. FieldPlot100" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Pipeline name: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_pipeline_name"
+                           name="run_search_pipeline_name" placeholder="e.g. seed_size_shape" />
+                </div>
+            </div>
+        </div>
+
+        <center>
+            <button class="btn btn-primary" id="run_search_submit">Search</button>
+        </center>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title=>"Image Analysis Run Search Results", collapsible => 1, collapsed=>0 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id="image_analysis_run_search_results" class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Run Name</th>
+                            <th>Source Image Filename</th>
+                            <th>Source Stock</th>
+                            <th>Pipeline Name</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
 <script>
 
 var service_traits = {
@@ -300,6 +385,19 @@ jQuery(document).ready(function(){
             return false;
         }
         _load_image_search_results();
+    });
+
+    _load_run_search_results();
+
+    jQuery('#run_search_submit').click(function () {
+        jQuery('#image_analysis_run_search_results').DataTable().ajax.reload();
+    });
+
+    jQuery('#run_search_form').keypress( function( e ) {
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+            jQuery('#run_search_submit').click();
+        }
     });
 
     jQuery("#image_submitter").autocomplete({
@@ -389,6 +487,7 @@ jQuery(document).ready(function(){
     const selected_image_ids = [];
     let submit_results;
     let is_multi_trait;
+    let analysis_metadata;
 
     jQuery('#image_analysis_submit').click(function(){
         jQuery('input[name="image_analysis_select"]').each(function() {
@@ -429,7 +528,7 @@ jQuery(document).ready(function(){
                 dataType:'json',
                 success: function(response) {
                     images_finished++;
-                    // console.log(response);
+                    console.log("submit response", response);
                     jQuery('#progress_msg').text('Responses received for '+images_finished+' out of '+image_total+' images');
                     current_progress += (1 / image_total) * 90;
                     progress_bar.css("width", current_progress + "%")
@@ -473,6 +572,7 @@ jQuery(document).ready(function(){
                 //alert("The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.")
             //}
 
+
             let metricsData = Object.entries(first.result.analysis_info)
                 .filter(([key, value]) => key != null && value != null)
                 .map(([key, value]) => ({
@@ -496,8 +596,8 @@ jQuery(document).ready(function(){
                     method: 'POST',
                     data: { 'result': JSON.stringify(results) },
                     success: function(response) {
-                        // console.log("Grouped Results are:");
-                        //console.log(response);
+                        console.log("Grouped Results are:");
+                        console.log(response);
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
                         .attr("aria-valuenow", current_progress)
@@ -505,6 +605,8 @@ jQuery(document).ready(function(){
                         jQuery('#progress_msg').text('Building results table.');
 
                         is_multi_trait = response.results.multi_trait_analysis;
+                        analysis_metadata = response.results.analysis_metadata;
+                        console.log("analysis_metadata", analysis_metadata);
                         if (response.results.analyzed_image_overlay) {
                             jQuery('#analysis_image').attr('src', response.results.analyzed_image_overlay);
                             jQuery('#analysis_image_link').attr('href', response.results.analyzed_image_overlay);
@@ -587,15 +689,64 @@ jQuery(document).ready(function(){
         console.log("submit results", submit_results);
         if (submit_results.stock_type_name === "plot") {
             jQuery('#plantCreationWarning').modal('show');
+        } else {
+            enterRunName();
         }
     });
 
     jQuery('#save_results_continue').click(function() {
         jQuery('#plantCreationWarning').modal('hide');
-        saveResults();
+        enterRunName();
     });
 
-    function saveResults() {
+    function enterRunName() {
+        jQuery('#run_name_error').hide().text('');
+        jQuery('#run_name_input').val('');
+        jQuery('#runNameModal').modal('show');
+        setTimeout(function () { jQuery('#run_name_input').focus(); }, 300);
+    } 
+
+    jQuery('#run_name_confirm').click(function () {
+        var runName = jQuery.trim(jQuery('#run_name_input').val());
+
+        if (!runName) {
+            showRunNameError('Please enter a name for this run.');
+            return;
+        }
+
+        var $btn = jQuery('#run_name_confirm');
+        $btn.prop('disabled', true).text('Checking...');
+
+        jQuery.ajax({
+            url: '/ajax/image_analysis/check_run_name',
+            method: 'GET',
+            data: { run_name: runName },
+            success: function (resp) {
+                $btn.prop('disabled', false).text('Save Results');
+
+                if (resp.exists) {
+                    showRunNameError('A run named "' + runName +
+                        '" already exists. Please choose a different name.');
+                    return;
+                }
+
+                // name is free -> proceed
+                jQuery('#runNameModal').modal('hide');
+                saveResults(runName);
+            },
+            error: function (xhr) {
+                $btn.prop('disabled', false).text('Save Results');
+                showRunNameError('Could not verify the name. Please try again.');
+                console.error(xhr.responseText);
+            }
+        });
+    });
+
+    function showRunNameError(msg) {
+        jQuery('#run_name_error').text(msg).show();
+    }
+
+    function saveResults(runName) {
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
         console.log("table data:", table_data);
         let dt = new DataTransfer();
@@ -679,13 +830,20 @@ jQuery(document).ready(function(){
             let germplasmName = plantData[0].observationUnitName;
             let accessionId = table_data[0].germplasmDbId;
             let sampleName;
+            var seen_trait_ids = {};
+            var trait_ids = [];
 
             table_data.forEach(row => {
+                var trait_id = row.observationVariableDbId;
+                if (trait_id != null && !seen_trait_ids[trait_id]) {
+                    seen_trait_ids[trait_id] = true;
+                    trait_ids.push(trait_id);
+                }
                 row.details.forEach((detail, i) => {
                     const key = detail.object_name || detail.image_name;
 
                     if (!samples[key]) {
-                        let sampleNumber = parseInt(detail.sample_num) + i;
+                        let sampleNumber = parseInt(detail.sample_num);
                         if (is_multi_trait == 1) {
                             sampleName = germplasmName + '_' + 'sample' + sampleNumber;
                         } else {
@@ -745,7 +903,7 @@ jQuery(document).ready(function(){
                     observationUnitPosition: {
                         observationLevel: {
                             levelName: "tissue_sample",
-                            levelCode: "tissue_sample_" + (index + 1),
+                            levelCode: "tissue_sample_test" + (index + 1),
                             levelOrder: 4
                         },
                         observationLevelRelationships: [
@@ -801,9 +959,19 @@ jQuery(document).ready(function(){
                         headers: { "Authorization": "Bearer " + jQuery.cookie("sgn_session_id") },
                         data: JSON.stringify(observationData),
                         success: function (obsResponse) {
-                            jQuery('#working_modal').modal('hide');
-                            jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
-                            jQuery('#saveResultModal').modal('show');
+                            console.log("obsResponse raw:", obsResponse);
+                            console.log("obsResponse type:", typeof obsResponse);
+                            var tissue_sample_ids = Object.keys(sampleData);
+                            console.log("tissue_sample_ids test:", tissue_sample_ids);
+                            createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids)
+                                .done(function (resp) {
+                                    jQuery('#working_modal').modal('hide');
+                                    showSaveSuccess(resp);
+                                })
+                                .fail(function (xhr) {
+                                    jQuery('#working_modal').modal('hide');
+                                    showSaveError(xhr && xhr.responseText);
+                                });
                         },
                         error: function (err) {
                             console.error("Error saving observations", err.responseText);
@@ -848,6 +1016,7 @@ jQuery(document).ready(function(){
                             
                         })
                         console.log("observationdata 2:", observationData);
+                        var unitResponseData = response.result.data;
 
                         jQuery.ajax({
                             type: 'POST',
@@ -859,9 +1028,18 @@ jQuery(document).ready(function(){
                                 let promise = (imageFiles && imageFiles.length) ? loadAllImages(imageFiles, imageData) : Promise.resolve();
                                 promise.then(function(uploadStatus) {
                                     console.log("Upload completed!");
-                                    jQuery('#working_modal').modal('hide');
-                                    jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
-                                    jQuery('#saveResultModal').modal('show');
+                                    var tissue_sample_ids = unitResponseData.map(function(unit) {
+                                        return unit.observationUnitDbId;
+                                    });
+                                    createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids)
+                                        .done(function (resp) {
+                                            jQuery('#working_modal').modal('hide');
+                                            showSaveSuccess(resp);
+                                        })
+                                        .fail(function (xhr) {
+                                            jQuery('#working_modal').modal('hide');
+                                            showSaveError(xhr && xhr.responseText);
+                                        });                                 
                                 });
                                 
                             },
@@ -892,9 +1070,16 @@ jQuery(document).ready(function(){
             },
             success: function(response) {
                 // console.log(response);
-                jQuery('#working_modal').modal('hide');
-                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
-                jQuery('#saveResultModal').modal('show');
+                var tissue_sample_ids = [table_data[0].observationUnitDbId];
+                createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids)
+                    .done(function (resp) {
+                        jQuery('#working_modal').modal('hide');
+                        showSaveSuccess(resp);
+                    })
+                    .fail(function (xhr) {
+                        jQuery('#working_modal').modal('hide');
+                        showSaveError(xhr && xhr.responseText);
+                    });
             },
             error: function(response) {
                 // console.log(response);
@@ -945,6 +1130,83 @@ function getOrCreateSamples(sampleData) {
     return Promise.all(requests).then(() => existingSamples);
 }
 
+function createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids) {
+    console.log("create run project triggered");
+    var run_date = new Date().toISOString()
+                    .slice(0,19).replace('T',' ');
+    return jQuery.ajax({
+        type : 'POST',
+        url  : '/ajax/image_analysis/create_run_project',
+        data : {
+            trial_id          : table_data[0].studyDbId,
+            run_name          : runName,
+            service_name      : jQuery(
+                '#image_analysis_service_select option:selected'
+            ).text(),
+            run_date          : run_date,
+            source_stock_id   : table_data[0].observationUnitDbId,
+            source_image_id   : "2625",
+            overlay_image_id  : "2626",
+            tissue_samples    : JSON.stringify(
+                tissue_sample_ids.map(function(id) {
+                    return { stock_id: parseInt(id), result_image_id: null };
+                })
+            ),
+            trait_ids         : JSON.stringify(trait_ids || []),
+            analysis_info_json: JSON.stringify({analysis_metadata}
+            ),
+        },
+        error: function(err) {
+            console.error(
+                "Error creating run project:",
+                err.responseText
+            );
+        }
+    });
+}
+
+function showSaveSuccess(resp) {
+    if (resp && resp.error) {
+        showSaveError(resp.error);
+        return;
+    }
+
+    var runName = (resp && resp.run_name) ? resp.run_name : '';
+    var runId   = (resp && resp.run_project_id) ? resp.run_project_id : null;
+
+    var nameHtml;
+    if (runId) {
+        nameHtml = '<a href="/image_analysis/run/' + runId + '">' +
+                    jQuery('<div>').text(runName).html() +   
+                    '</a>';
+    } else {
+        nameHtml = jQuery('<div>').text(runName).html();
+    }
+
+    jQuery('#saveResultModalBody').html(
+        '<ul class="list-group">' +
+            '<li class="list-group-item list-group-item-success">' +
+                '<span class="badge"><span class="glyphicon glyphicon-ok"></span></span>' +
+                'New analysis run saved: ' + nameHtml +
+            '</li>' +
+        '</ul>'
+    );
+    jQuery('#saveResultModal').modal('show');
+}
+
+function showSaveError(msg) {
+    jQuery('#saveResultModalBody').html(
+        '<ul class="list-group">' +
+            '<li class="list-group-item list-group-item-danger">' +
+                '<span class="badge"><span class="glyphicon glyphicon-remove"></span></span>' +
+                'Error while trying to save the analysis results.' +
+                (msg ? ' Deets: ' + jQuery('<div>').text(msg).html() : '') +
+            '</li>' +
+        '</ul>'
+    );
+    jQuery('#saveResultModal').modal('show');
+}
+
 function _load_image_search_results() {
     images_table = jQuery('#image_analysis_image_search_results').DataTable({
         'destroy' : true,
@@ -963,6 +1225,28 @@ function _load_image_search_results() {
               d.image_tag = jQuery('#image_tag').val();
               d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
               d.image_project_name = jQuery('#html_image_analysis_trial_select').val();
+            }
+        }
+    });
+}
+
+function _load_run_search_results() {
+    jQuery('#image_analysis_run_search_results').DataTable({
+        'destroy'    : true,
+        'searching'  : false,
+        'ordering'   : false,
+        'processing' : true,
+        'serverSide' : true,
+        'scrollX'    : true,
+        'lengthMenu' : [10, 20, 50, 100, 1000],
+        'ajax': {
+            'url': '/ajax/image_analysis/search_runs',
+            'method': 'POST',
+            'data': function (d) {
+                d.run_name       = jQuery('#run_search_run_name').val();
+                d.image_filename = jQuery('#run_search_image_filename').val();
+                d.stock_name     = jQuery('#run_search_stock_name').val();
+                d.pipeline_name  = jQuery('#run_search_pipeline_name').val();
             }
         }
     });
