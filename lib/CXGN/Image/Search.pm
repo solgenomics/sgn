@@ -384,21 +384,20 @@ sub search {
 	push @question_mark_values, $sql;
 	
     }
-    if ($stock_id_list && scalar(@$stock_id_list)>0) {
-        my $sql = join ("," , @$stock_id_list);
-        push @where_clause, "stock.stock_id in (?)";
-	push @question_mark_values, $sql;
+    if ($stock_id_list && scalar(@$stock_id_list) > 0) {
+        my $placeholders = join(",", ("?") x scalar(@$stock_id_list));
+        push @where_clause, "stock.stock_id in ($placeholders)";
+        push @question_mark_values, @$stock_id_list;
     }
-    if ($stock_name_list && scalar(@$stock_name_list)>0) {
+    if ($stock_name_list && scalar(@$stock_name_list) > 0) {
         if ($stock_names_exact) {
-            my $sql = join ("','" , @$stock_name_list);
-            my $name_sql = "'" . $sql . "'";
-            push @where_clause, "stock.uniquename in (?)";
-	    push @question_mark_values, $name_sql;
+            my $placeholders = join(",", ("?") x scalar(@$stock_name_list));
+            push @where_clause, "stock.uniquename in ($placeholders)";
+            push @question_mark_values, @$stock_name_list;
         } else {
             foreach (@$stock_name_list) {
                 push @and_clause, "stock.uniquename ilike ?";
-		push @question_mark_values, '%' . $_ . '%';
+                push @question_mark_values, '%' . $_ . '%';
             }
         }
     }
