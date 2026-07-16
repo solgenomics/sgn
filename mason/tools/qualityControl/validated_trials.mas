@@ -68,6 +68,8 @@
 <br>
 <br>
 
+<& /ai/command_panel.mas &>
+
 <&| /page/info_section.mas, title=>"Statistcs", collapsible=>1, collapsed=>1 &>
 
     <button id="calculate_statistics">Calculate Statistics</button>
@@ -131,6 +133,9 @@
 let currentPage = 1;   
 let itemsPerPage = 10; 
 let allData = [];
+let breedbaseAIConversationId = null;
+let currentBreedbaseAiQcContext = null;
+let currentBreedbaseAiQcResult = null;
 
 document.getElementById('downloadCsvButton').addEventListener('click', function () {
   // Prepare the headers for the CSV file
@@ -567,10 +572,160 @@ function calculateStatisticsPerTrait(data) {
 
 let stats = {};
 
+function isBreedbaseAIEnabled() {
+  return $('#breedbase_ai_qc_container').data('ai-enabled') === 1 || $('#breedbase_ai_qc_container').data('ai-enabled') === '1';
+}
+
+function setBreedbaseAIStatus(message) {
+  $('#breedbase_ai_qc_status').text(message);
+}
+
+function resetBreedbaseAIContext() {
+  currentBreedbaseAiQcContext = null;
+  currentBreedbaseAiQcResult = null;
+  window.BreedbaseAICommandContext = { page_type: 'quality_control' };
+  setBreedbaseAIStatus('Ready for a command.');
+}
+
+function uniqueValues(values) {
+  return [...new Set((values || []).filter((value) => value !== null && value !== undefined && value !== ''))];
+}
+
+function buildTraitSummaries(calculatedStats) {
+  return Object.entries(calculatedStats || {}).map(([trait, accessions]) => {
+    const accessionStats = Object.values(accessions || {});
+    const observationCount = accessionStats.reduce((sum, stat) => sum + (stat.count || 0), 0);
+    const means = accessionStats.map((stat) => stat.mean).filter((value) => value !== null && value !== undefined && !isNaN(value));
+    return {
+      trait_name: trait,
+      accession_count: accessionStats.length,
+      observation_count: observationCount,
+      mean_of_accession_means: means.length ? means.reduce((sum, value) => sum + value, 0) / means.length : null,
+      min: accessionStats.reduce((current, stat) => stat.min !== null && stat.min !== undefined ? Math.min(current, stat.min) : current, Infinity),
+      max: accessionStats.reduce((current, stat) => stat.max !== null && stat.max !== undefined ? Math.max(current, stat.max) : current, -Infinity),
+    };
+  }).map((summary) => ({
+    ...summary,
+    min: summary.min === Infinity ? null : summary.min,
+    max: summary.max === -Infinity ? null : summary.max,
+  }));
+}
+
+function buildTrialSummaries(phenotypeRows) {
+  const byTrial = {};
+  (phenotypeRows || []).forEach((row) => {
+    const trial = row.trial || 'Unknown trial';
+    if (!byTrial[trial]) {
+      byTrial[trial] = { trial: trial, observation_count: 0, traits: new Set(), accessions: new Set() };
+    }
+    byTrial[trial].observation_count += 1;
+    if (row.trait) { byTrial[trial].traits.add(row.trait); }
+    if (row.accession) { byTrial[trial].accessions.add(row.accession); }
+  });
+  return Object.values(byTrial).map((summary) => ({
+    trial: summary.trial,
+    observation_count: summary.observation_count,
+    trait_count: summary.traits.size,
+    accession_count: summary.accessions.size,
+  }));
+}
+
+function updateBreedbaseAIContextFromValidatedTrials(phenotypeRows, calculatedStats) {
+  if (!isBreedbaseAIEnabled()) { return; }
+
+  const traitNames = Object.keys(calculatedStats || {});
+  const projectNames = uniqueValues(allProjects.map((project) => project.name));
+  const selectedPairs = allProjects.map((project) => ({
+    trial_name: project.name,
+    trait_name: project.validated_trait,
+  }));
+  const validObservationRows = (phenotypeRows || []).filter((row) => row && row.value !== null && row.value !== undefined && !isNaN(parseFloat(row.value)));
+  const canAnalyze = projectNames.length > 0 && traitNames.length > 0 && validObservationRows.length > 0;
+
+  currentBreedbaseAiQcContext = {
+    page_type: 'quality_control',
+    workflow: 'validated_trials',
+    project_names: projectNames,
+    traits: traitNames,
+  };
+  window.BreedbaseAICommandContext = currentBreedbaseAiQcContext;
+
+  currentBreedbaseAiQcResult = {
+    method: 'Validated Trial Summary Statistics',
+    multiplier: 1.5,
+    observation_count: validObservationRows.length,
+    potential_outlier_count: 0,
+    trait_name: traitNames.join(', '),
+    candidates: [],
+    selected_projects: selectedPairs,
+    traits: buildTraitSummaries(calculatedStats),
+    by_trial: buildTrialSummaries(validObservationRows),
+  };
+
+  setBreedbaseAIStatus(canAnalyze ? 'Validated-trial context is available to Breedbase AI.' : 'Ready for a command.');
+}
+
+function submitBreedbaseAIValidatedTrials() {
+  if (!currentBreedbaseAiQcContext || !currentBreedbaseAiQcResult) {
+    showBreedbaseAIError('Calculate Statistics before asking Breedbase AI to analyze this page.');
+    return;
+  }
+
+  $('#breedbase_ai_qc_panel').show();
+  $('#breedbase_ai_qc_error').text('');
+  $('#breedbase_ai_qc_message').text('Analyzing...');
+  $('#breedbase_ai_qc_actions').empty();
+
+  $.ajax({
+    url: '/ajax/ai/chat',
+    method: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({
+      conversation_id: breedbaseAIConversationId,
+      message: 'Analyze the current Validated Trials Quality Control results.',
+      context: currentBreedbaseAiQcContext,
+      qc_result: currentBreedbaseAiQcResult,
+    }),
+    success: function(response) {
+      breedbaseAIConversationId = response.conversation_id || breedbaseAIConversationId;
+      renderBreedbaseAIValidatedTrialsResponse(response);
+    },
+    error: function(xhr) {
+      const response = xhr.responseJSON || {};
+      showBreedbaseAIError(response.error || 'Breedbase AI is currently unavailable. The Quality Control analysis is still available.');
+    },
+  });
+}
+
+function renderBreedbaseAIValidatedTrialsResponse(response) {
+  $('#breedbase_ai_qc_panel').show();
+  $('#breedbase_ai_qc_message').text(response.message || '');
+  $('#breedbase_ai_qc_error').text('');
+  const actions = $('#breedbase_ai_qc_actions');
+  actions.empty();
+
+  (response.actions || []).forEach(function(action) {
+    if (action.action_type === 'review_outliers' || action.action_type === 'compare_by_trial') {
+      $('<button>', { class: 'btn btn-default btn-sm', type: 'button' })
+        .text(action.label || 'Review Results')
+        .on('click', function() { document.getElementById('statTable').scrollIntoView({ behavior: 'smooth' }); })
+        .appendTo(actions);
+    }
+  });
+}
+
+function showBreedbaseAIError(message) {
+  $('#breedbase_ai_qc_panel').show();
+  $('#breedbase_ai_qc_error').text(message);
+}
+
 
 // Example usage with an AJAX call
 $(document).ready(function () {
+  resetBreedbaseAIContext();
+
   $('#calculate_statistics').on('click', function () {
+    resetBreedbaseAIContext();
     $('#loading_spinner').show();
 
     $.ajax({
@@ -591,6 +746,8 @@ $(document).ready(function () {
 
         // Populate the trait selection dropdown
         populateTraitSelection(stats);
+
+        updateBreedbaseAIContextFromValidatedTrials(response, stats);
 
         // Integrate pagination if needed
         $('#statTable').DataTable();
@@ -687,6 +844,7 @@ $(document).on('change', '.projectCheckbox', function () {
         }
     }
     console.log("here sel loc:", selectedLocations);
+    resetBreedbaseAIContext();
     // Call fetchLatLonForProjects only with unique selectedLocations
     if (selectedLocations.length > 0) {
         fetchLatLonForProjects([...new Set(selectedLocations)]);

@@ -67,6 +67,32 @@
     line-height: 1.6em;
 }           
 
+#breedbase_ai_qc_container {
+    border: 1px solid #d7d7d7;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 14px 0;
+    background: #fff;
+}
+#breedbase_ai_qc_panel {
+    margin-top: 12px;
+    border-left: 4px solid #337ab7;
+    padding: 10px 12px;
+    background: #f8f9fb;
+}
+#breedbase_ai_qc_message {
+    white-space: pre-wrap;
+    margin-bottom: 10px;
+}
+#breedbase_ai_qc_actions button {
+    margin-right: 8px;
+    margin-bottom: 6px;
+}
+#breedbase_ai_qc_error {
+    color: #a94442;
+    margin-top: 8px;
+}
+
 </style>
 
 <div id="qualitycontrol_tool">
@@ -76,6 +102,7 @@
 <div class="container">
   <div class="row">
     <div class="col-md-12">
+      <& /ai/command_panel.mas &>
       <div class="container-fluid">
         <&| /util/workflow.mas, id=> "quality_control_analysis_workflow" &>
           <&| /util/workflow.mas:step, title=> "Choose Dataset" &>
@@ -181,6 +208,7 @@
         </table>
         <br>
         </div>
+
         <div style="float:right">
             <button class="btn btn-main" id="qc_choose_variable"  onclick="Workflow.complete(this);">Next step</button>
         </div>
@@ -232,4 +260,3 @@ var qualitycontrol = window.jsMod['qualitycontrol'].init("qualitycontrol");
 });
 
 </script>
-

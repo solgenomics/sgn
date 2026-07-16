@@ -1,0 +1,326 @@
+% if ($c->get_conf('enable_ai_agent')) {
+<style>
+  #breedbase_ai_qc_container {
+    border: 1px solid #d7d7d7;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 14px 0;
+    background: #fff;
+  }
+  #breedbase_ai_qc_container .breedbase-ai-heading { margin: 0 0 6px; }
+  #breedbase_ai_qc_status { margin-left: 8px; }
+  #breedbase_ai_command_dialog .modal-dialog { width: min(920px, calc(100% - 30px)); }
+  #breedbase_ai_command_input { min-height: 88px; resize: vertical; }
+  #breedbase_ai_command_message { white-space: pre-wrap; margin: 12px 0; }
+  #breedbase_ai_command_plan,
+  #breedbase_ai_command_result,
+  #breedbase_ai_command_pending { margin-top: 12px; }
+  #breedbase_ai_command_actions button { margin: 8px 8px 0 0; }
+  #breedbase_ai_command_error { color: #a94442; margin-top: 10px; white-space: pre-wrap; }
+  #breedbase_ai_command_result .table { margin: 8px 0 0; }
+  #breedbase_ai_command_result .recommendation-keep { color: #2b6b3f; font-weight: 600; }
+  #breedbase_ai_command_result .recommendation-remove { color: #9b3b35; font-weight: 600; }
+</style>
+
+<div id="breedbase_ai_qc_container" data-ai-enabled="1">
+  <h3 class="breedbase-ai-heading">Breedbase AI</h3>
+  <p>Request controlled Quality Control workflows using natural language.</p>
+  <button type="button" class="btn btn-info" id="analyze_with_breedbase_ai_button">Open Breedbase AI</button>
+  <span id="breedbase_ai_qc_status" class="text-muted">Ready for a command.</span>
+</div>
+
+<div class="modal fade" id="breedbase_ai_command_dialog" tabindex="-1" role="dialog" aria-labelledby="breedbase_ai_command_title">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h3 class="modal-title" id="breedbase_ai_command_title">Breedbase AI</h3>
+      </div>
+      <div class="modal-body">
+        <div><strong>Context:</strong> <span id="breedbase_ai_command_context">Quality Control</span></div>
+        <label for="breedbase_ai_command_input" style="margin-top:12px;">Command</label>
+        <textarea
+          class="form-control"
+          id="breedbase_ai_command_input"
+          maxlength="4000"
+          placeholder="Use QC for filtering traits from dataset 225"></textarea>
+        <div id="breedbase_ai_command_message" aria-live="polite"></div>
+        <div id="breedbase_ai_command_plan"></div>
+        <div id="breedbase_ai_command_result"></div>
+        <div id="breedbase_ai_command_pending"></div>
+        <div id="breedbase_ai_command_actions"></div>
+        <div id="breedbase_ai_command_error" role="alert"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="breedbase_ai_command_run">Run</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function($) {
+  'use strict';
+
+  var state = window.BreedbaseAICommandState || {
+    conversationId: null,
+    message: '',
+    lastResponse: null
+  };
+  window.BreedbaseAICommandState = state;
+
+  function currentContext() {
+    var source = window.BreedbaseAICommandContext || { page_type: 'quality_control' };
+    var context = { page_type: source.page_type || 'quality_control' };
+    ['dataset_id', 'trial_id', 'study_id', 'trait_id', 'trait_name', 'workflow'].forEach(function(key) {
+      if (source[key] !== undefined && source[key] !== null && source[key] !== '') { context[key] = source[key]; }
+    });
+    ['project_names', 'traits'].forEach(function(key) {
+      if (Array.isArray(source[key])) { context[key] = source[key].slice(); }
+    });
+    return context;
+  }
+
+  function clearOutput() {
+    $('#breedbase_ai_command_message').text('');
+    $('#breedbase_ai_command_plan').empty();
+    $('#breedbase_ai_command_result').empty();
+    $('#breedbase_ai_command_pending').empty();
+    $('#breedbase_ai_command_actions').empty();
+    $('#breedbase_ai_command_error').text('');
+  }
+
+  function setBusy(busy) {
+    $('#breedbase_ai_command_run').prop('disabled', busy).text(busy ? 'Running...' : 'Run');
+  }
+
+  function sendCommand(options) {
+    options = options || {};
+    var message = options.message || $.trim($('#breedbase_ai_command_input').val());
+    if (!message) {
+      $('#breedbase_ai_command_error').text('Enter a command before running Breedbase AI.');
+      return;
+    }
+    state.message = message;
+    clearOutput();
+    $('#breedbase_ai_command_message').text(options.confirmed ? 'Running the confirmed workflow...' : 'Interpreting command...');
+    setBusy(true);
+    var payload = {
+      conversation_id: state.conversationId,
+      message: message,
+      context: currentContext(),
+      confirmed: options.confirmed === true
+    };
+    if (options.actionType) { payload.action_type = options.actionType; }
+
+    $.ajax({
+      url: '/ajax/ai/command',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(payload),
+      success: function(response) {
+        state.conversationId = response.conversation_id || state.conversationId;
+        state.lastResponse = response;
+        renderResponse(response);
+      },
+      error: function(xhr) {
+        var response = xhr.responseJSON || {};
+        $('#breedbase_ai_command_message').text('');
+        $('#breedbase_ai_command_error').text(response.error || 'Breedbase AI is currently unavailable. Existing Quality Control tools remain available.');
+      },
+      complete: function() { setBusy(false); }
+    });
+  }
+
+  function renderResponse(response) {
+    clearOutput();
+    $('#breedbase_ai_command_message').text(response.message || '');
+    renderPlan(response.plan || []);
+    if (response.response_type === 'qc_trait_filter_result') { renderTraitResult(response.data || {}); }
+    if (response.response_type === 'qc_problem_trials_result') { renderTrialResult(response.data || {}); }
+    if (response.response_type === 'phenotype_download_result') { renderDownloadSummary(response.data || {}); }
+    if (response.pending_action) { renderPendingAction(response.pending_action); }
+    renderActions(response.actions || [], response);
+  }
+
+  function renderPlan(plan) {
+    if (!plan.length) { return; }
+    var container = $('#breedbase_ai_command_plan');
+    $('<h4>').text('Plan').appendTo(container);
+    var list = $('<ol>').appendTo(container);
+    plan.forEach(function(step) { $('<li>').text(step).appendTo(list); });
+  }
+
+  function makeTable(headers, rows) {
+    var table = $('<table>', { class: 'table table-bordered table-striped table-condensed' });
+    var headRow = $('<tr>').appendTo($('<thead>').appendTo(table));
+    headers.forEach(function(header) { $('<th>').text(header).appendTo(headRow); });
+    var body = $('<tbody>').appendTo(table);
+    rows.forEach(function(cells) {
+      var row = $('<tr>').appendTo(body);
+      cells.forEach(function(cell) {
+        var td = $('<td>').appendTo(row);
+        if (cell && typeof cell === 'object' && cell.text !== undefined) {
+          td.text(cell.text).addClass(cell.className || '');
+        } else {
+          td.text(cell === null || cell === undefined ? '' : cell);
+        }
+      });
+    });
+    return table;
+  }
+
+  function renderTraitResult(data) {
+    var traits = data.traits || [];
+    var rows = traits.map(function(trait) {
+      return [
+        trait.trait_name,
+        trait.valid_observations,
+        Number(trait.missing_percentage || 0).toFixed(2),
+        Number(trait.candidate_outlier_percentage || 0).toFixed(2),
+        { text: trait.recommendation, className: 'recommendation-' + trait.recommendation },
+        trait.reason
+      ];
+    });
+    $('<h4>').text('Trait QC recommendations').appendTo('#breedbase_ai_command_result');
+    makeTable(['Trait', 'Valid Observations', 'Missing %', 'Outlier %', 'Recommendation', 'Reason'], rows)
+      .appendTo('#breedbase_ai_command_result');
+  }
+
+  function renderTrialResult(data) {
+    var rows = (data.trials || []).map(function(trial) {
+      return [trial.trial_name, trial.observation_count, trial.candidate_outlier_count, Number(trial.candidate_outlier_percentage || 0).toFixed(2)];
+    });
+    $('<h4>').text('QC candidates by trial').appendTo('#breedbase_ai_command_result');
+    makeTable(['Trial', 'Observations', 'Candidate Outliers', 'Outlier %'], rows).appendTo('#breedbase_ai_command_result');
+  }
+
+  function renderDownloadSummary(data) {
+    var text = 'Prepared ' + (data.observation_count || 0) + ' phenotype row(s); excluded ' +
+      (data.excluded_database_outlier_count || 0) + ' database-level outlier row(s).';
+    $('<p>').text(text).appendTo('#breedbase_ai_command_result');
+  }
+
+  function renderPendingAction(action) {
+    var container = $('#breedbase_ai_command_pending');
+    $('<h4>').text('Pending action confirmation').appendTo(container);
+    $('<p>').text(action.effect_summary || '').appendTo(container);
+    $('<p>').text('Pending action ID: ' + action.pending_action_id).appendTo(container);
+  }
+
+  function renderActions(actions, response) {
+    var container = $('#breedbase_ai_command_actions');
+    actions.forEach(function(action) {
+      var buttonClass = action.action_type === 'approve_pending_action' ? 'btn-success' : 'btn-default';
+      if (action.action_type === 'create_filtered_dataset') { buttonClass = 'btn-warning'; }
+      var button = $('<button>', { type: 'button', class: 'btn btn-sm ' + buttonClass })
+        .text(action.label || action.action_type)
+        .appendTo(container);
+      button.on('click', function() { handleAction(action, response); });
+    });
+  }
+
+  function handleAction(action, response) {
+    if (action.action_type === 'confirm_workflow') {
+      sendCommand({ message: state.message, confirmed: true });
+    } else if (action.action_type === 'cancel_workflow') {
+      $('#breedbase_ai_command_dialog').modal('hide');
+    } else if (action.action_type === 'create_filtered_dataset') {
+      sendCommand({ message: state.message, confirmed: true, actionType: 'create_filtered_dataset' });
+    } else if (action.action_type === 'download_filtered_trait_report') {
+      downloadRowsAsCsv('dataset-' + response.data.dataset_id + '-trait-qc.csv', response.data.traits || []);
+    } else if (action.action_type === 'download_phenotype_csv') {
+      downloadRowsAsCsv('dataset-' + response.data.dataset_id + '-phenotypes-without-outliers.csv', response.data.rows || []);
+    } else if (action.action_type === 'approve_pending_action') {
+      approvePendingAction(action.data && action.data.pending_action_id);
+    } else if (action.action_type === 'reject_pending_action') {
+      rejectPendingAction(action.data && action.data.pending_action_id);
+    }
+  }
+
+  function approvePendingAction(pendingActionId) {
+    if (!pendingActionId) { return; }
+    setBusy(true);
+    $.ajax({
+      url: '/ajax/ai/action/approve',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ pending_action_id: pendingActionId }),
+      success: function(response) {
+        var execution = response.execution || {};
+        if (execution.status === 'not_implemented') {
+          $('#breedbase_ai_command_message').text(execution.message || 'The controlled Breedbase write endpoint is not implemented.');
+        } else if (execution.dataset_id) {
+          $('#breedbase_ai_command_message').text('Approved action completed. Created dataset ' + execution.dataset_id + '.');
+        } else {
+          $('#breedbase_ai_command_message').text('Approved action completed.');
+        }
+        $('#breedbase_ai_command_pending, #breedbase_ai_command_actions').empty();
+      },
+      error: function(xhr) {
+        var response = xhr.responseJSON || {};
+        $('#breedbase_ai_command_error').text(response.error || 'Breedbase AI could not complete the approved action.');
+      },
+      complete: function() { setBusy(false); }
+    });
+  }
+
+  function rejectPendingAction(pendingActionId) {
+    if (!pendingActionId) { return; }
+    $.ajax({
+      url: '/ajax/ai/action/reject',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({ pending_action_id: pendingActionId }),
+      success: function() {
+        $('#breedbase_ai_command_message').text('Pending action rejected.');
+        $('#breedbase_ai_command_pending, #breedbase_ai_command_actions').empty();
+      },
+      error: function(xhr) {
+        var response = xhr.responseJSON || {};
+        $('#breedbase_ai_command_error').text(response.error || 'Breedbase AI could not reject the pending action.');
+      }
+    });
+  }
+
+  function downloadRowsAsCsv(filename, rows) {
+    if (!rows.length) {
+      $('#breedbase_ai_command_error').text('There are no rows available to download.');
+      return;
+    }
+    var columns = Object.keys(rows[0]);
+    function csvCell(value) {
+      var text = value === null || value === undefined ? '' : (typeof value === 'object' ? JSON.stringify(value) : String(value));
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+    var csv = [columns.map(csvCell).join(',')].concat(rows.map(function(row) {
+      return columns.map(function(column) { return csvCell(row[column]); }).join(',');
+    })).join('\n');
+    var url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  $(document).ready(function() {
+    window.BreedbaseAICommandContext = window.BreedbaseAICommandContext || { page_type: 'quality_control' };
+    $('#analyze_with_breedbase_ai_button').on('click', function() {
+      $('#breedbase_ai_command_dialog').modal('show');
+      setTimeout(function() { $('#breedbase_ai_command_input').focus(); }, 200);
+    });
+    $('#breedbase_ai_command_run').on('click', function() { sendCommand({ confirmed: false }); });
+    $('#breedbase_ai_command_input').on('keydown', function(event) {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        sendCommand({ confirmed: false });
+      }
+    });
+  });
+})(jQuery);
+</script>
+% }

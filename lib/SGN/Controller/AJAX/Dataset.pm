@@ -428,6 +428,7 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
     my $dataset_id = shift;
     my $dimension = shift;
     my $include_phenotype_primary_key = $c->req->param('include_phenotype_primary_key');
+    my $exclude_phenotype_outlier = $c->req->param('exclude_phenotype_outlier') ? 1 : 0;
     
     my $dataset = CXGN::Dataset->new(
 	{
@@ -435,6 +436,7 @@ sub retrieve_dataset_dimension :Path('/ajax/dataset/retrieve') Args(2) {
 	    people_schema => $c->dbic_schema("CXGN::People::Schema"),
 	    sp_dataset_id=> $dataset_id,
         include_phenotype_primary_key => $include_phenotype_primary_key,
+        exclude_phenotype_outlier => $exclude_phenotype_outlier,
 	});
 
     my $dimension_data;

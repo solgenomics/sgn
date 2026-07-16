@@ -26,6 +26,11 @@ export function init(main_div) {
     $('#qc_analysis_prepare_button').click(function () {
         dataset_id = get_dataset_id();
         if (dataset_id != false) {
+            window.BreedbaseAICommandContext = {
+                page_type: 'quality_control',
+                dataset_id: parseInt(dataset_id, 10)
+            };
+            setBreedbaseAIStatus('Dataset ' + dataset_id + ' context is available to Breedbase AI.');
             $.ajax({
                 url: '/ajax/qualitycontrol/prepare',
                 data: { 'dataset_id': get_dataset_id() },
@@ -130,6 +135,7 @@ export function init(main_div) {
                     outliers = result.outliers;  // Extract the outliers
                     globalOutliers = outliers;
                     allData = r.data;
+                    updateBreedbaseAIContext(result, r.data, trait_selected, outlierMultiplier);
                     populateOutlierTable(r.data, trait_selected);
                     populateCleanTable(r.data, outliers, trait_selected);
                 }
@@ -272,6 +278,9 @@ function populateOtherTraits(traitsHTML, traitSelected) {
 }
 
 var globalOutliers = [];
+var breedbaseAILastQCResult = null;
+var breedbaseAILastContext = null;
+var breedbaseAIConversationId = null;
 
 function updateBoxplot(isFixed, minValue, maxValue) {
     // Fetch the selected trait and tempfile
@@ -290,6 +299,7 @@ function updateBoxplot(isFixed, minValue, maxValue) {
             const outliers = result.outliers || [];
             populateCleanTable(boxplotData, outliers, trait_selected);
             globalOutliers = outliers;
+            updateBreedbaseAIContext(result, boxplotData, trait_selected, outlierMultiplier);
         },
 
         error: function (jqXHR, textStatus, errorThrown) {
@@ -652,6 +662,196 @@ function drawBoxplot(data, selected_trait, outlierMultiplier, isFixedMinMax, min
 
 }
 
+
+
+function isBreedbaseAIEnabled() {
+    return $('#breedbase_ai_qc_container').data('ai-enabled') === 1 || $('#breedbase_ai_qc_container').data('ai-enabled') === '1';
+}
+
+function parseTraitId(traitName) {
+    if (!traitName) { return null; }
+    const match = String(traitName).match(/(\d+)\s*$/);
+    if (!match) { return null; }
+    const traitId = parseInt(match[1], 10);
+    return isNaN(traitId) ? null : traitId;
+}
+
+function numericTraitValues(data, trait) {
+    return (data || []).map(function(row) {
+        const value = row && row[trait] !== undefined ? parseFloat(String(row[trait]).replace(',', '.')) : NaN;
+        return value;
+    }).filter(function(value) { return !isNaN(value); });
+}
+
+function setBreedbaseAIStatus(message) {
+    $('#breedbase_ai_qc_status').text(message);
+}
+
+function updateBreedbaseAIContext(result, data, trait, multiplier) {
+    if (!isBreedbaseAIEnabled()) { return; }
+    const datasetId = parseInt(get_dataset_id(), 10);
+    if (!datasetId || !trait || !result) {
+        setBreedbaseAIStatus('Ready for a command.');
+        return;
+    }
+
+    const candidates = (result.outliers || []).filter(function(outlier) {
+        return outlier && outlier.plotName !== null && outlier.plotName !== undefined;
+    });
+    const values = numericTraitValues(data, trait);
+    const byLocation = (result.boxplotData || []).map(function(item) {
+        return {
+            locationDbId: item.locationDbId,
+            observation_count: item.values ? item.values.length : 0,
+            outlier_count: item.outliers ? item.outliers.length : 0,
+            q1: item.q1,
+            q3: item.q3,
+            iqr: item.iqr,
+            lower_bound: item.lowerBound,
+            upper_bound: item.upperBound,
+            min: item.min,
+            max: item.max,
+            median: item.median
+        };
+    });
+    const firstStats = byLocation.find(function(item) { return item.q1 !== null && item.q1 !== undefined; }) || {};
+    const traitId = parseTraitId(trait);
+
+    breedbaseAILastContext = {
+        page_type: 'quality_control',
+        dataset_id: datasetId,
+        trait_name: trait
+    };
+    if (traitId) { breedbaseAILastContext.trait_id = traitId; }
+    window.BreedbaseAICommandContext = breedbaseAILastContext;
+
+    breedbaseAILastQCResult = {
+        method: 'IQR',
+        multiplier: multiplier || 1.5,
+        observation_count: values.length,
+        potential_outlier_count: candidates.length,
+        trait_id: traitId,
+        trait_name: trait,
+        q1: firstStats.q1,
+        q3: firstStats.q3,
+        iqr: firstStats.iqr,
+        lower_bound: firstStats.lower_bound,
+        upper_bound: firstStats.upper_bound,
+        by_location: byLocation,
+        candidates: candidates
+    };
+
+    const hasAnalysis = values.length > 0;
+    setBreedbaseAIStatus(hasAnalysis ? 'Dataset ' + datasetId + ' context is available to Breedbase AI.' : 'Ready for a command.');
+}
+
+function submitBreedbaseAI(message) {
+    if (!breedbaseAILastContext || !breedbaseAILastQCResult) {
+        showBreedbaseAIError('Run Quality Control before asking Breedbase AI to analyze the result.');
+        return;
+    }
+    $('#breedbase_ai_qc_panel').show();
+    $('#breedbase_ai_qc_error').text('');
+    $('#breedbase_ai_qc_message').text('Analyzing...');
+    $('#breedbase_ai_qc_actions').empty();
+
+    $.ajax({
+        url: '/ajax/ai/chat',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            conversation_id: breedbaseAIConversationId,
+            message: message,
+            context: breedbaseAILastContext,
+            qc_result: breedbaseAILastQCResult
+        }),
+        success: function(response) {
+            breedbaseAIConversationId = response.conversation_id || breedbaseAIConversationId;
+            renderBreedbaseAIResponse(response);
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON || {};
+            showBreedbaseAIError(response.error || 'Breedbase AI is currently unavailable. The Quality Control analysis is still available.');
+        }
+    });
+}
+
+function renderBreedbaseAIResponse(response) {
+    $('#breedbase_ai_qc_panel').show();
+    $('#breedbase_ai_qc_message').text(response.message || '');
+    $('#breedbase_ai_qc_error').text('');
+    const actions = $('#breedbase_ai_qc_actions');
+    actions.empty();
+
+    (response.actions || []).forEach(function(action) {
+        if (action.action_type === 'review_outliers') {
+            $('<button>', {id: 'breedbase_ai_review_outliers', class: 'btn btn-default btn-sm', type: 'button'}).text(action.label || 'Review Outliers').appendTo(actions);
+        }
+    });
+
+    if (response.response_type === 'qc_summary' && breedbaseAILastQCResult && breedbaseAILastQCResult.candidates.length > 0) {
+        $('<button>', {id: 'breedbase_ai_prepare_action', class: 'btn btn-warning btn-sm', type: 'button'}).text('Prepare Outlier Action').appendTo(actions);
+    }
+
+    if (response.pending_action && response.pending_action.pending_action_id) {
+        $('<button>', {
+            id: 'breedbase_ai_approve_action',
+            class: 'btn btn-success btn-sm',
+            type: 'button'
+        }).text('Confirm Action').data('pending-action-id', response.pending_action.pending_action_id).appendTo(actions);
+        $('<button>', {
+            id: 'breedbase_ai_reject_action',
+            class: 'btn btn-default btn-sm',
+            type: 'button'
+        }).text('Reject').data('pending-action-id', response.pending_action.pending_action_id).appendTo(actions);
+    }
+}
+
+function approveBreedbaseAIAction(pendingActionId) {
+    if (!pendingActionId) { return; }
+    $('#breedbase_ai_qc_error').text('');
+    $.ajax({
+        url: '/ajax/ai/action/approve',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({pending_action_id: pendingActionId}),
+        success: function(response) {
+            const storedCount = response.execution && response.execution.stored_count !== undefined ? response.execution.stored_count : null;
+            const message = storedCount !== null ? 'Approved action completed. Stored ' + storedCount + ' database-level phenotype outlier observation(s).' : 'Approved action completed.';
+            $('#breedbase_ai_qc_message').text(message);
+            $('#breedbase_ai_qc_actions').empty();
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON || {};
+            showBreedbaseAIError(response.error || 'Breedbase AI could not complete the approved action.');
+        }
+    });
+}
+
+function rejectBreedbaseAIAction(pendingActionId) {
+    if (!pendingActionId) { return; }
+    $.ajax({
+        url: '/ajax/ai/action/reject',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({pending_action_id: pendingActionId}),
+        success: function() {
+            $('#breedbase_ai_qc_message').text('Pending action rejected.');
+            $('#breedbase_ai_qc_actions').empty();
+            $('#breedbase_ai_qc_error').text('');
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON || {};
+            showBreedbaseAIError(response.error || 'Breedbase AI could not reject the pending action.');
+        }
+    });
+}
+
+function showBreedbaseAIError(message) {
+    $('#breedbase_ai_qc_panel').show();
+    $('#breedbase_ai_qc_error').text(message);
+    setBreedbaseAIStatus('Breedbase AI needs a completed Quality Control result before it can analyze this page.');
+}
 
 
 function get_dataset_id() {
