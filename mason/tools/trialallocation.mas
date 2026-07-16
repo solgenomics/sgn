@@ -46,6 +46,15 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
     line-height: 1.1;
   }
 
+  /* Tailwind replaces Bootstrap's inherited body font on this page. Restore
+     Bootstrap's navbar typography so its labels and dropdowns match the rest
+     of Breedbase. */
+  nav.navbar {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+  }
+
   :root {
     --cell: 40px;
     --gap: 2px;
