@@ -8,6 +8,7 @@ use Test::LWP::UserAgent;
 use SGN::Test::WWW::Mechanize;
 use CXGN::Image;
 use CXGN::Stock;
+use CXGN::Trial;
 use CXGN::Chado::Stock;
 use JSON;
 use Data::Dumper;
@@ -180,6 +181,266 @@ ok($tissue_resp->{result}{data}[0]{observationUnitDbId}, "Tissue sample created 
 
 # Get created tissue sample
 $mech->get_ok('http://localhost:3010/brapi/v2/observationunits?observationUnitName=FruitDiameter_"IITA-TMS-IBA980581_001"_sample1', 'get tissue sample');
+
+
+# create_run_project tests
+
+# A trial to attach the run to. Use an existing fixture trial id.
+my $trial_rs = $schema->resultset('Project::Project')->search(
+    undef, { rows => 1, order_by => { -desc => 'project_id' } }
+);
+my $trial_id = $trial_rs->first->project_id();
+
+# Source stock (reuse the stock from the submit test)
+my $source_stock_id = $stock_id;
+
+# A couple of tissue sample stocks to link. Grab two existing stocks.
+my @ts_rows = $schema->resultset('Stock::Stock')->search(
+    undef, { rows => 2, order_by => { -desc => 'stock_id' } }
+)->all;
+my @tissue_sample_ids = map { $_->stock_id } @ts_rows;
+
+my $tissue_samples_json = encode_json([
+    map { { stock_id => $_, result_image_id => undef } } @tissue_sample_ids
+]);
+
+# Trait ids to associate (use real cvterm ids from the fixture)
+my $trait_cvterm = $schema->resultset('Cv::Cvterm')->search(
+    undef, { rows => 1 }
+)->first;
+my $trait_id_1 = $trait_cvterm->cvterm_id();
+my $trait_ids_json = encode_json([ $trait_id_1 ]);
+
+# analysis_info_json carrying analysis_metadata
+my $analysis_info_json = encode_json({
+    analysis_metadata => {
+        job_id              => 'test-job-123',
+        timestamp           => '2026-07-09T20:32:28+00:00',
+        pipeline_name       => 'seed_size_shape',
+        pipeline_version    => '0.1.0',
+        input_filename      => 'test_input.jpg',
+        qc_json             => encode_json({ object_count => 2, analysis_pass => JSON::true }),
+        output_mode         => 'all',
+        traits_emitted_json => encode_json([ 'Object Area|IMGSTAT:0000006' ]),
+        raw_result_json     => encode_json({
+            objects => [
+                { object_id => 'obj_001', source_label => '1',
+                  traits => { 'Object Area|IMGSTAT:0000006' => { value => 12.01 } } },
+                { object_id => 'obj_002', source_label => '2',
+                  traits => { 'Object Area|IMGSTAT:0000006' => { value => 14.46 } } },
+            ],
+            traits_emitted => [ 'Object Area|IMGSTAT:0000006' ],
+        }),
+    }
+});
+
+my $run_name = 'ImageAnalysisRun_test_' . time();
+
+# --- Happy path: create a run project -------------------------------
+
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [
+        trial_id           => $trial_id,
+        run_name           => $run_name,
+        service_name       => 'Image Multi Object Multi Trait Analysis',
+        run_date           => '2026-07-09',
+        analysis_info_json => $analysis_info_json,
+        source_stock_id    => $source_stock_id,
+        source_image_id    => $image_id,
+        overlay_image_id   => $image_id,
+        trait_ids          => $trait_ids_json,
+        tissue_samples     => $tissue_samples_json,
+    ]
+);
+
+my $create_result = decode_json $mech->content;
+print STDERR "create result: " . Dumper $create_result;
+ok($create_result->{success}, "create_run_project returned success");
+ok($create_result->{run_project_id}, "run_project_id returned");
+is($create_result->{run_name}, $run_name, "run_name echoed back");
+is($create_result->{traits_associated}, 1, "one trait associated");
+
+my $run_project_id = $create_result->{run_project_id};
+
+# --- Verify the project was created ---------------------------------
+
+my $project = $schema->resultset('Project::Project')->find({ project_id => $run_project_id });
+ok($project, "run project row exists in the database");
+is($project->name(), $run_name, "project name matches run_name");
+
+# --- Verify the design projectprop marks it as an analysis run ------
+
+my $design_id = SGN::Model::Cvterm->get_cvterm_row(
+    $schema, 'design', 'project_property')->cvterm_id();
+my $design_prop = $schema->resultset('Project::Projectprop')->find({
+    project_id => $run_project_id,
+    type_id    => $design_id,
+});
+ok($design_prop, "design projectprop exists");
+is($design_prop->value, 'image_analysis_run', "design value is image_analysis_run");
+
+# --- Verify pipeline metadata projectprops --------------------------
+
+my %expect_meta = (
+    image_analysis_pipeline_name    => 'seed_size_shape',
+    image_analysis_pipeline_version => '0.1.0',
+    image_analysis_job_id           => 'test-job-123',
+    image_analysis_input_filename   => 'test_input.jpg',
+);
+foreach my $term (sort keys %expect_meta) {
+    my $tid = SGN::Model::Cvterm->get_cvterm_row(
+        $schema, $term, 'project_property')->cvterm_id();
+    my $prop = $schema->resultset('Project::Projectprop')->find({
+        project_id => $run_project_id,
+        type_id    => $tid,
+    });
+    ok($prop, "$term projectprop exists");
+    is($prop->value, $expect_meta{$term}, "$term value correct");
+}
+
+# --- Verify raw_result_json stored ----------------------------------
+
+my $raw_id = SGN::Model::Cvterm->get_cvterm_row(
+    $schema, 'image_analysis_raw_result_json', 'project_property')->cvterm_id();
+my $raw_prop = $schema->resultset('Project::Projectprop')->find({
+    project_id => $run_project_id,
+    type_id    => $raw_id,
+});
+ok($raw_prop && $raw_prop->value, "raw_result_json projectprop stored");
+my $stored_raw = decode_json($raw_prop->value);
+is(scalar(@{ $stored_raw->{objects} }), 2, "raw result has 2 objects");
+
+# --- Verify trait association (projectprop keyed on trait cvterm) ---
+
+my $trait_prop = $schema->resultset('Project::Projectprop')->find({
+    project_id => $run_project_id,
+    type_id    => $trait_id_1,
+});
+ok($trait_prop, "trait association projectprop exists");
+is($trait_prop->value, 1, "trait association value is 1");
+
+# --- Verify the run-on-trial relationship ---------------------------
+
+my $rel_id = SGN::Model::Cvterm->get_cvterm_row(
+    $schema, 'image_analysis_run_on_field_trial', 'project_relationship')->cvterm_id();
+my $rel = $schema->resultset('Project::ProjectRelationship')->find({
+    subject_project_id => $run_project_id,
+    object_project_id  => $trial_id,
+    type_id            => $rel_id,
+});
+ok($rel, "run project is linked to the field trial");
+
+# --- Verify nd_experiment + stock links -----------------------------
+
+my $exp_type_id = SGN::Model::Cvterm->get_cvterm_row(
+    $schema, 'image_analysis_experiment', 'experiment_type')->cvterm_id();
+
+my $nep_rs = $schema->resultset('NaturalDiversity::NdExperimentProject')->search({
+    project_id => $run_project_id,
+});
+is($nep_rs->count, 1, "one nd_experiment linked to run project");
+
+my $nd_experiment_id = $nep_rs->first->nd_experiment_id;
+my $nes_rs = $schema->resultset('NaturalDiversity::NdExperimentStock')->search({
+    nd_experiment_id => $nd_experiment_id,
+});
+# source stock + 2 tissue samples = 3
+is($nes_rs->count, 1 + scalar(@tissue_sample_ids),
+   "nd_experiment links source stock and tissue samples");
+
+# source stock is among the linked stocks
+my %linked_stocks = map { $_->stock_id => 1 } $nes_rs->all;
+ok($linked_stocks{$source_stock_id}, "source stock linked to nd_experiment");
+ok($linked_stocks{$tissue_sample_ids[0]}, "first tissue sample linked");
+
+# --- Verify source image link (phenome.project_md_image) ------------
+
+my $src_img_type_id = SGN::Model::Cvterm->get_cvterm_row(
+    $schema, 'image_analysis_source_image', 'project_md_image')->cvterm_id();
+my $dbh = $schema->storage->dbh();
+my $img_check = $dbh->prepare(
+    "SELECT count(*) FROM phenome.project_md_image
+      WHERE project_id = ? AND image_id = ? AND type_id = ?"
+);
+$img_check->execute($run_project_id, $image_id, $src_img_type_id);
+my ($src_img_count) = $img_check->fetchrow_array();
+is($src_img_count, 1, "source image linked to run project");
+
+# create_run_project validation / error tests
+
+# Missing required params -> error
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [
+        run_name       => 'incomplete_run',
+        tissue_samples => $tissue_samples_json,
+        # no trial_id / source_stock_id / source_image_id
+    ]
+);
+my $err1 = decode_json $mech->content;
+ok($err1->{error}, "error returned when required params missing");
+like($err1->{error}, qr/required/, "error mentions required params");
+
+# No tissue samples -> error
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [
+        trial_id        => $trial_id,
+        run_name        => 'no_samples_run_' . time(),
+        service_name    => 'Test',
+        run_date        => '2026-07-09',
+        source_stock_id => $source_stock_id,
+        source_image_id => $image_id,
+        tissue_samples  => '[]',
+    ]
+);
+my $err2 = decode_json $mech->content;
+ok($err2->{error}, "error returned when no tissue samples");
+like($err2->{error}, qr/tissue_sample/, "error mentions tissue_sample");
+
+# run_object_results test (uses the run project created above)
+
+$mech->get_ok(
+    "http://localhost:3010/ajax/image_analysis/run_object_results?run_project_id=$run_project_id"
+);
+my $ror = decode_json $mech->content;
+ok($ror->{success}, "run_object_results returned success");
+ok(ref($ror->{table_data}) eq 'ARRAY', "table_data is an array");
+is(scalar(@{ $ror->{table_data} }), 1, "one trait row in table_data");
+
+my $trait_row = $ror->{table_data}->[0];
+is($trait_row->{observationVariableName}, 'Object Area', "trait name parsed");
+is($trait_row->{numberAnalyzed}, 2, "two objects analyzed for the trait");
+is(scalar(@{ $trait_row->{details} }), 2, "two detail rows");
+# mean of 12.01 and 14.46 = 13.235
+cmp_ok(abs($trait_row->{value} - 13.2350), '<', 0.001, "mean value computed correctly");
+
+# --- Verify object_name carries the source_label ---------------------
+
+my %detail_by_object = map { $_->{object_name} => $_ } @{ $trait_row->{details} };
+ok(exists $detail_by_object{'1'}, "detail exists for object source_label 1");
+ok(exists $detail_by_object{'2'}, "detail exists for object source_label 2");
+is($detail_by_object{'1'}->{value}, 12.01, "object 1 value correct");
+is($detail_by_object{'2'}->{value}, 14.46, "object 2 value correct");
+
+# run_object_results validation / edge cases
+
+# Missing run_project_id -> error
+$mech->get_ok('http://localhost:3010/ajax/image_analysis/run_object_results');
+my $ror_err = decode_json $mech->content;
+ok($ror_err->{error}, "error returned when run_project_id missing");
+like($ror_err->{error}, qr/run_project_id/, "error mentions run_project_id");
+
+# A project with no raw_result_json -> graceful empty result
+# (use the trial project id, which has no image-analysis raw result)
+$mech->get_ok(
+    "http://localhost:3010/ajax/image_analysis/run_object_results?run_project_id=$trial_id"
+);
+my $ror_empty = decode_json $mech->content;
+ok($ror_empty->{error}, "error returned when no stored analysis results");
+ok(ref($ror_empty->{table_data}) eq 'ARRAY', "table_data present as empty array");
+is(scalar(@{ $ror_empty->{table_data} }), 0, "table_data is empty");
 
 # Delete test image
 my $dbh = SGN::Test::Fixture->new()->dbh();
