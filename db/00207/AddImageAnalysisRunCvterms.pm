@@ -67,6 +67,14 @@ sub patch {
         'project_property' => [
             'image_analysis_run_project_type',
             'image_analysis_run_parameters_json',
+            'image_analysis_job_id',
+            'image_analysis_pipeline_name',
+            'image_analysis_pipeline_version',
+            'image_analysis_run_timestamp',
+            'image_analysis_input_filename',
+            'image_analysis_qc_json',
+            'image_analysis_traits_emitted_json',
+            'image_analysis_raw_result_json',
         ],
         'project_relationship' => [
 
@@ -90,9 +98,12 @@ sub patch {
         ],
 
         'stock_md_image' => [
-
             'image_analysis_tissue_sample_result_image',
         ],
+        
+        'stock_property' => [
+            'image_analysis_object_metadata_json',
+        ]
 
     };
 
