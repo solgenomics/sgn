@@ -33,6 +33,11 @@ has 'family_name' => (isa => 'Maybe[Str]',
     is => 'rw',
 );
 
+has 'cross_stock_id' => (isa => 'Maybe[Int]',
+    is => 'rw',
+);
+
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
@@ -174,7 +179,6 @@ sub get_family_members {
         }
         return \@data;
 }
-
 
 ###
 1;

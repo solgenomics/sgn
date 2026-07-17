@@ -25,7 +25,7 @@ $family_id
 jQuery(document).ready(function(){
     const family_id = "<%$family_id%>";
     const crosses_in_family = jQuery('#crosses_in_family_table').DataTable({
-        'ajax': '/ajax/family/members/'+family_id,
+        'ajax': '/ajax/family/members_and_info/'+family_id,
         'destroy': true,
         'autoWidth': false,
         columns: [

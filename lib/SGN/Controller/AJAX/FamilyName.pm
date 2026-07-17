@@ -49,7 +49,7 @@ sub get_family_parents :Path('/ajax/family/parents') :Args(1) {
 }
 
 
-sub get_family_members_and_info :Path('/ajax/family/members') :Args(1) {
+sub get_family_members_and_info :Path('/ajax/family/members_and_info') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $family_id = shift;
@@ -103,14 +103,13 @@ sub get_all_progenies :Path('/ajax/family/all_progenies') :Args(1) {
 }
 
 
-sub remove_family_members :Path('/ajax/family/remove_members') :Args(1) {
+sub get_family_members :Path('/ajax/family/members') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $family_id = shift;
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
     my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
-
     my $result = $family->get_family_members();
 
     my @crosses;
@@ -125,6 +124,25 @@ sub remove_family_members :Path('/ajax/family/remove_members') :Args(1) {
     $c->stash->{rest} = { data => \@crosses };
 
 }
+
+
+sub remove_family_member : Path('/ajax/family/remove_member') : ActionClass('REST'){ }
+
+sub remove_family_member_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $cross_id = $c->req->param('cross_id');
+    my $family_id = $c->req->param('family_id');
+    my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id, cross_stock_id=>$cross_id});
+
+
+
+
+    $c->stash->{rest} = {success => 1};
+
+}
+
 
 ###
 1;

@@ -9,7 +9,7 @@ $family_id
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <table class="table table-hover table-bordered" id="cross_members_table">
+                <table class="table table-hover table-bordered" id="family_members_table">
                 </table>
             </div>
         </div>
@@ -32,21 +32,56 @@ $family_id
 
 jQuery(document).ready(function(){
 
-jQuery('#remove_crosses_from_family_section_onswitch').click(function(){
-    const family_id = "<%$family_id%>";
-    const cross_members_table = jQuery('#cross_members_table').DataTable({
-        'ajax': '/ajax/family/remove_members/'+family_id,
-        'destroy': true,
-        'autoWidth': false,
-        columns: [
-            { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
-            { title: "Remove", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeCross("+row.cross_id+")'>Remove</a>"; } },
-        ]
+    jQuery('#remove_crosses_from_family_section_onswitch').click(function(){
+        const family_id = "<%$family_id%>";
+        const family_members_table = jQuery('#family_members_table').DataTable({
+            'ajax': '/ajax/family/members/'+family_id,
+            'destroy': true,
+            'autoWidth': false,
+            columns: [
+                { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+                { title: "Remove", "data": "null", "render": function ( data, type, row ) { return "<a onclick='removeFamilyMember("+row.cross_id+")'>Remove</a>"; } },
+            ]
+        });
     });
-});
-
 
 });
+
+function removeFamilyMember(cross_id){
+
+    var confirmation = confirm('Are you sure you want to remove this cross?');
+
+    if (confirmation) {
+        const family_id = "<%$family_id%>";
+        jQuery.ajax({
+            url: '/ajax/family/remove_member',
+            data : {
+                'cross_id': cross_id,
+                'family_id': family_id,
+            },
+            method: 'POST',
+            destroy: true,
+            beforeSend: function(response) {
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    alert('The cross was removed successful');
+                    location.reload();
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response) {
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred during removing cross member');
+            }
+        });
+    }
+}
+
 
 
 
