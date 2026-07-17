@@ -114,6 +114,13 @@ sub image_search_POST : Args(0) {
         if ($_->{project_name}) {
             $associations = $_->{stock_id} ? $associations."<br/>Project (".$_->{project_image_type_name}."): <a href='/breeders/trial/".$_->{project_id}."' >".$_->{project_name}."</a>" : "Project (".$_->{project_image_type_name}."): <a href='/breeders/trial/".$_->{project_id}."' >".$_->{project_name}."</a>";
         }
+        my $field_trial_assoc = "";
+        if ($_->{field_trial_id}) {
+            $field_trial_assoc = "Field trial: <a href='/breeders/trial/".$_->{field_trial_id}."'>".$_->{field_trial_name}."</a>";
+        }
+        if ($field_trial_assoc) {
+            $associations = $associations ? $associations."<br/>".$field_trial_assoc : $field_trial_assoc;
+        }
         my @tags;
         foreach my $t (@{$_->{tags_array}}) {
             push @tags, $t->{name};
