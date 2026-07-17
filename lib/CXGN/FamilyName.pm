@@ -85,7 +85,7 @@ sub get_family_parents {
 }
 
 
-sub get_family_members {
+sub get_family_members_and_info {
     my $self = shift;
     my $schema = $self->schema();
     my $family_stock_id = $self->family_stock_id();
@@ -149,6 +149,30 @@ sub get_all_progenies {
     }
     print STDERR Dumper(\@progenies);
     return \@progenies;
+}
+
+
+sub get_family_members {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $family_stock_id = $self->family_stock_id();
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ? AND stock.type_id = ?
+        WHERE stock_relationship.object_id = ?";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+
+        $h->execute($cross_member_of_type_id, $cross_type_id, $family_stock_id);
+
+        my @data =();
+        while(my($cross_id, $cross_name) = $h->fetchrow_array()){
+            push @data, [$cross_id, $cross_name]
+        }
+        return \@data;
 }
 
 

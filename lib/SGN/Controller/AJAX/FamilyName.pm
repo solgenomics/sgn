@@ -49,7 +49,7 @@ sub get_family_parents :Path('/ajax/family/parents') :Args(1) {
 }
 
 
-sub get_family_members :Path('/ajax/family/members') :Args(1) {
+sub get_family_members_and_info :Path('/ajax/family/members') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $family_id = shift;
@@ -57,7 +57,7 @@ sub get_family_members :Path('/ajax/family/members') :Args(1) {
 
     my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
 
-    my $result = $family->get_family_members();
+    my $result = $family->get_family_members_and_info();
 
     my @crosses;
     foreach my $r (@$result){
@@ -102,6 +102,29 @@ sub get_all_progenies :Path('/ajax/family/all_progenies') :Args(1) {
 
 }
 
+
+sub remove_family_members :Path('/ajax/family/remove_members') :Args(1) {
+    my $self = shift;
+    my $c = shift;
+    my $family_id = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
+
+    my $result = $family->get_family_members();
+
+    my @crosses;
+    foreach my $r (@$result){
+        my ($cross_id, $cross_name) =@$r;
+        push @crosses, {
+            cross_id => $cross_id,
+            cross_name => $cross_name,
+        };
+    }
+
+    $c->stash->{rest} = { data => \@crosses };
+
+}
 
 ###
 1;
