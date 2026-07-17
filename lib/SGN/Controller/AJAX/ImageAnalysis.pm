@@ -966,8 +966,8 @@ sub image_analysis_group_POST : Args(0) {
             if ($is_multi_trait) {
                 print STDERR "RESULT IS MULTI TRAIT";
                 my @trait_rows;
-                my $test_trait_id = 70739; 
-                my $test_trait_name;
+                #my $test_trait_id = 70739; 
+                #my $test_trait_name;
 
                 foreach my $trait_name (keys %{$sample_data}) {
                     next if $trait_name eq 'object_metadata';
@@ -976,7 +976,7 @@ sub image_analysis_group_POST : Args(0) {
                     } else {
                         my ($trimmed_trait_name) = split (/\|/, $trait_name);
                         print STDERR "trimmed trait name: $trimmed_trait_name";
-                        $test_trait_name = 'apical branching';
+                        #$test_trait_name = 'apical branching';
                         my $cvterm = $schema->resultset('Cv::Cvterm')->find({
                             name => $trimmed_trait_name
                         });
@@ -1002,8 +1002,8 @@ sub image_analysis_group_POST : Args(0) {
                         original_link => $results_ref->{result}->{original_image},
                         analyzed_link => $results_ref->{result}->{image_link},
                         object_name    => $sample,
-                        trait_name    => $test_trait_name,
-                        trait_id      => $test_trait_id,
+                        trait_name    => $trait_name,
+                        trait_id      => $trait_id,
                         stock_type => $stock_type_name,
                         sample_num => $sample_num,
                         image_analyzed => $image_analyzed,
@@ -1011,7 +1011,7 @@ sub image_analysis_group_POST : Args(0) {
                         object_metadata => $sample_data->{object_metadata},
                         status => 'create',
                     };
-                    $test_trait_id++;
+                    #$test_trait_id++;
                 };
             } else {
                 # print STDERR "stock type: $stock_type_name accession id: $accession_id";
