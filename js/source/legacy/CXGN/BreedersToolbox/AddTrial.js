@@ -2283,7 +2283,7 @@ jQuery(document).ready(function ($) {
                                 if (typeof attr === 'object') {
                                     $components.append(document.createTextNode(attr.text));
                                 } else {
-                                    $components.append(jQuery('<span class="label label-default">').text(attr));
+                                    $components.append(jQuery('<code>').text(attr));
                                 }
                                 if (i < name_attributes.length - 1) {
                                     $components.append(document.createTextNode('_'));
