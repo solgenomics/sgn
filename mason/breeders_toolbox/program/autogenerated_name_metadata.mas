@@ -49,7 +49,7 @@ jQuery(document).ready(function(){
                 var fmt = Object.keys(row)[0]; return row[fmt].last_serial_number != null ? row[fmt].last_serial_number : '';
             }},
             { 'data': null, 'render': function(row) {
-                var fmt = Object.keys(row)[0]; return row[fmt].added_by || '';
+                var fmt = Object.keys(row)[0]; return `<a href="/solpeople/profile/${row[fmt].added_by}">${row[fmt].added_by_username}</a>` || '';
             }},
             { 'data': null, 'render': function(row) {
                 var fmt = Object.keys(row)[0]; return row[fmt].date || '';
