@@ -134,12 +134,16 @@ sub remove_family_member_POST : Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema");
     my $cross_id = $c->req->param('cross_id');
     my $family_id = $c->req->param('family_id');
-    my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id, cross_stock_id=>$cross_id});
 
+    my $family_obj = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id, cross_stock_id=>$cross_id});
+    my $error = $family_obj->delete_family_member();
 
-
-
-    $c->stash->{rest} = {success => 1};
+    my $return;
+    if ($error) {
+        $c->stash->{rest} = { error => "Error removing member from family: $error" };
+    } else {
+        $c->stash->{rest} = {success => 1};
+    }
 
 }
 

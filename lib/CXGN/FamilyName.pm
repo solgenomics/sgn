@@ -180,6 +180,50 @@ sub get_family_members {
         return \@data;
 }
 
+
+sub delete_family_member {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $family_id = $self->family_stock_id();
+    my $cross_id = $self->cross_stock_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+        my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+        my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
+        my $population_id;
+        my $family_member_rs = $schema->resultset("Stock::StockRelationship")->find({subject_id => $cross_id, object_id => $family_id, type_id => $cross_member_of_type_id});
+        if (!$family_member_rs) {
+            print STDERR "This cross is not a family member. Cannot delete.\n";
+	        die "This cross is not a family memeber. Cannot delete.\n";
+        } else {
+            my $stock_obj = CXGN::Stock->new(schema => $schema, stock_id => $family_id);
+            my @trial_list = $stock_obj->get_trials();
+            print STDERR "TRIAL LIST =".Dumper(\@trial_list)."\n";
+            if (scalar(@trial_list) > 0) {
+                print STDERR "This family is used in a trial. Cannot remove any member.\n";
+    	        die "This family is used in a trial. Cannot remove any member.\n";
+            }
+        }
+        
+        $family_member_rs->delete;
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting family member "."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
+}
+
+
 ###
 1;
 ###
