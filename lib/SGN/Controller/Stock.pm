@@ -341,14 +341,8 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         }
     }
 
-    my $is_in_trial;
-    my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
-    my @trial_list = $stock_obj->get_trials();
-    if (scalar(@trial_list) > 0) {
-        $is_in_trial = 1;
-    }
-
     my $is_a_parent;
+    my $stock_obj = CXGN::Stock->new( schema => $schema, stock_id => $stock_id);
     my $progeny_count = $stock_obj->check_progenies();
     if ($progeny_count > 0){
         $is_a_parent = 1;
@@ -395,7 +389,6 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
         derived_accession_relationship => $derived_accession_relationship,
         related_stock_link => $related_stock_link,
         original_stock_link => $original_stock_link,
-        is_in_trial => $is_in_trial,
         vector_related_genes => $vector_related_genes,
         vector_analyzed_tissue_types => $vector_analyzed_tissue_types,
         number_of_insertions => $number_of_insertions,

@@ -3,7 +3,6 @@
 $stock_id
 $stock_uniquename
 $is_obsolete
-$is_in_trial
 $is_a_parent
 </%args>
 
@@ -11,11 +10,9 @@ $is_a_parent
 
 % if ($is_obsolete) {
     <button class="btn btn-primary" id="stock_detail_page_unobsolete_stock">Un-Obsolete This Stock</button>
-% } elsif ($is_in_trial) {
-%    print "This stock is used in a trial, cannot obsolete";
 %} elsif ($is_a_parent) {
 %    print "This stock is associated with another stock (e.g., as a parent of another accession), cannot obsolete";
-%} elsif ((!$is_in_trial) && (!$is_a_parent)) {
+%} else {
     <button class="btn btn-primary" id="stock_detail_page_obsolete_stock">Obsolete This Stock</button>
 % }
 

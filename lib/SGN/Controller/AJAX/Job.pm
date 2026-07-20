@@ -87,7 +87,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             });
         };
         if ($@) {
-            print STDERR "$@\n";
+            print STDERR "ERROR CREATING JOB OBJECT: $@\n";
             if ($role eq "curator") {
                 $row = {
                     id => $job_id,
@@ -240,10 +240,13 @@ sub delete_dead_jobs :Path('/ajax/job/delete_dead_jobs') Args(1) {
         die "You do not have permission to delete these job logs.\n";
     }
 
+    my $is_curator = $role eq "curator" ? 1 : 0;
+
     CXGN::Job->delete_dead_jobs(
         $bcs_schema,
         $people_schema,
-        $sp_person_id
+        $sp_person_id,
+        $is_curator
     );
     $c->stash->{rest} = {success => 1};
 }
@@ -267,11 +270,14 @@ sub delete_older_than :Path('/ajax/job/delete_older_than') Args(2) {
         die "Invalid time selection: $older_than.\n";
     }
 
+    my $is_curator = $role eq "curator" ? 1 : 0;
+
     CXGN::Job->delete_jobs_older_than(
         $bcs_schema,
         $people_schema,
         $sp_person_id,
-        $older_than
+        $older_than,
+        $is_curator
     );
     $c->stash->{rest} = {success => 1};
 }
@@ -290,10 +296,13 @@ sub delete_finished :Path('/ajax/job/delete_finished') Args(1) {
         die "You do not have permission to delete these job logs.\n";
     }
 
+    my $is_curator = $role eq "curator" ? 1 : 0;
+
     CXGN::Job->delete_finished_jobs(
         $bcs_schema,
         $people_schema,
-        $sp_person_id
+        $sp_person_id,
+        $is_curator
     );
     $c->stash->{rest} = {success => 1};
 }

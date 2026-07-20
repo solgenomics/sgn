@@ -4,11 +4,11 @@
   "description": "node package containing all importable CXGN/SGN JavaScript files.",
   "main": "webpack.config.js",
   "scripts": {
-    "reset": "npm config set engine-strict true; rm -r build/ || true && npm install .",
-    "build": "npm run reset && webpack --config build.webpack.config.js",
-    "build-watch": "npm run reset && webpack --config build.webpack.config.js -w",
-    "reset-test": "npm config set engine-strict true; rm -r build_test/ || true && npm install .",
-    "build-test": "npm run reset-test && webpack --config test.webpack.config.js"
+    "reset": "rm -rf build/ && npm install",
+    "build": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js",
+    "build-watch": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js -w",
+    "reset-test": "rm -rf build_test/ && npm install",
+    "build-test": "npm run reset-test && NODE_OPTIONS=--openssl-legacy-provider webpack --config test.webpack.config.js"
   },
   "private": true,
   "author": "",
@@ -20,7 +20,7 @@
     "deepmerge": "^2.2.1",
     "del": "^3.0.0",
     "jsdom": "^16",
-    "loader-utils": "^1.2.3",
+    "loader-utils": "^2.0",
     "nock": "^10.0.6",
     "node-fetch": "^2.3.0",
     "requirejs": "2.3.7",
@@ -28,22 +28,21 @@
     "tape": "^4.10.1",
     "terser-webpack-plugin": "^4.2.3",
     "webpack": "^4.29",
-    "webpack-command": "^0.4.2"
+    "webpack-cli": "^4.10.0"
   },
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
-    "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",
+    "brapi-boxplotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",
     "core-js": "^3",
     "d3": "^7.3.0",
     "d3-array": "^2.11.0",
     "d3-path": "^1.0.9",
     "d3-sankey": "^0.12.3",
     "d3-shape": "^1.3.7",
-    "internmap": "^1.0.0",
-    "regenerator": "latest"
+    "internmap": "^1.0.0"
   },
   "engines": {
-    "node": ">=10.6.0",
-    "npm": ">=6.1.0"
+    "node": ">=18.20.8",
+    "npm": ">=10.8.2"
   }
 }

@@ -155,5 +155,6 @@ $t->while_logged_in_as("submitter", sub {
     }
 });
 
-$t->driver()->close();
+$f->clean_up_db();
+eval { $t->driver()->close(); };
 done_testing();

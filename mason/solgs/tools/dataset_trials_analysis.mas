@@ -46,6 +46,7 @@ my $collapsible = 0;
   title       =>'Analysis Tools'
 &>
 
+% if ($c->user()) {
 <div id="dataset_trials_analysis" style="display: flex; align-items: center; justify-content-left: space-between;">
     <& /solgs/tools/trials_select.mas,
         dataset_id => $dataset_id,
@@ -57,6 +58,10 @@ my $collapsible = 0;
     
     <input id="run_analysis" class="btn btn-success" type="button" value="Run Analysis" style="margin-top:20px" />
 </div>
+
+% } else {
+<div class="alert alert-info" style="margin-top:15px;">You must be logged in to use Analysis Tools.</div>
+% }
 
 <div id="dataset_trials_analysis_message" class="message"> </div>
 

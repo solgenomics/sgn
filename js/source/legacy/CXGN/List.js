@@ -995,6 +995,13 @@ CXGN.List.prototype = {
 	}).then(
 	    function(r) {
 		//alert("now="+JSON.stringify(r));
+		if (r.error) {
+		    if (non_interactive) {
+			return r;
+		    }
+		    alert(r.error);
+		    return;
+		}
 		if (!non_interactive) {
 		    return validate_interactive(r, type, list_id)
 		}
@@ -2158,7 +2165,7 @@ function validate_interactive(response, type, list_id) {
     		jQuery('#multiple_case_match_message_div').html('');
     	    }
 
-    	    jQuery('#adjust_case_action_button').click( function() {
+    	    jQuery('#adjust_case_action_button').off('click').on('click', function() {
     		jQuery.ajax( {
     		    url : '/ajax/list/adjust_case',
     		    data: { 'list_id' : list_id },
@@ -2187,7 +2194,7 @@ function validate_interactive(response, type, list_id) {
 
     	    //alert(JSON.stringify(synonym_matches_table));
 
-    	    jQuery('#replace_synonyms_with_uniquenames_button').click( function() {
+    	    jQuery('#replace_synonyms_with_uniquenames_button').off('click').on('click', function() {
     		jQuery.ajax( {
     		    url : '/ajax/list/adjust_synonyms',
     		    data: { 'list_id' : list_id },

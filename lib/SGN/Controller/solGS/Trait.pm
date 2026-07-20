@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use URI::FromHash 'uri';
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path /;
 use File::Spec::Functions qw / catfile catdir/;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file/;
@@ -240,24 +240,14 @@ sub get_acronym_pairs {
     my ($self, $c, $pop_id) = @_;
 
     $pop_id = $c->stash->{training_pop_id} if !$pop_id;
-    #$pop_id = $c->stash->{combo_pops_id} if !$pop_id;
-
-    my $dir    = $c->stash->{solgs_cache_dir};
-    opendir my $dh, $dir
-        or die "can't open $dir: $!\n";
-
-    no warnings 'uninitialized';
-
-    my ($file)   =  grep(/traits_acronym_pop_${pop_id}/, readdir($dh));
-    $dh->close;
-
-    my $acronyms_file = catfile($dir, $file);
+    $c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
+    my $acronyms_file = $c->stash->{traits_acronym_file};
 
     my @acronym_pairs;
     if (-f $acronyms_file)
     {
-        @acronym_pairs =  map { [ split(/\t/) ] }  read_file($acronyms_file, {binmode => ':utf8'});
-        shift(@acronym_pairs); # remove header;
+        @acronym_pairs = map { [ split(/\t/) ] } read_file($acronyms_file, {binmode => ':utf8'});
+        shift(@acronym_pairs); # remove header
     }
 
     @acronym_pairs = sort {uc $a->[0] cmp uc $b->[0] } @acronym_pairs;

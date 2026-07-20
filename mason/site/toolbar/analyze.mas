@@ -12,6 +12,7 @@
     <li><a href="/correlation/analysis">Correlation</a></li>
     <li><a href="/kinship/analysis">Kinship & Inbreeding</a></li>
     <li><a href="/tools/stability">Stability AMMI/GGE</a></li>
+    <li><a href="/tools/environment_stratification">Environment Stratification</a></li>
     <li><a href="/tools/heritability">Heritability</a></li>
     <li role="separator" class="divider"></li>
     <li><a href="/accession_usage">Accession Usage</a></li>
