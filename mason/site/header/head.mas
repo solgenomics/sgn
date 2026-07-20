@@ -56,6 +56,10 @@
         jquery.dataTables-buttons-html5-min
         jquery.dataTables-buttons-print-min
         jquery.dataTables-colReorder-min
+        jquery.dataTables-fixedColumns-min
+        jquery.dataTables-fixedHeader-min
+        jquery.dataTables-responsive-min
+        jquery.dataTables-searchPanes-min
         jquery.dataTables-select-min
     );
     my @current_environment = $c->config->{production_server} ? qw(jquerymigrate-min jquery.dataTables-min) : qw(jquerymigrate jquery.dataTables);
