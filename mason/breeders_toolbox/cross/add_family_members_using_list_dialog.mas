@@ -1,0 +1,76 @@
+<%args>
+$family_id
+</%args>
+
+
+<div class="modal fade" id="add_family_members_using_list_dialog" name="add__family_members_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addFamilyMembersUsingListDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_family_members_using_list_dismiss_button_1" name="add_family_members_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addFamilyMembersUsingList">Add Family Members Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" name="add_family_members_form" id="add_family_members_form">
+                        <div class="form-group">
+                            <label class="control-label col-sm-6">Select a List of Crosses to Add:</label>
+                            <div class="col-sm-6" >
+                                <div class="input-group">
+                                    <select class="form-control" id="family_crosses_list_select"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="family_members_list_submit">Submit</button>
+                <button id="add_family_members_using_list_dismiss_button_2" name="add_family_members_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_family_members_using_list_saved_dialog_message" name="add_family_members_using_list_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addFamilyMembersUsingListSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addFamilyMembersUsingListSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The new family members were stored successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_add_family_members_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_family_members_using_list_error_dialog" name="add_family_members_using_list_error_dialog" tabindex="-1" role="dialog" aria-labelledby="addFamilyMembersUsingListErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addFamilyMembersUsingListErrorDialog">Add Family Members Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

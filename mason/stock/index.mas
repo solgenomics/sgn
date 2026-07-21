@@ -391,7 +391,7 @@ function jqueryStuff() {
 
 %if ($type_name eq 'family_name') {
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Parents</h4>", info_section_subtitle => "$family_type_string", icon_class => "glyphicon glyphicon-random", info_section_id => "family_parents_section", family_id=>$stock_id, family_type=>$family_type  &>
-    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Crosses in this family</h4>", info_section_subtitle => "", icon_class => "glyphicon glyphicon-list-alt", info_section_id => "crosses_in_family_section", family_id=>$stock_id  &>
+    <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Crosses in this family</h4>", info_section_subtitle => "", icon_class => "glyphicon glyphicon-list-alt",buttons_html => '<button class="btn btn-primary btn-sm" id="add_family_members_link" style="margin:3px">Add Family Members</button>', info_section_id => "crosses_in_family_section", family_id=>$stock_id  &>
     <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, info_section_title => "<h4 style='display:inline'>Progenies</h4>", info_section_subtitle => "Progenies delived from this family", icon_class => "glyphicon glyphicon-th", info_section_id => "progenies_from_family_section", family_id=>$stock_id  &>
 % } else {
 % if ($type_name ne 'vector_construct'){

@@ -20,6 +20,8 @@ $family_id
     </div>
 </div>
 
+<& /breeders_toolbox/cross/add_family_members_using_list_dialog.mas, family_id => $family_id &>
+
 <script>
 
 jQuery(document).ready(function(){
@@ -50,6 +52,10 @@ jQuery(document).ready(function(){
                 });
             }
         }
+    });
+
+    jQuery('#add_family_members_link').click(function() {
+        jQuery("#add_family_members_using_list_dialog").modal("show");
     });
 
 });
