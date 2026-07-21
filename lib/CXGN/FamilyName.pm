@@ -181,7 +181,7 @@ sub get_family_members {
 }
 
 
-sub delete_family_member {
+sub remove_family_member {
     my $self = shift;
     my $schema = $self->schema();
     my $dbh = $self->schema()->storage()->dbh();
@@ -209,7 +209,7 @@ sub delete_family_member {
     	        die "This family is used in a trial. Cannot remove any member.\n";
             }
         }
-        
+
         $family_member_rs->delete;
     };
 
@@ -222,6 +222,52 @@ sub delete_family_member {
 	    return 0;
     }
 }
+
+
+sub delete_family {
+    my $self = shift;
+    my $dbh = $self->schema()->storage()->dbh();
+    my $schema = $self->schema();
+    my $family_id = $self->family_stock_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $stock_obj = CXGN::Stock->new(schema => $schema, stock_id => $family_id);
+        my @trial_list = $stock_obj->get_trials();
+        if (scalar(@trial_list) > 0) {
+            print STDERR "This family is used in a trial. Cannot delete.\n";
+            die "This family is used in a trial. Cannot delete.\n";
+        }
+
+        my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+
+        my $family_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $family_id, type_id => $family_type_id});
+        if (!$family_rs) {
+            print STDERR "This stock id is not a family. Cannot delete.\n";
+	        die "This stock id is not a family. Cannot delete.\n";
+        }
+
+        my $q = "delete from phenome.stock_owner where stock_id = ?";
+	    my $h = $dbh->prepare($q);
+	    $h->execute($family_id);
+
+	    my $q2 = "delete from stock where stock.stock_id = ? and stock.type_id = ?";
+	    my $h2 = $dbh->prepare($q2);
+	    $h2->execute($family_id, $family_type_id);
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting family id ".$family_id."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
+}
+
+
 
 
 ###

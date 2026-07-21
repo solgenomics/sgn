@@ -13,11 +13,10 @@ $family_id
                 </table>
             </div>
         </div>
-        <button class="btn btn-default" id="remove_all_crosses" role="button">Remove all crosses in this family</button><br/><br/>
     </div>
 </&>
 
-<&| /page/info_section.mas, id=>'delete_family_section', title => 'Delete family', subtitle => '<font color="red">Deletion cannot be undone. Please remove crosses in this family first</font>', collapsible=>1, collapsed=>1 &>
+<&| /page/info_section.mas, id=>'delete_family_section', title => 'Delete family', subtitle => '<font color="red">Deletion cannot be undone.</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
@@ -45,6 +44,39 @@ jQuery(document).ready(function(){
         });
     });
 
+    jQuery('#delete_family').click(function() {
+
+        const family_id = "<% $family_id %>";
+        const confirmation = confirm("Are you sure you want to delete this family? The deletion cannot be undone.");
+        if (confirmation) {
+            jQuery.ajax({
+                url: '/ajax/family/delete_family',
+                data : {
+                    'family_id': family_id,
+                },
+                method: 'POST',
+                destroy: true,
+                beforeSend: function(response) {
+                    jQuery('#working_modal').modal('show');
+                },
+                success: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    if (response.success == 1) {
+                        alert('The family was deleted');
+                        location.reload();
+                    }
+                    if (response.error) {
+                        alert(response.error);
+                    }
+                },
+                error: function(response) {
+                    jQuery('#working_modal').modal('hide');
+                    alert('An error occurred during delete this family');
+                }
+            });
+        }
+    });
+
 });
 
 function removeFamilyMember(cross_id){
@@ -67,7 +99,7 @@ function removeFamilyMember(cross_id){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    alert('The cross was removed successful');
+                    alert('The cross was removed');
                     location.reload();
                 }
                 if (response.error) {

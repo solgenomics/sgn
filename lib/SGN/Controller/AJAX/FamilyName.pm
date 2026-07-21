@@ -136,11 +136,41 @@ sub remove_family_member_POST : Args(0) {
     my $family_id = $c->req->param('family_id');
 
     my $family_obj = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id, cross_stock_id=>$cross_id});
-    my $error = $family_obj->delete_family_member();
+    my $error = $family_obj->remove_family_member();
 
     my $return;
     if ($error) {
         $c->stash->{rest} = { error => "Error removing member from family: $error" };
+    } else {
+        $c->stash->{rest} = {success => 1};
+    }
+
+}
+
+
+sub delete_family : Path('/ajax/family/delete_family') : ActionClass('REST'){ }
+
+sub delete_family_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (!$c->user()){
+        $c->stash->{rest} = { error => "You must be logged in to delete family" };
+        $c->detach();
+    }
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to delete family. Please contact us." };
+        $c->detach();
+    }
+
+    my $family_id = $c->req->param("family_id");
+
+    my $family_obj = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
+    my $error = $family_obj->delete_family();
+    my $return;
+    if ($error) {
+        $c->stash->{rest} = { error => "Error deleting family: $error" };
     } else {
         $c->stash->{rest} = {success => 1};
     }
