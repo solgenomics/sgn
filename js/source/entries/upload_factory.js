@@ -4,29 +4,31 @@
 *
 * @author Ryan Preble <rsp98@cornell.edu>
 * 
-*   Woe is he who treads here! This code can be a lot to take in, so use this as a general guide.
-
-    For each file type, the upload factory needs a way to handle an actual validation/upload,
-    and it needs to be able to display the file formatting rules for each one. For the file
-    formatting rules, check display_upload_formats(). For some of its cases, this function uses
-    additional display_{filetype}_upload_choices() and maybe display_{filetype}_formats() functions 
-    to show/hide specific options on the #upload_type_choice_dialog modal. This same modal is used 
-    when calling process_file(), which similarly populates the modal depending on whether more 
-    information is needed for the upload. Next, the function populate_{filetype}_validate_submit_data()
-    is called to populate the upload submission modal. Function submit_upload_job() will then submit
-    the job to the server. If the upload proceeds in two steps (validation and then final upload),
-    commit_upload_job() is called next. All the AJAX calls live in submit_upload_job and 
-    commit_upload_job(), not including the AJAX calls used to populate and refresh the upload tables. 
-
-    To implement a new file type, first add it to the list of allowed uploads in 
-    lib/SGN/Controller/BreedersToolbox.pm. Then, add it to the upload_type_dict variable and start
-    implementing the above functions for the file type. Be sure to add a file format mason template in
-    mason/file_formats, and include that template in manage_upload.mas. In the backend, make sure the 
-    upload is tracked using CXGN::Job and include proper finish/fail states, success_messages, 
-    error_messages, and warning_messages. Pay attention to whether the job is a final committal or a 
-    validation job; there are flags in the additional_args hash of the CXGN::Job object that control
-    this behavior. Final committals need a `final_upload => 1` flag and validation jobs need a 
-    `is_validation => 1` flag. 
+*    Woe is he who treads here! This code can be a lot to take in, so use this as a general guide.
+*
+*    For each file type, the upload factory needs a way to handle an actual validation/upload,
+*    and it needs to be able to display the file formatting rules for each one. For the file
+*    formatting rules, check display_upload_formats(). For some of its cases, this function uses
+*    additional display_{filetype}_upload_choices() and maybe display_{filetype}_formats() functions 
+*    to show/hide specific options on the #upload_type_choice_dialog modal. This same modal is used 
+*    when calling process_file(), which similarly populates the modal depending on whether more 
+*    information is needed for the upload. In either case, event listeners are dynamically added in 
+*    process_file() and display_upload_formats(). Next, the function 
+*    populate_{filetype}_validate_submit_data() is called to populate the upload submission modal. 
+*    Function submit_upload_job() will then submit the job to the server. If the upload proceeds in 
+*    two steps (validation and then final upload), commit_upload_job() is called next. All the AJAX 
+*    calls live in submit_upload_job and commit_upload_job(), not including the AJAX calls used to 
+*    populate and refresh the upload tables. 
+*
+*    To implement a new file type, first add it to the list of allowed uploads in 
+*    lib/SGN/Controller/BreedersToolbox.pm. Then, add it to the upload_type_dict variable and start
+*    implementing the above functions for the file type. Be sure to add a file format mason template in
+*    mason/file_formats, and include that template in manage_upload.mas. In the backend, make sure the 
+*    upload is tracked using CXGN::Job and include proper finish/fail states, success_messages, 
+*    error_messages, and warning_messages. Pay attention to whether the job is a final committal or a 
+*    validation job; there are flags in the additional_args hash of the CXGN::Job object that control
+*    this behavior. Final committals need a `final_upload => 1` flag and validation jobs need a 
+*    `is_validation => 1` flag. 
 */
 
 import { create } from "d3";
