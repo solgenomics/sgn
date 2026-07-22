@@ -503,9 +503,10 @@ sub _prep_upload {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_type
+            user_role => $user_type,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
         });
-        $archived_image_zipfile_with_path = $uploader->archive();
+        (my $archived_image_zipfile_id, $archived_image_zipfile_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_image_zipfile_with_path);
         if (!$archived_image_zipfile_with_path) {
             push @error_status, "Could not save images zipfile $upload_original_name in archive.";

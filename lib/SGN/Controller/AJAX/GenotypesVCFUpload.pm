@@ -236,9 +236,11 @@ sub upload_genotype_verify_POST : Args(0) {
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                file_type => 'genotyping_data',
+                metadata_schema => $metadata_schema
             });
-            my $archived_original_vcf = $original_uploader->archive();
+            my ($archived_original_vcf_id, $archived_original_vcf) = $original_uploader->archive();
             if (!$archived_original_vcf) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
                 $c->detach();

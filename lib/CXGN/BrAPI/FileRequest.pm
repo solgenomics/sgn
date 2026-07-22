@@ -18,6 +18,7 @@ use File::Spec::Functions;
 use List::MoreUtils qw(uniq);
 use DateTime;
 use CXGN::UploadFile;
+use CXGN::Metadata::Schema;
 
 has 'schema' => (
     isa => 'Bio::Chado::Schema',
@@ -108,6 +109,11 @@ sub observations {
         }
     close $fh;
 
+    my $metadata_schema = CXGN::Metadata::Schema->connect(
+        sub { $schema->storage()->dbh() },
+        { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
+    );
+
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
         subdirectory => $subdirectory,
@@ -115,9 +121,10 @@ sub observations {
         archive_filename => $archive_filename,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_type
+        user_role => $user_type,
+        metadata_schema => $metadata_schema
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $error_message = "Could not save incoming brapi observations into file for archive.";

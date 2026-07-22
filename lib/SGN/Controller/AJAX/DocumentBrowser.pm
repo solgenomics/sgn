@@ -73,7 +73,7 @@ sub upload_document_POST : Args(0) {
             user_role => $user_type,
             metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         if (!$archived_filename_with_path){
             $c->stash->{rest} = { error => 'Problem archiving the files!' };
             $c->detach;
@@ -84,9 +84,6 @@ sub upload_document_POST : Args(0) {
             $c->stash->{rest} = { error => 'Problem retrieving file md5 checksums!' };
             $c->detach;
         }
-
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-        $md_row->insert();
     }
 
     $c->stash->{rest} = {success => 'Successfully saved file!'};

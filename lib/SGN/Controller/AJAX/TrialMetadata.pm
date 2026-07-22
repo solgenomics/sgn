@@ -799,9 +799,10 @@ sub trial_used_seedlots_upload : Chained('trial') PathPart('upload_used_seedlots
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -928,7 +929,7 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
             timestamp => $timestamp,
             user_id => $user_id,
             user_role => $user_role,
-            file_type => 'plants_by_name',
+            file_type => 'plants',
             metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
         });
         ($archived_file_id, $archived_filename_with_path) = $uploader->archive();

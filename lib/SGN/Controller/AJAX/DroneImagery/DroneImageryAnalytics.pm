@@ -13002,9 +13002,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             archive_filename => $model_aux_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
+        my ($archived_aux_file_id, $archived_aux_filename_with_path) = $uploader_autoencoder->archive();
         my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
         if (!$archived_aux_filename_with_path) {
             return { error => "Could not save file $model_aux_original_name in archive." };
@@ -13040,9 +13041,10 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             archive_filename => $model_aux_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_aux_filename_with_path = $uploader_autoencoder->archive();
+        my ($archived_aux_file_id, $archived_aux_filename_with_path) = $uploader_autoencoder->archive();
         my $md5_aux = $uploader_autoencoder->get_md5($archived_aux_filename_with_path);
         if (!$archived_aux_filename_with_path) {
             return { error => "Could not save file $model_aux_original_name in archive." };

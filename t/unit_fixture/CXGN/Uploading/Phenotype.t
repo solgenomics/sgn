@@ -92,11 +92,13 @@ my $uploader = CXGN::UploadFile->new({
     archive_filename => "upload_phenotypin_spreadsheet.$extension",
     timestamp => $timestamp,
     user_id => 41, #janedoe in fixture
-    user_role => 'curator'
+    user_role => 'curator',
+    metadata_schema => $f->metadata_schema(),
+    file_type => 'phenotyping_spreadsheet'
 				     });
 
 ## Store uploaded temporary file in archive
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 ok($archived_filename_with_path);
 ok($md5);
@@ -128,6 +130,7 @@ is_deeply($parsed_file,
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_01:10:56";
@@ -335,11 +338,13 @@ my $uploader = CXGN::UploadFile->new({
   archive_filename => "upload_phenotyping_spreadsheet_plots_with_no_trait_data.$extension",
   timestamp => $timestamp,
   user_id => 41, #janedoe in fixture
-  user_role => 'curator'
+  user_role => 'curator',
+  metadata_schema => $f->metadata_schema(),
+  file_type => 'phenotyping_spreadsheet'
 });
 
 ## Store uploaded temporary file in archive
-my $archived_filename_with_path_plots_with_no_trait_data = $uploader->archive();
+my ($archived_file_id_2, $archived_filename_with_path_plots_with_no_trait_data) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path_plots_with_no_trait_data);
 ok($archived_filename_with_path_plots_with_no_trait_data);
 ok($md5);
@@ -357,6 +362,7 @@ ok($parsed_file, "Check if parse parse phenotype spreadsheet works ($extension)"
 # Now store the phenotype data
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path_plots_with_no_trait_data;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id_2;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_01:10:56";
@@ -425,11 +431,13 @@ my $uploader = CXGN::UploadFile->new({
   archive_filename => "upload_phenotypin_spreadsheet.$extension",
   timestamp => $timestamp,
   user_id => 41, #janedoe in fixture
-  user_role => 'curator'
+  user_role => 'curator',
+  metadata_schema => $f->metadata_schema(),
+  file_type => 'phenotyping_spreadsheet'
 });
 
 ## Store uploaded temporary file in archive
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 ok($archived_filename_with_path);
 ok($md5);
@@ -458,6 +466,7 @@ print STDERR "PARSED FILE FOR $archived_filename_with_path".Dumper($parsed_file)
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_01:10:56";
@@ -521,11 +530,13 @@ my $uploader = CXGN::UploadFile->new(
 	archive_filename => "upload_phenotypin_spreadsheet_update.$extension",
 	timestamp => $timestamp,
 	user_id => 41, #janedoe in fixture
-	user_role => 'curator'
+	user_role => 'curator',
+  metadata_schema => $f->metadata_schema(),
+  file_type => 'phenotyping_spreadsheet'
     });
 
 ## Store uploaded temporary file in archive
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 ok($archived_filename_with_path);
 ok($md5);
@@ -545,6 +556,7 @@ is_deeply($parsed_file,
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'}="spreadsheet phenotype file";
 $phenotype_metadata{'operator'}="janedoe";
 $phenotype_metadata{'date'}="2016-02-16_01:10:56";
@@ -1329,11 +1341,13 @@ my $uploader = CXGN::UploadFile->new({
   archive_filename => 'trial_phenotype_upload_file_simple.xlsx',
   timestamp => $timestamp,
   user_id => 41, #janedoe in fixture
-  user_role => 'curator'
+  user_role => 'curator',
+  metadata_schema => $f->metadata_schema(),
+  file_type => 'phenotyping_spreadsheet'
 });
 
 ## Store uploaded temporary file in archive
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 ok($archived_filename_with_path);
 ok($md5);

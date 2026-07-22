@@ -1119,11 +1119,13 @@ sub upload_progenies_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'new_progenies',
+        metadata_schema => $metadata_schema
     });
 
     ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -1174,28 +1176,14 @@ sub upload_progenies_POST : Args(0) {
         }
     }
 
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
-    my $md5checksum = $md5->hexdigest();
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => 'cross_progenies',
-        md5checksum => $md5checksum,
-        metadata_id => $md_row->metadata_id(),
-    });
-
-    my $file_id = $file_row->file_id();
-#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR "FILE ID =".Dumper($archived_file_id)."\n";
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
 #        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
-            file_id => $file_id,
+            file_id => $archived_file_id,
         });
     }
 
@@ -1266,11 +1254,13 @@ sub validate_upload_existing_progenies_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'existing_progenies',
+        metadata_schema => $metadata_schema
     });
 
     ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -1355,13 +1345,13 @@ sub store_upload_existing_progenies : Path('/ajax/cross/store_upload_existing_pr
 
     my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
     $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new();
+    my $upload_file = CXGN::UploadFile->new({ metadata_schema => $metadata_schema });
     my $md5 = $upload_file->get_md5($archived_filename_with_path);
     my $md5checksum = $md5->hexdigest();
     my $file_row = $metadata_schema->resultset("MdFiles")->create({
         basename => basename($archived_filename_with_path),
         dirname => dirname($archived_filename_with_path),
-        filetype => 'cross_progenies',
+        filetype => 'existing_progenies',
         md5checksum => $md5checksum,
         metadata_id => $md_row->metadata_id(),
     });
@@ -1461,11 +1451,13 @@ sub upload_info_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'cross_info',
+        metadata_schema => $metadata_schema
     });
 
     ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -1531,28 +1523,14 @@ sub upload_info_POST : Args(0) {
     }
 
 #    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
-    my $md5checksum = $md5->hexdigest();
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => 'cross_info',
-        md5checksum => $md5checksum,
-        metadata_id => $md_row->metadata_id(),
-    });
-
-    my $file_id = $file_row->file_id();
-#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR "FILE ID =".Dumper($archived_file_id)."\n";
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
 #        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
-            file_id => $file_id,
+            file_id => $archived_file_id,
         });
     }
 
@@ -1639,11 +1617,13 @@ sub upload_family_names_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'family_names',
+        metadata_schema => $metadata_schema
     });
 
     ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -1708,28 +1688,14 @@ sub upload_family_names_POST : Args(0) {
     }
 
 #    print STDERR "FILE =".Dumper($archived_filename_with_path)."\n";
-    my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new();
-    my $md5 = $upload_file->get_md5($archived_filename_with_path);
-    my $md5checksum = $md5->hexdigest();
-    my $file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($archived_filename_with_path),
-        dirname => dirname($archived_filename_with_path),
-        filetype => 'families',
-        md5checksum => $md5checksum,
-        metadata_id => $md_row->metadata_id(),
-    });
-
-    my $file_id = $file_row->file_id();
-#    print STDERR "FILE ID =".Dumper($file_id)."\n";
+#    print STDERR "FILE ID =".Dumper($archived_file_id)."\n";
     foreach my $cross_name (@all_crosses) {
         my $cross_experiment_type = CXGN::Cross->new({schema => $chado_schema, cross_name => $cross_name});
         my $experiment_id = $cross_experiment_type->get_nd_experiment_id_with_type_cross_experiment();
 #        print STDERR "ND EXPERIMENT ID =".Dumper($experiment_id)."\n";
         my $nd_experiment_file = $phenome_schema->resultset("NdExperimentMdFiles")->create({
             nd_experiment_id => $experiment_id,
-            file_id => $file_id,
+            file_id => $archived_file_id,
         });
     }
 

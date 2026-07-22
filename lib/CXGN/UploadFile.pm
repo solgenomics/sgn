@@ -14,10 +14,11 @@ CXGN::UploadFile - an object to handle uploading files
     archive_filename => 'myfilename.csv',
     timestamp => '2016-09-24_10:30:30',
     user_id => 41,
-    user_role => 'curator'
+    user_role => 'curator',
+    metadata_schema => $metadata_schema
  });
- my $uploaded_file = $uploader->archive();
- my $md5 = $uploader->get_md5($uploaded_file);
+ my ($upload_file_id, $uploaded_file_name_with_path) = $uploader->archive();
+ my $md5 = $uploader->get_md5($uploaded_file_name_with_path);
 
  In this example, the tempfile myfile.csv will be saved in: /some/path/to/dir/41/some_directory/2016-09-24_10:30:30_myfilename.csv
 
