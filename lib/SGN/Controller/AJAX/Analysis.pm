@@ -182,6 +182,8 @@ sub store_analysis_spreadsheet_POST {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'upload_analysis_generic';
 
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+
     my $analysis_model_auxiliary_files;
     if ($analysis_model_auxiliary_file_1 && $analysis_model_auxiliary_file_type_1) {
         my $upload_original_name = $analysis_model_auxiliary_file_1->filename();
