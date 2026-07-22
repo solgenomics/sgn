@@ -178,6 +178,59 @@ sub delete_family_POST : Args(0) {
 }
 
 
+sub add_family_members_using_list : Path('/ajax/family/add_family_members_using_list') : ActionClass('REST'){ }
+
+sub add_family_members_using_list_POST : Args(0) {
+
+    my $self = shift;
+    my $c = shift;
+    my $session_id = $c->req->param("sgn_session_id");
+    my $user_role;
+    my $user_id;
+
+    if ($session_id){
+        my $dbh = $c->dbc->dbh;
+        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
+        if (!$user_info[0]){
+            $c->stash->{rest} = {error=>'You must be logged in to add family members!'};
+            $c->detach();
+        }
+        $user_id = $user_info[0];
+        $user_role = $user_info[1];
+    } else {
+        if (!$c->user){
+            $c->stash->{rest} = {error=>'You must be logged in to add family members!'};
+            $c->detach();
+        }
+        $user_id = $c->user()->get_object()->get_sp_person_id();
+        $user_role = $c->user->get_object->get_user_type();
+    }
+
+    if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
+        $c->stash->{rest} = {error=>'Only a submitter or a curator can add family members'};
+        $c->detach();
+    }
+
+    my $family_name = $c->req->param('family_name');
+    my $family_id = $c->req->param('family_id');
+    my $list_id = $c->req->param('list_id');
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
+    my $dbh = $c->dbc->dbh;
+    my $list = CXGN::List->new({dbh=>$dbh, list_id=>$list_id});
+    my $family_members = $list->elements();
+
+    my $family_obj = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id, family_members=>$family_members});
+    my $error = $family_obj->add_family_members();
+    my $return;
+    $c->stash->{rest} = $return;
+
+
+}
+
+
+
 ###
 1;
 ###

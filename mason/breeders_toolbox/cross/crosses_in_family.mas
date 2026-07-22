@@ -1,5 +1,7 @@
 <%args>
 $family_id
+$family_name
+$family_type_string
 </%args>
 
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
@@ -20,7 +22,7 @@ $family_id
     </div>
 </div>
 
-<& /breeders_toolbox/cross/add_family_members_using_list_dialog.mas, family_id => $family_id &>
+<& /breeders_toolbox/cross/add_family_members_using_list_dialog.mas, family_id => $family_id, family_name => $family_name, family_type_string => $family_type_string &>
 
 <script>
 
