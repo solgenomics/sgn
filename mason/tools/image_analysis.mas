@@ -1145,8 +1145,8 @@ function createRunProject(tissue_sample_ids, table_data, analysis_metadata, runN
             ).text(),
             run_date          : run_date,
             source_stock_id   : table_data[0].observationUnitDbId,
-            source_image_id   : "2625",
-            overlay_image_id  : "2626",
+            source_image_id   : table_data[0].source_image_id,
+            overlay_image_id  : table_data[0].overlay_image_id,
             tissue_samples    : JSON.stringify(
                 tissue_sample_ids.map(function(id) {
                     return { stock_id: parseInt(id), result_image_id: null };
