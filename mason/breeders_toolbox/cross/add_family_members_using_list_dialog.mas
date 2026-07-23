@@ -98,7 +98,6 @@ jQuery(document).ready(function(){
 
     jQuery("#add_family_members_submit").click(function(){
         var crosses_list_id = jQuery('#family_crosses_list_select').val();
-        alert(crosses_list_id);
         if (!crosses_list_id) {
             alert ("Please select a list of crosses.");
             return;

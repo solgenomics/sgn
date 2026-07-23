@@ -34,7 +34,7 @@ $family_type
 jQuery(document).ready(function(){
     const family_id = "<%$family_id%>";
     const family_parent_table = jQuery('#family_parent_information').DataTable({
-        'ajax': '/ajax/family/parents/'+family_id,
+        'ajax': '/ajax/family/parent_info/'+family_id,
         'paging' : false,
         'searching' : false,
         'destroy' : true,

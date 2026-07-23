@@ -31,7 +31,22 @@ has 'family_stock_id' => (
 );
 
 has 'family_name' => (
+    isa => "Str",
+    is => 'rw',
+);
+
+has 'family_type' => (
     isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'female_parent_stock_id' => (
+    isa => "Int",
+    is => 'rw',
+);
+
+has 'male_parent_stock_id' => (
+    isa => "Int",
     is => 'rw',
 );
 
@@ -40,7 +55,7 @@ has 'cross_stock_id' => (
     is => 'rw',
 );
 
-has 'family_members' => (
+has 'cross_list' => (
     isa =>'ArrayRef[Str]',
     is => 'rw',
 );
@@ -61,10 +76,25 @@ sub BUILD {
         $self->family_name($family_uniquename);
         $self->family_stock_id($family_id);
     }
+
+    my $family_female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
+    my $family_male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
+    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
+
+    my $family_prop = $schema->resultset("Stock::Stockprop")->find({ stock_id => $family_id, type_id => $family_type_id});
+    if ($family_prop){
+        my  $family_type = $family_prop->value();
+        $self->family_type($family_type)
+    }
+
+    my $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({ object_id => $family_id, type_id => $family_female_parent_type_id})->subject_id();
+    my $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({ object_id => $family_id, type_id => $family_male_parent_type_id})->subject_id();
+    $self->female_parent_stock_id($female_parent_stock_id);
+    $self->male_parent_stock_id($male_parent_stock_id);
 }
 
 
-sub get_family_parents {
+sub get_family_parent_info {
     my $self = shift;
     my $schema = $self->schema();
     my $family_stock_id = $self->family_stock_id();
@@ -280,13 +310,19 @@ sub add_family_members {
     my $dbh = $self->schema()->storage()->dbh();
     my $schema = $self->schema();
     my $family_id = $self->family_stock_id();
-    my @family_members = @{$self->family_members()};
+#    my @family_members = @{$self->family_members()};
     my $error;
     print STDERR "FAMILY ID =".Dumper($family_id)."\n";
-    print STDERR "FAMILY MEMBERS =".Dumper(\@family_members)."\n";
+#    print STDERR "FAMILY MEMBERS =".Dumper(\@family_members)."\n";
 
     my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+
+
+
+
+
+
 
     try {
 #        my $population = $schema->resultset("Stock::Stock")->find({

@@ -29,7 +29,7 @@ __PACKAGE__->config(
     );
 
 
-sub get_family_parents :Path('/ajax/family/parents') :Args(1) {
+sub get_family_parent_info :Path('/ajax/family/parent_info') :Args(1) {
     my $self = shift;
     my $c = shift;
     my $family_id = shift;
@@ -37,7 +37,7 @@ sub get_family_parents :Path('/ajax/family/parents') :Args(1) {
 
     my $family = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
 
-    my $result = $family->get_family_parents();
+    my $result = $family->get_family_parent_info();
     my @family_parents;
     foreach my $r (@$result){
         my ($female_parent_id, $female_parent_name, $female_stock_type, $female_ploidy, $male_parent_id, $male_parent_name, $male_stock_type, $male_ploidy) =@$r;
@@ -141,6 +141,7 @@ sub remove_family_member_POST : Args(0) {
     my $return;
     if ($error) {
         $c->stash->{rest} = { error => "Error removing member from family: $error" };
+        return;
     } else {
         $c->stash->{rest} = {success => 1};
     }
@@ -171,6 +172,7 @@ sub delete_family_POST : Args(0) {
     my $return;
     if ($error) {
         $c->stash->{rest} = { error => "Error deleting family: $error" };
+        return;
     } else {
         $c->stash->{rest} = {success => 1};
     }
@@ -219,10 +221,36 @@ sub add_family_members_using_list_POST : Args(0) {
     my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema");
     my $dbh = $c->dbc->dbh;
     my $list = CXGN::List->new({dbh=>$dbh, list_id=>$list_id});
-    my $family_members = $list->elements();
+    my $cross_list = $list->elements();
 
-    my $family_obj = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id, family_members=>$family_members});
-    my $error = $family_obj->add_family_members();
+    my $family_obj = CXGN::FamilyName->new({schema=>$schema, family_stock_id=>$family_id});
+    my $member_list = $family_obj->get_family_members();
+    my @member_array = @$member_list;
+    my @member_names = map {$_->[1]} @member_array;
+    my %member_hash = map {$_ => 1} @member_names;
+    my @duplicate_members;
+    foreach my $cross (@$cross_list) {
+        if ($member_hash{$cross}) {
+            push @duplicate_members, $cross;
+        }
+    }
+
+    if (scalar @duplicate_members > 0) {
+        my $duplicate_members_string = join(',', @duplicate_members);
+        print STDERR "DUPLICATE MEMBERS STRING =".Dumper($duplicate_members_string)."\n";
+        $c->stash->{rest} = { error_string => "These crosses are already members of this family: $duplicate_members_string" };
+        return;
+    }
+
+    my $family_type = $family_obj->family_type();
+    my $female_parent_stock_id = $family_obj->female_parent_stock_id();
+    my $male_parent_stock_id = $family_obj->male_parent_stock_id();
+    print STDERR "FEMALE ID =".Dumper($female_parent_stock_id)."\n";
+    print STDERR "MALE ID =".Dumper($male_parent_stock_id)."\n";
+    print STDERR "FAMILY TYPE =".Dumper($family_type)."\n";
+
+
+#    my $error = $family_obj->add_family_members();
     my $return;
     $c->stash->{rest} = $return;
 
