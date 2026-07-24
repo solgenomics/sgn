@@ -305,48 +305,6 @@ sub delete_family {
 }
 
 
-sub add_family_members {
-    my $self = shift;
-    my $dbh = $self->schema()->storage()->dbh();
-    my $schema = $self->schema();
-    my $family_id = $self->family_stock_id();
-#    my @family_members = @{$self->family_members()};
-    my $error;
-    print STDERR "FAMILY ID =".Dumper($family_id)."\n";
-#    print STDERR "FAMILY MEMBERS =".Dumper(\@family_members)."\n";
-
-    my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
-    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
-
-
-
-
-
-
-
-    try {
-#        my $population = $schema->resultset("Stock::Stock")->find({
-#            uniquename => $population_name,
-#            type_id => $population_cvterm_id,
-#        });
-
-#        foreach my $m (@members) {
-#            my $m_row = $schema->resultset("Stock::Stock")->find({ uniquename => $m });
-#            my $connection = $schema->resultset("Stock::StockRelationship")->find_or_create({
-#                subject_id => $m_row->stock_id,
-#                object_id => $population->stock_id,
-#                type_id => $member_of_cvterm_id,
-#            });
-#        }
-    }
-    catch {
-        $error =  $_;
-    };
-}
-
-
-
-
 
 ###
 1;

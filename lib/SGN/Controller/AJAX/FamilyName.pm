@@ -20,7 +20,7 @@ use Try::Tiny;
 use Data::Dumper;
 use CXGN::FamilyName;
 use JSON;
-use CXGN::Pedigree::AddFamilyNames;
+use CXGN::Pedigree::AddFamilyAndMembers;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
@@ -253,7 +253,7 @@ sub add_family_members_using_list_POST : Args(0) {
 
     my $return;
     foreach my $cross_name (@$cross_list) {
-        my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
+        my $family_name_add = CXGN::Pedigree::AddFamilyAndMembers->new({
             chado_schema => $schema,
             phenome_schema => $phenome_schema,
             dbh => $dbh,
@@ -263,7 +263,7 @@ sub add_family_members_using_list_POST : Args(0) {
             family_type => $family_type
         });
 
-        $return = $family_name_add->add_family_name();
+        $return = $family_name_add->add_family_and_members();
         my $error;
         if (!$return){
             $error = "Error adding family name";

@@ -39,7 +39,7 @@ use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Pedigree::AddProgeniesExistingAccessions;
 use CXGN::Pedigree::AddCrossInfo;
-use CXGN::Pedigree::AddFamilyNames;
+use CXGN::Pedigree::AddFamilyAndMembers;
 use CXGN::Pedigree::AddPopulations;
 use CXGN::Pedigree::AddCrossTransaction;
 use CXGN::Pedigree::ParseUpload;
@@ -1617,7 +1617,7 @@ sub upload_family_names_POST : Args(0) {
         foreach my $cross_name(keys %family_name_hash){
             my $family_name = $family_name_hash{$cross_name};
 
-            my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
+            my $family_name_add = CXGN::Pedigree::AddFamilyAndMembers->new({
                 chado_schema => $chado_schema,
                 phenome_schema => $phenome_schema,
                 dbh => $dbh,
@@ -1627,7 +1627,7 @@ sub upload_family_names_POST : Args(0) {
                 family_type => $family_type
             });
 
-            my $return = $family_name_add->add_family_name();
+            my $return = $family_name_add->add_family_and_members();
             my $error;
             if (!$return){
                 $error = "Error adding family name";
