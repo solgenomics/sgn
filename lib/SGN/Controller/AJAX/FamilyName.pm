@@ -20,6 +20,7 @@ use Try::Tiny;
 use Data::Dumper;
 use CXGN::FamilyName;
 use JSON;
+use CXGN::Pedigree::AddFamilyNames;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 __PACKAGE__->config(
@@ -189,6 +190,7 @@ sub add_family_members_using_list_POST : Args(0) {
     my $session_id = $c->req->param("sgn_session_id");
     my $user_role;
     my $user_id;
+    my $user_name;
 
     if ($session_id){
         my $dbh = $c->dbc->dbh;
@@ -199,6 +201,8 @@ sub add_family_members_using_list_POST : Args(0) {
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
+        my $p = CXGN::People::Person->new($dbh, $user_id);
+        $user_name = $p->get_username;
     } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to add family members!'};
@@ -206,6 +210,8 @@ sub add_family_members_using_list_POST : Args(0) {
         }
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_role = $c->user->get_object->get_user_type();
+        $user_name = $c->user()->get_object()->get_username();
+
     }
 
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
@@ -237,7 +243,6 @@ sub add_family_members_using_list_POST : Args(0) {
 
     if (scalar @duplicate_members > 0) {
         my $duplicate_members_string = join(',', @duplicate_members);
-        print STDERR "DUPLICATE MEMBERS STRING =".Dumper($duplicate_members_string)."\n";
         $c->stash->{rest} = { error_string => "These crosses are already members of this family: $duplicate_members_string" };
         return;
     }
@@ -245,15 +250,34 @@ sub add_family_members_using_list_POST : Args(0) {
     my $family_type = $family_obj->family_type();
     my $female_parent_stock_id = $family_obj->female_parent_stock_id();
     my $male_parent_stock_id = $family_obj->male_parent_stock_id();
-    print STDERR "FEMALE ID =".Dumper($female_parent_stock_id)."\n";
-    print STDERR "MALE ID =".Dumper($male_parent_stock_id)."\n";
-    print STDERR "FAMILY TYPE =".Dumper($family_type)."\n";
 
-
-#    my $error = $family_obj->add_family_members();
     my $return;
-    $c->stash->{rest} = $return;
+    foreach my $cross_name (@$cross_list) {
+        my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
+            chado_schema => $schema,
+            phenome_schema => $phenome_schema,
+            dbh => $dbh,
+            cross_name => $cross_name,
+            family_name => $family_name,
+            owner_name => $user_name,
+            family_type => $family_type
+        });
 
+        $return = $family_name_add->add_family_name();
+        my $error;
+        if (!$return){
+            $error = "Error adding family name";
+        }
+        if ($return->{error}){
+            $error = $return->{error};
+        }
+        if ($error){
+            $c->stash->{rest} = {error_string => $error };
+            $c->detach();
+        }
+    }
+
+    $c->stash->{rest} = {success => 1};
 
 }
 
