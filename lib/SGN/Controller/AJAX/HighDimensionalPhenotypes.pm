@@ -175,6 +175,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     ## Set metadata
     my %phenotype_metadata;
     $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+    $phenotype_metadata{'archived_file_id'} = $archived_file_id;
     $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
     $phenotype_metadata{'operator'} = $user_name;
     $phenotype_metadata{'date'} = $timestamp;

@@ -256,6 +256,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $genotyping_plate_name genotyping plate upload",
         job_type => 'upload',
+        results_page => '/breeders/genotyping_projects',
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             is_validation => 1,

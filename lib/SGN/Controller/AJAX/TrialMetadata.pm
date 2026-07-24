@@ -948,12 +948,16 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name plants upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1131,12 +1135,16 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name subplot plants upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1314,12 +1322,16 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name subplots upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1494,12 +1506,16 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name plants with index upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1677,12 +1693,16 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name subplot plants with index upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1860,12 +1880,16 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name subplots with index upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2041,12 +2065,16 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name plants with number upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2224,12 +2252,16 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name subplot plants with number upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2407,12 +2439,16 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name subplots with number upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2599,12 +2635,16 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name plot GPS upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2777,12 +2817,16 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $sp_person_id,
         name => basename($archived_filename_with_path)." $trial_name change plot accessions upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             ignore_warnings => $override ? 1 : undef,
@@ -3008,12 +3052,16 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         $archived_filename_with_path = $archived_file->get_path();
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." $trial_name additional file upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -6359,12 +6407,16 @@ sub upload_entry_number_template_POST : Args(0) {
         $upload_original_name = basename($archived_filename_with_path);
     }
 
+    my $trial_id = $c->stash->{trial_id};
+
     my $upload_job = CXGN::Job->new({
         schema => $schema,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." entry numbers upload",
         job_type => 'upload',
+        results_page => "/breeders/trial/$trial_id",
+        submit_page =>  $c->request->headers->referer,
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             ignore_warnings => $ignore_warnings eq "true" ? 1 : 0,
