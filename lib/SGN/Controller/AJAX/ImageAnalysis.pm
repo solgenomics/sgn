@@ -831,6 +831,7 @@ sub image_analysis_group_POST : Args(0) {
     print STDERR "IMAGE ANALYSIS RESULTS: ".Dumper($result);
     my %grouped_results = ();
     my @table_data = ();
+    my %overlay_by_image = ();
 
     my ($uniquename, $next_uniquename, $trait, $value, $results_ref, $next_results_ref);
     # sort result hash array by $stock_id
@@ -848,6 +849,11 @@ sub image_analysis_group_POST : Args(0) {
         $uniquename = $results_ref->{'stock_uniquename'};
         $trait = $results_ref->{'result'}->{'trait'};
         $value = $results_ref->{'result'}->{'value'};
+
+        my $source_image_id = $results_ref->{'image_id'};
+        if (defined $source_image_id && !exists $overlay_by_image{$source_image_id} && $results_ref->{result}{analyzed_image_overlay}) {
+            $overlay_by_image{$source_image_id} = $results_ref->{result}{analyzed_image_overlay};
+        }
 
         if ($trait && $value) {  # we have a single analysis
             print STDERR "Working on $trait for $uniquename. Saving the details \n";
@@ -1010,6 +1016,9 @@ sub image_analysis_group_POST : Args(0) {
                         value         => $val + 0,
                         object_metadata => $sample_data->{object_metadata},
                         status => 'create',
+                        source_image_id => $results_ref->{image_id},
+                        source_image_filename => $results_ref->{image_original_filename},
+                        overlay_image_id => $results_ref->{result}{analyzed_image_id},
                     };
                     #$test_trait_id++;
                 };
@@ -1034,6 +1043,9 @@ sub image_analysis_group_POST : Args(0) {
                     image_analyzed => $image_analyzed,
                     value => $results_ref->{result}->{subanalyses}->{$sample}->{trait_value}+0,
                     status => 'create',
+                    source_image_id => $results_ref->{image_id},
+                    source_image_filename => $results_ref->{image_original_filename},
+                    overlay_image_id => $results_ref->{result}{analyzed_image_id},
                 };
             }
 	     
@@ -1065,6 +1077,7 @@ sub image_analysis_group_POST : Args(0) {
                 next unless defined $trait && $trait ne '';
 
                 my $details = $uniquename_data->{$trait};
+                my $row_source_image_id = $uniquename_data->{$trait}[0]->{'source_image_id'};
                 my @values = map { $_->{'value'}} @{$uniquename_data->{$trait}};
                 @values= grep { $_ ne 'NA' } @values; # remove NAs before calculating mean
                 # print STDERR "\n\n\nVALUES ARE @values and length is ". scalar @values . "\n\n\n"
@@ -1085,17 +1098,18 @@ sub image_analysis_group_POST : Args(0) {
                     image_analyzed => $uniquename_data->{$trait}[0]->{'image_analyzed'},
                     value => $mean_value,
                     details => $details,
-                    numberAnalyzed => scalar @values
-                    # Add previously observed trait value
+                    numberAnalyzed => scalar @values,
+                    source_image_id => $row_source_image_id,
+                    source_image_filename => $results_ref->{image_original_filename},
+                    overlay_image_id => $uniquename_data->{$trait}[0]->{'overlay_image_id'},
                 };
             }
         }
         
     }
-    
     my $image_overlay = $results_ref->{result}{analyzed_image_overlay};
     print STDERR "table data is ".Dumper(@table_data);
-    $c->stash->{rest} = { success => 1, results => { table_data => \@table_data, analyzed_image_overlay => $image_overlay, multi_trait_analysis => $is_multi_trait, analysis_metadata => $pipeline_metadata}};
+    $c->stash->{rest} = { success => 1, results => { table_data => \@table_data, output_image_overlays => \%overlay_by_image, multi_trait_analysis => $is_multi_trait, analysis_metadata => $pipeline_metadata}};
 }
 
 sub format_multi_trait_data {

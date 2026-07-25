@@ -230,21 +230,20 @@ tr.shown td.details-control {
     </div>
 
     <div class="modal fade" id="runNameModal" tabindex="-1" role="dialog" aria-labelledby="runNameModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="runNameModalTitle">Name This Image Analysis Run</h5>
+                    <h5 class="modal-title" id="runNameModalTitle">Name Image Analysis Runs</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <label for="run_name_input">Run Name</label>
-                    <input type="text" class="form-control" id="run_name_input"
-                        placeholder="e.g. Seed size analysis March 2025" />
-                    <p class="text-muted" style="font-size:12px;margin-top:6px;">
-                        This name will identify the analysis run in the database.
+                    <p class="text-muted" style="font-size:12px;">
+                        Each analyzed image will be saved as its own analysis run.
+                        Enter a unique name for each one below.
                     </p>
+                    <div id="run_name_rows"></div>
                     <div id="run_name_error" class="text-danger" style="display:none;margin-top:6px;"></div>
                 </div>
                 <div class="modal-footer">
@@ -339,7 +338,7 @@ tr.shown td.details-control {
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
-                <table id="image_analysis_run_search_results" class="table table-hover table-striped">
+                <table id="image_analysis_run_search_results" class="table table-hover table-striped" style="width:100%">
                     <thead>
                         <tr>
                             <th>Run Name</th>
@@ -488,6 +487,7 @@ jQuery(document).ready(function(){
     let submit_results;
     let is_multi_trait;
     let analysis_metadata;
+    let output_image_overlays;
 
     jQuery('#image_analysis_submit').click(function(){
         jQuery('input[name="image_analysis_select"]').each(function() {
@@ -606,12 +606,15 @@ jQuery(document).ready(function(){
 
                         is_multi_trait = response.results.multi_trait_analysis;
                         analysis_metadata = response.results.analysis_metadata;
-                        console.log("analysis_metadata", analysis_metadata);
-                        if (response.results.analyzed_image_overlay) {
-                            jQuery('#analysis_image').attr('src', response.results.analyzed_image_overlay);
-                            jQuery('#analysis_image_link').attr('href', response.results.analyzed_image_overlay);
-                            jQuery('#analysis_image_result').show()
+                        output_image_overlays = response.results.output_image_overlays;
+                        let overlayUrls = Object.values(output_image_overlays);
+
+                        if (overlayUrls.length === 1) {
+                            jQuery('#analysis_image').attr('src', overlayUrls[0]);
+                            jQuery('#analysis_image_link').attr('href', overlayUrls[0]);
+                            jQuery('#analysis_image_result').show();
                         }
+
                         jQuery('#image_analysis_result').show();
 
                         var table = jQuery('#image_analysis_result_table').DataTable( {
@@ -701,44 +704,117 @@ jQuery(document).ready(function(){
 
     function enterRunName() {
         jQuery('#run_name_error').hide().text('');
-        jQuery('#run_name_input').val('');
+
+        let partition = partitionTableDataByImage();
+        window.save_partition = partition;
+
+        let $rows = jQuery('#run_name_rows').empty();
+
+        partition.order.forEach(function(image_id) {
+            var rows    = partition.groups[image_id];
+            console.log("source image filename: ", rows[0].source_image_filename);
+            var label   = rows[0].source_image_filename || ('Image ' + image_id);
+            var overlay = (window.overlays_by_image && window.overlays_by_image[image_id]) || '';
+
+            $rows.append(
+                '<div class="form-group run-name-item" ' +
+                    'data-image-id="' + jQuery('<div>').text(image_id).html() + '" ' +
+                    'style="display:flex;align-items:center;border-bottom:1px solid #eee;padding:8px 0;">' +
+                    '<div style="flex:0 0 90px;">' +
+                        (overlay ? '<img src="' + overlay + '" style="max-height:60px;max-width:80px;">' : '') +
+                    '</div>' +
+                    '<div style="flex:1;">' +
+                        '<label style="font-size:12px;">' + jQuery('<div>').text(label).html() + '</label>' +
+                        '<input type="text" class="form-control run-name-input" ' +
+                            'placeholder="e.g. ' + jQuery('<div>').text(label).html() + ' run" />' +
+                    '</div>' +
+                '</div>'
+            );
+        });
+
         jQuery('#runNameModal').modal('show');
-        setTimeout(function () { jQuery('#run_name_input').focus(); }, 300);
+        setTimeout(function () { jQuery('.run-name-input').first().focus(); }, 300);
+    }
+
+    function partitionTableDataByImage() {
+        var all_rows = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
+        console.log("all table data rows: ", all_rows);
+        var groups = {};   // source_image_id -> [rows]
+        var order  = [];   // preserve first-seen order
+        all_rows.forEach(function(row) {
+            var img = String(row.source_image_id != null ? row.source_image_id : 'unknown');
+            if (!groups[img]) { groups[img] = []; order.push(img); }
+            groups[img].push(row);
+        });
+        return { groups: groups, order: order };
     } 
-
+    
     jQuery('#run_name_confirm').click(function () {
-        var runName = jQuery.trim(jQuery('#run_name_input').val());
+        jQuery('#run_name_error').hide().text('');
 
-        if (!runName) {
-            showRunNameError('Please enter a name for this run.');
+        var entries = [];
+        var seen = {};
+        var ok = true;
+
+        jQuery('.run-name-item').each(function() {
+            var image_id = String(jQuery(this).data('image-id'));
+            var name = jQuery.trim(jQuery(this).find('.run-name-input').val());
+
+            if (!name) {
+                ok = false;
+            } else if (seen[name.toLowerCase()]) {
+                ok = false;
+                showRunNameError('Duplicate name "' + name + '". Each run needs a unique name.');
+            }
+            seen[name.toLowerCase()] = true;
+
+            entries.push({
+                image_id: image_id,
+                runName:  name,
+                rows:     window.save_partition.groups[image_id]
+            });
+        });
+
+        if (!ok) {
+            if (!jQuery('#run_name_error').is(':visible')) {
+                showRunNameError('Please enter a unique name for every run.');
+            }
             return;
         }
 
-        var $btn = jQuery('#run_name_confirm');
-        $btn.prop('disabled', true).text('Checking...');
+        var $btn = jQuery('#run_name_confirm').prop('disabled', true).text('Checking...');
 
-        jQuery.ajax({
-            url: '/ajax/image_analysis/check_run_name',
-            method: 'GET',
-            data: { run_name: runName },
-            success: function (resp) {
-                $btn.prop('disabled', false).text('Save Results');
+        var checks = entries.map(function(e) {
+            return jQuery.ajax({
+                url: '/ajax/image_analysis/check_run_name',
+                method: 'GET',
+                data: { run_name: e.runName }
+            }).then(function(resp) {
+                return { entry: e, exists: resp.exists };
+            });
+        });
 
-                if (resp.exists) {
-                    showRunNameError('A run named "' + runName +
-                        '" already exists. Please choose a different name.');
-                    return;
-                }
+        jQuery.when.apply(jQuery, checks).then(function() {
+            var results = (entries.length === 1)
+                ? [arguments[0]]
+                : Array.prototype.slice.call(arguments);
 
-                // name is free -> proceed
-                jQuery('#runNameModal').modal('hide');
-                saveResults(runName);
-            },
-            error: function (xhr) {
-                $btn.prop('disabled', false).text('Save Results');
-                showRunNameError('Could not verify the name. Please try again.');
-                console.error(xhr.responseText);
+            var taken = results.filter(function(r){ return r.exists; })
+                            .map(function(r){ return r.entry.runName; });
+
+            $btn.prop('disabled', false).text('Save Results');
+
+            if (taken.length) {
+                showRunNameError('These names already exist: ' + taken.join(', ') +
+                                '. Please choose different names.');
+                return;
             }
+
+            jQuery('#runNameModal').modal('hide');
+            saveAllRuns(entries);
+        }, function () {
+            $btn.prop('disabled', false).text('Save Results');
+            showRunNameError('Could not verify the names. Please try again.');
         });
     });
 
@@ -746,9 +822,68 @@ jQuery(document).ready(function(){
         jQuery('#run_name_error').text(msg).show();
     }
 
-    function saveResults(runName) {
+    function saveAllRuns(entries) {
+        jQuery('#working_modal').modal('show');
+
+        var chain = jQuery.Deferred().resolve(); 
+        var summaries = [];
+
+        entries.forEach(function(e) {
+            chain = chain.then(function() {
+                return saveResults(e.rows, e.runName).then(
+                    function(resp) { summaries.push({ ok: true,  name: e.runName, resp: resp }); },
+                    function(xhr)  { summaries.push({ ok: false, name: e.runName, err: xhr && (xhr.responseText || xhr) }); }
+                );
+            });
+        });
+
+        chain.always(function() {
+            jQuery('#working_modal').modal('hide');
+            showAllSaveSummaries(summaries);   // combined success/error list
+        });
+    }
+
+    function showAllSaveSummaries(summaries) {
+        var html = '<ul class="list-group">';
+        summaries.forEach(function(s) {
+            if (s.ok && s.resp && !s.resp.error) {
+                var runId   = s.resp.run_project_id;
+                var runName = s.resp.run_name || s.name;
+                var nameHtml = runId
+                    ? '<a href="/image_analysis/run/' + runId + '">' + jQuery('<div>').text(runName).html() + '</a>'
+                    : jQuery('<div>').text(runName).html();
+                html += '<li class="list-group-item list-group-item-success">' +
+                            '<span class="badge"><span class="glyphicon glyphicon-ok"></span></span>' +
+                            'Saved run: ' + nameHtml + '</li>';
+            } else {
+                var msg = (s.resp && s.resp.error) ? s.resp.error : (s.err || 'Unknown error');
+                html += '<li class="list-group-item list-group-item-danger">' +
+                            '<span class="badge"><span class="glyphicon glyphicon-remove"></span></span>' +
+                            'Failed to save "' + jQuery('<div>').text(s.name).html() + '": ' +
+                            jQuery('<div>').text(msg).html() + '</li>';
+            }
+        });
+        html += '</ul>';
+        jQuery('#saveResultModalBody').html(html);
+        jQuery('#saveResultModal').modal('show');
+    }
+
+    function getThumbFromRows(rows) {
+        var d = rows[0].details && rows[0].details[0];
+        var orig = (d && d.original_link) || rows[0].original_link;
+        if (!orig) return '';
+        return orig.replace(/\/[^\/]+$/, '/small.jpg');
+    }
+
+    function saveResults(table_data, runName) {
+        let done = jQuery.Deferred();
+        console.log("saving run for image:", table_data[0].source_image_id, "->", runName);
+
+        let this_image_id = table_data[0].source_image_id;
+        /*
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
         console.log("table data:", table_data);
+        */
         let dt = new DataTransfer();
 
         jQuery('#working_modal').modal('show');
@@ -964,14 +1099,8 @@ jQuery(document).ready(function(){
                             var tissue_sample_ids = Object.keys(sampleData);
                             console.log("tissue_sample_ids test:", tissue_sample_ids);
                             createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids)
-                                .done(function (resp) {
-                                    jQuery('#working_modal').modal('hide');
-                                    showSaveSuccess(resp);
-                                })
-                                .fail(function (xhr) {
-                                    jQuery('#working_modal').modal('hide');
-                                    showSaveError(xhr && xhr.responseText);
-                                });
+                                .done(function (resp) { done.resolve(resp); })
+                                .fail(function (xhr)  { done.reject(xhr); });
                         },
                         error: function (err) {
                             console.error("Error saving observations", err.responseText);
@@ -1032,14 +1161,8 @@ jQuery(document).ready(function(){
                                         return unit.observationUnitDbId;
                                     });
                                     createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids)
-                                        .done(function (resp) {
-                                            jQuery('#working_modal').modal('hide');
-                                            showSaveSuccess(resp);
-                                        })
-                                        .fail(function (xhr) {
-                                            jQuery('#working_modal').modal('hide');
-                                            showSaveError(xhr && xhr.responseText);
-                                        });                                 
+                                        .done(function (resp) { done.resolve(resp); })
+                                        .fail(function (xhr)  { done.reject(xhr); });                               
                                 });
                                 
                             },
@@ -1072,14 +1195,8 @@ jQuery(document).ready(function(){
                 // console.log(response);
                 var tissue_sample_ids = [table_data[0].observationUnitDbId];
                 createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids)
-                    .done(function (resp) {
-                        jQuery('#working_modal').modal('hide');
-                        showSaveSuccess(resp);
-                    })
-                    .fail(function (xhr) {
-                        jQuery('#working_modal').modal('hide');
-                        showSaveError(xhr && xhr.responseText);
-                    });
+                    .done(function (resp) { done.resolve(resp); })
+                    .fail(function (xhr)  { done.reject(xhr); });
             },
             error: function(response) {
                 // console.log(response);
@@ -1089,6 +1206,7 @@ jQuery(document).ready(function(){
             }
         });
         }
+        return done.promise();
         
     }
 
