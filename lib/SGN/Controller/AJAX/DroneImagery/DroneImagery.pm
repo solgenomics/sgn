@@ -5946,6 +5946,12 @@ sub drone_imagery_remove_background_display_POST : Args(0) {
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_threshold '.$lower_threshold.' --upper_threshold '.$upper_threshold;
     print STDERR Dumper $cmd;
     my $status = system("$cmd > /dev/null");
+    if ($status != 0) {
+        die "RemoveBackground.py failed (exit status $status). Command: $cmd\n";
+    }
+    if (! -e $archive_remove_background_temp_image) {
+        die "RemoveBackground.py did not produce the expected output image $archive_remove_background_temp_image. Command: $cmd\n";
+    }
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -6033,6 +6039,12 @@ sub _perform_image_background_remove_threshold {
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackground.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_threshold '.$lower_threshold.' --upper_threshold '.$upper_threshold;
     print STDERR Dumper $cmd;
     my $status = system("$cmd > /dev/null");
+    if ($status != 0) {
+        die "RemoveBackground.py failed (exit status $status) for image type $image_type. Command: $cmd\n";
+    }
+    if (! -e $archive_remove_background_temp_image) {
+        die "RemoveBackground.py did not produce the expected output image $archive_remove_background_temp_image. Command: $cmd\n";
+    }
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
@@ -6154,6 +6166,12 @@ sub _perform_image_background_remove_threshold_percentage {
     my $cmd = $c->config->{python_executable}.' '.$c->config->{rootpath}.'/DroneImageScripts/ImageProcess/RemoveBackgroundPercentage.py --image_path \''.$image_fullpath.'\' --outfile_path \''.$archive_remove_background_temp_image.'\' --lower_percentage \''.$lower_threshold_percentage.'\' --upper_percentage \''.$upper_threshold_percentage.'\' '.$image_band_index_string;
     print STDERR Dumper $cmd;
     my $status = system("$cmd > /dev/null");
+    if ($status != 0) {
+        die "RemoveBackgroundPercentage.py failed (exit status $status) for image type $image_type. Command: $cmd\n";
+    }
+    if (! -e $archive_remove_background_temp_image) {
+        die "RemoveBackgroundPercentage.py did not produce the expected output image $archive_remove_background_temp_image. Command: $cmd\n";
+    }
 
     $image = SGN::Image->new( $schema->storage->dbh, undef, $c );
     $image->set_sp_person_id($user_id);
