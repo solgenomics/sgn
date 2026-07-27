@@ -55,6 +55,21 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
     line-height: 1.42857143;
   }
 
+  #trial-allocation-page {
+    font-weight: 400;
+  }
+
+  #trial-allocation-page label {
+    font-weight: 700;
+  }
+
+  #trial-allocation-page input,
+  #trial-allocation-page select,
+  #trial-allocation-page textarea,
+  #trial-allocation-page .select2-container {
+    font-weight: 400;
+  }
+
   :root {
     --cell: 40px;
     --gap: 2px;
@@ -186,7 +201,7 @@ my $is_curator = ($c->user && $c->user->check_roles('curator')) ? 1 : 0;
 
 </style>
 
-<div class="bg-white text-gray-800 font-sans p-8 space-y-12">
+<div id="trial-allocation-page" class="bg-white text-gray-800 font-sans p-8 space-y-12">
 
   <&| /page/info_section.mas, id=>"trial_summary_section", title=>"1 - Trial allocation summary", collapsible=>1, collapsed=>1 &>
     <h2 class="text-2xl font-bold mb-4">Field Layout Workflow</h2>
