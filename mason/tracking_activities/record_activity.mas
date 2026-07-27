@@ -14,6 +14,7 @@ $activity_type => undef
 $program_name => undef
 $source_info => undef
 $can_obsolete => undef
+$vector_id => undef
 
 </%args>
 
@@ -127,7 +128,7 @@ $can_obsolete => undef
 % }
 
 % if ($identifier_id && ($material_type eq 'transformation')) {
-    <& /transformation/transformants_section.mas, transformation_id => $material_stock_id, program_name => $program_name, can_obsolete => $can_obsolete &>
+    <& /transformation/transformants_section.mas, transformation_id => $material_stock_id, program_name => $program_name, can_obsolete => $can_obsolete, vector_id => $vector_id &>
     <& /transformation/obsoleted_transformants_section.mas, transformation_id => $material_stock_id &>
 % }
 
@@ -199,7 +200,7 @@ $(window).ready( function() {
         jQuery('#record_page_info_input').val('');
         let input_type = jQuery('#record_page_type_select').val();
         if (input_type.indexOf('date') != -1) {
-            flatpickr('#selected_type_input', {
+            flatpickr('#record_page_info_input', {
                 allowInput: true,
                 dateFormat: "Y-m-d",
                 defaultDate: "today"
