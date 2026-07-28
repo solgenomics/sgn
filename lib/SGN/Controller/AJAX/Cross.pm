@@ -386,7 +386,7 @@ sub get_membership :Path('/ajax/cross/membership') :Args(1) {
 
     foreach my $r (@$result){
         my ($crossing_experiment_id, $crossing_experiment_name, $description, $family_id, $family_name) =@$r;
-        push @membership_info, [qq{<a href="/breeders/trial/$crossing_experiment_id">$crossing_experiment_name</a>}, $description, qq{<a href = "/family/$family_id/">$family_name</a>}];
+        push @membership_info, [qq{<a href="/breeders/trial/$crossing_experiment_id">$crossing_experiment_name</a>}, $description, qq{<a href = "/stock/$family_id/view">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@membership_info };

@@ -343,7 +343,7 @@ sub view_stock : Chained('get_stock') PathPart('view') Args(0) {
                 if ($original_stock_type eq 'cross') {
                     $original_stock_link = qq{<a href = "/cross/$original_stock_id">$original_stock_name</a>}."(cross)";
                 } elsif ($original_stock_type eq 'family_name') {
-                    $original_stock_link = qq{<a href = "/family/$original_stock_id/">$original_stock_name</a>}."(family name)";
+                    $original_stock_link = qq{<a href="/stock/$original_stock_id/view">$original_stock_name</a>}."(family name)";
                 } else {
                     $original_stock_link = qq{<a href="/stock/$original_stock_id/view">$original_stock_name</a>}."(accession)";
                 }

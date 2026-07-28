@@ -2070,8 +2070,6 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
 
         if ($cvterm_name eq 'cross') {
             $url = qq{<a href = "/cross/$stock_id">$stock_name</a>};
-        } elsif ($cvterm_name eq 'family_name') {
-            $url = qq{<a href = "/family/$stock_id/">$stock_name</a>};
         } else {
             $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
         }
