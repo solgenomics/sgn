@@ -41,6 +41,7 @@ use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use CXGN::Tag;
 use CXGN::DroneImagery::ImageTypes;
+use CXGN::DroneImagery::LegendrePolynomials;
 use Time::Piece;
 use POSIX;
 use Math::Round;
@@ -62,9 +63,47 @@ use SGN::Controller::AJAX::DroneImagery::DroneImagery;
 use Storable qw(dclone);
 use Statistics::Descriptive;
 
+# The environment simulation formulas, keyed by the simulation type. Every entry takes
+# a hashref of the values its formula needs and returns the simulated value.
+# Use _simulate_environment_value() below to evaluate one by name.
+my %env_sim_subs = (
+    "linear_gradient" => sub {
+        my $args = shift;
+        my ($a_env, $a_env_adjustment, $b_env, $b_env_adjustment, $row_number, $col_number, $max_row, $max_col) =
+            @{$args}{qw(a_env a_env_adjustment b_env b_env_adjustment row_number col_number max_row max_col)};
+        return ( ($a_env-$a_env_adjustment)*$row_number/$max_row + ($b_env-$b_env_adjustment)*$col_number/$max_col );
+    },
+    "random_1d_normal_gradient" => sub {
+        my $args = shift;
+        my ($row_number, $row_number_adjustment, $max_row) =
+            @{$args}{qw(row_number row_number_adjustment max_row)};
+        return ( (1/(2*3.14159)) * exp(-1*(( ($row_number-$row_number_adjustment) /$max_row)**2)/2) );
+    },
+    "random_2d_normal_gradient" => sub {
+        my $args = shift;
+        my ($ro_env, $row_number, $row_number_adjustment, $mean_row, $max_row, $sig_row, $col_number, $col_number_adjustment, $mean_col, $max_col, $sig_col) =
+            @{$args}{qw(ro_env row_number row_number_adjustment mean_row max_row sig_row col_number col_number_adjustment mean_col max_col sig_col)};
+        return ( exp( (-1/(2*(1-$ro_env**2))) * ( ( (( ($row_number-$row_number_adjustment) - $mean_row)/$max_row)**2)/($sig_row**2) + ( (( ($col_number-$col_number_adjustment) - $mean_col)/$max_col)**2)/($sig_col**2) - ((2*$ro_env)*(( ($row_number-$row_number_adjustment) - $mean_row)/$max_row)*(( ($col_number-$col_number_adjustment) - $mean_col)/$max_col) )/($sig_row*$sig_col) ) ) / (2*3.14159*$sig_row*$sig_col*sqrt(1-$ro_env**2)) );
+    },
+    "random" => sub {
+        return rand(1);
+    }
+);
+
+sub _simulate_environment_value {
+    my $env_simulation = shift;
+    my $args = shift;
+
+    my $env_sim_sub = $env_sim_subs{$env_simulation};
+    if (!$env_sim_sub) {
+        print STDERR "No environment simulation defined for $env_simulation. Skipping it.\n";
+        return undef;
+    }
+    return $env_sim_sub->($args);
+}
+
 sub perform_drone_imagery_analytics {
-    my ($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $legendre_coeff_exec_array, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $env_sim_exec, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv) = @_;
-    my @legendre_coeff_exec = @$legendre_coeff_exec_array;
+    my ($schema, $a_env, $b_env, $ro_env, $row_ro_env, $env_variance_percent, $protocol_id, $statistics_select, $analytics_select, $tolparinv, $use_area_under_curve, $legendre_order_number, $permanent_environment_structure, $trait_name_encoder_hash, $trait_name_encoder_rev_hash, $stock_info_hash, $plot_id_map_hash, $sorted_trait_names_array, $accession_id_factor_map_hash, $rep_time_factors_array, $ind_rep_factors_array, $unique_accession_names_array, $plot_id_count_map_reverse_hash, $sorted_scaled_ln_times_array, $time_count_map_reverse_hash, $accession_id_factor_map_reverse_hash, $seen_times_hash, $plot_id_factor_map_reverse_hash, $trait_to_time_map_hash, $unique_plot_names_array, $stock_name_row_col_hash, $phenotype_data_original_hash, $plot_rep_time_factor_map_hash, $stock_row_col_hash, $stock_row_col_id_hash, $polynomial_map_hash, $plot_ids_ordered_array, $csv, $timestamp, $user_name, $stats_tempfile, $grm_file, $grm_rename_tempfile, $tmp_stats_dir, $stats_out_tempfile, $stats_out_tempfile_row, $stats_out_tempfile_col, $stats_out_tempfile_residual, $stats_out_tempfile_2dspl, $stats_prep2_tempfile, $stats_out_param_tempfile, $parameter_tempfile, $parameter_asreml_tempfile, $stats_tempfile_2, $permanent_environment_structure_tempfile, $permanent_environment_structure_env_tempfile, $permanent_environment_structure_env_tempfile2, $permanent_environment_structure_env_tempfile_mat, $sim_env_changing_mat_tempfile, $sim_env_changing_mat_full_tempfile, $yhat_residual_tempfile, $blupf90_solutions_tempfile, $coeff_genetic_tempfile, $coeff_pe_tempfile, $stats_out_tempfile_varcomp, $time_min, $time_max, $header_string, $min_row, $max_row, $min_col, $max_col, $mean_row, $sig_row, $mean_col, $sig_col, $sim_env_change_over_time, $correlation_between_times, $field_trial_id_list, $simulated_environment_real_data_trait_id, $fixed_effect_type, $perform_cv) = @_;
     my %trait_name_encoder = %$trait_name_encoder_hash;
     my %trait_name_encoder_rev = %$trait_name_encoder_rev_hash;
     my %stock_info = %$stock_info_hash;
@@ -1897,14 +1936,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -1936,14 +1968,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_original) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_original->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -1971,14 +1996,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -2009,14 +2027,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_original) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_original->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -5611,14 +5622,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -5647,14 +5651,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -5681,14 +5678,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -5717,14 +5707,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -7246,7 +7229,7 @@ sub perform_drone_imagery_analytics {
             foreach my $p (@unique_plot_names) {
                 my $row_number = $stock_name_row_col{$p}->{row_number};
                 my $col_number = $stock_name_row_col{$p}->{col_number};
-                my $sim_val = eval $env_sim_exec->{$env_simulation};
+                my $sim_val = _simulate_environment_value($env_simulation, { a_env => $a_env, a_env_adjustment => $a_env_adjustment, b_env => $b_env, b_env_adjustment => $b_env_adjustment, row_number => $row_number, col_number => $col_number, max_row => $max_row, max_col => $max_col });
 
                 $sim_data_check_1_times{$t}->{$row_number}->{$col_number} = $sim_val;
                 $seen_rows{$row_number}++;
@@ -8813,14 +8796,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -8849,14 +8825,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -8883,14 +8852,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -8919,14 +8881,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -10442,7 +10397,7 @@ sub perform_drone_imagery_analytics {
             foreach my $p (@unique_plot_names) {
                 my $row_number = $stock_name_row_col{$p}->{row_number};
                 my $col_number = $stock_name_row_col{$p}->{col_number};
-                my $sim_val = eval $env_sim_exec->{$env_simulation};
+                my $sim_val = _simulate_environment_value($env_simulation, { row_number => $row_number, row_number_adjustment => $row_number_adjustment, max_row => $max_row });
 
                 $sim_data_check_2_times{$t}->{$row_number}->{$col_number} = $sim_val;
 
@@ -10707,7 +10662,7 @@ sub perform_drone_imagery_analytics {
                             }
                         }
 
-                        my $sim_val = eval $sim_data_check_2_times{$t}->{$row_number}->{$col_number};
+                        my $sim_val = $sim_data_check_2_times{$t}->{$row_number}->{$col_number};
                         $sim_val = (($sim_val - $env_sim_min_2)/($env_sim_max_2 - $env_sim_min_2))*$env_variance_percent;
                         $val += $sim_val;
 
@@ -12004,14 +11959,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -12040,14 +11988,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_2) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_2->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -12074,14 +12015,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -12110,14 +12044,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_2) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_2->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -13634,7 +13561,7 @@ sub perform_drone_imagery_analytics {
             foreach my $p (@unique_plot_names) {
                 my $row_number = $stock_name_row_col{$p}->{row_number};
                 my $col_number = $stock_name_row_col{$p}->{col_number};
-                my $sim_val = eval $env_sim_exec->{$env_simulation};
+                my $sim_val = _simulate_environment_value($env_simulation, { ro_env => $ro_env, row_number => $row_number, row_number_adjustment => $row_number_adjustment, mean_row => $mean_row, max_row => $max_row, sig_row => $sig_row, col_number => $col_number, col_number_adjustment => $col_number_adjustment, mean_col => $mean_col, max_col => $max_col, sig_col => $sig_col });
 
                 $sim_data_check_3_times{$t}->{$row_number}->{$col_number} = $sim_val;
 
@@ -15197,14 +15124,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -15233,14 +15153,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_3) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_3->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -15267,14 +15180,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -15303,14 +15209,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_3) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_3->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -16824,7 +16723,7 @@ sub perform_drone_imagery_analytics {
         foreach my $p (@unique_plot_names) {
             my $row_number = $stock_name_row_col{$p}->{row_number};
             my $col_number = $stock_name_row_col{$p}->{col_number};
-            my $sim_val = eval $env_sim_exec->{$env_simulation};
+            my $sim_val = _simulate_environment_value($env_simulation, {});
             $sim_data_check_4_first{$row_number}->{$col_number} = $sim_val;
 
             if ($sim_val < $env_sim_min_4) {
@@ -18387,14 +18286,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -18423,14 +18315,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_4) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_4->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -18457,14 +18342,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -18493,14 +18371,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_4) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_4->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -21548,14 +21419,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -21584,14 +21448,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_5) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_5->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -21618,14 +21475,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -21654,14 +21504,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_5) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_5->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -24762,14 +24605,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -24798,14 +24634,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($accession_name, $coeffs) = each %rr_genetic_coefficients_altered_env_6) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_data_delta_altered_env_6->{$accession_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
@@ -24832,14 +24661,7 @@ sub perform_drone_imagery_analytics {
                 my $time = $t_i*5/100;
                 my $time_rescaled = sprintf("%.2f", $time*($time_max - $time_min) + $time_min);
 
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 my $time_term_string = '';
                 if ($statistics_select eq 'blupf90_grm_random_regression_gdd_blups' || $statistics_select eq 'airemlf90_grm_random_regression_gdd_blups') {
@@ -24868,14 +24690,7 @@ sub perform_drone_imagery_analytics {
         while ( my ($plot_name, $coeffs) = each %rr_temporal_coefficients_altered_env_6) {
             foreach my $time_term (@sorted_trait_names) {
                 my $time = ($time_term - $time_min)/($time_max - $time_min);
-                my $value = 0;
-                my $coeff_counter = 0;
-                foreach my $b (@$coeffs) {
-                    my $eval_string = $legendre_coeff_exec[$coeff_counter];
-                    # print STDERR Dumper [$eval_string, $b, $time];
-                    $value += eval $eval_string;
-                    $coeff_counter++;
-                }
+                my $value = CXGN::DroneImagery::LegendrePolynomials::legendre_polynomial_sum($coeffs, $time);
 
                 $result_blup_pe_data_delta_altered_env_6->{$plot_name}->{$time_term} = [$value, $timestamp, $user_name, '', ''];
 
