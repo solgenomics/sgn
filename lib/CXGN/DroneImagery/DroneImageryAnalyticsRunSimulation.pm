@@ -97,7 +97,7 @@ sub _simulate_environment_value {
     my $env_sim_sub = $env_sim_subs{$env_simulation};
     if (!$env_sim_sub) {
         print STDERR "No environment simulation defined for $env_simulation. Skipping it.\n";
-        return undef;
+        return;
     }
     return $env_sim_sub->($args);
 }

@@ -12845,34 +12845,34 @@ sub drone_imagery_calculate_analytics_POST : Args(0) {
             foreach my $t (@varcomp_keys) {
                 my $res = $_->{$t}->{residual};
                 my $genetic_line = 1;
-                foreach $a (@{$_->{$t}->{genetic_covariance}}) {
+                foreach my $a (@{$_->{$t}->{genetic_covariance}}) {
                     push @{$avg_varcomps{$type}->{$t}->{genetic_covariance}->{$genetic_line}->{vals}}, $a;
                     $genetic_line++;
                 }
                 my $env_line = 1;
-                foreach $a (@{$_->{$t}->{env_covariance}}) {
+                foreach my $a (@{$_->{$t}->{env_covariance}}) {
                     push @{$avg_varcomps{$type}->{$t}->{env_covariance}->{$env_line}->{vals}}, $a;
                     $env_line++;
                 }
                 my $hg_line = 1;
-                foreach $a (@{$_->{$t}->{genetic_covariance}}) {
+                foreach my $a (@{$_->{$t}->{genetic_covariance}}) {
                     my $hg = $a + $res == 0 ? 0 : $a/($a + $res);
                     push @{$avg_varcomps{$type}->{$t}->{h2_coeff}->{$hg_line}->{vals}}, $hg;
                     $hg_line++;
                 }
                 my $he_line = 1;
-                foreach $a (@{$_->{$t}->{env_covariance}}) {
+                foreach my $a (@{$_->{$t}->{env_covariance}}) {
                     my $he = $a + $res == 0 ? 0 : $a/($a + $res);
                     push @{$avg_varcomps{$type}->{$t}->{env2_coeff}->{$he_line}->{vals}}, $he;
                     $he_line++;
                 }
                 my $genetic_corr_line = 1;
-                foreach $a (@{$_->{$t}->{genetic_correlation}}) {
+                foreach my $a (@{$_->{$t}->{genetic_correlation}}) {
                     push @{$avg_varcomps{$type}->{$t}->{genetic_correlation}->{$genetic_corr_line}->{vals}}, $a;
                     $genetic_corr_line++;
                 }
                 my $env_corr_line = 1;
-                foreach $a (@{$_->{$t}->{env_correlation}}) {
+                foreach my $a (@{$_->{$t}->{env_correlation}}) {
                     push @{$avg_varcomps{$type}->{$t}->{env_correlation}->{$env_corr_line}->{vals}}, $a;
                     $env_corr_line++;
                 }
