@@ -2579,7 +2579,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
                         # print STDERR Dumper [$eval_string, $b, $time];
-                        $value += eval $eval_string;
+                        $value += eval "$eval_string";
                         $coeff_counter++;
                     }
 
@@ -2624,7 +2624,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
                         # print STDERR Dumper [$eval_string, $b, $time];
-                        $value += eval $eval_string;
+                        $value += eval "$eval_string";
                         $coeff_counter++;
                     }
 
@@ -2794,7 +2794,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
                         # print STDERR Dumper [$eval_string, $b, $time];
-                        $value += eval $eval_string;
+                        $value += eval "$eval_string";
                         $coeff_counter++;
                     }
 
@@ -3162,7 +3162,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
                         # print STDERR Dumper [$eval_string, $b, $time];
-                        $value += eval $eval_string;
+                        $value += eval "$eval_string";
                         $coeff_counter++;
                     }
 
@@ -3199,7 +3199,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
                         # print STDERR Dumper [$eval_string, $b, $time];
-                        $value += eval $eval_string;
+                        $value += eval "$eval_string";
                         $coeff_counter++;
                     }
 
@@ -3224,7 +3224,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
                         # print STDERR Dumper [$eval_string, $b, $time];
-                        $value += eval $eval_string;
+                        $value += eval "$eval_string";
                         $coeff_counter++;
                     }
 
@@ -3261,7 +3261,7 @@ sub drone_imagery_calculate_statistics_POST : Args(0) {
                     foreach my $b (@$coeffs) {
                         my $eval_string = $legendre_coeff_exec[$coeff_counter];
                         # print STDERR Dumper [$eval_string, $b, $time];
-                        $value += eval $eval_string;
+                        $value += eval "$eval_string";
                         $coeff_counter++;
                     }
 
