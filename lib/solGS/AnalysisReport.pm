@@ -891,30 +891,30 @@ sub generic_analysis_email_message {
             my $extra_info;
 
             my $referer = $output_details->{referer};
-            
+
             if ( $output_details->{$k}->{success} ) {
-                if ( $referer !~ /$analysis_type/) {
-                    my $alternative_output_page = $output_page;
-                    $output_page = $referer;
-
-                    $extra_info = 'Please run the analysis again using the same parameters to see the output.';
-                    $extra_info .= "\n\nAlternatively, if you don't remember the parameters, you can access the output here:";
-                    $extra_info .= "\n" .$alternative_output_page . "\n\n";
-                }   
-
+                
                 $message = "Your $analysis_type analysis, $analysis_name, is done. You can access the result here:";
-                $message .= "\n$output_page\n\n";
+                $message .= "\n$referer\n";
 
-                if ($extra_info) {
+
+                if ($referer !~ /$output_page/) {
+                    # my $alternative_output_page = $output_page;
+                    # $output_page = $referer;
+
+                    $extra_info = "\nPlease run the analysis again using the same parameters to see the output.\n";
+                    $extra_info .= "\n\nAlternatively, if you don't remember the parameters, you can access the output here:";
+                    $extra_info .= "\n$output_page\n\n";
+
                     $message .= $extra_info;
-                }
+                }   
 
             }
             else {
                 no warnings 'uninitialized';
                 my $fail_message = $output_details->{$k}->{failure_reason};
 
-                $message = "The $analysis_type analysis, $analysis_name, failed.\n";
+                $message = "\nThe $analysis_type analysis, $analysis_name, failed.\n";
                 $message .= "\nPossible causes are:\n$fail_message\n";
                 $message .= 'Refering page: ' . $referer. "\n\n";
                 $message .= 'Output page: ' . $output_page. "\n\n";
