@@ -417,13 +417,13 @@ sub structure_output_details {
     my $analysis_data = $c->stash->{analysis_profile};
     my $analysis_page = $analysis_data->{analysis_page};
 
-    my $uri_base = $c->req->base;
-    my $referer  = $c->req->referer || $analysis_page;
-    $referer =~ s/$uri_base//;
+    my $referer  = $c->req->referer;
+    my $hostname = $c->stash->{hostname};
 
-    my $base = $c->stash->{hostname};
-    $referer = $base . "/" . $referer;
-
+    if (!$referer) {
+        $referer = $hostname . $analysis_page;
+    }
+   
     my $output_details = {};
   
     my $match_pages =
@@ -464,11 +464,11 @@ m/solgs\/selection\/(\d+|\w+_\d+)\/model\/|solgs\/combined\/model\/\d+\/selectio
     my $mail_list = $self->mailing_list($c);
 
     $output_details->{analysis_profile}  = $analysis_data;
-    $output_details->{contact_page}      = $base . '/contact/form';
+    $output_details->{contact_page}      = $hostname . '/contact/form';
     $output_details->{data_set_type}     = $c->stash->{data_set_type};
     $output_details->{analysis_log_file} = $log_file;
-    $output_details->{host}              = $base;
-    $output_details->{referer}           = $referer;
+    $output_details->{host}              = "$hostname";
+    $output_details->{referer}           = "$referer";
     $output_details->{mailing_list}      = $mail_list;
 
     $c->stash->{bg_job_output_details} = $output_details;
