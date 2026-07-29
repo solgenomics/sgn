@@ -640,6 +640,7 @@ function loadSingleImage(imageFiles, imageData, uploadStatus){
     var total = imageFiles.length;
     var file = imageFiles[currentImage];
     var image = imageData[0];
+    var trialId = parseInt(jQuery('#trialIDDiv').text());
     //console.log("image", image);
     //console.log("file", file);
 
@@ -670,5 +671,16 @@ function loadSingleImage(imageFiles, imageData, uploadStatus){
             processData: false,
             contentType: file.type
         });
+        if (trialId) {
+            jQuery.ajax({
+                url: "/ajax/image/associate_trial",
+                method: "POST",
+                data: {
+                    image_id: imageDbId,
+                    project_id: trialId
+                },
+                headers: { "Authorization": "Bearer " + jQuery.cookie("sgn_session_id") }
+            });
+        }
     });
 }
