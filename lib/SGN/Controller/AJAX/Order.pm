@@ -283,7 +283,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my @current_orders;
     my @all_orders = @$all_orders_ref;
     foreach my $order (@all_orders) {
-        if (($order->{'order_status'}) ne 'completed') {
+        if (($order->{'order_status'} ne 'completed') && ($order->{'order_status'} ne 'cancelled'))  {
             my $formatted_clone_list = $order->{'formatted_clone_list'};
             push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $formatted_clone_list, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
@@ -326,7 +326,7 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my @all_orders = @$all_orders_ref;
 
     foreach my $order (@all_orders) {
-        if (($order->{'order_status'}) eq 'completed') {
+        if (($order->{'order_status'} eq 'completed') || ($order->{'order_status'} eq 'cancelled')) {
             my $formatted_clone_list = $order->{'formatted_clone_list'};
             push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $formatted_clone_list, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
@@ -371,7 +371,7 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my @vendor_current_orders;
     my @all_vendor_orders = @$vendor_orders_ref;
     foreach my $vendor_order (@all_vendor_orders) {
-        if (($vendor_order->{'order_status'}) ne 'completed') {
+        if (($vendor_order->{'order_status'} ne 'completed') && ($vendor_order->{'order_status'} ne 'cancelled')) {
             my $formatted_clone_list = $vendor_order->{'formatted_clone_list'};
             $vendor_order->{'order_details'} = $formatted_clone_list;
             push @vendor_current_orders, $vendor_order
@@ -417,7 +417,7 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my @vendor_completed_orders;
     my @all_vendor_orders = @$vendor_orders_ref;
     foreach my $vendor_order (@all_vendor_orders) {
-        if (($vendor_order->{'order_status'}) eq 'completed') {
+        if (($vendor_order->{'order_status'} eq 'completed') || ($vendor_order->{'order_status'} eq 'cancelled')) {
             my $formatted_clone_list = $vendor_order->{'formatted_clone_list'};
             $vendor_order->{'order_details'} = $formatted_clone_list;
 
@@ -485,7 +485,7 @@ END_HEREDOC
     }
 
     my $order_obj;
-    if ($new_status eq 'completed') {
+    if (($new_status eq 'completed') || ($new_status eq 'cancelled')) {
         $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp, comments => $contact_person_comments});
     } else {
         $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, comments => $contact_person_comments});
@@ -661,11 +661,6 @@ sub request_form_submission_POST : Args(0) {
     $details{'item_info'} = $item_info;
     $details{'order_details'} = $order_details;
     push @item_list, \%details;
-
-    print STDERR "ITEM INFO =".Dumper($item_info)."\n";
-    print STDERR "ORDER DETAILS =".Dumper($order_details)."\n";
-    print STDERR "VENDOR ID =".Dumper($vendor_id)."\n";
-    print STDERR "DETAILS =".Dumper(\%details)."\n";
 
     if (!$c->user()) {
         print STDERR "User not logged in.\n";
