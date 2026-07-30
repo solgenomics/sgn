@@ -16,7 +16,8 @@
 jQuery(document).ready(function(){
     jQuery('#manage_file_share_dump_table').DataTable({
         'lengthMenu': [10,20,50,100,1000,5000],
-        'ajax': { 'url':  '/ajax/filesharedump/list' }
+        'ajax': { 'url':  '/ajax/filesharedump/list' },
+        'scrollX': true,
     });
 });
 </script>

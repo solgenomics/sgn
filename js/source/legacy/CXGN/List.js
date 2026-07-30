@@ -437,7 +437,9 @@ CXGN.List.prototype = {
         var table = jQuery('#private_list_data_table').DataTable({
             "destroy": true,
             "columnDefs": [{ "orderable": false, "targets": [6,7,8,9,10,11] }],
-            "order": render_lists_order
+            "order": render_lists_order,
+            "scrollX": true,
+            "pageLength": 25,
         });
         table.page(render_lists_page).draw('page');
         table.on('order', () => render_lists_order = table.order());

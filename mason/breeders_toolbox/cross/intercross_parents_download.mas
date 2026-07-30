@@ -2,8 +2,6 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 
 <div class="modal fade" id="intercross_parents_download_dialog" name="intercross_parents_download_dialog" tabindex="-1" role="dialog" aria-labelledby="intercrossParentsDownloaddialog">

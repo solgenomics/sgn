@@ -4,19 +4,6 @@ $trial_name
 $trial_stock_type => undef
 </%args>
 
-
-<& /util/import_javascript.mas, classes => [ 'jqueryui.js', 'jquery.js' ] &>
-
-
-<!-- Load DataTables CSS and JS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css">
-<script type="text/javascript" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-
-<!-- Load Buttons CSS and JS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.1/css/buttons.dataTables.min.css">
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/dataTables.buttons.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.0.1/js/buttons.html5.min.js"></script>
-
 <& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="modal  fade" id="edit_field_map_dialog" name="edit_field_map_dialog" tabindex="-1" role="dialog" aria-labelledby="EditFieldMapDialog">
@@ -350,7 +337,12 @@ jQuery("#confirm_calculating_spatial_correction").click(async function() {
           { 'title': 'Moran P Value' },
           { 'title': 'Spatial Correction Needed' },
         ],
-        'dom': 'Bfrtip',
+        layout: {
+          topStart: 'buttons',
+          topEnd: 'search',
+          bottomStart: 'info',
+          bottomEnd: 'paging'
+        },
         'buttons': [
           'csv', 'excel'
         ]
@@ -436,7 +428,12 @@ jQuery("#correct_spatial").click(function() {
             { 'title': 'Corrected' },
             { 'title': 'Adjustment'}
           ],
-          'dom': 'Bfrtip',
+          layout: {
+            topStart: 'buttons',
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+          },
           'buttons': [
           'csv', 'excel'
         ]

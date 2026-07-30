@@ -2,8 +2,7 @@
 $stock_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Accessions' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Accessions' ] &>
 
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="population_members_table">

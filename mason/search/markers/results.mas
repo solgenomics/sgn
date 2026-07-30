@@ -17,8 +17,6 @@ David Waring <djw64@cornell.edu>
 
 </%doc>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <& /page/page_title.mas, title=>"Marker Search Results" &>
 
 
@@ -90,7 +88,12 @@ jQuery(document).ready(function() {
 
     // Init Genotyped DataTable
     jQuery('#genotyped-marker-results-table').DataTable({
-        dom: 'frt',
+        layout: {
+            topStart: null,
+            topEnd: 'search',
+            bottomStart: null,
+            bottomEnd: null
+        },
         autoWidth: false,
         pageLength: GENOTYPED_MARKERS_LIMIT,
         language: {
@@ -124,7 +127,12 @@ jQuery(document).ready(function() {
 
     // Init Mapped DataTable
     jQuery('#mapped-marker-results-table').DataTable({
-        dom: 'frt',
+        layout: {
+            topStart: null,
+            topEnd: 'search',
+            bottomStart: null,
+            bottomEnd: null
+        },
         autoWidth: false,
         pageLength: GENOTYPED_MARKERS_LIMIT,
         language: {

@@ -2,7 +2,6 @@
 $trial_id => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
 
 <div id="trial_additional_uploaded_files_div">
 [LOADING...]

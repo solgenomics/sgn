@@ -330,7 +330,12 @@ function build_table(data, column_names, trial_name, target_div) {
     var penultimate_column = column_names.length - 2;
 
     jQuery('#' + table_id).DataTable({
-        dom: 'Bfrtip',
+        layout: {
+            topStart: 'buttons',
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         buttons: [ 'copy',
             {
                 extend: 'excelHtml5',

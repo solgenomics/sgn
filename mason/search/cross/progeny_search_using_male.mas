@@ -41,7 +41,6 @@
 </&>
 <&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0&>
     <div class="well well-sm">
-        <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <table id="pedigree_male_female_search_results" width="100%" class="table table-hover table-striped">

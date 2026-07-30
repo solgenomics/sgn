@@ -277,7 +277,12 @@ $(document).ready(function () {
       "sPaginationType": "full_numbers",
       data: table_data,
       columns: columnDefs,
-     dom: 'Bfrtip',        // Needs button container
+      layout: {
+          topStart: 'buttons',
+          topEnd: 'search',
+          bottomStart: 'info',
+          bottomEnd: 'paging'
+      },
       select: 'single',
       responsive: true,
       altEditor: true,     // Enable altEditor
@@ -318,7 +323,12 @@ $(document).ready(function () {
       "sPaginationType": "full_numbers",
       data: table_data_RESites,
       columns: columnDefs2,
-     dom: 'Bfrtip',        // Needs button container
+      layout: {
+          topStart: 'buttons',
+          topEnd: 'search',
+          bottomStart: 'info',
+          bottomEnd: 'paging'
+      },
       select: 'single',
       responsive: true,
       altEditor: true,     // Enable altEditor

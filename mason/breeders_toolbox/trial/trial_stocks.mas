@@ -2,10 +2,9 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.List', 'jquery.iframe-post-form' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form' ] &>
 
-<div style="overflow:scroll">
+<div>
     <table class="table table-hover table-bordered" id="trial_stocks_table">
     </table>
 </div>
@@ -76,7 +75,8 @@ jQuery(document).ready(function(){
                         listType: list_type
                     });
                 }
-            }
+            },
+            'scrollX': true,
         });
     });
 

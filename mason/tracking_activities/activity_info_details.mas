@@ -25,16 +25,13 @@ $vector_id => undef
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect.js' ] &>
 
 % use utf8;
 % my @column_headers = @$activity_headers;
 % my @activity_types = @$type_select_options;
 
 <& /page/page_title.mas, title => "Tracking Activities of '$identifier_name'" &>
-
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 % if ($updated_status_type) {
     <div class="modal-header" style="text-align: center">
@@ -202,7 +199,12 @@ jQuery(document).ready( function() {
     jQuery('#activity_summary_table').DataTable({
         'autoWidth': false,
         'searching' : false,
-        'dom': 'rtip',
+        layout: {
+            topStart: null,
+            topEnd: null,
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         'ordering': false,
         'paging': false,
         'info': false,

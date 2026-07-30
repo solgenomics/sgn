@@ -17,7 +17,7 @@ $can_obsolete => undef
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect.js' ] &>
 
 <& /page/page_title.mas, title=>"Record Activity" &>
 
@@ -165,7 +165,12 @@ $(window).ready( function() {
         jQuery('#record_page_activity_info_table').DataTable({
             'autoWidth': false,
             'searching' : false,
-            'dom': 'rtip',
+            layout: {
+                topStart: null,
+                topEnd: null,
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+            },
             'ordering': false,
             'paging': false,
             'info': false,

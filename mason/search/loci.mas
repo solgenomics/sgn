@@ -4,8 +4,6 @@ $organism_ref => undef
 $lg_names_ref       => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <div class="container-fluid">
 
 <& /page/page_title.mas, title=>'Search Genes and Loci' &>
@@ -117,15 +115,11 @@ my $advanced_search=  info_table_html(
 </&>
 
 
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-
-
 <script>
 
 jQuery(document).ready(function () {
 
-   var table = jQuery('#locus_search_results').DataTable( { 
+   var table = jQuery('#locus_search_results').DataTable( {
    
      'searching' : false,
      'ordering'  : false,

@@ -4,7 +4,7 @@ $trial_id
 $trial_name
 </%args>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jquery.dataTables", 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ] &>
+<& /util/import_javascript.mas, classes => [ ] &>
 
 <& /breeders_toolbox/trial/trial_entry_numbers_template_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
 <& /breeders_toolbox/trial/trial_entry_numbers_upload_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
@@ -60,7 +60,12 @@ $trial_name
 
         // Init DataTable
         jQuery('#trial_entry_numbers_table').DataTable({
-            dom: 'Bfrtip',
+            layout: {
+                topStart: 'buttons',
+                topEnd: 'search',
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+            },
             autoWidth: false,
             data: [],
             columns: [

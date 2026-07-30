@@ -1,6 +1,3 @@
-
-import '../legacy/jquery.js';
-import '../legacy/jquery/dataTables.js';
 import '../legacy/CXGN/Login.js';
 
 export function init(main_div, stock_id, stockprop_id) {

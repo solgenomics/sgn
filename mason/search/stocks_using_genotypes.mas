@@ -3,8 +3,6 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <& /page/page_title.mas, title=>'Search Accessions Containing Specific Genotypes' &>
 
 <!--
@@ -99,8 +97,6 @@
 
 
 <&| /page/info_section.mas, title => 'Search Results' , collapsible=>1, collapsed=>0 &>
-
-    <link rel="stylesheet" type="text/css" href="/documents/inc/datatables/jquery.dataTables.css">
 
     <table id="genotype_search_results" width="100%" class="table table-hover table-striped">
     </table>

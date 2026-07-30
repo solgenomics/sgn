@@ -227,7 +227,8 @@ solGS.kinship = {
       'pageLength': 5,
       'rowId': function (a) {
         return a[6]
-      }
+      },
+      'scrollX': true,
     });
 
     table.rows.add(data).draw();

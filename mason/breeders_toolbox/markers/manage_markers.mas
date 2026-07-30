@@ -12,7 +12,7 @@ Titima Tantikanjana <tt15@cornell.edu>
 
 </%doc>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables','CXGN.BreedersToolbox.MarkerSet', "CXGN.List" ] &>
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.MarkerSet' ] &>
 
 <& /page/page_title.mas, title=>'Manage Marker Alleles' &>
 
