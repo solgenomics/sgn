@@ -198,6 +198,7 @@ solGS.pca = {
         var pcaArgs;
         var selectedPopDiv = document.getElementById(runPcaElemId);
 
+        var protocolId;
         if (selectedPopDiv) {
             var selectedPopData = selectedPopDiv.dataset;
             var selectedPop = JSON.parse(selectedPopData.selectedPop);
@@ -205,6 +206,21 @@ solGS.pca = {
 
             var pcaArgs = selectedPopData.selectedPop;
             pcaArgs = JSON.parse(pcaArgs);
+            if (pcaArgs.data_structure.match(/dataset/)) {
+                var datasetId = pcaArgs.dataset_id;
+                protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+            }
+
+            if (!protocolId) {
+                protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+            }
+
+            var page = `/pca/analysis/${pcaPopId}/gp/${protocolId}`;
+            
+            pcaArgs["analysis_type"] = "pca analysis";
+            pcaArgs["genotyping_protocol_id"] = protocolId;
+            pcaArgs["analysis_page"] = page;
+
             if (!selectedPop.data_type) {
                 pcaArgs["data_type"] = this.getSelectedDataType(pcaPopId);
             }
@@ -608,8 +624,17 @@ solGS.pca = {
 
     generatePcaUrl: function (pcaPopId) {
         var traitId = jQuery("#trait_id").val();
-        var protocolId =
-            solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+
+        var protocolId;
+        if (pcaPopId.match(/dataset/)) {
+            var datasetId = pcaPopId.replace(/dataset_/g, "");
+            protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+
+        } 
+
+        if (!protocolId) {
+            protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+        }
 
         var solgsPages =
             "solgs/population/" +
@@ -1098,8 +1123,15 @@ jQuery(document).ready(function () {
             var canvas = solGS.pca.canvas;
             var pcaMsgDiv = solGS.pca.pcaMsgDiv;
 
-            var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
-            pcaArgs["analysis_page"] = pcaUrl;
+            if (!pcaArgs.analysis_page) {
+                pcaPopId = pcaArgs.pca_pop_id;
+                var protocolId = pcaArgs.genotyping_protocol_id;
+                var pcaUrl = `/pca/analysis/${pcaPopId}/gp/${protocolId}`;
+                //    solGS.kinship.generateKinshipUrl(kinshipPopId);
+                pcaArgs["analysis_page"] = pcaUrl;
+            }
+        
+    
 
             solGS.pca
                 .checkCachedPca(pcaArgs)
@@ -1120,9 +1152,7 @@ jQuery(document).ready(function () {
                         solGS.pca.cleanUpOnSuccess(pcaPopId);
                     } else {
                         var page = location.pathname;
-                        var pcaUrl = solGS.pca.generatePcaUrl(
-                            pcaArgs.pca_pop_id
-                        );
+                        var pcaUrl = solGS.pca.generatePcaUrl(pcaArgs.pca_pop_id);
                         pcaArgs["analysis_page"] = pcaUrl;
 
                         runPcaBtnId = `#${runPcaBtnId}`;
