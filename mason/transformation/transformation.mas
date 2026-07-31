@@ -43,9 +43,9 @@ $vector_name
 <& /page/page_title.mas, title => "Details for transformation '$transformation_name'" &>
 
 <&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
-
     <div class="panel panel-default">
         <div class="panel-body">
+        <button class="btn btn-sm btn-primary" style="margin:3px" id="edit_transformation_details_link">Edit</button>
             <div class="row">
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
@@ -93,6 +93,7 @@ $vector_name
 <& /transformation/add_transformant_names_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, next_new_transformant => $next_new_transformant, last_number => $last_number, name_format => $name_format, program_id => $program_id, program_name => $program_name, source_info => $source_info &>
 <& /transformation/add_transformants_using_list_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, program_name => $program_name &>
 <& /transformation/add_transformation_control_dialog.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, project_id => $project_id, program_name => $program_name, is_a_control => $is_a_control, control_name => $control_name &>
+<& /transformation/edit_transformation_details.mas, transformation_id => $transformation_id, transformation_name => $transformation_name, transformation_notes => $transformation_notes &>
 
 <script>
 
