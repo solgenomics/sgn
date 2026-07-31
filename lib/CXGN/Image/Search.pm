@@ -411,16 +411,46 @@ sub search {
         push @where_clause, "project.project_id in (?)";
 	push @question_mark_values, $sql;
     }
-    if ($project_name_list && scalar(@$project_name_list)>0) {
+    if ($project_name_list && scalar(@$project_name_list) > 0) {
         if ($project_names_exact) {
-            my $sql = join ("','" , @$project_name_list);
-            my $name_sql = "'" . $sql . "'";
-            push @where_clause, "project.name in (?)";
-	    push @question_mark_values, $name_sql;
+            my $placeholders = join(",", ("?") x scalar(@$project_name_list));
+
+            push @where_clause, "(
+                project.name IN ($placeholders)
+                OR EXISTS (
+                    SELECT 1
+                    FROM nd_experiment_stock nes_f
+                    JOIN nd_experiment ne_f ON ne_f.nd_experiment_id = nes_f.nd_experiment_id
+                        AND ne_f.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout' LIMIT 1)
+                    JOIN nd_experiment_project nep_f ON nep_f.nd_experiment_id = ne_f.nd_experiment_id
+                    JOIN project p_f ON p_f.project_id = nep_f.project_id
+                    WHERE nes_f.stock_id = stock.stock_id
+                    AND p_f.name IN ($placeholders)
+                )
+            )";
+            push @question_mark_values, @$project_name_list;
+            push @question_mark_values, @$project_name_list;
         } else {
-            foreach (@$project_name_list) {
-                push @and_clause, "project.name ilike ?";
-		push @question_mark_values, '%' . $_ . '%';
+            my @project_name_or;
+            foreach my $name (@$project_name_list) {
+                push @project_name_or, "(
+                    project.name ILIKE ?
+                    OR EXISTS (
+                        SELECT 1
+                        FROM nd_experiment_stock nes_f
+                        JOIN nd_experiment ne_f ON ne_f.nd_experiment_id = nes_f.nd_experiment_id
+                            AND ne_f.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'field_layout' LIMIT 1)
+                        JOIN nd_experiment_project nep_f ON nep_f.nd_experiment_id = ne_f.nd_experiment_id
+                        JOIN project p_f ON p_f.project_id = nep_f.project_id
+                        WHERE nes_f.stock_id = stock.stock_id
+                        AND p_f.name ILIKE ?
+                    )
+                )";
+                push @question_mark_values, '%' . $name . '%';
+                push @question_mark_values, '%' . $name . '%';
+            }
+            if (scalar(@project_name_or) > 0) {
+                push @where_clause, " ( " . join(" OR ", @project_name_or) . " ) ";
             }
         }
     }
