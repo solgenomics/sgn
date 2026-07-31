@@ -1,4 +1,4 @@
-export function createDownloadTools({ qs, key, sanitizeTrialName, collectLayoutJson }) {
+export function createDownloadTools({ qs, key, sanitizeTrialName, collectLayoutJson, createFullGridExportElement }) {
   function xmlEscape(value) {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -263,6 +263,17 @@ ${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http:
     ]);
   }
 
+  function fullGridExportScale(width, height) {
+    const maxDimension = 16384;
+    const maxPixels = 64000000;
+    return Math.min(
+      2,
+      maxDimension / width,
+      maxDimension / height,
+      Math.sqrt(maxPixels / (width * height))
+    );
+  }
+
   function initDownloadTools() {
     qs('#zoom-slider')?.addEventListener('input', function (e) {
       const scale = parseFloat(e.target.value);
@@ -283,38 +294,31 @@ ${worksheetEntries.map(sheet => `  <Relationship Id="rId${sheet.id}" Type="http:
       });
     });
 
-    qs('#export-full-jpg-btn')?.addEventListener('click', function () {
-      const scrollContainer = qs('#farm-scroll');
-      const zoomContainer = qs('#field-zoom-container');
+    qs("#export-full-jpg-btn")?.addEventListener("click", function () {
+      const exportGrid = createFullGridExportElement();
+      if (!exportGrid) {
+        alert("Set the field rows and columns before exporting the full grid.");
+        return;
+      }
 
-      if (!scrollContainer || !zoomContainer) return;
-
-      const originalOverflow = scrollContainer.style.overflow;
-      const originalHeight = scrollContainer.style.maxHeight;
-      const originalWidth = zoomContainer.style.width;
-      const originalHeightZoom = zoomContainer.style.height;
-
-      const fullWidth = zoomContainer.scrollWidth;
-      const fullHeight = zoomContainer.scrollHeight;
-
-      scrollContainer.style.overflow = 'visible';
-      scrollContainer.style.maxHeight = 'none';
-      zoomContainer.style.width = `${fullWidth}px`;
-      zoomContainer.style.height = `${fullHeight}px`;
-
-      html2canvas(zoomContainer, {
-        backgroundColor: '#ffffff',
-        scale: 2
+      document.body.appendChild(exportGrid);
+      const width = exportGrid.scrollWidth;
+      const height = exportGrid.scrollHeight;
+      html2canvas(exportGrid, {
+        backgroundColor: "#ffffff",
+        scale: fullGridExportScale(width, height),
+        width,
+        height
       }).then(canvas => {
-        scrollContainer.style.overflow = originalOverflow;
-        scrollContainer.style.maxHeight = originalHeight;
-        zoomContainer.style.width = originalWidth;
-        zoomContainer.style.height = originalHeightZoom;
-
-        const link = document.createElement('a');
-        link.download = 'location_field_grid_full.jpg';
-        link.href = canvas.toDataURL('image/jpeg');
+        const link = document.createElement("a");
+        link.download = "location_field_grid_full.jpg";
+        link.href = canvas.toDataURL("image/jpeg");
         link.click();
+      }).catch(error => {
+        console.error("Full grid export failed:", error);
+        alert("Could not export the full field grid.");
+      }).finally(() => {
+        exportGrid.remove();
       });
     });
 
