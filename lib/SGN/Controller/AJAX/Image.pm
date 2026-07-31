@@ -402,60 +402,6 @@ sub verify_exif_POST {
     $c->stash->{rest} = { images => \@results };
 }
 
-sub associate_image_trial : Path('/ajax/image/associate_trial') : Args(0) : ActionClass('REST') { }
-
-sub associate_image_trial_POST : Args(0) {
-    my ($self, $c) = @_;
-    my $sp_person_id = $c->user ? $c->user->get_object->get_sp_person_id : undef;
-    my $schema         = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
-
-    my $image_id   = $c->req->param('image_id');
-    my $project_id = $c->req->param('project_id');
-
-    if (!$image_id || !$project_id) {
-        $c->stash->{rest} = { error => "image_id and project_id are required" };
-        return;
-    }
-
-    # Find the stock(s) this image is associated with
-    my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id;
-
-    my $stock_image_rs = $phenome_schema->resultset('StockImage')->search({ image_id => $image_id });
-
-    my $is_accession = 0;
-    while (my $si = $stock_image_rs->next) {
-        my $stock = $schema->resultset('Stock::Stock')->find({ stock_id => $si->stock_id });
-        if ($stock && $stock->type_id == $accession_type_id) {
-            $is_accession = 1;
-            last;
-        }
-    }
-
-    if (!$is_accession) {
-        # source stock is a plot/plant (or none) — stock-based lookup already covers it
-        $c->stash->{rest} = { success => 1, linked => 0 };
-        return;
-    }
-
-    my $image_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_associated_image', 'project_md_image')->cvterm_id;
-
-    my $existing = $phenome_schema->resultset('ProjectMdImage')->search({
-        image_id   => $image_id,
-        project_id => $project_id,
-    })->count;
-
-    if (!$existing) {
-        $phenome_schema->resultset('ProjectMdImage')->create({
-            image_id   => $image_id,
-            project_id => $project_id,
-            type_id => $image_type_id,
-        });
-    }
-
-    $c->stash->{rest} = { success => 1, linked => 1 };
-}
-
  sub image_metadata_store {
     my $self = shift;
     my $params = shift;
