@@ -3876,7 +3876,6 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         name => $trial_obj->get_name()." spatial layout upload",
         job_type => 'upload',
         cmd => "",
-        finish_logfile => $c->config->{job_finish_log},
         submit_page =>  $c->request->headers->referer,
         results_page =>  $c->request->headers->referer
     });

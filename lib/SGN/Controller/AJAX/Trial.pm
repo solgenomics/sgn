@@ -1413,12 +1413,16 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $job = CXGN::Job->new({
         sp_person_id => $user_id,
         schema => $c->dbic_schema("Bio::Chado::Schema"),
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         cmd => $cmd,
         name => "$upload_original_name multiple trial designs upload",
         results_page => '/breeders/trials',
-        job_type => 'upload',
-        finish_logfile => $c->config->{job_finish_log}
+        job_type => 'upload'
     });
     if ( $email_option_enabled && $email_address ) {
         #$runner->run_async($cmd);

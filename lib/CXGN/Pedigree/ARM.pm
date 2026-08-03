@@ -597,10 +597,14 @@ sub download_arm {
                 schema => $self->bcs_schema,
                 people_schema => $self->people_schema,
                 sp_person_id => $job_record_config->{calling_user_id},
+                dbhost => $job_record_config->{dbhost},
+                dbname => $job_record_config->{dbname},
+                dbuser => $job_record_config->{dbuser},
+                dbpass => $job_record_config->{dbpass},
+                basepath => $job_record_config->{basepath},
                 job_type => 'download',
                 name => 'ARM Download',
                 cmd => $heatmap_cmd,
-                finish_logfile => $job_record_config->{job_finish_log},
                 cxgn_tools_run_config => $cxgn_tools_run_config
             });
 
@@ -619,7 +623,7 @@ sub download_arm {
                 sleep(1);
             }
 
-            my $finished = $download->read_finish_timestamp();
+            my $finished = $download->retrieve_finish_timestamp();
             if (!$finished) {
                 $download->update_status("failed");
             } else {
