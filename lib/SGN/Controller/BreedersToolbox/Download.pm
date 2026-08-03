@@ -840,8 +840,9 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
     # Build Accession Info
+    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
     my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
-    my $rows = $BTAccessions->export_properties($c, \@accession_ids);
+    my $rows = $BTAccessions->export_properties(\@accession_ids, \@editable_stock_props);
 
     # Create and Return XLS and XLSX  file
     if ( $file_format eq ".xlsx" ) {
