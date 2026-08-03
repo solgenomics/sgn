@@ -14,6 +14,11 @@ supplying the Run arguments to the cxgn_tools_run_config hash.
 my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema,
+    dbhost => $dbhost,
+    dbname => $dbname,
+    dbuser => $dbuser,
+    dbpass => $dbpass,
+    basepath => $basepath,
     sp_person_id => $c->user->get_object()->get_sp_person_id(),
     cmd => $cmd,
     cxgn_tools_run_config => {
@@ -33,7 +38,7 @@ my $job = CXGN::Job->new({
     additional_args => {$more_stuff}
 });
 
-my $job_id = $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+my $job_id = $job->submit();
 
 ...
 
@@ -91,6 +96,46 @@ accessor for Bio::Chado::Schema database object
 =cut
 
 has 'schema' => ( isa => "Bio::Chado::Schema", is => 'rw', required => 1 );
+
+=head2 dbhost()
+
+Database hostname. Required for submitting background jobs.
+
+=cut
+
+has 'dbhost' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbhost');
+
+=head2 dbname()
+
+Database name. Required for submitting background jobs.
+
+=cut
+
+has 'dbname' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbname');
+
+=head2 dbuser()
+
+Database username. Required for submitting background jobs.
+
+=cut
+
+has 'dbuser' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbuser');
+
+=head2 dbpass()
+
+Database password. Required for submitting background jobs.
+
+=cut
+
+has 'dbpass' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbpass');
+
+=head2 basepath()
+
+Site basepath from $c->config->{basepath}. Required for submitting background jobs.
+
+=cut
+
+has 'basepath' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_basepath');
 
 =head2 sp_job_id()
 
@@ -404,7 +449,7 @@ sub cancel {
     } ;
 }
 
-=head2 submit($dbhost, $dbname, $dbuser, $dbpass)
+=head2 submit()
 
 Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a new db row. Returns sp_job_id. 
 
@@ -412,11 +457,14 @@ Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a
 
 sub submit {
     my $self = shift;
-    my $dbhost = shift;
-    my $dbname = shift;
-    my $dbuser = shift;
-    my $dbpass = shift;
-    my $basepath = shift;
+    if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
+        die "Cannot submit background jobs without db connection parameters and site basepath!\n";
+    }
+    my $dbhost = $self->dbhost();
+    my $dbname = $self->dbname();
+    my $dbuser = $self->dbuser();
+    my $dbpass = $self->dbpass();
+    my $basepath = $self->basepath();
 
     if ($self->has_sp_job_id()) {
         die "This job has already been submitted!\n";
@@ -424,10 +472,6 @@ sub submit {
 
     if (!$self->cmd()) {
         die "Background jobs must have a command to run.\n";
-    }
-
-    if (!$dbhost || !$dbname || !$dbuser || !$dbpass || !$basepath) {
-        die "Need DB connection parameters and site basepath to make finish timestamp."
     }
 
     my $cmd = $self->cmd();
@@ -441,7 +485,7 @@ sub submit {
 
     my $sp_job_id = $self->store();
 
-    my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+    my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd();
 
     my $job;
     my $backend_id;
@@ -532,7 +576,7 @@ sub store {
     return $self->sp_job_id();
 }
 
-=head2 generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+=head2 generate_finish_timestamp_cmd();
 
 Generates a command that gives the finish timestamp. Use to append to a cmd before submitting a job. 
 
@@ -540,19 +584,18 @@ Generates a command that gives the finish timestamp. Use to append to a cmd befo
 
 sub generate_finish_timestamp_cmd {
     my $self = shift;
-    my $dbhost = shift;
-    my $dbname = shift;
-    my $dbuser = shift;
-    my $dbpass = shift;
-    my $basepath = shift;
+    if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
+        die "Cannot create the finish timestamp script without db connection parameters and site basepath!\n";
+    }
+    my $dbhost = $self->dbhost();
+    my $dbname = $self->dbname();
+    my $dbuser = $self->dbuser();
+    my $dbpass = $self->dbpass();
+    my $basepath = $self->basepath();
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
     } 
-
-    if (!$dbhost || !$dbname || !$dbuser || !$dbpass || !$basepath) {
-        die "Need DB connection parameters and site basepath to make finish timestamp."
-    }
 
     my $sp_job_id = $self->sp_job_id();
 

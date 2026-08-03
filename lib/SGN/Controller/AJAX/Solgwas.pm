@@ -509,6 +509,11 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
     my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $user,
         job_type => 'solGWAS_analysis',
         name => $ds->name().' solGWAS',
@@ -517,7 +522,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         results_page => '/tools/solgwas'
     });
 
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+    $job->submit();
 
     while($job->alive()){
         sleep(1);

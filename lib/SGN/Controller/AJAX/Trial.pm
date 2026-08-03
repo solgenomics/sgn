@@ -1413,6 +1413,11 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $job = CXGN::Job->new({
         sp_person_id => $user_id,
         schema => $c->dbic_schema("Bio::Chado::Schema"),
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         cmd => $cmd,
         name => "$upload_original_name multiple trial designs upload",
@@ -1421,7 +1426,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     });
     if ( $email_option_enabled && $email_address ) {
         #$runner->run_async($cmd);
-        $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+        $job->submit();
         #my $err = $runner->err();
         #my $out = $runner->out();
 
@@ -1440,7 +1445,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         #my $err = $runner->err();
         #my $out = $runner->out();
 
-        $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+        $job->submit();
 
         while($job->alive()) {
             sleep(1);

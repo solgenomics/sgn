@@ -85,6 +85,11 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
         $obo_downloader = CXGN::Job->new({
             people_schema => $people_schema, 
             schema => $schema,
+            dbhost => $dbhost,
+            dbname => $dbname,
+            dbuser => $dbuser,
+            dbpass => $dbpass,
+            basepath => $basepath,
             sp_person_id => $sp_person_id,
             cmd => $cmd,
             name => "$db_name ontology download",
@@ -92,7 +97,7 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
             submit_page => $c->req->path
         });
 
-        $obo_downloader->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+        $obo_downloader->submit();
 
     };
 

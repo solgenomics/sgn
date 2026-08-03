@@ -179,9 +179,21 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
         $pheno_filepath.".clean",
         "'".$si_traits."'"
     ));
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
     my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $sp_person_id,
         job_type => 'spatial_analysis',
         cmd => $cmd_str,
@@ -204,14 +216,9 @@ sub generate_results: Path('/ajax/spatial_model/generate_results') Args(1) {
     # while ($cmd->alive) {
 	# sleep(1);
     # }
+    
 
-    my $dbhost = $c->config->{dbhost};
-    my $dbname = $c->config->{dbname};
-    my $dbuser = $c->config->{dbuser};
-    my $dbpass = $c->config->{dbpass};
-    my $basepath = $c->config->{basepath};
-
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+    $job->submit();
     while($job->alive()){
         sleep(1);
     }

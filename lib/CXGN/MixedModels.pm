@@ -523,6 +523,11 @@ sub run_model {
 	my $job = CXGN::Job->new({
 		schema => $job_config->{schema},
 		people_schema => $job_config->{people_schema},
+		dbhost => $job_config->{dbhost},
+		dbname => $job_config->{dbname},
+		dbuser => $job_config->{dbuser},
+		dbpass => $job_config->{dbpass},
+		basepath => $job_config->{basepath},
 		sp_person_id => $job_config->{user},
 		cmd => $cmd,
 		cxgn_tools_run_config => $cxgn_tools_run_config,
@@ -530,7 +535,7 @@ sub run_model {
 		job_type => 'mixed_model_analysis'
 	});
 
-	$job->submit($job_config->{dbhost},$job_config->{dbname},$job_config->{dbuser},$job_config->{dbpass}, $job_config->{basepath});
+	$job->submit();
 
 	# $job_record->update_status("submitted");
 	# $ctr->run_cluster($cmd.$job_record->generate_finish_timestamp_cmd());

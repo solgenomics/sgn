@@ -186,9 +186,20 @@ sub generate_results : Path('/ajax/environment_stratification/generate_results')
     ));
 
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
     my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $user,
         name => $ds->name() . " environment stratification",
         job_type => 'environment_stratification',
@@ -196,13 +207,7 @@ sub generate_results : Path('/ajax/environment_stratification/generate_results')
         cxgn_tools_run_config => $cxgn_tools_run_config
     });
 
-    my $dbhost = $c->config->{dbhost};
-    my $dbname = $c->config->{dbname};
-    my $dbuser = $c->config->{dbuser};
-    my $dbpass = $c->config->{dbpass};
-    my $basepath = $c->config->{basepath};
-
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+    $job->submit();
     while ($job->alive()) {
         sleep(1);
     }

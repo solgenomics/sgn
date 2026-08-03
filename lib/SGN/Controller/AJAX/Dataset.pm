@@ -160,9 +160,20 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         $stat_file_path
     ));
 
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
     my $job = CXGN::Job->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $user,
         name => $dataset->name()." Rosner's test outliers",
         results_page => "/dataset/$dataset_id",
@@ -171,13 +182,7 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         cxgn_tools_run_config => $cxgn_tools_run_config
     });
 
-    my $dbhost = $c->config->{dbhost};
-    my $dbname = $c->config->{dbname};
-    my $dbuser = $c->config->{dbuser};
-    my $dbpass = $c->config->{dbpass};
-    my $basepath = $c->config->{basepath};
-
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+    $job->submit();
 
     while($job->alive()) {
         sleep(1);
@@ -493,6 +498,11 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
         my $job = CXGN::Job->new({
             schema => $c->dbic_schema("Bio::Chado::Schema"),
             people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            dbhost => $dbhost,
+            dbname => $dbname,
+            dbuser => $dbuser,
+            dbpass => $dbpass,
+            basepath => $basepath,
             sp_person_id => $user,
             name => $dataset->name()." tool compatibility check",
             results_page => "/dataset/$dataset_id",
@@ -500,7 +510,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
             cmd => $cmd
         });
 
-        $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+        $job->submit();
     };
 
     if ($@){

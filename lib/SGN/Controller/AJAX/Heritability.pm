@@ -175,9 +175,21 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         $h2CsvFile,
         $errorFile
     ));
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
     my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema, 
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $sp_person_id,
         job_type => 'heritability_analysis',
         name => $ds->name().' heritability analysis',
@@ -205,13 +217,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     # $cmd->is_cluster(1);
     # $cmd->wait;
 
-    my $dbhost = $c->config->{dbhost};
-    my $dbname = $c->config->{dbname};
-    my $dbuser = $c->config->{dbuser};
-    my $dbpass = $c->config->{dbpass};
-    my $basepath = $c->config->{basepath};
-
-    $job->submit($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+    $job->submit();
 
     while ($job->alive()) {
         sleep(1);

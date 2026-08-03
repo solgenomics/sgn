@@ -597,13 +597,18 @@ sub download_arm {
                 schema => $self->bcs_schema,
                 people_schema => $self->people_schema,
                 sp_person_id => $job_record_config->{calling_user_id},
+                dbhost => $job_record_config->{dbhost},
+                dbname => $job_record_config->{dbname},
+                dbuser => $job_record_config->{dbuser},
+                dbpass => $job_record_config->{dbpass},
+                basepath => $job_record_config->{basepath},
                 job_type => 'download',
                 name => 'ARM Download',
                 cmd => $heatmap_cmd,
                 cxgn_tools_run_config => $cxgn_tools_run_config
             });
 
-            $download->submit($job_record_config->{dbhost},$job_record_config->{dbname},$job_record_config->{dbuser},$job_record_config->{dbpass}, $job_record_config->{basepath});
+            $download->submit();
             # Do the GRM on the cluster (currently not called anywhere)
             # my $plot_cmd = CXGN::Tools::Run->new(
             #    $cxgn_tools_run_config
