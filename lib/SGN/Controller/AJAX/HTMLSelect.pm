@@ -2781,7 +2781,7 @@ sub get_transformant_related_attributes_select : Path('/ajax/html/select/transfo
     push @related_attributes, ["", "Select Attribute"];
     push @related_attributes, ['breedingProgram', 'breeding program'];
     push @related_attributes, ['transformationProject', 'transformation project'];
-    push @related_attributes, ['transfomationID', 'transformation id'];
+    push @related_attributes, ['transformationID', 'transformation id'];
     push @related_attributes, ['vectorConstruct', 'vector construct'];
     push @related_attributes, ['plantMaterial', 'plant material'];
     push @related_attributes, ['text', 'text'];
@@ -2814,6 +2814,7 @@ sub get_plot_related_attributes_select : Path('/ajax/html/select/plot_related_at
     push @related_attributes, ['rangeNumber', 'range number'];
     push @related_attributes, ['rowNumber', 'row number'];
     push @related_attributes, ['colNumber', 'col number'];
+    push @related_attributes, ['text', 'text'];
 
     my $html = simple_selectbox_html(
         name => $name,
