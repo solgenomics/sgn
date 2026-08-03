@@ -83,6 +83,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $c->stash->{rest} = { error => 'Must have correct permissions to upload VCF genotypes! Please contact us.' };
         $c->detach();
     }
+    my $is_curator = $user_role eq 'curator' ? 1 : 0;
 
     my $project_id = $c->req->param('upload_genotype_project_id') || undef;
     my $protocol_id = $c->req->param('upload_genotype_protocol_id') || undef;
@@ -115,7 +116,7 @@ sub upload_genotype_verify_POST : Args(0) {
         $add_markers = 1;
     }
     my $update_markers;
-    if ($update_existing_markers) {
+    if ($update_existing_markers && $is_curator) {
         $update_markers = 1;
     }
     my $include_igd_numbers;
@@ -570,6 +571,7 @@ sub upload_genotype_verify_POST : Args(0) {
             }
 
             my @all_warnings;
+            my @mismatched_markers;
             my $previous_genotypes_exist;
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
                 push @all_warnings, @{$verified_errors->{warning_messages}};
@@ -591,6 +593,7 @@ sub upload_genotype_verify_POST : Args(0) {
                 my @mismatch_marker_names;
 		my @mismatch_markers;
 		my @markers_to_update;
+		my @marker_permission_errors;
                 while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
                     while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
 			$total_marker_count++;
@@ -603,10 +606,15 @@ sub upload_genotype_verify_POST : Args(0) {
                                 }
                             }
                             if (scalar(@field_diffs)) {
-                                if ($update_markers) {
-                                    push @markers_to_update, [$chrom, $marker_name];
+                                if (!$is_curator) {
+                                    push @marker_permission_errors, @field_diffs;
                                 } else {
-                                    push @protocol_match_errors, @field_diffs;
+                                    push @mismatched_markers, $marker_name;
+                                    if ($update_markers) {
+                                        push @markers_to_update, [$chrom, $marker_name];
+                                    } else {
+                                        push @protocol_match_errors, @field_diffs;
+                                    }
                                 }
                             }
                         } else {
@@ -614,6 +622,11 @@ sub upload_genotype_verify_POST : Args(0) {
 			    push @mismatch_markers, [$chrom, $marker_name];
                         }
                     }
+                }
+
+                if (scalar(@marker_permission_errors)) {
+                    $c->stash->{rest} = { error => "The following markers in your file differ from the previously stored protocol. Only a curator can modify existing protocol markers; please contact a curator.<br>".join("<br>", @marker_permission_errors) };
+                    $c->detach();
                 }
 
                 if (scalar(@mismatch_marker_names)) {
@@ -645,7 +658,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
             if (scalar(@all_warnings) > 0 && !$accept_warnings) {
                 my $warning_string = join("<br>", @all_warnings);
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
                 $c->detach();
             }
 
@@ -718,6 +731,7 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         my @all_warnings;
+        my @mismatched_markers;
         my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
             push @all_warnings, @{$verified_errors->{warning_messages}};
@@ -738,6 +752,7 @@ sub upload_genotype_verify_POST : Args(0) {
             my @mismatch_marker_names;
             my @mismatch_markers;
             my @markers_to_update;
+            my @marker_permission_errors;
             while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
                 while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
                     $total_marker_count++;
@@ -750,10 +765,15 @@ sub upload_genotype_verify_POST : Args(0) {
                             }
                         }
                         if (scalar(@field_diffs)) {
-                            if ($update_markers) {
-                                push @markers_to_update, [$chrom, $marker_name];
+                            if (!$is_curator) {
+                                push @marker_permission_errors, @field_diffs;
                             } else {
-                                push @protocol_match_errors, @field_diffs;
+                                push @mismatched_markers, $marker_name;
+                                if ($update_markers) {
+                                    push @markers_to_update, [$chrom, $marker_name];
+                                } else {
+                                    push @protocol_match_errors, @field_diffs;
+                                }
                             }
                         }
                     } else {
@@ -762,6 +782,11 @@ sub upload_genotype_verify_POST : Args(0) {
                     }
                 }
 	    }
+
+            if (scalar(@marker_permission_errors)) {
+                $c->stash->{rest} = { error => "The following markers in your file differ from the previously stored protocol. Only a curator can modify existing protocol markers; please contact a curator.<br>".join("<br>", @marker_permission_errors) };
+                $c->detach();
+            }
 
             if (scalar(@mismatch_marker_names)){
 		if ($add_markers) {
@@ -793,7 +818,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
         if (scalar(@all_warnings) > 0 && !$accept_warnings) {
             my $warning_string = join("<br>", @all_warnings);
-            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
+            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
             $c->detach();
         }
 
