@@ -22,7 +22,8 @@ library(blocksdesign)
 
 source(paramfile)
 ## 1) Preparing dataframe
-all.clones <- treatments
+if (!exists("engine", inherits = FALSE)) engine <- "breedbase"
+if(engine == 'trial_allocation'){ all.clones <- c(treatments, controls) } else { all.clones <- treatments }
 nTrt <- length(all.clones)
 nRep <- nRep
 nRows <- nRow
@@ -34,7 +35,10 @@ superCols <- nCols/colsPerBlock
 totalPlots <- nTrt*nRep
 
 plot_type <- plot_type 
-plot_start <- plot_start
+
+plot_start = 1
+if( serie == 2){ plot_start <- 101 }
+if( serie == 3){ plot_start <- 1001 }
 
 blocks = data.frame(block_number = gl(nRep,nTrt),
                     Cols = gl(superCols,colsPerBlock,totalPlots),
@@ -105,6 +109,13 @@ names(fieldBook)[names(fieldBook) == "treatments"] <- "accession_name"
 fieldBook <- transform(fieldBook, is_a_control = ifelse(fieldBook$accession_name %in% controls, 1, 0))
 
 design <- fieldBook %>% dplyr::select(block_number, rep_number, row_number, col_number, plot_number, accession_name, is_a_control)
+
+if(engine == 'trial_allocation'){
+  design <- design %>% dplyr::select(plot_number, block_number, accession_name, rep_number, is_a_control)
+  colnames(design) <- c("plots", "block", "all_entries", "rep", "is_control")
+}
+
+
 
 head(design)
 

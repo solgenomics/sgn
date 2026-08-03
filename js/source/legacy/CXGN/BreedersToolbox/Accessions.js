@@ -33,6 +33,7 @@ function disable_ui() {
 
 function enable_ui() {
     jQuery('#working_modal').modal("hide");
+    jQuery('.modal-backdrop').hide();
 }
 
 jQuery(document).ready(function ($) {
@@ -426,14 +427,16 @@ jQuery(document).ready(function ($) {
                 'email_address_upload': email_address,
                 'email_option_enabled': email_option_enabled,
             },
-            // beforeSend: function(){
+            // beforeSend: function(){ //UI gets disabled before ajax call if email option is not enabled
             //     disable_ui();
             // },
             success: function (response) {
                 console.log("email_option_enabled on success:", email_option_enabled);
                 if (response.error) {
+                    enable_ui();
                     alert(response.error);
                 } else {
+                    enable_ui();
                     var html = 'The following stocks were added!<br/>';
                     for (var i=0; i<response.added.length; i++){
                         html = html + '<a href="/stock/'+response.added[i][0]+'/view">'+response.added[i][1]+'</a><br/>';

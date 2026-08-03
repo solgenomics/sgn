@@ -302,49 +302,59 @@ sub genotyping_project_download_archived_vcf_GET : Args(0) {
     if ( defined $dirname && defined $basename && -s "$dirname/$basename" ) {
         my $filepath = "$dirname/$basename";
 
-        # Check if the file is a vcf (.vcf extension of ##filformat=VCF header on first line)
-        open my $FH, '<', $filepath;
-        my $firstline = <$FH>;
-        close $FH;
-        my $is_a_vcf = rindex($firstline, "##fileformat=VCF", 0) == 0 || $filepath =~ m/\.vcf$/;
+        # The original (non-transposed) VCF file is archived alongside the transposed
+        # file, in a sibling genotype_vcf_archive directory, under the same basename.
+        # If it is found there, use it directly. Otherwise, fall back to un-transposing
+        # the (transposed) file in genotype_vcf_upload.
+        (my $archive_dirname = $dirname) =~ s/genotype_vcf_upload$/genotype_vcf_archive/;
+        if ( $archive_dirname ne $dirname && -s "$archive_dirname/$basename" ) {
+            $filepath = "$archive_dirname/$basename";
+        } else {
 
-        # Transpose the VCF file (to a temp file)
-        if ($is_a_vcf) {
-            my $dir = $c->tempfiles_subdir('download');
-            my ($Fout, $temp_file_transposed) = $c->tempfile(TEMPLATE=>"download/download_vcf_XXXXX", SUFFIX=>".vcf", UNLINK=>0);
-            open (my $F, "< :encoding(UTF-8)", $filepath) or die "Can't open file $filepath \n";
-            my @outline;
-            my $lastcol;
-            while (<$F>) {
-                $_ =~ s/\r//g;
-                if ($_ =~ m/^\##/) {
-                    print $Fout $_;
-                } else {
-                    chomp;
-                    my @line = split /\t/;
-                    my $oldlastcol = $lastcol;
-                    $lastcol = $#line if $#line > $lastcol;
-                    for (my $i=$oldlastcol; $i < $lastcol; $i++) {
-                        if ($oldlastcol) {
-                            $outline[$i] = "\t" x $oldlastcol;
+            # Check if the file is a vcf (.vcf extension of ##filformat=VCF header on first line)
+            open my $FH, '<', $filepath;
+            my $firstline = <$FH>;
+            close $FH;
+            my $is_a_vcf = rindex($firstline, "##fileformat=VCF", 0) == 0 || $filepath =~ m/\.vcf$/;
+
+            # Transpose the VCF file (to a temp file)
+            if ($is_a_vcf) {
+                my $dir = $c->tempfiles_subdir('download');
+                my ($Fout, $temp_file_transposed) = $c->tempfile(TEMPLATE=>"download/download_vcf_XXXXX", SUFFIX=>".vcf", UNLINK=>0);
+                open (my $F, "< :encoding(UTF-8)", $filepath) or die "Can't open file $filepath \n";
+                my @outline;
+                my $lastcol;
+                while (<$F>) {
+                    $_ =~ s/\r//g;
+                    if ($_ =~ m/^\##/) {
+                        print $Fout $_;
+                    } else {
+                        chomp;
+                        my @line = split /\t/;
+                        my $oldlastcol = $lastcol;
+                        $lastcol = $#line if $#line > $lastcol;
+                        for (my $i=$oldlastcol; $i < $lastcol; $i++) {
+                            if ($oldlastcol) {
+                                $outline[$i] = "\t" x $oldlastcol;
+                            }
+                        }
+                        for (my $i=0; $i <=$lastcol; $i++) {
+                            $outline[$i] .= "$line[$i]\t"
                         }
                     }
-                    for (my $i=0; $i <=$lastcol; $i++) {
-                        $outline[$i] .= "$line[$i]\t"
-                    }
                 }
-            }
-            for (my $i=0; $i <= $lastcol; $i++) {
-                $outline[$i] =~ s/\s*$//g;
-                print $Fout $outline[$i]."\n";
-            }
+                for (my $i=0; $i <= $lastcol; $i++) {
+                    $outline[$i] =~ s/\s*$//g;
+                    print $Fout $outline[$i]."\n";
+                }
 
-            close($F);
-            close($Fout);
-            $filepath = $c->config->{basepath} . '/' . $temp_file_transposed;
-            my ($name,$path,$suffix) = fileparse($basename,qr"\..[^.]*$");
-            if ( $suffix ne '.vcf' ) {
-                $basename = "$basename.vcf";
+                close($F);
+                close($Fout);
+                $filepath = $c->config->{basepath} . '/' . $temp_file_transposed;
+                my ($name,$path,$suffix) = fileparse($basename,qr"\..[^.]*$");
+                if ( $suffix ne '.vcf' ) {
+                    $basename = "$basename.vcf";
+                }
             }
         }
 

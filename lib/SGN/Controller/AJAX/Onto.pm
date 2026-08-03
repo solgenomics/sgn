@@ -33,6 +33,7 @@ use CXGN::Onto;
 use Data::Dumper;
 use JSON;
 use CXGN::Job;
+use Encode;
 use Cwd;
 
 use namespace::autoclean;
@@ -126,7 +127,7 @@ sub compose_trait: Path('/ajax/onto/store_composed_term') Args(0) {
   #my @ids = $c->req->param("ids[]");
   #print STDERR "Ids array for composing in AJAX Onto = @ids\n";
 
-  my $new_trait_names = decode_json $c->req->param("new_trait_names");
+  my $new_trait_names = decode_json( encode("utf8", $c->req->param("new_trait_names")) );
   my $term_type = $c->req->param("type") ? $c->req->param("type") : 'trait';
   #print STDERR Dumper $new_trait_names;
   my $new_terms;
