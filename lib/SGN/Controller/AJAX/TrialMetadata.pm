@@ -3170,7 +3170,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     my $accession_rs = $schema->resultset("Stock::Stock")->search({
         uniquename => $new_accession
     });
-    if (!$accession_rs) {
+    if (!$accession_rs || $accession_rs->count() < 1) {
         $c->stash->{rest} = { error => "Could not find accession $new_accession - does it exist?" };
         return;
     }
@@ -3180,7 +3180,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
         uniquename => $old_accession
     });
     $old_accession_rs = $old_accession_rs->next();
-    if (!$old_accession_rs) {
+    if (!$old_accession_rs || $old_accession_rs->count() < 1) {
         $c->stash->{rest} = { error => "Could not find accession $old_accession - does it exist?" };
         return;
     }
