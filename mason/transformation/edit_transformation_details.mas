@@ -16,7 +16,7 @@ $transformation_notes
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_trial_name">Transformation Name: </label>
+                            <label class="col-sm-3 control-label" for="edit_transformation_name">Transformation Name: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
                                     <input class="form-control col-sm-8" id="edit_transformation_name" title="name" type="text" value="<%$transformation_name%>"/>
@@ -84,6 +84,56 @@ jQuery(document).ready(function(){
     jQuery('#edit_transformation_details_link').click(function(){
         jQuery('#transformation_details_edit_dialog').modal("show");
     });
+
+    jQuery('[id^="edit_transformation_"]').change(function (){
+        var this_element = jQuery(this);
+        highlight_changed_details(this_element);
+    });
+
+    jQuery('#save_transformation_details').click(function(){
+        var new_transformation_name;
+        var new_transformation_notes;
+        var changed_elements = document.getElementsByName("changed");
+        for(var i=0; i<changed_elements.length; i++){
+            var id = changed_elements[i].id;
+            if (id == 'edit_transformation_name') {
+                new_transformation_name = changed_elements[i].value;
+            } else if (id == 'edit_transformation_notes') {
+                new_transformation_notes = changed_elements[i].value;
+            }
+        },
+
+        jQuery.ajax({
+            url: '/ajax/transformation/update_transformation_id_details',
+            dataType: "json",
+            type: 'POST',
+            data:{
+                'transformation_stock_id': "<%$transformation_id%>",
+                'new_transformation_name': new_transformation_name,
+                'new_transformation_notes': new_transformation_notes,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery('#transformation_details_edit_dialog').modal('hide');
+                    jQuery('#transformation_details_saved_dialog').modal("show");
+
+                }
+                if (response.error) {
+                    alert(response.error);
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating transformation identifier details');
+            }
+        });
+
+    });
+
 
 });
 

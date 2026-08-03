@@ -41,6 +41,16 @@ has 'transformation_stock_id' => (
     is => 'rw',
 );
 
+has 'transformation_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'transformation_notes' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
 has 'transformants' => (
     isa => 'ArrayRef|Undef',
     is => 'rw',
