@@ -470,6 +470,9 @@ sub run_async {
     my $background_job    = $c->stash->{background_job};
     my $dependent_jobs    = $c->stash->{dependent_jobs};
 
+    $self->add_job_record_args_to_dependent_jobs($c, $dependent_jobs)
+      if $c->stash->{analysis_profile};
+
     my $temp_dir =
       $c->stash->{analysis_tempfiles_dir} || $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
@@ -780,6 +783,7 @@ sub create_multi_jobs_log_list {
         my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
         my $analysis_name = $c->stash->{analysis_profile}->{analysis_name};
         my $main_job_analysis_arguments = JSON::Any->decode($c->stash->{analysis_profile}->{arguments});
+        $main_job_analysis_arguments->{analysis_name} ||= $analysis_name;
 
         my $traits_ids = $main_job_analysis_arguments->{training_traits_ids} || $main_job_analysis_arguments->{trait_id};
         my @traits_ids = ref($traits_ids) eq 'ARRAY' ? @$traits_ids : ($traits_ids);
@@ -813,62 +817,98 @@ sub create_multi_jobs_log_list {
 
 }
 
-sub record_job_submission {
-    my ($self, $c, $args) = @_;
+sub add_job_record_args_to_dependent_jobs {
+    my ($self, $c, $jobs_file) = @_;
 
-    my @job_records;
-    if ( $c->stash->{analysis_profile} ) {
-        
-        my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
-    
-
-        my @multi_prediction_entries  = $self->create_multi_jobs_log_list($c);
-    
-        foreach my $job_entry (@multi_prediction_entries) {
-    
-            my $job_args = JSON::Any->decode($job_entry);
-
-            my $job_record = CXGN::Job->new({
-                schema => $c->dbic_schema("Bio::Chado::Schema"),
-                people_schema => $c->dbic_schema("CXGN::People::Schema"),
-                sp_person_id => $user,
-                job_type => $job_args->{analysis_type},
-                name => $job_args->{analysis_name},
-                results_page => $job_args->{analysis_page},
-                cmd => $args->{cmd},
-                cxgn_tools_run_config => $args->{config},
-                finish_logfile => $c->config->{job_finish_log},
-                additional_args => $job_args
-            });
-
-            if ($job_record) {
-                $job_record->update_status("submitted");
-            }
-
-            push @job_records, $job_record;
-        }
-        
+    if (!$jobs_file || !-s $jobs_file) {
+        return;
     }
 
-    return \@job_records;
+    my $dependent_jobs_args = retrieve($jobs_file);
+    my $dependent_jobs = ref($dependent_jobs_args) eq 'ARRAY'
+      ? $dependent_jobs_args
+      : [$dependent_jobs_args];
 
+    if (!@$dependent_jobs) {
+        return;
+    }
+
+    my @analysis_jobs = $self->create_multi_jobs_log_list($c);
+    if (!@analysis_jobs) {
+        return;
+    }
+
+    my $multiple_models_page_entry;
+    if (@analysis_jobs > 1) {
+        $multiple_models_page_entry = shift @analysis_jobs;
+    }
+
+    my $sp_person_id = $c->user()
+      ? $c->user->get_object()->get_sp_person_id()
+      : undef;
+
+    for my $index (0 .. $#$dependent_jobs) {
+        my $dependent_job = $dependent_jobs->[$index];
+        my $analysis_job = $analysis_jobs[$index];
+
+        if (ref($dependent_job) ne 'HASH' || !$analysis_job) {
+            next;
+        }
+
+        my $analysis_args = JSON::Any->decode($analysis_job);
+        my $analysis_name = $analysis_args->{analysis_name};
+
+        if (!$analysis_name) {
+            next;
+        }
+
+        $dependent_job->{analysis_name} = $analysis_name;
+        $dependent_job->{job_record_args} = [{
+            sp_person_id          => $sp_person_id,
+            job_type              => $analysis_args->{analysis_type},
+            name                  => $analysis_name,
+            results_page          => $analysis_args->{analysis_page},
+            cmd                   => $dependent_job->{cmd},
+            cxgn_tools_run_config => $dependent_job->{config},
+            finish_logfile        => $c->config->{job_finish_log},
+            additional_args       => $analysis_args,
+        }];
+        $dependent_job->{dbhost} = $c->config->{dbhost};
+        $dependent_job->{dbname} = $c->config->{dbname};
+        $dependent_job->{dbuser} = $c->config->{dbuser};
+        $dependent_job->{dbpass} = $c->config->{dbpass};
+
+    }
+
+    if ($multiple_models_page_entry && ref($dependent_jobs->[0]) eq 'HASH') {
+        my $multiple_models_args = JSON::Any->decode($multiple_models_page_entry);
+        my $multiple_models_name = $multiple_models_args->{analysis_name};
+
+        if ($multiple_models_name) {
+            my $multiple_models_record_args = {
+                sp_person_id          => $sp_person_id,
+                job_type              => $multiple_models_args->{analysis_type},
+                name                  => $multiple_models_name,
+                results_page          => $multiple_models_args->{analysis_page},
+                cmd                   => $dependent_jobs->[0]->{cmd},
+                cxgn_tools_run_config => $dependent_jobs->[0]->{config},
+                finish_logfile        => $c->config->{job_finish_log},
+                additional_args       => $multiple_models_args,
+            };
+
+            $dependent_jobs->[0]->{analysis_name} ||= $multiple_models_name;
+            $dependent_jobs->[0]->{job_record_args} ||= [];
+            unshift @{$dependent_jobs->[0]->{job_record_args}}, $multiple_models_record_args;
+        }
+    }
+
+    nstore $dependent_jobs, $jobs_file
+      or croak "Could not serialize job record arguments to $jobs_file: $!";
 }
-
 
 sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
-    my $job_records = $self->record_job_submission($c, $args);
-    my $finish_timestamp_cmd;
-    my @finish_timestamp_cmds;
-
-    if (@$job_records) {
-        foreach my $job_record (@$job_records) {
-            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
-            push @finish_timestamp_cmds, $finish_timestamp_cmd;
-        }
-    }
-    
     my $job;
 
     eval {
@@ -878,35 +918,15 @@ sub submit_job_cluster {
         if ( $args->{background_job} ) {
             $job->is_async(1);
 
-            foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
-                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
-            }
-
+            $job->run_async( $args->{cmd});
             $c->stash->{r_job_tempdir}  = $job->job_tempdir();
             $c->stash->{r_job_id}       = $job->jobid();
             $c->stash->{cluster_job_id} = $job->cluster_job_id();
             $c->stash->{cluster_job}    = $job;
 
-            foreach my $job_record (@$job_records) {
-                $job_record->backend_id($job->cluster_job_id());
-                $job_record->store();
-            
-                if ($job_record) {
-                    $job_record->backend_id($job->cluster_job_id());
-                    $job_record->store();
-                }
-            }
         }
         else {
-
-            if (@$job_records) {
-                foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
-                    $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
-                }
-            } else {
-                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
-            }
-
+            $job->run_async( $args->{cmd} );
             print STDERR "Waiting for job to finish...\n";
             $job->wait();
         }
@@ -914,12 +934,6 @@ sub submit_job_cluster {
 
     if ($@) {
 
-        if (@$job_records) {
-            foreach my $job_record (@$job_records) {
-                $job_record->update_status("failed") if $job_record;        
-            }
-        }
-        
         print STDERR "Error submitting a job or job record:\n $@\n";
         $c->stash->{Error} =
           'Error occured submitting the job ' . $@ . "\nJob: " . $args->{cmd};
