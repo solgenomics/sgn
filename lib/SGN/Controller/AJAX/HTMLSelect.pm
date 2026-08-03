@@ -3025,4 +3025,44 @@ sub get_qPCR_normalization_methods_select : Path('/ajax/html/select/qPCR_normali
     $c->stash->{rest} = { select => $html };
 }
 
+
+sub get_vendors_select : Path('/ajax/html/select/vendors') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $id = $c->req->param("id") || "vendors_select";
+    my $name = $c->req->param("name") || "vendors_select";
+    my $empty = $c->req->param("empty") || "";
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $default = $c->req->param("default");
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my @vendor_names;
+
+    if ($empty && !$default) {
+        push @vendor_names, ['', 'Please select'];
+    }
+
+    my $q = "SELECT person.sp_person_id, person.first_name, person.last_name
+        FROM sgn_people.sp_person AS person
+        JOIN sgn_people.sp_person_roles AS person_role ON (person.sp_person_id = person_role.sp_person_id)
+        JOIN sgn_people.sp_roles AS role ON (person_role.sp_role_id = role.sp_role_id)
+        WHERE role.name = 'vendor'";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute();
+    while (my ($sp_person_id,  $first_name, $last_name) = $h->fetchrow_array()){
+        my $full_name = $first_name.' '.$last_name;
+        push @vendor_names, [$sp_person_id,  $full_name];
+    }
+
+    my $html = simple_selectbox_html(
+        name => $name,
+        id => $id,
+        choices => \@vendor_names,
+        selected => $default
+    );
+    $c->stash->{rest} = { select => $html };
+}
+
+
 1;
