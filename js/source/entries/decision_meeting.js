@@ -1074,23 +1074,6 @@
       };
     }
 
-    function extractYearFromStage(stageValue){
-      var stage = String(stageValue || '').trim();
-      if (!stage) return '';
-
-      var parts = stage.split('-').map(function(part){
-        return String(part || '').trim();
-      }).filter(Boolean);
-
-      for (var i = 0; i < parts.length; i++) {
-        if (/^\d{2}$/.test(parts[i]) || /^\d{4}$/.test(parts[i])) {
-          return parts[i];
-        }
-      }
-
-      return '';
-    }
-
     function normalizeStageList(raw){
       var flat = [];
 
@@ -1822,7 +1805,6 @@
         }
 
         var stageText = rowObj ? (rowObj.stage || '') : '';
-        var originalYear = rowObj ? (rowObj.year || '') : '';
         var previousNewStage = rowObj ? (rowObj.new_stage || '') : '';
         var stockId = rowObj ? (rowObj.stock_id || '') : '';
 
@@ -1883,7 +1865,7 @@
         }
 
         var selectedStage = '';
-        var stageYear = v === 'drop' ? (extractYearFromStage(stageText) || originalYear) : meetingYearFull;
+        var stageYear = meetingYearFull;
         if (v === 'advance' || v === 'jump') {
           $.ajax({
             url: (window.DM_API_BASE || '/ajax/decisionmeeting') + '/compute_new_stage',
@@ -2094,6 +2076,61 @@
     $sel.attr('size', n);
   }
 
+  function twoDigit(value) {
+    return value < 10 ? '0' + value : String(value);
+  }
+
+  function formatMeetingDateForDisplay(date) {
+    return twoDigit(date.getDate()) + '/' +
+      twoDigit(date.getMonth() + 1) + '/' +
+      date.getFullYear();
+  }
+
+  function meetingDateForServer(value) {
+    const match = $.trim(value || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return '';
+
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+    const parsed = new Date(year, month - 1, day);
+
+    if (parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day) {
+      return '';
+    }
+
+    return String(year) + '-' + twoDigit(month) + '-' + twoDigit(day);
+  }
+
+  function ensureMeetingDatePicker() {
+    const $date = $('#mtg_date');
+    if (!$date.length || !$.fn.datepicker) return;
+    if ($date.data('dmDatePickerInitialized')) return;
+
+    $date
+      .off('changeDate.dmMeetingDate')
+      .on('changeDate.dmMeetingDate', function(event) {
+        if (event && event.date instanceof Date && !isNaN(event.date.getTime())) {
+          $(this).val(formatMeetingDateForDisplay(event.date));
+        }
+      });
+
+    $date.datepicker({
+      // jQuery UI uses dateFormat; Bootstrap Datepicker uses format.
+      dateFormat: 'dd/mm/yy',
+      format: 'dd/mm/yyyy',
+      changeMonth: true,
+      changeYear: true,
+      autoclose: true,
+      onSelect: function(dateText) {
+        $(this).val(dateText);
+      }
+    });
+    $date.data('dmDatePickerInitialized', true);
+  }
+
   function buildPayload(){
     const progVals = $('#mtg_program').val();
     const programs = Array.isArray(progVals)
@@ -2106,7 +2143,7 @@
       breeding_programs:  programs,
       location:           $.trim($('#mtg_location').val() || ''),
       year:               String($('#mtg_year').val() || ''),
-      date:               $('#mtg_date').val() || '',
+      date:               meetingDateForServer($('#mtg_date').val()),
       data:               $.trim($('#mtg_data').val() || ''),
       attendees:          parseAttendees($('#mtg_attendees').val()).join(',')
     };
@@ -2116,7 +2153,8 @@
     if (!p.meeting_name) return 'Please enter the Meeting name.';
     if (!p.location) return 'Please enter the Location.';
     if (!p.year || isNaN(Number(p.year))) return 'Please enter a valid Year.';
-    if (!p.date) return 'Please choose a Date.';
+    if (!$.trim($('#mtg_date').val() || '')) return 'Please enter the Date in DD/MM/YYYY format.';
+    if (!p.date) return 'Please enter a valid Date in DD/MM/YYYY format.';
     if (!p.breeding_programs || p.breeding_programs.length === 0) return 'Please select at least one Breeding Program.';
     return '';
   }
@@ -2126,7 +2164,11 @@
     if (!$sel.length) return;
     if (!API_BASE) return;
     $sel.find('option:not([value=""])').remove();
-    $.ajax({ url: API_BASE + '/locations', dataType: 'json' })
+    $.ajax({
+      url: API_BASE + '/locations',
+      dataType: 'json',
+      cache: false
+    })
       .done(function(items){
         if (!items || !items.length) {
           return;
@@ -2145,6 +2187,11 @@
   let PEOPLE_FILTERED = [];
   let PEOPLE_PAGE = 1;
   let PEOPLE_SELECTED = new Set();
+
+  function dm_updateSelectedAttendeeCount() {
+    const count = PEOPLE_SELECTED.size;
+    $('#people_selected_count').text(count + ' selected');
+  }
 
   function normPerson(p){
     return {
@@ -2202,6 +2249,7 @@
       $tbody.html('<tr><td colspan="4">No people found.</td></tr>');
       $('#people_pager').remove();
       dm_syncSelectAllState();
+      dm_updateSelectedAttendeeCount();
       return;
     }
 
@@ -2234,6 +2282,7 @@
       $('#people_table').closest('.table-responsive').after(pagerHtml);
     }
     dm_syncSelectAllState();
+    dm_updateSelectedAttendeeCount();
   }
 
   function applyPeopleSearch(){
@@ -2301,6 +2350,7 @@
       else PEOPLE_SELECTED.delete(key);
       $row.toggleClass('selected', on);
       dm_syncSelectAllState();
+      dm_updateSelectedAttendeeCount();
     });
 
   $(document)
@@ -2316,24 +2366,22 @@
     });
 
   function dm_collectSelectedNames() {
-    const out = [];
-    $('#people_table tbody input.person-check:checked, #people_table tbody input.attendee-check:checked').each(function(){
-      const $cb   = $(this);
-      const first = String($cb.data('first') || '').trim();
-      const last  = String($cb.data('last') || '').trim();
-      let name    = [first, last].filter(Boolean).join(' ').trim();
-      if (!name) {
-        const $tr   = $cb.closest('tr');
-        const tds   = $tr.children('td');
-        const alt   = [tds.eq(1).text(), tds.eq(2).text()].map(function(s){ return (s || '').trim(); }).filter(Boolean).join(' ');
-        name = alt || String($cb.data('email') || '').trim();
-      }
-      if (name) out.push(name);
-    });
+    const out = PEOPLE_ALL
+      .filter(function(person) {
+        return PEOPLE_SELECTED.has(personKey(person));
+      })
+      .map(function(person) {
+        const name = [person.first_name, person.last_name]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        return name || person.contact_email || '';
+      })
+      .filter(Boolean);
     const seen = new Set();
-    return out.filter(function(n){
-      n = n.trim();
-      return n && !seen.has(n) && seen.add(n);
+    return out.filter(function(name){
+      const normalized = name.trim();
+      return normalized && !seen.has(normalized) && seen.add(normalized);
     });
   }
 
@@ -2345,7 +2393,8 @@
       if ($form.length) $form[0].reset();
       const now = new Date();
       $('#mtg_year').val(now.getFullYear());
-      $('#mtg_date').val(now.toISOString().slice(0,10));
+      ensureMeetingDatePicker();
+      $('#mtg_date').val(formatMeetingDateForDisplay(now));
       hideErr();
       ensureMultiProgramControl();
       $.ajax({ url: API_BASE + '/programs', dataType: 'json' })
@@ -2365,6 +2414,7 @@
       $('#people_search').val('');
       PEOPLE_PAGE = 1;
       PEOPLE_SELECTED = new Set();
+      dm_updateSelectedAttendeeCount();
       $('#mtg_attendees').val('');
       dm_loadPeople();
       const $modal = $('#createMeetingModal');
@@ -2522,6 +2572,7 @@
   }
 
   function parseJSON(s){
+    if (s && typeof s === 'object') return s;
     try { return JSON.parse(s || '{}') || {}; }
     catch (e) { return {}; }
   }
@@ -2540,15 +2591,19 @@
   }
 
   function getMeetingProgramsText(j){
+    if (Array.isArray(j.breeding_program_names) && j.breeding_program_names.length) {
+      return j.breeding_program_names.join(', ');
+    }
+    if (j.breeding_program_name) return j.breeding_program_name;
     return Array.isArray(j.breeding_programs)
       ? j.breeding_programs.join(', ')
       : (j.breeding_programs || j.breeding_program || '');
   }
 
   function getMeetingAttendeesText(j){
-    return Array.isArray(j.attendees_list)
-      ? j.attendees_list.join(', ')
-      : (j.attendees || '');
+    if (Array.isArray(j.attendees_list)) return j.attendees_list.join(', ');
+    if (Array.isArray(j.attendees)) return j.attendees.join(', ');
+    return j.attendees || '';
   }
 
   function getMeetingNotesText(j){
@@ -2630,13 +2685,13 @@
 
   function rowsToArrays(rows){
     return (rows || []).map(function(r){
-      var j = parseJSON(r.meeting_json);
+      var j = parseJSON(r.meeting_data || r.meeting_json);
       var id    = r.project_id;
-      var name  = j.meeting_name || r.project_name || '';
-      var date  = j.date || '';
-      var loc   = j.location_name || j.location || '';
-      var progs = getMeetingProgramsText(j);
-      var atts  = getMeetingAttendeesText(j);
+      var name  = r.meeting_name || j.meeting_name || r.project_name || '';
+      var date  = r.meeting_date || j.date || j.meeting_date || '';
+      var loc   = r.meeting_location || j.location_name || j.location || j.location_raw || '';
+      var progs = r.meeting_programs || getMeetingProgramsText(j);
+      var atts  = r.meeting_attendees || getMeetingAttendeesText(j);
       var notes = getMeetingNotesText(j);
       var saved = isMeetingSaved(j);
 
@@ -2674,7 +2729,10 @@
     $tbl.addClass('dm-loading');
 
     try {
-      var r = await fetch(url, { headers:{ 'Accept':'application/json' } });
+      var r = await fetch(url, {
+        cache: 'no-store',
+        headers:{ 'Accept':'application/json' }
+      });
       if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
       var j = await r.json();
       var rows = j.rows || [];

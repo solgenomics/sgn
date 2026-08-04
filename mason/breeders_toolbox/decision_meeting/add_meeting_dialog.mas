@@ -4,6 +4,12 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 
 <!-- Create Meeting Modal -->
 
+<style>
+  #ui-datepicker-div {
+    z-index: 1060 !important;
+  }
+</style>
+
 <!-- 2) The modal -->
 <div id="createMeetingModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog">
@@ -46,8 +52,17 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
           </div>
 
           <div class="form-group">
-            <label for="mtg_date">Date</label>
-            <input id="mtg_date" class="form-control" type="date">
+            <label for="mtg_date">Date (DD/MM/YYYY)</label>
+            <input id="mtg_date"
+                   class="form-control"
+                   type="text"
+                   placeholder="DD/MM/YYYY"
+                   inputmode="numeric"
+                   maxlength="10"
+                   autocomplete="off"
+                   data-date-format="dd/mm/yyyy"
+                   aria-describedby="mtg_date_help">
+            <span id="mtg_date_help" class="help-block">Use day/month/year, for example 04/08/2026.</span>
           </div>
 
           <div class="form-group">
@@ -55,7 +70,10 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <textarea id="mtg_data" class="form-control" rows="3"></textarea>
           </div>
            <div class="form-group" id="attendees_group">
-            <label class="control-label" for="people_search">Attendees</label>
+            <label class="control-label" for="people_search">
+              Attendees
+              <span id="people_selected_count" class="label label-info" aria-live="polite">0 selected</span>
+            </label>
 
             <!-- single global search box -->
             <input type="search"
