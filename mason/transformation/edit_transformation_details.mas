@@ -12,7 +12,7 @@ $transformation_notes
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="transformationDetailsEditDialog">Edit Transformation Details</h4>
             </div>
-            <div class="modal-body" id="transformation_details_edit_body">
+            <div class="modal-body" id="edit_transformation_details_body">
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
@@ -67,7 +67,7 @@ $transformation_notes
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="transformationDetailsErrorDialog">Error Saving Transformation Details</h4>
             </div>
-            <div class="modal-body" id="trial_details_error_body">
+            <div class="modal-body" id="edit_transformation_details_error_body">
                 <ul class="list-group" id="transformation_details_error_message"></ul>
             </div>
             <div class="modal-footer">
@@ -101,13 +101,13 @@ jQuery(document).ready(function(){
             } else if (id == 'edit_transformation_notes') {
                 new_transformation_notes = changed_elements[i].value;
             }
-        },
+        }
 
         jQuery.ajax({
-            url: '/ajax/transformation/update_transformation_id_details',
+            url : '/ajax/transformation/update_transformation_id_details',
             dataType: "json",
             type: 'POST',
-            data:{
+            data : {
                 'transformation_stock_id': "<%$transformation_id%>",
                 'new_transformation_name': new_transformation_name,
                 'new_transformation_notes': new_transformation_notes,
@@ -118,20 +118,27 @@ jQuery(document).ready(function(){
             success: function(response) {
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
-                    jQuery('#transformation_details_edit_dialog').modal('hide');
-                    jQuery('#transformation_details_saved_dialog').modal("show");
-
+                    jQuery("#transformation_details_edit_dialog").modal("hide");
+                    jQuery("#transformation_details_saved_dialog").modal("show");
                 }
-                if (response.error) {
-                    alert(response.error);
+                if (response.error_string) {
+                    jQuery("#edit_transformation_details_error_dialog tbody").html('');
+                    jQuery("#edit_transformation_details_error_dialog tbody").append(response.error_string);
+                    jQuery("#transformation_details_error_dialog").modal("show");
+                    return;
                 }
             },
             error: function(response){
                 jQuery('#working_modal').modal('hide');
-                alert('An error occurred updating transformation identifier details');
+                alert('An error occurred updating transformation ID details');
             }
         });
 
+    });
+
+    var edit_details_body_html = document.getElementById('edit_transformation_details_body').innerHTML;
+    jQuery('#edit_transformation_details_cancel_button').click(function(){
+        reset_dialog_body('edit_transformation_details_body', edit_details_body_html);
     });
 
 
