@@ -424,7 +424,8 @@ function parseImageFilenames(imageFiles) {
         var timestampWithoutExtension = timestamp.substr(0, timestamp.lastIndexOf('.'));
         var nameWithoutTimestamp = name.substring(0, name.lastIndexOf('_'));
         var nameWithoutNumber = nameWithoutTimestamp.substring(0, nameWithoutTimestamp.lastIndexOf('_'));
-        var justUnit = nameWithoutNumber.substring(0, nameWithoutNumber.lastIndexOf('_'));
+        var traitName = nameWithoutNumber.substring(nameWithoutNumber.lastIndexOf('_') + 1);
+        var justUnit = nameWithoutNumber.substring(0, nameWithoutNumber.lastIndexOf('_'));       
         justUnit.match(id_format) ? id_count++ : name_count++;
         if (justUnit) {
             fileData[file.name] = {
@@ -432,7 +433,8 @@ function parseImageFilenames(imageFiles) {
                 "imageFileSize" : file.size,
                 "imageTimeStamp" : timestampWithoutExtension,
                 "mimeType" : file.type,
-                "observationUnit" : justUnit
+                "observationUnit" : justUnit,
+                "descriptiveOntologyTerms" : traitName ? [traitName] : []
             };
         } else {
             parseErrors.push("Filename <b>" + name + "</b> must start with a valid observationUnitName or observationUnitDbId.")
