@@ -70,7 +70,10 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
             <textarea id="mtg_data" class="form-control" rows="3"></textarea>
           </div>
            <div class="form-group" id="attendees_group">
-            <label class="control-label" for="people_search">Attendees</label>
+            <label class="control-label" for="people_search">
+              Attendees
+              <span id="people_selected_count" class="label label-info" aria-live="polite">0 selected</span>
+            </label>
 
             <!-- single global search box -->
             <input type="search"

@@ -2206,6 +2206,11 @@
   let PEOPLE_PAGE = 1;
   let PEOPLE_SELECTED = new Set();
 
+  function dm_updateSelectedAttendeeCount() {
+    const count = PEOPLE_SELECTED.size;
+    $('#people_selected_count').text(count + ' selected');
+  }
+
   function normPerson(p){
     return {
       first_name:    (p.first_name ?? p.first ?? p.given_name ?? '').trim(),
@@ -2262,6 +2267,7 @@
       $tbody.html('<tr><td colspan="4">No people found.</td></tr>');
       $('#people_pager').remove();
       dm_syncSelectAllState();
+      dm_updateSelectedAttendeeCount();
       return;
     }
 
@@ -2294,6 +2300,7 @@
       $('#people_table').closest('.table-responsive').after(pagerHtml);
     }
     dm_syncSelectAllState();
+    dm_updateSelectedAttendeeCount();
   }
 
   function applyPeopleSearch(){
@@ -2361,6 +2368,7 @@
       else PEOPLE_SELECTED.delete(key);
       $row.toggleClass('selected', on);
       dm_syncSelectAllState();
+      dm_updateSelectedAttendeeCount();
     });
 
   $(document)
@@ -2376,24 +2384,23 @@
     });
 
   function dm_collectSelectedNames() {
-    const out = [];
-    $('#people_table tbody input.person-check:checked, #people_table tbody input.attendee-check:checked').each(function(){
-      const $cb   = $(this);
-      const first = String($cb.data('first') || '').trim();
-      const last  = String($cb.data('last') || '').trim();
-      let name    = [first, last].filter(Boolean).join(' ').trim();
-      if (!name) {
-        const $tr   = $cb.closest('tr');
-        const tds   = $tr.children('td');
-        const alt   = [tds.eq(1).text(), tds.eq(2).text()].map(function(s){ return (s || '').trim(); }).filter(Boolean).join(' ');
-        name = alt || String($cb.data('email') || '').trim();
-      }
-      if (name) out.push(name);
-    });
+    const out = PEOPLE_ALL
+      .filter(function(person) {
+        return PEOPLE_SELECTED.has(personKey(person));
+      })
+      .map(function(person) {
+        const name = [person.first_name, person.last_name]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        return name || person.contact_email || '';
+      })
+      .filter(Boolean);
+
     const seen = new Set();
-    return out.filter(function(n){
-      n = n.trim();
-      return n && !seen.has(n) && seen.add(n);
+    return out.filter(function(name){
+      const normalized = name.trim();
+      return normalized && !seen.has(normalized) && seen.add(normalized);
     });
   }
 
@@ -2426,6 +2433,7 @@
       $('#people_search').val('');
       PEOPLE_PAGE = 1;
       PEOPLE_SELECTED = new Set();
+      dm_updateSelectedAttendeeCount();
       $('#mtg_attendees').val('');
       dm_loadPeople();
       const $modal = $('#createMeetingModal');
