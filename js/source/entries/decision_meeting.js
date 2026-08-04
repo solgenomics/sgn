@@ -2182,7 +2182,11 @@
     if (!$sel.length) return;
     if (!API_BASE) return;
     $sel.find('option:not([value=""])').remove();
-    $.ajax({ url: API_BASE + '/locations', dataType: 'json' })
+    $.ajax({
+      url: API_BASE + '/locations',
+      dataType: 'json',
+      cache: false
+    })
       .done(function(items){
         if (!items || !items.length) {
           return;

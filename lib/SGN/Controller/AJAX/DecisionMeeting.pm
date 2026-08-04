@@ -174,6 +174,8 @@ sub locations_GET {
     return $self->status_forbidden($c, message => 'Login required')
         unless $c->user;
 
+    $c->res->headers->header('Cache-Control' => 'no-store, no-cache, must-revalidate');
+
     my $locations = $self->_configured_meeting_locations(
         $c->config->{meeting_locations}
     );
