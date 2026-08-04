@@ -1,6 +1,7 @@
 # lib/SGN/Controller/AJAX/DecisionMeeting.pm
 package SGN::Controller::AJAX::DecisionMeeting;
 use Moose;
+use utf8 ();
 use CXGN::List;
 use JSON;
 use JSON qw(decode_json);
@@ -35,6 +36,32 @@ sub ping : Path('ping') : Args(0) : ActionClass('REST') {}
 sub ping_GET {
     my ($self, $c) = @_;
     $self->status_ok($c, entity => { ok => 1, user => ($c->user ? 1 : 0) });
+}
+
+sub _decode_meeting_json {
+    my ($self, $json_text) = @_;
+    return wantarray ? (undef, 'Meeting JSON is undefined') : undef
+        unless defined $json_text;
+
+    # DBD::Pg can return text as either UTF-8 octets or an already-decoded
+    # character string, depending on its UTF-8 settings. JSON::decode_json
+    # always expects octets and fails on character strings containing accents.
+    my @utf8_modes = utf8::is_utf8($json_text) ? (0, 1) : (1, 0);
+    my $last_error = '';
+
+    foreach my $utf8_mode (@utf8_modes) {
+        my $decoded;
+        eval {
+            $decoded = JSON->new
+                ->allow_nonref
+                ->utf8($utf8_mode)
+                ->decode($json_text);
+        };
+        return wantarray ? ($decoded, '') : $decoded unless $@;
+        $last_error = $@;
+    }
+
+    return wantarray ? (undef, $last_error) : undef;
 }
 
 sub lists : Path('lists') : Args(0) : ActionClass('REST') {}
@@ -114,30 +141,48 @@ sub programs_GET {
 }
 
 sub locations : Path('locations') : ActionClass('REST') { }
+
+sub _configured_meeting_locations {
+    my ($self, $raw_locations) = @_;
+
+    my @config_values = ref($raw_locations) eq 'ARRAY'
+        ? @$raw_locations
+        : (defined($raw_locations) ? $raw_locations : ());
+
+    my (@locations, %seen);
+    foreach my $config_value (@config_values) {
+        next if !defined($config_value) || ref($config_value);
+
+        # A location name may contain commas (for example, a city and state),
+        # so meeting_locations uses a pipe as its list separator.
+        foreach my $location (split /\|/, $config_value) {
+            $location =~ s/^\s+|\s+$//g;
+            next if $location eq '';
+
+            my $key = lc($location);
+            next if $seen{$key}++;
+            push @locations, $location;
+        }
+    }
+
+    return \@locations;
+}
+
 sub locations_GET {
     my ($self, $c) = @_;
 
     return $self->status_forbidden($c, message => 'Login required')
         unless $c->user;
 
-    my $schema = $c->dbic_schema('Bio::Chado::Schema');
-    my $ps     = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
-    my $locs   = $ps->get_locations() || [];
-
-    my @items;
-    foreach my $r (@$locs) {
-        my ($id, $desc, $lat, $lon, $alt, $count) = @$r;
-        next unless defined $id;
-
-        push @items, {
-            location_id => $id,
-            name        => defined $desc && $desc ne '' ? $desc : "Location $id",
-            latitude    => $lat,
-            longitude   => $lon,
-            altitude    => $alt,
-            plot_count  => $count,
-        };
-    }
+    my $locations = $self->_configured_meeting_locations(
+        $c->config->{meeting_locations}
+    );
+    my @items = map {
+        +{
+            location_id => $_,
+            name        => $_,
+        }
+    } @$locations;
 
     return $self->status_ok($c, entity => \@items);
 }
@@ -233,9 +278,8 @@ sub _decision_rows_entity {
 
         my ($meeting_json) = $sth->fetchrow_array;
         if ($meeting_json) {
-            my $decoded = {};
-            eval { $decoded = decode_json($meeting_json); };
-            $decoded ||= {};
+            my ($decoded) = $self->_decode_meeting_json($meeting_json);
+            $decoded = {} unless ref($decoded) eq 'HASH';
 
             if ($decoded->{breeding_program_name}) {
                 $selected_program = $decoded->{breeding_program_name};
@@ -583,9 +627,8 @@ sub _meeting_year_from_meeting_id {
     my ($meeting_json) = $sth->fetchrow_array;
     return '' unless $meeting_json;
 
-    my $decoded = {};
-    eval { $decoded = decode_json($meeting_json); };
-    $decoded ||= {};
+    my ($decoded) = $self->_decode_meeting_json($meeting_json);
+    $decoded = {} unless ref($decoded) eq 'HASH';
 
     my $date = $decoded->{date} || '';
     return $1 if $date =~ /^(\d{4})-/;
@@ -1656,6 +1699,29 @@ sub dataset_plot_data_GET {
 }
 
 sub save_all_decisions : Path('save_all_decisions') : Args(0) : ActionClass('REST') { }
+
+sub _merge_decisions_into_meeting {
+    my ($self, $meeting_data, $decision_data, $saved_at) = @_;
+
+    $meeting_data  = {} unless ref($meeting_data) eq 'HASH';
+    $decision_data = {} unless ref($decision_data) eq 'HASH';
+
+    # The meeting record is the source of truth for its metadata.  Add fields
+    # from the decision report, but only replace the fields that are edited by
+    # the save-decisions workflow.
+    my %merged = (%$decision_data, %$meeting_data);
+    foreach my $key (qw(accessions list_id meeting_notes)) {
+        $merged{$key} = $decision_data->{$key}
+            if exists $decision_data->{$key};
+    }
+
+    $merged{saved}        = JSON::true;
+    $merged{saved_at}     = defined($saved_at) ? $saved_at : scalar localtime();
+    $merged{saved_status} = 'successfully';
+
+    return \%merged;
+}
+
 sub save_all_decisions_POST {
     my ($self, $c) = @_;
 
@@ -1712,33 +1778,59 @@ sub save_all_decisions_POST {
         );
     }
 
-    $payload->{saved}        = JSON::true;
-    $payload->{saved_at}     = scalar localtime();
-    $payload->{saved_status} = 'successfully';
+    my $dbh = $c->dbc->dbh;
+    my $meeting_json_type = SGN::Model::Cvterm->get_cvterm_row(
+        $schema,
+        'meeting_json',
+        'project_property',
+    );
+    unless ($meeting_json_type) {
+        return $self->status_bad_request($c, message => 'Meeting metadata type not found');
+    }
+
+    my ($meeting_prop_id, $meeting_json);
+    eval {
+        my $sth = $dbh->prepare(q{
+            SELECT projectprop_id, value
+            FROM projectprop
+            WHERE project_id = ?
+              AND type_id = ?
+            ORDER BY projectprop_id DESC
+            LIMIT 1
+        });
+        $sth->execute($meeting_id, $meeting_json_type->cvterm_id);
+        ($meeting_prop_id, $meeting_json) = $sth->fetchrow_array;
+    };
+    if ($@) {
+        return $self->status_bad_request($c, message => "Failed to load meeting metadata: $@");
+    }
+    unless ($meeting_prop_id && defined $meeting_json) {
+        return $self->status_bad_request($c, message => 'Meeting metadata not found');
+    }
+
+    my ($meeting_data, $meeting_decode_error) = $self->_decode_meeting_json($meeting_json);
+    if ($meeting_decode_error || ref($meeting_data) ne 'HASH') {
+        return $self->status_bad_request($c, message => 'Stored meeting metadata is invalid');
+    }
+
+    my $updated_payload = $self->_merge_decisions_into_meeting($meeting_data, $payload);
 
     my $json_text;
     eval {
         require JSON;
-        $json_text = JSON->new->allow_nonref->canonical->encode($payload);
+        $json_text = JSON->new->allow_nonref->canonical->encode($updated_payload);
     };
     if ($@) {
         return $self->status_bad_request($c, message => 'Could not encode payload to JSON');
     }
 
-    my $dbh = $c->dbc->dbh;
-
     eval {
         my $sth = $dbh->prepare(q{
             UPDATE projectprop
             SET value = ?
-            WHERE project_id = ?
-              AND type_id = (
-                  SELECT cvterm_id
-                  FROM cvterm
-                  WHERE name = 'meeting_json'
-              )
+            WHERE projectprop_id = ?
         });
-        $sth->execute($json_text, $meeting_id);
+        $sth->execute($json_text, $meeting_prop_id);
 
         my $raw_conf = $c->config->{saved_program_stage};
         my $saved_program_stage = '';
@@ -1992,8 +2084,50 @@ sub upload_decision_template_POST {
 }
 
 sub meetings : Path('meetings') : Args(0) : ActionClass('REST') {}
+
+sub _meeting_tracker_metadata {
+    my ($self, $project_name, $meeting_data) = @_;
+    $meeting_data = {} unless ref($meeting_data) eq 'HASH';
+
+    my @programs;
+    if (ref($meeting_data->{breeding_program_names}) eq 'ARRAY') {
+        @programs = @{$meeting_data->{breeding_program_names}};
+    }
+    elsif (defined($meeting_data->{breeding_program_name}) && $meeting_data->{breeding_program_name} ne '') {
+        @programs = ($meeting_data->{breeding_program_name});
+    }
+    elsif (ref($meeting_data->{breeding_programs}) eq 'ARRAY') {
+        @programs = @{$meeting_data->{breeding_programs}};
+    }
+    elsif (defined($meeting_data->{breeding_program}) && $meeting_data->{breeding_program} ne '') {
+        @programs = ($meeting_data->{breeding_program});
+    }
+
+    my @attendees;
+    if (ref($meeting_data->{attendees_list}) eq 'ARRAY') {
+        @attendees = @{$meeting_data->{attendees_list}};
+    }
+    elsif (ref($meeting_data->{attendees}) eq 'ARRAY') {
+        @attendees = @{$meeting_data->{attendees}};
+    }
+    elsif (defined($meeting_data->{attendees}) && $meeting_data->{attendees} ne '') {
+        @attendees = ($meeting_data->{attendees});
+    }
+
+    return {
+        meeting_name      => $meeting_data->{meeting_name} // $project_name // '',
+        meeting_programs  => join(', ', grep { defined($_) && $_ ne '' } @programs),
+        meeting_date      => $meeting_data->{date} // $meeting_data->{meeting_date} // '',
+        meeting_year      => $meeting_data->{year} // '',
+        meeting_location  => $meeting_data->{location_name} // $meeting_data->{location} // $meeting_data->{location_raw} // '',
+        meeting_attendees => join(', ', grep { defined($_) && $_ ne '' } @attendees),
+    };
+}
+
 sub meetings_GET {
     my ($self, $c) = @_;
+    $c->res->headers->header('Cache-Control' => 'no-store, no-cache, must-revalidate');
+
     my $dbh = $c->dbc->dbh;
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
@@ -2006,9 +2140,7 @@ sub meetings_GET {
     my $mtg_json_type_id = $mtg_json_type_row ? $mtg_json_type_row->cvterm_id : undef;
 
     if (!$design_type_id || !$mtg_json_type_id) {
-        $c->stash->{rest} = { rows => [] };
-        $c->detach($c->view('JSON'));
-        return;
+        return $self->status_ok($c, entity => { rows => [] });
     }
 
     my $ps = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
@@ -2051,9 +2183,7 @@ sub meetings_GET {
     }
 
     if (!@ids) {
-        $c->stash->{rest} = { rows => [] };
-        $c->detach($c->view('JSON'));
-        return;
+        return $self->status_ok($c, entity => { rows => [] });
     }
 
     my $ph = join(',', ('?') x @ids);
@@ -2079,9 +2209,8 @@ sub meetings_GET {
         my $mj  = $json_for{$pid};
         next unless defined $mj;
 
-        my $decoded = {};
-        eval { $decoded = decode_json($mj) if $mj; };
-        $decoded ||= {};
+        my ($decoded) = $self->_decode_meeting_json($mj);
+        $decoded = {} unless ref($decoded) eq 'HASH';
 
         my $is_saved = 0;
         if (
@@ -2127,17 +2256,22 @@ sub meetings_GET {
         }
 
         $decoded->{saved} = $is_saved ? JSON::true : JSON::false;
+        my $tracker_metadata = $self->_meeting_tracker_metadata(
+            $p->{project_name},
+            $decoded,
+        );
 
         push @rows, {
+            %$tracker_metadata,
             project_id    => $pid,
             project_name  => $p->{project_name},
+            meeting_data  => $decoded,
             meeting_json  => encode_json($decoded),
             meeting_saved => $is_saved ? JSON::true : JSON::false,
         };
     }
 
-    $c->stash->{rest} = { rows => \@rows };
-    $c->detach($c->view('JSON'));
+    return $self->status_ok($c, entity => { rows => \@rows });
 }
 
 sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args(0) {
@@ -2155,16 +2289,18 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
     my $sth = $dbh->prepare(q{
         SELECT p.project_id, p.name, pp.value
         FROM project p
-        LEFT JOIN projectprop pp
-            ON pp.project_id = p.project_id
-           AND pp.type_id = (
-               SELECT cvterm_id
-               FROM cvterm
-               WHERE name = 'meeting_json'
-               LIMIT 1
-           )
+        LEFT JOIN LATERAL (
+            SELECT projectprop.value
+            FROM projectprop
+            JOIN cvterm ON cvterm.cvterm_id = projectprop.type_id
+            JOIN cv ON cv.cv_id = cvterm.cv_id
+            WHERE projectprop.project_id = p.project_id
+              AND cvterm.name = 'meeting_json'
+              AND cv.name = 'project_property'
+            ORDER BY projectprop.projectprop_id DESC
+            LIMIT 1
+        ) pp ON TRUE
         WHERE p.project_id = ?
-        LIMIT 1
     });
     $sth->execute($meeting_id);
 
@@ -2179,15 +2315,33 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
 
     my $data = {};
     if ($json_value) {
-        eval { $data = decode_json($json_value); };
-        if ($@) {
-            $data = {};
-        }
+        my ($decoded) = $self->_decode_meeting_json($json_value);
+        $data = $decoded if ref($decoded) eq 'HASH';
     }
 
     my $meeting_notes = $data->{meeting_notes} // '';
     my $accessions    = $data->{accessions} || [];
     my $attendees     = $data->{attendees};
+    my $meeting_date  = $data->{date} // '';
+    my $meeting_year  = $data->{year} // '';
+    my $location      = $data->{location_name} // $data->{location} // '';
+    my $meeting_status = $data->{meeting_status} // '';
+
+    my @programs;
+    if (ref($data->{breeding_program_names}) eq 'ARRAY') {
+        @programs = @{$data->{breeding_program_names}};
+    }
+    elsif (defined($data->{breeding_program_name}) && $data->{breeding_program_name} ne '') {
+        @programs = ($data->{breeding_program_name});
+    }
+    elsif (ref($data->{breeding_programs}) eq 'ARRAY') {
+        @programs = @{$data->{breeding_programs}};
+    }
+    elsif (defined($data->{breeding_program}) && $data->{breeding_program} ne '') {
+        @programs = ($data->{breeding_program});
+    }
+
+    my $programs_html = join(', ', grep { defined($_) && $_ ne '' } @programs);
 
     my $saved_status = lc($data->{saved_status} // '');
 
@@ -2243,6 +2397,14 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
     $meeting_notes =~ s/>/&gt;/g;
     $meeting_notes =~ s/"/&quot;/g;
     $meeting_notes =~ s/\n/<br>/g;
+
+    for ($meeting_date, $meeting_year, $location, $meeting_status, $programs_html) {
+        $_ = '' unless defined $_;
+        s/&/&amp;/g;
+        s/</&lt;/g;
+        s/>/&gt;/g;
+        s/"/&quot;/g;
+    }
 
     my $attendees_html = '';
     if (ref($attendees) eq 'ARRAY') {
@@ -2323,6 +2485,11 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
   <div class="meta">
     <strong>Meeting:</strong> $safe_project_name<br>
     <strong>Meeting ID:</strong> $meeting_id<br>
+    <strong>Programs:</strong> $programs_html<br>
+    <strong>Date:</strong> $meeting_date<br>
+    <strong>Year:</strong> $meeting_year<br>
+    <strong>Location:</strong> $location<br>
+    <strong>Status:</strong> $meeting_status<br>
     <strong>Attendees:</strong> $attendees_html
   </div>
 
@@ -2497,19 +2664,63 @@ sub create : Path('create') Args(0) {
         trial_name        => $trial_name,
         trial_description => $description,
         project_type      => 'meeting_project',
+        skip_design_store => 1,
     });
 
     my ($project_id, $nd_experiment_id);
     my $err;
     try {
-        $tc->save_trial();
+        my $pp_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'meeting_json', 'project_property')
+            or die "cvterm meeting_json not found in cv project_property";
+        my $type_id = $pp_type->cvterm_id;
+        my $design_prop_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'design', 'project_property')
+            or die "cvterm design not found in cv project_property";
 
-        $project_id       = eval { $tc->get_trial_id }         || eval { $tc->get_project_id } || undef;
-        $nd_experiment_id = eval { $tc->get_nd_experiment_id } || undef;
+        my $proj_row;
+        my $save_result = $tc->save_trial();
+        if (ref($save_result) eq 'HASH' && $save_result->{error}) {
+            # TrialCreate creates the base project before layout validation.
+            # A previous failed meeting attempt can therefore be completed on
+            # retry, but only when it is an unfinished Meeting owned by the
+            # same user.
+            if ($save_result->{error} =~ /Trial name already exists/i) {
+                my $candidate = $schema->resultset('Project::Project')->find({ name => $trial_name });
+                my $candidate_design = $candidate
+                    ? $candidate->search_related('projectprops', {
+                        type_id => $design_prop_type->cvterm_id,
+                        value   => 'Meeting',
+                    })->first
+                    : undef;
+                my $candidate_json = $candidate
+                    ? $candidate->search_related('projectprops', { type_id => $type_id })->first
+                    : undef;
+                my ($same_owner) = $candidate
+                    ? $dbh->selectrow_array(
+                        'SELECT 1 FROM phenome.project_owner WHERE project_id = ? AND sp_person_id = ?',
+                        undef,
+                        $candidate->project_id,
+                        $owner_id,
+                    )
+                    : ();
 
-        my $proj_row = $project_id
-            ? $schema->resultset('Project::Project')->find({ project_id => $project_id })
-            : $schema->resultset('Project::Project')->find({ name => $trial_name });
+                $proj_row = $candidate
+                    if $candidate_design && !$candidate_json && $same_owner;
+            }
+
+            die $save_result->{error} unless $proj_row;
+        }
+
+        unless ($proj_row) {
+            $project_id       = (ref($save_result) eq 'HASH' ? $save_result->{trial_id} : undef)
+                             || eval { $tc->get_trial_id }
+                             || eval { $tc->get_project_id }
+                             || undef;
+            $nd_experiment_id = eval { $tc->get_nd_experiment_id } || undef;
+
+            $proj_row = $project_id
+                ? $schema->resultset('Project::Project')->find({ project_id => $project_id })
+                : $schema->resultset('Project::Project')->find({ name => $trial_name });
+        }
 
         die "Project not found after save_trial" unless $proj_row;
 
@@ -2528,10 +2739,6 @@ sub create : Path('create') Args(0) {
             location_raw            => $location_in,
         };
         my $val = encode_json($meeting_payload);
-
-        my $pp_type = SGN::Model::Cvterm->get_cvterm_row($schema, 'meeting_json', 'project_property')
-            or die "cvterm meeting_json not found in cv project_property";
-        my $type_id = $pp_type->cvterm_id;
 
         my $existing = $proj_row->search_related('projectprops', { type_id => $type_id })->first;
         if ($existing) {
@@ -2681,9 +2888,21 @@ sub _resolve_program_name {
 
 sub _resolve_location_name {
     my ($schema, $in) = @_;
-    return $in unless defined $in && $in =~ /^\d+$/;
-    my $row = $schema->resultset('NaturalDiversity::NdGeolocation')->find({ nd_geolocation_id => $in })
-          || $schema->resultset('NdGeolocation')->find({ nd_geolocation_id => $in });
+    return unless defined($in) && $in ne '';
+
+    my $query = $in =~ /^\d+$/
+        ? { nd_geolocation_id => $in }
+        : { description => $in };
+
+    my $row;
+    foreach my $resultset_name ('NaturalDiversity::NdGeolocation', 'NdGeolocation') {
+        my $resultset = eval { $schema->resultset($resultset_name) };
+        next unless $resultset;
+
+        $row = eval { $resultset->find($query) };
+        last if $row;
+    }
+
     return unless $row;
     return $row->can('description') ? ($row->description // '') : ($row->can('name') ? $row->name : '');
 }

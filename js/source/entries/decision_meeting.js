@@ -2094,6 +2094,61 @@
     $sel.attr('size', n);
   }
 
+  function twoDigit(value) {
+    return value < 10 ? '0' + value : String(value);
+  }
+
+  function formatMeetingDateForDisplay(date) {
+    return twoDigit(date.getDate()) + '/' +
+      twoDigit(date.getMonth() + 1) + '/' +
+      date.getFullYear();
+  }
+
+  function meetingDateForServer(value) {
+    const match = $.trim(value || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return '';
+
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+    const parsed = new Date(year, month - 1, day);
+
+    if (parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day) {
+      return '';
+    }
+
+    return String(year) + '-' + twoDigit(month) + '-' + twoDigit(day);
+  }
+
+  function ensureMeetingDatePicker() {
+    const $date = $('#mtg_date');
+    if (!$date.length || !$.fn.datepicker) return;
+    if ($date.data('dmDatePickerInitialized')) return;
+
+    $date
+      .off('changeDate.dmMeetingDate')
+      .on('changeDate.dmMeetingDate', function(event) {
+        if (event && event.date instanceof Date && !isNaN(event.date.getTime())) {
+          $(this).val(formatMeetingDateForDisplay(event.date));
+        }
+      });
+
+    $date.datepicker({
+      // jQuery UI uses dateFormat; Bootstrap Datepicker uses format.
+      dateFormat: 'dd/mm/yy',
+      format: 'dd/mm/yyyy',
+      changeMonth: true,
+      changeYear: true,
+      autoclose: true,
+      onSelect: function(dateText) {
+        $(this).val(dateText);
+      }
+    });
+    $date.data('dmDatePickerInitialized', true);
+  }
+
   function buildPayload(){
     const progVals = $('#mtg_program').val();
     const programs = Array.isArray(progVals)
@@ -2106,7 +2161,7 @@
       breeding_programs:  programs,
       location:           $.trim($('#mtg_location').val() || ''),
       year:               String($('#mtg_year').val() || ''),
-      date:               $('#mtg_date').val() || '',
+      date:               meetingDateForServer($('#mtg_date').val()),
       data:               $.trim($('#mtg_data').val() || ''),
       attendees:          parseAttendees($('#mtg_attendees').val()).join(',')
     };
@@ -2116,7 +2171,8 @@
     if (!p.meeting_name) return 'Please enter the Meeting name.';
     if (!p.location) return 'Please enter the Location.';
     if (!p.year || isNaN(Number(p.year))) return 'Please enter a valid Year.';
-    if (!p.date) return 'Please choose a Date.';
+    if (!$.trim($('#mtg_date').val() || '')) return 'Please enter the Date in DD/MM/YYYY format.';
+    if (!p.date) return 'Please enter a valid Date in DD/MM/YYYY format.';
     if (!p.breeding_programs || p.breeding_programs.length === 0) return 'Please select at least one Breeding Program.';
     return '';
   }
@@ -2345,7 +2401,8 @@
       if ($form.length) $form[0].reset();
       const now = new Date();
       $('#mtg_year').val(now.getFullYear());
-      $('#mtg_date').val(now.toISOString().slice(0,10));
+      ensureMeetingDatePicker();
+      $('#mtg_date').val(formatMeetingDateForDisplay(now));
       hideErr();
       ensureMultiProgramControl();
       $.ajax({ url: API_BASE + '/programs', dataType: 'json' })
@@ -2522,6 +2579,7 @@
   }
 
   function parseJSON(s){
+    if (s && typeof s === 'object') return s;
     try { return JSON.parse(s || '{}') || {}; }
     catch (e) { return {}; }
   }
@@ -2540,15 +2598,19 @@
   }
 
   function getMeetingProgramsText(j){
+    if (Array.isArray(j.breeding_program_names) && j.breeding_program_names.length) {
+      return j.breeding_program_names.join(', ');
+    }
+    if (j.breeding_program_name) return j.breeding_program_name;
     return Array.isArray(j.breeding_programs)
       ? j.breeding_programs.join(', ')
       : (j.breeding_programs || j.breeding_program || '');
   }
 
   function getMeetingAttendeesText(j){
-    return Array.isArray(j.attendees_list)
-      ? j.attendees_list.join(', ')
-      : (j.attendees || '');
+    if (Array.isArray(j.attendees_list)) return j.attendees_list.join(', ');
+    if (Array.isArray(j.attendees)) return j.attendees.join(', ');
+    return j.attendees || '';
   }
 
   function getMeetingNotesText(j){
@@ -2630,13 +2692,13 @@
 
   function rowsToArrays(rows){
     return (rows || []).map(function(r){
-      var j = parseJSON(r.meeting_json);
+      var j = parseJSON(r.meeting_data || r.meeting_json);
       var id    = r.project_id;
-      var name  = j.meeting_name || r.project_name || '';
-      var date  = j.date || '';
-      var loc   = j.location_name || j.location || '';
-      var progs = getMeetingProgramsText(j);
-      var atts  = getMeetingAttendeesText(j);
+      var name  = r.meeting_name || j.meeting_name || r.project_name || '';
+      var date  = r.meeting_date || j.date || j.meeting_date || '';
+      var loc   = r.meeting_location || j.location_name || j.location || j.location_raw || '';
+      var progs = r.meeting_programs || getMeetingProgramsText(j);
+      var atts  = r.meeting_attendees || getMeetingAttendeesText(j);
       var notes = getMeetingNotesText(j);
       var saved = isMeetingSaved(j);
 
@@ -2674,7 +2736,10 @@
     $tbl.addClass('dm-loading');
 
     try {
-      var r = await fetch(url, { headers:{ 'Accept':'application/json' } });
+      var r = await fetch(url, {
+        cache: 'no-store',
+        headers:{ 'Accept':'application/json' }
+      });
       if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
       var j = await r.json();
       var rows = j.rows || [];
