@@ -45,7 +45,7 @@ sub get_stored_marker_from_array {
     foreach my $m (@{$protocol->markers_array()}) {
         return $m if $m->{name} eq $marker_name;
     }
-    return undef;
+    return;
 }
 
 #Upload the file the first time to establish a protocol with marker S1_21594

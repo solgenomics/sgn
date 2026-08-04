@@ -740,7 +740,8 @@ sub validate {
         join => {'nd_experiment_stocks' => {'nd_experiment' => [ {'nd_experiment_genotypes' => 'genotype'}, {'nd_experiment_protocols' => 'nd_protocol'}, {'nd_experiment_projects' => 'project'} ] } },
         '+select' => ['nd_protocol.nd_protocol_id', 'nd_protocol.name', 'project.project_id', 'project.name'],
         '+as' => ['protocol_id', 'protocol_name', 'project_id', 'project_name'],
-        order_by => 'genotype.genotype_id'
+        distinct => 1,
+        order_by => 'me.uniquename'
     });
     while(my $r = $previous_genotypes_rs->next){
         print STDERR "PREVIOUS GENOTYPES ".join (",", ($r->get_column('uniquename'), $r->get_column('protocol_name'), $r->get_column('project_name')))."\n";

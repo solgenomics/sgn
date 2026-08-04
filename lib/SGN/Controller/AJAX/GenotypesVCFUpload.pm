@@ -571,10 +571,12 @@ sub upload_genotype_verify_POST : Args(0) {
             }
 
             my @all_warnings;
+            my @warning_groups;
             my @mismatched_markers;
             my $previous_genotypes_exist;
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
                 push @all_warnings, @{$verified_errors->{warning_messages}};
+                push @warning_groups, { title => 'Accessions with genotypes already stored for this protocol', count => scalar(@{$verified_errors->{warning_messages}}), messages => $verified_errors->{warning_messages} };
                 $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
             }
 
@@ -654,11 +656,14 @@ sub upload_genotype_verify_POST : Args(0) {
                 }
 
                 push @all_warnings, @protocol_match_errors;
+                if (scalar(@protocol_match_errors)) {
+                    push @warning_groups, { title => 'Markers with mismatched chrom, pos, name, ref, or alt compared to the previously stored protocol', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+                }
 	    }
 
-            if (scalar(@all_warnings) > 0 && !$accept_warnings) {
+            if (scalar(@all_warnings) > 0 && !$accept_warnings && !$update_markers) {
                 my $warning_string = join("<br>", @all_warnings);
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+                $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
                 $c->detach();
             }
 
@@ -731,10 +736,12 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         my @all_warnings;
+        my @warning_groups;
         my @mismatched_markers;
         my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
             push @all_warnings, @{$verified_errors->{warning_messages}};
+            push @warning_groups, { title => 'Accessions with genotypes already stored for this protocol', count => scalar(@{$verified_errors->{warning_messages}}), messages => $verified_errors->{warning_messages} };
             $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
         }
 
@@ -814,11 +821,14 @@ sub upload_genotype_verify_POST : Args(0) {
             }
 
             push @all_warnings, @protocol_match_errors;
+            if (scalar(@protocol_match_errors)) {
+                push @warning_groups, { title => 'Markers with mismatched chrom, pos, name, ref, or alt compared to the previously stored protocol', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+            }
 	}
 
-        if (scalar(@all_warnings) > 0 && !$accept_warnings) {
+        if (scalar(@all_warnings) > 0 && !$accept_warnings && !$update_markers) {
             my $warning_string = join("<br>", @all_warnings);
-            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+            $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
             $c->detach();
         }
 

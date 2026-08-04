@@ -479,7 +479,23 @@ jQuery(document).ready(function ($) {
             }
 
             if (response.warning) {
-                jQuery('#upload_genotypes_warnings_html').html(response.warning);
+                if (response.warning_groups && response.warning_groups.length > 0) {
+                    var accordion_id = 'upload_genotypes_warnings_accordion';
+                    var accordion_html = '<div class="panel-group" id="' + accordion_id + '">';
+                    for (var i = 0; i < response.warning_groups.length; i++) {
+                        var group = response.warning_groups[i];
+                        var panel_id = accordion_id + '_panel_' + i;
+                        accordion_html += '<div class="panel panel-warning">';
+                        accordion_html += '<div class="panel-heading"><h4 class="panel-title"><a data-toggle="collapse" data-parent="#' + accordion_id + '" href="#' + panel_id + '">' + group.title + ' (' + group.count + ')</a></h4></div>';
+                        var group_messages = jQuery.grep(group.messages, function(m) { return m; });
+                        accordion_html += '<div id="' + panel_id + '" class="panel-collapse collapse"><div class="panel-body" style="color:#333; background-color:#fff;">' + group_messages.join('<br>') + '</div></div>';
+                        accordion_html += '</div>';
+                    }
+                    accordion_html += '</div>';
+                    jQuery('#upload_genotypes_warnings_html').html(accordion_html);
+                } else {
+                    jQuery('#upload_genotypes_warnings_html').html(response.warning);
+                }
                 jQuery('#upload_genotypes_warnings_div').show();
                 if (response.mismatched_markers && response.mismatched_markers.length > 0) {
                     jQuery('#upload_genotypes_mismatched_marker_div').show();
