@@ -1861,16 +1861,16 @@ sub get_vector_obsoleted_accessions :Path('/ajax/transformation/vector_obsoleted
 }
 
 
-sub update_transformation_id_details : Path('/ajax/transformation/update_transformation_id_details') : ActionClass('REST') {}
+sub update_transformation_metadata : Path('/ajax/transformation/update_transformation_metadata') : ActionClass('REST') {}
 
-sub update_transformation_id_details_POST :Args(0){
+sub update_transformation_metadata_POST :Args(0){
     my ($self, $c) = @_;
     my $dbh = $c->dbc->dbh;
     my $transformation_stock_id = $c->req->param('transformation_stock_id');
     my $new_transformation_name = $c->req->param('new_transformation_name');
     my $new_transformation_notes = $c->req->param('new_transformation_notes');
-    print STDERR "NEW NAME =".Dumper($new_transformation_name)."\n";
-    print STDERR "NEW NOTES =".Dumper($new_transformation_notes)."\n";
+    print STDERR "NEW NAME 1=".Dumper($new_transformation_name)."\n";
+    print STDERR "NEW NOTES 1=".Dumper($new_transformation_notes)."\n";
 
     if (!$c->user()) {
         $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
@@ -1878,17 +1878,17 @@ sub update_transformation_id_details_POST :Args(0){
     }
 
     if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)){
-        $c->stash->{rest} = {error =>  "you have insufficient privileges to edit this transformation identifier details." };
+        $c->stash->{rest} = {error =>  "you have insufficient privileges to edit this transformation metadata." };
         return;
     }
 
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
 
-    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_name=>$new_transformation_name, new_transformation_notes=>$new_transformation_notes});
-    my $error = $transformation_obj->update_details();
+    my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_name=>$new_transformation_name, transformation_notes=>$new_transformation_notes});
+    my $error = $transformation_obj->update_transformation_metadata();
     if ($error) {
-        $c->stash->{rest} = { error => "An error occurred attempting to update transformation ID details. ($@)" };
+        $c->stash->{rest} = { error => "An error occurred attempting to update transformation metadata. ($@)" };
         return;
     }
 
