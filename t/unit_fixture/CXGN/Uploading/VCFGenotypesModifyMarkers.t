@@ -73,8 +73,10 @@ my $upload_response = $ua->post(
 );
 ok($upload_response->is_success, 'initial VCF upload request succeeded at the HTTP level');
 my $message_hash = decode_json $upload_response->decoded_content;
+diag(Dumper($message_hash));
 is($message_hash->{success}, 1, 'initial upload stored successfully') or diag(Dumper($message_hash));
 my $protocol_id = $message_hash->{nd_protocol_id};
+diag(Dumper($protocol_id));
 ok($protocol_id, 'got a protocol_id from the initial upload');
 
 my $original_marker = get_stored_marker($protocol_id, 'S1_21594');
