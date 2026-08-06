@@ -401,6 +401,28 @@ sub get_traits_from_component_categories: Path('/ajax/onto/get_traits_from_compo
   }
 }
 
+=head2 
+
+rebuilds transitive closure for an ontology so it can be searched
+
+=cut
+
+sub build_cvtermpath :Path('/ajax/onto/build_cvtermpath') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $onto_db_name = $c->req->param("onto_db");
+
+    if (!$onto_db_name) {
+        $c->stash->{rest} = {error => "You must supply an ontology to rebuild cvtermpaths."};
+        return;
+    }
+
+    # use onto dbname to find cv.name
+    
+    # call gmod_make_cvtermpath.pl for cv.name
+    # do it as a background job
+}
+
 
 =head2 children
 
