@@ -62,6 +62,7 @@ $phenotypes_fully_uploaded => undef
 $user_can_modify => undef
 $latest_trial_activity => undef
 $has_col_and_row_numbers => undef
+$plot_name_template => undef
 
 #Specific to stock detail page
 $type_name => undef
@@ -190,6 +191,13 @@ $data_type => "" # for access_denied mason
 $propagation_type => undef
 $date => undef
 $logged_in_name => undef
+
+#Specific to dataset detail page
+$dataset_id => undef
+$dataset_name => undef
+$is_dataset_owner => 0
+$is_dataset_public => 0
+
 
 </%args>
 
@@ -442,7 +450,7 @@ $logged_in_name => undef
                                 <& /breeders_toolbox/tissue_samples/sampling_trials.mas &>
 % } #End manage_tissue_samples_sampling_trials
 % if ($info_section_id eq 'trial_details'){
-                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, transplanting_date=>$transplanting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
+                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, transplanting_date=>$transplanting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity, plot_name_template => $plot_name_template &>
 % } #End trial_details
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
@@ -698,6 +706,19 @@ $logged_in_name => undef
 % if ($info_section_id eq 'propagation_group_ids_in_project_section'){
                                 <& /propagation/propagation_groups_in_project.mas, trial_id=>$trial_id &>
 % } #End propagation_group_ids_in_project_section
+
+% if ($info_section_id eq 'dataset_outlier_detection') {
+    <& /dataset/outliers.mas, dataset_id => $dataset_id, dataset_name => $dataset_name &>
+% }
+% if ( $info_section_id eq 'dataset_analysis_tools') {
+    <& /solgs/tools/dataset_trials_analysis.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, data_structure => 'dataset' &>
+% }
+% if ( $info_section_id eq 'dataset_tool_compatibility') {
+    <& /dataset/tool_compatibility.mas, dataset_id => $dataset_id, dataset_name => $dataset_name &>
+% }
+% if ( $info_section_id eq 'dataset_publish') {
+    <& /dataset/publish.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner, is_dataset_public => $is_dataset_public &>
+% }
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

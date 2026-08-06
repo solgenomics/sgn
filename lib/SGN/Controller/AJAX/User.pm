@@ -398,7 +398,7 @@ sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
     $self->send_forgot_username_email_message($c, $email, \@person_ids);
 
     $c->stash->{rest} = {
-        message => "Username email sent. Please check your email for a message containing the username(s) of any accounts associated with your email address."
+        message => "Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
     };
 }
 
@@ -410,33 +410,16 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     my $email = $c->req->param('password_reset_email');
 
     my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
-
-    if (!@person_ids) {
-	$c->stash->{rest} = { error => "The provided email ($email) is not associated with any account." };
-	return;
-    }
-
-    if (@person_ids > 1) {
-	$c->stash->{rest} = { message => "The provided email ($email) is associated with multiple accounts. An email is sent for each account. Please notify the database team using the contact form to consolidate the accounts." };
-    }
-
-    my @reset_links;
-    my @reset_tokens;
     foreach my $pid (@person_ids) {
         my $email_reset_token = $self->tempname();
         my $reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
-        print STDERR "Sending reset link $reset_link\n";
         $self->send_reset_email_message($c, $pid, $email, $reset_link, $person->{username});
-        push @reset_links, $reset_link;
-        push @reset_tokens, $email_reset_token;
     }
 
     $c->stash->{rest} = {
-        message => "Reset link sent. Please check your email and click on the link.",
-        reset_links => \@reset_links,
-        reset_tokens => \@reset_tokens
+        message => "Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.",
     };
 }
 
@@ -487,14 +470,16 @@ sub send_forgot_username_email_message {
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         push(@usernames, $person->get_username());
     }
-    my $username_message = @usernames > 0 ? "The following username(s) are associated with your email address: " . join(', ', @usernames)
-        : "There are no accounts associated with your email address.";
 
-    my $project_name = $c->config->{project_name};
-    my $subject = "[$project_name] Forgot Username Request";
-    my $main_url = $c->config->{main_production_site_url};
+    # Only send a message if there is an account associated with the specified email address
+    if ( @usernames > 0 ) {
+        my $username_message = "The following username(s) are associated with your email address: " . join(', ', @usernames);
 
-    my $body = <<END_HEREDOC;
+        my $project_name = $c->config->{project_name};
+        my $subject = "[$project_name] Forgot Username Request";
+        my $main_url = $c->config->{main_production_site_url};
+
+        my $body = <<END_HEREDOC;
 
 Hi,
 
@@ -512,7 +497,8 @@ Your friends at $project_name
 
 END_HEREDOC
 
-   CXGN::Contact::send_email($subject, $body, $email);
+        CXGN::Contact::send_email($subject, $body, $email);
+    }
 }
 
 sub send_reset_email_message {
@@ -609,14 +595,18 @@ HTML
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $username = $c->user->get_username();
     $html = <<HTML;
-      <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
-	<button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
-	<button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
-        Lists <span class="glyphicon glyphicon-list-alt" ></span></button>
-	<button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
-              <span class="glyphicon glyphicon-list-alt" ></span>&nbsp;<span class="hidden-sm">Datasets</span></button>
-	<button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span></button>
-	<button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
+    <div class="btn-group" role="group" aria-label="..." style="height:34px; margin: 1px 3px 0px 0px">
+        <button id="navbar_profile" class="btn btn-primary" type="button" onclick='location.href="/solpeople/profile/$sp_person_id"' style="margin: 7px 0px 0px 0px" title="My Profile">$username</button>
+        <button id="navbar_lists" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Lists" onClick="show_lists();">
+            <span class="glyphicon glyphicon-align-justify" ></span>&nbsp;<span class="hidden-sm">Lists</span>
+        </button>
+        <button id="navbar_datasets" name="lists_link" class="btn btn-info" style="margin:7px 0px 0px 0px" type="button" title="Datasets" onClick="window.location='/search/datasets';">
+            <span class="glyphicon glyphicon-list" style="transform: rotate(90deg)"></span>&nbsp;<span class="hidden-sm">Datasets</span>
+        </button>
+        <button id="navbar_personal_calendar" name="personal_calendar_link" class="btn btn-primary" style="margin:7px 0px 0px 0px" type="button" title="Your Calendar">
+            Calendar&nbsp;<span class="glyphicon glyphicon-calendar" ></span>
+        </button>
+        <button id="navbar_logout" class="btn btn-default glyphicon glyphicon-log-out" style="margin:6px 0px 0px 0px" type="button" onclick="logout();" title="Logout"></button>
       </div>
 HTML
 

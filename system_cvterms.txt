@@ -719,6 +719,7 @@ stock_property	BacterialResistantMarker	Vector property	4/17/2023	mrf252	00167
 stock_property	biological status of accession code	From BrAPI	03/27/2017	nm529	00076
 stock_property	block				00052
 stock_property	CassetteName	Vector property	1/19/2023	mrf252	00164
+stock_property	catalog    For indicating if a stock is included in a catalog	tt15    00206
 stock_property	CloningOrganism	Vector property	1/19/2023	mrf252	00164
 stock_property	col_number				00052
 stock_property  completed_metadata  tt15  00187

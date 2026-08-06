@@ -53,6 +53,7 @@ use CXGN::BreedersToolbox::Accessions;
 use CXGN::Cross;
 use Sort::Key::Natural qw(natkeysort);
 use Time::Piece;
+use Text::CSV qw(csv);
 
 
 sub breeder_download : Path('/breeders/download/') Args(0) {
@@ -264,7 +265,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $repetitive_measurements = $c->req->param("repetitive_measurements") || "average";
     my $timestamp_option = $c->req->param("timestamp") && $c->req->param("timestamp") ne 'null' ? $c->req->param("timestamp") : 0;
     my $exclude_phenotype_outlier = $c->req->param("exclude_phenotype_outlier") && $c->req->param("exclude_phenotype_outlier") ne 'null' && $c->req->param("exclude_phenotype_outlier") ne 'undefined' ? $c->req->param("exclude_phenotype_outlier") : 0;
-    my $include_pedigree_parents = $c->req->param('include_pedigree_parents');
+    my $include_pedigree_parents = $c->req->param("include_pedigree_parents") && $c->req->param("include_pedigree_parents") ne 'null' && $c->req->param("include_pedigree_parents") ne 'undefined' ? $c->req->param("include_pedigree_parents") : 0;
     my $include_intercrop_stocks = $c->req->param("intercrop") && $c->req->param("intercrop") ne 'null' && $c->req->param("intercrop") ne 'undefined' ? $c->req->param("intercrop") : 0;
     my $include_entry_numbers = $c->req->param("entry_numbers") && $c->req->param("entry_numbers") ne 'null' ? $c->req->param("entry_numbers") : 0;
     my $include_trait_synonyms = $c->req->param("trait_synonyms") && $c->req->param("trait_synonyms") ne 'null' ? $c->req->param("trait_synonyms") : 0;
@@ -592,6 +593,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
     my $include_entry_numbers = $c->req->param("entry_numbers") || 0;
     my $include_trait_synonyms = $c->req->param("trait_synonyms") || 0;
     my $timestamp_included = $c->req->param("timestamp") || 0;
+    my $include_pedigree_parents = $c->req->param("pedigrees") || 0;
 
     # parameters for outliers download
     my @trait_ids     = split(',', $c->req->param("trait_ids_list"));
@@ -708,6 +710,7 @@ sub download_action : Path('/breeders/download_action') Args(0) {
             include_entry_numbers=>$include_entry_numbers,
             include_trait_synonyms=>$include_trait_synonyms,
     		data_level=>$datalevel,
+            include_pedigree_parents=>$include_pedigree_parents,
     	);
     	@data = $phenotypes_search->get_phenotype_matrix();
     }
@@ -839,6 +842,8 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         return;
     }
 
+
+
     # Get accession IDs from list
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my @accession_list = map { $_->[1] } @$accession_data;
@@ -848,13 +853,19 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
     my @accession_ids = @{$accession_id_hash->{transform}};
 
+
+
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
-    # Build Accession Info
-    my @editable_stock_props = split ',', $c->config->{editable_stock_props};
+    my $editable_properties_string = $c->config->{editable_stock_props};
+    my @editable_properties = split /\s*\,\s*/, $editable_properties_string;
 
-    my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
+    #print STDERR "DOWNLOADING PROPERTIES: ".join(", ", @editable_properties)."\n";
+
+    # Build Accession Info
+    my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
+    my $rows = $BTAccessions->export_properties(\@accession_ids, \@editable_properties);
 
     # Create and Return XLS and XLSX  file
     if ( $file_format eq ".xlsx" ) {
@@ -887,28 +898,7 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         my $file_name = basename($file_path);
 
         # Write to csv file
-        ## no critic (RequireBriefOpen)
-        open(my $csv_fh, "> :encoding(UTF-8)", $file_path) || die "Can't open file $file_path\n";
-        my @header =  @{$rows->[0]};
-        my $num_col = scalar(@header);
-
-        for ( my $line = 0; $line <= $#$rows; $line++ ) {
-            my $columns = $rows->[$line];
-            my $step = 1;
-            for ( my $i = 0; $i < $num_col; $i++ ) {
-                if ($columns->[$i]) {
-                    print $csv_fh "\"$columns->[$i]\"";
-                } else {
-                    print $csv_fh "\"\"";
-                }
-                if ($step < $num_col) {
-                    print $csv_fh ",";
-                }
-                $step++;
-            }
-            print $csv_fh "\n";
-        }
-        close $csv_fh;
+        csv(in => $rows, out => $file_path, sep_char => ",");
 
         # Return the csv file
         $c->res->content_type('text/csv');
@@ -927,81 +917,6 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         $c->res->body($output);
     }
 
-}
-
-#
-# Build Accession Properties Info
-#
-# Generate the rows in the accession info table for the specified Accessions
-#
-# Usage: my $rows = $self->build_accession_properties_info($dbh, \@accession_ids, \@editable_stock_props);
-# Returns: an arrayref where each array item is an array of accession properties
-#          the first item is an array of the header values
-#
-sub build_accession_properties_info {
-    my $self = shift;
-    my $dbh = shift;
-    my $accession_ids = shift;
-    my $editable_stock_props = shift;
-
-    # Setup Stock Props
-    my @stock_props = ("organization", "stock_synonym", "PUI");
-    foreach my $esp (@$editable_stock_props) {
-        if (!scalar grep { $_ eq $esp } @stock_props) {
-            push(@stock_props, $esp)
-        }
-    }
-
-    # Build Header
-    my @accession_headers = ("accession_name", "create_date", "species_name", "population_name");
-    push(@accession_headers, @stock_props);
-
-    # Add Header to Rows
-    my @accession_rows = ();
-    push(@accession_rows, \@accession_headers);
-
-    # Start query blocks
-    my $select = "SELECT stock.uniquename AS accession_name, stock.create_date AS create_date, organism.species AS species_name, string_agg(distinct(rs.uniquename), ', ') AS population_name";
-    my $from = "FROM public.stock";
-    my $joins = "LEFT JOIN public.organism USING (organism_id)";
-    $joins .= " LEFT JOIN public.stock_relationship ON (stock.stock_id = stock_relationship.subject_id AND stock_relationship.type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'member_of' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_relationship')))";
-    $joins .= " LEFT JOIN public.stock AS rs ON (stock_relationship.object_id = rs.stock_id)";
-    my $group = "GROUP BY stock.stock_id, organism.species";
-    my $order = "ORDER BY stock.uniquename ASC;";
-    my @params;
-
-    # Add each of the stock props
-    my $count = 0;
-    foreach my $sp (@stock_props) {
-        $count++;
-        my $table = "sp" . $count;
-        $select .= ", string_agg(distinct($table.value), ', ') AS \"$sp\"";
-        $joins .= " LEFT JOIN public.stockprop AS $table ON (stock.stock_id = $table.stock_id AND $table.type_id = (SELECT cvterm_id FROM cvterm WHERE name = '$sp' AND cv_id = (SELECT cv_id FROM cv WHERE name = 'stock_property')))";
-    }
-
-    # Build where block using accession ids
-    my $where = "WHERE stock.stock_id IN (" . join(',', ('?') x @$accession_ids) . ")";
-    push(@params, @$accession_ids);
-
-    # Put query together
-    my $q = "$select $from $joins $where $group $order";
-
-    #print STDERR "QUERY = $q\n";
-
-    # Execute the query and add results to accession rows
-    my $h = $dbh->prepare($q);
-    $h->execute(@params);
-    while (my @results = $h->fetchrow_array()) {
-        # print STDERR "RETRIEVED: ".join(",", @results)."\n";
-        my $original_date_format = $results[1];
-        my $create_date = Time::Piece->strptime($original_date_format, "%Y-%m-%d %H:%M:%S");
-        my $download_date_format = $create_date->strftime("%Y-%B-%d");
-
-        splice(@results,1,1,$download_date_format);
-        push(@accession_rows, \@results);
-    }
-
-    return \@accession_rows;
 }
 
 # accession properties download -- end

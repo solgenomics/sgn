@@ -523,12 +523,16 @@ sub run_model {
 	my $job = CXGN::Job->new({
 		schema => $job_config->{schema},
 		people_schema => $job_config->{people_schema},
+		dbhost => $job_config->{dbhost},
+		dbname => $job_config->{dbname},
+		dbuser => $job_config->{dbuser},
+		dbpass => $job_config->{dbpass},
+		basepath => $job_config->{basepath},
 		sp_person_id => $job_config->{user},
 		cmd => $cmd,
 		cxgn_tools_run_config => $cxgn_tools_run_config,
 		name => $job_config->{name},
-		job_type => 'mixed_model_analysis',
-		finish_logfile => $job_config->{finish_logfile}
+		job_type => 'mixed_model_analysis'
 	});
 
 	$job->submit();
@@ -544,7 +548,7 @@ sub run_model {
 		sleep (1);
 	}
 
-	my $finished = $job->read_finish_timestamp();
+	my $finished = $job->retrieve_finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {

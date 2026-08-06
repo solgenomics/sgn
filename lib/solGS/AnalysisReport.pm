@@ -807,7 +807,7 @@ sub population_download_message {
                     $message =
 "The phenotype and genotype data for $pop_name is ready for analysis."
                       . "\nYou can view the training population page here:\n"
-                      . "\n$pop_page.\n\n";
+                      . "\n$pop_page\n\n";
                 }
                 else {
                     no warnings 'uninitialized';
