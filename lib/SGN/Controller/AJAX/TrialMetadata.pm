@@ -3278,12 +3278,20 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     my $accession_rs = $schema->resultset("Stock::Stock")->search({
         uniquename => $new_accession
     });
+    if (!$accession_rs || $accession_rs->count() < 1) {
+        $c->stash->{rest} = { error => "Could not find accession $new_accession - does it exist?" };
+        return;
+    }
     $accession_rs = $accession_rs->next();
     my $new_accession_id = $accession_rs->stock_id;
     my $old_accession_rs = $schema->resultset("Stock::Stock")->search({
         uniquename => $old_accession
     });
-    $old_accession_rs = $old_accession_rs->first();
+    $old_accession_rs = $old_accession_rs->next();
+    if (!$old_accession_rs || $old_accession_rs->count() < 1) {
+        $c->stash->{rest} = { error => "Could not find accession $old_accession - does it exist?" };
+        return;
+    }
     my $old_accession_id = $old_accession_rs->stock_id;
 
     $rep_hash->{$old_accession_id}->{'remove'}->{$plot_id} = $plot_hash->{$plot_id};
