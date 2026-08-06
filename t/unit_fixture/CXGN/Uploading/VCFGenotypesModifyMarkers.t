@@ -170,7 +170,9 @@ $upload_response = $ua->post(
 ok($upload_response->is_success, 'accepted-warnings upload request succeeded at the HTTP level');
 $message_hash = decode_json $upload_response->decoded_content;
 diag(Dumper($message_hash));
-is($message_hash->{success}, 1, 'upload succeeds once warnings are accepted') or diag(Dumper($message_hash));
+is($message_hash->{success}, 1, 'initial upload stored successfully')
+    or BAIL_OUT("Initial upload failed: " . Dumper($message_hash));
+#is($message_hash->{success}, 1, 'upload succeeds once warnings are accepted') or diag(Dumper($message_hash));
 diag(Dumper($protocol_id));
 ok($message_hash->{project_id}, 'got a project_id for the accepted-warnings upload');
 
