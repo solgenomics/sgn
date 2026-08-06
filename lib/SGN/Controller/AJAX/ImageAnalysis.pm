@@ -81,32 +81,81 @@ sub create_run_project_POST : Args(0) {
     my $analysis_metadata = decode_json($analysis_info_json);
     $analysis_metadata = $analysis_metadata->{analysis_metadata} if $analysis_metadata->{analysis_metadata};
     print STDERR "Analysis info json create test: $analysis_info_json";
-    my $source_stock_id    = $c->req->param('source_stock_id');
-    my $source_image_id    = $c->req->param('source_image_id');
+
     my $trait_ids          = $c->req->param('trait_ids');
 
-    my $overlay_image_id   = $c->req->param('overlay_image_id');
+    my @images;
 
-    my $tissue_samples = decode_json(
-        $c->req->param('tissue_samples') || '[]'
-    );
+    if (my $images_json = $c->req->param('images_json')) {
+        my $decoded = eval { decode_json($images_json) };
+        if ($@ || ref($decoded) ne 'ARRAY') {
+            $c->stash->{rest} = { error => "images_json must be a JSON array: $@" };
+            $c->detach();
+        }
+        @images = @$decoded;
+    }
+    else {
+        # Backwards compatibility with the old single-image callers.
+        @images = ({
+            source_image_id  => $c->req->param('source_image_id'),
+            source_stock_id  => $c->req->param('source_stock_id'),
+            overlay_image_id => $c->req->param('overlay_image_id'),
+            tissue_samples   => decode_json($c->req->param('tissue_samples') || '[]'),
+        });
+    }
 
-    print STDERR "Params: trial_id=$trial_id, " .
-        "source_stock_id=$source_stock_id, " .
-        "source_image_id=$source_image_id\n";
-
-    unless ($trial_id && $source_stock_id && $source_image_id) {
-        $c->stash->{rest} = {
-            error => "trial_id, source_stock_id, source_image_id required"
-        };
+    unless ($trial_id && $run_name) {
+        $c->stash->{rest} = { error => "trial_id and run_name required" };
         $c->detach();
     }
-    unless (@$tissue_samples) {
-        $c->stash->{rest} = {
-            error => "At least one tissue_sample required"
-        };
+    unless (@images) {
+        $c->stash->{rest} = { error => "At least one image required" };
         $c->detach();
     }
+
+    # Validate + dedupe images, and collect the stocks / image links we need.
+    my %image_seen;
+    my @clean_images;
+    my $total_samples = 0;
+
+    foreach my $img (@images) {
+        my $img_id   = $img->{source_image_id};
+        my $stock_id = $img->{source_stock_id};
+        my $samples  = $img->{tissue_samples} || [];
+
+        unless ($img_id && $stock_id) {
+            $c->stash->{rest} = {
+                error => "Each image entry requires source_image_id and source_stock_id"
+            };
+            $c->detach();
+        }
+        unless ($img_id =~ /^\d+$/ && $stock_id =~ /^\d+$/) {
+            $c->stash->{rest} = {
+                error => "source_image_id and source_stock_id must be numeric (got $img_id / $stock_id)"
+            };
+            $c->detach();
+        }
+        unless (ref($samples) eq 'ARRAY' && @$samples) {
+            $c->stash->{rest} = {
+                error => "Image $img_id has no tissue_samples"
+            };
+            $c->detach();
+        }
+
+        next if $image_seen{$img_id}++;   # same image submitted twice
+
+        $total_samples += scalar(@$samples);
+
+        push @clean_images, {
+            source_image_id  => $img_id,
+            source_stock_id  => $stock_id,
+            overlay_image_id => $img->{overlay_image_id},
+            tissue_samples   => $samples,
+        };
+    }
+
+    print STDERR "create_run_project: " . scalar(@clean_images) .
+                " images, $total_samples tissue samples\n";
 
     my $trial = CXGN::Trial->new({
         bcs_schema => $schema,
@@ -144,6 +193,8 @@ sub create_run_project_POST : Args(0) {
     my $analysis_run_on_trial_rel_cvterm_id = SGN::Model::Cvterm->get_cvterm_row( $schema, 'image_analysis_run_on_field_trial', 'project_relationship' )->cvterm_id();
 
     my $image_analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row( $schema, 'image_analysis_experiment', 'experiment_type' )->cvterm_id();
+
+    my $analysis_image_stock_map_cvterm_id = SGN::Model::Cvterm->get_cvterm_row( $schema, 'image_analysis_image_stock_map_json', 'project_property' )->cvterm_id();
 
     # project_md_image types
     my $source_image_type_id = SGN::Model::Cvterm->get_cvterm_row( $schema, 'image_analysis_source_image', 'project_md_image' )->cvterm_id();
@@ -217,51 +268,66 @@ sub create_run_project_POST : Args(0) {
                 " of " . scalar(@trait_terms) . " emitted traits\n";
 
     my $run_project_id;
+    my @nd_experiment_stocks;
 
     eval {
         $schema->txn_do(sub {
 
-            my @nd_experiment_stocks = ({
-                stock_id => $source_stock_id,
-                type_id  => $image_analysis_experiment_type_id,
-            });
+            my %stock_seen;
 
-            foreach my $sample (@$tissue_samples) {
-                push @nd_experiment_stocks, {
-                    stock_id => $sample->{stock_id},
-                    type_id  => $image_analysis_experiment_type_id,
-                };
+            foreach my $img (@clean_images) {
+                foreach my $stock_id ($img->{source_stock_id},
+                                    map { $_->{stock_id} } @{ $img->{tissue_samples} }) {
+                    next unless defined $stock_id && $stock_id =~ /^\d+$/;
+                    next if $stock_seen{$stock_id}++;
+                    push @nd_experiment_stocks, {
+                        stock_id => $stock_id,
+                        type_id  => $image_analysis_experiment_type_id,
+                    };
+                }
             }
 
-            my $nd_experiment_rs =
-                $schema->resultset(
-                    'NaturalDiversity::NdExperiment'
-                )->create({
-                    nd_geolocation_id    => $geolocation_id,
-                    type_id              => $image_analysis_experiment_type_id,
-                    nd_experiment_stocks => \@nd_experiment_stocks,
-                });
+            print STDERR "Linking " . scalar(@nd_experiment_stocks) . " unique stocks\n";
+
+            my $nd_experiment_rs = $schema->resultset('NaturalDiversity::NdExperiment')->create({
+                nd_geolocation_id    => $geolocation_id,
+                type_id              => $image_analysis_experiment_type_id,
+                nd_experiment_stocks => \@nd_experiment_stocks,
+            });
 
             my $nd_experiment_id = $nd_experiment_rs->nd_experiment_id();
             print STDERR "Created nd_experiment: $nd_experiment_id\n";
 
-            # Create image_analysis_run project
-            my $project =
-                $schema->resultset('Project::Project')->create({
-                    name        => $run_name,
-                    description =>
-                        "Image analysis using $service_name " .
-                        "on trial $trial_name.",
-                    projectprops => \@projectprops,
-                    project_relationship_subject_projects => [{
-                        type_id           =>
-                            $analysis_run_on_trial_rel_cvterm_id,
-                        object_project_id => $trial_id,
-                    }],
-                    nd_experiment_projects => [{
-                        nd_experiment_id => $nd_experiment_id,
-                    }],
-                });
+            # Create image_analysis_run projects
+            my $image_map_json = encode_json([
+                map {
+                    {
+                        source_image_id  => $_->{source_image_id},
+                        source_stock_id  => $_->{source_stock_id},
+                        overlay_image_id => $_->{overlay_image_id},
+                        tissue_sample_ids => [ map { $_->{stock_id} } @{ $_->{tissue_samples} } ],
+                    }
+                } @clean_images
+            ]);
+
+            push @projectprops, {
+                type_id => $analysis_image_stock_map_cvterm_id,
+                value   => $image_map_json,
+            };
+
+            my $project = $schema->resultset('Project::Project')->create({
+                name        => $run_name,
+                description => "Image analysis using $service_name on trial $trial_name (" .
+                            scalar(@clean_images) . " images).",
+                projectprops => \@projectprops,
+                project_relationship_subject_projects => [{
+                    type_id           => $analysis_run_on_trial_rel_cvterm_id,
+                    object_project_id => $trial_id,
+                }],
+                nd_experiment_projects => [{
+                    nd_experiment_id => $nd_experiment_id,
+                }],
+            });
 
             $run_project_id = $project->project_id();
             print STDERR "Created run project: $run_project_id\n";
@@ -274,11 +340,10 @@ sub create_run_project_POST : Args(0) {
                 });
             }
             print STDERR "Associated " . scalar(@trait_cvterm_ids) .
-                         " traits with project $run_project_id\n";
+                        " traits with project $run_project_id\n";
 
             my $dbh = $schema->storage->dbh();
 
-            # Link source image to run project
             my $sth = $dbh->prepare(
                 "INSERT INTO phenome.project_md_image (project_id, image_id, type_id)
                 SELECT ?, ?, ?
@@ -288,38 +353,48 @@ sub create_run_project_POST : Args(0) {
                 )"
             );
 
-            $sth->execute(
-                $run_project_id, $source_image_id, $source_image_type_id,
-                $run_project_id, $source_image_id, $source_image_type_id
-            );
-            print STDERR "Linked source image: $source_image_id\n";
+            my $linked_sources  = 0;
+            my $linked_overlays = 0;
 
-            # Link overlay image to run project
-            if ($overlay_image_id) {
+            foreach my $img (@clean_images) {
+                my $src = $img->{source_image_id};
+
                 $sth->execute(
-                    $run_project_id, $overlay_image_id, $overlay_image_type_id,
-                    $run_project_id, $overlay_image_id, $overlay_image_type_id
+                    $run_project_id, $src, $source_image_type_id,
+                    $run_project_id, $src, $source_image_type_id
                 );
-                print STDERR "Linked overlay image: $overlay_image_id\n";
+                $linked_sources++;
+
+                my $ovl = $img->{overlay_image_id};
+                if ($ovl && $ovl =~ /^\d+$/) {
+                    $sth->execute(
+                        $run_project_id, $ovl, $overlay_image_type_id,
+                        $run_project_id, $ovl, $overlay_image_type_id
+                    );
+                    $linked_overlays++;
+                }
             }
+
+            print STDERR "Linked $linked_sources source images, " .
+                        "$linked_overlays overlay images to project $run_project_id\n";
         });
     };
 
     if ($@) {
         print STDERR "create_run_project error: $@\n";
-        $c->stash->{rest} = {
-            error => "Failed to create run project: $@"
-        };
+        $c->stash->{rest} = { error => "Failed to create run project: $@" };
         $c->detach();
     }
 
     print STDERR "create_run_project success: $run_project_id\n";
 
     $c->stash->{rest} = {
-        success            => 1,
-        run_project_id     => $run_project_id,
-        run_name           => $run_name,
-        traits_associated  => scalar(@trait_cvterm_ids),
+        success           => 1,
+        run_project_id    => $run_project_id,
+        run_name          => $run_name,
+        image_count       => scalar(@clean_images),
+        stock_count       => scalar(@nd_experiment_stocks),
+        traits_associated => scalar(@trait_cvterm_ids),
     };
 }
 

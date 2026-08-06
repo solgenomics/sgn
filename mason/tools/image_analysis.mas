@@ -233,17 +233,24 @@ tr.shown td.details-control {
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="runNameModalTitle">Name Image Analysis Runs</h5>
+                    <h5 class="modal-title" id="runNameModalTitle">Name Image Analysis Run</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <p class="text-muted" style="font-size:12px;">
-                        Each analyzed image will be saved as its own analysis run.
-                        Enter a unique name for each one below.
+                        All analyzed images below will be saved together as a single analysis run.
                     </p>
-                    <div id="run_name_rows"></div>
+
+                    <div class="form-group">
+                        <label for="run_name_input" style="font-size:12px;">Run name</label>
+                        <input type="text" class="form-control" id="run_name_input" placeholder="e.g. Plot 101 leaf area analysis" />
+                    </div>
+
+                    <label style="font-size:12px;">Images included (<span id="run_image_count">0</span>)</label>
+                    <div id="run_image_list" style="max-height:260px;overflow-y:auto;border:1px solid #eee;"></div>
+
                     <div id="run_name_error" class="text-danger" style="display:none;margin-top:6px;"></div>
                 </div>
                 <div class="modal-footer">
@@ -704,117 +711,104 @@ jQuery(document).ready(function(){
 
     function enterRunName() {
         jQuery('#run_name_error').hide().text('');
+        jQuery('#run_name_input').val('');
 
         let partition = partitionTableDataByImage();
         window.save_partition = partition;
 
-        let $rows = jQuery('#run_name_rows').empty();
+        let $list = jQuery('#run_image_list').empty();
+        jQuery('#run_image_count').text(partition.order.length);
 
         partition.order.forEach(function(image_id) {
             var rows    = partition.groups[image_id];
-            console.log("source image filename: ", rows[0].source_image_filename);
             var label   = rows[0].source_image_filename || ('Image ' + image_id);
             var overlay = (window.overlays_by_image && window.overlays_by_image[image_id]) || '';
 
-            $rows.append(
-                '<div class="form-group run-name-item" ' +
+            $list.append(
+                '<div class="run-image-item" ' +
                     'data-image-id="' + jQuery('<div>').text(image_id).html() + '" ' +
-                    'style="display:flex;align-items:center;border-bottom:1px solid #eee;padding:8px 0;">' +
+                    'style="display:flex;align-items:center;border-bottom:1px solid #eee;padding:8px;">' +
                     '<div style="flex:0 0 90px;">' +
                         (overlay ? '<img src="' + overlay + '" style="max-height:60px;max-width:80px;">' : '') +
                     '</div>' +
-                    '<div style="flex:1;">' +
-                        '<label style="font-size:12px;">' + jQuery('<div>').text(label).html() + '</label>' +
-                        '<input type="text" class="form-control run-name-input" ' +
-                            'placeholder="e.g. ' + jQuery('<div>').text(label).html() + ' run" />' +
+                    '<div style="flex:1;font-size:12px;">' +
+                        jQuery('<div>').text(label).html() +
+                        '<span class="text-muted"> &mdash; ' + rows.length +
+                        (rows.length === 1 ? ' result' : ' results') + '</span>' +
                     '</div>' +
                 '</div>'
             );
         });
 
         jQuery('#runNameModal').modal('show');
-        setTimeout(function () { jQuery('.run-name-input').first().focus(); }, 300);
+        setTimeout(function () { jQuery('#run_name_input').focus(); }, 300);
     }
 
-    function partitionTableDataByImage() {
-        var all_rows = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
-        console.log("all table data rows: ", all_rows);
-        var groups = {};   // source_image_id -> [rows]
-        var order  = [];   // preserve first-seen order
+    function partitionTableDataByImage(rows) {
+        var all_rows = rows || jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
+
+        var groups  = {};   // source_image_id -> [rows]
+        var order   = [];   // preserve first-seen order
+        var unknown = [];   // rows with no usable source_image_id
+
         all_rows.forEach(function(row) {
-            var img = String(row.source_image_id != null ? row.source_image_id : 'unknown');
+            var raw = row.source_image_id;
+            if (raw == null || raw === '' || !String(raw).match(/^\d+$/)) {
+                unknown.push(row);
+                return;
+            }
+            var img = String(raw);
             if (!groups[img]) { groups[img] = []; order.push(img); }
             groups[img].push(row);
         });
-        return { groups: groups, order: order };
-    } 
+
+        return { groups: groups, order: order, unknown: unknown };
+    }
     
     jQuery('#run_name_confirm').click(function () {
         jQuery('#run_name_error').hide().text('');
 
-        var entries = [];
-        var seen = {};
-        var ok = true;
-
-        jQuery('.run-name-item').each(function() {
-            var image_id = String(jQuery(this).data('image-id'));
-            var name = jQuery.trim(jQuery(this).find('.run-name-input').val());
-
-            if (!name) {
-                ok = false;
-            } else if (seen[name.toLowerCase()]) {
-                ok = false;
-                showRunNameError('Duplicate name "' + name + '". Each run needs a unique name.');
-            }
-            seen[name.toLowerCase()] = true;
-
-            entries.push({
-                image_id: image_id,
-                runName:  name,
-                rows:     window.save_partition.groups[image_id]
-            });
-        });
-
-        if (!ok) {
-            if (!jQuery('#run_name_error').is(':visible')) {
-                showRunNameError('Please enter a unique name for every run.');
-            }
+        var runName = jQuery.trim(jQuery('#run_name_input').val());
+        if (!runName) {
+            showRunNameError('Please enter a name for this run.');
             return;
         }
 
-        var $btn = jQuery('#run_name_confirm').prop('disabled', true).text('Checking...');
+        var partition = window.save_partition;
+        if (!partition || !partition.order.length) {
+            showRunNameError('No analysis results found to save.');
+            return;
+        }
 
-        var checks = entries.map(function(e) {
-            return jQuery.ajax({
-                url: '/ajax/image_analysis/check_run_name',
-                method: 'GET',
-                data: { run_name: e.runName }
-            }).then(function(resp) {
-                return { entry: e, exists: resp.exists };
-            });
+        var images = partition.order.map(function(image_id) {
+            var rows = partition.groups[image_id];
+            return {
+                source_image_id:  image_id,
+                source_stock_id:  rows[0].source_stock_id,
+                overlay_image_id: (window.overlay_ids_by_image && window.overlay_ids_by_image[image_id]) || null,
+                tissue_samples:   rows.map(function(r) { return { stock_id: r.stock_id }; })
+            };
         });
 
-        jQuery.when.apply(jQuery, checks).then(function() {
-            var results = (entries.length === 1)
-                ? [arguments[0]]
-                : Array.prototype.slice.call(arguments);
+        var $btn = jQuery('#run_name_confirm').prop('disabled', true).text('Checking...');
 
-            var taken = results.filter(function(r){ return r.exists; })
-                            .map(function(r){ return r.entry.runName; });
-
+        jQuery.ajax({
+            url: '/ajax/image_analysis/check_run_name',
+            method: 'GET',
+            data: { run_name: runName }
+        }).then(function(resp) {
             $btn.prop('disabled', false).text('Save Results');
 
-            if (taken.length) {
-                showRunNameError('These names already exist: ' + taken.join(', ') +
-                                '. Please choose different names.');
+            if (resp && resp.exists) {
+                showRunNameError('The name "' + runName + '" already exists. Please choose a different name.');
                 return;
             }
 
             jQuery('#runNameModal').modal('hide');
-            saveAllRuns(entries);
+            saveSingleRun(images, runName);
         }, function () {
             $btn.prop('disabled', false).text('Save Results');
-            showRunNameError('Could not verify the names. Please try again.');
+            showRunNameError('Could not verify the name. Please try again.');
         });
     });
 
@@ -1246,6 +1240,33 @@ function getOrCreateSamples(sampleData) {
     });
 
     return Promise.all(requests).then(() => existingSamples);
+}
+
+function buildImagesJson(table_data, tissue_sample_ids) {
+    var partition = partitionTableDataByImage(table_data);
+    if (!partition.order.length) return [];
+
+    return partition.order.map(function(img_id, idx) {
+        var rows = partition.groups[img_id];
+        return {
+            source_image_id:  parseInt(img_id, 10),
+            source_stock_id:  parseInt(rows[0].observationUnitDbId, 10),
+            overlay_image_id: resolveOverlayImageId(rows[0]),
+            // Only the first group owns the samples this call just created.
+            tissue_samples:   idx === 0 ? dedupeStockIds(tissue_sample_ids) : []
+        };
+    });
+}
+
+function dedupeStockIds(ids) {
+    var seen = {}, out = [];
+    (ids || []).forEach(function(id) {
+        var n = parseInt(id, 10);
+        if (isNaN(n) || seen[n]) return;
+        seen[n] = true;
+        out.push({ stock_id: n });
+    });
+    return out;
 }
 
 function createRunProject(tissue_sample_ids, table_data, analysis_metadata, runName, trait_ids) {

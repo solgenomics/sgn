@@ -75,6 +75,7 @@ sub patch {
             'image_analysis_qc_json',
             'image_analysis_traits_emitted_json',
             'image_analysis_raw_result_json',
+            'image_analysis_image_stock_map_json'
         ],
         'project_relationship' => [
 
