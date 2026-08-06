@@ -3005,11 +3005,70 @@ export function initTrialAllocation() {
     drawPieChart(qs('#field-usage-chart'), qs('#field-usage-legend'), usageRows);
   }
 
+  function createFullGridExportElement() {
+    const rows = +qs("#farm-rows")?.value || 0;
+    const cols = +qs("#farm-cols")?.value || 0;
+    if (!rows || !cols) return null;
+
+    const exportGrid = document.createElement("div");
+    exportGrid.className = "bg-white";
+    exportGrid.setAttribute("aria-hidden", "true");
+    exportGrid.style.position = "absolute";
+    exportGrid.style.left = "0";
+    exportGrid.style.top = `${document.documentElement.scrollHeight + 100}px`;
+    exportGrid.style.display = "grid";
+    exportGrid.style.gridTemplateColumns = `repeat(${cols + 1}, ${CELL}px)`;
+    exportGrid.style.gridAutoRows = `${CELL}px`;
+    exportGrid.style.gap = `${GAP}px`;
+    exportGrid.style.width = `${(cols + 1) * STEP - GAP}px`;
+    exportGrid.style.backgroundColor = "#ffffff";
+
+    const plotCells = new Map();
+    qsa("#farm-grid .trial-box").forEach(box => {
+      const clone = box.cloneNode(true);
+      clone.removeAttribute("draggable");
+      plotCells.set(key(+box.dataset.row, +box.dataset.col), clone);
+    });
+
+    const headerCell = label => {
+      const cell = document.createElement("div");
+      cell.className = "grid-cell header-cell";
+      cell.style.position = "static";
+      cell.textContent = label;
+      return cell;
+    };
+
+    const cells = document.createDocumentFragment();
+    cells.appendChild(headerCell(""));
+    for (let col = 0; col < cols; col++) cells.appendChild(headerCell(col + 1));
+
+    for (let row = 0; row < rows; row++) {
+      cells.appendChild(headerCell(row + 1));
+      for (let col = 0; col < cols; col++) {
+        const plot = plotCells.get(key(row, col));
+        if (plot) {
+          cells.appendChild(plot);
+        } else {
+          const cell = document.createElement("div");
+          cell.className = "grid-cell border";
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          paintCell(cell);
+          cells.appendChild(cell);
+        }
+      }
+    }
+
+    exportGrid.appendChild(cells);
+    return exportGrid;
+  }
+
   ({ initDownloadTools, plantingSettings } = createDownloadTools({
     qs,
     key,
     sanitizeTrialName,
-    collectLayoutJson
+    collectLayoutJson,
+    createFullGridExportElement
   }));
 
   function restoreSet(items) {

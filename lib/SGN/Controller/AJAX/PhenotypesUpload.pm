@@ -757,6 +757,7 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
     }
 
     my $user = $c->user();
+    my $sp_person_id = $user->get_object()->get_sp_person_id();
 
     my $user_type = $user->get_object->get_user_type();
     my $username = $user->get_username();
@@ -786,10 +787,10 @@ sub update_single_observation :Path('/ajax/phenotype/edit/') Args(1) {
         trial_id => $trial_id
     });
 
-    my $breeding_program = $this_trial->get_breeding_program();
+    my $owners = $this_trial->_get_trial_owners();
 
-    if ( ! $user->check_roles("curator")  ) {
-        $c->stash->{rest} = {error => "You do not have permission to make edits on this trial."};
+    if ( ! $user->check_roles("curator") && !defined($owners->{$sp_person_id}) ) {
+        $c->stash->{rest} = {error => "You do not have permission to make edits on this trial - only curators and trial owners can modify raw phenotype values."};
         return;
     }
 

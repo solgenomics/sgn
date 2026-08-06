@@ -112,7 +112,7 @@
 
                     <b>Optional fields:</b>
                     <ul>
-                    <li>plot_name (must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>.)</li>
+                    <li>plot_name (must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>, or according to a plot name template if specified.)</li>
                     <li>is_a_control (type 1 in this field if the plot is a control, otherwise leave blank. generally you will have accessions/cross unique ids/family names that are controls, so you should indicate the plots of those accessions/cross unique ids/family names as a control.)</li>
                     <li>rep_number (replicate number, numeric)</li>
                     <li>range_number (range number. often synonymous with col_number, numeric)</li>
@@ -217,6 +217,7 @@
                     <b>Additional optional fields:</b>
                     <ul>
                     <li>plot_name (Must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>)</li>
+                    <li>plot_name_template (The name of a saved plot name template. Must be coherent with the breeding program supplied, and only one is allowed per trial. Can be used in place of plot_name.)</li>
                     <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
                     <li>trial_stock_type (The type of stocks that are being evaluated in the trial.  Can be either 'accession', 'cross', or 'family_name'.  When not provided, 'accession' is used as the default)
                     <li>plot_width (plot width in meters)</li>

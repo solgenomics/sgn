@@ -20,7 +20,7 @@ sub get_pheno_data_query_job_args_file {
     $self->get_trials_phenotype_query_jobs_args( $c, $trials );
     my $pheno_query_args = $c->stash->{trials_phenotype_query_jobs_args};
 
-    my $temp_dir              = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir              = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $pheno_query_args_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'phenotype_data_query_args_file' );
 
@@ -37,7 +37,7 @@ sub get_geno_data_query_job_args_file {
     $self->get_trials_genotype_query_jobs_args( $c, $trials, $protocol_id );
     my $geno_query_args = $c->stash->{trials_genotype_query_jobs_args};
 
-    my $temp_dir             = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir             = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $geno_query_args_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'genotype_data_query_args_file' );
 
@@ -108,7 +108,7 @@ sub get_training_pop_data_query_job_args_file {
     $self->training_pop_data_query_job_args( $c, $trials, $protocol_id );
     my $training_query_args = $c->stash->{training_pop_data_query_job_args};
 
-    my $temp_dir                 = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir                 = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $training_query_args_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'training_pop_data_query_args' );
 
@@ -147,7 +147,7 @@ sub get_trials_genotype_query_jobs_args {
             my $out_temp_file = $c->stash->{out_file_temp};
             my $err_temp_file = $c->stash->{err_file_temp};
 
-            my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+            my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
             my $background_job = $c->stash->{background_job};
 
             my $args_file = $c->controller('solGS::Files')
@@ -329,7 +329,7 @@ sub get_trials_phenotype_query_jobs_args {
             my $out_temp_file = $c->stash->{out_file_temp};
             my $err_temp_file = $c->stash->{err_file_temp};
 
-            my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+            my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
             my $background_job = $c->stash->{background_job};
 
             my $args_file =
@@ -402,11 +402,12 @@ sub genotype_trial_query_args {
         $geno_file = $c->stash->{genotype_file_name};
     }
 
+    my $cache_dir = $c->controller('solGS::Files')->solgs_cache_dir($c);
     my $args = {
         'trial_id'               => $pop_id,
         'genotype_file'          => $geno_file,
         'genotyping_protocol_id' => $protocol_id,
-        'cache_dir'              => $c->stash->{solgs_cache_dir},
+        'cache_dir'              => $cache_dir,
     };
 
     return $args;
@@ -445,7 +446,7 @@ sub create_cluster_accessible_tmp_files {
     my $temp_file_template = $template || $c->stash->{r_temp_file};
 
     my $temp_dir =
-      $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
+      $c->stash->{analysis_tempfiles_dir} || $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     my $in_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, "${temp_file_template}-in" );
@@ -470,7 +471,7 @@ sub run_async {
     my $dependent_jobs    = $c->stash->{dependent_jobs};
 
     my $temp_dir =
-      $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
+      $c->stash->{analysis_tempfiles_dir} || $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
 
     $c->stash->{r_temp_file} = 'run-async';
     $self->create_cluster_accessible_tmp_files($c);
@@ -593,7 +594,7 @@ sub get_cluster_query_job_args {
         my $out_temp_file = $c->stash->{out_file_temp};
         my $err_temp_file = $c->stash->{err_file_temp};
 
-        my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+        my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
         my $background_job = $c->stash->{background_job};
 
         $self->get_selection_pop_query_args($c);
@@ -661,7 +662,7 @@ sub get_selection_pop_query_args_file {
     $self->get_cluster_query_job_args($c);
     my $selection_pop_query_args = $c->stash->{cluster_query_job_args};
 
-    my $temp_dir                 = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir                 = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $selection_pop_query_file = $c->controller('solGS::Files')
       ->create_tempfile( $temp_dir, 'selection_pop_query_args' );
 
@@ -682,7 +683,7 @@ sub get_gs_modeling_jobs_args_file {
     }
 
     if ($modeling_jobs) {
-        my $temp_dir   = $c->stash->{solgs_tempfiles_dir};
+        my $temp_dir   = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
         my $model_file = $c->controller('solGS::Files')
           ->create_tempfile( $temp_dir, 'gs_model_args' );
 
@@ -709,9 +710,9 @@ sub get_cluster_r_job_args {
     my $in_file       = $c->stash->{in_file_temp};
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
-
+    my $solgs_tempfiles_dir = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $temp_dir =
-      $c->stash->{analysis_tempfiles_dir} || $c->stash->{solgs_tempfiles_dir};
+      $c->stash->{analysis_tempfiles_dir} || $solgs_tempfiles_dir;
 
     {
         my $r_cmd_file = $c->path_to($r_script);
@@ -836,7 +837,6 @@ sub record_job_submission {
                 results_page => $job_args->{analysis_page},
                 cmd => $args->{cmd},
                 cxgn_tools_run_config => $args->{config},
-                finish_logfile => $c->config->{job_finish_log},
                 additional_args => $job_args
             });
 
@@ -857,28 +857,36 @@ sub record_job_submission {
 sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
     my $job_records = $self->record_job_submission($c, $args);
     my $finish_timestamp_cmd;
     my @finish_timestamp_cmds;
 
     if (@$job_records) {
         foreach my $job_record (@$job_records) {
-            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
+            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass, $basepath);
             push @finish_timestamp_cmds, $finish_timestamp_cmd;
         }
     }
-    
+
     my $job;
 
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
+        # $job->is_cluster(1);
+        # $job->run_cluster( "(" . $args->{cmd} . join( '', @finish_timestamp_cmds ) . ")" );
 
         if ( $args->{background_job} ) {
             $job->is_async(1);
 
             foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
-                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+                $job->run_async( "( ".$args->{cmd}.$finish_timestamp_cmd." )" );
             }
 
             $c->stash->{r_job_tempdir}  = $job->job_tempdir();
@@ -889,25 +897,18 @@ sub submit_job_cluster {
             foreach my $job_record (@$job_records) {
                 $job_record->backend_id($job->cluster_job_id());
                 $job_record->store();
-            
-                if ($job_record) {
-                    $job_record->backend_id($job->cluster_job_id());
-                    $job_record->store();
-                }
             }
         }
         else {
-
             if (@$job_records) {
                 foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
-                    $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+                    $job->run_async( "( ".$args->{cmd}. $finish_timestamp_cmd." )" );
                 }
             } else {
-                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+                $job->run_async( "( ".$args->{cmd}. $finish_timestamp_cmd." )" );
             }
-
-            print STDERR "Waiting for job to finish...\n";
-            $job->wait();
+            # print STDERR "Waiting for job to finish...\n";
+            # $job->wait();
         }
     };
 
@@ -1022,7 +1023,7 @@ sub submit_cluster_compare_trials_markers {
     my $out_temp_file = $c->stash->{out_file_temp};
     my $err_temp_file = $c->stash->{err_file_temp};
 
-    my $temp_dir       = $c->stash->{solgs_tempfiles_dir};
+    my $temp_dir       = $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
     my $background_job = $c->stash->{background_job};
 
     my $status;

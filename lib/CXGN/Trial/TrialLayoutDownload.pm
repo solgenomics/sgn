@@ -501,4 +501,37 @@ sub _add_exact_performance_to_line {
     return $line;
 }
 
+# returns a hash of accession_id => {variety => ... , synonyms => ... , ... }
+# more accessionprops can be added here in the future, but they need to be handled in each 
+# trial layout plugin
+sub _get_trial_accessionprops {
+    my $self = shift;
+    my $schema = $self->schema();
+    my %design = %{$self->design};
+    my @trial_design = values %design;
+    my @all_accession_ids = map {$_->{accession_id}} @trial_design;
+    my %accessionprops = ();
+
+    my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
+    my $variety_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'variety', 'stock_property')->cvterm_id();
+
+    my $q = "SELECT stock_id,
+    string_agg(value, ',' ORDER BY rank) FILTER (WHERE type_id = $variety_cvterm_id) AS variety_names,
+    string_agg(value, ',' ORDER BY rank) FILTER (WHERE type_id = $synonym_cvterm_id) AS synonyms
+    FROM stockprop
+    WHERE stock_id IN (".join(",",@all_accession_ids).")
+    AND type_id IN ($synonym_cvterm_id, $variety_cvterm_id)
+    GROUP BY stock_id";
+    my $h = $schema->storage->dbh->prepare($q);
+    $h->execute();
+    while (my ($accession_id, $variety_names, $synonyms) = $h->fetchrow_array) {
+        $accessionprops{$accession_id} = {
+            variety => $variety_names,
+            synonyms => $synonyms,
+        };
+    }
+
+    return \%accessionprops;
+}
+
 1;

@@ -243,6 +243,9 @@ my $coderef = sub {
         if ($trial_design->{'transplanting_date'}){
             $trial_info_hash{transplanting_date} = $trial_design->{'transplanting_date'};
         }
+        if ($trial_design->{'plot_name_template'}){
+            $trial_info_hash{plot_name_template} = $trial_design->{'plot_name_template'};
+        }
         my $trial_create = CXGN::Trial::TrialCreate->new(\%trial_info_hash);
         my $current_save = $trial_create->save_trial();
 

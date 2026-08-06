@@ -26,6 +26,12 @@ solGS.sIndex = {
         sIndexPops.push(trialSelPopsList);
       }
     }
+
+    if (solGS.listTypeSelectionPopulation) {
+      sIndexPops.push(
+        solGS.listTypeSelectionPopulation.getPredictedSelectionPops()
+      );
+    }
     
     var menu = new SelectMenu(this.siPopsDiv, this.siPopsSelectMenuId);
 
@@ -45,6 +51,7 @@ solGS.sIndex = {
     //   for (var i = 0; i < indexed.length; i++) {
         return  {
           id: indexedPop.sindex_id,
+          menu_id: "selection_index_" + indexedPop.sindex_name,
           name: indexedPop.sindex_name,
           pop_type: "selection_index",
         };

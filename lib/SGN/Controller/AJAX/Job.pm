@@ -84,8 +84,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             $job = CXGN::Job->new({
                 schema => $bcs_schema,
                 people_schema => $people_schema,
-                sp_job_id => $job_id,
-                finish_logfile => $c->config->{job_finish_log}
+                sp_job_id => $job_id
             });
         };
         if ($@) {
@@ -129,7 +128,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             $actions_html .= "<button id=\"cancel_job_$job_id\" onclick=\"jsMod['job'].cancel_job($job_id)\" class=\"btn btn-small btn-danger\">Cancel</button>";
             $results_page = "In progress";
         }
-        if ($status eq "finished") {
+        elsif ($status eq "finished") {
             $results_page = $job->results_page();
             if ($results_page) {
                 $results_page =~ s/http[s]*:\/\///;
@@ -138,6 +137,8 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
             } else {
                 $results_page = '';
             }
+        } else {
+            $results_page = '';
         }
         $create_timestamp = $job->create_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
         $finish_timestamp = $job->finish_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
@@ -190,8 +191,7 @@ sub delete :Path('/ajax/job/delete') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id,
-            finish_logfile => $c->config->{job_finish_log}
+            sp_job_id => $sp_job_id
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {
@@ -217,8 +217,7 @@ sub cancel :Path('/ajax/job/cancel') Args(1) {
     my $job = CXGN::Job->new({
             schema => $bcs_schema,
             people_schema => $people_schema,
-            sp_job_id => $sp_job_id,
-            finish_logfile => $c->config->{job_finish_log}
+            sp_job_id => $sp_job_id
     });
 
     if ($job->sp_person_id() ne $logged_user && $role ne "curator") {

@@ -36,10 +36,15 @@ use R::YapRI::Base;
 use R::YapRI::Data::Matrix;
 use POSIX;
 use List::Util 'max';
+use JSON;
 
 with 'MooseX::Object::Pluggable';
 
 has 'trial_name' => (isa => 'Str', is => 'rw', predicate => 'has_trial_name', clearer => 'clear_trial_name');
+
+has 'plot_name_template' => (isa => 'Str', is => 'rw', predicate => 'has_plot_name_template');
+
+has 'breeding_program_name' => (isa => 'Str', is => 'rw', predicate => 'has_breeding_program_name');
 
 has 'stock_list' => (isa => 'ArrayRef[Str]', is => 'rw', predicate => 'has_stock_list', clearer => 'clear_stock_list');
 
@@ -279,50 +284,89 @@ sub _build_plot_names {
     my $self = shift;
     my $design_ref = shift;
     my %design = %{$design_ref};
-    my $prefix = '';
-    my $suffix = '';
-    my $trial_name = $self->get_trial_name;
 
-    if ($self->has_plot_name_prefix()) {
-        $prefix = $self->get_plot_name_prefix()."-";
-    }
-    if ($self->has_plot_name_suffix()) {
-        $suffix = $self->get_plot_name_suffix();
-    }
+    if ($self->has_plot_name_template()) {
+        my $template_json   = decode_json($self->get_plot_name_template());
+        my ($format_name)   = keys %$template_json;
+        my $name_attributes = $template_json->{$format_name}->{'name_attributes'} || [];
+        my $trial_name = $self->get_trial_name() || '';
+        my $bp_name    = $self->has_breeding_program_name() ? $self->get_breeding_program_name() : '';
+        my %valid_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
 
-    foreach my $key (keys %design) {
-	$trial_name ||="";
-	my $block_number = $design{$key}->{block_number};
-	my $stock_name = $design{$key}->{stock_name};
-	my $rep_number = $design{$key}->{rep_number};
-	$design{$key}->{plot_number} = $key;
+        foreach my $key (sort { $a <=> $b } keys %design) {
+            $design{$key}->{plot_number} = $key;
+            my %source_info = (
+                breedingProgram => $bp_name,
+                trialName       => $trial_name,
+                accessionName   => $design{$key}->{stock_name}   || '',
+                plotNumber      => $key,
+                blockNumber     => $design{$key}->{block_number}  // '',
+                repNumber       => $design{$key}->{rep_number}    // '',
+                rangeNumber     => $design{$key}->{range_number}  // '',
+                rowNumber       => $design{$key}->{row_number}    // '',
+                colNumber       => $design{$key}->{col_number}    // '',
+            );
+            my @components = map {
+                ref $_ eq 'HASH' ? ($_->{'text'} // '') :
+                $valid_attrs{$_} ? ($source_info{$_} // '') : ''
+            } @$name_attributes;
+            $design{$key}->{plot_name} = join('_', @components);
 
-	if ($self->get_design_type() eq "RCBD") {  # as requested by IITA (Prasad)
-	    my $plot_num_per_block = $design{$key}->{plot_num_per_block};
-	    $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
-	    #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
-        $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
-	}
-	elsif ($self->get_design_type() eq "Augmented") {
-      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
-	    $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-block".$block_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
-	}
-    elsif ($self->get_design_type() eq "greenhouse") {
-        $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;
-    }
-	else {
-      my $plot_num_per_block = $design{$key}->{plot_num_per_block};
-      $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
-	    #$design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
-	}
-
-        if($design{$key}->{subplots_names}){
-            my $nums = $design{$key}->{subplots_names};
-            my @named_subplots;
-            foreach (@$nums){
-                push @named_subplots, $design{$key}->{plot_name}."_subplot_".$_;
+            if($design{$key}->{subplots_names}){
+                my $nums = $design{$key}->{subplots_names};
+                my @named_subplots;
+                foreach (@$nums){
+                    push @named_subplots, $design{$key}->{plot_name}."_subplot_".$_;
+                }
+                $design{$key}->{subplots_names} = \@named_subplots;
             }
-            $design{$key}->{subplots_names} = \@named_subplots;
+        }
+    } else {
+        my $prefix = '';
+        my $suffix = '';
+        my $trial_name = $self->get_trial_name;
+
+        if ($self->has_plot_name_prefix()) {
+            $prefix = $self->get_plot_name_prefix()."-";
+        }
+        if ($self->has_plot_name_suffix()) {
+            $suffix = $self->get_plot_name_suffix();
+        }
+
+        foreach my $key (keys %design) {
+            $trial_name ||="";
+            my $block_number = $design{$key}->{block_number};
+            my $stock_name = $design{$key}->{stock_name};
+            my $rep_number = $design{$key}->{rep_number};
+            $design{$key}->{plot_number} = $key;
+
+            if ($self->get_design_type() eq "RCBD") {  # as requested by IITA (Prasad)
+                my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+                $design{$key}->{plot_number} = $design{$key}->{plot_num_per_block};
+                #$design{$key}->{plot_name} = $prefix.$trial_name."_rep_".$rep_number."_".$stock_name."_".$block_number."_".$plot_num_per_block."".$suffix;
+                $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
+            }
+            elsif ($self->get_design_type() eq "Augmented") {
+            my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+                $design{$key}->{plot_name} = $prefix.$trial_name."-plotno".$key."-block".$block_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
+            }
+            elsif ($self->get_design_type() eq "greenhouse") {
+                $design{$key}->{plot_name} = $prefix.$trial_name."_".$stock_name."_".$key.$suffix;
+            }
+            else {
+            my $plot_num_per_block = $design{$key}->{plot_num_per_block};
+            $design{$key}->{plot_name} = $prefix.$trial_name."-rep".$rep_number."-".$stock_name."_".$plot_num_per_block."".$suffix;
+                #$design{$key}->{plot_name} = $prefix.$trial_name."_".$key.$suffix;
+            }
+
+            if($design{$key}->{subplots_names}){
+                my $nums = $design{$key}->{subplots_names};
+                my @named_subplots;
+                foreach (@$nums){
+                    push @named_subplots, $design{$key}->{plot_name}."_subplot_".$_;
+                }
+                $design{$key}->{subplots_names} = \@named_subplots;
+            }
         }
     }
 
