@@ -1504,7 +1504,6 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         name => "$clean_file_name multiple trial designs upload",
         results_page => '/breeders/trials',
         job_type => 'upload',
-        finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             final_upload => 1,
             file_type => "trials",

@@ -35,6 +35,7 @@ use Data::Dumper;
 use File::Slurp qw( write_file read_file );
 use File::Path qw( make_path );
 use JSON::Any;
+use Try::Tiny;
 use CXGN::Metadata::Schema;
 
 use strict;
@@ -275,7 +276,7 @@ sub store {
     my $self = shift;
     my $metadata_schema = $self->metadata_schema();
 
-    eval {
+    try {
         my $mdfile_rs = $metadata_schema->resultset("MdFiles")->find({file_id => $self->file_id()});
         $mdfile_rs->update({
             basename => $self->basename(),
@@ -288,10 +289,9 @@ sub store {
             urlsource => $self->urlsource(),
             urlsource_md5checksum => $self->urlsource_md5checksum()
         });
+    } catch {
+        die "An error occurred trying to update file information: $_\n";
     };
-    if ($@) {
-        die "An error occurred trying to update file information: $@\n";
-    }
 }
 
 =head2 set_file_type($type)
@@ -317,6 +317,34 @@ Get the full filepath and name for this file.
 sub get_path {
     my $self = shift;
     return $self->archive_path()."/".$self->dirname()."/".$self->basename();
+}
+
+=head2 delete_file()
+
+Deletes the file and associated metadata. Useful for some uploads (like images) 
+that don't need to be clogging the database after they have been parsed.
+
+=cut
+
+sub delete_file {
+    my $self = shift;
+    my $metadata_schema = $self->metadata_schema();
+    my $file_id = $self->file_id();
+
+    try {
+        my $mdfile_rs = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
+        if (!$mdfile_rs) {
+            die "No md_file row found with file ID $file_id!\n";
+        }
+        my $metadata_id = $mdfile_rs->metadata_id();
+        my $metadata_rs = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
+        if ($metadata_rs) {
+            $metadata_rs->delete();
+        }
+        $mdfile_rs->delete();
+    } catch {
+        die "Error deleting file: $_";
+    };
 }
 
 =head1 CLASS METHODS

@@ -29,7 +29,11 @@ use Moose;
 use File::Temp qw(tempdir);
 use File::Basename qw(basename);
 use JSON;
+use List::MoreUtils qw /any /;
+use Try::Tiny;
 use SGN::Model::Cvterm;
+use CXGN::File;
+use CXGN::Job;
 use Data::Dumper;
 
 BEGIN { extends 'Catalyst::Controller::REST' };
@@ -344,32 +348,141 @@ sub verify_exif : Path('/ajax/image/verify_exif') : Args(0) : ActionClass('REST'
 
 sub verify_exif_POST {
     my ($self, $c) = @_;
-    my $user_id = $c->user()->get_object->get_sp_person_id;
-    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
 
-    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
-    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+    # Check if user is logged in and has curator or submitter privileges
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You need to be logged in to upload images." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
+        $c->stash->{rest} = { error => "You have insufficient privileges to upload images." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $ignore_warnings = $c->req->param('ignore_warnings');
+
+    my @success_status;
+    my @warning_status;
+    my @error_status;
     my @results;
 
-    foreach my $upload (@uploads) {
-        my $filename = $upload->filename;
-        my $file_path = $upload->tempname;
- 
-        my $meta = CXGN::Image->extract_exif_info_class($file_path);
+    # Optional list of already archived image files. When given, the images are read from
+    # the archive instead of from the tempfiles of a multipart upload.
+    my $archived_file_id_param = $c->req->parameters->{'archived_file_ids'} || $c->req->parameters->{'archived_file_ids[]'} || $c->req->parameters->{'archived_file_id'};
+    my @archived_file_ids = ref($archived_file_id_param) eq 'ARRAY' ? @$archived_file_id_param : defined($archived_file_id_param) ? ($archived_file_id_param) : ();
+
+    # Every image to check, as { filename => ..., file_path => ... }
+    my @images_to_verify;
+
+    if (scalar(@archived_file_ids) > 0) {
+        foreach my $archived_file_id (@archived_file_ids) {
+            try {
+                my $archived_file = CXGN::File->new({
+                    file_id => $archived_file_id,
+                    metadata_schema => $metadata_schema,
+                    archive_path => $c->config->{archive_path}
+                });
+                push @images_to_verify, {
+                    filename => $archived_file->filename() || $archived_file->basename(),
+                    file_path => $archived_file->get_path()
+                };
+            } catch {
+                push @error_status, "Could not retrieve archived file with id $archived_file_id: $_";
+            };
+        }
+    } else {
+        my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+        my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+        foreach my $upload (@uploads) {
+            next if !$upload;
+            push @images_to_verify, {
+                filename => $upload->filename,
+                file_path => $upload->tempname
+            };
+        }
+    }
+
+    if (scalar(@images_to_verify) == 0) {
+        push @error_status, "No images were given to verify.";
+        $c->stash->{rest} = { images => \@results, success => \@success_status, warning => \@warning_status, error => \@error_status };
+        return;
+    }
+
+    my $job_name = scalar(@images_to_verify) == 1 ? $images_to_verify[0]->{filename}." image EXIF validation" : scalar(@images_to_verify)." images EXIF validation";
+
+    my $validation_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => $job_name,
+        job_type => 'upload',
+        additional_args => {
+            is_validation => 1,
+            file_type => 'images',
+            ignore_warnings => $ignore_warnings,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_ids[0],
+            file_ids => \@archived_file_ids
+        }
+    });
+
+    $validation_job->update_status("submitted");
+
+    my $exif_files = 0;
+    my $non_exif_files = 0;
+
+    foreach my $image (@images_to_verify) {
+        my $filename = $image->{filename};
+        my $file_path = $image->{file_path};
+        my @file_errors;
+
+        my $meta;
+        try {
+            $meta = CXGN::Image->extract_exif_info_class($file_path);
+        } catch {
+            push @file_errors, "$filename: could not read EXIF metadata. $_";
+        };
+
+        my $decoded_json;
         if ($meta) {
-            my $decoded_json = decode_json($meta);
-            my $id_type = $decoded_json->{study}->{study_unique_id_name};
-            my $stock_name;
-            my $stock_exists;
+            try {
+                $decoded_json = decode_json($meta);
+            } catch {
+                push @file_errors, "$filename: EXIF metadata is not valid JSON.";
+            };
+        }
+
+        if (!$decoded_json) {
+            $non_exif_files++;
+            push @file_errors, "$filename does not have EXIF data." if !scalar(@file_errors);
+            push @error_status, @file_errors;
+            push @results, { filename => $filename, exif => undef, status => "no_exif" };
+            next;
+        }
+        $exif_files++;
+
+        my $stock_name;
+        my $stock_exists;
+        my $cvterm_id;
+        my $lookup_error;
+
+        try {
+            my $id_type = $decoded_json->{study}->{study_unique_id_name} || '';
             my $stock_name_found;
 
             if ($id_type ne 'ObservationUnitDbId' && $id_type ne 'plot_id') {
-                # Replace observation unit name with id if there is only is stock name 
+                # Replace observation unit name with id if there is only is stock name
                 $stock_name = $decoded_json->{observation_unit}->{observation_unit_db_id};
                 $stock_name_found = $schema->resultset('Stock::Stock')->find({ uniquename => $stock_name});
                 if ($stock_name_found) {
-                    my $obs_unit_id = $schema->resultset("Stock::Stock")->find({ uniquename => $stock_name })->stock_id();
+                    my $obs_unit_id = $stock_name_found->stock_id();
                     $decoded_json->{observation_unit}->{observation_unit_db_id} = "$obs_unit_id";
+                    $stock_exists = "true";
                 } else {
                     $stock_exists = "false";
                 }
@@ -387,19 +500,74 @@ sub verify_exif_POST {
             }
             # Get cvterm_id of recorded trait
             my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
-            my $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+            $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+        } catch {
+            $lookup_error = $_;
+        };
 
-            $decoded_json->{stock_name} = $stock_name;
-            if ($cvterm_id) {
-                $decoded_json->{cvterm_id} = $cvterm_id;
-            }
-            push @results, { filename => $filename, exif => $decoded_json, status => "success", stock_exists => $stock_exists };
-            
-        } else {
+        if ($lookup_error) {
+            push @file_errors, "$filename: error verifying EXIF metadata. $lookup_error";
+            push @error_status, @file_errors;
             push @results, { filename => $filename, exif => undef, status => "no_exif" };
+            next;
         }
+
+        $decoded_json->{stock_name} = $stock_name;
+        if ($cvterm_id) {
+            $decoded_json->{cvterm_id} = $cvterm_id;
+        }
+
+        my $observation_unit_db_id = $decoded_json->{observation_unit}->{observation_unit_db_id} || '';
+        my $observation_variable_name = $decoded_json->{observation_variable}->{observation_variable_name} || '';
+
+        if (!$observation_unit_db_id) {
+            push @file_errors, "$filename: missing ObservationUnitDbId.";
+        }
+        if (!$observation_variable_name) {
+            push @file_errors, "$filename: missing observation variable name.";
+        }
+        if (!$decoded_json->{timestamp}) {
+            push @file_errors, "$filename: missing timestamp.";
+        }
+        if (!$cvterm_id) {
+            push @file_errors, "$filename: associated trait $observation_variable_name does not exist in the database.";
+        }
+        if ($stock_exists eq "false") {
+            push @file_errors, "$filename: ObservationUnitDbId $observation_unit_db_id does not exist in the database.";
+        } elsif (!$stock_name) {
+            push @file_errors, "$filename: could not determine the stock name of ObservationUnitDbId $observation_unit_db_id.";
+        }
+
+        if (scalar(@file_errors) > 0) {
+            push @error_status, @file_errors;
+        } else {
+            push @success_status, "$filename has valid EXIF data. Associated stock: $stock_name. Associated trait: $observation_variable_name.";
+        }
+
+        push @results, { filename => $filename, exif => $decoded_json, status => "success", stock_exists => $stock_exists };
     }
-    $c->stash->{rest} = { images => \@results };
+
+    if ($exif_files > 0 && $non_exif_files > 0) {
+        push @error_status, "Please upload files that all contain EXIF data, or that all follow the same file naming pattern.";
+    }
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $validation_job->additional_args->{warning_messages} = join("<br>", @warning_status);
+    }
+    if (scalar(@error_status) > 0) {
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+    }
+    if (scalar(@success_status) > 0) {
+        $validation_job->additional_args->{success_messages} = join("<br>", @success_status);
+    }
+
+    if (!$validation_job->additional_args->{error_messages} && !$validation_job->additional_args->{warning_messages}) {
+        $validation_job->update_status("finished");
+    } else {
+        $validation_job->update_status("failed");
+    }
+
+    $c->stash->{rest} = { images => \@results, success => \@success_status, warning => \@warning_status, error => \@error_status };
 }
 
  sub image_metadata_store {
