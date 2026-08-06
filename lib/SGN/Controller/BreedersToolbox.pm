@@ -490,7 +490,7 @@ sub manage_upload :Path("/breeders/upload") Args(0) {
         "<option value='nirs'>NIRS</option>".
         "<option value='metabolomics'>Metabolomics</option>".
         "<option value='transcriptomics'>Transcriptomics</option>".
-        #"<option value='images'>Images</option>".
+        "<option value='images'>Images</option>".
         #"<option value='soil_data'>Soil Data</option>".
         "<option value='vectors'>Vectors</option>".
         "<option value='subplots'>Subplots</option>".

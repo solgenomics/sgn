@@ -1503,7 +1503,6 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         cmd => $cmd,
         name => "$clean_file_name multiple trial designs upload",
         results_page => '/breeders/trials',
-<<<<<<< HEAD
         job_type => 'upload',
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
@@ -1512,9 +1511,6 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_id
         }
-=======
-        job_type => 'upload'
->>>>>>> master
     });
     if ( ($email_option_enabled && $email_address)) {
         #$runner->run_async($cmd);
