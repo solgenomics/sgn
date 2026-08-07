@@ -742,9 +742,22 @@ sub get_user_submitted_jobs {
     
     my $rs;
     if ($user_role eq 'curator') {
-        $rs = $people_schema->resultset("SpJob")->search();
+        $rs = $people_schema->resultset("SpJob")->search(
+            {},
+            {
+                join     => 'sp_person',
+                order_by => [
+                    { -asc  => 'sp_person.first_name' },
+                    { -asc  => 'sp_person.last_name' },
+                    { -desc => 'me.create_timestamp' },
+                ],
+            },
+        );
     } else {
-        $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+        $rs = $people_schema->resultset("SpJob")->search(
+            { 'me.sp_person_id' => $sp_person_id },
+            { order_by => { -desc => 'me.create_timestamp' } },
+        );
     }
 
     while (my $row = $rs->next()){
