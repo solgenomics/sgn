@@ -71,8 +71,10 @@ my $upload_response = $ua->post(
         "upload_genotype_add_new_accessions"=>1,
     ]
 );
+sleep(20);
 ok($upload_response->is_success, 'initial VCF upload request succeeded at the HTTP level');
 my $message_hash = decode_json $upload_response->decoded_content;
+print STDERR "post response message_hash\n";
 diag(Dumper($message_hash));
 is($message_hash->{success}, 1, 'initial upload stored successfully') or diag(Dumper($message_hash));
 my $protocol_id = $message_hash->{nd_protocol_id};
@@ -128,6 +130,7 @@ $upload_response = $ua->post(
         "upload_genotype_add_new_accessions"=>0,
     ]
 );
+sleep(20);
 ok($upload_response->is_success, 'mismatched-marker upload request succeeded at the HTTP level');
 $message_hash = decode_json $upload_response->decoded_content;
 ok(!$message_hash->{success}, 'upload with a mismatched marker and no accept_warnings is not stored') or diag(Dumper($message_hash));
@@ -167,12 +170,13 @@ $upload_response = $ua->post(
         "upload_genotype_accept_warnings"=>1,
     ]
 );
+sleep(20);
+print STDERR "finished upload for protocol $protocol_id\n";
 ok($upload_response->is_success, 'accepted-warnings upload request succeeded at the HTTP level');
 $message_hash = decode_json $upload_response->decoded_content;
+print STDERR "message_hash\n";
 diag(Dumper($message_hash));
-is($message_hash->{success}, 1, 'initial upload stored successfully')
-    or BAIL_OUT("Initial upload failed: " . Dumper($message_hash));
-#is($message_hash->{success}, 1, 'upload succeeds once warnings are accepted') or diag(Dumper($message_hash));
+is($message_hash->{success}, 1, 'upload succeeds once warnings are accepted') or diag(Dumper($message_hash));
 diag(Dumper($protocol_id));
 ok($message_hash->{project_id}, 'got a project_id for the accepted-warnings upload');
 
