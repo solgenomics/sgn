@@ -256,14 +256,14 @@ sub query_from_cookie {
     my $cookie_string = shift;
 
     my $sth = $self->get_sql("user_from_cookie");
-    return undef unless $sth;
+    return unless $sth;
     if ( !$sth->execute( $LOGIN_TIMEOUT, $cookie_string ) ) {
         print STDERR "Cookie Query Error: " . $DBH->errstr;
-        return undef;
+        return;
     }
     my @result = $sth->fetchrow_array();
 
-    return undef unless scalar(@result);
+    return unless scalar(@result);
 
     #if TWO rows are found with the SAME cookie_string, scream!
     if ( scalar(@result) && $sth->fetchrow_array() ) {
