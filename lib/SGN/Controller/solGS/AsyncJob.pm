@@ -470,8 +470,9 @@ sub run_async {
     my $background_job    = $c->stash->{background_job};
     my $dependent_jobs    = $c->stash->{dependent_jobs};
 
-    $self->add_job_record_args_to_dependent_jobs($c, $dependent_jobs)
-      if $c->stash->{analysis_profile};
+    if ($c->stash->{analysis_profile}) {
+        $self->add_job_record_args_to_dependent_jobs($c, $dependent_jobs);
+    }
 
     my $temp_dir =
       $c->stash->{analysis_tempfiles_dir} || $c->controller('solGS::Files')->solgs_tempfiles_dir($c);
@@ -873,6 +874,7 @@ sub add_job_record_args_to_dependent_jobs {
             finish_logfile        => $c->config->{job_finish_log},
             additional_args       => $analysis_args,
         }];
+        
         $dependent_job->{dbhost} = $c->config->{dbhost};
         $dependent_job->{dbname} = $c->config->{dbname};
         $dependent_job->{dbuser} = $c->config->{dbuser};
