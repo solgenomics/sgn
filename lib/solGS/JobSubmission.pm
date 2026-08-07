@@ -4,9 +4,13 @@ use Moose;
 use namespace::autoclean;
 
 use CXGN::Tools::Run;
+
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
 use solGS::queryJobs;
+use Bio::Chado::Schema;
+use CXGN::People::Schema;
+use CXGN::Job;
 
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
@@ -33,6 +37,7 @@ has "config_file" => (
 );
 
 
+
 sub run {
     my $self = shift;
     my $secs = 30; #60 * 4;
@@ -47,9 +52,77 @@ sub run {
     print STDERR
 "\nCompleted dependent jobs. After waiting $secs sec...Now checking results and emailing the results...\n";
 
-    $self->send_analysis_report();
-    print STDERR "\nGot done checking results and emailing the results...\n";
 
+    print STDERR "\nSubmitting the analysis report job...\n";
+    $self->send_analysis_report();
+    print STDERR "\nGot done submitting the analysis report job...\n";
+}
+
+sub connect_job_schemas {
+    my ($self, $args) = @_;
+
+    my $dsn =
+        'dbi:Pg:database=' . $args->{dbname}
+      . ';host=' . $args->{dbhost}
+      . ';port=' . ($args->{dbport} || 5432);
+
+    my $schema = Bio::Chado::Schema->connect(
+        $dsn,
+        $args->{dbuser},
+        $args->{dbpass},
+    );
+
+    my $people_schema = CXGN::People::Schema->connect(
+        $dsn,
+        $args->{dbuser},
+        $args->{dbpass},
+        {
+            on_connect_do => [
+                'SET search_path TO sgn_people, public, sgn'
+            ]
+        },
+    );
+
+    return ($schema, $people_schema);
+}
+
+
+sub record_job_submission {
+    my ($self, $args) = @_;
+
+    if (!$args->{analysis_name}) {
+        return [] ;
+    }
+
+    my $jobs_record_args = $args->{job_record_args} || [];
+    if (!@$jobs_record_args) {
+        return [];
+    }
+
+    my ($schema, $people_schema) = $self->connect_job_schemas($args);
+
+    my @job_records;
+
+    foreach my $job_record_args (@$jobs_record_args) {
+        my $additional_args = $job_record_args->{additional_args} || {};
+        my $job_type = $job_record_args->{job_type} || $additional_args->{analysis_type};
+
+        if (!$job_type) {
+            die "Cannot record a job without an analysis type.\n";
+        }
+
+        my $job_record = CXGN::Job->new({
+            %$job_record_args,
+            schema        => $schema,
+            people_schema => $people_schema,
+            job_type      => $job_type,
+        });
+
+        $job_record->update_status('submitted');
+        push @job_records, $job_record;
+    }
+
+    return \@job_records;
 }
 
 sub run_prerequisite_jobs {
@@ -145,6 +218,7 @@ sub send_analysis_report {
     my $self = shift;
 
     my $report_file = $self->analysis_report_job;
+
     unless ( $report_file =~ /none/ ) {
         my $report_job = retrieve($report_file);
         my $job        = $self->submit_job($report_job);
@@ -157,27 +231,53 @@ sub submit_job {
     my ( $self, $args ) = @_;
 
     my $job;
-    ###my $config = $self->config_file;
-    ###$config = retrieve($config);
+    my $job_records = [];
 
     print STDERR "submitting job... $args->{cmd}\n";
 
     eval {
+        $job_records = $self->record_job_submission($args);
+        
+        my @finish_timestamp_cmds;
+        foreach my $job_record (@$job_records) {
+            my $finish_cmd = $job_record->generate_finish_timestamp_cmd();
+            $finish_cmd =~ s/^\s*;//;
+            push @finish_timestamp_cmds, $finish_cmd;
+        }
+
+        my $analysis_job_cmd = $args->{cmd};
+        if (@finish_timestamp_cmds) {
+            $analysis_job_cmd .= ";\n" . join "\n", @finish_timestamp_cmds;
+        }
+
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
 
         $job->is_cluster(1);
-        $job->run_cluster( $args->{cmd} );
+        $job->run_cluster( '(' . $analysis_job_cmd . ')' );
+
+        foreach my $job_record (@$job_records) {
+            $job_record->backend_id($job->cluster_job_id());
+            $job_record->store();
+        }
 
         if ( !$args->{background_job} ) {
             print STDERR "\n WAITING job to finish\n";
             $job->wait();
             print STDERR "\n job COMPLETED\n";
+
+            foreach my $job_record (@$job_records) {
+                $job_record->update_status('finished');
+            }
         }
     };
 
     if ($@) {
-        print STDERR "An error occurred submitting job $args->{cmd} \n$@\n";
+        my $error = $@;
+        foreach my $job_record (@$job_records) {
+            $job_record->update_status('failed') if $job_record;
+        }
+        die "An error occurred running job $args->{cmd}\n$error";
     }
 
     return $job;
