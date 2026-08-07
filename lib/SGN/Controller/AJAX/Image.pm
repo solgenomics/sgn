@@ -296,30 +296,123 @@ sub scan_barcode : Path('/ajax/image/scan_barcode') : Args(0) : ActionClass('RES
 
 sub scan_barcode_POST {
     my ($self, $c) = @_;
+
+    # Check if user is logged in and has curator or submitter privileges
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You need to be logged in to upload images." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
+        $c->stash->{rest} = { error => "You have insufficient privileges to upload images." };
+        return;
+    }
+
     my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
     my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $user_id);
+    my $ignore_warnings = $c->req->param('ignore_warnings');
 
-    my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
-    my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+    my @success_status;
+    my @warning_status;
+    my @error_status;
     my @results;
-    my $stock_exists;
-    my $valid_barcode;
-    my $multiple_codes;
 
-    foreach my $upload (@uploads) {
-        my $filename = $upload->filename;
-        my $file_path = $upload->tempname;
-        my @barcode_data = CXGN::Image->read_barcode($file_path);
+    # Optional list of already archived image files. When given, the images are read from
+    # the archive instead of from the tempfiles of a multipart upload.
+    my $archived_file_id_param = $c->req->parameters->{'archived_file_ids'} || $c->req->parameters->{'archived_file_ids[]'} || $c->req->parameters->{'archived_file_id'};
+    my @archived_file_ids = ref($archived_file_id_param) eq 'ARRAY' ? @$archived_file_id_param : defined($archived_file_id_param) ? ($archived_file_id_param) : ();
 
-        if (@barcode_data > 1) {
-            $multiple_codes = "true";
-        } elsif (@barcode_data == 1) {
-            $multiple_codes = "false";
-        } else {
-            $valid_barcode = "false"
+    # Every image to scan, as { filename => ..., file_path => ... }
+    my @images_to_scan;
+
+    if (scalar(@archived_file_ids) > 0) {
+        foreach my $archived_file_id (@archived_file_ids) {
+            try {
+                my $archived_file = CXGN::File->new({
+                    file_id => $archived_file_id,
+                    metadata_schema => $metadata_schema,
+                    archive_path => $c->config->{archive_path}
+                });
+                push @images_to_scan, {
+                    filename => $archived_file->filename() || $archived_file->basename(),
+                    file_path => $archived_file->get_path()
+                };
+            } catch {
+                push @error_status, "Could not retrieve archived file with id $archived_file_id: $_";
+            };
+        }
+    } else {
+        my $upload_param = $c->req->uploads->{"images"} || $c->req->uploads->{"images[]"};
+        my @uploads = ref($upload_param) eq 'ARRAY' ? @$upload_param : ($upload_param);
+        foreach my $upload (@uploads) {
+            next if !$upload;
+            push @images_to_scan, {
+                filename => $upload->filename,
+                file_path => $upload->tempname
+            };
+        }
+    }
+
+    if (scalar(@images_to_scan) == 0) {
+        push @error_status, "No images were given to scan.";
+        $c->stash->{rest} = { images => \@results, success => \@success_status, warning => \@warning_status, error => \@error_status };
+        return;
+    }
+
+    my $job_name = scalar(@images_to_scan) == 1 ? $images_to_scan[0]->{filename}." image barcode validation" : scalar(@images_to_scan)." images barcode validation";
+
+    my $validation_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => $job_name,
+        job_type => 'upload',
+        additional_args => {
+            is_validation => 1,
+            file_type => 'images',
+            ignore_warnings => $ignore_warnings,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_ids[0],
+            file_ids => \@archived_file_ids
+        }
+    });
+
+    $validation_job->update_status("submitted");
+
+    foreach my $image (@images_to_scan) {
+        my $filename = $image->{filename};
+        my $file_path = $image->{file_path};
+        my @file_errors;
+
+        my $stock_exists;
+        my $valid_barcode;
+        my $multiple_codes;
+
+        my @barcode_data;
+        my $read_error;
+        try {
+            @barcode_data = CXGN::Image->read_barcode($file_path);
+        } catch {
+            $read_error = $_;
+        };
+
+        if ($read_error) {
+            push @file_errors, "$filename: could not scan the image for barcodes. $read_error";
+            push @error_status, @file_errors;
+            push @results, { filename => $filename, stock_id => undef, stock_exists => undef, valid_barcode => "false", timestamp => undef, multiple_codes => undef };
+            next;
         }
 
-        my $stock_id = $barcode_data[0]->{data};
+        if (scalar(@barcode_data) > 1) {
+            $multiple_codes = "true";
+            push @file_errors, "Multiple barcodes found in $filename. Please make sure each image only contains one barcode.";
+        } elsif (scalar(@barcode_data) == 1) {
+            $multiple_codes = "false";
+        }
+
+        my $stock_id = scalar(@barcode_data) ? $barcode_data[0]->{data} : undef;
 
         if ($stock_id) {
             $valid_barcode = "true";
@@ -329,19 +422,49 @@ sub scan_barcode_POST {
                 $stock_exists = "true";
             } else {
                 $stock_exists = "false";
+                push @file_errors, "Stock ID $stock_id found in $filename does not exist in the database.";
             }
         } else {
-            $valid_barcode = "false"
+            $valid_barcode = "false";
+            push @file_errors, "Barcode not found for $filename.";
         }
 
-        my $exif = CXGN::Image->extract_exif_info($file_path);
         my $create_date;
-        if ($exif) {
-            $create_date = $exif->{"CreateDate"};
+        try {
+            my $exif = CXGN::Image->extract_exif_info($file_path);
+            if ($exif) {
+                $create_date = $exif->{"CreateDate"};
+            }
+        } catch {
+            push @file_errors, "$filename: could not read EXIF metadata. $_";
+        };
+
+        if (scalar(@file_errors) > 0) {
+            push @error_status, @file_errors;
+        } else {
+            push @success_status, "$filename barcode scanned successfully. Associated stock ID: $stock_id.";
         }
+
         push @results, { filename => $filename, stock_id => $stock_id, stock_exists => $stock_exists, valid_barcode => $valid_barcode, timestamp => $create_date, multiple_codes => $multiple_codes };
     }
-    $c->stash->{rest} = { images => \@results };
+
+    if (scalar(@warning_status) > 0 && !$ignore_warnings) {
+        $validation_job->additional_args->{warning_messages} = join("<br>", @warning_status);
+    }
+    if (scalar(@error_status) > 0) {
+        $validation_job->additional_args->{error_messages} = join("<br>", @error_status);
+    }
+    if (scalar(@success_status) > 0) {
+        $validation_job->additional_args->{success_messages} = join("<br>", @success_status);
+    }
+
+    if (!$validation_job->additional_args->{error_messages} && !$validation_job->additional_args->{warning_messages}) {
+        $validation_job->update_status("finished");
+    } else {
+        $validation_job->update_status("failed");
+    }
+
+    $c->stash->{rest} = { images => \@results, success => \@success_status, warning => \@warning_status, error => \@error_status };
 }
 
 sub verify_exif : Path('/ajax/image/verify_exif') : Args(0) : ActionClass('REST') { }

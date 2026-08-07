@@ -663,7 +663,7 @@ export function process_file(file_data, upload_type, config) {
             display_images_upload_choices();
             let images_select = jQuery('#upload_images_select_more');
             archived_files_list.forEach(item => {
-                if (item.filename.includes(".png") || item.filename.includes(".jpg") || item.filename.includes(".jpeg") || item.filename.includes(".webp") || item.filename.includes(".tif") || item.filename.includes(".tiff")) {
+                if ((item.filename.includes(".png") || item.filename.includes(".jpg") || item.filename.includes(".jpeg") || item.filename.includes(".webp") || item.filename.includes(".tif") || item.filename.includes(".tiff")) && !file_data.file_name.endsWith(item.filename)) {
                     const opt = jQuery('<option></option>').val(item.file_id).text(item.filename);
                     images_select.append(opt);
                 }
@@ -1497,7 +1497,7 @@ function display_images_upload_choices() {
             '<label class="col-sm-6 control-label">Select additional images: </label>'+
             '<div class="col-sm-6" >'+
                 '<select class="form-control" id="upload_images_select_more" name="upload_images_select_more" multiple>'+
-                    '<option value>Select...</option>'+
+                    //'<option value>Select...</option>'+
                 '</select>'+
            ' </div>'+
         '</div>'+
@@ -1975,15 +1975,15 @@ function populate_treatment_spreadsheet_validate_submit_data(event) {
 
 function populate_fieldbook_validate_submit_data(event) {
     let file_data = event.data.file_data;
-    let images_zipfile_select = jQuery('#upload_fieldbook_images_select option:selected');
-    let images_zipfile_id = images_zipfile_select.val();
-    let images_zipfile_name = images_zipfile_select.text();
+    let image_zipfile_select = jQuery('#upload_fieldbook_images_select option:selected');
+    let image_zipfile_id = image_zipfile_select.val();
+    let image_zipfile_name = image_zipfile_select.text();
     let data_level = jQuery('#upload_fieldbook_data_level').val();
 
-    if (images_zipfile_id) {
+    if (image_zipfile_id) {
         populate_validate_submit_data('fieldbook_phenotypes', file_data, {
-            images_zipfile_id : images_zipfile_id,
-            images_zipfile : images_zipfile_name,
+            image_zipfile_id : image_zipfile_id,
+            image_zipfile : image_zipfile_name,
             data_level : data_level
         });
     } else {
@@ -2249,8 +2249,11 @@ export function submit_upload_job() {
                     'ignore_warnings' : ignore_warnings
                 },
                 success: function(response) {
-                    if (response.error) {
-                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -2782,12 +2785,16 @@ export function submit_upload_job() {
                 type : 'POST',
                 data : {
                     'upload_fieldbook_phenotype_data_level' : submit_params.additional_args.data_level,
-                    'archived_image_zipfile_id' : submit_params.additional_args.images_zipfile_id,
+                    'archived_image_zipfile_id' : submit_params.additional_args.image_zipfile_id,
                     'archived_file_id' : submit_params.file_id,
                     'ignore_warnings' : ignore_warnings
                 },
                 success: function(response) {
-                    if (response.error) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -2808,7 +2815,11 @@ export function submit_upload_job() {
                     'ignore_warnings' : ignore_warnings
                 },
                 success: function(response) {
-                    if (response.error) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -2884,12 +2895,110 @@ export function submit_upload_job() {
                 }
             });
             break;
-        case 'images' :
+        case 'images' : {
+            let exif_file_ids = [submit_params.file_id];
+            if (submit_params.additional_args && submit_params.additional_args.additional_files) {
+                submit_params.additional_args.additional_files.forEach(item => {
+                    if (item.id) {
+                        exif_file_ids.push(item.id);
+                    }
+                });
+            }
+            jQuery.ajax({
+                url : '/ajax/image/verify_exif',
+                type : 'POST',
+                traditional : true,
+                data : {
+                    'archived_file_ids' : exif_file_ids,
+                    'ignore_warnings' : ignore_warnings
+                },
+                success : function(response) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred submitting image EXIF validation, check console.");
+                    return;
+                }
+            });
             break;
-        case 'images_barcodes' :
+        }
+        case 'images_barcodes' : {
+            let barcode_file_ids = [submit_params.file_id];
+            if (submit_params.additional_args && submit_params.additional_args.additional_files) {
+                submit_params.additional_args.additional_files.forEach(item => {
+                    if (item.id) {
+                        barcode_file_ids.push(item.id);
+                    }
+                });
+            }
+            jQuery.ajax({
+                url : '/ajax/image/scan_barcode',
+                type : 'POST',
+                traditional : true,
+                data : {
+                    'archived_file_ids' : barcode_file_ids,
+                    'ignore_warnings' : ignore_warnings
+                },
+                success : function(response) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred submitting image barcode validation, check console.");
+                    return;
+                }
+            });
             break;
-        case 'images_phenotypes' :
+        }
+        case 'images_phenotypes' : {
+            // The uploaded file is the image zipfile; the phenotyping spreadsheet it goes with was
+            // picked from the archive and came through as the first additional file.
+            let additional_files = submit_params.additional_args ? submit_params.additional_args.additional_files : undefined;
+            let pheno_spreadsheet_id = additional_files && additional_files.length > 0 ? additional_files[0].id : undefined;
+            if (!pheno_spreadsheet_id) {
+                jQuery('#working_modal').modal("hide");
+                alert("Select the phenotyping spreadsheet that goes with this image zipfile.");
+                return;
+            }
+            jQuery.ajax({
+                url : '/ajax/phenotype/upload_verify/spreadsheet',
+                type : 'POST',
+                data : {
+                    'upload_spreadsheet_phenotype_file_format' : 'associated_images',
+                    'archived_file_id' : pheno_spreadsheet_id,
+                    'archived_image_zipfile_id' : submit_params.file_id,
+                    'ignore_warnings' : ignore_warnings
+                },
+                success : function(response) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error : function() {
+                    alert("An error occurred submitting associated images validation, check console.");
+                    return;
+                }
+            });
             break;
+        }
         case 'soil_data' :
             break;
         case 'vectors' :
@@ -2906,8 +3015,11 @@ export function submit_upload_job() {
                     'ignore_warnings' : ignore_warnings
                 },
                 success: function(response) {
-                    if (response.error) {
-                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -2949,13 +3061,17 @@ export function commit_upload_job(job_id) {
                     'upload_spreadsheet_phenotype_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
                     'upload_spreadsheet_phenotype_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
                     'archived_file_id' : job.args.additional_args.file_id,
+                    'archived_image_zipfile_id' : job.args.additional_args.image_zipfile_id,
                     'ignore_warnings' : job.args.additional_args.ignore_warnings,
                     'phenotype_upload_overwrite_values' : job.args.additional_args.overwrite_values,
                     'phenotype_upload_remove_values' : job.args.additional_args.remove_values
                 },
                 success: function(response) {
-                    if (response.error) {
-                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -2978,8 +3094,11 @@ export function commit_upload_job(job_id) {
                     'ignore_warnings' : job.args.additional_args.ignore_warnings
                 },
                 success: function(response) {
-                    if (response.error) {
-                        //alert(`An error occurred: ${response.error}`); //This always errors for some reason, even if nothing bad happened.
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -3000,7 +3119,11 @@ export function commit_upload_job(job_id) {
                     'ignore_warnings' : job.args.additional_args.ignore_warnings
                 },
                 success: function(response) {
-                    if (response.error) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();
@@ -3017,12 +3140,16 @@ export function commit_upload_job(job_id) {
                 type : 'POST',
                 data : {
                     'upload_fieldbook_phenotype_data_level' : job.args.additional_args.upload_fieldbook_phenotype_data_level,
-                    'archived_image_zipfile_id' : job.args.additional_args.images_zipfile_id,
+                    'archived_image_zipfile_id' : job.args.additional_args.image_zipfile_id,
                     'archived_file_id' : job.args.additional_args.file_id,
                     'ignore_warnings' : job.args.additional_args.ignore_warnings
                 },
                 success: function(response) {
-                    if (response.error) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
                         console.log(response.error);
                     }
                     refresh_upload_tables();

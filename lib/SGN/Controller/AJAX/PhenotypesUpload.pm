@@ -104,15 +104,15 @@ sub upload_phenotype_verify_POST : Args(1) {
     my $validation_type;
     if ($file_type eq "spreadsheet" && ! $is_treatment) {
         $validation_type = "phenotyping_spreadsheet";
-    } elsif ($file_type eq "spreadsheet" && $is_treatment eq "treatment") {
+    } elsif ($file_type eq "spreadsheet" && $is_treatment && $is_treatment eq "treatment") {
         $validation_type = "treatments";
     } elsif ($file_type eq "datacollector") {
-        $validation_type = "datacollector_spreadsheet"
+        $validation_type = "datacollector_spreadsheet";
     } elsif ($file_type eq "fieldbook") {
-        $validation_type eq "fieldbook_phenotypes";
+        $validation_type = "fieldbook_phenotypes";
     }
     $validation_job->additional_args->{file_type} = $validation_type;
-    if ($is_treatment eq "treatment") {
+    if ($is_treatment && $is_treatment eq "treatment") {
         $validation_job->additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
         $validation_job->additional_args->{upload_spreadsheet_treatment_data_level} = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
         $validation_job->additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
@@ -165,6 +165,11 @@ sub upload_phenotype_verify_POST : Args(1) {
 
     if ($verified_error) {
         push @$error_status, $verified_error;
+        $validation_job->additional_args->{error_messages} = join("<br>", @$error_status);
+        if (scalar(@$success_status) > 0) {
+            $validation_job->additional_args->{success_messages} = join("<br>", @$success_status);
+        }
+        $validation_job->update_status("failed");
         $c->stash->{rest} = {success => $success_status, error => $error_status };
         return;
     }
