@@ -137,6 +137,7 @@ sub retrieve_jobs_by_user :Path('/ajax/job/jobs_by_user') Args(1) {
                 $results_page = '';
             }
         }
+        no warnings 'uninitialized';
         $create_timestamp = $job->create_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
         $finish_timestamp = $job->finish_timestamp() =~ s/(:\d{2}\+\d{2})$//r;
         if ($role eq "curator") {

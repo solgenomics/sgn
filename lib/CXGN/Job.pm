@@ -387,6 +387,7 @@ sub read_finish_timestamp {
     my @finish_row = grep {/$db_id\s+/} @rows;
     my $finish_row = pop(@finish_row);
 
+    no warnings 'uninitialized';
     $finish_row =~ m/$db_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+.*)/;
 
     if ($+{FINISH_TIMESTAMP}) {
