@@ -103,7 +103,10 @@ sub upload_phenotype_verify_POST : Args(1) {
 
     my $validation_type;
     if ($file_type eq "spreadsheet" && ! $is_treatment) {
-        $validation_type = "phenotyping_spreadsheet";
+        # An associated images spreadsheet is uploaded together with an image zipfile, so it gets
+        # its own type to keep it distinguishable from a plain phenotyping spreadsheet.
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format') || '';
+        $validation_type = $spreadsheet_format eq 'associated_images' ? "images_phenotypes" : "phenotyping_spreadsheet";
     } elsif ($file_type eq "spreadsheet" && $is_treatment && $is_treatment eq "treatment") {
         $validation_type = "treatments";
     } elsif ($file_type eq "datacollector") {
@@ -116,7 +119,7 @@ sub upload_phenotype_verify_POST : Args(1) {
         $validation_job->additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
         $validation_job->additional_args->{upload_spreadsheet_treatment_data_level} = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
         $validation_job->additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
-    } elsif ($validation_type eq "phenotyping_spreadsheet") {
+    } elsif ($validation_type eq "phenotyping_spreadsheet" || $validation_type eq "images_phenotypes") {
         $validation_job->additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $validation_job->additional_args->{upload_spreadsheet_phenotype_data_level} = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $validation_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
@@ -250,8 +253,11 @@ sub upload_phenotype_store_POST : Args(1) {
 
     my $submit_type;
     if ($file_type eq "spreadsheet" && ! $is_treatment) {
-        $submit_type = "phenotyping_spreadsheet";
-    } elsif ($file_type eq "spreadsheet" && $is_treatment eq "treatment") {
+        # An associated images spreadsheet is uploaded together with an image zipfile, so it gets
+        # its own type to keep it distinguishable from a plain phenotyping spreadsheet.
+        my $spreadsheet_format = $c->req->param('upload_spreadsheet_phenotype_file_format') || '';
+        $submit_type = $spreadsheet_format eq 'associated_images' ? "images_phenotypes" : "phenotyping_spreadsheet";
+    } elsif ($file_type eq "spreadsheet" && $is_treatment && $is_treatment eq "treatment") {
         $submit_type = "treatments";
     } elsif ($file_type eq "datacollector") {
         $submit_type = "datacollector_spreadsheet"
@@ -259,14 +265,17 @@ sub upload_phenotype_store_POST : Args(1) {
         $submit_type = "fieldbook_phenotypes"
     }
     $submit_job->additional_args->{file_type} = $submit_type;
-    if ($is_treatment eq "treatment") {
+    if ($is_treatment && $is_treatment eq "treatment") {
         $submit_job->additional_args->{upload_spreadsheet_treatment_timestamp_checkbox} = $c->req->param('upload_spreadsheet_treatment_timestamp_checkbox');
         $submit_job->additional_args->{upload_spreadsheet_treatment_data_level} = $c->req->param('upload_spreadsheet_treatment_data_level') || 'plots';
         $submit_job->additional_args->{upload_spreadsheet_treatment_file_format} = $c->req->param('upload_spreadsheet_treatment_file_format');
-    } elsif ($submit_type eq "phenotyping_spreadsheet") {
+    } elsif ($submit_type eq "phenotyping_spreadsheet" || $submit_type eq "images_phenotypes") {
         $submit_job->additional_args->{upload_spreadsheet_phenotype_timestamp_checkbox} = $c->req->param('upload_spreadsheet_phenotype_timestamp_checkbox');
         $submit_job->additional_args->{upload_spreadsheet_phenotype_data_level} = $c->req->param('upload_spreadsheet_phenotype_data_level') || 'plots';
         $submit_job->additional_args->{upload_spreadsheet_phenotype_file_format} = $c->req->param('upload_spreadsheet_phenotype_file_format');
+        if ($c->req->param('archived_image_zipfile_id')) {
+            $submit_job->additional_args->{image_zipfile_id} = $c->req->param('archived_image_zipfile_id');
+        }
     } elsif ($submit_type eq "datacollector_spreadsheet") {
         $submit_job->additional_args->{upload_datacollector_phenotype_timestamp_checkbox} = $c->req->param('upload_datacollector_phenotype_timestamp_checkbox');
     } elsif ($submit_type eq "fieldbook_phenotypes") {

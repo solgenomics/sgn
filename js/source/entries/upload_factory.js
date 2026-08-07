@@ -3061,6 +3061,33 @@ export function commit_upload_job(job_id) {
                     'upload_spreadsheet_phenotype_timestamp_checkbox' : job.args.additional_args.upload_spreadsheet_phenotype_timestamp_checkbox,
                     'upload_spreadsheet_phenotype_data_level' : job.args.additional_args.upload_spreadsheet_phenotype_data_level,
                     'archived_file_id' : job.args.additional_args.file_id,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings,
+                    'phenotype_upload_overwrite_values' : job.args.additional_args.overwrite_values,
+                    'phenotype_upload_remove_values' : job.args.additional_args.remove_values
+                },
+                success: function(response) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred storing phenotype data, check console.");
+                    return;
+                }
+            });
+            break;
+        case 'images_phenotypes' :
+            jQuery.ajax({
+                url: '/ajax/phenotype/upload_store/spreadsheet',
+                type : 'POST',
+                data : {
+                    'upload_spreadsheet_phenotype_file_format' : job.args.additional_args.upload_spreadsheet_phenotype_file_format,
+                    'archived_file_id' : job.args.additional_args.file_id,
                     'archived_image_zipfile_id' : job.args.additional_args.image_zipfile_id,
                     'ignore_warnings' : job.args.additional_args.ignore_warnings,
                     'phenotype_upload_overwrite_values' : job.args.additional_args.overwrite_values,
@@ -3076,13 +3103,13 @@ export function commit_upload_job(job_id) {
                     }
                     refresh_upload_tables();
                 },
-                error: function() { 
-                    alert("An error occurred storing phenotype data, check console.");
+                error: function() {
+                    alert("An error occurred storing associated images phenotype data, check console.");
                     return;
                 }
             });
             break;
-        case 'treatments' : 
+        case 'treatments' :
             jQuery.ajax({
                 url: '/ajax/phenotype/upload_store/spreadsheet/treatment',
                 type : 'POST',
