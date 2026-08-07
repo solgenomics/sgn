@@ -10,7 +10,8 @@ use JSON::Any;
 use CXGN::Dataset;
 use CXGN::Genotype::SearchStocks;
 use CXGN::List;
-
+use CXGN::BreederSearch;
+use JSON;
 
 __PACKAGE__->config(
     default   => 'application/json',
@@ -26,11 +27,40 @@ sub get_stocks_using_markerset :Path('/ajax/search/search_stocks_using_markerset
     my $markerset_id = $c->req->param("markerset_id");
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $stock_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $stock_list_id});
-    my $stock_names = $stock_list->retrieve_elements($stock_list_id);
-
     my $markerset = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $markerset_id});
     my $markerset_items = $markerset->retrieve_elements($markerset_id);
+
+    # Get the stock names
+    my $stock_names;
+
+    # ... from the user-provided accession list
+    if ( defined $stock_list_id && $stock_list_id ne '' ) {
+        my $stock_list = CXGN::List->new({dbh => $schema->storage->dbh, list_id => $stock_list_id});
+        $stock_names = $stock_list->retrieve_elements($stock_list_id);
+    }
+
+    # ... from the genotyping protocol associated with the markerset
+    else {
+        my $markerset_metadata = decode_json($markerset_items->[0]);
+        my $proto_id = $markerset_metadata->{genotyping_protocol_id};
+
+        my $bs = CXGN::BreederSearch->new({ dbh => $schema->storage->dbh });
+        my $criteria_list = ['genotyping_protocols', 'accessions'];
+        my $dataref = {
+            'accessions' => {
+                'genotyping_protocols' => "'$proto_id'",
+            }
+        };
+        my $queryref = {
+            'accessions' => {
+                'genotyping_protocols' => 0
+            }
+        };
+        my $results_ref = $bs->metadata_query($criteria_list, $dataref, $queryref);
+
+        my @results_names = map { $_->[1] } @{$results_ref->{results}};
+        $stock_names = \@results_names;
+    }
 
     my $genotypes_stocks_search = CXGN::Genotype::SearchStocks->new({
         bcs_schema=>$schema,

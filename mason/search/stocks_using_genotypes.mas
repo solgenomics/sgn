@@ -20,78 +20,76 @@
 -->
 
 <&| /page/info_section.mas, title=>'Step 1:'&>
-    <div class="row" id="search_form_1" >
-        <div class="col-sm-1">
-        </div>
-        <div class="col-sm-12 well">
-            <div class="row">
-                <div class="col-sm-11">
-                    <div class="form-horizontal">
-                        <div class="form-group">
-                            <label class="control-label col-sm-4">Select a list of accessions:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="stock_list_select">
-                                        <option value="">Select a list of accessions</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="well" id="search_form_1" >
+        <div class="row">
+            <label class="control-label col-sm-3" style="text-align: right">Select a list of marker alleles:</label>
+            <div class="col-sm-9">
+                <select class="form-control" id="markerset_select">
+                    <option value="">Select a list of marker alleles</option>
+                </select>
+                <p class="small">This is the list of genotypes (markers with allele values) that will be used to filter the set of accessions.</p>
             </div>
         </div>
-    </div>
-</&>
 
-<br>
-<&| /page/info_section.mas, title=>'Step 2:'&>
-    <div class="row" id="search_form_2" >
-        <div class="col-sm-1">
+        <div class="row">
+            <label class="control-label col-sm-3" style="text-align: right">Protocol:</label>
+            <span class="col-sm-9" id="mal-proto-name"></span>
         </div>
-        <div class="col-sm-12 well">
-            <div class="row">
-                <div class="col-sm-11">
-                    <div class="form-horizontal">
-                        <div class="form-group">
-                            <label class="control-label col-sm-4">Select a list of marker alleles:</label>
-                            <div class="col-sm-8" >
-                                <div class="input-group">
-                                    <select class="form-control" id="markerset_select">
-                                        <option value="">Select a list of marker alleles</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label col-sm-4"></label>
-                            <div class="col-sm-8" >
-                                <a href="/breeders/markers"><p>Need to create a list of marker alleles.</p></a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+        <br /><br />
+
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-9">
+                <a id="mal-btn" class="btn btn-primary" href="/breeders/markers" target="_blank">
+                    <i class="glyphicon glyphicon-edit"></i> Create &amp; Edit Marker Allele Lists
+                </a>
             </div>
         </div>
     </div>
 </&>
-<br>
-<&| /page/info_section.mas, title=>'Step 3:'&>
-    <div class="row" id="search_form_3" >
-        <div class="col-sm-1">
+<br />
+
+<&| /page/info_section.mas, title=>'Step 2:'&>
+    <div class="well" id="search_form_2" >
+        <div class="row">
+            <label class="control-label col-sm-3" style="text-align: right">Select a list of accessions (optional):</label>
+            <div class="col-sm-9" >
+                <select class="form-control" id="stock_list_select">
+                    <option value="">Search all accessions in protocol of selected marker alleles</option>
+                </select>
+                <p class="small">This is the set of accessions that will be filtered by the selected genotypes.</p>
+                <p class="small">If you don't select a list here, then all of the accessions in the protocol linked to the marker allele list will be used.</p>
+                <p class="small">If you do select a list here, then the accessions in this list that are also in the protocol of the marker alleles will be used.</p>
+            </div>
         </div>
-        <div class="col-sm-12 well">
-            <div class="row">
-                <div class="col-sm-11">
-                    <div class="form-horizontal">
-                        <div class="form-group">
-                            <label class="control-label col-sm-4"></label>
-                            <div class="col-sm-8" >
-                                <button class="btn btn-primary" id="search_accessions_using_markerset"><i class="glyphicon glyphicon-search"></i> Search Accessions</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    </div>
+</&>
+<br />
+
+<&| /page/info_section.mas, title=>'Step 3:'&>
+    <div class="well" id="search_form_3" >
+        <div class="row">
+            <label class="control-label col-sm-3" style="text-align: right">Search Type:</label>
+            <div class="col-sm-9" >
+                <select class="form-control" id="stock_list_select">
+                    <option value="all">All Genotypes</option>
+                    <option value="any">Any Genotype</option>
+                </select>
+                <p class="small">All Genotypes = returned accessions will include <strong>all</strong> of the genotypes in the marker allele list</p>
+                <p class="small">Any Genotypes = returned accessions will include <strong>at least one</strong> of the genotpyes in the marker allele list</p>
+            </div>
+        </div>
+    </div>
+</&>
+<br />
+
+<&| /page/info_section.mas, title=>'Step 4:'&>
+    <div class="well" id="search_form_4" >
+        <div class="row">
+            <label class="control-label col-sm-3"></label>
+            <div class="col-sm-9">
+                <button class="btn btn-primary" id="search_accessions_using_markerset"><i class="glyphicon glyphicon-search"></i> Search Accessions</button>
             </div>
         </div>
     </div>
@@ -115,9 +113,20 @@ jQuery(document).ready(function (){
     var lo = new CXGN.List();
 
 //    get_select_box('datasets', 'dataset_accessions', {"checkbox_name":"dataset_accessions_checkbox"});
-    jQuery('#stock_list_select').html(lo.listSelect('stock_list_select', ['accessions'], 'Select a list of accessions', undefined, undefined));
+    jQuery('#stock_list_select').html(lo.listSelect('stock_list_select', ['accessions'], 'Search all accessions in protocol of selected marker alleles', undefined, undefined));
 
     jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], 'Select a list of marker alleles', undefined, undefined));
+
+    jQuery('#markerset_select').on('change', () => {
+        var gpname = "";
+        const id = jQuery(this).find(":selected").val();
+        if ( id && id !== "" ) {
+            const contents = lo.getList(id) || [];
+            const metadata = JSON.parse(contents[0] || {});
+            gpname = metadata.genotyping_protocol_name;
+        }
+        jQuery("#mal-proto-name").html(gpname);
+    });
 
     jQuery("#search_accessions_using_markerset").click(function(){
 
@@ -138,11 +147,6 @@ jQuery(document).ready(function (){
 //        }
 
         var stock_list_id = jQuery('#stock_list_select').val();
-
-        if (!stock_list_id) {
-            alert("Please choose a list of accessions");
-            return;
-        }
 
         var markerset_id = jQuery('#markerset_select').val();
 
@@ -194,3 +198,16 @@ jQuery(document).ready(function (){
 
 
 </script>
+
+
+<style>
+    #mal-btn {
+        color: #fff;
+    }
+    #mal-btn:hover {
+        background-color: #286090
+    }
+    p.small {
+        margin: 5px 0;
+    }
+</style>
