@@ -189085,6 +189085,7 @@ COPY sgn_people.sp_person (sp_person_id, censor, salutation, last_name, first_na
 42	0	\N	Sanger	Fred	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	freddy	\N	\N	$2a$06$GWBtnOVFPiJekF9k0Iouv.5DTHmbVzkc8UZeg2CCnvTzZPpt.Q6Em	\N	\N	user	\N	2014-01-03 17:22:43.111627	\N	\N
 40	0	\N	Doe	John	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	johndoe	\N	\N	$2a$06$J4Me6MnN22EuC5Cy13J1YOJ/s9qL4LcMVkbB1q0af3lbDuMChm9/y	\N	\N	user	yksjzeqhmehpnwzdrkikhttacojlrwcbvmuxuzzybwzvnegjycqgrofwunsurytzdfairlv	2017-07-18 14:55:25.912619	\N	\N
 41	0	\N	Doe	Jane	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	janedoe	\N	\N	$2a$06$7/Mf/NvUCeLkxpL4LGxVuOlUs0nrSWxehQTsmTg03M2cTbbiMDP5u	\N	\N	user	eybqrvhrtrkwyehcfhaqxaiqztvdihvvwngpywoeghfjbhvvtygqftirqfmicqbnasyzcns	2017-10-10 16:52:16.329507	\N	\N
+43	0	\N	Doe	Jane	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	curatorjane	\N	\N	$2a$06$7/Mf/NvUCeLkxpL4LGxVuOlUs0nrSWxehQTsmTg03M2cTbbiMDP5u	\N	\N	curator	\N	2017-10-10 16:52:16.329507	\N	\N
 \.
 
 
@@ -189106,6 +189107,7 @@ COPY sgn_people.sp_person_roles (sp_person_role_id, sp_person_id, sp_role_id) FR
 73	42	4
 74	40	6
 75	41	6
+76	43	1
 \.
 
 
@@ -193054,14 +193056,14 @@ SELECT pg_catalog.setval('sgn_people.sp_person_organisms_sp_person_organisms_id_
 -- Name: sp_person_roles_sp_person_role_id_seq; Type: SEQUENCE SET; Schema: sgn_people; Owner: postgres
 --
 
-SELECT pg_catalog.setval('sgn_people.sp_person_roles_sp_person_role_id_seq', 75, true);
+SELECT pg_catalog.setval('sgn_people.sp_person_roles_sp_person_role_id_seq', 76, true);
 
 
 --
 -- Name: sp_person_sp_person_id_seq; Type: SEQUENCE SET; Schema: sgn_people; Owner: postgres
 --
 
-SELECT pg_catalog.setval('sgn_people.sp_person_sp_person_id_seq', 42, true);
+SELECT pg_catalog.setval('sgn_people.sp_person_sp_person_id_seq', 43, true);
 
 
 --
