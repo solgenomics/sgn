@@ -26,11 +26,6 @@ sub create_trait :Path('/ajax/trait/create') {
         return;
     }
 
-    if (! $c->config->{allow_trait_edits}) {
-        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
-        return;
-    }
-
     my $name = $c->req->param('name') ? $c->req->param('name') : undef;
     my $definition = $c->req->param('definition') ? $c->req->param('definition') : undef;
     my $format = $c->req->param('format') ? $c->req->param('format') : undef;
@@ -41,6 +36,15 @@ sub create_trait :Path('/ajax/trait/create') {
     my $category_details = $c->req->param('category_details') ? $c->req->param('category_details') : undef;
     my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
     my $parent_terms = $c->req->param('parent_terms') ? $c->req->param('parent_terms') : undef;
+    my $parent_dbs = $c->req->pram('parent_dbs') ? $c->req->pram('parent_dbs') : undef;
+
+    my $editable_ontologies_str = $c->config->{allow_trait_edits};
+    my @editable_ontologies = split(",", $editable_ontologies_str);
+
+    if (! ($editable_ontologies_str == 1 || (grep {$parent_dbs =~ m/($_)/} @editable_ontologies ) ) ) {
+        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
+        return;
+    }
 
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
@@ -162,14 +166,22 @@ sub edit_trait :Path('/ajax/trait/edit') {
         return;
     }
 
-    if (! $c->config->{allow_trait_edits}) {
-        $c->stash->{rest} = {error => "You do not have permission to edit cvterms. Check server configuration.\n"};
-        return;
-    }
-
     my $cvterm_id = $c->req->param('cvterm_id') ? $c->req->param('cvterm_id') : undef;
     my $new_name = $c->req->param('new_name') ? $c->req->param('new_name') : undef;
     my $new_definition = $c->req->param('new_definition') ? $c->req->param('new_definition') : undef;
+
+    my $editable_ontologies_str = $c->config->{allow_trait_edits};
+    my @editable_ontologies = split(",", $editable_ontologies_str);
+
+    my $trait = CXGN::Trait->new({
+        bcs_schema => $schema,
+        cvterm_id => $cvterm_id
+    });
+
+    if (! ($editable_ontologies_str == 1 || (grep {$_ eq $trait->db()} @editable_ontologies ) ) ) {
+        $c->stash->{rest} = {error => "You do not have permission to edit traits.\n"};
+        return;
+    }
 
     if (!$cvterm_id) {
         $c->stash->{rest} = {error => "Cvterm ID missing.\n"};
@@ -177,11 +189,6 @@ sub edit_trait :Path('/ajax/trait/edit') {
     }
 
     eval {
-        my $trait = CXGN::Trait->new({
-            bcs_schema => $schema,
-            cvterm_id => $cvterm_id
-        });
-
         if (defined($new_name)) {
             $trait->name($new_name);
         }
@@ -212,11 +219,6 @@ sub delete_trait :Path('/ajax/trait/delete') {
         return;
     }
 
-    if (! $c->config->{allow_trait_edits}) {
-        $c->stash->{rest} = {error => "You do not have permission to edit cvterms. Check server configuration.\n"};
-        return;
-    }
-
     my $cvterm_id = $c->req->param('cvterm_id') ? $c->req->param('cvterm_id') : undef;
 
     if (!$cvterm_id) {
@@ -224,11 +226,20 @@ sub delete_trait :Path('/ajax/trait/delete') {
         return;
     }
 
+    my $editable_ontologies_str = $c->config->{allow_trait_edits};
+    my @editable_ontologies = split(",", $editable_ontologies_str);
+
+    my $trait = CXGN::Trait->new({
+        bcs_schema => $schema,
+        cvterm_id => $cvterm_id
+    });
+
+    if (! ($editable_ontologies_str == 1 || (grep {$_ eq $trait->db()} @editable_ontologies ) ) ) {
+        $c->stash->{rest} = {error => "You do not have permission to delete traits.\n"};
+        return;
+    }
+
     eval {
-        my $trait = CXGN::Trait->new({
-            bcs_schema => $schema,
-            cvterm_id => $cvterm_id
-        });
 
         $trait->delete();
     };

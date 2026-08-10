@@ -1,5 +1,4 @@
 <%args>
-    $exp_treatment_root
     $db_name
 </%args>
 
@@ -105,7 +104,12 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
 <button id="download_ontology_btn" class="btn btn-primary">Download Treatment Ontology</button>
 <br>
 <br>
-<& /ontology/embedded_browser.mas, cvterm => $exp_treatment_root &>
+% 
+% my $root_nodes = $db_name =~ s/,/ /gr; # should just be EXPERIMENT_TREATMENT
+% 
+<&| /page/info_section.mas, title=>"Treatment terms", collapsible=>1 &>
+    <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>0 &>
+</&>
 
 <script>
     jQuery(document).ready(function () {
@@ -148,7 +152,8 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                     categories : categories,
                     category_details : category_details,
                     parent_terms : parent_terms_json,
-                    repeat_type : repeat_type
+                    repeat_type : repeat_type,
+                    parent_dbs : "<% $db_name %>"
                 },
                 success: function(response) { 
                     jQuery('#working_modal').modal("hide");
@@ -168,7 +173,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
         });
 
         jQuery('#new_treatment_parent_term').autocomplete({
-            source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
+            source : '/ajax/cvterm/autocompleteslim' + "?db_names=<% $db_name %>"
         });
 
         jQuery('#new_treatment_add_parent_btn').on('click', function(e) {
@@ -339,6 +344,8 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                     console.error('Download failed:', error)
                 });
         });
+
+        jQuery("[title='ontology browser input form']").hide();
 
         function html_table_to_json(html_str) {
             let list = html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== '');
