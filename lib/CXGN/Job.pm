@@ -14,6 +14,11 @@ supplying the Run arguments to the cxgn_tools_run_config hash.
 my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema,
+    dbhost => $dbhost,
+    dbname => $dbname,
+    dbuser => $dbuser,
+    dbpass => $dbpass,
+    basepath => $basepath,
     sp_person_id => $c->user->get_object()->get_sp_person_id(),
     cmd => $cmd,
     cxgn_tools_run_config => {
@@ -26,7 +31,6 @@ my $job = CXGN::Job->new({
         'sleep' => undef,
         'backend' => 'Slurm'
     },
-    finish_logfile => $c->config->{job_finish_log},
     name => 'Sample download',
     job_type => 'download',
     submit_page => 'https://www.breedbase.org/submit_page_url',
@@ -38,7 +42,7 @@ my $job_id = $job->submit();
 
 ...
 
-my $job = CXGN::Jobs->new({
+my $job = CXGN::Job->new({
     people_schema => $people_schema
     schema => $bcs_schema
     sp_job_id => $job_id
@@ -93,6 +97,46 @@ accessor for Bio::Chado::Schema database object
 
 has 'schema' => ( isa => "Bio::Chado::Schema", is => 'rw', required => 1 );
 
+=head2 dbhost()
+
+Database hostname. Required for submitting background jobs.
+
+=cut
+
+has 'dbhost' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbhost');
+
+=head2 dbname()
+
+Database name. Required for submitting background jobs.
+
+=cut
+
+has 'dbname' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbname');
+
+=head2 dbuser()
+
+Database username. Required for submitting background jobs.
+
+=cut
+
+has 'dbuser' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbuser');
+
+=head2 dbpass()
+
+Database password. Required for submitting background jobs.
+
+=cut
+
+has 'dbpass' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_dbpass');
+
+=head2 basepath()
+
+Site basepath from $c->config->{basepath}. Required for submitting background jobs.
+
+=cut
+
+has 'basepath' => (isa => 'Maybe[Str]', is => 'ro', predicate => 'has_basepath');
+
 =head2 sp_job_id()
 
 Database ID for submitted job
@@ -141,7 +185,7 @@ Current status of the job. May be stored in DB or may be gathered from Slurm (an
 
 has 'status' => ( 
     isa => 'Maybe[Str]',
-    isa => enum([qw( submitted finished failed timeout canceled )]), 
+    isa => enum([qw( submitted finished failed timed_out canceled )]), 
     is => 'rw'
 );
 
@@ -220,14 +264,6 @@ The command submitted to be run.
 
 has 'cmd' => (isa => 'Maybe[Str]', is => 'rw');
 
-=head2 logfile()
-
-The logfile used to store and retrieve finish timestamps.
-
-=cut
-
-has 'finish_logfile' => (isa => 'Maybe[Str]', is => 'rw', predicate => 'has_finish_logfile', required => 0);
-
 =head2 name()
 
 The name of the job.
@@ -267,9 +303,6 @@ sub BUILD {
                 cv_id => $cv_id
             });
         }
-        if (!$self->has_finish_logfile()) {
-            die "Need a finish logfile to create new jobs.";
-        }
         $self->create_timestamp(DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
         if (!$self->has_cxgn_tools_run_config()) {
             $self->cxgn_tools_run_config($self->get_default_cxgn_tools_run_config());
@@ -296,7 +329,6 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        $self->finish_logfile($args->{finish_logfile});
     }
 }
 
@@ -310,40 +342,29 @@ sub check_status {
     my $self = shift;
 
     my $backend_id = $self->backend_id();
-    my $logfile = $self->finish_logfile();
 
-    if ($self->status() eq "canceled" || $self->status() eq "failed") {
+    if ($self->status() eq "canceled" || $self->status() eq "failed" || $self->status() eq "timed_out" || $self->status() eq "finished") { #just return a finish state if already recorded
         return $self->status();
     }
 
-    if (!$backend_id || !$self->has_sp_job_id()) {
-        my $finish_timestamp = $self->read_finish_timestamp();
-        if ($finish_timestamp && $self->status() ne "canceled") {
+    my $finish_timestamp = $self->finish_timestamp();
+    if ($finish_timestamp) {
+        if ($self->status() ne "canceled" && $self->status() ne "failed" && $self->status() ne "timed_out") { #if theres a timestamp and the job doesn't already have and end state, then mark it as done
             $self->status("finished");
             $self->store();
-        }
-        return $self->status() ? $self->status() : "";
-    } else {
-        if ($self->status() eq "submitted") {
+        } 
+    } else { # no finish timestamp in db. Is this job running? Or did it die?
+        my $now_timestamp = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
+        if (defined($backend_id)) {
             my $squeue = `squeue --job=$backend_id`;
             my @job_results = split("\n", $squeue);
-            if (scalar(@job_results) < 2) { #Squeue gives only header line if no job to show
-                my $finish_timestamp = $self->read_finish_timestamp();
-
-                if (!$finish_timestamp) {
-                    $self->status("failed");
-                    $self->store();
-                } else {
-                    $self->status("finished");
-                    $self->store();
-                }
-
+            if (scalar(@job_results) < 2) { #if there was no finish timestamp and squeue is empty, the job crashed
+                $self->status("failed");
+                $self->store();
             } else { #job is live 
                 my ($JOBID,$PARTITION,$NAME,$USER,$ST,$TIME,$NODES,$NODELIST) = split(/\s+/, $job_results[1]);
                 my @timestamp = split("-", $TIME);#squeue time outputs look like Days-Hours:Mins:Seconds, but days are ommitted for short lived jobs. 
-
                 if (scalar(@timestamp) > 1) {#The length will be greater than one if the job has been running greater than 24 hours
-
                     if (int($timestamp[0]) >= 2) { #job is timed out!
                         $self->status("timed_out");
                         system("scancel $backend_id");
@@ -351,57 +372,33 @@ sub check_status {
                     }
                 }
             }
-        } 
-        return $self->status()
+        } else { #job has no backend ID and no finish timestamp.
+            if (!$self->create_timestamp()) { #something is weird if it has no create timestamp. 
+                $self->status("failed");
+                $self->store();
+            } else { # no backend id, but has a create timestamp and no finish timestamp. 
+                my $now = DateTime->now(time_zone => 'local');
+                my $create_timestamp = $self->create_timestamp();
+                $create_timestamp =~ s/ /T/;
+                my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+                my $age = ( $now->epoch - $start_time->epoch ) / 86400;
+                if ($age > 1) {
+                    $self->status("timed_out");
+                    $self->store();
+                } else { # no backend, no create timestamp, no finish timestamp, but hasnt been running long
+                    $self->status("submitted");
+                    $self->store();
+                }
+            }
+        }
     }
+    return $self->status();
 }
 
-=head2 read_finish_timestamp()
-
-Returns the finish timestamp if already recorded. Otherwise, reads the logfile, stores the timestamp, and returns the time.
-
-=cut
-
-sub read_finish_timestamp {
-    my $self = shift;
-
-    if (!$self->has_finish_logfile()) {
-        die "No finish logfile to read.\n";
-    }
-
-    my $logfile = $self->finish_logfile();
-
-    if ($self->finish_timestamp()) {
-        return $self->finish_timestamp();
-    }
-
-    my @rows;
-    try {
-        @rows = read_file( $logfile, { binmode => ':utf8' } );
-    } catch {
-        print STDERR "Error reading logfile: $_\n";
-        return "";
-    } ;
-
-    my $db_id = $self->sp_job_id();
-    my @finish_row = grep {/$db_id\s+/} @rows;
-    my $finish_row = pop(@finish_row);
-
-    no warnings 'uninitialized';
-    $finish_row =~ m/$db_id\s+(?<FINISH_TIMESTAMP>\d+-\d+-\d+ \d+:\d+:\d+.*)/;
-
-    if ($+{FINISH_TIMESTAMP}) {
-        $self->finish_timestamp($+{FINISH_TIMESTAMP});
-        $self->store();
-        return $+{FINISH_TIMESTAMP};
-    }
-
-    return "";
-}
 
 =head2 delete()
 
-Deletes the job from the database and the log finish file
+Deletes the job from the database
 
 =cut
 
@@ -411,8 +408,6 @@ sub delete {
     if (!$self->has_sp_job_id()) {
         die "Deletion has no meaning for jobs that have not yet been stored.\n";
     } 
-
-    my $logfile = $self->finish_logfile();
 
     my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
@@ -425,17 +420,6 @@ sub delete {
     } catch {
         die "An error occurred deleting job from database: $_\n";
     } ;
-    my $job_id = $self->sp_job_id();
-    my @rows;
-    try {
-        @rows = read_file( $logfile, { binmode => ':utf8' } );
-    } catch {
-        print STDERR "Error reading finish logfile: $_\n";
-        return "";
-    } ;
-
-    @rows = grep {!m/$job_id\s+\d+-\d+-\d+ \d+:\d+:\d+/} @rows;
-    write_file($logfile,{binmode => ':utf8'},@rows);
 }
 
 =head2 cancel()
@@ -451,8 +435,6 @@ sub cancel {
         die "Cannot cancel a job without a backend ID.\n";
     }
 
-    my $logfile = $self->finish_logfile();
-
     my $backend_id = $self->backend_id();
 
     try {
@@ -461,7 +443,6 @@ sub cancel {
         $self->status('canceled');
         my $formatted_time = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
         $self->finish_timestamp($formatted_time);
-        system('echo "'.$self->sp_job_id().'    '.$formatted_time.'" >> '.$logfile);
         $self->store();
     } catch {
         die "Error canceling job: $_\n";
@@ -476,7 +457,14 @@ Creates a CXGN::Tools::Run object and runs the current job. Stores job data in a
 
 sub submit {
     my $self = shift;
-    my $run_sync = shift;
+    if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
+        die "Cannot submit background jobs without db connection parameters and site basepath!\n";
+    }
+    my $dbhost = $self->dbhost();
+    my $dbname = $self->dbname();
+    my $dbuser = $self->dbuser();
+    my $dbpass = $self->dbpass();
+    my $basepath = $self->basepath();
 
     if ($self->has_sp_job_id()) {
         die "This job has already been submitted!\n";
@@ -485,12 +473,6 @@ sub submit {
     if (!$self->cmd()) {
         die "Background jobs must have a command to run.\n";
     }
-
-    if (!$self->has_finish_logfile()) {
-        die "Need a finish logfile for job submission.\n";
-    }
-
-    my $logfile = $self->finish_logfile();
 
     my $cmd = $self->cmd();
     my $cxgn_tools_run_config;
@@ -507,7 +489,6 @@ sub submit {
 
     my $job;
     my $backend_id;
-    # my $cxgn_tools_run_id;
     my $status;
 
     try {
@@ -528,9 +509,9 @@ sub submit {
     } ;
 
     $self->backend_id($backend_id);
-    $self->update_status($status);
     $self->cxgn_tools_run_config->{out_file} = $job->out_file();
     $self->cxgn_tools_run_config->{jobid} = $job->jobid();
+    $self->update_status($status);
 
     return $sp_job_id;
 }
@@ -553,7 +534,6 @@ sub store {
             $row->args(JSON::Any->encode({
                 cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                 name => $self->name(),
-                # finish_logfile => $self->finish_logfile(),
                 cmd => $self->cmd(),
                 results_page => $self->results_page(),
                 submit_page => $self->submit_page(),
@@ -575,7 +555,6 @@ sub store {
                 args => JSON::Any->encode({
                     cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                     name => $self->name(),
-                    # finish_logfile => $self->finish_logfile(),
                     cmd => $self->cmd(),
                     results_page => $self->results_page(),
                     submit_page => $self->submit_page(),
@@ -605,12 +584,14 @@ Generates a command that gives the finish timestamp. Use to append to a cmd befo
 
 sub generate_finish_timestamp_cmd {
     my $self = shift;
-
-    if (!$self->has_finish_logfile()) {
-        return "";
+    if (!$self->has_dbhost() || !$self->has_dbname() || !$self->has_dbuser() || !$self->has_dbpass() || !$self->has_basepath()) {
+        die "Cannot create the finish timestamp script without db connection parameters and site basepath!\n";
     }
-
-    my $logfile = $self->finish_logfile();
+    my $dbhost = $self->dbhost();
+    my $dbname = $self->dbname();
+    my $dbuser = $self->dbuser();
+    my $dbpass = $self->dbpass();
+    my $basepath = $self->basepath();
 
     if (!$self->has_sp_job_id()) {
         die "Can't generate a finish timestamp if job has no id.\n";
@@ -618,12 +599,28 @@ sub generate_finish_timestamp_cmd {
 
     my $sp_job_id = $self->sp_job_id();
 
-    return ';
+    return ";
 
-FINISH_TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S%z"); 
-echo "'.$sp_job_id.'    $FINISH_TIMESTAMP" >> '.$logfile.' ;
+perl $basepath/bin/record_finish_timestamp.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass -j $sp_job_id ;
 
-';
+";
+}
+
+=head2 retrieve_finish_timestamp()
+
+Check the database for a finish timestamp. Useful if you created a job object for job submission, and want to 
+check for a finish timestamp before the object has been destroyed and reformed. 
+
+=cut
+
+sub retrieve_finish_timestamp {
+    my $self = shift;
+
+    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+
+    my $finish_timestamp = $row->finish_timestamp() ? $row->finish_timestamp() : "";
+    $self->finish_timestamp($finish_timestamp);
+    return $finish_timestamp;
 }
 
 =head2 update_status($status)
@@ -653,16 +650,6 @@ Returns a hashref of the default config options for cxgn tools run. Used when no
 sub get_default_cxgn_tools_run_config {
     my $self = shift;
 
-    # my $cxgn_tools_run_config;
-    # my $user_id = $self->sp_person_id();
-    # my $name = $self->name() =~ s/ /_/gr;
-    # $name =~ s/[\\*?[\]{}|;><&$"'`]//g;
-    # if (!$name) {
-    #     $name = "job_".DateTime->now(time_zone => 'local')->strftime('%Y_%m_%d_%H_%M_%S');
-    # }
-    # my $temp_base = "/home/production/volume/tmp/user_$user_id/$name";
-    # my $err_file = "$temp_base/job.err";
-    # my $out_file = "$temp_base/job.out";
     my $cxgn_tools_run_config = {
         #'err_file' => $err_file,
         'submit_host' => 'localhost',
@@ -859,7 +846,7 @@ sub delete_jobs_older_than {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
                 my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-                my $now = DateTime->now();
+                my $now = DateTime->now(time_zone => 'local');
                 my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
                 if ($age > $time_limit) {
@@ -885,7 +872,7 @@ sub delete_jobs_older_than {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
                 my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-                my $now = DateTime->now();
+                my $now = DateTime->now(time_zone => 'local');
                 my $age = ( $now->epoch - $start_time->epoch ) / 86400;
 
                 if ($age > $time_limit) {

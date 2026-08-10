@@ -916,6 +916,8 @@ sub submit_job_cluster {
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
+        # $job->is_cluster(1);
+        # $job->run_cluster( "(" . $args->{cmd} . join( '', @finish_timestamp_cmds ) . ")" );
 
         if ( $args->{background_job} ) {
             $job->is_async(1);

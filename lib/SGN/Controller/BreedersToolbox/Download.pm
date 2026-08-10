@@ -827,6 +827,8 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
         return;
     }
 
+
+
     # Get accession IDs from list
     my $accession_data = SGN::Controller::AJAX::List->retrieve_list($c, $accession_list_id);
     my @accession_list = map { $_->[1] } @$accession_data;
@@ -836,12 +838,19 @@ sub download_accession_properties_action : Path('/breeders/download_accession_pr
     my $accession_id_hash = $t->transform($schema, $acc_t, \@accession_list);
     my @accession_ids = @{$accession_id_hash->{transform}};
 
+
+
     # Create tempfile
     my ($tempfile, $uri) = $c->tempfile(TEMPLATE => "download_accessions_XXXXX", UNLINK=> 0);
 
+    my $editable_properties_string = $c->config->{editable_stock_props};
+    my @editable_properties = split /\s*\,\s*/, $editable_properties_string;
+
+    #print STDERR "DOWNLOADING PROPERTIES: ".join(", ", @editable_properties)."\n";
+
     # Build Accession Info
     my $BTAccessions = CXGN::BreedersToolbox::Accessions->new({ schema => $schema });
-    my $rows = $BTAccessions->export_properties($c, \@accession_ids);
+    my $rows = $BTAccessions->export_properties(\@accession_ids, \@editable_properties);
 
     # Create and Return XLS and XLSX  file
     if ( $file_format eq ".xlsx" ) {
