@@ -866,12 +866,16 @@ sub add_job_record_args_to_dependent_jobs {
         $dependent_job->{analysis_name} = $analysis_name;
         $dependent_job->{job_record_args} = [{
             sp_person_id          => $sp_person_id,
+            dbhost                => $c->config->{dbhost},
+            dbname                => $c->config->{dbname},
+            dbuser                => $c->config->{dbuser},
+            dbpass                => $c->config->{dbpass},
+            basepath              => $c->config->{basepath},
             job_type              => $analysis_args->{analysis_type},
             name                  => $analysis_name,
             results_page          => $analysis_args->{analysis_page},
             cmd                   => $dependent_job->{cmd},
             cxgn_tools_run_config => $dependent_job->{config},
-            finish_logfile        => $c->config->{job_finish_log},
             additional_args       => $analysis_args,
         }];
         
@@ -879,6 +883,7 @@ sub add_job_record_args_to_dependent_jobs {
         $dependent_job->{dbname} = $c->config->{dbname};
         $dependent_job->{dbuser} = $c->config->{dbuser};
         $dependent_job->{dbpass} = $c->config->{dbpass};
+        $dependent_job->{dbport} = $c->config->{dbport} || 5432;
 
     }
 
@@ -889,12 +894,16 @@ sub add_job_record_args_to_dependent_jobs {
         if ($multiple_models_name) {
             my $multiple_models_record_args = {
                 sp_person_id          => $sp_person_id,
+                dbhost                => $c->config->{dbhost},
+                dbname                => $c->config->{dbname},
+                dbuser                => $c->config->{dbuser},
+                dbpass                => $c->config->{dbpass},
+                basepath              => $c->config->{basepath},
                 job_type              => $multiple_models_args->{analysis_type},
                 name                  => $multiple_models_name,
                 results_page          => $multiple_models_args->{analysis_page},
                 cmd                   => $dependent_jobs->[0]->{cmd},
                 cxgn_tools_run_config => $dependent_jobs->[0]->{config},
-                finish_logfile        => $c->config->{job_finish_log},
                 additional_args       => $multiple_models_args,
             };
 
@@ -916,9 +925,7 @@ sub submit_job_cluster {
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
-        # $job->is_cluster(1);
-        # $job->run_cluster( "(" . $args->{cmd} . join( '', @finish_timestamp_cmds ) . ")" );
-
+    
         if ( $args->{background_job} ) {
             $job->is_async(1);
 
