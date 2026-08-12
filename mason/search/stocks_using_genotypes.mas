@@ -22,6 +22,18 @@
 <&| /page/info_section.mas, title=>'Step 1:'&>
     <div class="well" id="search_form_1" >
         <div class="row">
+            <label class="control-label col-sm-3" style="text-align: right">Select a genotyping protocol (optional):</label>
+            <div class="col-sm-9">
+                <select class="form-control" id="protocol_select">
+                    <option value="">Select a genotyping protocol</option>
+                </select>
+                <p class="small">Filter the lists of marker alleles that match this protocol.</p>
+            </div>
+        </div>
+
+        <br />
+
+        <div class="row">
             <label class="control-label col-sm-3" style="text-align: right">Select a list of marker alleles:</label>
             <div class="col-sm-9">
                 <select class="form-control" id="markerset_select">
@@ -31,18 +43,13 @@
             </div>
         </div>
 
-        <div class="row">
-            <label class="control-label col-sm-3" style="text-align: right">Protocol:</label>
-            <span class="col-sm-9" id="mal-proto-name"></span>
-        </div>
-
         <br /><br />
 
         <div class="row">
             <div class="col-sm-3"></div>
             <div class="col-sm-9">
                 <a id="mal-btn" class="btn btn-primary" href="/breeders/markers" target="_blank">
-                    <i class="glyphicon glyphicon-edit"></i> Create &amp; Edit Marker Allele Lists
+                    <i class="glyphicon glyphicon-edit"></i> Manage Marker Allele Lists
                 </a>
             </div>
         </div>
@@ -72,7 +79,7 @@
         <div class="row">
             <label class="control-label col-sm-3" style="text-align: right">Search Type:</label>
             <div class="col-sm-9" >
-                <select class="form-control" id="stock_list_select">
+                <select class="form-control" id="search_type_select">
                     <option value="all">All Genotypes</option>
                     <option value="any">Any Genotype</option>
                 </select>
@@ -106,6 +113,45 @@
 
 <script>
 
+const updateMarkersetListOptions = () => {
+    var lo = new CXGN.List();
+    var lists = lo.getLists(['markers']);
+    var select = jQuery('#markerset_select');
+    var selected_protocol_id = jQuery("#protocol_select").val();
+
+    select.empty();
+
+    _addOption({ label: "Select a list of marker alleles" });
+    _addOption({ label: "--------YOUR LISTS BELOW--------", disabled: true });
+    lists?.private_lists?.forEach(([id, name]) => _addOption(_parseList(id, name)));
+    _addOption({ label: "--------PUBLIC LISTS BELOW--------", disabled: true });
+    lists?.public_lists?.forEach(([id, name]) => _addOption(_parseList(id, name)));
+
+    function _parseList(id, name) {
+        const { elements } = lo.getListData(id);
+        const metadata = JSON.parse(elements[0][1] || '{}');
+        const protocol_id = metadata.genotyping_protocol_id;
+        const protocol_name = metadata.genotyping_protocol_name;
+        return {
+            value: id,
+            label: `${name} [${protocol_name}]`,
+            protocol_id: parseInt(protocol_id)
+        };
+    }
+
+    function _addOption({ value, label, protocol_id, disabled = false } = {}) {
+        if ( !selected_protocol_id || selected_protocol_id === "" || 
+                !protocol_id || protocol_id === "" || 
+                parseInt(selected_protocol_id) === parseInt(protocol_id) ) {
+            var option = jQuery("<option></option>")
+                .attr("value", value || '')
+                .attr("data-protocol-id", protocol_id || '')
+                .attr("disabled", disabled)
+                .text(label);
+            select.append(option);
+        }
+    }
+}
 
 jQuery(document).ready(function (){
 
@@ -115,18 +161,9 @@ jQuery(document).ready(function (){
 //    get_select_box('datasets', 'dataset_accessions', {"checkbox_name":"dataset_accessions_checkbox"});
     jQuery('#stock_list_select').html(lo.listSelect('stock_list_select', ['accessions'], 'Search all accessions in protocol of selected marker alleles', undefined, undefined));
 
-    jQuery('#markerset_select').html(lo.listSelect('markerset_select', ['markers'], 'Select a list of marker alleles', undefined, undefined));
-
-    jQuery('#markerset_select').on('change', () => {
-        var gpname = "";
-        const id = jQuery(this).find(":selected").val();
-        if ( id && id !== "" ) {
-            const contents = lo.getList(id) || [];
-            const metadata = JSON.parse(contents[0] || {});
-            gpname = metadata.genotyping_protocol_name;
-        }
-        jQuery("#mal-proto-name").html(gpname);
-    });
+    get_select_box('genotyping_protocol', 'protocol_select', {'empty':1});
+    jQuery('#protocol_select').on('change', updateMarkersetListOptions);
+    updateMarkersetListOptions();
 
     jQuery("#search_accessions_using_markerset").click(function(){
 
