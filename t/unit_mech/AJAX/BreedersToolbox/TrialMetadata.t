@@ -43,9 +43,8 @@ is_deeply($response, {'data' => [['<a href="/cvterm/70741/view">dry matter conte
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/phenotypes?display=plots&group_by_accession=1');
 $response = decode_json $mech->content;
 my @response = @{$response->{data}};
-my @last_n = @response[-4..-1];
-#print STDERR Dumper \@last_n;
-is_deeply(\@last_n, [['<a href="/stock/38881/view">UG120004</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','5.25','2.51','8.00','3.88','73.87%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/stock/38880/view">UG120003</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','5.25','4.50','6.00','1.06','20.21%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/stock/38879/view">UG120002</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','6.25','3.00','9.50','4.60','73.54%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>'],['<a href="/stock/38878/view">UG120001</a>','<a href="/cvterm/70773/view">fresh shoot weight measurement in kg|CO_334:0000016</a>','20.00','12.00','28.00','11.31','56.57%',2,'0%','<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change(70773)"><span class="glyphicon glyphicon-stats"></span></a>']], "check plots accessions");
+my @four_rows = @response[0..3];
+is_deeply(\@four_rows, [['<a href="/stock/39251/view">UG130145</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','26.80','26.80','26.80',undef,0,1,'0%','<span class="glyphicon glyphicon-stats"></span>'],['<a href="/stock/39250/view">UG130144</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','16.30','16.30','16.30',undef,0,1,'0%','<span class="glyphicon glyphicon-stats"></span>'],['<a href="/stock/39249/view">UG130143</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','23.70','23.70','23.70',undef,0,1,'0%','<span class="glyphicon glyphicon-stats"></span>'],['<a href="/stock/39248/view">UG130140</a>','<a href="/cvterm/70741/view">dry matter content percentage|CO_334:0000092</a>','27.80','27.80','27.80',undef,0,1,'50.00%','<span class="glyphicon glyphicon-stats"></span>']], "check plots accessions");
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/phenotypes_fully_uploaded');
 $response = decode_json $mech->content;
@@ -144,7 +143,7 @@ $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/accession
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 my @accessions = @{$response->{accessions}->[0]};
-@last_n = @accessions[-4..-1];
+#@last_n = @accessions[-4..-1];
 #print STDERR Dumper \@last_n;
 is_deeply($response, {'accessions' => [[{'stock_type' => 'accession','accession_name' => 'test_accession1','relationship_type' => 'plot_of','stock_id' => 38840,'organism' => 'Solanum lycopersicum'},{'organism' => 'Solanum lycopersicum','stock_id' => 38841,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession2'},{'relationship_type' => 'plot_of','stock_id' => 38842,'accession_name' => 'test_accession3','stock_type' => 'accession','organism' => 'Solanum lycopersicum'},{'stock_id' => 38843,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession4','organism' => 'Solanum lycopersicum'},{'organism' => 'Solanum lycopersicum','stock_id' => 38844,'relationship_type' => 'plot_of','stock_type' => 'accession','accession_name' => 'test_accession5'}]]});
 
