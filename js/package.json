@@ -26,9 +26,9 @@
     "requirejs": "2.3.7",
     "save-svg-as-png": "^1.4.17",
     "tape": "^4.10.1",
-    "terser-webpack-plugin": "^4.2.3",
-    "webpack": "^4.29",
-    "webpack-cli": "^4.10.0"
+    "terser-webpack-plugin": "^5",
+    "webpack": "^5",
+    "webpack-cli": "^6"
   },
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
@@ -42,7 +42,7 @@
     "internmap": "^1.0.0"
   },
   "engines": {
-    "node": ">=18.20.8",
-    "npm": ">=10.8.2"
+    "node": ">=24",
+    "npm": ">=11"
   }
 }
