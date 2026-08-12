@@ -1121,11 +1121,16 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     my @marker_sets;
     foreach my $list (@$lists){
         my ($id, $name, $desc, $item_count, $type_id, $type, $public) = @$list;
+        my $list = CXGN::List->new({ dbh => $c->dbc->dbh(), list_id => $id });
+        my $elements = $list->retrieve_elements($id);
+        my $metadata = decode_json($elements->[0]);
+
         push @marker_sets, {
             markerset_id => $id,
             markerset_name => $name,
             number_of_markers => $item_count - 1,
             description => $desc,
+            metadata => $metadata
         }
     }
 

@@ -8,6 +8,7 @@ jQuery(document).ready(function (){
 
     const urlParams = new URLSearchParams(window.location.search);
     get_select_box('genotyping_protocol','selected_protocol', { empty: 1, default: urlParams.has('defaultProtocol') ? urlParams.get('defaultProtocol') : undefined });
+    jQuery("#genotyping_data_type").val(urlParams.has('defaultDataType') ? urlParams.get('defaultDataType') : undefined);
 
     var lo = new CXGN.List();
     jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a list of marker alleles'));
@@ -276,6 +277,7 @@ function show_table() {
         'ajax':{'url': '/marker_sets/available'},
         'columns': [
             {title: "List Name", "data": "markerset_name"},
+            {title: "Protocol", "data": "null", "render": function(data, type, row) { return `<a href="/breeders_toolbox/protocol/${row.metadata.genotyping_protocol_id}" target="_blank">${row.metadata.genotyping_protocol_name}</a>` }},
             {title: "Number of Markers", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'showMarkersetDetail("+row.markerset_id+")'>Detail</a>" ;}},

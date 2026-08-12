@@ -162,9 +162,12 @@ jQuery(document).ready(function (){
     jQuery('#stock_list_select').html(lo.listSelect('stock_list_select', ['accessions'], 'Search all accessions in protocol of selected marker alleles', undefined, undefined));
 
     const urlParams = new URLSearchParams(window.location.search);
-    get_select_box('genotyping_protocol', 'protocol_select', { empty: 1, default: urlParams.has('defaultProtocol') ? urlParams.get('defaultProtocol') : undefined });
+    get_select_box('genotyping_protocol', 'protocol_select', {
+        empty: 1,
+        default: urlParams.has('defaultProtocol') ? urlParams.get('defaultProtocol') : undefined,
+        after_load: updateMarkersetListOptions
+    });
     jQuery('#protocol_select').on('change', updateMarkersetListOptions);
-    updateMarkersetListOptions();
 
     jQuery("#search_accessions_using_markerset").click(function(){
 
