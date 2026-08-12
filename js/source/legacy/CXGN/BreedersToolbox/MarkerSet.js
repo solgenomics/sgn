@@ -6,7 +6,8 @@ jQuery(document).ready(function (){
     ALLELES_BY_MARKER = {};
     MARKER_BY_ALLELE = {};
 
-    get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
+    const urlParams = new URLSearchParams(window.location.search);
+    get_select_box('genotyping_protocol','selected_protocol', { empty: 1, default: urlParams.has('defaultProtocol') ? urlParams.get('defaultProtocol') : undefined });
 
     var lo = new CXGN.List();
     jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a list of marker alleles'));
