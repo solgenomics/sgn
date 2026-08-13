@@ -241,9 +241,12 @@ sub search {
     my $phenotypeprop_sql = '';
     my %design_layout_hash;
     my $using_layout_hash;
+    my $trial_observationunit_list;
     #For performance reasons the number of joins to stock can be reduced if a trial is given. If trial(s) given, use the cached layout from TrialLayout instead.
 
-    print STDERR "start date here: ".$self->start_date()." and the end date here: ".$self->end_date()."\n";
+    my $requested_start_date = $self->start_date // '';
+    my $requested_end_date = $self->end_date // '';
+    print STDERR "start date here: $requested_start_date and the end date here: $requested_end_date\n";
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
 
@@ -336,6 +339,41 @@ sub search {
             }
 
 
+        }
+
+        # A trial-level "all" search otherwise relies only on the project join
+        # to limit observation units.  On large databases PostgreSQL can build
+        # the global phenotype join before applying that filter.  Resolve the
+        # selected trials' observation units first, as the level-specific
+        # searches above already do for plots, plants, and subplots.
+        my $has_observationunit_filter =
+            ($self->plot_list && scalar(@{$self->plot_list}) > 0)
+            || ($self->plant_list && scalar(@{$self->plant_list}) > 0)
+            || ($self->subplot_list && scalar(@{$self->subplot_list}) > 0);
+
+        if ($self->data_level eq 'all' && !$has_observationunit_filter) {
+            my @trial_ids = @{$self->trial_list};
+            my $trial_placeholders = join(',', ('?') x scalar(@trial_ids));
+            my $observationunit_type_ids = join(',',
+                $plot_type_id,
+                $plant_type_id,
+                $analysis_instance_id,
+                $subplot_type_id,
+                $tissue_sample_type_id,
+            );
+            my $trial_observationunit_query = "
+                SELECT DISTINCT nd_experiment_stock.stock_id
+                FROM nd_experiment_stock
+                JOIN nd_experiment_project USING (nd_experiment_id)
+                JOIN stock USING (stock_id)
+                WHERE nd_experiment_project.project_id IN ($trial_placeholders)
+                  AND stock.type_id IN ($observationunit_type_ids)
+            ";
+            $trial_observationunit_list = $schema->storage->dbh->selectcol_arrayref(
+                $trial_observationunit_query,
+                undef,
+                @trial_ids,
+            );
         }
     } else {
         print STDERR "\n\n design_layout_sql for  ".$self->data_level. " time: ".  localtime ."\n";
@@ -489,6 +527,15 @@ sub search {
     my $accession_list = $self->accession_list;
     print STDERR "Native search Accession list is ".Dumper($accession_list)."\n";
 
+    if (defined($trial_observationunit_list)) {
+        if (scalar(@$trial_observationunit_list) > 0) {
+            my $observationunit_sql = _sql_from_arrayref($trial_observationunit_list);
+            push @where_clause, "observationunit.stock_id in ($observationunit_sql)";
+        } else {
+            push @where_clause, "1 = 0";
+        }
+    }
+
     my $analysis_result_stock_list = $self->analysis_result_stock_list;
 
     if ($self->analysis_result_stock_list && scalar(@{$self->analysis_result_stock_list})>0) {
@@ -575,11 +622,11 @@ sub search {
     }
 
     my ($start_date, $end_date);
-    if ($self->start_date() =~ m/(\d{4}\-\d{2}\-\d{2})/) {
+    if ($requested_start_date =~ m/(\d{4}\-\d{2}\-\d{2})/) {
 	$start_date = $1;
     }
 
-    if ($self->end_date() =~ m/(\d{4}\-\d{2}\-\d{2})/) {
+    if ($requested_end_date =~ m/(\d{4}\-\d{2}\-\d{2})/) {
 	$end_date = $1;
     }
 

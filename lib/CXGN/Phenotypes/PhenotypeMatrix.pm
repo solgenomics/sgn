@@ -472,6 +472,8 @@ sub get_phenotype_matrix {
         }
 
         foreach my $d (@$data) {
+            next unless defined($d->{trait_name}) && $d->{trait_name} ne '';
+
             my $value = "";
 
             my $timestamp = $d->{timestamp};
