@@ -196,6 +196,8 @@ jQuery(document).ready(function (){
 
         var markerset_id = jQuery('#markerset_select').val();
 
+        var search_type = jQuery('#search_type_select').val();
+
         if (!markerset_id) {
             alert("Please choose a list of marker alleles");
             return;
@@ -207,6 +209,7 @@ jQuery(document).ready(function (){
                 'data':{
                     'stock_list_id': stock_list_id,
                     'markerset_id': markerset_id,
+                    'search_type': search_type
                 }
             },
             columns: [
@@ -230,10 +233,16 @@ jQuery(document).ready(function (){
                     render: function(data, type,row){
                         var parsed = JSON.parse(data);
                         var items = [];
-                        Object.entries(parsed).forEach(([key, value]) => {
-                            items.push(`<strong>${key}</strong>: ${JSON.stringify(value)}`);
+                        Object.entries(parsed).sort().forEach(([key, value]) => {
+                            var html = `<strong>${key}</strong>:`;
+                            html += `<ul>`;
+                            Object.entries(value).sort().forEach(([vk, vv]) => {
+                                html += `<li><em>${vk}</em> = ${vv}</li>`;
+                            });
+                            html += `</ul>`;
+                            items.push(html);
                         });
-                        return items.join('<br />');
+                        return items.join('');
                     }
                 },
             ],
