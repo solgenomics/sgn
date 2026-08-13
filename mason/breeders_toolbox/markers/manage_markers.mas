@@ -16,6 +16,11 @@ Titima Tantikanjana <tt15@cornell.edu>
 
 <& /page/page_title.mas, title=>'Manage Marker Alleles' &>
 
+<div id="markerset_filter_warning" class="alert alert-warning" role="alert" style="display: none; align-items: center; justify-content: space-between; color: #8a6d3b; background-color: #fcf8e3; border-color: #faebcc">
+    <p><span class="glyphicon glyphicon-warning-sign"></span>&nbsp;&nbsp;Table of Marker Allele Lists is Filtered by Protocol</p>
+    <button class="btn btn-warning btn-small" onclick="removeProtocolFilter()">Remove Filter</button>
+</div>
+
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 0, info_section_title => "<h4 style='display:inline'>Your Marker Alleles</h4>", info_section_subtitle => 'View your marker allele info', buttons_html => '<button class="btn btn-sm btn-primary" style="margin:3px" id="add_new_markerset_button">Create new List of Marker Alleles</button><button class="btn btn-sm btn-primary" style="margin:3px" id="add_marker_dosage_button">Add Marker Alleles to existing List</button><button class="btn btn-default" style="margin:3px" data-toggle="modal" data-target="#markerset_usage_modal">Usage Help <span class="glyphicon glyphicon-question-sign"></span></button>', icon_class => "glyphicon glyphicon-list-alt", info_section_id => "marker_set_summary_section" &>
 
 <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-search", title => "Use marker alleles to search for accessions with specific genotype.", go_btn_id => "accession_search_link" &>

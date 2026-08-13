@@ -48,7 +48,7 @@
         <div class="row">
             <div class="col-sm-3"></div>
             <div class="col-sm-9">
-                <a id="mal-btn" class="btn btn-primary" href="/breeders/markers" target="_blank">
+                <a id="mal-btn" class="btn btn-primary" href="#" onclick="manageMarkerAlleleLists()">
                     <i class="glyphicon glyphicon-edit"></i> Manage Marker Allele Lists
                 </a>
             </div>
@@ -151,6 +151,11 @@ const updateMarkersetListOptions = () => {
             select.append(option);
         }
     }
+}
+
+const manageMarkerAlleleLists = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    window.open(`/breeders/markers?defaultProtocol=${urlParams.get('defaultProtocol') || ''}&defaultDataType=${urlParams.get('defaultDataType') || ''}`, '_blank');
 }
 
 jQuery(document).ready(function (){

@@ -1110,6 +1110,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
 sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $protocol_id = $c->req->param('protocolId');
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
@@ -1125,12 +1126,14 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
         my $elements = $list->retrieve_elements($id);
         my $metadata = decode_json($elements->[0]);
 
-        push @marker_sets, {
-            markerset_id => $id,
-            markerset_name => $name,
-            number_of_markers => $item_count - 1,
-            description => $desc,
-            metadata => $metadata
+        if ( !$protocol_id || $protocol_id eq '' || $protocol_id eq $metadata->{genotyping_protocol_id} ) {
+            push @marker_sets, {
+                markerset_id => $id,
+                markerset_name => $name,
+                number_of_markers => $item_count - 1,
+                description => $desc,
+                metadata => $metadata
+            }
         }
     }
 
