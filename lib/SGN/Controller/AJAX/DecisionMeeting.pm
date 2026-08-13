@@ -22,6 +22,7 @@ use Excel::Writer::XLSX;
 use Spreadsheet::ParseExcel;
 use Spreadsheet::ParseXLSX;
 use Spreadsheet::WriteExcel;
+use Time::Piece ();
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -62,6 +63,20 @@ sub _decode_meeting_json {
     }
 
     return wantarray ? (undef, $last_error) : undef;
+}
+
+sub _normalize_meeting_date {
+    my ($self, $value) = @_;
+    return '' unless defined $value && !ref($value);
+
+    $value =~ s/^\s+|\s+$//g;
+    return '' unless $value =~ /^(\d{4})[\/-](\d{2})[\/-](\d{2})$/;
+
+    my $canonical = "$1-$2-$3";
+    my $parsed = eval { Time::Piece->strptime($canonical, '%Y-%m-%d') };
+    return '' unless $parsed && $parsed->strftime('%Y-%m-%d') eq $canonical;
+
+    return $canonical;
 }
 
 sub lists : Path('lists') : Args(0) : ActionClass('REST') {}
@@ -640,7 +655,7 @@ sub _meeting_year_from_meeting_id {
     $decoded = {} unless ref($decoded) eq 'HASH';
 
     my $date = $decoded->{date} || '';
-    return $1 if $date =~ /^(\d{4})-/;
+    return $1 if $date =~ /^(\d{4})[\/-]/;
 
     return '';
 }
@@ -685,7 +700,7 @@ sub _compute_stage_transition_data {
     my $breeding_stages  = $args{breeding_stages} || '';
     my $schema           = $args{schema};
 
-    if ($decision eq 'drop' && $meeting_date =~ /^(\d{4})-/) {
+    if ($decision eq 'drop' && $meeting_date =~ /^(\d{4})[\/-]/) {
         $year = $1;
     }
 
@@ -2065,10 +2080,14 @@ sub _meeting_tracker_metadata {
         @attendees = ($meeting_data->{attendees});
     }
 
+    my $meeting_date = $self->_normalize_meeting_date(
+        $meeting_data->{date} // $meeting_data->{meeting_date} // ''
+    );
+
     return {
         meeting_name      => $meeting_data->{meeting_name} // $project_name // '',
         meeting_programs  => join(', ', grep { defined($_) && $_ ne '' } @programs),
-        meeting_date      => $meeting_data->{date} // $meeting_data->{meeting_date} // '',
+        meeting_date      => $meeting_date,
         meeting_year      => $meeting_data->{year} // '',
         meeting_location  => $meeting_data->{location_name} // $meeting_data->{location} // $meeting_data->{location_raw} // '',
         meeting_attendees => join(', ', grep { defined($_) && $_ ne '' } @attendees),
@@ -2277,7 +2296,9 @@ sub meeting_report_html : Path('/ajax/decisionmeeting/meeting_report_html') Args
     my $meeting_notes = $data->{meeting_notes} // '';
     my $accessions    = $data->{accessions} || [];
     my $attendees     = $data->{attendees};
-    my $meeting_date  = $data->{date} // $data->{meeting_date} // '';
+    my $meeting_date  = $self->_normalize_meeting_date(
+        $data->{date} // $data->{meeting_date} // ''
+    );
     my $meeting_year  = $data->{year} // '';
     my $location      = $data->{location_name} // $data->{location} // $data->{location_raw} // '';
     my $meeting_status = $data->{meeting_status} // '';
@@ -2534,7 +2555,9 @@ sub create : Path('create') Args(0) {
     my $program_in    = $p->{breeding_program} // '';
     my $location_in   = $p->{location}         // '';
     my $trial_year    = $p->{year}             // '';
-    my $planting_date = $p->{date}             // undef;
+    my $date_in       = $p->{date}             // '';
+    my $meeting_date  = $self->_normalize_meeting_date($date_in);
+    my $planting_date = $meeting_date;
     my $description   = $p->{data}             // '';
     my $meeting_status= $p->{meeting_status}   // '';
 
@@ -2544,6 +2567,10 @@ sub create : Path('create') Args(0) {
         unless ($program_in || ref($p->{breeding_programs}) eq 'ARRAY');
     return $self->status_bad_request($c, message => "Missing location")
         unless $location_in;
+    return $self->status_bad_request($c, message => "Missing date")
+        unless $date_in;
+    return $self->status_bad_request($c, message => "Date must use the YYYY-MM-DD format")
+        unless $meeting_date;
 
     my @program_in_list =
         ref($p->{breeding_programs}) eq 'ARRAY'
@@ -2689,7 +2716,7 @@ sub create : Path('create') Args(0) {
             breeding_program_choice => $program_choice,
             breeding_program_name   => $program_name,
             year                    => ($trial_year || undef),
-            date                    => ($planting_date || undef),
+            date                    => ($meeting_date || undef),
             location                => $location_name,
             location_raw            => $location_in,
         };
@@ -2719,7 +2746,7 @@ sub create : Path('create') Args(0) {
                 breeding_program  => $program_choice,
                 location          => $location_in,
                 year              => $trial_year,
-                date              => $planting_date,
+                date              => $meeting_date,
                 attendees         => $attendees,
             },
         }));
@@ -2739,7 +2766,7 @@ sub create : Path('create') Args(0) {
             breeding_program  => $program_name,
             location          => $location_name,
             year              => $trial_year,
-            date              => $planting_date,
+            date              => $meeting_date,
             attendees         => $attendees,
         },
     }));
@@ -2945,16 +2972,57 @@ sub _resolve_location_name {
 }
 
 sub people : Path('people') : Args(0) : ActionClass('REST') { }
+
+sub _configured_meeting_roles {
+    my ($self, $raw_roles) = @_;
+
+    my @config_values = ref($raw_roles) eq 'ARRAY'
+        ? @$raw_roles
+        : (defined($raw_roles) ? $raw_roles : ());
+
+    my (@roles, %seen);
+    foreach my $config_value (@config_values) {
+        next if !defined($config_value) || ref($config_value);
+
+        foreach my $role (split /,/, $config_value) {
+            $role =~ s/^\s+|\s+$//g;
+            next if $role eq '';
+
+            my $key = lc($role);
+            next if $seen{$key}++;
+            push @roles, $key;
+        }
+    }
+
+    return \@roles;
+}
+
 sub people_GET {
     my ($self, $c) = @_;
 
+    my $meeting_roles = $self->_configured_meeting_roles(
+        $c->config->{meeting_role}
+    );
+    return $self->status_ok($c, entity => []) unless @$meeting_roles;
+
+    my $placeholders = join(', ', ('?') x @$meeting_roles);
     my $dbh = $c->dbc->dbh;
-    my $sth = $dbh->prepare(q{
-        SELECT first_name, last_name, contact_email
-        FROM sgn_people.sp_person
-        ORDER BY last_name, first_name
+    my $sth = $dbh->prepare(qq{
+        SELECT person.first_name, person.last_name, person.contact_email
+        FROM sgn_people.sp_person AS person
+        WHERE COALESCE(person.censor, 0) = 0
+          AND person.disabled IS NULL
+          AND EXISTS (
+              SELECT 1
+              FROM sgn_people.sp_person_roles AS person_role
+              JOIN sgn_people.sp_roles AS role
+                ON role.sp_role_id = person_role.sp_role_id
+              WHERE person_role.sp_person_id = person.sp_person_id
+                AND LOWER(role.name) IN ($placeholders)
+          )
+        ORDER BY person.last_name, person.first_name, person.contact_email
     });
-    $sth->execute();
+    $sth->execute(@$meeting_roles);
 
     my @rows;
     while (my ($first_name, $last_name, $contact_email) = $sth->fetchrow_array) {

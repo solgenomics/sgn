@@ -1810,7 +1810,7 @@
 
         var meetingYearFull = '';
         if (meetingDate) {
-          var m = String(meetingDate).match(/^(\d{4})-/);
+          var m = String(meetingDate).match(/^(\d{4})[\/-]/);
           if (m) {
             meetingYearFull = m[1];
           } else {
@@ -2081,18 +2081,18 @@
   }
 
   function formatMeetingDateForDisplay(date) {
-    return twoDigit(date.getDate()) + '/' +
-      twoDigit(date.getMonth() + 1) + '/' +
-      date.getFullYear();
+    return date.getFullYear() + '-' +
+      twoDigit(date.getMonth() + 1) + '-' +
+      twoDigit(date.getDate());
   }
 
   function meetingDateForServer(value) {
-    const match = $.trim(value || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    const match = $.trim(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (!match) return '';
 
-    const day = Number(match[1]);
+    const year = Number(match[1]);
     const month = Number(match[2]);
-    const year = Number(match[3]);
+    const day = Number(match[3]);
     const parsed = new Date(year, month - 1, day);
 
     if (parsed.getFullYear() !== year ||
@@ -2119,8 +2119,8 @@
 
     $date.datepicker({
       // jQuery UI uses dateFormat; Bootstrap Datepicker uses format.
-      dateFormat: 'dd/mm/yy',
-      format: 'dd/mm/yyyy',
+      dateFormat: 'yy-mm-dd',
+      format: 'yyyy-mm-dd',
       changeMonth: true,
       changeYear: true,
       autoclose: true,
@@ -2153,8 +2153,8 @@
     if (!p.meeting_name) return 'Please enter the Meeting name.';
     if (!p.location) return 'Please enter the Location.';
     if (!p.year || isNaN(Number(p.year))) return 'Please enter a valid Year.';
-    if (!$.trim($('#mtg_date').val() || '')) return 'Please enter the Date in DD/MM/YYYY format.';
-    if (!p.date) return 'Please enter a valid Date in DD/MM/YYYY format.';
+    if (!$.trim($('#mtg_date').val() || '')) return 'Please enter the Date in YYYY-MM-DD format.';
+    if (!p.date) return 'Please enter a valid Date in YYYY-MM-DD format.';
     if (!p.breeding_programs || p.breeding_programs.length === 0) return 'Please select at least one Breeding Program.';
     return '';
   }
@@ -2610,6 +2610,23 @@
     return j.notes || j.meeting_notes || j.data || '';
   }
 
+  function normalizeMeetingDateForDisplay(value){
+    var match = String(value || '').trim().match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})$/);
+    if (!match) return '';
+
+    var year = Number(match[1]);
+    var month = Number(match[2]);
+    var day = Number(match[3]);
+    var parsed = new Date(year, month - 1, day);
+    if (parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day) {
+      return '';
+    }
+
+    return match[1] + '-' + match[2] + '-' + match[3];
+  }
+
   function meetingCheckboxHtml(id, name, date, saved){
     if (saved) {
       return '<span class="dm-meeting-select-disabled" title="This meeting has already been saved.">Saved</span>';
@@ -2688,7 +2705,7 @@
       var j = parseJSON(r.meeting_data || r.meeting_json);
       var id    = r.project_id;
       var name  = r.meeting_name || j.meeting_name || r.project_name || '';
-      var date  = r.meeting_date || j.date || j.meeting_date || '';
+      var date  = normalizeMeetingDateForDisplay(r.meeting_date || j.date || j.meeting_date || '');
       var loc   = r.meeting_location || j.location_name || j.location || j.location_raw || '';
       var progs = r.meeting_programs || getMeetingProgramsText(j);
       var atts  = r.meeting_attendees || getMeetingAttendeesText(j);
