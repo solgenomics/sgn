@@ -54,6 +54,7 @@ sub legendre_polynomial_sum {
     my $value = 0;
     my $coeff_counter = 0;
     foreach my $b (@$coeffs) {
+        next if $b < 0;
         my $legendre_term = $legendre_coeff_subs[$coeff_counter];
         if (!$legendre_term) {
             print STDERR "No Legendre polynomial defined for coefficient number $coeff_counter. Skipping it.\n";
