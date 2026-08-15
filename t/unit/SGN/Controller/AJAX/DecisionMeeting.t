@@ -53,6 +53,7 @@ ok(
     'the persisted successful status identifies a saved meeting',
 );
 
+## no critic (Modules::RequireFilenameMatchesPackage)
 {
     package Local::DecisionMeeting::LocationRow;
     sub new { bless { description => $_[1] }, $_[0] }
@@ -86,6 +87,7 @@ ok(
         return Local::DecisionMeeting::LocationResultSet->new($self->{locations});
     }
 }
+## use critic
 
 my $location_schema = Local::DecisionMeeting::LocationSchema->new({ BTI => 1 });
 is(

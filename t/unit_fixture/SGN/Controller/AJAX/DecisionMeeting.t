@@ -9,6 +9,7 @@ use SGN::Model::Cvterm;
 use SGN::Test::Fixture;
 use Test::More;
 
+## no critic (Modules::RequireFilenameMatchesPackage)
 {
     package Local::DecisionMeetingCreate::Person;
 
@@ -87,6 +88,7 @@ use Test::More;
     sub log         { return $_[0]->{log}; }
     sub dbic_schema { return $_[0]->{schema}; }
 }
+## use critic
 
 my $fixture = SGN::Test::Fixture->new();
 my $schema  = $fixture->bcs_schema;
