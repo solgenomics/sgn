@@ -472,6 +472,9 @@ sub get_phenotype_matrix {
         }
 
         foreach my $d (@$data) {
+            # Native all-level searches also return observation units that have
+            # no phenotype.  Keep those rows for their metadata below, but do
+            # not create an empty trait column for the NULL side of the join.
             next unless defined($d->{trait_name}) && $d->{trait_name} ne '';
 
             my $value = "";
