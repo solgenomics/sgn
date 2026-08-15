@@ -36,13 +36,27 @@ sub create_trait :Path('/ajax/trait/create') {
     my $category_details = $c->req->param('category_details') ? $c->req->param('category_details') : undef;
     my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
     my $parent_terms = $c->req->param('parent_terms') ? $c->req->param('parent_terms') : undef;
-    my $parent_dbs = $c->req->pram('parent_dbs') ? $c->req->pram('parent_dbs') : undef;
+    my $parent_dbs = $c->req->param('parent_dbs') ? $c->req->param('parent_dbs') : undef;
+    my $ontology_db_name = $c->req->param('ontology_db_name') ? $c->req->param('ontology_db_name') : undef;
+
+    if (!$ontology_db_name) {
+        $c->stash->{rest} = {error => "You must select the trait ontology that the new trait belongs to.\n"};
+        return;
+    }
 
     my $editable_ontologies_str = $c->config->{allow_trait_edits};
     my @editable_ontologies = split(",", $editable_ontologies_str);
+    my @parent_dbs = split(",", $parent_dbs);
+    foreach my $parent_db (@parent_dbs) { # ALL of the parent DBs need to be editable, or traits need to be editable in general
+        if (! ($editable_ontologies_str == 1 || (grep {$parent_db eq $_} @editable_ontologies))) {
+            $c->stash->{rest} = {error => "Ontology $parent_db is not editable on this server - contact a system administrator.\n"};
+            return;
+        }
+    }
 
-    if (! ($editable_ontologies_str == 1 || (grep {$parent_dbs =~ m/($_)/} @editable_ontologies ) ) ) {
-        $c->stash->{rest} = {error => "You do not have permission to design new traits.\n"};
+    # the ontology the new term is stored in must be editable in its own right, since the parent dbs are supplied by the client
+    if (! ($editable_ontologies_str == 1 || (grep {$ontology_db_name eq $_} @editable_ontologies))) {
+        $c->stash->{rest} = {error => "Ontology $ontology_db_name is not editable on this server - contact a system administrator.\n"};
         return;
     }
 
@@ -143,7 +157,7 @@ sub create_trait :Path('/ajax/trait/create') {
             $new_trait->default_value($default_value);
         }
 
-        $new_trait->interactive_store($parent_terms);
+        $new_trait->interactive_store($parent_terms, $ontology_db_name);
     };
 
     if ($@) {
@@ -169,22 +183,28 @@ sub edit_trait :Path('/ajax/trait/edit') {
     my $cvterm_id = $c->req->param('cvterm_id') ? $c->req->param('cvterm_id') : undef;
     my $new_name = $c->req->param('new_name') ? $c->req->param('new_name') : undef;
     my $new_definition = $c->req->param('new_definition') ? $c->req->param('new_definition') : undef;
+    my $trait;
+    if (!$cvterm_id) {
+        $c->stash->{rest} = {error => "Cvterm ID missing.\n"};
+        return;
+    }
+
+    eval {
+        $trait = CXGN::Trait->new({
+            bcs_schema => $schema,
+            cvterm_id => $cvterm_id
+        });
+    };
+    if ($@) {
+        $c->stash->{rest} = {error => "An error occurred retreiving cvterm information: $@\n"};
+        return;
+    }
 
     my $editable_ontologies_str = $c->config->{allow_trait_edits};
     my @editable_ontologies = split(",", $editable_ontologies_str);
 
-    my $trait = CXGN::Trait->new({
-        bcs_schema => $schema,
-        cvterm_id => $cvterm_id
-    });
-
     if (! ($editable_ontologies_str == 1 || (grep {$_ eq $trait->db()} @editable_ontologies ) ) ) {
         $c->stash->{rest} = {error => "You do not have permission to edit traits.\n"};
-        return;
-    }
-
-    if (!$cvterm_id) {
-        $c->stash->{rest} = {error => "Cvterm ID missing.\n"};
         return;
     }
 

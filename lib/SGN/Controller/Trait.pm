@@ -27,23 +27,26 @@ sub trait_design_page : Path('/traits/design/') Args(0) {
     my @db_names;
 
     my @root_terms = map {{name => $_->[1] =~ s/\w+:\d+ //r, cv_id => $_->[0], db_name => $_->[1] =~ s/:.*//r}} @root_nodes;
-    foreach my $term (@root_terms) { 
+    foreach my $term (@root_terms) {
         push @db_names, $term->{db_name};
     }
 
+    my %seen; # an ontology can have more than one root node, but should only be listed once
+    @db_names = grep { !$seen{$_}++ } @db_names;
+
     my $editable_ontologies_str = $c->config->{allow_trait_edits}; #this can be 1 or a list of dbnames
 
-    if ($editable_ontologies_str == 1) { #just give the first hit
+    if ($editable_ontologies_str == 1) { #every trait ontology is editable
         $c->stash(
             template => '/tools/trait_designer.mas',
-            db_names => $db_names[0]
+            db_names => join(",",@db_names)
         );
     } else { #need to actually check if trait ontology is editable
         my @editable_ontologies = split(",", $editable_ontologies_str);
         my @editable_dbnames;
-        foreach my $term (@root_terms) { 
-            if (grep {$_ eq $term->{db_name}} @editable_ontologies) { #if this root term is editable per the config, add it to the list
-                push @editable_dbnames, $term->{db_name};
+        foreach my $db_name (@db_names) {
+            if (grep {$_ eq $db_name} @editable_ontologies) { #if this ontology is editable per the config, add it to the list
+                push @editable_dbnames, $db_name;
             }
         }
         if (scalar(@editable_dbnames > 0)) {
