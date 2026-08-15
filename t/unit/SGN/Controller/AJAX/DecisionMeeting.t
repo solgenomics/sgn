@@ -101,12 +101,12 @@ is(
     'configured meeting location is rejected when it does not exist in the location table',
 );
 
-my $unicode_json = '{"date":"2026-08-04","attendees":["André Luis Hartmann Caranhato"]}';
+my $unicode_json = '{"date":"2026-08-04","attendees":["Tést Attendee Two"]}';
 my ($unicode_data, $unicode_error) = $controller->_decode_meeting_json($unicode_json);
 is($unicode_error, '', 'meeting JSON accepts an already-decoded Unicode string');
 is(
     $unicode_data->{attendees}->[0],
-    'André Luis Hartmann Caranhato',
+    'Tést Attendee Two',
     'accented attendee names survive character-string JSON decoding',
 );
 
@@ -116,7 +116,7 @@ my ($byte_data, $byte_error) = $controller->_decode_meeting_json($utf8_json_byte
 is($byte_error, '', 'meeting JSON accepts UTF-8 bytes');
 is(
     $byte_data->{attendees}->[0],
-    'André Luis Hartmann Caranhato',
+    'Tést Attendee Two',
     'accented attendee names survive byte-string JSON decoding',
 );
 
@@ -132,8 +132,8 @@ is_deeply(
             location               => 'Uberlandia',
             location_raw           => '616',
             attendees              => [
-                'Charles Hobi Zimmer',
-                'André Luis Hartmann Caranhato',
+                'Test Attendee One',
+                'Tést Attendee Two',
             ],
         },
     ),
@@ -143,7 +143,7 @@ is_deeply(
         meeting_date      => '2026-08-04',
         meeting_year      => '2026',
         meeting_location  => 'Uberlandia',
-        meeting_attendees => 'Charles Hobi Zimmer, André Luis Hartmann Caranhato',
+        meeting_attendees => 'Test Attendee One, Tést Attendee Two',
     },
     'tracker metadata is populated directly from the saved meeting record',
 );
