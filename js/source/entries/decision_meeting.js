@@ -982,7 +982,9 @@
         if (!$sel.length) return;
         $sel.empty().append('<option value="">(choose a list)</option>');
         ((resp && resp.lists) || []).forEach(function(li){
-          $sel.append('<option value="' + (li.list_id || '') + '">' + (li.name || ('List ' + li.list_id)) + '</option>');
+          var id = li.list_id || '';
+          var name = li.name || ('List ' + id);
+          $sel.append($('<option></option>').val(String(id)).text(String(name)));
         });
       });
     }
@@ -1045,8 +1047,8 @@
       var cur = normDecision(current);
       return '' +
         '<select class="dm-decision-select form-control input-sm ' + colorClass(cur) + '" ' +
-                'data-acc="' + String(acc || '').replace(/"/g, '&quot;') + '" ' +
-                'data-bp="' + String(bp || '').replace(/"/g, '&quot;') + '">' +
+                'data-acc="' + escapeHtml(acc) + '" ' +
+                'data-bp="' + escapeHtml(bp) + '">' +
           '<option value="">(select)</option>' +
           '<option value="drop"' +    (cur === 'drop'    ? ' selected' : '') + '>Drop</option>' +
           '<option value="hold"' +    (cur === 'hold'    ? ' selected' : '') + '>Hold</option>' +
@@ -1226,6 +1228,12 @@
         scrollX:true,
         scrollCollapse:true,
         deferRender:true,
+        columnDefs: [{
+          targets: [0, 1, 2, 3, 5, 6, 7, 8],
+          render: function(data, type){
+            return type === 'display' ? escapeHtml(data) : data;
+          }
+        }],
         drawCallback: function () {
           var api = this.api();
           setTimeout(function () {
@@ -1611,6 +1619,10 @@
 
         var dlg = document.getElementById('dm_save_dialog');
         if (dlg) dlg.close('saved');
+
+        document.dispatchEvent(new CustomEvent('meeting:decisions-saved', {
+          detail: { meeting_id: payload.meeting_id }
+        }));
 
         alert((data && (data.message || data.detail)) || 'All decisions were saved successfully.');
       } catch (e) {
@@ -2029,6 +2041,15 @@
     $('#create-meeting-error').hide().text('');
   }
 
+  function dmEscapeHtml(value){
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function ensureMultiProgramControl() {
     const $sel = $('#mtg_program');
     if (!$sel.length) return;
@@ -2152,7 +2173,7 @@
   function validate(p){
     if (!p.meeting_name) return 'Please enter the Meeting name.';
     if (!p.location) return 'Please enter the Location.';
-    if (!p.year || isNaN(Number(p.year))) return 'Please enter a valid Year.';
+    if (!/^\d{4}$/.test(p.year)) return 'Please enter the Year in YYYY format.';
     if (!$.trim($('#mtg_date').val() || '')) return 'Please enter the Date in YYYY-MM-DD format.';
     if (!p.date) return 'Please enter a valid Date in YYYY-MM-DD format.';
     if (!p.breeding_programs || p.breeding_programs.length === 0) return 'Please select at least one Breeding Program.';
@@ -2176,7 +2197,9 @@
         (items || []).forEach(function(l){
           const id = l.location_id ?? '';
           const nm = l.name ?? String(id);
-          if (id !== '') $sel.append('<option value="' + id + '">' + nm + '</option>');
+          if (id !== '') {
+            $sel.append($('<option></option>').val(String(id)).text(String(nm)));
+          }
         });
       })
       .fail(function(){});
@@ -2194,10 +2217,11 @@
   }
 
   function normPerson(p){
+    p = p && typeof p === 'object' ? p : {};
     return {
-      first_name:    (p.first_name ?? p.first ?? p.given_name ?? '').trim(),
-      last_name:     (p.last_name  ?? p.last  ?? p.family_name ?? '').trim(),
-      contact_email: (p.contact_email ?? p.email ?? '').trim()
+      first_name:    String(p.first_name ?? p.first ?? p.given_name ?? '').trim(),
+      last_name:     String(p.last_name  ?? p.last  ?? p.family_name ?? '').trim(),
+      contact_email: String(p.contact_email ?? p.email ?? '').trim()
     };
   }
 
@@ -2261,15 +2285,19 @@
       const key = personKey(p);
       const em  = p.contact_email || '';
       const checked = PEOPLE_SELECTED.has(key) ? ' checked' : '';
+      const safeKey = dmEscapeHtml(key);
+      const safeEmail = dmEscapeHtml(em);
+      const safeFirst = dmEscapeHtml(p.first_name || '');
+      const safeLast = dmEscapeHtml(p.last_name || '');
       return (
         '<tr>'
           + '<td class="text-center">'
             + `<input type="checkbox" class="person-check attendee-check" id="${id}"`
-              + ` data-key="${key}" data-email="${em}" data-first="${p.first_name || ''}" data-last="${p.last_name || ''}"${checked}>`
+              + ` data-key="${safeKey}" data-email="${safeEmail}" data-first="${safeFirst}" data-last="${safeLast}"${checked}>`
           + '</td>'
-          + `<td><label for="${id}" class="sr-only">Select ${p.first_name || 'person'}</label>${p.first_name || ''}</td>`
-          + `<td>${p.last_name || ''}</td>`
-          + `<td>${em}</td>`
+          + `<td><label for="${id}" class="sr-only">Select ${safeFirst || 'person'}</label>${safeFirst}</td>`
+          + `<td>${safeLast}</td>`
+          + `<td>${safeEmail}</td>`
         + '</tr>'
       );
     }).join('');
@@ -2405,7 +2433,7 @@
           (items || []).forEach(function(p){
             const id = (p.program_id ?? p.name ?? '');
             const nm = (p.name ?? String(p.program_id));
-            $sel.append('<option value="' + id + '">' + nm + '</option>');
+            $sel.append($('<option></option>').val(String(id)).text(String(nm)));
           });
           upgradeMultiProgramUI(items);
           $sel.trigger('change');
@@ -2485,12 +2513,12 @@
           $('#createMeetingModal').modal('hide');
           document.dispatchEvent(new CustomEvent('meeting:created', { detail: Object.assign({}, p, r) }));
         } else {
-          showErr((r && (r.message || r.detail)) || 'Unexpected server response.');
+          showErr((r && (r.message || r.msg || r.detail)) || 'Unexpected server response.');
         }
       })
       .fail(function (xhr) {
         const serverMsg =
-          (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.detail)) ||
+          (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.msg || xhr.responseJSON.detail)) ||
           xhr.responseText ||
           '';
 
@@ -2585,6 +2613,7 @@
     if (j.decisions_saved === true) return true;
     if (String(j.status || '').toLowerCase() === 'saved') return true;
     if (String(j.save_status || '').toLowerCase() === 'saved') return true;
+    if (String(j.saved_status || '').toLowerCase() === 'successfully') return true;
     if (j.saved_at) return true;
     if (j.date_saved) return true;
     return false;
@@ -2770,9 +2799,16 @@
   async function downloadMeetingReport(meetingId){
     var base = (window.DM_API_BASE || '/ajax/decisionmeeting');
     var url = base + '/meeting_report_html?meeting_id=' + encodeURIComponent(meetingId);
+    var reportWindow = window.open('', '_blank');
+
+    if (!reportWindow) {
+      throw new Error('Your browser blocked the report window. Allow pop-ups for this site and try again.');
+    }
+    reportWindow.opener = null;
 
     try {
       var resp = await fetch(url, {
+        cache: 'no-store',
         headers: { 'Accept': 'text/html,application/json' }
       });
 
@@ -2788,16 +2824,19 @@
         }
       }
 
-      window.open(url, '_blank');
+      reportWindow.location.href = url;
     } catch (err) {
-      alert(err && err.message ? err.message : 'Could not open meeting report.');
+      reportWindow.close();
       throw err;
     }
   }
 
-  document.addEventListener('meeting:created', function(){
+  function refreshMeetingTracker(){
     setTimeout(loadMeetingTracker, 200);
-  });
+  }
+
+  document.addEventListener('meeting:created', refreshMeetingTracker);
+  document.addEventListener('meeting:decisions-saved', refreshMeetingTracker);
 
   var dmMeetingResizeTimer = null;
 
@@ -2843,7 +2882,7 @@
       try {
         await downloadMeetingReport(meetingId);
       } catch (e) {
-        alert('Could not open the meeting report.');
+        alert(e && e.message ? e.message : 'Could not open the meeting report.');
       } finally {
         $btn.prop('disabled', false).text(original);
       }

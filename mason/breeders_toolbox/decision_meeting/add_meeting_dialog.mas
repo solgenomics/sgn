@@ -5,7 +5,8 @@ $high_dimensional_phenotype_type => undef #either NIRS, Transcriptomics, Metabol
 <!-- Create Meeting Modal -->
 
 <style>
-  #ui-datepicker-div {
+  #ui-datepicker-div,
+  .datepicker-dropdown {
     z-index: 1060 !important;
   }
 </style>
