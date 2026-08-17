@@ -276,10 +276,11 @@ jQuery(document).ready(function (){
 });
 
 function show_table() {
-    jQuery("#markerset_filter_warning").css("display", URL_PARAMS.has('defaultProtocol') ? 'flex' : 'none');
+    var hasFilter = URL_PARAMS.has('defaultProtocol') && URL_PARAMS.get('defaultProtocol') !== "";
+    jQuery("#markerset_filter_warning").css("display", hasFilter ? 'flex' : 'none');
     var markersets_table = jQuery('#marker_sets').DataTable({
         'destroy': true,
-        'ajax':{'url': `/marker_sets/available?protocolId=${URL_PARAMS.has('defaultProtocol') ? URL_PARAMS.get('defaultProtocol') : ''}`},
+        'ajax':{'url': `/marker_sets/available?protocolId=${hasFilter ? URL_PARAMS.get('defaultProtocol') : ''}`},
         'columns': [
             {title: "List Name", "data": "markerset_name"},
             {title: "Protocol", "data": "null", "render": function(data, type, row) { return `<a href="/breeders_toolbox/protocol/${row.metadata.genotyping_protocol_id}" target="_blank">${row.metadata.genotyping_protocol_name}</a>` }},
