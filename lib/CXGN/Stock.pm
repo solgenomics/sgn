@@ -1350,6 +1350,7 @@ sub get_trials {
     my $plot_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $tissue_sample_type_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $intercrop_plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'intercrop_plot_of', 'stock_relationship')->cvterm_id();
     my $subplot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
     my $plant_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
@@ -1380,12 +1381,12 @@ sub get_trials {
     JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id = nd_experiment_project.nd_experiment_id)
     JOIN project ON (nd_experiment_project.project_id = project.project_id)
     JOIN projectprop ON (project.project_id=projectprop.project_id) AND projectprop.type_id = ?
-    LEFT JOIN stock_relationship AS stock_relationship_1 ON (stock.stock_id=stock_relationship_1.subject_id) AND stock_relationship_1.type_id IN (?,?,?)
+    LEFT JOIN stock_relationship AS stock_relationship_1 ON (stock.stock_id=stock_relationship_1.subject_id) AND stock_relationship_1.type_id IN (?,?,?,?)
     LEFT JOIN stock_relationship AS stock_relationship_2 ON (stock.stock_id=stock_relationship_2.object_id) AND stock_relationship_2.type_id = ?
     $where_clause;";
 
     my $h = $dbh->prepare($q);
-    $h->execute($geolocation_type_id, $plot_of_type_id, $subplot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id);
+    $h->execute($geolocation_type_id, $plot_of_type_id, $intercrop_plot_of_type_id, $subplot_of_type_id, $plant_of_type_id, $tissue_sample_of_type_id);
     my @trials;
     while (my ($project_id, $project_name, $nd_geolocation_id) = $h->fetchrow_array()) {
         push @trials, [ $project_id, $project_name, $nd_geolocation_id, $geolocations{$nd_geolocation_id} ];
