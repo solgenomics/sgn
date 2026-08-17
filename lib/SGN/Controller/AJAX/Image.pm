@@ -395,9 +395,9 @@ sub verify_exif_POST {
                 if ($cvterm) {
                     $cvterm_id = $cvterm->cvterm_id();
                 }
-                else {
-                    $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
-                }
+            }
+            else {
+                $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
             }
 
             $decoded_json->{stock_name} = $stock_name;
