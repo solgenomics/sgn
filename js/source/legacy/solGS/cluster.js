@@ -829,21 +829,32 @@ solGS.cluster = {
     var clusterArgs;
 
     var selectedPopDiv = document.getElementById(runClusterElemId);
+    
+
     if (selectedPopDiv) {
-      var selectedPopData = selectedPopDiv.dataset;
+        var protocolId;
+        var selectedPopData = selectedPopDiv.dataset;
 
-      clusterArgs = JSON.parse(selectedPopData.selectedPop);
-      var clusterPopId = clusterArgs.data_str + "_" + clusterArgs.id;
+        clusterArgs = JSON.parse(selectedPopData.selectedPop);
+        var clusterPopId = clusterArgs.data_str + "_" + clusterArgs.id;
 
-      var protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
+        if (clusterArgs.data_str && clusterArgs.data_str.match(/dataset/)) {
+            var datasetId = clusterArgs.id;
+            protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+        }
 
-      clusterArgs["analysis_type"] = "cluster analysis";
-      clusterArgs["genotyping_protocol_id"] = protocolId;
-      clusterArgs["cluster_pop_id"] = clusterPopId;
-      clusterArgs["data_structure"] = clusterArgs.data_str;
+        if (!protocolId) {
+            protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("cluster_div");
+        }
+
+        clusterArgs["analysis_type"] = "cluster analysis";
+        clusterArgs["genotyping_protocol_id"] = protocolId;
+        clusterArgs["cluster_pop_id"] = clusterPopId;
+        clusterArgs["data_structure"] = clusterArgs.data_str;
     }
 
     return clusterArgs;
+    
   },
 
   populateClusterMenu: function (newPop) {

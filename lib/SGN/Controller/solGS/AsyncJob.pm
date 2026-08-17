@@ -831,13 +831,17 @@ sub record_job_submission {
             my $job_record = CXGN::Job->new({
                 schema => $c->dbic_schema("Bio::Chado::Schema"),
                 people_schema => $c->dbic_schema("CXGN::People::Schema"),
+                dbhost => $c->config->{dbhost},
+                dbname => $c->config->{dbname},
+                dbuser => $c->config->{dbuser},
+                dbpass => $c->config->{dbpass},
+                basepath => $c->config->{basepath},
                 sp_person_id => $user,
                 job_type => $job_args->{analysis_type},
                 name => $job_args->{analysis_name},
                 results_page => $job_args->{analysis_page},
                 cmd => $args->{cmd},
                 cxgn_tools_run_config => $args->{config},
-                finish_logfile => $c->config->{job_finish_log},
                 additional_args => $job_args
             });
 
@@ -868,18 +872,20 @@ sub submit_job_cluster {
             push @finish_timestamp_cmds, $finish_timestamp_cmd;
         }
     }
-    
+
     my $job;
 
     eval {
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
+        # $job->is_cluster(1);
+        # $job->run_cluster( "(" . $args->{cmd} . join( '', @finish_timestamp_cmds ) . ")" );
 
         if ( $args->{background_job} ) {
             $job->is_async(1);
 
             foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
-                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+                $job->run_async( "( ".$args->{cmd}.$finish_timestamp_cmd." )" );
             }
 
             $c->stash->{r_job_tempdir}  = $job->job_tempdir();
@@ -890,25 +896,18 @@ sub submit_job_cluster {
             foreach my $job_record (@$job_records) {
                 $job_record->backend_id($job->cluster_job_id());
                 $job_record->store();
-            
-                if ($job_record) {
-                    $job_record->backend_id($job->cluster_job_id());
-                    $job_record->store();
-                }
             }
         }
         else {
-
             if (@$job_records) {
                 foreach my $finish_timestamp_cmd (@finish_timestamp_cmds) {
-                    $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+                    $job->run_async( "( ".$args->{cmd}. $finish_timestamp_cmd." )" );
                 }
             } else {
-                $job->run_async( $args->{cmd}. $finish_timestamp_cmd );
+                $job->run_async( "( ".$args->{cmd}. $finish_timestamp_cmd." )" );
             }
-
-            print STDERR "Waiting for job to finish...\n";
-            $job->wait();
+            # print STDERR "Waiting for job to finish...\n";
+            # $job->wait();
         }
     };
 

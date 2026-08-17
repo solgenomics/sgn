@@ -5,7 +5,7 @@
 
 <div style="text-align: center; margin: 2em 0">
    <h2 style="margin-bottom: 1em">Design new experimental treatments</h2>
-   <h4>Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit their treatments from their parent stocks.</h4>
+   <h4>Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit treatments from their parent stocks.</h4>
 
    <h4> Check the <a href='/search/treatments'>treatment search page</a> to see if your treatment has already been made before designing new treatments.</h4>
 
@@ -16,7 +16,7 @@
         <div class="form-group">
                 <label class="col-sm-3 control-label"> New treatment name: </label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="ASCII characters only. Non-ASCII characters and pipes (|)  will be removed."/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Pipes (|)  will be removed from name."/>
                 </div>
             </div>
             <div class="form-group">

@@ -44,7 +44,6 @@ sub create_trait :Path('/ajax/trait/create') {
 
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
-    $name =~ s/[^[:ascii:]]//g;
     $name =~ s/\|//g;
 
     $definition =~ s/^\s+//;

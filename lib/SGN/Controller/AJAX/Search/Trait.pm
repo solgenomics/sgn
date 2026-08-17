@@ -111,6 +111,7 @@ sub search : Path('/ajax/search/traits') Args(0) {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh } );
 
     my %seen;
+    my %seen_synonym;
     my @ordered_ids;
 
     foreach my $trait (@$data) {
@@ -119,7 +120,10 @@ sub search : Path('/ajax/search/traits') Args(0) {
             $seen{$id} = {%$trait, synonyms => []};
             push @ordered_ids, $id;
         }
-        push @{$seen{$id}{synonyms}}, $trait->{synonym} if $trait->{synonym};
+        my $syn = $trait->{synonym};
+        if (defined $syn && length $syn && !$seen_synonym{$id}{$syn}++) {
+            push @{ $seen{$id}{synonyms} }, $syn;
+        }
     }
 
     foreach my $id (@ordered_ids) {
