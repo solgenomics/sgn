@@ -123,13 +123,20 @@ const updateMarkersetListOptions = () => {
 
     _addOption({ label: "Select a list of marker alleles" });
     _addOption({ label: "--------YOUR LISTS BELOW--------", disabled: true });
-    lists?.private_lists?.forEach(([id, name]) => _addOption(_parseList(id, name)));
+    lists?.private_lists?.forEach((listParams) => {
+        _addOption(
+            _parseList(listParams[0], listParams[1], listParams[9])
+        );
+    });
     _addOption({ label: "--------PUBLIC LISTS BELOW--------", disabled: true });
-    lists?.public_lists?.forEach(([id, name]) => _addOption(_parseList(id, name)));
+    lists?.public_lists?.forEach((listParams) => {
+        _addOption(
+            _parseList(listParams[0], listParams[1], listParams[9])
+        );
+    });
 
-    function _parseList(id, name) {
-        const { elements } = lo.getListData(id);
-        const metadata = JSON.parse(elements[0][1] || '{}');
+    function _parseList(id, name, first_item) {
+        const metadata = JSON.parse(first_item || '{}');
         const protocol_id = metadata.genotyping_protocol_id;
         const protocol_name = metadata.genotyping_protocol_name;
         return {

@@ -74,8 +74,8 @@ sub search {
 	foreach (@$lists){
 		my $name = $_->[1];
 		my $id = $_->[0];
-		my $create_date = $_->[-2];
-		my $modified_date = $_->[-1];
+		my $create_date = $_->[7];
+		my $modified_date = $_->[8];
 		if ( $names_arrayref && ! grep { $_ eq $name } @{$names_arrayref} ) { next;};
 		if ( $list_ids_arrayref && ! grep { $_ eq $id } @{$list_ids_arrayref} ) { next;};
 		if ( $list_source_arrayref && ! grep { $_ eq $hostname } @{$list_source_arrayref} ) { next;};
