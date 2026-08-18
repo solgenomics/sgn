@@ -5,36 +5,7 @@
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             </div>
             <div class="modal-body">
-                <div class="well well-sm">
-                    <& /help/file_upload_type.mas, type => "Accession exchanges", optional_column => 0 &>
-                    <br/>
-
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-                            <b>Header:</b><br>
-                            The first row (header) must contain the columns 'plot_name' and 'accession_name'.<br>
-                            An optional additional column, 'new_plot_name' can be added to change the plot names:<br>
-
-                            <table style="margin-top: 3%;" class="table table-bordered table-hover">
-                                <tbody>
-                                <tr>
-                                <td>plot_name</td>
-                                <td>accession_name</td>
-                                <td>new_plot_name (optional)</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <b>Required columns:</b><br>
-                    <b>plot_name:</b> name of plot to change the accession for<br>
-                    <b>accession_name:</b> name of the accession that the plot should be connected to.<br>
-                    <br><b>Optional column:</b><br>
-                    <b>new_plot_name:</b> new name for plot.<br>
-                    <div class="list-group-item-warning" >
-                        <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. Changing plot accessions may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
-                    </div>
-                </div>
+                <& /file_formats/change_accessions_file_desc.mas &>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
