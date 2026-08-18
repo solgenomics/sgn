@@ -3109,6 +3109,35 @@ export function commit_upload_job(job_id) {
                 }
             });
             break;
+        case 'images' :
+        case 'images_barcodes' :
+            // Storing images is slow enough that it runs as a background job, so this only submits
+            // the batch. The images themselves are reported on by the job once it finishes.
+            jQuery.ajax({
+                url: '/ajax/image/store_images',
+                type : 'POST',
+                traditional : true,
+                data : {
+                    'archived_file_ids' : job.args.additional_args.file_ids,
+                    'image_type' : upload_type,
+                    'ignore_warnings' : job.args.additional_args.ignore_warnings
+                },
+                success: function(response) {
+                    // These endpoints report errors as an array, and an empty array is truthy in
+                    // javascript, so the length has to be checked as well.
+                    if (response.error && response.error.length) {
+                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                        alert(`An error occurred: ${error_messages}`);
+                        console.log(response.error);
+                    }
+                    refresh_upload_tables();
+                },
+                error: function() {
+                    alert("An error occurred submitting the image upload, check console.");
+                    return;
+                }
+            });
+            break;
         case 'treatments' :
             jQuery.ajax({
                 url: '/ajax/phenotype/upload_store/spreadsheet/treatment',

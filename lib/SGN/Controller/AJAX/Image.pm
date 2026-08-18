@@ -371,7 +371,7 @@ sub scan_barcode_POST {
         job_type => 'upload',
         additional_args => {
             is_validation => 1,
-            file_type => 'images',
+            file_type => 'images_barcodes',
             ignore_warnings => $ignore_warnings,
             user_name => "$user_first_name $user_last_name",
             file_id => $archived_file_ids[0],
@@ -691,6 +691,107 @@ sub verify_exif_POST {
     }
 
     $c->stash->{rest} = { images => \@results, success => \@success_status, warning => \@warning_status, error => \@error_status };
+}
+
+=head2 store_images
+
+Stores a batch of already archived and validated images in the database, associating each one with
+the observation unit found in its EXIF metadata ("images") or in its barcode ("images_barcodes").
+
+Images are stored by a background script rather than in-process, because processing an image is slow
+and a batch can be arbitrarily large. The script reports its progress back to the job it was
+submitted from, so a batch that stores some images and fails on others reports both.
+
+=cut
+
+sub store_images : Path('/ajax/image/store_images') : Args(0) : ActionClass('REST') { }
+
+sub store_images_POST {
+    my ($self, $c) = @_;
+
+    # Check if user is logged in and has curator or submitter privileges
+    if (!$c->user()) {
+        $c->stash->{rest} = { error => "You need to be logged in to upload images." };
+        return;
+    }
+    if (!any { $_ eq "curator" || $_ eq "submitter" } ($c->user()->roles)) {
+        $c->stash->{rest} = { error => "You have insufficient privileges to upload images." };
+        return;
+    }
+
+    my $user_id = $c->user()->get_object->get_sp_person_id;
+    my $username = $c->user()->get_object()->get_username();
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $user_id);
+    my $ignore_warnings = $c->req->param('ignore_warnings');
+
+    # Which of the two image upload types this batch is. Barcoded images get their observation unit
+    # from the barcode, everything else from the EXIF metadata.
+    my $image_type = $c->req->param('image_type') || 'images';
+    if ($image_type ne 'images' && $image_type ne 'images_barcodes') {
+        $c->stash->{rest} = { error => "Unknown image upload type $image_type." };
+        return;
+    }
+
+    my $archived_file_id_param = $c->req->parameters->{'archived_file_ids'} || $c->req->parameters->{'archived_file_ids[]'} || $c->req->parameters->{'archived_file_id'};
+    my @archived_file_ids = ref($archived_file_id_param) eq 'ARRAY' ? @$archived_file_id_param : defined($archived_file_id_param) ? ($archived_file_id_param) : ();
+
+    if (scalar(@archived_file_ids) == 0) {
+        $c->stash->{rest} = { error => "No images were given to store." };
+        return;
+    }
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+    my $archive_path = $c->config->{archive_path};
+    my $image_dir = $c->config->{static_datasets_path}."/".$c->config->{image_dir};
+    my $file_ids = join(",", @archived_file_ids);
+
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job.
+    my $cmd = "perl \"$basepath/bin/store_images.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -id \"$image_dir\" -i \"$file_ids\" -un \"$username\" -t \"$image_type\" -j __SP_JOB_ID__";
+
+    my $job_name = scalar(@archived_file_ids) == 1 ? "1 image upload" : scalar(@archived_file_ids)." images upload";
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
+        cmd => $cmd,
+        name => $job_name,
+        job_type => 'upload',
+        additional_args => {
+            final_upload => 1,
+            file_type => $image_type,
+            ignore_warnings => $ignore_warnings,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_ids[0],
+            file_ids => \@archived_file_ids
+        }
+    });
+
+    my $submit_error;
+    try {
+        $upload_job->submit();
+    } catch {
+        $submit_error = $_;
+    };
+
+    if ($submit_error) {
+        $c->stash->{rest} = { error => "Could not submit the image upload job: $submit_error" };
+        return;
+    }
+
+    $c->stash->{rest} = { success => 1, job_id => $upload_job->sp_job_id() };
 }
 
  sub image_metadata_store {

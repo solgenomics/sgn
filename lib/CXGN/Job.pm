@@ -261,7 +261,9 @@ has 'cxgn_tools_run_config' => (isa => 'Maybe[HashRef]', is => 'rw', predicate =
 
 =head2 cmd()
 
-The command submitted to be run.
+The command submitted to be run. If the command contains the placeholder __SP_JOB_ID__, submit()
+replaces it with this job's id once the job row has been created. Use this to let a background
+script report its own messages and finish status back into the job that started it.
 
 =cut
 
@@ -489,6 +491,14 @@ sub submit {
     }
 
     my $sp_job_id = $self->store();
+
+    # A background script that reports its own success/error messages needs to know which job
+    # it belongs to, but the id doesn't exist until the row above is created. Commands can use
+    # __SP_JOB_ID__ as a placeholder and have it filled in here.
+    if ($cmd =~ m/__SP_JOB_ID__/) {
+        $cmd =~ s/__SP_JOB_ID__/$sp_job_id/g;
+        $self->cmd($cmd);
+    }
 
     my $finish_timestamp_cmd = $self->generate_finish_timestamp_cmd();
 
