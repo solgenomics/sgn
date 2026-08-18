@@ -208,7 +208,9 @@ sub add_family_members_using_list_POST : Args(0) {
         return;
     }
 
-    $user_role = $c->user->get_object->get_user_type();
+    my $user_role = $c->user->get_object->get_user_type();
+    my $user_name = $c->user()->get_object()->get_username();
+
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
         $c->stash->{rest} = {error=>'Only a submitter or a curator can add family members'};
         $c->detach();
