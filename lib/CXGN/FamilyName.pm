@@ -228,6 +228,13 @@ sub remove_family_member {
     eval {
         $dbh->begin_work();
 
+        my $stock_obj = CXGN::Stock->new(schema => $schema, stock_id => $family_id);
+        my @trial_list = $stock_obj->get_trials();
+        if (scalar(@trial_list) > 0) {
+            print STDERR "This family is used in a trial. Cannot remove any member.\n";
+            die "This family is used in a trial. Cannot remove any member.\n";
+        }
+
         my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
         my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
         my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
