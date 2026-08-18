@@ -132,7 +132,20 @@ sub remove_family_member : Path('/ajax/family/remove_member') : ActionClass('RES
 sub remove_family_member_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    if (!$c->user()->check_roles("curator")) {
+        $c->stash->{rest} = { error => "You do not have the correct role to modify family members. Please contact us." };
+        $c->detach();
+    }
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+
     my $cross_id = $c->req->param('cross_id');
     my $family_id = $c->req->param('family_id');
 
@@ -155,16 +168,19 @@ sub delete_family : Path('/ajax/family/delete_family') : ActionClass('REST'){ }
 sub delete_family_POST : Args(0) {
     my $self = shift;
     my $c = shift;
-    my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
-    if (!$c->user()){
-        $c->stash->{rest} = { error => "You must be logged in to delete family" };
-        $c->detach();
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
     }
+
     if (!$c->user()->check_roles("curator")) {
         $c->stash->{rest} = { error => "You do not have the correct role to delete family. Please contact us." };
         $c->detach();
     }
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
 
     my $family_id = $c->req->param("family_id");
 
@@ -184,36 +200,15 @@ sub delete_family_POST : Args(0) {
 sub add_family_members_using_list : Path('/ajax/family/add_family_members_using_list') : ActionClass('REST'){ }
 
 sub add_family_members_using_list_POST : Args(0) {
-
     my $self = shift;
     my $c = shift;
-    my $session_id = $c->req->param("sgn_session_id");
-    my $user_role;
-    my $user_id;
-    my $user_name;
 
-    if ($session_id){
-        my $dbh = $c->dbc->dbh;
-        my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
-        if (!$user_info[0]){
-            $c->stash->{rest} = {error=>'You must be logged in to add family members!'};
-            $c->detach();
-        }
-        $user_id = $user_info[0];
-        $user_role = $user_info[1];
-        my $p = CXGN::People::Person->new($dbh, $user_id);
-        $user_name = $p->get_username;
-    } else {
-        if (!$c->user){
-            $c->stash->{rest} = {error=>'You must be logged in to add family members!'};
-            $c->detach();
-        }
-        $user_id = $c->user()->get_object()->get_sp_person_id();
-        $user_role = $c->user->get_object->get_user_type();
-        $user_name = $c->user()->get_object()->get_username();
-
+    if (!$c->user()) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
     }
 
+    $user_role = $c->user->get_object->get_user_type();
     if (($user_role ne 'curator') && ($user_role ne 'submitter')) {
         $c->stash->{rest} = {error=>'Only a submitter or a curator can add family members'};
         $c->detach();
@@ -266,7 +261,7 @@ sub add_family_members_using_list_POST : Args(0) {
         $return = $family_name_add->add_family_and_members();
         my $error;
         if (!$return){
-            $error = "Error adding family name";
+            $error = "Error adding family members";
         }
         if ($return->{error}){
             $error = $return->{error};
