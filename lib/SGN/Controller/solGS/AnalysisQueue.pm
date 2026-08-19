@@ -370,6 +370,7 @@ sub analysis_report_job_args {
         'config'         => $job_config,
         'background_job' => $c->stash->{background_job},
         'temp_dir'       => $temp_dir,
+        'record_job'     => 0,
     };
 
     $c->stash->{analysis_report_job_args} = $job_args;
