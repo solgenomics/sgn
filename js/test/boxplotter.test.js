@@ -19,10 +19,13 @@ test('Boxplot', t=>{
     t.test("populate", t=>{
         t.plan(2);
         
+        var searchResultsDbId = "test-search-id";
         var scope = nock(document.location.origin);
         scope.get('/ajax/tools/boxplotter/get_constraints').query({dataset: 7})
             .reply(200, data.constraints);
-        scope.post('/brapi/v1/phenotypes-search')
+        scope.post('/brapi/v2/search/observationunits')
+            .reply(200, {metadata: {}, result: {searchResultsDbId: searchResultsDbId}});
+        scope.get('/brapi/v2/search/observationunits/'+searchResultsDbId).query(true)
             .reply(200, data.phenotypes);
             
         setTimeout(() => {
