@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ $(/usr/bin/id -u) -ne 0 ]]; then
-    echo "\nMust run script as root."
+    printf "\nMust run script as root."
     exit
 fi
 
