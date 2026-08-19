@@ -39,6 +39,7 @@ sub run {
     my $output_details = retrieve( $self->output_details_file );
     $self->process_analysis_status($output_details);
 
+    return 0;
 }
 
 sub process_analysis_status {
