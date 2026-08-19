@@ -9,9 +9,8 @@ use Data::Dumper;
 use DateTime;
 use JSON;
 use SGN::Model::Cvterm;
-use CXGN::Pedigree::AddCrossingtrial;
-use CXGN::Pedigree::AddCrosses;
-
+use CXGN::List;
+use CXGN::People::Person;
 
 local $Data::Dumper::Indent = 0;
 
@@ -74,8 +73,6 @@ my $message = $response->decoded_content;
 my $message_hash = decode_json $message;
 is_deeply($message_hash, { 'success' => 1 });
 
-
-
 #test removing a family member
 my $family_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'BB_family_1' })->stock_id();
 my $BB_cross_3_stock_id = $schema->resultset('Stock::Stock')->find({ name => 'BB_cross_3' })->stock_id();
@@ -100,10 +97,39 @@ my $members_2 = $data_2{data};
 my $number_of_members_2 = @$members_2;
 is($number_of_members_2, 2);
 
+#test adding new members using a list
+my $janedoe_id = CXGN::People::Person->get_person_by_username($dbh, 'janedoe');
+my $list_id = CXGN::List::create_list($dbh, 'new_family_members', 'test', $janedoe_id );
+my $list = CXGN::List->new( { dbh => $dbh, list_id => $list_id });
+$list->type('crosses');
+$list->add_bulk( [ 'BB_cross_3', 'BB_cross_4']);
 
+$mech->post_ok('http://localhost:3010/ajax/family/add_family_members_using_list', [ 'family_name' => 'BB_family_1', 'family_id' => $family_stock_id, 'list_id' => $list_id]);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
+#number of members after adding 2 new members
+$mech->post_ok('http://localhost:3010/ajax/family/members/' . $family_stock_id);
+$response = decode_json $mech->content;
+my %data_3 = %$response;
+my $members_3 = $data_3{data};
+my $number_of_members_3 = @$members_3;
+is($number_of_members_3, 4);
 
+#test deleting family name
+$mech->post_ok('http://localhost:3010/ajax/family/delete_family', ['family_id' => $family_stock_id]);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
 
+#deleting all crosses after testing
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/' . $crossing_experiment_id . '/delete_all_crosses_in_crossingtrial');
+
+#deleting crossing experiment after testing
+my $project_owner = $phenome_schema->resultset('ProjectOwner')->find({ project_id => $crossing_experiment_id });
+$project_owner->delete();
+
+my $crossing_experiment_rs = $schema->resultset('Project::Project')->find({ name => 'BB_crossing_experiment' });
+$crossing_experiment_rs->delete();
 
 $f->clean_up_db();
 
