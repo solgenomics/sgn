@@ -11,6 +11,8 @@ use solGS::queryJobs;
 use Bio::Chado::Schema;
 use CXGN::People::Schema;
 use CXGN::Job;
+use DateTime;
+use Try::Tiny;
 
 with 'MooseX::Getopt';
 with 'MooseX::Runnable';
@@ -36,26 +38,71 @@ has "config_file" => (
     isa => 'Str',
 );
 
+has "analysis_start_timestamp" => (
+    is  => 'rw',
+    isa => 'Maybe[Str]',
+);
+
+has "job_records_by_slurm_id" => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { {} },
+);
+
+has "prepared_job_records" => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { {} },
+);
+
+has "analysis_job_records" => (
+    is      => 'ro',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+);
+
 
 
 sub run {
     my $self = shift;
     my $secs = 30; #60 * 4;
 
-    my $pre_jobs = $self->run_prerequisite_jobs();
-    sleep($secs);
-    print STDERR
+    $self->analysis_start_timestamp(
+        DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S')
+    );
+
+    $self->prepare_analysis_job_records();
+
+    my $analysis_error;
+    try {
+        my $pre_jobs = $self->run_prerequisite_jobs();
+        sleep($secs);
+        print STDERR
 "\nCompleted prerequisite jobs. After waiting $secs sec...Now running the set of dependent jobs...\n";
 
-    my $dep_jobs = $self->run_dependent_jobs();
-    sleep($secs);
-    print STDERR
+        my $dep_jobs = $self->run_dependent_jobs();
+        sleep($secs);
+        print STDERR
 "\nCompleted dependent jobs. After waiting $secs sec...Now checking results and emailing the results...\n";
+    }
+    catch {
+        $analysis_error = $_;
+        warn "Analysis job failed: $analysis_error";
+
+        foreach my $job_record (@{$self->analysis_job_records}) {
+            my $status = $job_record->status();
+            if (!defined($status) || $status eq 'submitted') {
+                $job_record->update_status('failed');
+            }
+        }
+    };
 
 
     print STDERR "\nSubmitting the analysis report job...\n";
     $self->send_analysis_report();
     print STDERR "\nGot done submitting the analysis report job...\n";
+    
+    return 0;
 }
 
 sub connect_job_schemas {
@@ -87,7 +134,50 @@ sub connect_job_schemas {
 }
 
 
+sub job_record_key {
+    my ($self, $args) = @_;
+
+    return join("\0", $args->{analysis_name} || '', $args->{cmd} || '');
+}
+
+sub prepare_analysis_job_records {
+    my $self = shift;
+
+    my $jobs_file = $self->dependent_jobs;
+    return if !$jobs_file || !-s $jobs_file;
+
+    my $dependent_jobs = retrieve($jobs_file);
+    $dependent_jobs = [$dependent_jobs] if reftype($dependent_jobs) ne 'ARRAY';
+
+    foreach my $args (@$dependent_jobs) {
+        next if ref($args) ne 'HASH';
+
+        my $job_records = $self->build_job_records($args);
+        next if !@$job_records;
+
+        foreach my $job_record (@$job_records) {
+            $job_record->update_status('submitted');
+            push @{$self->analysis_job_records}, $job_record;
+        }
+
+        my $key = $self->job_record_key($args);
+        push @{$self->prepared_job_records->{$key}}, $job_records;
+    }
+}
+
 sub record_job_submission {
+    my ($self, $args) = @_;
+
+    my $key = $self->job_record_key($args);
+    my $prepared_records = $self->prepared_job_records->{$key};
+    if ($prepared_records && @$prepared_records) {
+        return shift @$prepared_records;
+    }
+
+    return $self->build_job_records($args);
+}
+
+sub build_job_records {
     my ($self, $args) = @_;
 
     if (!$args->{analysis_name}) {
@@ -118,7 +208,10 @@ sub record_job_submission {
             job_type      => $job_type,
         });
 
-        $job_record->update_status('submitted');
+        if ($self->analysis_start_timestamp) {
+            $job_record->create_timestamp($self->analysis_start_timestamp);
+        }
+
         push @job_records, $job_record;
     }
 
@@ -167,16 +260,46 @@ sub wait_till_jobs_end {
 
     $sleep_time = 30 if !$sleep_time;
     while (@$jobs) {
-        for ( my $i = 0 ; $i < scalar(@$jobs) ; $i++ ) {
-            splice( @$jobs, $i, 1 ) if !$jobs->[$i]->alive();
+        for my $i (reverse 0 .. $#$jobs) {
+            if (!$jobs->[$i]->alive()) {
+                $self->record_terminal_job_status($jobs->[$i]);
+                splice(@$jobs, $i, 1);
+            }
         }
 
-        sleep $sleep_time;
+        sleep $sleep_time if @$jobs;
 
     }
 
     my $remaining_jobs = $jobs ? $jobs->[0] : 0;
     return $remaining_jobs;
+}
+
+sub record_terminal_job_status {
+    my ($self, $job) = @_;
+
+    my $slurm_job_id = $job->cluster_job_id();
+    my $job_records = $self->job_records_by_slurm_id->{$slurm_job_id} || [];
+
+    if (!@$job_records) {
+        return;
+    }
+
+    my ($job_status, $state) = $job_records->[0]->update_status_from_slurm();
+
+    for my $index (1 .. $#$job_records) {
+        $job_records->[$index]->update_status($job_status);
+    }
+    delete $self->job_records_by_slurm_id->{$slurm_job_id};
+
+    if ($job_status eq 'submitted') {
+        warn "Slurm job $slurm_job_id has no confirmed terminal state; "
+          . "leaving its database status as submitted.\n";
+    }
+    elsif ($job_status ne 'finished') {
+        my $reported_state = defined($state) ? $state : 'UNKNOWN';
+        die "Slurm job $slurm_job_id ended with state $reported_state \n";
+    }
 }
 
 sub submit_jobs {
@@ -235,50 +358,53 @@ sub submit_job {
 
     print STDERR "submitting job... $args->{cmd}\n";
 
-    eval {
-        $job_records = $self->record_job_submission($args);
-        
-        my @finish_timestamp_cmds;
-        foreach my $job_record (@$job_records) {
-            my $finish_cmd = $job_record->generate_finish_timestamp_cmd();
-            $finish_cmd =~ s/^\s*;//;
-            push @finish_timestamp_cmds, $finish_cmd;
-        }
-
-        my $analysis_job_cmd = $args->{cmd};
-        if (@finish_timestamp_cmds) {
-            $analysis_job_cmd .= ";\n" . join "\n", @finish_timestamp_cmds;
+    try {
+        if (!exists($args->{record_job}) || $args->{record_job}) {
+            $job_records = $self->record_job_submission($args);
         }
 
         $job = CXGN::Tools::Run->new( $args->{config} );
         $job->do_not_cleanup(1);
-
         $job->is_cluster(1);
-        $job->run_cluster( '(' . $analysis_job_cmd . ')' );
+
+        $job->run_cluster('(' . $args->{cmd} . ')');
+
+        my $slurm_job_id = $job->cluster_job_id();
 
         foreach my $job_record (@$job_records) {
-            $job_record->backend_id($job->cluster_job_id());
-            $job_record->store();
+            $job_record->backend_id($slurm_job_id);
+            $job_record->update_status('submitted');
         }
 
-        if ( !$args->{background_job} ) {
-            print STDERR "\n WAITING job to finish\n";
+        if (@$job_records) {
+            $self->job_records_by_slurm_id->{$slurm_job_id} = $job_records;
+        }
+
+        if (!$args->{background_job}) {
             $job->wait();
-            print STDERR "\n job COMPLETED\n";
-
-            foreach my $job_record (@$job_records) {
-                $job_record->update_status('finished');
-            }
+            $self->record_terminal_job_status($job);
         }
-    };
-
-    if ($@) {
-        my $error = $@;
-        foreach my $job_record (@$job_records) {
-            $job_record->update_status('failed') if $job_record;
-        }
-        die "An error occurred running job $args->{cmd}\n$error";
     }
+    catch {
+        my $error = $_;
+
+        foreach my $job_record (@$job_records) {
+            if (!$job_record)  {
+                next;
+            }
+
+            my $status = $job_record->status();
+            my $status_options = qr/^(?:finished|failed|canceled|timed_out)$/;
+            if (defined($status) && $status =~ $status_options) {
+                next;
+            }
+        
+            $job_record->update_status('failed');
+            
+        }
+
+        die "An error occurred running job $args->{cmd}\n$error";
+    };
 
     return $job;
 
