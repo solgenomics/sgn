@@ -413,7 +413,13 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#accession_search_link').click(function () {
-        location.href = '/search/stocks_using_genotypes';
+        const urlParams = new URLSearchParams(window.location.search);
+        if ( urlParams.has('defaultProtocol') ) {
+            location.href = `/search/stocks_using_genotypes?defaultProtocol=${urlParams.get('defaultProtocol')}`;
+        }
+        else {
+            location.href = '/search/stocks_using_genotypes';
+        }
     });
 
 });

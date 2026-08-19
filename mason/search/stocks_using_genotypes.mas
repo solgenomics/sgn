@@ -84,7 +84,7 @@
                     <option value="any">Any Genotype</option>
                 </select>
                 <p class="small">All Genotypes = returned accessions will include <strong>all</strong> of the genotypes in the marker allele list</p>
-                <p class="small">Any Genotypes = returned accessions will include <strong>at least one</strong> of the genotpyes in the marker allele list</p>
+                <p class="small">Any Genotypes = returned accessions will include <strong>at least one</strong> of the genotypes in the marker allele list</p>
             </div>
         </div>
     </div>
