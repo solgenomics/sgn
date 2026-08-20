@@ -359,7 +359,7 @@ sub store_image_file {
 =head2 associate_stock($image_id, $stock_id)
 
 Links an image to an observation unit. Written out here rather than done through SGN::Image, which
-needs a Catalyst context that a background script has no way to supply.
+needs a Catalyst context.
 
 =cut
 
