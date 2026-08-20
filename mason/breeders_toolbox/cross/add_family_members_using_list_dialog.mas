@@ -1,0 +1,146 @@
+<%args>
+$family_id
+$family_name
+$family_type_string
+</%args>
+
+
+<div class="modal fade" id="add_family_members_using_list_dialog" name="add__family_members_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addFamilyMembersUsingListDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <button type="reset" class="close" id="add_family_members_using_list_dismiss_button_1" name="add_family_members_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <center><h4 class="modal-title" id="addFamilyMembersUsingList">Add Family Members Using a List</h4></center>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" name="add_family_members_form" id="add_family_members_form">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" >Family Name: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" name="members_for_family_name" id="members_for_family_name" disabled value="<% $family_name %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" >Family Type: </label>
+                            <div class="col-sm-9">
+                                <input class="form-control" name="family_name_type" id="family_name_type" disabled value="<% $family_type_string %>">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-sm-3">Select a List of Crosses to Add:</label>
+                            <div class="col-sm-9" >
+                                <div class="input-group">
+                                    <select class="form-control" id="family_crosses_list_select"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="add_family_members_submit">Submit</button>
+                <button id="add_family_members_using_list_dismiss_button_2" name="add_family_members_using_list_dismiss_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_family_members_using_list_saved_dialog_message" name="add_family_members_using_list_saved_dialog_message" tabindex="-1" role="dialog" aria-labelledby="addFamilyMembersUsingListSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addFamilyMembersUsingListSavedDialog">Success</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                        The new family members were stored successfully.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="dismiss_add_family_members_using_list_saved_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_family_members_using_list_error_dialog" name="add_family_members_using_list_error_dialog" tabindex="-1" role="dialog" aria-labelledby="addFamilyMembersUsingListErrorDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="addFamilyMembersUsingListErrorDialog">Add Family Members Error</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    var lo = new CXGN.List();
+    jQuery('#family_crosses_list_select').html(lo.listSelect('family_crosses_list_select', ['crosses'], 'Select a list', undefined, undefined));
+
+    jQuery("#add_family_members_submit").click(function(){
+        var crosses_list_id = jQuery('#family_crosses_list_select').val();
+        if (!crosses_list_id) {
+            alert ("Please select a list of crosses.");
+            return;
+        } else {
+            list_validation = lo.legacy_validate(crosses_list_id, 'crosses', true);
+            if (list_validation != 1) {
+                alert("The list did not pass validation. Cross Unique IDs in the list must be uniquenames with cross stock type in the database");
+                return;
+            }
+        }
+
+        jQuery.ajax({
+            url : '/ajax/family/add_family_members_using_list',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'list_id' : crosses_list_id,
+                'family_id': "<%$family_id%>",
+                'family_name': "<%$family_name%>",
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery("#add_family_members_using_list_dialog").modal("hide");
+                    jQuery("#add_family_members_using_list_saved_dialog_message").modal("show");
+                }
+                if (response.error_string) {
+                    jQuery("#add_family_members_using_list_error_dialog tbody").html('');
+                    jQuery("#add_family_members_using_list_error_dialog tbody").append(response.error_string);
+                    jQuery("#add_family_members_using_list_error_dialog").modal("show");
+                    return;
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred adding new family members');
+            }
+        });
+    });
+});
+
+
+</script>
