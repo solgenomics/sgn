@@ -243,7 +243,7 @@ sub remove_family_member {
         my $family_member_rs = $schema->resultset("Stock::StockRelationship")->find({subject_id => $cross_id, object_id => $family_id, type_id => $cross_member_of_type_id});
         if (!$family_member_rs) {
             print STDERR "This cross is not a family member. Cannot delete.\n";
-	        die "This cross is not a family memeber. Cannot delete.\n";
+	        die "This cross is not a family member. Cannot delete.\n";
         } else {
             my $stock_obj = CXGN::Stock->new(schema => $schema, stock_id => $family_id);
             my @trial_list = $stock_obj->get_trials();
