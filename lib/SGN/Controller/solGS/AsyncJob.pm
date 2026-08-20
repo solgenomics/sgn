@@ -831,6 +831,11 @@ sub record_job_submission {
             my $job_record = CXGN::Job->new({
                 schema => $c->dbic_schema("Bio::Chado::Schema"),
                 people_schema => $c->dbic_schema("CXGN::People::Schema"),
+                dbhost => $c->config->{dbhost},
+                dbname => $c->config->{dbname},
+                dbuser => $c->config->{dbuser},
+                dbpass => $c->config->{dbpass},
+                basepath => $c->config->{basepath},
                 sp_person_id => $user,
                 job_type => $job_args->{analysis_type},
                 name => $job_args->{analysis_name},
@@ -857,19 +862,13 @@ sub record_job_submission {
 sub submit_job_cluster {
     my ( $self, $c, $args ) = @_;
 
-    my $dbhost = $c->config->{dbhost};
-    my $dbname = $c->config->{dbname};
-    my $dbuser = $c->config->{dbuser};
-    my $dbpass = $c->config->{dbpass};
-    my $basepath = $c->config->{basepath};
-
     my $job_records = $self->record_job_submission($c, $args);
     my $finish_timestamp_cmd;
     my @finish_timestamp_cmds;
 
     if (@$job_records) {
         foreach my $job_record (@$job_records) {
-            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd($dbhost, $dbname, $dbuser, $dbpass, $basepath);
+            $finish_timestamp_cmd = $job_record->generate_finish_timestamp_cmd();
             push @finish_timestamp_cmds, $finish_timestamp_cmd;
         }
     }
