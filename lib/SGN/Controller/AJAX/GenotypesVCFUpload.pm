@@ -645,6 +645,7 @@ sub upload_genotype_verify_POST : Args(0) {
             sp_person_id => $user_id,
             name => basename($archived_filename_with_path)." genotype data upload",
             job_type => 'upload',
+            submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
             finish_logfile => $c->config->{finish_logfile},
             additional_args => {
                 final_upload => 1,

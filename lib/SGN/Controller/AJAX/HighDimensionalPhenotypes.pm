@@ -132,6 +132,7 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." nirs validation",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             is_validation => 1,
@@ -415,6 +416,7 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." nirs upload",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             final_upload => 1,
@@ -808,6 +810,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_verify_POST : Args(0) {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." transcriptomics validation",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             is_validation => 1,
@@ -1073,6 +1076,7 @@ sub high_dimensional_phenotypes_transcriptomics_upload_store_POST : Args(0) {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." transcriptomics upload",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             final_upload => 1,
@@ -1409,6 +1413,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_verify_POST : Args(0) {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." metabolomics validation",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             is_validation => 1,
@@ -1715,6 +1720,7 @@ sub high_dimensional_phenotypes_metabolomics_upload_store_POST : Args(0) {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." metabolomics upload",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             final_upload => 1,

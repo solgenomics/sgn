@@ -257,6 +257,7 @@ sub parse_genotype_trial_file_POST : Args(0) {
         name => basename($archived_filename_with_path)." $genotyping_plate_name genotyping plate upload",
         job_type => 'upload',
         results_page => '/breeders/genotyping_projects',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             is_validation => 1,
@@ -395,6 +396,7 @@ sub store_genotype_trial_POST : Args(0) {
         sp_person_id => $user_id,
         name => "$plate_info->{name} genotyping plate upload",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,

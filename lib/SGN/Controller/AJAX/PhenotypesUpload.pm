@@ -90,6 +90,7 @@ sub upload_phenotype_verify_POST : Args(1) {
         sp_person_id => $user_id,
         name => "$filename file validation",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             is_validation => 1,
@@ -240,6 +241,7 @@ sub upload_phenotype_store_POST : Args(1) {
         sp_person_id => $user_id,
         name => "$filename phenotype upload",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{job_finish_log},
         additional_args => {
             final_upload => 1,

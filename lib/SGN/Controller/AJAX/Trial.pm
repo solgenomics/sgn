@@ -1504,6 +1504,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         name => "$clean_file_name multiple trial designs upload",
         results_page => '/breeders/trials',
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         additional_args => {
             final_upload => 1,
             file_type => "trials",
@@ -1678,6 +1679,7 @@ sub upload_trial_metadata_file_POST : Args(0) {
         sp_person_id => $user_id,
         name => $upload_original_name." trial metadata upload",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             file_type => 'trial_metadata',

@@ -962,7 +962,7 @@ sub trial_upload_plants : Chained('trial') PathPart('upload_plants') Args(0) {
         name => basename($archived_filename_with_path)." $trial_name plants upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1149,7 +1149,7 @@ sub trial_upload_plants_subplot : Chained('trial') PathPart('upload_plants_subpl
         name => basename($archived_filename_with_path)." $trial_name subplot plants upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1336,7 +1336,7 @@ sub trial_upload_subplots : Chained('trial') PathPart('upload_subplots') Args(0)
         name => basename($archived_filename_with_path)." $trial_name subplots upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1520,7 +1520,7 @@ sub trial_upload_plants_with_index_number : Chained('trial') PathPart('upload_pl
         name => basename($archived_filename_with_path)." $trial_name plants with index upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1707,7 +1707,7 @@ sub trial_upload_plants_subplot_with_index_number : Chained('trial') PathPart('u
         name => basename($archived_filename_with_path)." $trial_name subplot plants with index upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -1894,7 +1894,7 @@ sub trial_upload_subplots_with_index_number : Chained('trial') PathPart('upload_
         name => basename($archived_filename_with_path)." $trial_name subplots with index upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2079,7 +2079,7 @@ sub trial_upload_plants_with_number_of_plants : Chained('trial') PathPart('uploa
         name => basename($archived_filename_with_path)." $trial_name plants with number upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2266,7 +2266,7 @@ sub trial_upload_plants_subplot_with_number_of_plants : Chained('trial') PathPar
         name => basename($archived_filename_with_path)." $trial_name subplot plants with number upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2453,7 +2453,7 @@ sub trial_upload_subplots_with_number_of_subplots : Chained('trial') PathPart('u
         name => basename($archived_filename_with_path)." $trial_name subplots with number upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2649,7 +2649,7 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         name => basename($archived_filename_with_path)." $trial_name plot GPS upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -2831,7 +2831,7 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         name => basename($archived_filename_with_path)." $trial_name change plot accessions upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             ignore_warnings => $override ? 1 : undef,
@@ -3144,7 +3144,7 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         name => basename($archived_filename_with_path)." $trial_name additional file upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
@@ -4660,8 +4660,8 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         name => $trial_obj->get_name()." spatial layout upload",
         job_type => 'upload',
         cmd => "",
-        submit_page =>  $c->request->headers->referer,
-        results_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        results_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         additional_args => {
             final_upload => 1,
             file_type => 'spatial_layout',
@@ -6584,7 +6584,7 @@ sub upload_entry_number_template_POST : Args(0) {
         name => basename($archived_filename_with_path)." entry numbers upload",
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
-        submit_page =>  $c->request->headers->referer,
+        submit_page =>  submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             ignore_warnings => $ignore_warnings eq "true" ? 1 : 0,

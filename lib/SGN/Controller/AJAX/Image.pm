@@ -369,6 +369,7 @@ sub scan_barcode_POST {
         sp_person_id => $user_id,
         name => $job_name,
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         additional_args => {
             is_validation => 1,
             file_type => 'images_barcodes',
@@ -544,6 +545,7 @@ sub verify_exif_POST {
         sp_person_id => $user_id,
         name => $job_name,
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         additional_args => {
             is_validation => 1,
             file_type => 'images',
@@ -769,6 +771,7 @@ sub store_images_POST {
         cmd => $cmd,
         name => $job_name,
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         additional_args => {
             final_upload => 1,
             file_type => $image_type,

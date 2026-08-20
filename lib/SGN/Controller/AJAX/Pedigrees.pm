@@ -121,6 +121,7 @@ sub upload_pedigrees_verify : Path('/ajax/pedigrees/upload_verify') Args(0)  {
         sp_person_id => $user_id,
         name => basename($archived_filename_with_path)." pedigree validation",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             is_validation => 1,
@@ -218,6 +219,7 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
         sp_person_id => $sp_person_id,
         name => "$filename pedigree upload",
         job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
         finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
