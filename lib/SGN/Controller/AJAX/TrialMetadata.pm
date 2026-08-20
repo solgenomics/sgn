@@ -384,14 +384,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $rel_type_id;
     my $total_complete_number;
     # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
-    my $stocks_per_accession;
     if ($display eq 'plots') {
         if ($group_by_accession) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
             $select_clause_additional = ', accession.uniquename, accession.stock_id';
             $group_by_additional = ', accession.stock_id, accession.uniquename';
-            $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
             $order_by_additional = ' , accession.uniquename DESC';
         } else {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -406,7 +404,6 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
             $select_clause_additional = ', accession.uniquename, accession.stock_id';
             $group_by_additional = ', accession.stock_id, accession.uniquename';
-            $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
             $order_by_additional = ' , accession.uniquename DESC';
         } else {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -427,13 +424,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
             $select_clause_additional = ', accession.uniquename, accession.stock_id';
             $group_by_additional = ', accession.stock_id, accession.uniquename';
-            $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
             $order_by_additional = ' , accession.uniquename DESC';
         } else {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
-            my $subplots = $c->stash->{trial}->get_subplots();
-            $total_complete_number = scalar (@$subplots);
+            my $tissue_samples = $c->stash->{trial}->get_tissue_samples();
+            $total_complete_number = scalar (@$tissue_samples);
         }
     }
     if ($display eq 'analysis_instance') {
@@ -516,11 +512,78 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     # print STDERR "date params : $date_params\n";
 
+    # When the results are grouped, the denominator of the percent missing
+    # calculation has to be the number of observation units in the group, not
+    # the number of observation units in the whole trial. This matters most for
+    # treatments, which are grouped by cvterm AND value (eg 'fertilizer=high'):
+    # an observation unit that received the same treatment at a different level
+    # belongs to a different group and must not be counted as missing here.
+    # This also collects every group in the trial, so that groups with no
+    # measurement at all of a given trait can be reported rather than
+    # dropped from the table.
+    my $group_key = sub {
+        my ($accession_id, $treatment) = @_;
+        return join('|', defined $accession_id ? $accession_id : '', defined $treatment ? $treatment : '');
+    };
+    my %group_totals;
+    my %group_info;
+
+    # $stocks_measured counts distinct observation units, not observations: an
+    # observation unit measured more than once for the same trait is still a
+    # single observation unit that is not missing. This fixes %missing being 
+    # wrong for repetitive measurements, where num phenotypes could be greater
+    # than num stocks (even if some stocks didn't get measured!)
+    my $percent_missing_for = sub {
+        my ($stocks_measured, $group_size) = @_;
+        return "0%" if (!$group_size || $group_size <= $stocks_measured);
+        return sprintf("%.2f", 100 - (($stocks_measured/$group_size)*100))."%";
+    };
+
+    my $is_grouped = $select_clause_additional || $group_by_treatments;
+
+    # This is where we get group totals for treatments, accessions, and treatments+accessions
+    if ($is_grouped) {
+        my $group_by_clause = "$group_by_additional $treatment_group_by";
+        $group_by_clause =~ s/^\s*,\s*//;#make sure no extra commas get put in between clauses
+
+        my $qg = "$treatment_with
+        SELECT
+            count(DISTINCT plot.stock_id) AS n_stocks
+            $select_clause_additional
+            $treatment_select
+            FROM stock AS plot
+            JOIN nd_experiment_stock ON nd_experiment_stock.stock_id = plot.stock_id
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN stock_relationship ON plot.stock_id = stock_relationship.subject_id
+            JOIN stock AS accession ON accession.stock_id = stock_relationship.object_id
+            $treatment_join
+            WHERE project_id                = ?
+            AND stock_relationship.type_id  = ?
+            AND plot.type_id                = ?
+            AND accession.type_id           = ?
+            GROUP BY $group_by_clause";
+
+        my $hg = $dbh->prepare($qg);
+        $hg->execute($trial_id, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+
+        while (my @group_row = $hg->fetchrow_array()) {
+            my $n_stocks = shift @group_row;
+            my ($accession_name, $accession_id, $treatment, $treatment_id);
+            ($accession_name, $accession_id) = splice(@group_row, 0, 2) if $select_clause_additional;
+            ($treatment, $treatment_id) = splice(@group_row, 0, 2) if $group_by_treatments;
+
+            my $key = $group_key->($accession_id, $treatment);
+            $group_totals{$key} = $n_stocks;
+            $group_info{$key} = [ $accession_name, $accession_id, $treatment, $treatment_id ];
+        }
+    }
+
     my $q1 = "$treatment_with
     SELECT
         (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value)                             AS n_obs,
+        count(DISTINCT plot.stock_id)                      AS n_stocks,
         to_char(avg(phenotype.value::real), 'FM999990.990') AS avg_val,
         to_char(max(phenotype.value::real), 'FM999990.990') AS max_val,
         to_char(min(phenotype.value::real), 'FM999990.990') AS min_val,
@@ -559,12 +622,21 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
     my %numeric_trait_ids;
+    my %traits_seen;
+    my %groups_seen_by_trait;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $treatment, $treatment_id) = $h1->fetchrow_array()) {
+    while (my @row = $h1->fetchrow_array()) {
+
+        my ($trait, $trait_id, $count, $stock_count, $average, $max, $min, $stddev) = splice(@row, 0, 8);
+        my ($stock_name, $stock_id, $treatment, $treatment_id);
+        ($stock_name, $stock_id) = splice(@row, 0, 2) if $select_clause_additional;
+        ($treatment, $treatment_id) = splice(@row, 0, 2) if $group_by_treatments;
 
         next if ($trait =~ m/_TREATMENT/);
 
         $numeric_trait_ids{$trait_id} = 1;
+        $traits_seen{$trait_id} = $trait;
+        $groups_seen_by_trait{$trait_id}->{ $group_key->($stock_id, $treatment) } = 1;
 
         my $cv = 0;
         if ($stddev && $average != 0) {
@@ -578,25 +650,26 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         my @return_array;
         if ($select_clause_additional && $stock_name && $stock_id) {
-            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
         if ($group_by_treatments) {
-            if ($select_clause_additional) {
-                push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
-            }
-            else {
-                push @return_array, qq{<a href="/cvterm/$stock_id/view">$stock_name</a>};
-            }
-        }
-        my $percent_missing = '';
-        if ($total_complete_number > $count){
-            $percent_missing = sprintf("%.2f", 100 -(($count/$total_complete_number)*100))."%";
-        } else {
-            $percent_missing = "0%";
+            push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
         }
 
-        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+        if ($is_grouped) {
+            $total_complete_number = $group_totals{ $group_key->($stock_id, $treatment) } || 0;
+        }
+
+        my $percent_missing = $percent_missing_for->($stock_count, $total_complete_number);
+
+        my $trait_histogram_link = '';
+        if ($group_by_treatments || $group_by_accession || $percent_missing eq "100%" || !$trait_id) {
+            $trait_histogram_link = '<span class="glyphicon glyphicon-stats"></span>';
+        } else {
+            $trait_histogram_link = qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>};
+        }
+
+        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, $trait_histogram_link );
         push @phenotype_data, \@return_array;
 
     }
@@ -617,7 +690,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     SELECT
         (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
-        count(phenotype.value) AS n_obsx
+        count(phenotype.value) AS n_obsx,
+        count(DISTINCT plot.stock_id) AS n_stocks
         $select_clause_additional
         $treatment_select
         FROM phenotype
@@ -648,23 +722,60 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
-    while (my ($trait, $trait_id, $count, $stock_name, $stock_id, $treatment, $treatment_id) = $h->fetchrow_array()) {
+    while (my @row = $h->fetchrow_array()) {
+
+        my ($trait, $trait_id, $count, $stock_count) = splice(@row, 0, 4);
+        my ($stock_name, $stock_id, $treatment, $treatment_id);
+        ($stock_name, $stock_id) = splice(@row, 0, 2) if $select_clause_additional;
+        ($treatment, $treatment_id) = splice(@row, 0, 2) if $group_by_treatments;
+
         next if ($trait =~ m/_TREATMENT/);
+
+        $traits_seen{$trait_id} = $trait;
+        $groups_seen_by_trait{$trait_id}->{ $group_key->($stock_id, $treatment) } = 1;
+
 	    my @return_array;
         if ($select_clause_additional && $stock_name && $stock_id) {
-            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
         if ($group_by_treatments) {
-            if ($select_clause_additional) {
-                push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
-            }
-            else {
-                push @return_array, qq{<a href="/cvterm/$stock_id/view">$stock_name</a>};
+            push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
+        }
+
+        if ($is_grouped) {
+            $total_complete_number = $group_totals{ $group_key->($stock_id, $treatment) } || 0;
+        }
+
+        my $percent_missing = $percent_missing_for->($stock_count, $total_complete_number);
+
+	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, $percent_missing, qq{<span class="glyphicon glyphicon-stats"></span></a>} );
+        push @phenotype_data, \@return_array;
+    }
+
+    # Both queries above get stocks after first getting phenotypes, which means
+    # that an accession could be in the trial that has NO values measured for a
+    # trait. The result is that a 100% missing row is dropped entirely and not
+    # reported at all. This section is for that case. 
+    if ($is_grouped) {
+        foreach my $trait_id (sort keys %traits_seen) {
+            my $trait = $traits_seen{$trait_id};
+
+            foreach my $key (sort keys %group_totals) {
+                next if $groups_seen_by_trait{$trait_id}->{$key};
+
+                my ($accession_name, $accession_id, $treatment, $treatment_id) = @{$group_info{$key}};
+
+                my @return_array;
+                if ($select_clause_additional && $accession_name && $accession_id) {
+                    push @return_array, qq{<a href="/stock/$accession_id/view">$accession_name</a>};
+                }
+                if ($group_by_treatments) {
+                    push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
+                }
+                push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", 0, $percent_missing_for->(0, $group_totals{$key}), qq{<span class="glyphicon glyphicon-stats"></span>} );
+                push @phenotype_data, \@return_array;
             }
         }
-	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
-        push @phenotype_data, \@return_array;
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
