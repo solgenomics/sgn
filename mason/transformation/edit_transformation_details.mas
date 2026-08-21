@@ -87,22 +87,31 @@ jQuery(document).ready(function(){
         jQuery('#transformation_details_edit_dialog').modal("show");
     });
 
-    jQuery('[id^="edit_transformation_"]').change(function (){
-        var this_element = jQuery(this);
-        highlight_changed_details(this_element);
+    jQuery('#edit_transformation_name').change(function(){
+        highlight_changed_details(jQuery('#edit_transformation_name'));
+    });
+
+    jQuery('#edit_transformation_notes').change(function(){
+        highlight_changed_details(jQuery('#edit_transformation_notes'));
     });
 
     jQuery('#save_transformation_details').click(function(){
         var new_transformation_name;
         var new_transformation_notes;
+        var success_message = '';
+        var type;
+
         var changed_elements = document.getElementsByName("changed");
         for(var i=0; i<changed_elements.length; i++){
             var id = changed_elements[i].id;
-            alert(id);
             if (id == 'edit_transformation_name') {
                 new_transformation_name = changed_elements[i].value;
+                type = 'Name';
+                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_name+"</b></li>";
             } else if (id == 'edit_transformation_notes') {
                 new_transformation_notes = changed_elements[i].value;
+                type = 'Notes';
+                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_notes+"</b></li>";
             }
         }
 
@@ -122,7 +131,9 @@ jQuery(document).ready(function(){
                 jQuery('#working_modal').modal('hide');
                 if (response.success == 1) {
                     jQuery("#transformation_details_edit_dialog").modal("hide");
+                    document.getElementById('transformation_details_saved_message').innerHTML = success_message;
                     jQuery("#transformation_details_saved_dialog").modal("show");
+                    return;
                 }
                 if (response.error_string) {
                     jQuery("#edit_transformation_details_error_dialog tbody").html('');
@@ -136,7 +147,6 @@ jQuery(document).ready(function(){
                 alert('An error occurred updating transformation ID details');
             }
         });
-
     });
 
     var edit_details_body_html = document.getElementById('edit_transformation_details_body').innerHTML;
@@ -146,6 +156,9 @@ jQuery(document).ready(function(){
         jQuery('#transformation_details_edit_dialog').modal('hide');
     });
 
+    jQuery("#transformation_details_saved_close_button").click(function(){
+        location.reload();
+    });
 
 });
 

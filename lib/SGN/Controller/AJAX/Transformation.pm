@@ -1887,10 +1887,10 @@ sub update_transformation_metadata_POST :Args(0){
 
     my $transformation_obj = CXGN::Transformation::Transformation->new({schema=>$schema, dbh=>$dbh, transformation_stock_id=>$transformation_stock_id, transformation_name=>$new_transformation_name, transformation_notes=>$new_transformation_notes});
     my $error = $transformation_obj->update_transformation_metadata();
-    if ($error) {
-        $c->stash->{rest} = { error => "An error occurred attempting to update transformation metadata. ($@)" };
-        return;
-    }
+#    if ($error) {
+#        $c->stash->{rest} = { error => "An error occurred attempting to update transformation metadata. ($@)" };
+#        return;
+#    }
 
     $c->stash->{rest} = { success => 1 };
 
