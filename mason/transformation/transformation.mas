@@ -45,7 +45,7 @@ $vector_name
 <&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>
     <div class="panel panel-default">
         <div class="panel-body">
-        <button class="btn btn-sm btn-primary" style="margin:3px" id="edit_transformation_details_link">Edit</button>
+        <button class="btn btn-sm btn-default" style="margin:3px" id="edit_transformation_details_link">Edit</button>
             <div class="row">
                 <div class="col-sm-6">
                     <table class="table table-bordered table-hover">
