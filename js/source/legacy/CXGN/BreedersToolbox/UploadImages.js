@@ -322,11 +322,13 @@ function verifyExifData(result) {
             if (!hasCvtermId) {
                 if (img.trait_lookup_type === "id") {
                     imgErrors.push(`${imgName}: Trait ID "${img.trait_lookup_value}" does not exist in the database`);
-                } else if (img.trait_lookup_type === "name") {
+                } else if (img.trait_lookup_type === "name" || img.trait_lookup_type === "synonym") {
                     imgErrors.push(`${imgName}: Trait name "${img.trait_lookup_value}" does not exist in the database`);
                 } else {
                     imgErrors.push(`${imgName}: Associated trait does not exist in the database`);
                 }
+            } else if (img.trait_lookup_type === "synonym") {
+                successMessages.push(`${imgName}: Trait name "${img.trait_lookup_value}" matched via synonym to "${img.trait_matched_name}"`);
             }
         }
 

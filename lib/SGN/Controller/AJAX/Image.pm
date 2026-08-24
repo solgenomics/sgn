@@ -389,7 +389,6 @@ sub verify_exif_POST {
             my $observation_variable = $decoded_json->{observation_variable};
             my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
             my $trait_name = $observation_variable->{observation_variable_name};
-            print STDERR "trait id test: $trait_id";
             my $cvterm_id;
             my $trait_lookup_type;
             my $trait_lookup_value;
@@ -405,6 +404,14 @@ sub verify_exif_POST {
                 my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $trait_name });
                 if ($cvterm) {
                     $cvterm_id = $cvterm->cvterm_id();
+                } else {
+                    # Check if it's a synyonym if name not found
+                    my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->find({ synonym => $trait_name });
+                    if ($synonym_row) {
+                        $cvterm_id = $synonym_row->cvterm_id();
+                        $trait_lookup_type  = "synonym";
+                        $trait_matched_name = $synonym_row->cvterm->name();
+                    }
                 }
             }
 
