@@ -590,33 +590,37 @@ sub update_transformation_metadata {
     my $transformation_stock_id = $self->transformation_stock_id();
     my $new_transformation_name = $self->transformation_name();
     my $new_transformation_notes = $self->transformation_notes();
-    print STDERR "NEW NAME =".Dumper($new_transformation_name)."\n";
-    print STDERR "NEW NOTES =".Dumper($new_transformation_notes)."\n";
-    if ($new_transformation_name) {
-        my $check_new_name_rs = $schema->resultset('Stock::Stock')->find({ 'uniquename' => $new_transformation_name});
-        if ($check_new_name_rs) {
-            return {error => "Error: $new_transformation_name already exists in the database."};
+
+    eval {
+        if ($new_transformation_name) {
+            my $check_new_name_rs = $schema->resultset('Stock::Stock')->find({ 'uniquename' => $new_transformation_name});
+            if ($check_new_name_rs){
+                die "This new transformation ID already exists in the database. Please use another name.\n";
+            } else {
+                my $transformation_rs = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $transformation_stock_id});
+                $transformation_rs->uniquename($new_transformation_name);
+                $transformation_rs->update();
+            }
         }
-    }
 
-    my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
-    my $transformation_rs = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $transformation_stock_id});
-    if ($new_transformation_name) {
-        $transformation_rs->uniquename($new_transformation_name);
-        $transformation_rs->update();
-    }
-
-    if ($new_transformation_notes) {
-        my $notes_update = $schema->resultset('Stock::Stockprop')->update_or_create({
-            type_id=>$transformation_notes_cvterm_id,
-            stock_id=>$transformation_stock_id,
-            rank=>0,
-            value=>$new_transformation_notes
-        }),
-
+        my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
+        if ($new_transformation_notes) {
+            my $notes_update = $schema->resultset('Stock::Stockprop')->update_or_create({
+                type_id=>$transformation_notes_cvterm_id,
+                stock_id=>$transformation_stock_id,
+                rank=>0,
+                value=>$new_transformation_notes
+            }),
+        };
     };
 
-    return 1;
+    if ($@) {
+        print STDERR "An error occurred while updating information for transformation stock id ".$transformation_stock_id."$@\n";
+        return $@;
+    } else {
+        return 0;
+    }
+
 }
 
 
