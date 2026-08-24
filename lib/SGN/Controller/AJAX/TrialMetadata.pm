@@ -139,7 +139,7 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
 
         $error = $c->stash->{trial}->delete_phenotype_metadata($metadata_schema, $phenome_schema);
         $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
-        
+
         my $trial_id = $c->stash->{trial}->get_trial_id();
         ### remove cached analyses result from this trial data
         $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, {'trials' => [$trial_id]});
@@ -2292,8 +2292,8 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Trial::ParseUpload->new(
-        chado_schema => $schema, 
-        filename => $archived_filename_with_path, 
+        chado_schema => $schema,
+        filename => $archived_filename_with_path,
         trial_id => $trial_id
     );
     $parser->load_plugin('TrialChangePlotAccessions');
@@ -4211,7 +4211,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/family/$family_id/">$family_name</a>}];
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/stock/$family_id/view">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -6026,7 +6026,7 @@ sub delete_trial_plants_POST : Args(0) {
     my %trial_plants_map = map {$_->[1] => $_->[0]} @trial_plants;
 
     my @delete_stock_ids = ();
-    
+
     my @mismatch_plants = ();
     foreach my $plant (@delete_plants) {
         if (!defined($trial_plants_map{$plant})) {
@@ -6097,7 +6097,7 @@ sub delete_trial_subplots_POST : Args(0) {
     my %trial_subplots_map = map {$_->[1] => $_->[0]} @trial_subplots;
 
     my @delete_stock_ids = ();
-    
+
     my @mismatch_subplots = ();
     foreach my $subplot (@delete_subplots) {
         if (!defined($trial_subplots_map{$subplot})) {
@@ -6947,12 +6947,10 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
     foreach my $entry (@$stock_entries) {
         my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;
         my $parent_stock_link;
-        if ($parent_stock_type eq 'accession') {
+        if (($parent_stock_type eq 'accession') || ($parent_stock_type eq 'family_name')) {
             $parent_stock_link = qq{<a href="/stock/$parent_stock_id/view">$parent_stock_name</a>};
         } elsif ($parent_stock_type eq 'cross') {
             $parent_stock_link = qq{<a href="/cross/$parent_stock_id">$parent_stock_name</a>};
-        } elsif ($parent_stock_type eq 'family_name') {
-            $parent_stock_link = qq{<a href="/family/$parent_stock_id">$parent_stock_name</a>};
         }
 
         push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, $plant_id ? qq{<a href="/stock/$plant_id/view">$plant_name</a>} : '', $tissue_sample_id ? qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>} : ''];

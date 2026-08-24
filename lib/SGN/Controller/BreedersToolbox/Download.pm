@@ -260,6 +260,14 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $location_list = $c->req->param("location_list");
     my $trial_list = $c->req->param("trial_list");
     my $accession_list = $c->req->param("accession_list");
+    my $family_list = $c->req->param("family_name_list");
+    my $cross_list = $c->req->param("cross_list");
+    if ($family_list && $family_list ne 'null') {
+        $accession_list = $family_list;
+    } elsif ($cross_list && $cross_list ne 'null') {
+        $accession_list = $cross_list;
+    }
+
     my $plot_list = $c->req->param("plot_list");
     my $plant_list = $c->req->param("plant_list");
     my $protocol_list = $c->req->param("protocol_list");
