@@ -411,6 +411,8 @@ sub verify_exif_POST {
                         $cvterm_id = $synonym_row->cvterm_id();
                         $trait_lookup_type  = "synonym";
                         $trait_matched_name = $synonym_row->cvterm->name();
+                    } else {
+                        $cvterm = undef;
                     }
                 }
             }
