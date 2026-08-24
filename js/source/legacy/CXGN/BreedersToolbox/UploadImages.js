@@ -304,7 +304,8 @@ function verifyExifData(result) {
         const hasObsVar = obsVar && obsVar.observation_variable_name;
         const hasTimestamp = exif.timestamp;
         const hasCvtermId = exif.cvterm_id;
-        const stockName = exif.stock_name;
+        const stockName = exif.stock_name; 
+        let traitName = obsVar.observation_variable_name;
 
         if (hasObsUnit) {
             successMessages.push(`${imgName}: ObservationUnitDbId: ${obsUnit.observation_unit_db_id}`);
@@ -328,6 +329,7 @@ function verifyExifData(result) {
                     imgErrors.push(`${imgName}: Associated trait does not exist in the database`);
                 }
             } else if (img.trait_lookup_type === "synonym") {
+                traitName = img.trait_matched_name;
                 successMessages.push(`${imgName}: Trait name "${img.trait_lookup_value}" matched via synonym to "${img.trait_matched_name}"`);
             }
         }
@@ -345,7 +347,7 @@ function verifyExifData(result) {
         }
 
         if (imgErrors.length === 0) {
-            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${stockName}. Associated trait: ${obsVar.observation_variable_name}. Ready to store image`);
+            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${stockName}. Associated trait: ${traitName}. Ready to store image`);
             validFilenames.push(imgName);
         } else {
             errorMessages.push(...imgErrors);

@@ -392,6 +392,7 @@ sub verify_exif_POST {
             my $cvterm_id;
             my $trait_lookup_type;
             my $trait_lookup_value;
+            my $trait_matched_name;
 
             if ($trait_id) {
                 $trait_lookup_type  = "id";
@@ -405,14 +406,20 @@ sub verify_exif_POST {
                 if ($cvterm) {
                     $cvterm_id = $cvterm->cvterm_id();
                 } else {
-                    # Check if it's a synyonym if name not found
-                    my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->find({ synonym => $trait_name });
+                    my $escaped_name = $trait_name;
+                    $escaped_name =~ s/([%_\\])/\\$1/g;
+
+                    my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->search( { synonym => { -ilike => '"' . $escaped_name . '"%' } } )->first;
+
                     if ($synonym_row) {
                         $cvterm_id = $synonym_row->cvterm_id();
-                        $trait_lookup_type  = "synonym";
-                        $trait_matched_name = $synonym_row->cvterm->name();
+                        $trait_lookup_type = "synonym";
+
+                        my $matched_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+                        $trait_matched_name = $matched_cvterm ? $matched_cvterm->name() : undef;
+                        print STDERR "trait matched name: $trait_matched_name";
                     } else {
-                        $cvterm = undef;
+                        $cvterm_id = undef;
                     }
                 }
             }
@@ -429,6 +436,7 @@ sub verify_exif_POST {
                 trait_exists    => $cvterm_id ? "true" : "false",
                 trait_lookup_type => $trait_lookup_type,
                 trait_lookup_value => $trait_lookup_value,
+                trait_matched_name => $trait_matched_name,
             };
             
         } else {
