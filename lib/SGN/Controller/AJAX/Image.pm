@@ -386,25 +386,41 @@ sub verify_exif_POST {
                 }
             }
             # Get cvterm_id of recorded trait
+            my $observation_variable = $decoded_json->{observation_variable};
             my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
+            my $trait_name = $observation_variable->{observation_variable_name};
+            print STDERR "trait id test: $trait_id";
             my $cvterm_id;
+            my $trait_lookup_type;
+            my $trait_lookup_value;
 
-            if (!$trait_id) {
-                my $trait_name = $decoded_json->{observation_variable}->{observation_variable_name};
+            if ($trait_id) {
+                $trait_lookup_type  = "id";
+                $trait_lookup_value = $trait_id;
+                $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+            }
+            elsif ($trait_name) {
+                $trait_lookup_type  = "name";
+                $trait_lookup_value = $trait_name;
                 my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $trait_name });
                 if ($cvterm) {
                     $cvterm_id = $cvterm->cvterm_id();
                 }
-            }
-            else {
-                $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
             }
 
             $decoded_json->{stock_name} = $stock_name;
             if ($cvterm_id) {
                 $decoded_json->{cvterm_id} = $cvterm_id;
             }
-            push @results, { filename => $filename, exif => $decoded_json, status => "success", stock_exists => $stock_exists };
+            push @results, {
+                filename        => $filename,
+                exif            => $decoded_json,
+                stock_exists    => $stock_exists,
+                trait_present   => $observation_variable ? "true" : "false",
+                trait_exists    => $cvterm_id ? "true" : "false",
+                trait_lookup_type => $trait_lookup_type,
+                trait_lookup_value => $trait_lookup_value,
+            };
             
         } else {
             push @results, { filename => $filename, exif => undef, status => "no_exif" };

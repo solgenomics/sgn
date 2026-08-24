@@ -276,86 +276,99 @@ function reportVerifyResult(result) {
 }
 
 function verifyExifData(result) {
-    const successMessages =[];
+    const successMessages = [];
     const errorMessages = [];
     const finalSuccessMessage = [];
+    const validFilenames = [];
+    const invalidFilenames = [];
     let exifFiles = 0;
     let nonExifFiles = 0;
-    //console.log("image data", result.images[0].exif);
 
     result.images.forEach((img, index) => {
         const imgName = img.filename || `Image ${index + 1}`;
         const exif = img.exif || {};
+        const imgErrors = [];
 
-        if (result.images[index].status === "no_exif") {
+        if (img.status === "no_exif") {
             errorMessages.push(`${imgName} does not have EXIF data`);
+            invalidFilenames.push(imgName);
             nonExifFiles++;
             return;
         } else {
             exifFiles++;
         }
 
-        const hasObsUnit = exif.observation_unit && exif.observation_unit.observation_unit_db_id;
-        const hasObsVar = exif.observation_variable && exif.observation_variable.observation_variable_name;
-        const obsVariableName = exif.observation_variable.observation_variable_name;
+        const obsUnit = exif.observation_unit;
+        const obsVar = exif.observation_variable;
+        const hasObsUnit = obsUnit && obsUnit.observation_unit_db_id;
+        const hasObsVar = obsVar && obsVar.observation_variable_name;
         const hasTimestamp = exif.timestamp;
         const hasCvtermId = exif.cvterm_id;
         const stockName = exif.stock_name;
-        
+
         if (hasObsUnit) {
-            successMessages.push(`${imgName}: ObservationUnitDbId: ${exif.observation_unit.observation_unit_db_id}`);
+            successMessages.push(`${imgName}: ObservationUnitDbId: ${obsUnit.observation_unit_db_id}`);
         } else {
-            errorMessages.push(`${imgName}: Missing ObservationUnitDbId`);
+            imgErrors.push(`${imgName}: Missing ObservationUnitDbId`);
         }
 
-        if (hasObsVar) {
-            successMessages.push(`${imgName}: Observation Variable: ${exif.observation_variable.observation_variable_name}`);
+        // Specific: field missing entirely vs. present but empty/not found
+        if (!obsVar) {
+            imgErrors.push(`${imgName}: No trait field found in EXIF data`);
+        } else if (!hasObsVar && !obsVar.external_db_id) {
+            imgErrors.push(`${imgName}: Trait field is present but is missing both a trait ID and trait name`);
         } else {
-            errorMessages.push(`${imgName}: Missing Observation Variable Name`);
+            successMessages.push(`${imgName}: Observation Variable: ${obsVar.observation_variable_name || obsVar.external_db_id}`);
+            if (!hasCvtermId) {
+                if (img.trait_lookup_type === "id") {
+                    imgErrors.push(`${imgName}: Trait ID "${img.trait_lookup_value}" does not exist in the database`);
+                } else if (img.trait_lookup_type === "name") {
+                    imgErrors.push(`${imgName}: Trait name "${img.trait_lookup_value}" does not exist in the database`);
+                } else {
+                    imgErrors.push(`${imgName}: Associated trait does not exist in the database`);
+                }
+            }
         }
 
         if (hasTimestamp) {
             successMessages.push(`${imgName}: Timestamp: ${exif.timestamp}`);
         } else {
-            errorMessages.push(`${imgName}: Missing Timestamp`);
+            imgErrors.push(`${imgName}: Missing Timestamp`);
         }
 
-        if (!hasCvtermId) {
-            errorMessages.push(`${imgName} associated trait ${obsVariableName} does not exist in the database`);
+        if (img.stock_exists === "false") {
+            imgErrors.push(`${imgName}: ObservationUnitDbId ${obsUnit.observation_unit_db_id} does not exist in the database`);
+        } else if (hasObsUnit && !stockName) {
+            imgErrors.push(`${imgName}: Stock associated with ObservationUnitDbId ${obsUnit.observation_unit_db_id} could not be found`);
         }
 
-        if (result.images[index].stock_exists === "false") {
-            errorMessages.push(`${imgName}: ObservationUnitDbId ${exif.observation_unit.observation_unit_db_id} does not exist in the database`);
-        } else if (!stockName) {
-            errorMessages.push(`${imgName} Stock ${stockName} does not exist in the database`);
-        }
-
-        if (errorMessages.length === 0) {
-            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${exif.stock_name} Associated trait: ${obsVariableName}. Ready to store image`);
+        if (imgErrors.length === 0) {
+            finalSuccessMessage.push(`${imgName} has valid EXIF data. Associated stock: ${stockName}. Associated trait: ${obsVar.observation_variable_name}. Ready to store image`);
+            validFilenames.push(imgName);
+        } else {
+            errorMessages.push(...imgErrors);
+            invalidFilenames.push(imgName);
         }
     });
 
-    let validExif;
     if (errorMessages.length === 0) {
         jQuery('#upload_images_submit_store').attr('disabled', false);
         jQuery('#upload_images_status').html(
             formatMessage(finalSuccessMessage, "success")
         );
-        return true;
-    } else if (exifFiles > 0 && nonExifFiles > 0) {
-        errorMessages.push("Please load files all containing EXIF data or with the same file naming pattern");
-        validExif = errorMessages;
-    } else if (errorMessages.length > 0 && successMessages.length > 0) {
-        validExif = errorMessages;
-    } else {
-        return false;
+        return { valid: true, validFilenames: validFilenames, invalidFilenames: invalidFilenames };
     }
 
-    jQuery('#upload_images_submit_store').attr('disbled', true);
+    if (exifFiles > 0 && nonExifFiles > 0) {
+        errorMessages.push("Please load files all containing EXIF data or with the same file naming pattern");
+    }
+
+    jQuery('#upload_images_submit_store').attr('disabled', true);
     jQuery('#upload_images_status').html(
         formatMessage(errorMessages, "error")
     );
-    return validExif;
+
+    return { valid: false, validFilenames: validFilenames, invalidFilenames: invalidFilenames, errorMessages: errorMessages };
 }
 
 function parseExifData(exifData, imageFiles) {
