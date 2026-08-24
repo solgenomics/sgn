@@ -18,10 +18,10 @@ $transformation_notes
                 <div class="container-fluid">
                     <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
                         <div class="form-group">
-                            <label class="col-sm-3 control-label" for="edit_transformation_name">Transformation Name: </label>
+                            <label class="col-sm-3 control-label" for="edit_transformation_name">Transformation ID: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <input class="form-control col-sm-8" id="edit_transformation_name" title="name" type="text" value="<%$transformation_name%>"/>
+                                    <input class="form-control col-sm-8" id="edit_transformation_name" type="text" value="<%$transformation_name%>"/>
                                 </div>
                             </div>
                         </div>
@@ -29,7 +29,7 @@ $transformation_notes
                             <label class="col-sm-3 control-label" for="edit_transformation_notes">Notes: </label>
                             <div class="col-sm-8">
                                 <div class="input-group">
-                                    <textarea class="form-control" id="edit_transformation_notes" title="notes" rows="5"><%$transformation_notes%></textarea>
+                                    <textarea class="form-control" id="edit_transformation_notes" rows="5"><%$transformation_notes%></textarea>
                                 </div>
                             </div>
                         </div>
@@ -101,17 +101,17 @@ jQuery(document).ready(function(){
     });
 
     jQuery('#save_transformation_details').click(function(){
-        var new_transformation_name;
-        var new_transformation_notes;
-        var success_message = '';
-        var type;
+        let new_transformation_name;
+        let new_transformation_notes;
+        let success_message;
 
-        var changed_elements = document.getElementsByName("changed");
+        let changed_elements = document.getElementsByName("changed");
         for(var i=0; i<changed_elements.length; i++){
-            var id = changed_elements[i].id;
+            let id = changed_elements[i].id;
+            let type;
             if (id == 'edit_transformation_name') {
                 new_transformation_name = changed_elements[i].value;
-                type = 'Name';
+                type = 'Transformation ID';
                 success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_name+"</b></li>";
             } else if (id == 'edit_transformation_notes') {
                 new_transformation_notes = changed_elements[i].value;
