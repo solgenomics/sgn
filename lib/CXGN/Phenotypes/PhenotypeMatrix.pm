@@ -485,6 +485,7 @@ sub get_phenotype_matrix {
                 $value = $d->{phenotype_value};
             # print STDERR "value only with phenotypes: $value\n";
             }
+            no warnings 'uninitialized';
             push @{ $obsunit_data{$d->{obsunit_stock_id}}->{$d->{trait_name} } }, $value;
         }
 
