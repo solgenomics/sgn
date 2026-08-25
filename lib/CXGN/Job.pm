@@ -335,8 +335,6 @@ sub BUILD {
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
     }
-
-    # $self->enforce_finish_logfile();
 }
 
 =head2 check_status()

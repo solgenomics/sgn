@@ -190,7 +190,6 @@ sub upload_cross_file_POST : Args(0) {
         name => basename($archived_filename_with_path)." cross upload",
         job_type => 'upload',
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
             file_type => 'crosses',

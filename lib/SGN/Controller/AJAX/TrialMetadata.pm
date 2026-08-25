@@ -1007,7 +1007,6 @@ sub _upload_trial_stock_entries {
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
             file_type => $args->{file_type},
@@ -1294,7 +1293,6 @@ sub trial_plot_gps_upload : Chained('trial') PathPart('upload_plot_gps') Args(0)
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
             file_type => $gps_file_type,
@@ -1476,7 +1474,6 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             ignore_warnings => $override ? 1 : undef,
             final_upload => 1,
@@ -1789,7 +1786,6 @@ sub trial_additional_file_upload : Chained('trial') PathPart('upload_additional_
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
             file_type => 'trial_additional_file',
@@ -5229,7 +5225,6 @@ sub upload_entry_number_template_POST : Args(0) {
         job_type => 'upload',
         results_page => "/breeders/trial/$trial_id",
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             ignore_warnings => $ignore_warnings eq "true" ? 1 : 0,
             final_upload => 1,

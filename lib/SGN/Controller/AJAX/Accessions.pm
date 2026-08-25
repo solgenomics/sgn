@@ -308,7 +308,6 @@ sub verify_accessions_file_POST : Args(0) {
         name => basename($archived_filename_with_path)." accession validation",
         job_type => 'upload',
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             is_validation => 1,
             file_type => 'accessions',
@@ -487,7 +486,6 @@ sub add_accession_list_POST : Args(0) {
         name => "$filename accession upload",
         job_type => 'upload',
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             final_upload => 1,
             file_type => 'accessions',

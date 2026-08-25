@@ -1680,7 +1680,6 @@ sub upload_trial_metadata_file_POST : Args(0) {
         name => $upload_original_name." trial metadata upload",
         job_type => 'upload',
         submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-        finish_logfile => $c->config->{finish_logfile},
         additional_args => {
             file_type => 'trial_metadata',
             user_name => "$user_first_name $user_last_name",

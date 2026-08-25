@@ -183,6 +183,11 @@ sub upload_genotype_verify_POST : Args(0) {
     my $has_intertek_marker = defined($upload_inteterk_marker_info) || defined($archived_intertek_marker_info_file_id);
     my $has_kasp     = defined($upload_kasp_genotypes)     || defined($archived_kasp_file_id);
 
+    # The upload manager archives a file before calling here, so a file that is already in the
+    # archive is one it is going to follow the job for itself. The upload dialog posts the file
+    # directly and reports the outcome to the user, so it waits for the job to finish.
+    my $from_upload_manager = ($archived_vcf_file_id || $archived_tassel_file_id || $archived_intertek_file_id || $archived_ssr_file_id || $archived_kasp_file_id) ? 1 : 0;
+
     if ($has_kasp && !defined $assay_type) {
         $assay_type = 'KASP';
     }
@@ -214,6 +219,7 @@ sub upload_genotype_verify_POST : Args(0) {
     my $archived_filename_with_path;
     my $archived_main_file_id;
     my $archived_marker_info_file;
+    my $tassel_hdf5_file;
     my $genotype_file_type;
     if ($upload_vcf || $archived_vcf_file_id) {
         $genotype_file_type = 'genotype_data_vcf';
@@ -377,44 +383,11 @@ sub upload_genotype_verify_POST : Args(0) {
             $archived_main_file_id = $archived_tassel_file_id;
         }
 
-        my $output_dir = $c->tempfiles_subdir('/genotype_upload_tassel_hdf5');
-        $upload_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/temp_vcf_XXXX').".vcf";
-        my $cmd = "perl ".$c->config->{rootpath}."/tassel-5-standalone/run_pipeline.pl -Xmx12g -h5 ".$archived_tassel_hdf5_file." -export ".$upload_tempfile." -exportType VCF";
-        print STDERR Dumper $cmd;
-        my $status = system($cmd);
-
-        my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/fileXXXX');
-
-        open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
-        open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
-        my @outline;
-        my $lastcol = -1;
-        while (<$F>) {
-            $_ =~ s/\r//g;
-            if ($_ =~ m/^\##/) {
-                print $Fout $_;
-            } else {
-                chomp;
-                my @line = split /\t/;
-                my $oldlastcol = $lastcol;
-                $lastcol = $#line if $#line > $lastcol;
-                for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
-                    if ($oldlastcol) {
-                        $outline[$i] = "\t" x $oldlastcol;
-                    }
-                }
-                for (my $i=0; $i <=$lastcol; $i++) {
-                    $outline[$i] .= "$line[$i]\t"
-                }
-            }
-        }
-        for (my $i=0; $i <= $lastcol; $i++) {
-            $outline[$i] =~ s/\s*$//g;
-            print $Fout $outline[$i]."\n";
-        }
-        close($F);
-        close($Fout);
-        $archived_filename_with_path = $temp_file_transposed;
+        # Exporting the HDF5 file to VCF and transposing it is by far the slowest part of a Tassel
+        # upload, so it is left to the background script along with the parsing and storing that
+        # follow it. What is recorded here is the archived HDF5 file it starts from.
+        $tassel_hdf5_file = $archived_tassel_hdf5_file;
+        $archived_filename_with_path = $archived_tassel_hdf5_file;
         $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
     }
@@ -637,539 +610,116 @@ sub upload_genotype_verify_POST : Args(0) {
 	print STDERR "organism species not defined\n";
     }
 
-    my $upload_job;
-    if ($archived_filename_with_path) {
-        $upload_job = CXGN::Job->new({
-            schema => $schema,
-            people_schema => $people_schema,
-            sp_person_id => $user_id,
-            name => basename($archived_filename_with_path)." genotype data upload",
-            job_type => 'upload',
-            submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
-            finish_logfile => $c->config->{finish_logfile},
-            additional_args => {
-                final_upload => 1,
-                file_type => $genotype_file_type,
-                user_name => "$user_first_name $user_last_name",
-                file_id => $archived_main_file_id
-            }
-        });
-        $upload_job->update_status("submitted");
-    }
-
-    my $parser;
-    if ($archived_filename_with_path) {
-      $parser = CXGN::Genotype::ParseUpload->new({
-        chado_schema => $schema,
-        filename => $archived_filename_with_path,
-        filename_marker_info => $archived_marker_info_file,
-        observation_unit_type_name => $obs_type,
-        organism_id => $organism_id,
-        create_missing_observation_units_as_accessions => $add_accessions,
-        igd_numbers_included => $include_igd_numbers,
-        # lab_numbers_included => $include_lab_numbers
-      });
-      $parser->load_plugin($parser_plugin);
-    }
-
-    my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
-    my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
-
-    my $vcf_genotyping_type =  'vcf_snp_genotyping';#for now only SNP type are uploaded from VCF using the web interface
-    my $genotyping_type;
-    my $genotype_data_type;
-
-    if ($vcf_genotyping_type =~ /vcf_phg_genotyping/) {
-    $genotyping_type = 'phg genotyping';
-    $genotype_data_type = 'PHG';
-
-} else {
-    $genotyping_type = 'snp genotyping';
-    $genotype_data_type = 'SNP';
-}
-
-    my $store_args = {
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        observation_unit_type_name=>$obs_type,
-        project_id=>$project_id,
-        protocol_id=>$protocol_id,
-        genotyping_facility=>$genotyping_facility, #projectprop
-        breeding_program_id=>$breeding_program_id, #project_rel
-        project_year=>$year, #projectprop
-        project_location_id=>$location_id, #ndexperiment and projectprop
-        project_name=>$project_name, #project_attr
-        project_description=>$description, #project_attr
-        protocol_name=>$protocol_name,
-        protocol_description=>$protocol_description,
-        organism_id=>$organism_id,
-        igd_numbers_included=>$include_igd_numbers,
-        lab_numbers_included=>$include_lab_numbers,
-        user_id=>$user_id,
-        archived_filename=>$archived_filename_with_path,
-        archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-        temp_file_sql_copy=>$temp_file_sql_copy,
-        vcf_genotyping_type => $vcf_genotyping_type,
-        genotyping_type => $genotyping_type,
-        genotyping_data_type=> $genotype_data_type,
-    };
-
-    my $return;
-    #For VCF files, memory was an issue so we parse them with an iterator
-    if ($parser_plugin eq 'VCF' || $parser_plugin eq 'transposedVCF') {
-        my $parser_return = $parser->parse_with_iterator();
-
-        if ($parser->get_parse_errors()) {
-            my $return_error = '';
-            my $parse_errors = $parser->get_parse_errors();
-            print STDERR Dumper $parse_errors;
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
-            }
-            if ($upload_job) {
-                $upload_job->additional_args->{error_messages} = $return_error;
-                $upload_job->update_status("failed");
-            }
-            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-            $c->detach();
-        }
-
-        my $protocol = $parser->protocol_data();
-        my $observation_unit_names_all = $parser->observation_unit_names();
-        $store_args->{observation_unit_uniquenames} = $observation_unit_names_all;
-
-        if ($parser_plugin eq 'VCF') {
-            $store_args->{marker_by_marker_storage} = 1;
-        }
-
-        $protocol->{'reference_genome_name'} = $reference_genome_name;
-        $protocol->{'species_name'} = $organism_species;
-        $protocol->{'assay_type'} = $assay_type;
-        my $store_genotypes;
-        my ($observation_unit_names, $genotype_info) = $parser->next();
-        if (scalar(keys %$genotype_info) > 0) {
-            #print STDERR Dumper [$observation_unit_names, $genotype_info];
-            print STDERR "Parsing first genotype and extracting protocol info... \n";
-
-            $store_args->{protocol_info} = $protocol;
-            $store_args->{genotype_info} = $genotype_info;
-
-            $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
-            my $verified_errors = $store_genotypes->validate();
-
-            if (scalar(@{$verified_errors->{error_messages}}) > 0){
-                my $error_string;
-                foreach my $error (@{$verified_errors->{error_messages}}) {
-                    $error_string .= $error."<br>";
-                }
-                if ($upload_job) {
-                    $upload_job->additional_args->{error_messages} = $error_string;
-                    $upload_job->update_status("failed");
-                }
-                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
-                $c->detach();
-            }
-
-            my @all_warnings;
-            my $previous_genotypes_exist;
-            if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-                my $warning_string;
-                foreach my $error_string (@{$verified_errors->{'warning_messages'}}){
-                    $warning_string .= $error_string."<br>";
-                }
-                if ($upload_job) {
-                    $upload_job->additional_args->{warning_messages} = $warning_string;
-                }
-                if (!$accept_warnings){
-                    if ($upload_job) {
-                        $upload_job->update_status("failed");
-                    }
-                    $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-                    $c->detach();
-                }
-                push @all_warnings, @{$verified_errors->{warning_messages}};
-                $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
-            }
-
-            if ($protocol_id) {
-                my @protocol_match_errors;
-                my $new_marker_data = $protocol->{markers};
-                my $stored_protocol = CXGN::Genotype::Protocol->new({
-                    bcs_schema => $schema,
-                    nd_protocol_id => $protocol_id
-                });
-                my $stored_markers = $stored_protocol->markers();
-
-                my @all_stored_markers = keys %$stored_markers;
-                my %compare_marker_names = map {$_ => 1} @all_stored_markers;
-		my $total_marker_count = 0;
-                my @mismatch_marker_names;
-		my @mismatch_markers;
-                while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-                    while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
-			$total_marker_count++;
-                        if (exists($compare_marker_names{$marker_name})) {
-                            for my $key (qw(chrom pos name ref alt)) {
-                                my $value = $new_marker_details->{$key};
-                                if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                    push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
-                                }
-                            }
-                        } else {
-                            push @mismatch_marker_names, $marker_name;
-			    push @mismatch_markers, [$chrom, $marker_name];
-                        }
-                    }
-                }
-
-                if (scalar(@mismatch_marker_names)) {
-		    if ($add_markers) {
-                        if ($total_marker_count && (scalar(@mismatch_marker_names) / $total_marker_count) < 0.1) {
-			    print STDERR "Adding new markers\n";
-			    $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
-			} else {
-			    if ($upload_job) {
-                                $upload_job->additional_args->{error_messages} = "Too many new markers";
-                                $upload_job->update_status("failed");
-                            }
-			    $c->stash->{rest} = { error => "Too many new markers"};
-                            $c->detach();
-		        }
-		    } else {
-                        my $marker_name_error = "<br>";
-                        foreach my $error ( sort @mismatch_marker_names) {
-                            $marker_name_error .= $error."<br>";
-                        }
-                        if ($upload_job) {
-                            $upload_job->additional_args->{error_messages} = "These marker names in your file are not in the selected protocol. $marker_name_error";
-                            $upload_job->update_status("failed");
-                        }
-			$c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error", missing_markers => \@mismatch_marker_names };
-                        $c->detach();
-                    }
-                }
-
-                if (scalar(@protocol_match_errors) > 0){
-                    my $protocol_warning;
-                    foreach my $match_error (@protocol_match_errors) {
-                        $protocol_warning .= $match_error."<br>";
-                    }
-                    if ($upload_job) {
-                        $upload_job->additional_args->{warning_messages} = $protocol_warning;
-                    }
-                    if (!$accept_warnings){
-                        if ($upload_job) {
-                            $upload_job->update_status("failed");
-                        }
-                        $c->stash->{rest} = { warning => $protocol_warning };
-                        $c->detach();
-                    }
-                }
-                push @all_warnings, @protocol_match_errors;
-	    }
-
-            if (scalar(@all_warnings) > 0 && !$accept_warnings) {
-                my $warning_string = join("<br>", @all_warnings);
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
-                $c->detach();
-            }
-
-            $store_genotypes->store_metadata();
-            $store_genotypes->store_identifiers();
-        }
-
-        print STDERR "Done loading first line, moving on...\n";
-
-        my $continue_iterate = 1;
-        while ($continue_iterate == 1) {
-            my ($observation_unit_names, $genotype_info) = $parser->next();
-            if (scalar(keys %$genotype_info) > 0) {
-                $store_genotypes->genotype_info($genotype_info);
-                $store_genotypes->observation_unit_uniquenames($observation_unit_names);
-                $store_genotypes->store_identifiers();
-            } else {
-                $continue_iterate = 0;
-                last;
-            }
-        }
-        $return = $store_genotypes->store_genotypeprop_table();
-    }
-    #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
-    elsif (($parser_plugin eq 'IntertekCSV') || ($parser_plugin eq 'KASP')) {
-        if (defined $protocol_id) {
-            $parser->{nd_protocol_id} = $protocol_id;
-        }
-        my $parsed_data = $parser->parse();
-        my $parse_errors;
-        if (!$parsed_data) {
-            my $return_error = '';
-            if (!$parser->has_parse_errors() ){
-                $return_error = "Could not get parsing errors";
-                $c->stash->{rest} = {error_string => $return_error,};
-            } else {
-                $parse_errors = $parser->get_parse_errors();
-        	#print STDERR Dumper $parse_errors;
-                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                    $return_error=$return_error.$error_string."<br>";
-                }
-            }
-            if ($upload_job) {
-                $upload_job->additional_args->{error_messages} = $return_error;
-                $upload_job->update_status("failed");
-            }
-            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-            $c->detach();
-        }
-        #print STDERR Dumper $parsed_data;
-        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-        my $genotype_info = $parsed_data->{genotypes_info};
-        my $protocol_info = $parsed_data->{protocol_info};
-        my $marker_info_keys = $parsed_data->{marker_info_keys};
-        $protocol_info->{'reference_genome_name'} = $reference_genome_name;
-        $protocol_info->{'species_name'} = $organism_species;
-        $protocol_info->{'marker_info_keys'} = $marker_info_keys;
-        $protocol_info->{'assay_type'} = $assay_type;
-
-        $store_args->{protocol_info} = $protocol_info;
-        $store_args->{genotype_info} = $genotype_info;
-        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
-
-        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
-        my $verified_errors = $store_genotypes->validate();
-
-        if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string;
-            foreach my $error (@{$verified_errors->{error_messages}}) {
-                $error_string .= $error."<br>";
-            }
-            if ($upload_job) {
-                $upload_job->additional_args->{error_messages} = $error_string;
-                $upload_job->update_status("failed");
-            }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
-            $c->detach();
-        }
-
-        my @all_warnings;
-        my $previous_genotypes_exist;
-        if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            my $warning_string;
-            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
-                $warning_string .= $error_string."<br>";
-            }
-            if ($upload_job) {
-                $upload_job->additional_args->{warning_messages} = $warning_string;
-            }
-            if (!$accept_warnings){
-                if ($upload_job) {
-                    $upload_job->update_status("failed");
-                }
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-                $c->detach();
-            }
-            push @all_warnings, @{$verified_errors->{warning_messages}};
-            $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
-        }
-
-        if ($protocol_id) {
-            my @protocol_match_errors;
-            my $new_marker_data = $protocol_info->{markers};
-            my $stored_protocol = CXGN::Genotype::Protocol->new({
-                bcs_schema => $schema,
-                nd_protocol_id => $protocol_id
-            });
-            my $stored_markers = $stored_protocol->markers();
-	    my @all_stored_markers = keys %$stored_markers;
-	    my %compare_marker_names = map {$_ => 1} @all_stored_markers;
-	    my $total_marker_count = 0;
-            my @mismatch_marker_names;
-            my @mismatch_markers;
-            while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-                while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
-                    $total_marker_count++;
-                    if (exists($compare_marker_names{$marker_name})) {
-                        for my $key (qw(chrom pos name ref alt)) {
-                            my $value = $new_marker_details->{$key};
-                            if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
-                            }
-                        }
-                    } else {
-                        push @mismatch_marker_names, $marker_name;
-                        push @mismatch_markers, [$chrom, $marker_name];
-                    }
-                }
-	    }
-
-            if (scalar(@mismatch_marker_names)){
-		if ($add_markers) {
-		    if (scalar(@mismatch_marker_names) < 20) {
-                        print STDERR "Adding new markers\n";
-                        $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
-                    } else {
-			print STDERR "Too many new markers, should be less than 20\n";
-                        if ($upload_job) {
-                            $upload_job->additional_args->{error_messages} = "Too many new markers, should be less than 20";
-                            $upload_job->update_status("failed");
-                        }
-		        $c->stash->{rest} = { error => "Too many new markers, should be less than 20"};
-                        $c->detach();
-                    }
-		} else {
-		    my $marker_name_error = "<br>";
-                    foreach my $error ( sort @mismatch_marker_names) {
-                        $marker_name_error .= $error."<br>";
-                    }
-                    if ($upload_job) {
-                        $upload_job->additional_args->{error_messages} = "These marker names in your file are not in the selected protocol. $marker_name_error";
-                        $upload_job->update_status("failed");
-                    }
-		    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
-                    $c->detach();
-                }
-            }
-
-	    if (scalar(@protocol_match_errors) > 0){
-                my $protocol_warning;
-                foreach my $match_error (@protocol_match_errors) {
-                    $protocol_warning .= $match_error."<br>";
-                }
-                if ($upload_job) {
-                    $upload_job->additional_args->{warning_messages} = $protocol_warning;
-                }
-                if (!$accept_warnings){
-                    if ($upload_job) {
-                        $upload_job->update_status("failed");
-                    }
-                    $c->stash->{rest} = { warning => $protocol_warning };
-                    $c->detach();
-                }
-            }
-            push @all_warnings, @protocol_match_errors;
-	}
-
-        if (scalar(@all_warnings) > 0 && !$accept_warnings) {
-            my $warning_string = join("<br>", @all_warnings);
-            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
-            $c->detach();
-        }
-
-        $store_genotypes->store_metadata();
-        $store_genotypes->store_identifiers();
-        $return = $store_genotypes->store_genotypeprop_table();
-
-    } elsif ($parser_plugin eq 'SSRExcel') {
-        my $parsed_data = $parser->parse();
-        print STDERR "SSR PARSED DATA =".Dumper($parsed_data)."\n";
-        my $parse_errors;
-        if (!$parsed_data) {
-            my $return_error = '';
-            if (!$parser->has_parse_errors() ){
-                $return_error = "Could not get parsing errors";
-                $c->stash->{rest} = {error_string => $return_error,};
-            } else {
-                $parse_errors = $parser->get_parse_errors();
-                #print STDERR Dumper $parse_errors;
-                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                    $return_error=$return_error.$error_string."<br>";
-                }
-            }
-            if ($upload_job) {
-                $upload_job->additional_args->{error_messages} = $return_error;
-                $upload_job->update_status("failed");
-            }
-            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-            $c->detach();
-        }
-
-        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-        my $genotype_info = $parsed_data->{genotypes_info};
-
-        my @protocol_id_list;
-        push @protocol_id_list, $protocol_id;
-        my $genotypes_search = CXGN::Genotype::Search->new({
-        	bcs_schema=>$schema,
-        	people_schema=>$people_schema,
-        	protocol_id_list=>\@protocol_id_list,
-        });
-        my $result = $genotypes_search->get_pcr_genotype_info();
-        my $protocol_marker_names = $result->{'marker_names'};
-        my $previous_protocol_marker_names = decode_json $protocol_marker_names;
-
-        my %protocolprop_info;
-        $protocolprop_info{'sample_observation_unit_type_name'} = 'accession';
-        $protocolprop_info{'marker_names'} = $previous_protocol_marker_names;
-
-        $store_args->{genotype_info} = $genotype_info;
-        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
-        $store_args->{protocol_info} = \%protocolprop_info;
-        $store_args->{observation_unit_type_name} = 'accession';
-        $store_args->{genotyping_data_type} = 'ssr';
-
-        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
-        my $verified_errors = $store_genotypes->validate();
-
-        if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string;
-            foreach my $error (@{$verified_errors->{error_messages}}) {
-                $error_string .= $error."<br>";
-            }
-            if ($upload_job) {
-                $upload_job->additional_args->{error_messages} = $error_string;
-                $upload_job->update_status("failed");
-            }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
-            $c->detach();
-        }
-
-        if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            my $warning_string;
-            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
-                $warning_string .= $error_string."<br>";
-            }
-            if ($upload_job) {
-                $upload_job->additional_args->{warning_messages} = $warning_string;
-            }
-            if (!$accept_warnings){
-                if ($upload_job) {
-                    $upload_job->update_status("failed");
-                }
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-                $c->detach();
-            }
-        }
-
-        $store_genotypes->store_metadata();
-        $return = $store_genotypes->store_identifiers();
-
-    } else {
-        print STDERR "Parser plugin $parser_plugin not recognized!\n";
-        if ($upload_job) {
-            $upload_job->additional_args->{error_messages} = "Parser plugin $parser_plugin not recognized";
-            $upload_job->update_status("failed");
-        }
-	#$c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
+    # Nothing recognizable was uploaded. Submitting a job for it would only produce a background
+    # failure that is harder to read than saying so here.
+    if (!$genotype_file_type || !$archived_filename_with_path || !$parser_plugin) {
+        $c->stash->{rest} = { error => 'You must upload a genotype data file!' };
         $c->detach();
     }
 
-    if ($upload_job) {
-        $upload_job->update_status("finished");
-    }
-
-    my $basepath = $c->config->{basepath};
     my $dbhost = $c->config->{dbhost};
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
     my $dbpass = $c->config->{dbpass};
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$dbname, } );
-    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
+    my $basepath = $c->config->{basepath};
+    my $archive_path = $c->config->{archive_path};
+    my $tempfiles_subdir = $c->config->{tempfiles_subdir};
 
-    # Rebuild and refresh the materialized_markerview table
-    my $async_refresh = CXGN::Tools::Run->new();
-    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+    # Everything that describes the upload goes on the job rather than on the command line. Most of
+    # it is text the uploader typed, which does not belong in a shell string, and the design of a
+    # protocol would not fit on one anyway.
+    my $upload_params = {
+        parser_plugin => $parser_plugin,
+        genotype_file_type => $genotype_file_type,
+        archived_filename => $archived_filename_with_path,
+        archived_marker_info_file => $archived_marker_info_file,
+        tassel_hdf5_file => $tassel_hdf5_file,
+        rootpath => $c->config->{rootpath},
+        user_id => $user_id,
+        obs_type => $obs_type,
+        organism_id => $organism_id,
+        organism_species => $organism_species,
+        add_accessions => $add_accessions,
+        add_markers => $add_markers,
+        include_igd_numbers => $include_igd_numbers,
+        include_lab_numbers => $include_lab_numbers,
+        accept_warnings => $accept_warnings,
+        project_id => $project_id,
+        protocol_id => $protocol_id,
+        genotyping_facility => $genotyping_facility,
+        breeding_program_id => $breeding_program_id,
+        year => $year,
+        location_id => $location_id,
+        project_name => $project_name,
+        description => $description,
+        protocol_name => $protocol_name,
+        protocol_description => $protocol_description,
+        reference_genome_name => $reference_genome_name,
+        assay_type => $assay_type
+    };
 
-    $c->stash->{rest} = $return;
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job, and can read the upload it is to run off it.
+    my $cmd = "perl \"$basepath/bin/upload_genotype_data.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -tf \"$tempfiles_subdir\" -j __SP_JOB_ID__";
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
+        cmd => $cmd,
+        name => basename($archived_filename_with_path)." genotype data upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            final_upload => 1,
+            file_type => $genotype_file_type,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_main_file_id,
+            upload_params => $upload_params
+        }
+    });
+
+    my $submit_error;
+    try {
+        $upload_job->submit();
+    } catch {
+        $submit_error = $_;
+    };
+    if ($submit_error) {
+        $c->stash->{rest} = { error => "Could not submit the genotype data upload: $submit_error" };
+        $c->detach();
+    }
+
+    if ($from_upload_manager) {
+        $c->stash->{rest} = { success => 1, job_id => $upload_job->sp_job_id() };
+        $c->detach();
+    }
+
+    $upload_job->wait();
+
+    # The script reports its results by writing them to the job, so they have to be read back from
+    # the database rather than from the object that submitted it. The answer the dialog gets is
+    # recorded whole, so that a file that was waited on reads exactly the same as it used to.
+    my $finished_job = CXGN::Job->new({
+        sp_job_id => $upload_job->sp_job_id(),
+        schema => $schema,
+        people_schema => $people_schema
+    });
+    my $job_args = $finished_job->additional_args() || {};
+
+    if (!$job_args->{result}) {
+        # The job left the queue without recording an outcome, which happens if the script died
+        # before it could report anything.
+        $c->stash->{rest} = { error => "The genotype data upload did not report a result. Check the status of upload job ".$upload_job->sp_job_id()."." };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = $job_args->{result};
 }
 
 1;
