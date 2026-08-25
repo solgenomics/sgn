@@ -25,6 +25,7 @@ $user_id => undef
                 <th>Altitude(m)</th>
                 <th>Trials</th>
                 <th>Nearest NOAA Station ID</th>
+                <th>Edit</th>
             </tr>
         </thead>
         <!-- <caption class="well well-sm" style="caption-side: bottom;margin-top: 10px;"><center> Locations </center></caption> -->
@@ -86,6 +87,12 @@ jQuery(document).ready(function() {
                 { "data": "properties.NOAAStationID",
                     "render":function(data, type, full, meta) {
                         return full.properties.NOAAStationID ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + full.properties.NOAAStationID + "/detail' target=_blank>"+ full.properties.NOAAStationID + "</a>" : "";
+                    }
+                },
+                {
+                    "data": "properties.Id",
+                    "render": function(data, type, full, meta) {
+                        return `[<a href="#" onclick="edit_location(${full.properties.Id})">Edit</a>] [<a href="#" onclick="delete_location(${full.properties.Id})">Delete</a>]`;
                     }
                 }
             ],
