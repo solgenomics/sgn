@@ -386,14 +386,58 @@ sub verify_exif_POST {
                 }
             }
             # Get cvterm_id of recorded trait
+            my $observation_variable = $decoded_json->{observation_variable};
             my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
-            my $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+            my $trait_name = $observation_variable->{observation_variable_name};
+            my $cvterm_id;
+            my $trait_lookup_type;
+            my $trait_lookup_value;
+            my $trait_matched_name;
+
+            if ($trait_id) {
+                $trait_lookup_type  = "id";
+                $trait_lookup_value = $trait_id;
+                $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+            }
+            elsif ($trait_name) {
+                $trait_lookup_type  = "name";
+                $trait_lookup_value = $trait_name;
+                my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $trait_name });
+                if ($cvterm) {
+                    $cvterm_id = $cvterm->cvterm_id();
+                } else {
+                    my $escaped_name = $trait_name;
+                    $escaped_name =~ s/([%_\\])/\\$1/g;
+
+                    my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->search( { synonym => { -ilike => '"' . $escaped_name . '"%' } } )->first;
+
+                    if ($synonym_row) {
+                        $cvterm_id = $synonym_row->cvterm_id();
+                        $trait_lookup_type = "synonym";
+
+                        my $matched_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+                        $trait_matched_name = $matched_cvterm ? $matched_cvterm->name() : undef;
+                        print STDERR "trait matched name: $trait_matched_name";
+                    } else {
+                        $cvterm_id = undef;
+                    }
+                }
+            }
 
             $decoded_json->{stock_name} = $stock_name;
             if ($cvterm_id) {
                 $decoded_json->{cvterm_id} = $cvterm_id;
             }
-            push @results, { filename => $filename, exif => $decoded_json, status => "success", stock_exists => $stock_exists };
+            push @results, {
+                filename        => $filename,
+                exif            => $decoded_json,
+                stock_exists    => $stock_exists,
+                trait_present   => $observation_variable ? "true" : "false",
+                trait_exists    => $cvterm_id ? "true" : "false",
+                trait_lookup_type => $trait_lookup_type,
+                trait_lookup_value => $trait_lookup_value,
+                trait_matched_name => $trait_matched_name,
+            };
             
         } else {
             push @results, { filename => $filename, exif => undef, status => "no_exif" };

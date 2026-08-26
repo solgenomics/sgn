@@ -1,17 +1,17 @@
-package CXGN::Pedigree::AddFamilyNames;
+package CXGN::Pedigree::AddFamilyAndMembers;
 
 =head1 NAME
 
-CXGN::Pedigree::AddFamilyNames - a module to add family names.
+CXGN::Pedigree::AddFamilyAndMembers - a module to add family and members.
 
 =head1 USAGE
 
- my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({ chado_schema => $chado_schema, cross_name => $cross_name, family_name => $family_name} );
- $family_name_add->add_family_name();
+ my $family_name_add = CXGN::Pedigree::AddFamilyAndMembers->new({ chado_schema => $chado_schema, cross_name => $cross_name, family_name => $family_name} );
+ $family_name_add->add_family_and_members();
 
 =head1 DESCRIPTION
 
-Adds family name and creates corresponding new stock of type family_name if the family_name does not exist in the database. The cross must already exist in the database.
+Creates new stock of type family_name if the family_name does not exist in the database and adds cross members. The crosses must already exist in the database.
 
 =head1 AUTHORS
 
@@ -46,7 +46,7 @@ has 'family_name' => (isa =>'Str', is => 'rw', predicate => 'has_family_name', r
 has 'owner_name' => (isa => 'Str', is => 'rw', predicate => 'has_owner_name', required => 1,);
 has 'family_type' => (isa => 'Str', is => 'rw', predicate => 'has_family_type', required => 1,);
 
-sub add_family_name {
+sub add_family_and_members {
     my $self = shift;
     my $chado_schema = $self->get_chado_schema();
     my $phenome_schema = $self->get_phenome_schema();
