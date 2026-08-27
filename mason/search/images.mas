@@ -102,6 +102,10 @@ jQuery(document).ready(function () {
         source: '/ajax/stock/stock_autocomplete'
     });
 
+    jQuery("#image_project_name").autocomplete({
+        source: '/ajax/trials/trial_autocomplete'
+    });
+
     jQuery('#image_search_submit').click( function() {
         _load_image_search_results();
     });

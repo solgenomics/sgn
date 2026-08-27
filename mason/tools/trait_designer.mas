@@ -1,6 +1,5 @@
 <%args>
-    $trait_root
-    $db_name
+    $db_names
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
@@ -25,16 +24,26 @@
                 </div>
             </div>
             <div class="form-group">
+                <label class="col-sm-3 control-label"><span class="glyphicon glyphicon-question-sign" style="color:blue;font-size:18px" title="The ontology that the new term will belong to. This is separate from the parent term(s) that the new term is chained to."></span>&nbsp;Trait ontology:</label>
+                <div class="col-sm-9">
+                    <select style="width:70%;" class="form-control" id="new_trait_ontology_select" name="new_trait_ontology_select" type="select">
+%                   foreach my $ontology_db_name (grep { $_ } map { $_ =~ s/^\s+|\s+$//gr } split(",", $db_names)) {
+                        <option value="<% $ontology_db_name %>"><% $ontology_db_name %></option>
+%                   }
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="col-sm-3 control-label">Trait format:</label>
                 <div class="col-sm-9">
                     <select style="width:70%;" class="form-control" id="new_trait_format_select" name="new_trait_format_select" type="select">
-                        <option value="Numeric" selected>Numeric</option>
-                        <option value="Categorical">Categorical</option>
-                        <option value="Percent">Percent</option>
-                        <option value="Boolean">Boolean</option>
-                        <option value="Date">Date</option>
-                        <option value="Text">Text</option>
-                        <option value="Counter">Counter</option>
+                        <option value="numeric" selected>Numeric</option>
+                        <option value="categorical">Categorical</option>
+                        <option value="percent">Percent</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="date">Date</option>
+                        <option value="text">Text</option>
+                        <option value="counter">Counter</option>
                         <option value="ontology">Ontology (parent to child terms)</option>
                     </select>
                 </div>
@@ -101,11 +110,29 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
     </div>
 </div>
 
+<table>
+    <tr>
+        <td>
+            <select id="trait_ontology_download_select" class="form-control">
+                <option value="">Download trait ontology...</option>
+            </select>
+        </td>
+        <td>
+            <button id="download_ontology_btn" class="btn btn-primary"><span class="glyphicon glyphicon-floppy-save"></span></button>
+        </td>
+    </tr>
+</table>
 
-<button id="download_ontology_btn" class="btn btn-primary">Download Trait Ontology</button>
+
 <br>
 <br>
-<& /ontology/embedded_browser.mas, cvterm => $trait_root &>
+% 
+% my $root_nodes = $db_names =~ s/,/ /gr;
+% 
+<&| /page/info_section.mas, title=>"Trait terms", collapsible=>1 &>
+    <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>0 &>
+</&>
+
 
 <script>
     jQuery(document).ready(function () {
@@ -117,6 +144,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             let name = jQuery('#new_trait_name').val();
             let definition = jQuery('#new_trait_definition').val();
             let format = jQuery('#new_trait_format_select').val();
+            let ontology_db_name = jQuery('#new_trait_ontology_select').val();
             let default_value = jQuery('#new_trait_default_value').val();
             let minimum = jQuery('#new_trait_minimum').val();
             let maximum = jQuery('#new_trait_maximum').val();
@@ -148,7 +176,9 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                     categories : categories,
                     category_details : category_details,
                     parent_terms : parent_terms_json,
-                    repeat_type : repeat_type
+                    repeat_type : repeat_type,
+                    ontology_db_name : ontology_db_name,
+                    parent_dbs : "<% $db_names %>"
                 },
                 success: function(response) {
                     jQuery('#working_modal').modal("hide");
@@ -168,7 +198,7 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
         });
 
         jQuery('#new_trait_parent_term').autocomplete({
-            source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
+            source : '/ajax/cvterm/autocompleteslim' + "?db_names=<% $db_names %>"
         });
 
         jQuery('#new_trait_add_parent_btn').on('click', function(e) {
@@ -316,18 +346,35 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
             jQuery('#new_trait_categories').html(table_str);
         });
 
+        let ontology_db_names = "<% $db_names %>".split(",");
+        ontology_db_names.forEach(function (db_name) {
+            db_name = db_name.trim();
+            if (db_name) {
+                jQuery('#trait_ontology_download_select').append(
+                    jQuery('<option>', { value : db_name, text : db_name })
+                );
+            }
+        });
+
         jQuery('#download_ontology_btn').click(function() {
+
+            let db_name = jQuery('#trait_ontology_download_select').val();
+
+            if (!db_name || db_name == null || db_name == "") {
+                alert("Please select an ontology.");
+                return;
+            }
 
             jQuery('#working_modal').modal("show");
 
-            fetch("/ajax/onto/download_obo/<% $db_name %>")
+            fetch(`/ajax/onto/download_obo/${db_name}`)
                 .then(response => response.blob())
                 .then(blob => {
                     jQuery('#working_modal').modal("hide");
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = "<% $db_name %>.txt";
+                    a.download = `${db_name}.txt`;
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
@@ -339,6 +386,8 @@ Will be the trait root term by default if none are added."></span>&nbsp;Chain to
                     console.error('Download failed:', error)
                 });
         });
+
+        jQuery("[title='ontology browser input form']").hide();
 
         function html_table_to_json(html_str) {
             let list = html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== '');
