@@ -573,6 +573,7 @@ sub upload_genotype_verify_POST : Args(0) {
             my @all_warnings;
             my @warning_groups;
             my @mismatched_markers;
+            my @protocol_match_errors;
             my $previous_genotypes_exist;
             if (scalar(@{$verified_errors->{warning_messages}}) > 0){
                 push @all_warnings, @{$verified_errors->{warning_messages}};
@@ -581,7 +582,6 @@ sub upload_genotype_verify_POST : Args(0) {
             }
 
             if ($protocol_id) {
-                my @protocol_match_errors;
                 my $new_marker_data = $protocol->{markers};
                 my $stored_protocol = CXGN::Genotype::Protocol->new({
                     bcs_schema => $schema,
@@ -661,7 +661,13 @@ sub upload_genotype_verify_POST : Args(0) {
                 }
 	    }
 
-            if (scalar(@all_warnings) > 0 && !$accept_warnings && !$update_markers) {
+            if (scalar(@protocol_match_errors) > 0 && !$update_markers) {
+                my $warning_string = join("<br>", @all_warnings);
+                $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+                $c->detach();
+            }
+
+            if (scalar(@all_warnings) > 0 && !$accept_warnings) {
                 my $warning_string = join("<br>", @all_warnings);
                 $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
                 $c->detach();
@@ -738,6 +744,7 @@ sub upload_genotype_verify_POST : Args(0) {
         my @all_warnings;
         my @warning_groups;
         my @mismatched_markers;
+        my @protocol_match_errors;
         my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
             push @all_warnings, @{$verified_errors->{warning_messages}};
@@ -746,7 +753,6 @@ sub upload_genotype_verify_POST : Args(0) {
         }
 
         if ($protocol_id) {
-            my @protocol_match_errors;
             my $new_marker_data = $protocol_info->{markers};
             my $stored_protocol = CXGN::Genotype::Protocol->new({
                 bcs_schema => $schema,
@@ -826,7 +832,13 @@ sub upload_genotype_verify_POST : Args(0) {
             }
 	}
 
-        if (scalar(@all_warnings) > 0 && !$accept_warnings && !$update_markers) {
+        if (scalar(@protocol_match_errors) > 0 && !$update_markers) {
+            my $warning_string = join("<br>", @all_warnings);
+            $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
+            $c->detach();
+        }
+
+        if (scalar(@all_warnings) > 0 && !$accept_warnings) {
             my $warning_string = join("<br>", @all_warnings);
             $c->stash->{rest} = { warning => $warning_string, warning_groups => \@warning_groups, previous_genotypes_exist => $previous_genotypes_exist, mismatched_markers => \@mismatched_markers };
             $c->detach();

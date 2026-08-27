@@ -69,6 +69,7 @@ my $upload_response = $ua->post(
         "upload_genotype_vcf_include_igd_numbers"=>1,
         "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
         "upload_genotype_add_new_accessions"=>1,
+        "upload_genotype_accept_warnings"=>1,
     ]
 );
 sleep(20);
@@ -147,8 +148,9 @@ is($original_marker->{ref}, 'G', 'marker S1_21594 is still stored with ref G aft
 is($original_marker->{alt}, 'A', 'marker S1_21594 is still stored with alt A after the warning-only upload');
 
 #Re-upload the same modified file, this time accepting warnings but still not
-#requesting the mismatched marker be updated: the upload should succeed, but
-#the stored marker info should still be left unchanged.
+#requesting the mismatched marker be updated: accepting warnings alone must not
+#bypass a marker ref/alt/position mismatch, so the upload should still fail
+#with the same warning, and the stored marker info should be left unchanged.
 $ua = LWP::UserAgent->new;
 $upload_response = $ua->post(
     'http://localhost:3010/ajax/genotype/upload',
@@ -176,9 +178,13 @@ ok($upload_response->is_success, 'accepted-warnings upload request succeeded at 
 $message_hash = decode_json $upload_response->decoded_content;
 print STDERR "message_hash\n";
 diag(Dumper($message_hash));
-is($message_hash->{success}, 1, 'upload succeeds once warnings are accepted') or diag(Dumper($message_hash));
-diag(Dumper($protocol_id));
-ok($message_hash->{project_id}, 'got a project_id for the accepted-warnings upload');
+ok(!$message_hash->{success}, 'upload with a mismatched marker is not stored even when accept_warnings is set, without requesting an update') or diag(Dumper($message_hash));
+ok($message_hash->{warning}, 'a warning is still returned describing the mismatched marker');
+like($message_hash->{warning}, qr/Marker S1_21594 in your file has 21600 for pos, but in the previously stored protocol shows 21594/, 'warning describes the pos mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 in your file has C for ref, but in the previously stored protocol shows G/, 'warning describes the ref mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 in your file has T for alt, but in the previously stored protocol shows A/, 'warning describes the alt mismatch');
+is($message_hash->{previous_genotypes_exist}, 1, 'previous_genotypes_exist is set since these accessions already have genotypes stored for this protocol');
+is_deeply($message_hash->{mismatched_markers}, ['S1_21594'], 'mismatched_markers lists the one marker with differing info');
 
 $original_marker = get_stored_marker($protocol_id, 'S1_21594');
 is($original_marker->{pos}, '21594', 'marker S1_21594 is still stored with pos 21594 after accepting warnings without requesting an update');

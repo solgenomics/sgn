@@ -448,7 +448,10 @@ $facilities
                                             <small class="help-block">If a marker name already exists in the selected protocol but its chromosome, position, ref, or alt differs from this file.</small>
                                         </label>
                                         <div class="col-sm-7">
-                                            <input type="checkbox" id="upload_genotype_update_markers" name="upload_genotype_update_markers" value="1">
+                                            <select class="form-control" id="upload_genotype_update_markers" name="upload_genotype_update_markers">
+                                                <option value="0">No</option>
+                                                <option value="1">Yes</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>

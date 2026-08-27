@@ -423,6 +423,21 @@ jQuery(document).ready(function ($) {
         submit_genotype_data_upload()
     });
 
+    jQuery('#upload_genotype_vcf_file_input').change(function() {
+        jQuery('#upload_genotypes_errors_div').html('').hide();
+        jQuery('#upload_genotypes_warnings_div').hide();
+        jQuery('#upload_genotypes_warnings_html').html('');
+
+        jQuery('#upload_genotypes_missing_stocks_div').hide();
+
+        jQuery('#upload_genotypes_missing_marker_div').hide();
+        jQuery('#upload_genotypes_add_missing_marker_html').html('');
+        jQuery('#upload_genotype_add_new_markers').prop('selectedIndex', 0);
+
+        jQuery('#upload_genotypes_mismatched_marker_div').hide();
+        jQuery('#upload_genotype_update_markers').prop('selectedIndex', 0);
+    });
+
     function submit_genotype_data_upload() {
         jQuery('#working_modal').modal('show');
         jQuery('#upload_genotypes_form').attr("action", "/ajax/genotype/upload");
@@ -501,14 +516,14 @@ jQuery(document).ready(function ($) {
                     jQuery('#upload_genotypes_mismatched_marker_div').show();
                 } else {
                     jQuery('#upload_genotypes_mismatched_marker_div').hide();
-                    jQuery('#upload_genotype_update_markers').prop('checked', false);
+                    jQuery('#upload_genotype_update_markers').val('0');
                 }
                 return;
             }
             if (response.success) {
                 jQuery('#upload_genotypes_warnings_div').hide();
                 jQuery('#upload_genotypes_mismatched_marker_div').hide();
-                jQuery('#upload_genotype_update_markers').prop('checked', false);
+                jQuery('#upload_genotype_update_markers').val('0');
                 var success_string = "<h4>Go to your <a href='/breeders/trial/"+response.project_id+"'>genotyping project page</a></h4>";
                 console.log(success_string);
                 jQuery('#upload_genotype_submit_complete').html(success_string);
