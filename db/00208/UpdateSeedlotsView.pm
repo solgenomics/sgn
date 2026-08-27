@@ -3,11 +3,11 @@
 
 =head1 NAME
 
-  UpdateTrialsView
+  UpdateSeedlotsView
 
 =head1 SYNOPSIS
 
-mx-run UpdateTrialsView [options] -H hostname -D dbname -u username [-F]
+mx-run UpdateSeedlotsView [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -31,14 +31,14 @@ it under the same terms as Perl itself.
 =cut
 
 
-package UpdateTrialsView;
+package UpdateSeedlotsView;
 
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
 
 
 has '+description' => ( default => <<'' );
-This updates the trials view to better filter out non-trial projects
+This updates the seedlots view to filter out discarded seedlots
 
 has '+prereq' => (
     default => sub {
