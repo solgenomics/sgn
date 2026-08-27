@@ -5,10 +5,10 @@
   "main": "webpack.config.js",
   "scripts": {
     "reset": "rm -rf build/ && npm install",
-    "build": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js",
-    "build-watch": "npm run reset && NODE_OPTIONS=--openssl-legacy-provider webpack --config build.webpack.config.js -w",
+    "build": "npm run reset && webpack --config build.webpack.config.js",
+    "build-watch": "npm run reset && webpack --config build.webpack.config.js -w",
     "reset-test": "rm -rf build_test/ && npm install",
-    "build-test": "npm run reset-test && NODE_OPTIONS=--openssl-legacy-provider webpack --config test.webpack.config.js"
+    "build-test": "npm run reset-test && webpack --config test.webpack.config.js"
   },
   "private": true,
   "author": "",
@@ -16,19 +16,18 @@
   "devDependencies": {
     "@babel/core": "^7",
     "@babel/preset-env": "^7",
-    "babel-loader": "^8",
+    "babel-loader": "^9",
     "deepmerge": "^2.2.1",
     "del": "^3.0.0",
     "jsdom": "^16",
-    "loader-utils": "^2.0",
-    "nock": "^10.0.6",
+    "nock": "^13.5.6",
     "node-fetch": "^2.3.0",
     "requirejs": "2.3.7",
     "save-svg-as-png": "^1.4.17",
     "tape": "^4.10.1",
-    "terser-webpack-plugin": "^4.2.3",
-    "webpack": "^4.29",
-    "webpack-cli": "^4.10.0"
+    "terser-webpack-plugin": "^5",
+    "webpack": "^5",
+    "webpack-cli": "^6"
   },
   "dependencies": {
     "@solgenomics/brapijs": "github:solgenomics/brapi-js#develop",
@@ -42,7 +41,7 @@
     "internmap": "^1.0.0"
   },
   "engines": {
-    "node": ">=24.0.0",
-    "npm": ">=11.0.0"
+    "node": "^24",
+    "npm": "^11"
   }
 }
