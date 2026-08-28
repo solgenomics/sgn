@@ -711,6 +711,10 @@ sub upload_genotype_verify_POST : Args(0) {
         people_schema => $people_schema
     });
     my $job_args = $finished_job->additional_args() || {};
+    print STDERR Dumper $job_args->{result};
+    print STDERR Dumper $job_args->{success_messages};
+    print STDERR Dumper $job_args->{warning_messages};
+    print STDERR Dumper $job_args->{error_messages};
 
     if (!$job_args->{result}) {
         # The job left the queue without recording an outcome, which happens if the script died

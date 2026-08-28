@@ -81,8 +81,7 @@ if (!$basepath || !$dbname || !$dbhost || !$archive_path || !$tempfiles_subdir |
     pod2usage({ -msg => 'Error. Missing options!', -verbose => 1, -exitval => 1 });
 }
 
-# Connect to databases. Everything shares one handle so that the genotypes, the protocol they were
-# read against and the metadata recorded about the file are written in the same transaction.
+# Connect to databases. 
 my $dbh;
 if ($dbpass && $dbuser) {
     $dbh = DBI->connect(
@@ -110,11 +109,9 @@ my @warning_messages;
 my @error_messages;
 
 # The answer the upload dialog is given. Every way out of this script sets it, so that a dialog
-# waiting on the job reads exactly what it used to read when the upload ran in the request.
+# waiting on the job reads exactly what it used to read when the upload ran in the controller.
 my $result;
 
-# What this upload is: which file, which parser, and the project and protocol details the uploader
-# filled in. Read off the submitting job rather than passed as options.
 my $params;
 
 # Only SNP type genotypes are uploaded from VCF through the web interface for now.

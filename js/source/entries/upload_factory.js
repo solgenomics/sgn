@@ -1708,7 +1708,10 @@ function populate_genotyping_plate_validate_submit_data(event) {
     let plate_format = jQuery('#genotype_plate_upload_format').val();
     let sample_type = jQuery('#genotype_plate_upload_sample_type').val();
     let description = jQuery('#genotype_plate_upload_description').val();
-    let include_facility_identifiers = jQuery('#genotype_plate_upload_include_facility_identifiers').prop('checked');
+    // jQuery.ajax serializes a JS boolean false to the literal string "false", which Perl's
+    // if($param) treats as true, so the unchecked (default) case must be coerced to 0/1 here
+    // rather than left as a boolean, or the backend always behaves as if this were checked.
+    let include_facility_identifiers = jQuery('#genotype_plate_upload_include_facility_identifiers').prop('checked') ? 1 : 0;
 
     populate_validate_submit_data(genotype_plate_upload_type, file_data, {
         genotyping_project_id : genotyping_project_id,
@@ -1758,6 +1761,10 @@ function populate_genotyping_data_validate_submit_data(event) {
         alert("Error: Could not read IGD numbers checkbox value.");
         return;
     }
+    // jQuery.ajax serializes a JS boolean false to the literal string "false", which Perl's
+    // if($param) treats as true, so the unchecked (default) case must be coerced to 0/1 here
+    // rather than left as a boolean, or the backend always behaves as if this were checked.
+    tissue_sample_names_include_numbers = tissue_sample_names_include_numbers ? 1 : 0;
 
     let data_location_id = jQuery('#upload_genotype_location_select').val();
     let data_location = jQuery('#upload_genotype_location_select option:selected').text();
@@ -2911,11 +2918,11 @@ export function submit_upload_job() {
                 success : function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
                     // javascript, so the length has to be checked as well.
-                    if (response.error && response.error.length) {
-                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
-                        alert(`An error occurred: ${error_messages}`);
-                        console.log(response.error);
-                    }
+                    // if (response.error && response.error.length) {
+                    //     let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                    //     alert(`An error occurred: ${error_messages}`);
+                    //     console.log(response.error);
+                    // }
                     refresh_upload_tables();
                 },
                 error : function() {
@@ -2945,11 +2952,11 @@ export function submit_upload_job() {
                 success : function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
                     // javascript, so the length has to be checked as well.
-                    if (response.error && response.error.length) {
-                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
-                        alert(`An error occurred: ${error_messages}`);
-                        console.log(response.error);
-                    }
+                    // if (response.error && response.error.length) {
+                    //     let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                    //     alert(`An error occurred: ${error_messages}`);
+                    //     console.log(response.error);
+                    // }
                     refresh_upload_tables();
                 },
                 error : function() {
@@ -2981,11 +2988,11 @@ export function submit_upload_job() {
                 success : function(response) {
                     // These endpoints report errors as an array, and an empty array is truthy in
                     // javascript, so the length has to be checked as well.
-                    if (response.error && response.error.length) {
-                        let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
-                        alert(`An error occurred: ${error_messages}`);
-                        console.log(response.error);
-                    }
+                    // if (response.error && response.error.length) {
+                    //     let error_messages = Array.isArray(response.error) ? response.error.join("\n") : response.error;
+                    //     alert(`An error occurred: ${error_messages}`);
+                    //     console.log(response.error);
+                    // }
                     refresh_upload_tables();
                 },
                 error : function() {

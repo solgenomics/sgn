@@ -314,7 +314,7 @@ sub BUILD {
         }
         
     } else { #existing job, retrieve from DB
-        my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+        my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
         if (!$row) { die "The job with id ".$self->sp_job_id()." does not exist"; }
         my $job_args = $row->args() ? JSON::Any->decode($row->args()) : undef;
         $self->type_id($row->type_id());
@@ -335,6 +335,28 @@ sub BUILD {
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
     }
+}
+
+=head2 _prepare_people_schema($people_schema)
+
+Internal helper. people_schema() and schema() (and often metadata_schema()/phenome_schema())
+are frequently constructed by callers sharing one physical database handle across all four
+DBIx::Class schema objects, each with its own C<on_connect_do> that sets the search path for
+its own schema (see e.g. bin/upload_genotype_data.pl). DBIx::Class only runs a schema's
+on_connect_do the first time that particular schema object issues a query, so if any of the
+other schema objects sharing the connection gets queried for the first time after
+people_schema has already connected, it silently overwrites the shared connection's search
+path with its own, leaving sgn_people off of it. Every SpJob query after that then fails with
+"relation sp_job does not exist", even though people_schema itself was configured correctly.
+Call this immediately before any SpJob query to force sgn_people back onto the search path
+regardless of what else has touched the shared connection since.
+
+=cut
+
+sub _prepare_people_schema {
+    my $people_schema = shift;
+    $people_schema->storage->dbh->do('SET search_path TO public, sgn, sgn_people');
+    return $people_schema;
 }
 
 =head2 check_status()
@@ -414,7 +436,7 @@ sub delete {
         die "Deletion has no meaning for jobs that have not yet been stored.\n";
     } 
 
-    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+    my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
     if (!$row){
         die "The specified job does not exist in the database.\n";
@@ -540,7 +562,7 @@ sub store {
     try {
         
         if ($self->has_sp_job_id()) {
-            my $row = $self->people_schema()->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
+            my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find( { sp_job_id => $self->sp_job_id() });
             $row->backend_id($self->backend_id());
             $row->create_timestamp($self->create_timestamp() ? $self->create_timestamp() : DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S'));
             $row->finish_timestamp($self->finish_timestamp());
@@ -563,7 +585,7 @@ sub store {
             if ($cvterm_row) {
                 $cvterm_id = $cvterm_row->cvterm_id();
             } 
-            my $row = $self->people_schema()->resultset("SpJob")->create({
+            my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->create({
                 backend_id => $self->backend_id(),
                 args => JSON::Any->encode({
                     cxgn_tools_run_config => $self->cxgn_tools_run_config(),
@@ -629,7 +651,7 @@ check for a finish timestamp before the object has been destroyed and reformed.
 sub retrieve_finish_timestamp {
     my $self = shift;
 
-    my $row = $self->people_schema()->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
+    my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
 
     my $finish_timestamp = $row->finish_timestamp() ? $row->finish_timestamp() : "";
     $self->finish_timestamp($finish_timestamp);
@@ -743,9 +765,9 @@ sub get_user_submitted_jobs {
     
     my $rs;
     if ($user_role eq 'curator') {
-        $rs = $people_schema->resultset("SpJob")->search();
+        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search();
     } else {
-        $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
     }
 
     while (my $row = $rs->next()){
@@ -775,7 +797,7 @@ sub delete_dead_jobs {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( {status => { in => ['failed', 'timed_out'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( {status => { in => ['failed', 'timed_out'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -793,7 +815,7 @@ sub delete_dead_jobs {
     } else {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -841,7 +863,7 @@ sub delete_jobs_older_than {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search();
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search();
             while(my $row = $rs->next()) {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
@@ -867,7 +889,7 @@ sub delete_jobs_older_than {
     } else {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
             while(my $row = $rs->next()) {
                 my $create_timestamp = $row->create_timestamp();
                 $create_timestamp =~ s/ /T/;
@@ -913,7 +935,7 @@ sub delete_finished_jobs {
     if ($is_curator) {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { status => { in => ['finished', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { status => { in => ['finished', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -931,7 +953,7 @@ sub delete_finished_jobs {
     } else {
         try {
             my @job_ids;
-            my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+            my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
             while(my $row = $rs->next()) {
                 push @job_ids, $row->sp_job_id();
             }
@@ -967,7 +989,7 @@ sub delete_finished_upload_jobs {
 
     eval {
         my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
+        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['finished', 'canceled'] } });
         while(my $row = $rs->next()) {
             push @job_ids, $row->sp_job_id();
         }
@@ -1006,7 +1028,7 @@ sub delete_dead_upload_jobs {
 
     eval {
         my @job_ids;
-        my $rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
+        my $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, status => { in => ['failed', 'timed_out'] } });
         while(my $row = $rs->next()) {
             push @job_ids, $row->sp_job_id();
         }
@@ -1060,9 +1082,9 @@ sub get_user_in_progress_uploads {
 
     my $uploads_rs;
     if ($user_role eq "curator") {
-        $uploads_rs = $people_schema->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
     } else {
-        $uploads_rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
     }
 
     while (my $upload = $uploads_rs->next()) {
@@ -1128,9 +1150,9 @@ sub get_user_completed_uploads {
 
     my $uploads_rs;
     if ($user_role eq "curator") {
-        $uploads_rs = $people_schema->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
     } else {
-        $uploads_rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+        $uploads_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
     }
 
     while (my $upload = $uploads_rs->next()) {
@@ -1195,9 +1217,9 @@ sub get_user_in_progress_validations {
 
     my $validation_rs;
     if ($user_role eq "curator") {
-        $validation_rs = $people_schema->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
+        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { type_id => $upload_cvterm_id });
     } else {
-        $validation_rs = $people_schema->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
+        $validation_rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id, type_id => $upload_cvterm_id });
     }
 
     while (my $validation = $validation_rs->next()) {

@@ -58,7 +58,7 @@ sub set_file_type : Chained('file') PathPart('set_file_type') Args(1) {
     my $file = $c->stash->{archived_file};
     my $user_id = $c->user()->get_object()->get_sp_person_id();
 
-    if (!($c->user()->check_roles('curator') || $user_id == $file->user_directory())) {
+    if (!($c->user()->check_roles('curator') || $user_id == $file->user_id())) {
         $c->stash->{rest} = {error => "You do not have permission to modify this file entry. You must either be the uploader or a curator."};
         return;
     }

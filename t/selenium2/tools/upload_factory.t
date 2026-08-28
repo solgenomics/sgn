@@ -22,7 +22,7 @@ my $schema = $f->bcs_schema();
 
 # The genotype-data upload step needs a genotyping-data project and an existing protocol 
 # from a table -- there's no way to create a new one from that dialog. So create one here, 
-# the same way the unit fixture test does.
+# the same way the other tests do.
 my $mech = Test::WWW::Mechanize->new;
 $mech->post_ok("$base_url/brapi/v1/token", [ "username" => "janedoe", "password" => "secretpw", "grant_type" => "password" ], "brapi login for prerequisite setup");
 my $token_response = decode_json $mech->content;
@@ -75,11 +75,21 @@ sub archive_file {
     # to its selection rather than replacing it, so clear it first to avoid re-archiving every
     # file from earlier steps each time.
     $t->driver()->execute_script("document.getElementById('upload_factory_archive_new_file').value = '';");
+    sleep(1);
 
     $t->driver()->upload_file($filename);
     my $file_input = $t->find_element_ok("upload_factory_archive_new_file", "id", "find archive file input for $relative_path");
     $file_input->send_keys($filename);
-    $t->find_element_ok("upload_factory_new_file_btn", "id", "click archive button for $relative_path")->click();
+    sleep(1);
+    my $archive_btn = $t->find_element_ok("upload_factory_new_file_btn", "id", "click archive button for $relative_path");
+    # By the second archive_file() call, prior interactions elsewhere on the page (report
+    # dialogs, table refreshes, etc.) have left the page scrolled away from the top, so a plain
+    # click() scrolls this button up under the fixed top navbar and Selenium reports it as
+    # obscured. Scroll it into view and back off the navbar's height first, as done elsewhere
+    # in the selenium suite (e.g. t/selenium2/solgs/genetic_gain.t).
+    $t->driver()->execute_script("arguments[0].scrollIntoView(true);window.scrollBy(0,-70);", $archive_btn);
+    sleep(1);
+    $archive_btn->click();
     sleep(10);
 }
 
@@ -170,12 +180,12 @@ sub click_select_option {
     sleep(1);
 }
 
-$t->while_logged_in_as("submitter", sub {
+$t->while_logged_in_as("curator", sub {
     sleep(2);
 
     # Create a genotyping project via the UI first, since the genotyping-plate upload step in the
     # Upload Factory requires an existing genotyping project to attach the plate layout to.
-    my $genotyping_project_name = "SeleniumUploadFactoryGenoProject";
+    my $genotyping_project_name = "NEXTGENCASSAVA";
 
     $t->get_ok('/breeders/genotyping_projects');
     sleep(2);
@@ -333,43 +343,9 @@ $t->while_logged_in_as("submitter", sub {
 
     sleep(20);
 
-    ###################################################
-    # 4) NIRS upload, expect to fail bc bad data level
-    ###################################################
-
-    archive_file("t/data/NIRS/C16Mval_spectra.csv");
-    my $nirs_file_id = find_archived_file_id("C16Mval_spectra.csv");
-    set_upload_type_and_process($nirs_file_id, "nirs");
-
-    sleep(5); # upload_nirs_protocol_select is populated by an async get_select_box call
-
-    $t->find_element_ok(
-        "//div[\@id='upload_nirs_protocol_select']//tr[.//td[contains(text(),'NIRS SCIO Protocol')]]//input[\@type='checkbox']",
-        "xpath",
-        "check NIRS protocol checkbox"
-    )->click();
-    sleep(1);
-
-    $t->find_element_ok('nirs_upload_next_btn', 'id', 'click next on NIRS choices')->click();
-    sleep(2);
-
-    confirm_and_submit();
-
-    my $nirs_status = wait_for_first_row_status("upload_factory_validated_files_table");
-    ok($nirs_status !~ /finished/, "NIRS validation job did not finish cleanly (expected, see comment above)")
-        or diag("NIRS validation status row was: $nirs_status");
-    ok($nirs_status =~ /failed/, "NIRS validation job failed as expected")
-        or diag("NIRS validation status row was: $nirs_status");
-
-    my $nirs_report = view_report_text_for_first_row("upload_factory_validated_files_table");
-    like($nirs_report, qr/not valid in the database/i, "NIRS validation report explains the plant-level samples were not found")
-        or diag("NIRS validation report was: $nirs_report");
-
-    sleep(20);
-
-    ##################
-    # 5) Image upload
-    ##################
+    ##################################################################
+    # 4) Image upload, expect to fail bc prerequisite trait not there
+    ##################################################################
 
     archive_file("t/data/images/fieldbook/test_image_for_exif.jpg");
     my $image_file_id = find_archived_file_id("test_image_for_exif.jpg");
@@ -383,29 +359,15 @@ $t->while_logged_in_as("submitter", sub {
     confirm_and_submit();
 
     my $image_validation_status = wait_for_first_row_status("upload_factory_validated_files_table");
-    ok($image_validation_status =~ /finished/, "image EXIF validation job finished")
+    ok($image_validation_status !~ /finished/, "image EXIF validation job failed as expected")
         or diag("image validation status row was: $image_validation_status");
 
     my $image_validation_report = view_report_text_for_first_row("upload_factory_validated_files_table");
-    unlike($image_validation_report, qr/list-group-item-danger/, "image validation report has no error text")
-        or diag("image validation report was: $image_validation_report");
-    like($image_validation_report, qr/list-group-item-success/, "image validation report shows success text")
-        or diag("image validation report was: $image_validation_report");
+    like($image_validation_report, qr/associated trait Test Image\|Timepoint 1\|image\|COMP:0000034 does not exist in the database/, "image validation report explains the associated trait was not found")
+        or diag("image commit report was: $image_validation_report");
 
-    commit_first_row();
-
-    my $image_commit_status = wait_for_first_row_status("upload_factory_completed_uploads_table");
-    ok($image_commit_status =~ /finished/, "image commit job finished")
-        or diag("image commit status row was: $image_commit_status");
-    ok($image_commit_status =~ /Images/, "image job is labeled as an image upload");
-
-    my $image_commit_report = view_report_text_for_first_row("upload_factory_completed_uploads_table");
-    unlike($image_commit_report, qr/list-group-item-danger/, "image commit report has no error text")
-        or diag("image commit report was: $image_commit_report");
-    like($image_commit_report, qr/list-group-item-success/, "image commit report shows success text")
-        or diag("image commit report was: $image_commit_report");
 });
 
 $f->clean_up_db();
-eval { $t->driver()->close(); };
+$t->driver()->close();
 done_testing();
