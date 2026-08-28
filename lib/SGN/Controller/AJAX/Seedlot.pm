@@ -1210,10 +1210,14 @@ sub add_seedlot_transaction :Chained('seedlot_base') :PathPart('transaction/add'
                 $c->detach();
             }
 
-            my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_existing_seedlot_id);
-            my $new_seedlot_material_type = $from_sl->material_type();
-            if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
-                $new_seedlot_material_type = $default_seedlot_material_type;
+            my $from_stock_type = $schema->resultset('Stock::Stock')->find({stock_id=>$from_existing_seedlot_id})->type_id();
+            my $new_seedlot_material_type;
+            if ($from_stock_type == $seedlot_cvterm_id) {
+                my $from_sl = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $from_existing_seedlot_id);
+                $new_seedlot_material_type = $from_sl->material_type();
+                if ((!$new_seedlot_material_type) && $default_seedlot_material_type) {
+                    $new_seedlot_material_type = $default_seedlot_material_type;
+                }
             }
 
             my $sl = CXGN::Stock::Seedlot->new(schema => $schema);
