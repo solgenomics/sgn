@@ -7,7 +7,7 @@
 
 =cut
 
-package SGN::Controller::DroneImagery::DroneImageryUpload;
+package SGN::Controller::DroneImageryUpload;
 
 use Moose;
 use Data::Dumper;
