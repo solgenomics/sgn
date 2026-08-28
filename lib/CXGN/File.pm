@@ -321,8 +321,9 @@ sub get_path {
 
 =head2 delete_file()
 
-Deletes the file and associated metadata. Useful for some uploads (like images) 
-that don't need to be clogging the database after they have been parsed.
+Deletes the file and unlinks file in archive, but does not delete metadata row. 
+Useful for some uploads (like images) that don't need to be clogging the database 
+after they have been parsed.
 
 =cut
 
@@ -336,10 +337,9 @@ sub delete_file {
         if (!$mdfile_rs) {
             die "No md_file row found with file ID $file_id!\n";
         }
-        my $metadata_id = $mdfile_rs->metadata_id();
-        my $metadata_rs = $metadata_schema->resultset("MdMetadata")->find({metadata_id => $metadata_id});
-        if ($metadata_rs) {
-            $metadata_rs->delete();
+        my $filepath = $self->get_path();
+        if (-e $filepath) {
+            unlink($filepath) or die "Could not delete file $filepath: $!\n";
         }
         $mdfile_rs->delete();
     } catch {

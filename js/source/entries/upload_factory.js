@@ -153,8 +153,7 @@ export function load_archived_files_table(user_id) {
                 } 
 
                 let archived_files = jQuery('#upload_factory_archived_files_table').DataTable({
-                    order : [[0, 'desc']],
-                    scrollX : true
+                    order : [[0, 'desc']]
                 });
             }
         },
@@ -242,8 +241,7 @@ function load_in_progress_validations_table(user_id) {
                 jQuery('#upload_factory_validated_files_table').show();
 
                 let uploads_in_progress = jQuery('#upload_factory_validated_files_table').DataTable({
-                    order : [[0, 'desc']],
-                    scrollX : true
+                    order : [[0, 'desc']]
                 });
             }
         },
@@ -323,8 +321,7 @@ function load_in_progress_uploads_table(user_id) {
                 jQuery('#upload_factory_in_progress_uploads_table').show();
 
                 let uploads_in_progress = jQuery('#upload_factory_in_progress_uploads_table').DataTable({
-                    order : [[0, 'desc']],
-                    scrollX : true
+                    order : [[0, 'desc']]
                 });
             }
         },
@@ -401,8 +398,7 @@ function load_completed_uploads_table(user_id) {
                 jQuery('#upload_factory_completed_uploads_table').show();
 
                 let uploads_in_progress = jQuery('#upload_factory_completed_uploads_table').DataTable({
-                    order : [[0, 'desc']],
-                    scrollX : true
+                    order : [[0, 'desc']]
                 });
             }
         },
