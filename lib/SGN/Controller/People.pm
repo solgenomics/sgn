@@ -11,6 +11,7 @@ use CXGN::Phenome::Population;
 use SGN::Controller::solGS::AnalysisQueue;
 use CXGN::Page::FormattingHelpers qw/info_section_html page_title_html info_table_html simple_selectbox_html html_optional_show columnar_table_html/;
 use CXGN::Phenome::Locus;
+use CXGN::Onto;
 
 BEGIN { extends 'Catalyst::Controller' };
 
@@ -36,6 +37,7 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
         $c->res->redirect(uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
         $c->detach();
     }
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $users_profile;
     if ($person_id == $user_id) {
         $users_profile = 1;
@@ -130,12 +132,25 @@ sub people_top_level : Path('/solpeople/profile') Args(1) {
     }
 
     my $allow_trait_edits = 0;
-    if ($c->config->{allow_trait_edits}) {
-        $allow_trait_edits = 1;
-    }
     my $allow_treatment_edits = 0;
-    if ($c->config->{allow_treatment_edits}) {
-        $allow_treatment_edits = 1;
+    my $editable_ontologies_str = $c->config->{allow_trait_edits};
+    if ($editable_ontologies_str == 1) {
+        $allow_trait_edits = 1;
+    } else {
+        my @editable_ontologies = split(",", $editable_ontologies_str);
+        my $ontology_obj = CXGN::Onto->new({
+            schema => $schema
+        });
+        my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+
+        my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
+        my $db_name = $root_nodes[0]->[1] =~ s/:.*//r;
+        if (grep {$_ eq $db_name} @editable_ontologies) {
+            $allow_trait_edits = 1;
+        }
+        if (grep {$_ eq "EXPERIMENT_TREATMENT"} @editable_ontologies) {
+            $allow_treatment_edits = 1;
+        }
     }
 
     $c->stash->{site_name} = $c->config->{project_name};

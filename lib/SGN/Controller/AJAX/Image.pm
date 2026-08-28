@@ -594,6 +594,9 @@ sub verify_exif_POST {
         my $stock_name;
         my $stock_exists;
         my $cvterm_id;
+        my $trait_lookup_type;
+        my $trait_lookup_value;
+        my $trait_matched_name;
         my $lookup_error;
 
         try {
@@ -623,9 +626,41 @@ sub verify_exif_POST {
                     $stock_exists = "false";
                 }
             }
-            # Get cvterm_id of recorded trait
+            # Get cvterm_id of recorded trait, by id if given, otherwise by name -- falling back
+            # to a synonym match if there's no exact name match, since trait names coming from
+            # external sources aren't always the trait's primary name in the database.
+            my $observation_variable = $decoded_json->{observation_variable};
             my $trait_id = $decoded_json->{observation_variable}->{external_db_id};
-            $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+            my $trait_name = $observation_variable->{observation_variable_name};
+
+            if ($trait_id) {
+                $trait_lookup_type  = "id";
+                $trait_lookup_value = $trait_id;
+                $cvterm_id = SGN::Model::Cvterm->find_trait_by_id($schema, $trait_id);
+            }
+            elsif ($trait_name) {
+                $trait_lookup_type  = "name";
+                $trait_lookup_value = $trait_name;
+                my $cvterm = $schema->resultset('Cv::Cvterm')->find({ name => $trait_name });
+                if ($cvterm) {
+                    $cvterm_id = $cvterm->cvterm_id();
+                } else {
+                    my $escaped_name = $trait_name;
+                    $escaped_name =~ s/([%_\\])/\\$1/g;
+
+                    my $synonym_row = $schema->resultset('Cv::Cvtermsynonym')->search( { synonym => { -ilike => '"' . $escaped_name . '"%' } } )->first;
+
+                    if ($synonym_row) {
+                        $cvterm_id = $synonym_row->cvterm_id();
+                        $trait_lookup_type = "synonym";
+
+                        my $matched_cvterm = $schema->resultset('Cv::Cvterm')->find({ cvterm_id => $cvterm_id });
+                        $trait_matched_name = $matched_cvterm ? $matched_cvterm->name() : undef;
+                    } else {
+                        $cvterm_id = undef;
+                    }
+                }
+            }
         } catch {
             $lookup_error = $_;
         };
@@ -669,7 +704,17 @@ sub verify_exif_POST {
             push @success_status, "$filename has valid EXIF data. Associated stock: $stock_name. Associated trait: $observation_variable_name.";
         }
 
-        push @results, { filename => $filename, exif => $decoded_json, status => "success", stock_exists => $stock_exists };
+        push @results, {
+            filename           => $filename,
+            exif               => $decoded_json,
+            status             => "success",
+            stock_exists       => $stock_exists,
+            trait_present      => $decoded_json->{observation_variable} ? "true" : "false",
+            trait_exists       => $cvterm_id ? "true" : "false",
+            trait_lookup_type  => $trait_lookup_type,
+            trait_lookup_value => $trait_lookup_value,
+            trait_matched_name => $trait_matched_name,
+        };
     }
 
     if ($exif_files > 0 && $non_exif_files > 0) {

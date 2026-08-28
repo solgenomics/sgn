@@ -71,4 +71,5 @@ $t->while_logged_in_as("curator", sub {
     sleep(1);
 });
 
+$t->driver->close();
 done_testing();

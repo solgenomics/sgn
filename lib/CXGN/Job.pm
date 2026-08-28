@@ -312,7 +312,7 @@ sub BUILD {
         if (!$self->has_cxgn_tools_run_config()) {
             $self->cxgn_tools_run_config($self->get_default_cxgn_tools_run_config());
         }
-        
+
     } else { #existing job, retrieve from DB
         my $row = _prepare_people_schema($self->people_schema())->resultset("SpJob")->find({ sp_job_id => $self->sp_job_id() });
         if (!$row) { die "The job with id ".$self->sp_job_id()." does not exist"; }
@@ -385,9 +385,10 @@ sub check_status {
         if (defined($backend_id)) {
             my $squeue = `squeue --job=$backend_id`;
             my @job_results = split("\n", $squeue);
-            if (scalar(@job_results) < 2) { #if there was no finish timestamp and squeue is empty, the job crashed
-                $self->status("failed");
-                $self->store();
+            if (scalar(@job_results) < 2) {
+                # Jobs normally disappear from squeue after reaching a terminal
+                # state. Ask Slurm for that state instead of assuming failure.
+                return $self->update_status_from_slurm();
             } else { #job is live 
                 my ($JOBID,$PARTITION,$NAME,$USER,$ST,$TIME,$NODES,$NODELIST) = split(/\s+/, $job_results[1]);
                 my @timestamp = split("-", $TIME);#squeue time outputs look like Days-Hours:Mins:Seconds, but days are ommitted for short lived jobs. 
@@ -676,6 +677,59 @@ sub update_status {
     $self->store();
 }
 
+=head2 update_status_from_slurm()
+
+Query Slurm for the job's terminal state, update the database status, and return
+the mapped database status. In list context, also returns the Slurm state.
+
+=cut
+
+sub update_status_from_slurm {
+    my $self = shift;
+
+    my $backend_id = $self->backend_id();
+    if (!defined($backend_id) || $backend_id !~ /^\d+(?:_\d+)?$/) {
+        die "Cannot check Slurm status without a valid backend job ID.\n";
+    }
+
+    my $slurm_states = qr/^(?:COMPLETED|FAILED|CANCELLED|TIMEOUT)$/;
+    my $state;
+    for my $attempt (1 .. 5) {
+        my $job_info = `scontrol show job -o $backend_id 2>/dev/null`;
+        ($state) = $job_info =~ /\bJobState=(\S+)/;
+
+        if (defined($state) && $state =~ $slurm_states) {
+            last;
+        }
+
+        sleep 1 if $attempt < 5;
+    }
+
+    my $job_status = 'submitted';
+    if (!defined($state)) {
+        $state = 'UNKNOWN';
+    }
+
+    if ($state eq 'COMPLETED') {
+        $job_status = 'finished';
+    }
+    elsif ($state eq 'FAILED') {
+        $job_status = 'failed';
+    }
+    elsif ($state eq 'CANCELLED') {
+        $job_status = 'canceled';
+    }
+    elsif ($state eq 'TIMEOUT') {
+        $job_status = 'timed_out';
+    }
+
+    $self->update_status($job_status);
+
+    return wantarray
+        ? ($job_status, $state)
+        : $job_status;
+}
+
 =head2 get_default_cxgn_tools_run_config()
 
 Returns a hashref of the default config options for cxgn tools run. Used when no cxgn_tools_run_config found.
@@ -765,9 +819,22 @@ sub get_user_submitted_jobs {
     
     my $rs;
     if ($user_role eq 'curator') {
-        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search();
+        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search(
+            {},
+            {
+                join     => 'sp_person',
+                order_by => [
+                    { -asc  => 'sp_person.first_name' },
+                    { -asc  => 'sp_person.last_name' },
+                    { -desc => 'me.create_timestamp' },
+                ],
+            },
+        );
     } else {
-        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search( { sp_person_id => $sp_person_id });
+        $rs = _prepare_people_schema($people_schema)->resultset("SpJob")->search(
+            { 'me.sp_person_id' => $sp_person_id },
+            { order_by => { -desc => 'me.create_timestamp' } },
+        );
     }
 
     while (my $row = $rs->next()){
