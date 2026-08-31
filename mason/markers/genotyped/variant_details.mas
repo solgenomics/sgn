@@ -31,6 +31,7 @@ A hashref containing the variants and the markers related to one or more of the 
 <%args>
     $variant_name => undef
     $markers => undef
+    $schema => undef
 </%args>
 
 <%init>
@@ -88,8 +89,15 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 <!-- VARIANT DETAILS TABLE -->
-<&| /page/info_section.mas, title=>'Genotype locations', collapsible=>1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>'Genotype Locations', collapsible=>1, collapsed=>0 &>
     <& /markers/genotyped/genotype_locations.mas, markers => $markers &>
+</&>
+
+
+
+<!-- MARKER METADATA -->
+<&| /page/info_section.mas, title=>'Marker Metadata', collapsible=>1, collapsed=>0 &>
+    <& /markers/genotyped/marker_metadata.mas, markers => $markers, schema => $schema &>
 </&>
 
 
@@ -112,7 +120,7 @@ A hashref containing the variants and the markers related to one or more of the 
 
 <!-- EXTERNAL LINKS -->
 <&| /page/info_section.mas, title=>'External Links', collapsible=>1, collapsed=>0 &>
-    <& /markers/genotyped/external_links.mas, markers => $markers &>
+    <& /markers/genotyped/external_links.mas, markers => $markers, schema => $schema &>
 </&>
 
 

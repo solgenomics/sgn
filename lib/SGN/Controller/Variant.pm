@@ -45,6 +45,11 @@ sub get_variant_details: Chained('get_variant') PathPart('details') :Args(0) {
     }
 
     $c->stash->{markers} = $markers;
+    $c->stash->{schema} = $schema;
+    if (!$c->user) {
+        $c->stash->{template} = '/markers/genotyped/preview.mas';
+        return;
+    }
     $c->stash->{template} = '/markers/genotyped/variant_details.mas';
 }
 

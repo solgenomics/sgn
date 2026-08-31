@@ -1,0 +1,87 @@
+<%args>
+    $markers => undef
+    $schema => undef
+</%args>
+
+<%init>
+    if ( !$markers ) {
+        print "<p><strong>ERROR: Markers are not defined!</strong></p>";
+    }
+
+    # Get marker metadata for each marker
+    my @metadata;
+    foreach my $marker (@$markers) {
+        my $protocol_id = $marker->{nd_protocol_id};
+        my $marker_name = $marker->{marker_name};
+
+        my $protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
+        });
+        my $marker_metadata = $protocol->get_marker_metadata($marker_name);
+
+        foreach my $m (keys %$marker_metadata) {
+            push @metadata, $marker_metadata->{$m};
+        }
+    }
+</%init>
+
+% if ( scalar(@metadata) > 0 ) {
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Marker</th>
+            <th>Protocol</th>
+            <th>Locus</th>
+            <th>Description</th>
+            <th>Alleles</th>
+            <th>References</th>
+        </tr>
+    </thead>
+    <tbody>
+% foreach my $md (@metadata) {
+        <tr>
+            <td><strong><% $md->{'marker_name'} %></strong></td>
+            <td>
+                <a href="/breeders_toolbox/protocol/<% $md->{'nd_protocol_id'} %>">
+                    <% $md->{'nd_protocol_name'} %>
+                </a>
+            </td>
+            <td>
+                <a href="/locus/<% $md->{'locus_id'} %>/view">
+                    <% $md->{'locus_name'} %>
+                </a>
+            </td>
+            <td><p><% $md->{'locus_description'} %></p></td>
+            <td>
+                <ul style="padding-left: 15px">
+% foreach my $al (@{$md->{'alleles'}}) {
+                    <li><% $al->{'allele_name'} %></li>
+% }
+                </ul>
+            </td>
+            <td>
+                <ul style="padding-left: 15px">
+% foreach my $ref (@{$md->{'references'}}) {
+                    <li>
+                        <a href="<% $ref->{'url'} %>" target="_blank">
+                            <% $ref->{'db_name'} %>:<% $ref->{'dbxref_accession'} %>
+% if ( defined $ref->{'cvterm_name'} ) {
+                            (<% $ref->{'cvterm_name'} %>)
+% }
+                        </a>
+                    </li>
+% }
+                </ul>
+            </td>
+        </tr>
+% }
+    </tbody>
+  </table>
+
+% } else {
+
+<p><em>This marker does not have any associated metadata.</em></p>
+
+% }

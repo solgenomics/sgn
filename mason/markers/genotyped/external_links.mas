@@ -4,6 +4,7 @@
 
 <%args>
     $markers => undef
+    $schema => undef
 </%args>
 
 <%init>
@@ -12,6 +13,22 @@
         push(@marker_names, $marker->{marker_name});
     }
     my @unique_marker_names = do { my %seen; grep { !$seen{$_}++ } @marker_names };
+
+    my @metadata = ();
+    foreach my $marker (@$markers) {
+        my $protocol_id = $marker->{nd_protocol_id};
+        my $marker_name = $marker->{marker_name};
+
+        my $protocol = CXGN::Genotype::Protocol->new({
+            bcs_schema => $schema,
+            nd_protocol_id => $protocol_id
+        });
+        my $marker_metadata = $protocol->get_marker_metadata($marker_name);
+
+        foreach my $m (keys %$marker_metadata) {
+            push @metadata, $marker_metadata->{$m};
+        }
+    }
 </%init>
 
 <style>
@@ -22,8 +39,17 @@
 
 
 <div id="external-links">
-    <div id="external-links-table"><p><em>Loading...</em></p></div>
-    <div id="external-links-flankingseq"></div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Marker</th>
+                <th>External Link</th>
+            </tr>
+        </thead>
+        <tbody id="external-links-table">
+            <tr><td colspan="2"><p><em>Loading...</em></p></td></tr>
+        </tbody>
+    </table>
 </div>
 
 
@@ -34,7 +60,6 @@
      */
     jQuery(document).ready(function() {
         getProps();
-        flankingSeq();
     });
 
     /**
@@ -65,32 +90,39 @@
      * Generate the external links HTML
      * @param  {Object[]} props A list of marker_name props
      */
-    function renderLinks(props) {
-        let html = "<p><em>No external links found</em></p>";
-        if ( props && props.length > 0 ) {
-            html = "<table style=\"border-spacing: 10px; border-collapse: separate;\">";
-            for ( let i = 0; i < props.length; i++ ) {
-                let prop = props[i];
-                let url = prop.url;
-                let type_name = prop.type_name;
-                let marker_name = prop.marker_name;
-                let xref_name = prop.xref_name;
-                html += "<tr><td>" + marker_name + "</td><td><a href='" + url + xref_name + "' target='_new'>" + xref_name + "</a><td>" + type_name;
-            }
-            html += "</table>";
-            
+    function renderLinks(props = []) {
+        let html = "";
+
+        for ( let i = 0; i < props.length; i++ ) {
+            let prop = props[i];
+            let url = prop.url;
+            let type_name = prop.type_name;
+            let marker_name = prop.marker_name;
+            let xref_name = prop.xref_name;
+            html += `<tr><td>${marker_name}</td><td><a href="${url}${xref_name}" target="_new">${type_name}:${xref_name}</a></td></tr>`;
         }
+
+% foreach my $md ( @metadata ) {
+% if ( exists $md->{references} ) {
+% foreach my $ref ( @{$md->{references}} ) {
+        html += "<tr>";
+        html += "<td><% $md->{'marker_name'} %></td>";
+        html += "<td>";
+        html += "<a href='<% $ref->{url} %>' target='_new'>";
+        html += "<% $ref->{db_name} %>:<% $ref->{dbxref_accession} %>"
+% if ( defined $ref->{cvterm_name} ) {
+        html += " (<% $ref->{cvterm_name} %>)";
+% }
+        html += "</a>";
+        html += "</td>";
+        html += "</tr>";
+% }
+% }
+% }
+
+        if ( html === "" ) html = "<tr><td colspan=2><p><em>No external links found</em></p></td></tr>";
+
         jQuery("#external-links-table").html(html);
-    }
-
-    /**
-     * Generate the link for marker flanking sequence
-     */
-
-    function flankingSeq() {
-        let html = "<ul></ul>";
-        jQuery("#external-links-flankingseq").html(html);
-        console.log("Made it here");
     }
 
 </script>

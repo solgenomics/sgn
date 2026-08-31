@@ -655,6 +655,7 @@ sub get_marker_metadata {
         if ( ! exists($metadata{$locus_name}) ) {
             $metadata{$locus_name} = {
                 nd_protocol_id => $nd_protocol_id,
+                nd_protocol_name => $self->protocol_name(),
                 locus_id => $locus_id,
                 locus_name => $locus_name,
                 marker_name => $marker_name,
