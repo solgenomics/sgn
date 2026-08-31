@@ -49,6 +49,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->get_ok('/dataset/' . $trials_dt->{dataset_id}, 'trials dataset page');
     sleep(5);
 
+    $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+    sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
@@ -66,6 +68,8 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(5);
 
+    $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
+    sleep(5);
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
     my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
