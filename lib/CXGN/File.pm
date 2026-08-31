@@ -170,15 +170,48 @@ has 'alt_filename' => (
     is => 'rw'
 );
 
-=head2 comment()
+=head2 comments()
 
-md_files.comment
+md_files.comment (comments portion)
+
+md_files.comment is stored as a single JSON string in the database that holds both
+the comments list and the tags hash described below. This accessor exposes just the
+comments half: a list of comment strings left on this file.
+
+This accessor is read-only from outside the module: use add_comment() and
+clear_comments() to modify its contents. This prevents other modules from storing
+arbitrary structures in this column; only a plain list of strings is allowed.
 
 =cut
 
-has 'comment' => (
-    isa => 'Maybe[Str]',
-    is => 'rw'
+has 'comments' => (
+    isa => 'ArrayRef',
+    is => 'ro',
+    writer => '_set_comments',
+    default => sub { [] }
+);
+
+=head2 tags()
+
+md_files.comment (tags portion)
+
+md_files.comment is stored as a single JSON string in the database that holds both
+the comments list described above and the tags hash. This accessor exposes just the
+tags half: a hash of unique attribute tags applied to this file, keyed by tag name
+and pointing to 1 (e.g. tags => { tag_1 => 1 }), so that a given tag can only be
+applied to a file once.
+
+This accessor is read-only from outside the module: use add_tag(), clear_tags(),
+and delete_tag() to modify its contents. This prevents other modules from storing
+arbitrary structures in this column; only the tag_name => 1 shape is allowed.
+
+=cut
+
+has 'tags' => (
+    isa => 'HashRef',
+    is => 'ro',
+    writer => '_set_tags',
+    default => sub { {} }
 );
 
 =head2 md5checksum()
@@ -264,7 +297,12 @@ sub BUILD {
     $self->subdirectory($+{SUBDIR});
     $self->user_id($file_rs->get_column('create_person_id'));
     $self->filetype($file_rs->get_column('filetype'));
-    $self->comment($file_rs->get_column('comment'));
+
+    my $comment_json = $file_rs->get_column('comment');
+    my $comment = $comment_json ? JSON::Any->decode($comment_json) : {};
+    $self->_set_comments($comment->{comments} || []);
+    $self->_set_tags($comment->{tags} || {});
+
     $self->alt_filename($file_rs->get_column('alt_filename'));
     $self->md5checksum($file_rs->get_column('md5checksum'));
     $self->metadata_id($file_rs->get_column('metadata_id'));
@@ -283,7 +321,7 @@ sub store {
             dirname => $self->dirname(),
             filetype => $self->filetype(),
             alt_filename => $self->alt_filename(),
-            comment => $self->comment(),
+            comment => JSON::Any->encode({ comments => $self->comments(), tags => $self->tags() }),
             md5checksum => $self->md5checksum(),
             metadata_id => $self->metadata_id(),
             urlsource => $self->urlsource(),
@@ -305,6 +343,94 @@ sub set_file_type {
     my $new_type = shift;
 
     $self->filetype($new_type);
+    $self->store();
+}
+
+=head2 add_comment($comment)
+
+Appends $comment (a string) to the list of comments stored on this file, and saves
+the change to the database.
+
+=cut
+
+sub add_comment {
+    my $self = shift;
+    my $comment_text = shift;
+
+    my $comments = $self->comments();
+    push @$comments, $comment_text;
+    $self->_set_comments($comments);
+    $self->store();
+}
+
+=head2 add_tag($tag)
+
+Adds $tag (a string) as a key in the tags hash stored on this file, and saves the
+change to the database. Since tags are stored as hash keys, adding the same tag
+more than once has no additional effect and will not die.
+
+=cut
+
+sub add_tag {
+    my $self = shift;
+    my $tag = shift;
+
+    my $tags = $self->tags();
+    $tags->{$tag} = 1;
+    $self->_set_tags($tags);
+    $self->store();
+}
+
+=head2 clear_comments()
+
+Deletes ALL comments stored on this file, indiscriminately, and saves the change
+to the database.
+
+NOTE: This function should be used sparingly, if at all. There are very few cases
+where deleting a comment is appropriate, and even fewer where deleting every
+comment on a file is appropriate. Prefer leaving the comment history intact unless
+you have a specific reason to purge it.
+
+=cut
+
+sub clear_comments {
+    my $self = shift;
+
+    $self->_set_comments([]);
+    $self->store();
+}
+
+=head2 clear_tags()
+
+Deletes ALL tags stored on this file, indiscriminately, and saves the change to
+the database.
+
+NOTE: Prefer removing individual tags with delete_tag() unless you have a 
+specific reason to purge them all.
+
+=cut
+
+sub clear_tags {
+    my $self = shift;
+
+    $self->_set_tags({});
+    $self->store();
+}
+
+=head2 delete_tag($tag)
+
+Deletes $tag (a string) from the tags hash stored on this file, and saves the
+change to the database.
+
+=cut
+
+sub delete_tag {
+    my $self = shift;
+    my $tag = shift;
+
+    my $tags = $self->tags();
+    delete $tags->{$tag};
+    $self->_set_tags($tags);
     $self->store();
 }
 

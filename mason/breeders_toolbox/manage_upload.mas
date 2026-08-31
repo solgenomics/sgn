@@ -35,8 +35,8 @@ $allowed_upload_types => undef
 <div class="container-fluid">
 
 <div class="well well-sm">
-    <h3>Archived files</h3>
-        <&| /page/info_section.mas, title => ' ',  id => 'archived_files_table_section', collapsible => 1, collapsed => 0 &>
+    <h3>Uploaded files</h3>
+        <&| /page/info_section.mas, title => ' ', subtitle => 'Files that are stored in the site archive; their data has not necessarily been saved to the database.', id => 'archived_files_table_section', collapsible => 1, collapsed => 0 &>
             <table style="width:100%">
                 <tr>
                     <td>
@@ -55,7 +55,7 @@ $allowed_upload_types => undef
                         <div style="display:flex;justify-content:flex-end;">
                             <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label">Archive files: </label>
+                                    <label class="col-sm-4 control-label">Upload files: </label>
                                     <div class="col-sm-6">
                                         <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file[]" multiple>
                                     </div>
@@ -79,7 +79,7 @@ $allowed_upload_types => undef
 
 <div class="well well-sm">
 <h3>File validation</h3>
-    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to complete the upload after passing validation. Warning and error conditions will cause an upload to fail.', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
+    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to commit the data after passing validation. Warning and error conditions will cause an upload to fail.', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
         <img id="validation-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_validated_files_table">
             <thead>
@@ -93,7 +93,7 @@ $allowed_upload_types => undef
 </div>
 
 <div class="well well-sm">
-<h3>Uploads in-progress</h3>
+<h3>Data extraction in-progress</h3>
     <&| /page/info_section.mas, title => ' ', id => 'in_progress_uploads_table_section', collapsible => 1, collapsed => 1 &>
         <img id="uploads-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
         <table id="upload_factory_in_progress_uploads_table">
@@ -109,8 +109,8 @@ $allowed_upload_types => undef
 
 
 <div class="well well-sm">
-<h3>Completed uploads</h3>
-    <&| /page/info_section.mas, title => ' ', id => 'completed_uploads_table_section', collapsible => 1, collapsed => 1 &>
+<h3>Processed uploads</h3>
+    <&| /page/info_section.mas, title => ' ', subtitle => 'Jobs for which data has been extracted and committed to the database.', id => 'completed_uploads_table_section', collapsible => 1, collapsed => 1 &>
         <br>
         <button id="dismiss_completed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all completed uploads</button> &nbsp; &nbsp;
         <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed and timed-out uploads</button> &nbsp; &nbsp;

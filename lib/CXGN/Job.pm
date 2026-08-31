@@ -77,6 +77,8 @@ use File::Path qw( make_path );
 use JSON::Any;
 use CXGN::Tools::Run;
 use CXGN::People::Schema;
+use CXGN::Metadata::Schema;
+use CXGN::File;
 use Try::Tiny;
 
 use strict;
@@ -661,7 +663,7 @@ sub retrieve_finish_timestamp {
 
 =head2 update_status($status)
 
-Update the status of the job and store with the new value. 
+Update the status of the job and store with the new value.
 
 =cut
 
@@ -675,6 +677,37 @@ sub update_status {
 
     $self->status($new_status);
     $self->store();
+
+    if ($new_status eq "finished") {
+        $self->_tag_final_upload_file();
+    }
+}
+
+=head2 _tag_final_upload_file()
+
+Internal helper called by update_status() whenever a job finishes successfully.
+Final upload jobs (job_type "upload" with a true "final_upload" key in
+additional_args) carry the file_id of the file they uploaded in additional_args;
+tag that file "processed" now that the upload job it belongs to is done. Does
+nothing for jobs that aren't final uploads.
+
+=cut
+
+sub _tag_final_upload_file {
+    my $self = shift;
+
+    my $additional_args = $self->additional_args();
+    my $file_id = $additional_args ? $additional_args->{file_id} : undef;
+
+    return unless $self->has_type() && $self->job_type() eq "upload" && $additional_args->{final_upload} && $file_id;
+
+    my $metadata_schema = CXGN::Metadata::Schema->connect(sub { $self->schema->storage->dbh() });
+    my $file = CXGN::File->new({
+        file_id => $file_id,
+        metadata_schema => $metadata_schema,
+        archive_path => '' # not needed to add a tag; only used by get_path()
+    });
+    $file->add_tag("processed");
 }
 
 =head2 update_status_from_slurm()

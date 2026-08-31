@@ -6,7 +6,7 @@ upload_multiple_trial_design.pl
 
 =head1 SYNOPSIS
 
-upload_multiple_trial_design.pl -H [dbhost] -D [dbname] -P [dbpass] -w [basepath] -U [dbuser] -ap [archive_path] -i infile_id -t [tempfiles_subdir] -un [username] -e [email address]
+upload_multiple_trial_design.pl -H [dbhost] -D [dbname] -P [dbpass] -w [basepath] -U [dbuser] -ap [archive_path] -i infile_id -t [tempfiles_subdir] -un [username] -e [email address] -j [sp_job_id]
 
 =head1 COMMAND-LINE OPTIONS
 ARGUMENTS
@@ -20,7 +20,8 @@ ARGUMENTS
  -t tempfile basedir (from config) (required)
  -un username of uploader (required)
  -e email address of the user
-if loading trial data from metadata file, phenotypes + layout from infile 
+ -j sp_job_id of the job that submitted this script (required)
+if loading trial data from metadata file, phenotypes + layout from infile
 
 =head2 DESCRIPTION
 
@@ -51,8 +52,10 @@ use CXGN::TrialStatus;
 use File::Temp qw/tempfile/;
 use CXGN::Phenotypes::StorePhenotypes;
 use CXGN::File;
+use CXGN::Job;
+use CXGN::People::Schema;
 
-my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $archive_path, $file_id, $username, $temp_basedir, $email_address, $ignore_warnings);
+my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $archive_path, $file_id, $username, $temp_basedir, $email_address, $ignore_warnings, $sp_job_id);
 GetOptions(
     'dbhost|H=s'           => \$dbhost,
     'dbname|D=s'           => \$dbname,
@@ -65,10 +68,11 @@ GetOptions(
     'temp_basedir|t=s'     => \$temp_basedir,
     'email|e=s'            => \$email_address,
     'ignore_warnings|iw!'  => \$ignore_warnings,
+    'jobid|j=s'            => \$sp_job_id,
     'help'                 => \$help,
 );
 pod2usage(1) if $help;
-if (!$file_id || !$username || !$basepath || !$dbname || !$dbhost || !$archive_path) { 
+if (!$file_id || !$username || !$basepath || !$dbname || !$dbhost || !$archive_path || !defined($sp_job_id)) {
     pod2usage({ -msg => 'Error. Missing options!', -verbose => 1, -exitval => 1 });
 }
 
@@ -94,6 +98,7 @@ else {
     });
 }
 my $chado_schema = Bio::Chado::Schema->connect(sub { $dbh },  { on_connect_do => ['SET search_path TO  public, sgn, metadata, phenome;'] });
+my $people_schema = CXGN::People::Schema->connect(sub { $dbh }, { on_connect_do => ['SET search_path TO public, sgn, sgn_people;'] });
 print STDOUT "Database connection ok!\n";
 
 my $parsed_data;
@@ -354,6 +359,31 @@ sub finish {
     foreach (@warnings) {
         print STDERR "WARNING: $_\n";
     }
+
+    # Report the outcome back to the submitting job. Warnings only reach here when they blocked
+    # the upload (ignore_warnings was false), so they count as a failure for job status purposes,
+    # the same as errors.
+    try {
+        my $job = CXGN::Job->new({
+            sp_job_id => $sp_job_id,
+            schema => $chado_schema,
+            people_schema => $people_schema
+        });
+
+        if (!$job->additional_args()) {
+            $job->additional_args({});
+        }
+        if (scalar(@warnings) > 0) {
+            $job->additional_args->{warning_messages} = join("<br>", @warnings);
+        }
+        if (scalar(@errors) > 0) {
+            $job->additional_args->{error_messages} = join("<br>", @errors);
+        }
+
+        $job->update_status((scalar(@errors) > 0 || scalar(@warnings) > 0) ? "failed" : "finished");
+    } catch {
+        print STDERR "Could not report the results of this upload to job $sp_job_id: $_\n";
+    };
 
     # Send email message, if requested
     # Exit the script: 0 = success, 1 = errors, 2 = warnings

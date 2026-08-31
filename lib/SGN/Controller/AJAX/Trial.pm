@@ -1485,7 +1485,9 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $temp_basedir = $c->config->{tempfiles_subdir};
 
     # Build the backend script command to parse, validate, and upload the trials
-    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -i \"$archived_file_id\" -t \"$temp_basedir\" -un \"$username\"";
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job.
+    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -i \"$archived_file_id\" -t \"$temp_basedir\" -un \"$username\" -j __SP_JOB_ID__";
     $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
     $cmd .= " -iw" if $ignore_warnings;
 
