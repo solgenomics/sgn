@@ -15,12 +15,13 @@
                     <&| /util/workflow.mas, id=> "transactions_upload_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Upload Seedlot Transactions" &>
-                            <center>You can upload 3 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
+                            <center>You can upload 4 different types of seedlot transactions. All of the transactions in each file have to be the same type.</center>
                             <ul>
                                 <li>Transferring seeds from existing seedlot to another existing seedlot.</li>
                                 <li>Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.</li>
                                 <li>Removing seeds from existing seedlot to unspecified seedlot name or plot name</li>
                                 <li><b>Note:</b>To transfer seeds from existing seedlot to a previously stored plot, Please use <b>Upload Seedlots Planted in Trial</b> link in the Experimental Design section on the Trial Detail page.</li>
+                                <li>Add additional seeds from accession or cross to existing seedlot</li>                                
                             </ul>
                             <br/><br/>
                             <center>
@@ -39,6 +40,7 @@
                                             <option value="seedlots_to_seedlots">From existing seedlots to other existing seedlots</option>
                                             <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
                                             <option value="seedlots_to_unspecified_names">From existing seedlots to unpecified seedlots/plots</option>
+                                            <option value="contents_to_seedlots">From accession or cross to existing seedlots</option>
                                         </select>
                                     </div>
                                 </div>
@@ -184,6 +186,39 @@
                                                             <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_unspecified_names_file" id="seedlots_to_unspecified_names_file" encoding="multipart/form-data" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="contents_to_seedlots_section" style="display:none">
+                                    <br/>
+                                    <hr class ="solid">
+                                    <center>
+                                        <h4>You want to add more seeds from accessions/crosses to existing seedlots</h4>
+                                    </center>
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <&| /page/explanation.mas, title=>'Template information' &>
+                                                    <p>
+                                                        <b>File format information</b>
+                                                        <br>
+                                                        <a id="contents_to_seedlots_format">Spreadsheet format</a>
+                                                    </p>
+                                                </&>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <br/>
+                                                <div class="panel panel-default">
+                                                    <div class="panel-body">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <div class="col-sm-6">
+                                                                <input type="file" name="contents_to_seedlots_file" id="contents_to_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -447,6 +482,58 @@
     </div>
 </div>
 
+<div class="modal fade" id="contents_to_seedlots_info_dialog" name="contents_to_seedlots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="contentsToseedlotsInfoDialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="contentsToseedlotsInfoDialog">Upload Template Information For Accession/Cross to Existing Seedlot Transactions  </h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
+                    <br />
+                    <b>Header:</b>
+                    <br>
+                    The first row (header) must contain the following:
+                    <br />
+                    <table class="table table-hover table-bordered table-condensed" >
+                        <thead></thead>
+                        <tbody>
+                            <tr>
+                                <td>content_name</td>
+                                <td>to_seedlot_name</td>
+                                <td>amount</td>
+                                <td>weight(g)</td>
+                                <td>operator_name</td>
+                                <td>transaction_description</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <b>Required fields:</b>
+                    <ul>
+                        <li><b>content_name:</b> Must exist in the database. Content name can be either accession or cross stock type. </li>
+                        <li><b>to_seedlot_name:</b> Must exist in the database. The accession or cross indicated in the content_name column must be the same as the content of the corresponding seedlot..</li>
+                        <li>
+                            <b>amount:</b> Number of seeds being added. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <br/><b>AND/OR</b><br/>
+                            <b>weight(g):</b> Weight in grams of seedlot being added. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                        </li>
+                        <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
+                    </ul>
+                    <b>Optional fields:</b>
+                    <ul>
+                        <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_contents_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 
 hr.solid { border-top: 1px solid #bbb; }
@@ -503,6 +590,14 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_unspecified_names_section").show();
             jQuery("#submit_transactions_button_section").show();
         }
+        if (jQuery(this).val() == "contents_to_seedlots" ){
+            jQuery("#seedlots_to_seedlots_section").hide();
+            jQuery("#seedlots_to_new_seedlots_section").hide();
+            jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#contents_to_seedlots_section").show();
+            jQuery("#submit_transactions_button_section").show();
+        }
     });
 
     jQuery("#upload_transactions_submit").click(function() {
@@ -550,6 +645,9 @@ jQuery(document).ready(function(){
         jQuery("#seedlots_to_unspecified_names_info_dialog").modal("show");
     });
 
+    jQuery("#contents_to_seedlots_format").click(function() {
+        jQuery("#contents_to_seedlots_info_dialog").modal("show");
+    });
 
     jQuery("[name='upload_transactions_dismiss_button']").click(function() {
         jQuery('#upload_transactions_dialog').modal('hide');
@@ -575,8 +673,11 @@ function upload_transactions_file() {
             if (uploadSeedlotsToPlots === ''){
                 var uploadSeedlotsToUnspecified = jQuery("#seedlots_to_unspecified_names_file").val();
                 if (uploadSeedlotsToUnspecified === '') {
-                    alert("Please select a file");
-                    return;
+                    var uploadContentsToSeedlots = jQuery("#contents_to_seedlots_file").val();
+                    if (uploadContentsToSeedlots === '') {
+                        alert("Please select a file");
+                        return;
+                    }
                 }
             }
         }
