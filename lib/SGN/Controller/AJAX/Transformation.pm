@@ -1887,7 +1887,7 @@ sub update_transformation_metadata_POST :Args(0){
     my $error = $transformation_obj->update_transformation_metadata();
 
     if ($error) {
-        $c->stash->{rest} = { error => "An error occurred attempting to update the transformation metadata. ($@)" };
+        $c->stash->{rest} = { error => "Error: $error" };
         return;
     }
 
