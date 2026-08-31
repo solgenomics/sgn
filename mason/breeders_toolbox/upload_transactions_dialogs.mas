@@ -21,7 +21,7 @@
                                 <li>Transferring seeds from existing seedlot to a new seedlot. A new seedlot is created beforing adding new transaction.</li>
                                 <li>Removing seeds from existing seedlot to unspecified seedlot name or plot name</li>
                                 <li><b>Note:</b>To transfer seeds from existing seedlot to a previously stored plot, Please use <b>Upload Seedlots Planted in Trial</b> link in the Experimental Design section on the Trial Detail page.</li>
-                                <li>Add additional seeds from accession or cross to existing seedlot</li>                                
+                                <li>Add additional seeds from accession or cross to existing seedlot</li>
                             </ul>
                             <br/><br/>
                             <center>
@@ -40,7 +40,7 @@
                                             <option value="seedlots_to_seedlots">From existing seedlots to other existing seedlots</option>
                                             <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
                                             <option value="seedlots_to_unspecified_names">From existing seedlots to unpecified seedlots/plots</option>
-                                            <option value="contents_to_seedlots">From accession or cross to existing seedlots</option>
+                                            <option value="accessions_crosses_to_seedlots">From accession or cross to existing seedlots</option>
                                         </select>
                                     </div>
                                 </div>
@@ -194,7 +194,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="contents_to_seedlots_section" style="display:none">
+                                <div id="accessions_crosses_to_seedlots_section" style="display:none">
                                     <br/>
                                     <hr class ="solid">
                                     <center>
@@ -207,7 +207,7 @@
                                                     <p>
                                                         <b>File format information</b>
                                                         <br>
-                                                        <a id="contents_to_seedlots_format">Spreadsheet format</a>
+                                                        <a id="accessions_crosses_to_seedlots_format">Spreadsheet format</a>
                                                     </p>
                                                 </&>
                                             </div>
@@ -218,7 +218,7 @@
                                                         <div class="form-group">
                                                             <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
                                                             <div class="col-sm-6">
-                                                                <input type="file" name="contents_to_seedlots_file" id="contents_to_seedlots_file" encoding="multipart/form-data" />
+                                                                <input type="file" name="accessions_crosses_to_seedlots_file" id="accessions_crosses_to_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -482,12 +482,12 @@
     </div>
 </div>
 
-<div class="modal fade" id="contents_to_seedlots_info_dialog" name="contents_to_seedlots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="contentsToseedlotsInfoDialog">
+<div class="modal fade" id="accessions_crosses_to_seedlots_info_dialog" name="accessions_crosses_to_seedlots_info_dialog" tabindex="-1" role="dialog" aria-labelledby="accessionsCrossesToseedlotsInfoDialog">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="contentsToseedlotsInfoDialog">Upload Template Information For Accession/Cross to Existing Seedlot Transactions  </h4>
+                <h4 class="modal-title" id="accessionsCrossesToseedlotsInfoDialog">Upload Template Information For Accession/Cross to Existing Seedlot Transactions  </h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -528,7 +528,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="close_contents_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="close_accessions_crossses_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -590,12 +590,12 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_unspecified_names_section").show();
             jQuery("#submit_transactions_button_section").show();
         }
-        if (jQuery(this).val() == "contents_to_seedlots" ){
+        if (jQuery(this).val() == "accessions_crosses_to_seedlots" ){
             jQuery("#seedlots_to_seedlots_section").hide();
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").hide();
-            jQuery("#contents_to_seedlots_section").show();
+            jQuery("#accessions_crosses_to_seedlots_section").show();
             jQuery("#submit_transactions_button_section").show();
         }
     });
@@ -645,8 +645,8 @@ jQuery(document).ready(function(){
         jQuery("#seedlots_to_unspecified_names_info_dialog").modal("show");
     });
 
-    jQuery("#contents_to_seedlots_format").click(function() {
-        jQuery("#contents_to_seedlots_info_dialog").modal("show");
+    jQuery("#accessions_crosses_to_seedlots_format").click(function() {
+        jQuery("#accessions_crosses_to_seedlots_info_dialog").modal("show");
     });
 
     jQuery("[name='upload_transactions_dismiss_button']").click(function() {
@@ -673,8 +673,8 @@ function upload_transactions_file() {
             if (uploadSeedlotsToPlots === ''){
                 var uploadSeedlotsToUnspecified = jQuery("#seedlots_to_unspecified_names_file").val();
                 if (uploadSeedlotsToUnspecified === '') {
-                    var uploadContentsToSeedlots = jQuery("#contents_to_seedlots_file").val();
-                    if (uploadContentsToSeedlots === '') {
+                    var uploadAccessionsCrossesToSeedlots = jQuery("#accessions_crosses_to_seedlots_file").val();
+                    if (uploadAccessionsCrossesToSeedlots === '') {
                         alert("Please select a file");
                         return;
                     }

@@ -1959,6 +1959,7 @@ sub upload_transactions_POST : Args(0) {
     my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
     my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
     my $upload_seedlots_to_unspecified_names = $c->req->upload('seedlots_to_unspecified_names_file');
+    my $upload_accessions_crosses_to_existing_seedlots = $c->req->upload('accessions_crosses_to_seedlots_file');
 
     my $new_seedlot_breeding_program_id = $c->req->param("new_seedlot_breeding_program_id");
     my $new_seedlot_location = $c->req->param("new_seedlot_location");
@@ -1985,6 +1986,10 @@ sub upload_transactions_POST : Args(0) {
     if (defined $upload_seedlots_to_unspecified_names){
         $upload = $upload_seedlots_to_unspecified_names;
         $parser_type = 'SeedlotsToUnspecifiedNames';
+    }
+    if (defined $upload_accessions_crosses_to_existing_seedlots){
+        $upload = $upload_seedlots_to_unspecified_names;
+        $parser_type = 'AccessionsCrossesToExistingSeedlots';
     }
 
     my $subdirectory = "seedlot_transaction_upload";
