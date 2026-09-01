@@ -99,7 +99,8 @@
                 data: Object.values(response),
                 columns: [
                     { title: "Marker", render: (data, type, row) => {
-                        var html = `<a href='/locus/${row.locus_id}/view'>`;
+                        var url = !!row.variant_name ? `/variant/${row.variant_name}/details` : `/locus/${row.locus_id}/view`;
+                        var html = `<a href='${url}'>`;
                         html += row.marker_name;
                         if ( row.locus_name !== row.marker_name ) html += ` = ${row.locus_name}`;
                         html += '</a>';

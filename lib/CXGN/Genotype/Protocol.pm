@@ -629,7 +629,7 @@ sub get_marker_metadata {
     my $dbh = $schema->storage->dbh();
     my $protocol_id = $self->nd_protocol_id;
 
-    my $q = "SELECT nd_protocol_id, locus.locus_id, locus.locus_name, marker_name, locus.description, allele.allele_id, allele_name, db.name, db.urlprefix, db.url, dbxref.accession, cvterm.cvterm_id, cvterm.name ";
+    my $q = "SELECT locus_geno_marker.nd_protocol_id, locus.locus_id, locus.locus_name, locus_geno_marker.marker_name, locus.description, allele.allele_id, allele_name, db.name, db.urlprefix, db.url, dbxref.accession, cvterm.cvterm_id, cvterm.name, materialized_markerview.variant_name ";
     $q .= "FROM phenome.locus_geno_marker ";
     $q .= "LEFT JOIN phenome.locus ON (locus_geno_marker.locus_id = locus.locus_id) ";
     $q .= "LEFT JOIN phenome.allele ON (allele.locus_id = locus.locus_id) ";
@@ -637,8 +637,9 @@ sub get_marker_metadata {
     $q .= "LEFT JOIN public.dbxref ON (locus_dbxref.dbxref_id = dbxref.dbxref_id) ";
     $q .= "LEFT JOIN public.db ON (dbxref.db_id = db.db_id) ";
     $q .= "LEFT JOIN public.cvterm ON (dbxref.dbxref_id = cvterm.dbxref_id) ";
-    $q .= "WHERE nd_protocol_id = ? ";
-    $q .= "AND marker_name = ?" if $marker_name;
+    $q .= "LEFT JOIN public.materialized_markerview ON (locus_geno_marker.nd_protocol_id = materialized_markerview.nd_protocol_id) AND (locus_geno_marker.marker_name = materialized_markerview.marker_name)";
+    $q .= "WHERE locus_geno_marker.nd_protocol_id = ? ";
+    $q .= "AND locus_geno_marker.marker_name = ?" if $marker_name;
 
     my $sth = $dbh->prepare($q);
     if ( $marker_name ) {
@@ -651,7 +652,7 @@ sub get_marker_metadata {
     my %metadata;
     my %seen_alleles;
     my %seen_references;
-    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name, $db_name, $db_urlprefix, $db_url, $dbxref_accession, $cvterm_id, $cvterm_name) = $sth->fetchrow_array()) {
+    while (my ($nd_protocol_id, $locus_id, $locus_name, $marker_name, $locus_description, $allele_id, $allele_name, $db_name, $db_urlprefix, $db_url, $dbxref_accession, $cvterm_id, $cvterm_name, $variant_name) = $sth->fetchrow_array()) {
         if ( ! exists($metadata{$locus_name}) ) {
             $metadata{$locus_name} = {
                 nd_protocol_id => $nd_protocol_id,
@@ -660,6 +661,7 @@ sub get_marker_metadata {
                 locus_name => $locus_name,
                 marker_name => $marker_name,
                 locus_description => $locus_description,
+                variant_name => $variant_name,
                 alleles => [],
                 references => [],
             };
