@@ -6,6 +6,8 @@ use namespace::autoclean;
 
 use Data::Dumper;
 
+use JSON;
+use File::Slurp qw /read_file write_file/;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -36,19 +38,26 @@ sub get_genotype_protocols: Path('/get/genotyping/protocols/') Args() {
 sub genotype_protocols {
     my ($self, $c) = @_;
 
-    my $protocol_ids = $c->controller('solGS::Search')->model($c)->get_all_genotyping_protocols();
-    my @protocols_details;
+     my $file = $c->controller('solGS::Files')->genotyping_protocols_file($c);
 
-    foreach my $protocol_id (@$protocol_ids)
-    {
-	my $details = $self->protocol_detail($c, $protocol_id);
-	push @protocols_details, $details if %$details;
+    if (-s $file) {
+        my $cached = decode_json(read_file($file, binmode => ':utf8'));
+        
+        if (ref($cached) eq 'ARRAY') {
+            return $cached;
+        }
+        else {
+            $c->log->warn("Invalid genotyping protocol cache: $file");
+        }
+        
     }
 
-    # my $dummy = {'protocol_id'=>2, 'name'=>'dummy protocol'};
-    # push @protocols_details, $dummy;
+    my $protocols = $c->controller('solGS::Search')->model($c)->get_all_genotyping_protocols();
 
-    return \@protocols_details;
+    print STDERR "Genotyping protocols: " . Dumper $protocols;
+    write_file($file, { binmode => ':utf8' }, encode_json($protocols));
+
+    return $protocols;
 
 }
 
@@ -68,10 +77,9 @@ sub create_protocol_url {
 sub stash_protocol_id {
     my ($self, $c, $protocol_id) = @_;
 
-    if (!$protocol_id || $protocol_id =~ /undefined/)
-    {
-	my $protocol_detail= $self->default_genotyping_protocol($c);
-	$protocol_id = $protocol_detail->{protocol_id};
+    if (!$protocol_id || $protocol_id =~ /undefined/) {
+        my $protocol_detail= $self->default_genotyping_protocol($c);
+        $protocol_id = $protocol_detail->{protocol_id};
     }
 
     $c->stash->{genotyping_protocol_id} = $protocol_id;
@@ -93,11 +101,18 @@ sub default_genotyping_protocol {
 sub protocol_detail {
     my ($self, $c, $protocol) = @_;
 
-
     my $protocol_detail = $c->controller('solGS::Search')->model($c)->protocol_detail($protocol);
 
     return $protocol_detail;
 }
+
+
+sub begin : Private {
+    my ($self, $c) = @_;
+
+    $c->controller('solGS::Files')->get_solgs_dirs($c);
+}
+
 ###
 1;
 ###
