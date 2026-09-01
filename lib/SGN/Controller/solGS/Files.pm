@@ -498,7 +498,7 @@ sub phenotype_metadata_file {
         key  => 'phenotype_metadata',
         file => 'phenotype_metadata',
         stash_key => 'phenotype_metadata_file',
-		cache_dir => $c->stash->{solgs_dir}
+		cache_dir => $c->stash->{analysis_metadata_dir}
     };
 
     $self->cache_file($c, $cache_data);
@@ -740,6 +740,24 @@ sub traits_acronym_file {
 
 }
 
+
+sub genotyping_protocols_file {
+    my ($self, $c) = @_;
+
+    my $cache_dir = $c->stash->{analysis_metadata_dir};
+    print STDERR "cache dir for genotyping protocols file: $cache_dir\n";
+
+    my $cache_data = {
+        key       => 'solgs_genotyping_protocols',
+        file      => 'genotyping_protocols',
+        ext       => 'json',
+        stash_key => 'genotyping_protocols_file',
+        cache_dir => $cache_dir,
+    };
+
+    $self->cache_file($c, $cache_data);
+
+}
 
 sub template {
     my ($self, $file) = @_;
@@ -1022,21 +1040,18 @@ sub get_solgs_dirs {
     }
 
     my $analysis_log_dir = catdir($cluster_shared_dir, 'log');
-    #my $solgs_dir       = catdir($cluster_shared_dir, "solgs");
-    # my $solgs_temp_dir   = catdir($solgs_dir, 'tempfiles');
+    my $analysis_metadata_dir = catdir($cluster_shared_dir, 'metadata');
     my $solgs_lists     = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'lists');
     my $solgs_datasets  = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'datasets');
 
-    make_path(($solgs_lists, $solgs_datasets, $analysis_log_dir), { mode => oct('0755') });
+    my @solgs_dirs = ($analysis_log_dir, $solgs_lists, $solgs_datasets, $analysis_metadata_dir);
+    make_path(@solgs_dirs, { mode => oct('0755') });
+
     $c->stash->{solgs_lists_dir} = $solgs_lists;
     $c->stash->{solgs_datasets_dir} = $solgs_datasets;
     $c->stash->{analysis_log_dir} = $analysis_log_dir;
-    # $c->stash->{solgs_dir} = $solgs_dir;
+    $c->stash->{analysis_metadata_dir} = $analysis_metadata_dir;
 
-    ### for backward compatibility with old code
-    # $c->stash->{solgs_tempfiles_dir} = $solgs_temp_dir;
-
-    
 }
 
 
