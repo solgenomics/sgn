@@ -1,4 +1,4 @@
-package CXGN::Stock::Seedlot::ParseUpload::Plugin::AccessionsCrossesToSeedlotsGeneric;
+package CXGN::Stock::Seedlot::ParseUpload::Plugin::AccessionsCrossesToExistingSeedlotsGeneric;
 
 use Moose::Role;
 use CXGN::File::Parse;
