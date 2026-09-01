@@ -223,6 +223,24 @@ sub wait_for_working_dialog {
     print STDERR "... working dialog dismissed ...\n";
 }
 
+
+sub filter_datatable {
+    my ($self, $table_id, $search_text) = @_;
+
+    $table_id =~ s/^#//;
+    $search_text =~ s/^\s+|\s+$//g;
+
+    my $filter = $self->find_element(
+        '#' . $table_id . '_filter input',
+        'css'
+    );
+
+    $filter->clear();
+    $filter->send_keys($search_text);
+
+    return $filter;
+}
+
 1;
    
     
