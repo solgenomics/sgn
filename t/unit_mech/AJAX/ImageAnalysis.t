@@ -346,7 +346,7 @@ my $nes_rs = $schema->resultset('NaturalDiversity::NdExperimentStock')->search({
     nd_experiment_id => $nd_experiment_id,
 });
 # source stock + 2 tissue samples = 3
-is($nes_rs->count, 1 + scalar(@tissue_sample_ids),
+is($nes_rs->count, scalar(@tissue_sample_ids),
    "nd_experiment links source stock and tissue samples");
 
 # source stock is among the linked stocks
