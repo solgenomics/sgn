@@ -23,7 +23,7 @@ my $schema = $f->bcs_schema;
 
 my $mech = Test::WWW::Mechanize->new;
 
-$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "curatorjane", "password"=> "secretpw", "grant_type"=> "password" ]);
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 my $response = decode_json $mech->content;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
