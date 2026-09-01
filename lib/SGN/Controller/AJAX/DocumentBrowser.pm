@@ -136,10 +136,6 @@ sub user_archived_files_POST : Args(0) {
     my $logged_user = $c->user->get_object()->get_sp_person_id();
     my $role = $c->user->get_object()->get_user_type();
 
-    print STDERR "========================\n";
-    print STDERR "User ID: $user_id  |  Logged User: $logged_user  |  Role : $role\n";
-    print STDERR "========================\n";
-
     if (!$user_id || ($user_id ne $logged_user && $role ne "curator")) {
         $c->stash->{rest} = {error => "You do not have permission to view these files.\n"} ;
         return;

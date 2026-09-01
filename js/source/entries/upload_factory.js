@@ -111,6 +111,7 @@ export function load_archived_files_table(user_id) {
                 let header_row = jQuery('<tr>');
                 header_row.append(jQuery('<th>').text("Timestamp"));
                 header_row.append(jQuery('<th>').text("File Name"));
+                header_row.append(jQuery('<th>').text("Tags"));
 
                 if (response.data.length > 0 && response.data[0].hasOwnProperty('user_id')) {
                     header_row.append(jQuery('<th>').text("Uploader"));
@@ -137,6 +138,7 @@ export function load_archived_files_table(user_id) {
                         let tr = jQuery("<tr>");
                         tr.append(jQuery("<td>").html("<div id='file_timestamp_"+row.file_id+"'>"+row.timestamp+"</div>"));
                         tr.append(jQuery("<td>").html("<a id='file_name_"+row.file_id+"' href='/breeders/phenotyping/download/"+row.file_id+"'>"+row.filename+"</a> &nbsp; | &nbsp; <a target='_blank' href='/breeders/phenotyping/view/"+row.file_id+"'>View</a>"));
+                        tr.append(jQuery("<td>").html("<div id='file_tags_"+row.file_id+"'>"+(row.tags || '')+"</div>"));
                         if (response.data[0].hasOwnProperty('user_id')) {
                             tr.append(jQuery("<td>").html("<a href='/solpeople/profile/"+row.user_id+"'>"+row.user_name+"</a>"));
                         }

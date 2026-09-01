@@ -262,11 +262,33 @@ has 'urlsource_md5checksum' => (
 
 =cut
 
+=head2 _prepare_metadata_schema($metadata_schema)
+
+Internal helper. metadata_schema() (and often schema()/people_schema()/phenome_schema())
+is frequently constructed by callers sharing one physical database handle across all four
+DBIx::Class schema objects, each with its own C<on_connect_do> that sets the search path for
+its own schema. DBIx::Class only runs a schema's on_connect_do the first time that particular
+schema object issues a query, so if any of the other schema objects sharing the connection
+gets queried for the first time after metadata_schema has already connected, it silently
+overwrites the shared connection's search path with its own, leaving metadata off of it. Every
+MdFiles query after that then fails with "relation md_files does not exist", even though
+metadata_schema itself was configured correctly. Call this immediately before any MdFiles
+query to force metadata back onto the search path regardless of what else has touched the
+shared connection since.
+
+=cut
+
+sub _prepare_metadata_schema {
+    my $metadata_schema = shift;
+    $metadata_schema->storage->dbh->do('SET search_path TO public, sgn, metadata');
+    return $metadata_schema;
+}
+
 sub BUILD {
     my $self = shift;
     my $args = shift;
 
-    my $metadata_schema = $self->metadata_schema();
+    my $metadata_schema = _prepare_metadata_schema($self->metadata_schema());
     my $file_id = $self->file_id();
 
     if (!$file_id) {
@@ -312,7 +334,7 @@ sub BUILD {
 
 sub store {
     my $self = shift;
-    my $metadata_schema = $self->metadata_schema();
+    my $metadata_schema = _prepare_metadata_schema($self->metadata_schema());
 
     try {
         my $mdfile_rs = $metadata_schema->resultset("MdFiles")->find({file_id => $self->file_id()});
@@ -455,7 +477,7 @@ after they have been parsed.
 
 sub delete_file {
     my $self = shift;
-    my $metadata_schema = $self->metadata_schema();
+    my $metadata_schema = _prepare_metadata_schema($self->metadata_schema());
     my $file_id = $self->file_id();
 
     try {
@@ -486,23 +508,24 @@ sub get_user_archived_files {
     my $schema = shift;
     my $user_id = shift;
 
-    my $q = "SELECT file_id, basename, filetype FROM metadata.md_files 
-        JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
+    my $q = "SELECT file_id, basename, filetype, comment FROM metadata.md_files
+        JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
         WHERE sp_person_id=? AND basename != 'none'";
-    
+
     my $h = $schema->storage()->dbh()->prepare($q);
     $h->execute($user_id);
 
     my @data;
 
-    while (my ($file_id, $file_name, $filetype) = $h->fetchrow_array()){
+    while (my ($file_id, $file_name, $filetype, $comment_json) = $h->fetchrow_array()){
         $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
         push @data, {
             file_id => $file_id,
             timestamp => $+{TIMESTAMP},
             filename => $+{FILENAME},
-            type => $filetype
+            type => $filetype,
+            tags => _parse_tags_string($comment_json)
         };
     }
 
@@ -519,8 +542,8 @@ sub get_all_archived_files {
     my $class = shift;
     my $schema = shift;
 
-    my $q = "SELECT file_id, basename, sp_person_id, first_name, last_name, filetype FROM metadata.md_files 
-        JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id) 
+    my $q = "SELECT file_id, basename, sp_person_id, first_name, last_name, filetype, comment FROM metadata.md_files
+        JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
         WHERE basename != 'none'";
 
@@ -529,7 +552,7 @@ sub get_all_archived_files {
 
     my @data;
 
-    while (my ($file_id, $file_name, $user_id, $first_name, $last_name, $filetype) = $h->fetchrow_array()){
+    while (my ($file_id, $file_name, $user_id, $first_name, $last_name, $filetype, $comment_json) = $h->fetchrow_array()){
         $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
         push @data, {
             file_id => $file_id,
@@ -537,11 +560,32 @@ sub get_all_archived_files {
             filename => $+{FILENAME},
             user_id => $user_id,
             user_name => "$first_name $last_name",
-            type => $filetype
+            type => $filetype,
+            tags => _parse_tags_string($comment_json)
         };
     }
 
     return \@data;
+}
+
+=head2 _parse_tags_string($comment_json)
+
+Given the raw JSON string stored in a md_files row's comment column, returns
+a comma-separated string of the tags applied to that file (or an empty string
+if there are none). Used by get_user_archived_files and get_all_archived_files
+so callers don't need to know about the {comments=>[], tags=>{}} JSON shape.
+
+=cut
+
+sub _parse_tags_string {
+    my $comment_json = shift;
+
+    return '' unless $comment_json;
+
+    my $comment = JSON::Any->decode($comment_json);
+    my $tags = $comment->{tags} || {};
+
+    return join(', ', sort keys %$tags);
 }
 
 1;
