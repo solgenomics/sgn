@@ -2025,10 +2025,6 @@ sub genotyping_protocol {
 sub protocol_detail {
     my ( $self, $protocol ) = @_;
 
-    # unless ($protocol)
-    # {
-    # $protocol = $self->context->config->{default_genotyping_protocol};
-    # }
 
     my $where;
     if ( $protocol =~ /[A-Za-z]/ ) {
@@ -2075,7 +2071,7 @@ sub get_all_genotyping_protocols {
     my @protocols;
 
     while ( my ($protocol_id, $name) = $sth->fetchrow_array() ) {
-        push @protocols, { id => $protocol_id, name => $name };
+        push @protocols, { protocol_id => $protocol_id, name => $name };
     }
 
     return \@protocols;
