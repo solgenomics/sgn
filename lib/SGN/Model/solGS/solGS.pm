@@ -2060,11 +2060,11 @@ sub get_all_genotyping_protocols {
 
     if ($trial_id) {
         $where = ' WHERE trial_id = ?';
-        $q     = 'SELECT distinct(genotyping_protocol_id)
+        $q     = 'SELECT distinct(genotyping_protocol_id),genotyping_protocol_name
                     FROM genotyping_protocolsXtrials' . $where;
     }
     else {
-        $q = 'SELECT distinct(genotyping_protocol_id)
+        $q = 'SELECT distinct(genotyping_protocol_id), genotyping_protocol_name
                         FROM genotyping_protocols' . $where;
     }
 
@@ -2072,13 +2072,13 @@ sub get_all_genotyping_protocols {
 
     $trial_id ? $sth->execute($trial_id) : $sth->execute();
 
-    my @protocol_ids;
+    my @protocols;
 
-    while ( my $protocol_id = $sth->fetchrow_array() ) {
-        push @protocol_ids, $protocol_id;
+    while ( my ($protocol_id, $name) = $sth->fetchrow_array() ) {
+        push @protocols, { id => $protocol_id, name => $name };
     }
 
-    return \@protocol_ids;
+    return \@protocols;
 }
 
 sub get_genotypes_from_dataset {
