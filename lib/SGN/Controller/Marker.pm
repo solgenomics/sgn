@@ -93,7 +93,8 @@ error message if no matches are found.
 =cut
 
 sub view_marker_by_name :Path('/marker/view_by_name') CaptureArgs(1) {
-    my ($self, $c, $marker_query) = @_;
+    my ($self, $c, @args) = @_;
+    my $marker_query = join('/', @args);
     $self->search_marker($c, $marker_query);
 }
 
