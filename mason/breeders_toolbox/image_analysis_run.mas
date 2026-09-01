@@ -2,7 +2,7 @@
 
 =head1 NAME
 
-/image_analysis/image_analysis_run_project.mas - a mason component to display an image analysis run detail page
+/image_analysis/image_analysis_run.mas - a mason component to display an image analysis run detail page
 
 =head1 AUTHORS
 
@@ -15,8 +15,8 @@ $run_project_id
 $run_name
 $service_name
 $run_date
-$trial_id
-$trial_name
+$trial_id           => undef
+$trial_name         => undef
 $analysis_info_json => '{}'
 $overlay_image_id   => undef
 $overlay_image_url  => undef
@@ -25,20 +25,27 @@ $user_can_modify    => undef
 </%args>
 
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.2/css/dataTables.bootstrap4.min.css"/>
-<script src="https://cdn.datatables.net/1.11.2/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.2/js/dataTables.bootstrap4.min.js"></script>
 
 <link rel="stylesheet" type="text/css"
       href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"/>
 
+<& /util/import_javascript.mas,
+  classes => ['jquery.dataTables-buttons-min', 'jszip-min',
+              'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts',
+              'buttons.bootstrap-min', 'buttons.html5-min']
+&>
+
+<style>
+td.details-control { text-align:center; color:forestgreen; cursor:pointer; }
+tr.shown td.details-control { text-align:center; color:red; }
+.image-panel-heading a { text-decoration:none; }
+</style>
 
 <br/>
-<!-- ============================================================
-     SECTION 1: Run Details  (styled like Trial Details)
-============================================================ -->
-  <div class="trial-header">
-      <& /page/page_title.mas, info_section_collapsed => 0, title => "Image Analysis Run: " . $run_name &>
-  </div>
+
+<div class="trial-header">
+    <& /page/page_title.mas, info_section_collapsed => 0, title => "Image Analysis Run: " . $run_name &>
+</div>
 
 <&| /page/info_section.mas,
     id          => "run_details",
@@ -61,53 +68,36 @@ $user_can_modify    => undef
     &>
 </&>
 
-<&| /page/info_section.mas, title=>"Image Analysis Results", collapsible => 1, collapsed=>0 &>
-
-    <!-- ============================================================
-         SECTION 2: Object Results (collapsible) — mirrors image_analysis.mas
-    ============================================================ -->
+<&| /page/info_section.mas, title=>"Image Analysis Results by Image", collapsible => 1, collapsed=>0 &>
   <div class="well well-sm">
-    <div class="panel panel-default">
-      <div class="panel-body">
-          <div class="form-group">
-            <div id="object_results_loading"
-                style="display:none;text-align:center;padding:20px;">
-                <span class="glyphicon glyphicon-refresh glyphicon-spin" style="font-size:24px;"></span>
-                <p>Loading...</p>
-            </div>
 
-            <table id="image_analysis_result_table"
-                  class="table table-bordered table-hover table-condensed display"
-                  style="width:100%">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>Stock</th>
-                        <th>Trait</th>
-                        <th id="analyzed_header"># Analyzed Objects</th>
-                        <th>Mean Value</th>
-                    </tr>
-                </thead>
-            </table>
-          </div>
-        </div>
-      </div>
+    <div id="per_image_results_loading" style="text-align:center;padding:20px;">
+      <span class="glyphicon glyphicon-refresh" style="font-size:24px;"></span>
+      <p>Loading images…</p>
     </div>
 
+    <div class="panel-group" id="per_image_accordion" role="tablist" aria-multiselectable="true"></div>
+
+    <div id="per_image_empty" class="text-muted" style="display:none;padding:15px;">
+      No per-image results are stored for this run.
+    </div>
+
+  </div>
 </&>
 
-<!-- Hidden field for run project id -->
-<div id="run_project_id_div" style="display:none;"><% $run_project_id %></div>
+<!-- Hidden JSON payload for renderMetadata() -->
+<div id="analysis_info_json_data" style="display:none;"><% $analysis_info_json | h %></div>
 
 <script defer="defer">
 jQuery(document).ready(function () {
 
-    var run_project_id  = '<% $run_project_id %>';
+    var run_project_id = '<% $run_project_id %>';
+    var loaded_tables  = {};
 
-    // -------------------------------------------------------
-    // 1. Populate Run Details table from analysis_metadata
-    //    (parsed out of analysis_info_json)
-    // -------------------------------------------------------
+    function esc(s) {
+        return jQuery('<div>').text(s == null ? '' : s).html();
+    }
+
     function safeText(v) {
         if (v === null || v === undefined || v === '') return null;
         return String(v);
@@ -122,17 +112,17 @@ jQuery(document).ready(function () {
         }
     }
 
-        function renderMetadata() {
-        var raw = <% $analysis_info_json %>;
+    // Run-level pipeline metadata (same for the whole run)
+    function renderMetadata() {
         var info;
         try {
-            info = (typeof raw === 'string') ? JSON.parse(raw) : raw;
+            var raw = jQuery('#analysis_info_json_data').text();
+            info = raw ? JSON.parse(raw) : {};
         } catch (e) {
             console.error('Failed to parse analysis_info_json:', e);
             return;
         }
 
-        // analysis_metadata may be nested (createRunProject sends { analysis_metadata })
         var meta = info.analysis_metadata || info || {};
 
         setCell('meta_pipeline_name',    meta.pipeline_name);
@@ -140,152 +130,300 @@ jQuery(document).ready(function () {
         setCell('meta_job_id',           meta.job_id);
         setCell('meta_timestamp',        meta.run_timestamp || meta.timestamp);
         setCell('meta_input_filename',   meta.input_filename);
-        setCell('meta_output_mode',      meta.output_mode);
 
-        // QC json
         if (meta.qc_json) {
             try {
-                var qc = (typeof meta.qc_json === 'string')
-                    ? JSON.parse(meta.qc_json) : meta.qc_json;
-
+                var qc = (typeof meta.qc_json === 'string') ? JSON.parse(meta.qc_json) : meta.qc_json;
                 var lines = [];
                 for (var key in qc) {
-                    if (qc.hasOwnProperty(key)) {
-                        lines.push(key + ': ' + qc[key]);
-                    }
+                    if (qc.hasOwnProperty(key)) lines.push(key + ': ' + qc[key]);
                 }
-                jQuery('#meta_qc_json').text(lines.join('\n'));
+                jQuery('#meta_qc_json').text(lines.length ? lines.join('\n') : '—');
             } catch (e) {
                 jQuery('#meta_qc_json').text(String(meta.qc_json));
             }
         } else {
             jQuery('#meta_qc_json').text('—');
         }
-
-        // Traits emitted - render as a comma-separated list of trait 
-        /*
-        if (meta.traits_emitted_json) {
-            try {
-                var traits = (typeof meta.traits_emitted_json === 'string')
-                    ? JSON.parse(meta.traits_emitted_json)
-                    : meta.traits_emitted_json;
-
-                if (Array.isArray(traits) && traits.length) {
-                    // format is "Trait Name|IMGSTAT:0000006" - show the name part
-                    var names = traits.map(function (t) {
-                        return String(t).split('|')[0];
-                    });
-                    jQuery('#meta_traits_emitted').html(
-                        names.map(function (n) {
-                            return '<span class="label label-info" ' +
-                                   'style="margin:2px;display:inline-block;">' +
-                                   n + '</span>';
-                        }).join(' ')
-                    );
-                } else {
-                    jQuery('#meta_traits_emitted').html('<span class="text-muted">—</span>');
-                }
-            } catch (e) {
-                jQuery('#meta_traits_emitted').text(String(meta.traits_emitted_json));
-            }
-        } else {
-            jQuery('#meta_traits_emitted').html('<span class="text-muted">—</span>');
-        }
-        */
     }
 
-    // -------------------------------------------------------
-    // 2. Child-row formatter (mirrors format() in image_analysis.mas)
-    //    Renders the per-object / per-image detail table.
-    // -------------------------------------------------------
-    function tissueSampleLink(image) {
-        var name = image.tissue_sample_name;
-        var id   = image.tissue_sample_id;   // tissue sample stock_id
-
-        if (!name) {
-            return '<span class="text-muted">—</span>';
-        }
-        if (id) {
-            return '<a href="/stock/' + id + '/view">' + name + '</a>';
-        }
-        return name;
+    // Child-row formatter: tissue samples + values
+    function tissueSampleLink(d) {
+        var name = d.tissue_sample_name;
+        var id   = d.tissue_sample_id;
+        if (!name) return '<span class="text-muted">—</span>';
+        if (id)    return '<a href="/stock/' + esc(id) + '/view">' + esc(name) + '</a>';
+        return esc(name);
     }
 
     function format(d) {
         var detail_rows = '';
-        var name_header = 'Object Name';
 
-        (d.details || []).forEach(function (image) {
-            var result = image.analyzed_link;
-            var text;
-            var name;
-
-            if (result && String(result).startsWith('Error: ')) {
-                text = result;
-                name = image.object_name || image.image_name;
-                name_header = image.object_name ? 'Object Name' : 'Image Name';
-            } else if (Object.prototype.hasOwnProperty.call(image, 'object_name')) {
-                text = '';
-                name_header = 'Object Name';
-                name = image.object_name;
-            } else {
-                text = result ? '<img src="' + result + '" width="100">' : '';
-                name_header = 'Image Name';
-                name = image.image_name;
+        (d.details || []).forEach(function (item) {
+            var img = '';
+            if (item.analyzed_link && !String(item.analyzed_link).startsWith('Error: ')) {
+                img = '<img src="' + item.analyzed_link + '" width="100">';
+            } else if (item.analyzed_link) {
+                img = esc(item.analyzed_link);
             }
 
             detail_rows +=
                 '<tr>' +
-                    '<td>' + (name  != null ? name  : '') + '</td>' +
-                    '<td>' + tissueSampleLink(image) + '</td>' +
-                    '<td>' + (text  != null ? text  : '') + '</td>' +
-                    '<td>' + (image.value != null ? image.value : '') + '</td>' +
+                    '<td>' + esc(item.object_name) + '</td>' +
+                    '<td>' + tissueSampleLink(item) + '</td>' +
+                    '<td>' + img + '</td>' +
+                    '<td>' + esc(item.value) + '</td>' +
                 '</tr>';
         });
 
-        return '<table class="table">' +
-                   '<thead>' +
-                       '<tr>' +
-                           '<th scope="col">' + name_header + '</th>' +
-                           '<th scope="col">Tissue Sample</th>' +
-                           '<th scope="col">Analyzed Image</th>' +
-                           '<th scope="col">Value</th>' +
-                       '</tr>' +
-                   '</thead>' +
+        if (!detail_rows) {
+            detail_rows = '<tr><td colspan="4" class="text-muted">No stored values.</td></tr>';
+        }
+
+        return '<table class="table table-condensed">' +
+                   '<thead><tr>' +
+                       '<th scope="col">Object</th>' +
+                       '<th scope="col">Tissue Sample</th>' +
+                       '<th scope="col">Analyzed Image</th>' +
+                       '<th scope="col">Value</th>' +
+                   '</tr></thead>' +
                    '<tbody>' + detail_rows + '</tbody>' +
                '</table>';
     }
 
-    // -------------------------------------------------------
-    // 3. Load object results table for this run project
-    //    Expects a backend endpoint that returns table_data in the
-    //    same shape as image_analysis.mas: an array of rows with
-    //    observationUnitName, observationVariableName, numberAnalyzed,
-    //    value, and a details[] array (object_name/image_name,
-    //    analyzed_link, value).
-    // -------------------------------------------------------
-    function loadObjectResults() {
-        jQuery('#object_results_loading').show();
-
+    // Load the run's image list, then build summary + accordion
+    function loadRunImages() {
         jQuery.ajax({
-            url: '/ajax/image_analysis/run_object_results',
+            url: '/ajax/image_analysis/run_images',
             method: 'GET',
             data: { run_project_id: run_project_id },
-            success: function (response) {
-                jQuery('#object_results_loading').hide();
+            success: function (resp) {
+                jQuery('#per_image_results_loading').hide();
+                jQuery('#run_images_summary_loading').hide();
 
-                if (response.error) {
-                    console.error(response.error);
+                var images = (resp && resp.images) || [];
+
+                if (!images.length) {
+                    jQuery('#per_image_empty')
+                        .text((resp && resp.error) || 'No per-image results are stored for this run.')
+                        .show();
+                    jQuery('#run_trial_links').html('<span class="text-muted">—</span>');
                     return;
                 }
 
-                var table_data = response.table_data || response.results || [];
+                renderRunSummary(images);
+                renderImageAccordion(images);
+            },
+            error: function (xhr) {
+                jQuery('#per_image_results_loading').hide();
+                jQuery('#run_images_summary_loading').hide();
+                console.error('Failed to load run images:', xhr.responseText);
+                jQuery('#per_image_empty').text('Could not load the image list.').show();
+            }
+        });
+    }
 
-                if (jQuery.fn.DataTable.isDataTable('#image_analysis_result_table')) {
-                    jQuery('#image_analysis_result_table').DataTable().destroy();
+    // Right-hand summary table + run-level counts / trial links
+    function renderRunSummary(images) {
+        var totalSamples = 0;
+        var trials = {};
+        var $tb = jQuery('#run_images_summary_table tbody').empty();
+
+        images.forEach(function (img) {
+            totalSamples += (img.tissue_sample_count || 0);
+            if (img.trial_id) {
+                trials[img.trial_id] = img.trial_name || ('Trial ' + img.trial_id);
+            }
+
+            var label = img.source_image_filename || ('Image #' + img.source_image_id);
+
+            $tb.append(
+                '<tr>' +
+                    '<td>' + (img.source_image_thumb
+                        ? '<img src="' + img.source_image_thumb + '" style="max-height:34px;max-width:40px;">'
+                        : '') + '</td>' +
+                    '<td><a href="#image_panel_' + esc(img.source_image_id) + '" ' +
+                        'class="jump-to-image" data-image-id="' + esc(img.source_image_id) + '">' +
+                        esc(label) + '</a></td>' +
+                    '<td>' + (img.source_stock_id
+                        ? '<a href="/stock/' + esc(img.source_stock_id) + '/view">' +
+                          esc(img.source_stock_name || img.source_stock_id) + '</a>'
+                        : '<span class="text-muted">—</span>') + '</td>' +
+                    '<td>' + (img.tissue_sample_count || 0) + '</td>' +
+                '</tr>'
+            );
+        });
+
+        jQuery('#run_images_summary_table').show();
+        jQuery('#run_image_count').text(images.length);
+        jQuery('#run_sample_count').text(totalSamples);
+
+        var links = Object.keys(trials).map(function (tid) {
+            return '<a href="/breeders/trial/' + esc(tid) + '">' + esc(trials[tid]) + '</a>';
+        });
+        jQuery('#run_trial_links').html(
+            links.length ? links.join(', ') : '<span class="text-muted">—</span>'
+        );
+
+        // Clicking a filename opens that image's panel and scrolls to it.
+        jQuery('#run_images_summary_table').off('click', '.jump-to-image')
+            .on('click', '.jump-to-image', function (e) {
+                e.preventDefault();
+                var imageId = jQuery(this).data('image-id');
+                var $panel  = jQuery('#collapse_' + imageId);
+                if (!$panel.hasClass('in')) { $panel.collapse('show'); }
+                jQuery('html, body').animate({
+                    scrollTop: jQuery('#image_panel_' + imageId).offset().top - 60
+                }, 300);
+            });
+    }
+
+    // One collapsible dropdown per image
+    function renderImageAccordion(images) {
+        var $acc = jQuery('#per_image_accordion').empty();
+
+        images.forEach(function (img, i) {
+            var iid   = img.source_image_id;
+            var label = img.source_image_filename || ('Image #' + iid);
+            var isOpen = (i === 0);
+
+            $acc.append(
+              '<div class="panel panel-default" id="image_panel_' + esc(iid) + '">' +
+                '<div class="panel-heading image-panel-heading" role="tab">' +
+                  '<h4 class="panel-title" style="font-size:14px;">' +
+                    '<a role="button" data-toggle="collapse" ' +
+                       'href="#collapse_' + esc(iid) + '" ' +
+                       'aria-expanded="' + (isOpen ? 'true' : 'false') + '">' +
+                      '<span class="glyphicon glyphicon-chevron-right"></span> ' +
+                      '<b>' + esc(label) + '</b>' +
+                      ' <small class="text-muted">— ' +
+                          esc(img.source_stock_name || ('stock ' + img.source_stock_id)) +
+                          ' · ' + (img.tissue_sample_count || 0) + ' tissue samples' +
+                      '</small>' +
+                    '</a>' +
+                  '</h4>' +
+                '</div>' +
+                '<div id="collapse_' + esc(iid) + '" ' +
+                     'class="panel-collapse collapse' + (isOpen ? ' in' : '') + '" ' +
+                     'data-image-id="' + esc(iid) + '" role="tabpanel">' +
+                  '<div class="panel-body">' +
+                    imageDetailBlock(img) +
+                    '<div id="loading_' + esc(iid) + '" style="display:none;padding:10px;">' +
+                      '<span class="glyphicon glyphicon-refresh"></span> Loading results…' +
+                    '</div>' +
+                    '<div id="msg_' + esc(iid) + '"></div>' +
+                    '<table id="result_table_' + esc(iid) + '" ' +
+                           'class="table table-bordered table-hover table-condensed display" ' +
+                           'style="width:100%">' +
+                      '<thead><tr>' +
+                        '<th></th><th>Stock</th><th>Trait</th>' +
+                        '<th># Analyzed Objects</th><th>Mean Value</th>' +
+                      '</tr></thead>' +
+                    '</table>' +
+                  '</div>' +
+                '</div>' +
+              '</div>'
+            );
+        });
+
+        // Lazy-load: only fetch a table the first time its panel opens.
+        jQuery('#per_image_accordion')
+            .on('shown.bs.collapse', '.panel-collapse', function () {
+                var imageId = jQuery(this).data('image-id');
+                jQuery(this).closest('.panel')
+                    .find('.panel-heading .glyphicon')
+                    .removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
+                if (!loaded_tables[imageId]) loadResultsForImage(imageId);
+            })
+            .on('hidden.bs.collapse', '.panel-collapse', function () {
+                jQuery(this).closest('.panel')
+                    .find('.panel-heading .glyphicon')
+                    .removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-right');
+            });
+
+        // First panel is open by default, so load it now.
+        if (images.length) loadResultsForImage(images[0].source_image_id);
+    }
+
+    // Per-image detail block (source image / stock / trial / overlay)
+    function imageDetailBlock(img) {
+        var overlay = img.overlay_image_url
+            ? '<div style="border:1px solid #ddd;padding:4px;background:#fff;text-align:center;">' +
+                  '<img src="' + img.overlay_image_url + '" ' +
+                       'style="max-width:100%;max-height:220px;cursor:pointer;" ' +
+                       'title="Click to view full image" ' +
+                       'onclick="window.open(\'' + img.overlay_image_url + '\',\'_blank\')"/>' +
+              '</div>' +
+              '<p class="text-muted" style="font-size:11px;margin-top:4px;">' +
+                  '<a href="/image/view/' + esc(img.overlay_image_id) + '">View overlay details</a>' +
+              '</p>'
+            : '<div class="text-center text-muted" style="padding:25px 10px;">' +
+                  '<span class="glyphicon glyphicon-picture" style="font-size:32px;"></span>' +
+                  '<p style="margin-top:8px;">No overlay image.</p>' +
+              '</div>';
+
+        return '<div class="row" style="margin-bottom:12px;">' +
+            '<div class="col-sm-8">' +
+              '<table class="table table-condensed table-bordered" style="font-size:12px;">' +
+                '<tr><td style="width:35%;"><b>Source Image</b></td><td>' +
+                    '<a href="/image/view/' + esc(img.source_image_id) + '">' +
+                    esc(img.source_image_filename || ('Image #' + img.source_image_id)) + '</a></td></tr>' +
+                '<tr><td><b>Source Image ID</b></td><td>' + esc(img.source_image_id) + '</td></tr>' +
+                '<tr><td><b>Source Stock</b></td><td>' + (img.source_stock_id
+                    ? '<a href="/stock/' + esc(img.source_stock_id) + '/view">' +
+                      esc(img.source_stock_name || img.source_stock_id) + '</a>'
+                    : '<span class="text-muted">—</span>') + '</td></tr>' +
+                '<tr><td><b>Source Trial</b></td><td>' + (img.trial_id
+                    ? '<a href="/breeders/trial/' + esc(img.trial_id) + '">' +
+                      esc(img.trial_name || img.trial_id) + '</a>'
+                    : '<span class="text-muted">—</span>') + '</td></tr>' +
+                '<tr><td><b>Tissue Samples</b></td><td>' +
+                    (img.tissue_sample_count || 0) + '</td></tr>' +
+              '</table>' +
+            '</div>' +
+            '<div class="col-sm-4">' + overlay + '</div>' +
+        '</div>';
+    }
+
+    // Load the results table for one image
+    function loadResultsForImage(imageId) {
+        loaded_tables[imageId] = true;
+        jQuery('#loading_' + imageId).show();
+        jQuery('#msg_' + imageId).empty();
+
+        jQuery.ajax({
+            url: '/ajax/image_analysis/run_image_results',
+            method: 'GET',
+            data: {
+                run_project_id:  run_project_id,
+                source_image_id: imageId
+            },
+            success: function (response) {
+                jQuery('#loading_' + imageId).hide();
+
+                var sel = '#result_table_' + imageId;
+
+                if (response && response.error) {
+                    jQuery('#msg_' + imageId).html(
+                        '<div class="text-warning" style="font-size:12px;">' +
+                        esc(response.error) + '</div>'
+                    );
                 }
 
-                var table = jQuery('#image_analysis_result_table').DataTable({
+                var table_data = (response && response.table_data) || [];
+
+                if (!table_data.length && response && response.message) {
+                    jQuery('#msg_' + imageId).html(
+                        '<div class="text-muted" style="font-size:12px;">' +
+                        esc(response.message) + '</div>'
+                    );
+                }
+
+                if (jQuery.fn.DataTable.isDataTable(sel)) {
+                    jQuery(sel).DataTable().destroy();
+                }
+
+                var table = jQuery(sel).DataTable({
                     "destroy": true,
                     "data": table_data,
                     "dom": 'Bfrtip',
@@ -309,8 +447,7 @@ jQuery(document).ready(function () {
                     "order": [[1, 'asc']]
                 });
 
-                // Expand / collapse detail rows (same behavior as image_analysis.mas)
-                jQuery('#image_analysis_result_table tbody')
+                jQuery(sel + ' tbody')
                     .off('click', 'td.details-control')
                     .on('click', 'td.details-control', function () {
                         var tr  = jQuery(this).closest('tr');
@@ -320,28 +457,27 @@ jQuery(document).ready(function () {
                         if (row.child.isShown()) {
                             row.child.hide();
                             tr.removeClass('shown');
-                            tdi.first().removeClass('fa-minus-square');
-                            tdi.first().addClass('fa-plus-square');
+                            tdi.first().removeClass('fa-minus-square').addClass('fa-plus-square');
                         } else {
                             row.child(format(row.data())).show();
                             tr.addClass('shown');
-                            tdi.first().removeClass('fa-plus-square');
-                            tdi.first().addClass('fa-minus-square');
+                            tdi.first().removeClass('fa-plus-square').addClass('fa-minus-square');
                         }
                     });
             },
             error: function (xhr) {
-                jQuery('#object_results_loading').hide();
-                console.error('Failed to load object results:', xhr.responseText);
+                jQuery('#loading_' + imageId).hide();
+                console.error('Failed to load results for image ' + imageId, xhr.responseText);
+                jQuery('#msg_' + imageId).html(
+                    '<div class="text-danger" style="font-size:12px;">' +
+                    'Could not load results for this image.</div>'
+                );
             }
         });
     }
 
-    // -------------------------------------------------------
-    // 4. Init
-    // -------------------------------------------------------
     renderMetadata();
-    loadObjectResults();
+    loadRunImages();
 
 });
 </script>
