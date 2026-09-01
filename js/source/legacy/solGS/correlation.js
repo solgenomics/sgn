@@ -247,7 +247,7 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 15,
+      'pageLength': 5,
       'rowId': function (a) {
         return a[6]
       }
