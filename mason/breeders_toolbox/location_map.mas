@@ -759,15 +759,14 @@ function onEachFeature(feature, layer) {
         if (programs) { program_array = programs.split(" & ") };
 
         if (program_array.length > 0) {
-            program_array.forEach(function(program) {
-                $("#breeding_program_select option").filter(function() {
-                    return this.text == program
-                }).attr('selected', true);
+            $("#breeding_program_select option").each(function() {
+                $(this).prop('selected', program_array.includes(this.text));
             });
         } else {
             $('#breeding_program_select option:first').text('');
             $('#breeding_program_select option:first').prop('selected', true);
         }
+        setTimeout(() => scrollToSelected("breeding_program_select"), 250);
 
         $('#location_type').val(loc_data.properties.Type);
         $('#location_latitude').val(loc_data.properties.Latitude);
@@ -777,4 +776,14 @@ function onEachFeature(feature, layer) {
         $('#store_location_dialog').modal("show");
     }
 
+    function scrollToSelected(select_id) {
+        var select = document.getElementById(select_id);
+        var opts = select.getElementsByTagName('option');
+        for ( var j = opts.length -1; j > 0; --j ) {
+            if ( opts.item(j).selected === true ) {
+                select.scrollTop = j * opts.item(j).offsetHeight;
+                return;
+            }
+        }
+    }
 </script>

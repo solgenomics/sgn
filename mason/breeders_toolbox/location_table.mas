@@ -92,7 +92,7 @@ jQuery(document).ready(function() {
                 {
                     "data": "properties.Id",
                     "render": function(data, type, full, meta) {
-                        return `[<a href="#" onclick="edit_location(${full.properties.Id})">Edit</a>] [<a href="#" onclick="delete_location(${full.properties.Id})">Delete</a>]`;
+                        return `[<a href="javascript:;" onclick="edit_location(${full.properties.Id})">Edit</a>] [<a href="javascript:;" onclick="delete_location(${full.properties.Id})">Delete</a>]`;
                     }
                 }
             ],
