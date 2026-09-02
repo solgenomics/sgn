@@ -84,10 +84,13 @@ export function init(trial_id, trial_name) {
           //Need to check that there's actually data to render before making a big svg canvas
           if (!(r.source_field_trials.length == 0 && r.field_trials_sourced.length == 0)){
 
-            //Set margins and set up svg area
-            var margin = {top: 100, right: 100, bottom: 100, left: 100};
-            var width = 800//document.querySelector('#field_trial_to_field_trial_html').offsetWidth*0.90;
-            var height = 400;//document.querySelector('#field_trial_to_field_trial_html').offsetHeight*0.90;
+            //Set margins and set up svg area. Wide left/right margins leave room for the
+            //trial-name labels that sit outside the first and last columns.
+            var margin = {top: 50, right: 150, bottom: 30, left: 150};
+            var width = 620;
+            var height = 320;
+            var sankeyWidth = width;
+            var sankeyHeight = height;
 
             var svg = d3.select("#field_trial_to_field_trial_html").append("svg")
             .attr("width", width + margin.left + margin.right)
@@ -158,36 +161,46 @@ export function init(trial_id, trial_name) {
               //Now that the nodes are constructed, wait for all the germplasm JSONs to be collected, then construct the links
               return Promise.all(Object.values(linkAjaxCallsMap)).then((values2) => {
 
-                //For each trial-to-trial edge, draw one sub-link per accession shared
-                //between the edge's two endpoints (its source trial and its target trial).
+                //One link per trial-to-trial edge, its value (and rendered width) is the
+                //number of accessions shared between the edge's source and target trials.
                 for (var i = 0; i < primitiveLinks.length; i++){
 
-                  var sourceGermplasm = germplasmNames(linkAjaxCallsMap[primitiveLinks[i].source.name]);
-                  var targetGermplasm = new Set(germplasmNames(linkAjaxCallsMap[primitiveLinks[i].target.name]));
+                  var src = primitiveLinks[i].source;
+                  var tgt = primitiveLinks[i].target;
 
-                  for (var j = 0; j < sourceGermplasm.length; j++){
-                    if (targetGermplasm.has(sourceGermplasm[j])){
-                      linkMap[primitiveLinks[i].source.name+","+primitiveLinks[i].target.name+","+sourceGermplasm[j]] = {"source": primitiveLinks[i].source, "target":primitiveLinks[i].target, "value":1, "name": sourceGermplasm[j]};
-                    }
-                  }
+                  var sourceGermplasm = germplasmNames(linkAjaxCallsMap[src.name]);
+                  var targetGermplasm = new Set(germplasmNames(linkAjaxCallsMap[tgt.name]));
+                  var shared = sourceGermplasm.filter(function(n){ return targetGermplasm.has(n); });
+                  if (shared.length === 0) continue; //no shared accessions -> no link, as before
+
+                  linkMap[src.name+","+tgt.name] = {
+                    "source": src,
+                    "target": tgt,
+                    "value": shared.length,
+                    "names": shared.sort()
+                  };
                 }
-
-                console.log("linkMap:");
-                console.log(linkMap);
 
                 links = Object.values(linkMap);
 
                 data={nodes, links};
-                console.log("Here is the sankey data: ");
-                console.log(data);
 
                 sankey = d3sankey()
-                  .size([width-100, height-100])
+                  .size([sankeyWidth, sankeyHeight])
                   .nodeId(d => d.id)
-                  .nodeWidth(20)
-                  .nodePadding(10)
+                  .nodeWidth(18)
+                  .nodePadding(22)
                   .nodeAlign(sankeyCenter);
                 var graph = sankey(data);
+
+                //d3-sankey uses one scale factor per diagram, fixed by the busiest column,
+                //so a link/node carrying only a few accessions can shrink below a usable
+                //size next to a link carrying hundreds. Floor both so a small link stays a
+                //visible, clickable ribbon; anything above the floor is still proportional.
+                var MIN_LINK_PX = 6;
+                var MIN_NODE_PX = 16;
+                var nodeHeight = d => Math.max(MIN_NODE_PX, d.y1 - d.y0);
+                var nodeTop = d => (d.y0 + d.y1) / 2 - nodeHeight(d) / 2;
 
                 svglinks = svg
                   .append("g")
@@ -199,16 +212,67 @@ export function init(trial_id, trial_name) {
                   .classed("link", true)
                   .attr("d", sankeyLinkHorizontal())
                   .attr("fill", "none")
-                  .attr("stroke", "#D3D3D3")
-                  .attr("stroke-width", d => d.width)
-                  .attr("marker-end", "url(#triangle)")
-                  .attr("stoke-opacity", 0.3)
+                  .attr("stroke", "#a6bddb")
+                  .attr("stroke-opacity", 0.6)
+                  .attr("stroke-width", d => Math.max(MIN_LINK_PX, d.width))
                   .on("mouseover", function(d){
-                    d3.select(this).attr("stroke", "#808080");
+                    d3.select(this).attr("stroke", "#3182bd").attr("stroke-opacity", 0.9);
+                    show_link_tooltip(d);
                   })
                   .on("mouseout", function(d){
-                    d3.select(this).attr("stroke", "#D3D3D3");
+                    d3.select(this).attr("stroke", "#a6bddb").attr("stroke-opacity", 0.6);
+                    tooltip_region.selectAll("*").remove();
                   });
+
+                //Shared white callout used for both the link and node hovers. Anchored at
+                //(leftX, centerY) in plot coordinates and clamped to stay inside the
+                //drawing so it never gets cut off at an edge.
+                var TOOLTIP_WIDTH = 220;
+                function draw_tooltip(leftX, centerY, lines){
+                  tooltip_region.selectAll("*").remove();
+
+                  var lineHeight = 15;
+                  var boxHeight = lines.length * lineHeight + 12;
+                  var x = Math.max(0, Math.min(leftX, sankeyWidth - TOOLTIP_WIDTH));
+                  var y = Math.max(0, Math.min(centerY - boxHeight / 2, sankeyHeight - boxHeight));
+
+                  tooltip_region.attr("transform", "translate(" + x + "," + y + ")");
+                  tooltip_region.append("rect")
+                    .attr("width", TOOLTIP_WIDTH)
+                    .attr("height", boxHeight)
+                    .attr("rx", 4)
+                    .attr("fill", "white")
+                    .attr("stroke", "#333")
+                    .attr("stroke-width", 1);
+                  lines.forEach(function(line, i){
+                    tooltip_region.append("text")
+                      .attr("x", 10)
+                      .attr("y", 17 + i * lineHeight)
+                      .style("font-size", "11px")
+                      .style("font-weight", i === 0 ? "bold" : "normal")
+                      .text(line);
+                  });
+                }
+
+                //Lists the accessions shared across a trial-to-trial link, capped so a
+                //big overlap does not blow up the tooltip.
+                var LINK_TOOLTIP_MAX_NAMES = 15;
+                function show_link_tooltip(d){
+                  var shown = d.names.slice(0, LINK_TOOLTIP_MAX_NAMES);
+                  var header = d.value + " shared accession" + (d.value === 1 ? "" : "s");
+                  var lines = [header].concat(shown);
+                  if (d.names.length > shown.length){
+                    lines.push("…and " + (d.names.length - shown.length) + " more");
+                  }
+                  draw_tooltip((d.source.x1 + d.target.x0) / 2 + 10, (d.y0 + d.y1) / 2, lines);
+                }
+
+                function show_node_tooltip(d){
+                  var lines = ["Trial: " + d.id, "Trial Type: " + (d.trialType || "—")];
+                  var leftX = d.x1 + 12;
+                  if (leftX + TOOLTIP_WIDTH > sankeyWidth) leftX = d.x0 - 12 - TOOLTIP_WIDTH;
+                  draw_tooltip(leftX, (d.y0 + d.y1) / 2, lines);
+                }
 
 
                   svgnodes = svg
@@ -220,33 +284,17 @@ export function init(trial_id, trial_name) {
                    .append("rect")
                    .classed("node", true)
                    .attr("x", d => d.x0)
-                   .attr("y", d => d.y0)
+                   .attr("y", nodeTop)
                    .attr("width", d => d.x1 - d.x0)
-                   .attr("height", d => d.y1 - d.y0)
-                   .attr("fill", "#add8e6")
-                   .attr("opacity", 0.8)
+                   .attr("height", nodeHeight)
+                   .attr("fill", "#6baed6")
+                   .attr("opacity", 1)
                    .on("mouseover", function(d){
-                     d3.select(this).attr("fill", "#6699cc");
-                     tooltip_region.selectAll("*").remove();
-                     tooltip_region.attr("transform", "translate("+ ((d.x1+d.x0)/2 - 5 - 110) +", "+ (d.y0 - 5 - 70) +")" );
-                     var tooltip = tooltip_region
-                       .append("path")
-                       .attr('fill', 'white')
-                       .attr('stroke', 'black')
-                       .attr('stroke-width', '1.5');
-                     var pathString = "M "+(  115  )+" "+( 75 )+" l 10 -10 h 90 c 10 0 10 0 10 -10 v -40 c 0 -10 0 -10 -10 -10 h -200 c -10 0 -10 0 -10 10 v 40 c 0 10 0 10 10 10 h 90 l 10 10 z";
-                     tooltip.attr("d", pathString);
-                     var tooltip_text1 = tooltip_region.append("text")
-                     .attr("text-anchor", "middle")
-                     .attr("transform", "translate(110,20)");
-                     tooltip_text1.text("Trial: "+d.id);
-                     var tooltip_text2 = tooltip_region.append("text")
-                     .attr("text-anchor", "middle")
-                     .attr("transform", "translate(110,40)");
-                     tooltip_text2.text("Trial Type: "+d.trialType);
+                     d3.select(this).attr("fill", "#3182bd");
+                     show_node_tooltip(d);
                    })
                    .on("mouseout", function(d){
-                     d3.select(this).attr("fill", "#add8e6");
+                     d3.select(this).attr("fill", "#6baed6");
                      tooltip_region.selectAll("*").remove();
                    })
                    .on("click", function(d){
@@ -280,17 +328,55 @@ export function init(trial_id, trial_name) {
                    });
 
 
+                //Persistent trial-name labels, kept clear of the link ribbons: first column
+                //labelled to its left, last column to its right, any middle column above the
+                //node. The current trial is bold so the user keeps their bearing after
+                //clicking through to a neighbor.
+                var xExtent = d3.extent(graph.nodes, function(d){ return d.x0; });
+                var labelSide = function(d){
+                  if (d.x0 <= xExtent[0]) return "left";
+                  if (d.x0 >= xExtent[1]) return "right";
+                  return "above";
+                };
+
                 svglabels = svg
                   .append("g")
-                  .classed("text", true)
+                  .classed("node-labels", true)
+                  .selectAll("text")
+                  .data(graph.nodes)
+                  .enter()
+                  .append("text")
+                  .classed("node-label", true)
+                  .attr("x", d => labelSide(d) === "left" ? d.x0 - 8
+                                : labelSide(d) === "right" ? d.x1 + 8
+                                : (d.x0 + d.x1) / 2)
+                  .attr("y", d => labelSide(d) === "above" ? nodeTop(d) - 8 : (d.y0 + d.y1) / 2)
+                  .attr("dy", d => labelSide(d) === "above" ? 0 : "0.35em")
+                  .attr("text-anchor", d => labelSide(d) === "left" ? "end"
+                                          : labelSide(d) === "right" ? "start"
+                                          : "middle")
+                  .style("font-size", "12px")
+                  .style("font-weight", d => (String(d.name) === String(trial_id) ? "bold" : "normal"))
+                  .text(d => d.id);
+
+                //Shared-accession count on each link, with a white halo so it stays legible
+                //where it crosses a ribbon.
+                svg
+                  .append("g")
+                  .classed("link-counts", true)
                   .selectAll("text")
                   .data(graph.links)
                   .enter()
                   .append("text")
-                  .classed("link", true)
-                  .attr("x", d => d.source.x1 + 5)
-                  .attr("y", d => d.y0 + 5)
-                  .text(d => d.name);
+                  .attr("x", d => (d.source.x1 + d.target.x0) / 2)
+                  .attr("y", d => (d.y0 + d.y1) / 2 - 4)
+                  .attr("text-anchor", "middle")
+                  .style("font-size", "11px")
+                  .style("paint-order", "stroke")
+                  .attr("stroke", "white")
+                  .attr("stroke-width", 3)
+                  .attr("fill", "#555")
+                  .text(d => d.value);
 
 
                 //These are placed here for the drawing order. This ensures that they are on top of other DOM elements, so I don't have to do any extra footwork to bring them to the foreground
