@@ -40,7 +40,7 @@
                                             <option value="seedlots_to_seedlots">From existing seedlots to other existing seedlots</option>
                                             <option value="seedlots_to_new_seedlots">From existing seedlots to new seedlots</option>
                                             <option value="seedlots_to_unspecified_names">From existing seedlots to unpecified seedlots/plots</option>
-                                            <option value="accessions_crosses_to_seedlots">From accession or cross to existing seedlots</option>
+                                            <option value="accessions_crosses_to_seedlots">From accessions or crosses to existing seedlots</option>
                                         </select>
                                     </div>
                                 </div>
@@ -501,10 +501,10 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>content_name</td>
+                                <td>from_content_name</td>
                                 <td>to_seedlot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                             </tr>
@@ -512,12 +512,12 @@
                     </table>
                     <b>Required fields:</b>
                     <ul>
-                        <li><b>content_name:</b> Must exist in the database. Content name can be either accession or cross stock type. </li>
+                        <li><b>from_content_name:</b> Must exist in the database. Content name can be either accession or cross stock type. </li>
                         <li><b>to_seedlot_name:</b> Must exist in the database. The accession or cross indicated in the content_name column must be the same as the content of the corresponding seedlot..</li>
                         <li>
                             <b>amount:</b> Number of seeds being added. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being added. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being added. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                     </ul>

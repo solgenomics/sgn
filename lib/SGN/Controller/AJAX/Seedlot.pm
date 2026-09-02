@@ -1965,7 +1965,7 @@ sub upload_transactions_POST : Args(0) {
     my $new_seedlot_location = $c->req->param("new_seedlot_location");
     my $new_seedlot_organization = $c->req->param("new_seedlot_organization_name");
 
-    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots && !$upload_seedlots_to_unspecified_names){
+    if (!$upload_seedlots_to_seedlots && !$upload_seedlots_to_new_seedlots && !$upload_seedlots_to_plots && !$upload_seedlots_to_unspecified_names && !$upload_accessions_crosses_to_existing_seedlots){
         $c->stash->{rest} = {error=>'You must upload a transaction file!'};
         $c->detach();
     }
@@ -1988,7 +1988,7 @@ sub upload_transactions_POST : Args(0) {
         $parser_type = 'SeedlotsToUnspecifiedNames';
     }
     if (defined $upload_accessions_crosses_to_existing_seedlots){
-        $upload = $upload_seedlots_to_unspecified_names;
+        $upload = $upload_accessions_crosses_to_existing_seedlots;
         $parser_type = 'AccessionsCrossesToExistingSeedlotsGeneric';
     }
 
