@@ -435,6 +435,33 @@ sub pca_input_files {
 
 }
 
+sub pca_trial_membership_file {
+    my ( $self, $c ) = @_;
+
+    my $dataset_id = $c->stash->{dataset_id};
+
+    my $rows = $c->controller('solGS::Search')->model($c)
+      ->get_dataset_accession_trial_memberships($dataset_id);
+
+    if (!@$rows) {
+        return;
+    }
+
+    my $file_id = $c->stash->{file_id};
+    my $name = "pca_trial_membership_${file_id}";
+    my $tmp_dir = $self->pca_temp_dir($c);
+    my $file = $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+
+    my $headers = "accession" . "\t" . "accession_id" . "\t" . "trial" . "\n";
+    my @lines = ( $headers );
+    push @lines, map { join( "\t", @$_ ) . "\n" } @$rows;
+    write_file( $file, { binmode => ':utf8' }, @lines );
+
+    $c->stash->{pca_trial_membership_file} = $file;
+
+    return $file;
+}
+
 sub pca_geno_input_files {
     my ( $self, $c ) = @_;
 
@@ -442,14 +469,16 @@ sub pca_geno_input_files {
     my $files = [];
 
     if ( $data_type =~ /genotype/i ) {
-        if ( $c->req->referer =~
-            /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\// )
-        {
+        if ( $c->req->referer =~ /solgs\/selection\/|solgs\/combined\/model\/\d+\/selection\// ) {
             $self->training_selection_geno_files($c);
         }
 
-        $files =
-          $c->stash->{genotype_files_list} || $c->stash->{genotype_file_name};
+        $files = $c->stash->{genotype_files_list} || $c->stash->{genotype_file_name};
+
+        if ( $c->stash->{data_structure} && $c->stash->{data_structure} =~ /dataset/ ) {
+            my $membership_file = $self->pca_trial_membership_file($c);
+            $files .= "\t$membership_file" if $membership_file;
+        }
     }
 
     $files = join( "\t", @$files ) if reftype($files) eq 'ARRAY';
