@@ -932,6 +932,10 @@ solGS.pca = {
             popName = plotData.list_name;
         }
 
+        if (plotData.pca_pop_name) {
+            popName = plotData.pca_pop_name;
+        }
+
         popName = popName
             ? popName + " (" + plotData.data_type + ")"
             : " (" + plotData.data_type + ")";

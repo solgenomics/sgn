@@ -160,7 +160,7 @@ sub prepare_pca_output_response {
 
             if ($scores) {
                 $res = {
-                    "scores"          =>  $scores,
+                    "scores"          => $scores,
                     "variances"       => $variances,
                     "scores_file"     => $scores_file,
                     "variances_file"  => $variances_file,
@@ -171,6 +171,7 @@ sub prepare_pca_output_response {
                     "status"          => 'success',
                     "cached"          => 1,
                     "pca_pop_id"      => $c->stash->{pca_pop_id},
+                    "pca_pop_name"    => $c->stash->{pca_pop_name},
                     "file_id"         => $file_id,
                     "list_id"         => $c->stash->{list_id},
                     "trials_names"    => $trials_names,
