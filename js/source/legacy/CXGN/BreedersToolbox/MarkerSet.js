@@ -2,14 +2,20 @@
 // This is updated each time the selected markerset is changed
 var ALLELES = {}
 
+// URL Query Params can set the default protocol and data type
+// ?defaultProtocol=id - id of the default protocol when creating a new list and filters the table of marker sets
+// ?defaultDataType - SNP / Dosage to set the default data type when creating a new list
+const URL_PARAMS = new URLSearchParams(window.location.search);
+
 jQuery(document).ready(function (){
     ALLELES_BY_MARKER = {};
     MARKER_BY_ALLELE = {};
 
-    get_select_box('genotyping_protocol','selected_protocol', {'empty':1});
+    get_select_box('genotyping_protocol','selected_protocol', { empty: 1, default: URL_PARAMS.has('defaultProtocol') ? URL_PARAMS.get('defaultProtocol') : undefined });
+    jQuery("#genotyping_data_type").val(URL_PARAMS.has('defaultDataType') ? URL_PARAMS.get('defaultDataType') : undefined);
 
     var lo = new CXGN.List();
-    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a list of marker alleles', 'refresh', 'hide_public_lists' ));
+    jQuery('#selected_marker_set1').html(lo.listSelect('selected_marker_set1', ['markers'], 'Select a list of marker alleles', undefined, true));
 
     var list = new CXGN.List();
     jQuery('#selected_marker_set2').html(list.listSelect('selected_marker_set2', ['markers'], 'Select a list of marker alleles', 'refresh', undefined));
@@ -270,17 +276,26 @@ jQuery(document).ready(function (){
 });
 
 function show_table() {
+    var hasFilter = URL_PARAMS.has('defaultProtocol') && URL_PARAMS.get('defaultProtocol') !== "";
+    jQuery("#markerset_filter_warning").css("display", hasFilter ? 'flex' : 'none');
     var markersets_table = jQuery('#marker_sets').DataTable({
         'destroy': true,
-        'ajax':{'url': '/marker_sets/available'},
+        'ajax':{'url': `/marker_sets/available?protocolId=${hasFilter ? URL_PARAMS.get('defaultProtocol') : ''}`},
         'columns': [
             {title: "List Name", "data": "markerset_name"},
+            {title: "Protocol", "data": "null", "render": function(data, type, row) { return `<a href="/breeders_toolbox/protocol/${row.metadata.genotyping_protocol_id}" target="_blank">${row.metadata.genotyping_protocol_name}</a>` }},
             {title: "Number of Markers", "data": "number_of_markers"},
             {title: "Description", "data": "description"},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'showMarkersetDetail("+row.markerset_id+")'>Detail</a>" ;}},
             {title: "", "data": "null", "render": function (data, type, row) {return "<a onclick = 'removeMarkerSet("+row.markerset_id+")'>Delete</a>" ;}},
         ],
     });
+}
+
+function removeProtocolFilter() {
+    URL_PARAMS.delete("defaultProtocol");
+    window.location.search = URL_PARAMS.toString();
+    show_table();
 }
 
 function removeMarkerSet (markerset_id){

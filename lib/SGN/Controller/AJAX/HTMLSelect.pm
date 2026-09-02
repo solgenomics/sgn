@@ -1549,6 +1549,7 @@ sub get_genotyping_protocol_select : Path('/ajax/html/select/genotyping_protocol
     my $id = $c->req->param("id") || "gtp_select";
     my $name = $c->req->param("name") || "genotyping_protocol_select";
     my $empty = $c->req->param("empty") || "";
+    my $default = $c->req->param("default");
     my $default_gtp;
     my %gtps;
 
@@ -1568,7 +1569,7 @@ sub get_genotyping_protocol_select : Path('/ajax/html/select/genotyping_protocol
         name => $name,
         id => $id,
         choices => $gt_protocols,
-        selected => $gtps{$default_gtp}
+        selected => $default || $gtps{$default_gtp}
     );
     $c->stash->{rest} = { select => $html };
 }

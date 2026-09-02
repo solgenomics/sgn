@@ -1110,6 +1110,7 @@ sub desynonymize_list: Path('/list/desynonymize') Args(0) {
 sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     my $self = shift;
     my $c = shift;
+    my $protocol_id = $c->req->param('protocolId');
 
     my $user_id = $self->get_user($c);
     if (!$user_id) {
@@ -1120,12 +1121,17 @@ sub available_marker_sets : Path('/marker_sets/available') Args(0) {
     my $lists = CXGN::List::available_lists($c->dbc->dbh(), $user_id, 'markers');
     my @marker_sets;
     foreach my $list (@$lists){
-        my ($id, $name, $desc, $item_count, $type_id, $type, $public) = @$list;
-        push @marker_sets, {
-            markerset_id => $id,
-            markerset_name => $name,
-            number_of_markers => $item_count - 1,
-            description => $desc,
+        my ($id, $name, $desc, $item_count, $type_id, $type, $username, $timestamp, $modify_timestamp, $first_item) = @$list;
+        my $metadata = decode_json($first_item || '{}');
+
+        if ( !$protocol_id || $protocol_id eq '' || $protocol_id eq $metadata->{genotyping_protocol_id} ) {
+            push @marker_sets, {
+                markerset_id => $id,
+                markerset_name => $name,
+                number_of_markers => $item_count - 1,
+                description => $desc,
+                metadata => $metadata
+            }
         }
     }
 

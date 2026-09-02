@@ -39,6 +39,12 @@ has 'stock_list' => (
     is => 'ro',
 );
 
+has 'search_type' => (
+    isa => 'Str',
+    is => 'ro',
+    default => 'all'
+);
+
 sub get_selected_stocks {
     my $self = shift;
     my $schema = $self->bcs_schema;
@@ -190,6 +196,17 @@ sub get_selected_stocks {
             JOIN nd_experiment_stock ON stock_relationship.subject_id = nd_experiment_stock.stock_id"
     }
 
+    # search_type = 'all' (default) -> accessions must match all genotypes in markerset
+    # search_type = 'any' -> accessions must match at least one of the genotypes in the markerset
+    my $where = "WHERE genotypeprop.value @> ?";
+    if ( $self->search_type() eq 'any' ) {
+        $where = "WHERE EXISTS (
+            SELECT 1
+            FROM jsonb_each(?) AS search(marker_name, marker_data)
+            WHERE genotypeprop.value @> jsonb_build_object(search.marker_name, search.marker_data)
+        )";
+    }
+
     my @selected_stocks_details;
     foreach my $param (@rank_and_params) {
         my $stock_table = "DROP TABLE IF EXISTS stock_table;
@@ -207,7 +224,13 @@ sub get_selected_stocks {
         @selected_stocks_details = ();
 
         if (($sample_type eq 'accession') || ($sample_type eq 'tissue_sample')) {
-            my $q2 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+            my $q2 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name,
+                (
+                    SELECT jsonb_object_agg(key, genotypeprop.value -> key)
+                    FROM jsonb_object_keys(?) AS key
+                    WHERE jsonb_exists(genotypeprop.value, key)
+                ) AS matched_genotypes
+                FROM stock_table
                 JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
                 $join_type
                 JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
@@ -215,17 +238,23 @@ sub get_selected_stocks {
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
                 JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ? AND genotypeprop.rank = ?
-                WHERE genotypeprop.value @> ? ";
+                $where";
 
             my $h2 = $schema->storage->dbh()->prepare($q2);
-            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1]);
+            $h2->execute($param->[1], $accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1]);
 
-            while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
-                push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
+            while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $matched_genotype) = $h2->fetchrow_array()){
+                push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $matched_genotype ];
                 push @stocks, $selected_accession_name
             }
         } elsif ($sample_type eq 'stocks') {
-            my $q2 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+            my $q2 = "SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name,
+                (
+                    SELECT jsonb_object_agg(key, genotypeprop.value -> key)
+                    FROM jsonb_object_keys(?) AS key
+                    WHERE jsonb_exists(genotypeprop.value, key)
+                ) AS matched_genotypes
+                FROM stock_table
                 JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
                 JOIN nd_experiment_stock ON (stock1.stock_id = nd_experiment_stock.stock_id)
                 JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
@@ -233,11 +262,17 @@ sub get_selected_stocks {
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
                 JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ? AND genotypeprop.rank = ?
-                WHERE genotypeprop.value @> ?
+                $where
 
                 UNION ALL
 
-                SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
+                SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name,
+                (
+                    SELECT jsonb_object_agg(key, genotypeprop.value -> key)
+                    FROM jsonb_object_keys(?) AS key
+                    WHERE jsonb_exists(genotypeprop.value, key)
+                ) AS matched_genotypes
+                FROM stock_table
                 JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
                 JOIN stock_relationship ON (stock_relationship.object_id = stock1.stock_id) AND stock_relationship.type_id IN (?,?,?)
                 JOIN nd_experiment_stock ON stock_relationship.subject_id = nd_experiment_stock.stock_id
@@ -246,13 +281,13 @@ sub get_selected_stocks {
                 JOIN nd_experiment_protocol ON (nd_experiment_stock.nd_experiment_id = nd_experiment_protocol.nd_experiment_id) AND nd_experiment_stock.type_id = ? AND nd_experiment_protocol.nd_protocol_id =?
                 JOIN nd_experiment_genotype on (nd_experiment_genotype.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
                 JOIN genotypeprop on (nd_experiment_genotype.genotype_id = genotypeprop.genotype_id) AND genotypeprop.type_id = ? AND genotypeprop.rank = ?
-                WHERE genotypeprop.value @> ?";
+                $where";
 
             my $h2= $schema->storage->dbh()->prepare($q2);
-            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1], $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1]);
+            $h2->execute($param->[1], $accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1], $param->[1], $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1]);
 
-            while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
-                push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];
+            while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $matched_genotype) = $h2->fetchrow_array()){
+                push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $matched_genotype ];
                 push @stocks, $selected_accession_name
             }
         }

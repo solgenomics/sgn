@@ -837,7 +837,7 @@ sub get_tracking_project_cvterm_id {
 sub get_gt_protocols {
     my $self = shift;
     my $genotyping_protocol_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'genotyping_experiment', 'experiment_type')->cvterm_id();
-    my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { type_id => $genotyping_protocol_cvterm_id} );
+    my $rs = $self->schema->resultset("NaturalDiversity::NdProtocol")->search( { type_id => $genotyping_protocol_cvterm_id }, { order_by => { -asc => 'name' } } );
     #print STDERR "NdProtocol resultset rows:\n";
     my @protocols;
     while (my $row = $rs->next()) {
