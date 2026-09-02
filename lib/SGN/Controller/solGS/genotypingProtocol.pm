@@ -38,7 +38,8 @@ sub get_genotype_protocols: Path('/get/genotyping/protocols/') Args() {
 sub genotype_protocols {
     my ($self, $c) = @_;
 
-     my $file = $c->controller('solGS::Files')->genotyping_protocols_file($c);
+    my $file = $c->controller('solGS::Files')->genotyping_protocols_file($c);
+    print STDERR "genotyping protocols file: $file\n";
 
     if (-s $file) {
         my $cached = decode_json(read_file($file, binmode => ':utf8'));
@@ -106,12 +107,6 @@ sub protocol_detail {
     return $protocol_detail;
 }
 
-
-sub begin : Private {
-    my ($self, $c) = @_;
-
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
-}
 
 ###
 1;
