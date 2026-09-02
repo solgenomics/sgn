@@ -57,7 +57,11 @@
             <td>
                 <ul style="padding-left: 15px">
 % foreach my $al (@{$md->{'alleles'}}) {
-                    <li><% $al->{'allele_name'} %></li>
+                    <li>
+                        <a href="/phenome/allele.pl?allele_id=<% $al->{'allele_id'} %>">
+                            <% $al->{'allele_name'} %>
+                        </a>
+                    </li>
 % }
                 </ul>
             </td>
