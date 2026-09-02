@@ -153,15 +153,15 @@ sub create_run_project_POST : Args(0) {
         next if $trial_info{$tid};
 
         $trial = eval { CXGN::Trial->new({ bcs_schema => $schema, trial_id => $tid }) };
-        #my $loc   = $trial ? $trial->get_location() : undef;
+        my $loc   = $trial ? $trial->get_location() : undef;
 
-        #unless ($trial && $loc && $loc->[0]) {
-        #    $c->stash->{rest} = { error => "Trial $tid not found or has no location" };
-        #    $c->detach();
-        #}
+        unless ($trial && $loc && $loc->[0]) {
+            $c->stash->{rest} = { error => "Trial $tid not found or has no location" };
+            $c->detach();
+        }
 
         $trial_info{$tid} = {
-            #geolocation_id => $loc->[0],
+            geolocation_id => $loc->[0],
             name           => $trial->get_name(),
         };
         push @trial_order, $tid;
@@ -421,6 +421,7 @@ sub create_run_project_POST : Args(0) {
         image_count       => scalar(@clean_images),
         stock_count       => $unique_stock_count,
         traits_associated => scalar(@trait_cvterm_ids),
+        trial_ids         => \@trial_order,
     };
 }
 
