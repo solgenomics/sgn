@@ -56,34 +56,29 @@ my $stock_id = $row->stock_id();
 # Create test plant
 $data = '[{"germplasmDbId":"41281","locationDbId":"23","observationUnitName":"Testing Plant","programDbId":"134","studyDbId":"165","trialDbId":"165","observationUnitPosition":{"observationLevel":{"levelName":"plant","levelCode":"plant_1"},"observationLevelRelationships":[{"levelCode":"' . $stock_id. '","levelName":"plot"}],"positionCoordinateX":"74","positionCoordinateXType":"GRID_COL","positionCoordinateY":"03","positionCoordinateYType":"GRID_ROW"}, "additionalInfo" : {"observationUnitParent":"' . $stock_id. '"} }]';
 $mech->post('http://localhost:3010/brapi/v2/observationunits/', Content => $data);
-$response = decode_json $mech->content;
+my $plant_response = decode_json $mech->content;
 
-my $rs = $f->bcs_schema()->resultset('Stock::Stock')->search( undef, { columns => [ { stock_id => { max => "stock_id" }} ]} );
-my $row = $rs->next();
+$rs = $f->bcs_schema()->resultset('Stock::Stock')->search( undef, { columns => [ { stock_id => { max => "stock_id" }} ]} );
+$row = $rs->next();
 
 my $plant_id = $row->stock_id();
 
 $mech->get_ok("/image/add?type=stock&type_id=$plant_id");
-
 $mech->get_ok("/image/add?action=new&type=stock&type_id=$plant_id");
 
-# Store image associated with created plant
+# Store first image associated with created plant
 my %form = (
     form_name => 'upload_image_form',
     fields => {
-        file => $test_file,
-        type => 'stock',
-        type_id => $plant_id,
+        file          => $test_file,
+        type          => 'stock',
+        type_id       => $plant_id,
         refering_page => 'http://google.com',
     },
 );
-
 $mech->submit_form_ok(\%form, "Form submitted");
 
-my $store_form = {
-    form_name => 'store_image',
-};
-
+my $store_form = { form_name => 'store_image' };
 $mech->submit_form_ok($store_form, "Submitting multi analysis image for storage");
 $mech->content_contains('SGN Image');
 $mech->content_contains(basename($test_file));
@@ -91,9 +86,35 @@ $mech->content_contains(basename($test_file));
 my $uri = $mech->uri();
 my $image_id = "";
 if ($uri =~ /\/(\d+)$/) {
-    $image_id =$1;
+    $image_id = $1;
 }
 
+# --- Navigate back to the upload form before uploading the second image ---
+$mech->get_ok("/image/add?type=stock&type_id=$plant_id");
+$mech->get_ok("/image/add?action=new&type=stock&type_id=$plant_id");
+
+# Store second image associated with created plant
+my %form2 = (
+    form_name => 'upload_image_form',
+    fields => {
+        file          => $test_file,
+        type          => 'stock',
+        type_id       => $plant_id,
+        refering_page => 'http://google.com',
+    },
+);
+$mech->submit_form_ok(\%form2, "Form submitted (second image)");
+
+my $store_form2 = { form_name => 'store_image' };
+$mech->submit_form_ok($store_form2, "Submitting multi analysis image for storage (second image)");
+$mech->content_contains('SGN Image');
+$mech->content_contains(basename($test_file));
+
+my $uri2 = $mech->uri();
+my $image_id_2 = "";
+if ($uri2 =~ /\/(\d+)$/) {
+    $image_id_2 = $1;
+}
 # Image analysis submit
 $mech->post_ok('http://localhost:3010/ajax/image_analysis/submit', ["selected_image_ids"=> $image_id, 'service'=> 'plantcv_citrus_app', 'trait'=> 'Fruit Diameter|INV:0000118']);
 $submit_result = decode_json $mech->content;
@@ -172,16 +193,47 @@ ok(ref($group_result->{results}{table_data}) eq 'ARRAY', "table_data array in re
 # Save results: create tissue samples via BrAPI
 my $table_data = $group_result->{results}{table_data};
 
-# Create tissue sample
-my $tissueSamplesData = '[{"additionalInfo":{"observationUnitParent":" ' . $plant_id . '"},"observationUnitName":"FruitDiameter_"' . $table_data->[0]{observationUnitName} .'_sample1","studyDbId":144,"germplasmDbId":38878,"observationUnitPosition":{"observationLevel":{"levelName":"tissue_sample","levelCode":"' . $plant_id . '","levelOrder":4},"observationLevelRelationships":[{"levelName":"plant","observationUnitDbId":"' . $plant_id . '","levelOrder":4}],"positionCoordinateX":null,"positionCoordinateY":null,"geoCoordinates":null}}]';
+# --- Tissue samples ---
+my @tissue_sample_ids;
 
-$mech->post_ok('http://localhost:3010/brapi/v2/observationunits', Content => $tissueSamplesData);
-my $tissue_resp = decode_json $mech->content;
-ok($tissue_resp->{result}{data}[0]{observationUnitDbId}, "Tissue sample created via BrAPI");
+my $plant_unit   = $plant_response->{result}{data}[0];
+my $study_id     = $plant_unit->{studyDbId};
+my $germplasm_id = $plant_unit->{germplasmDbId};
 
-# Get created tissue sample
-$mech->get_ok('http://localhost:3010/brapi/v2/observationunits?observationUnitName=FruitDiameter_"IITA-TMS-IBA980581_001"_sample1', 'get tissue sample');
+foreach my $n (1, 2) {
+    my $name = 'FruitDiameter_' . $table_data->[0]{observationUnitName} . "_sample$n";
 
+    my $payload = encode_json([{
+        additionalInfo      => { observationUnitParent => $plant_id },
+        observationUnitName => $name,
+        studyDbId           => $study_id,
+        germplasmDbId       => $germplasm_id,
+        observationUnitPosition => {
+            observationLevel => {
+                levelName  => 'tissue_sample',
+                levelCode  => "sample$n",
+                levelOrder => 4,
+            },
+            observationLevelRelationships => [
+                { levelName => 'plant', observationUnitDbId => $plant_id, levelOrder => 4 }
+            ],
+            positionCoordinateX => undef,
+            positionCoordinateY => undef,
+            geoCoordinates      => undef,
+        },
+    }]);
+
+    $mech->post_ok(
+        'http://localhost:3010/brapi/v2/observationunits',
+        'Content-Type'  => 'application/json',
+        'Authorization' => "Bearer $sgn_session_id",
+        Content         => $payload,
+    );
+    my $resp = decode_json $mech->content;
+    my $ts_id = $resp->{result}{data}[0]{observationUnitDbId};
+    ok($ts_id, "tissue sample $n created") or diag(Dumper($resp->{metadata}));
+    push @tissue_sample_ids, $ts_id;
+}
 
 # create_run_project tests
 
@@ -194,15 +246,6 @@ my $trial_id = $trial_rs->first->project_id();
 # Source stock (reuse the stock from the submit test)
 my $source_stock_id = $stock_id;
 
-# A couple of tissue sample stocks to link. Grab two existing stocks.
-my @ts_rows = $schema->resultset('Stock::Stock')->search(
-    undef, { rows => 2, order_by => { -desc => 'stock_id' } }
-)->all;
-my @tissue_sample_ids = map { $_->stock_id } @ts_rows;
-
-my $tissue_samples_json = encode_json([
-    map { { stock_id => $_, result_image_id => undef } } @tissue_sample_ids
-]);
 
 # Trait ids to associate (use real cvterm ids from the fixture)
 my $trait_cvterm = $schema->resultset('Cv::Cvterm')->search(
@@ -236,30 +279,37 @@ my $analysis_info_json = encode_json({
 
 my $run_name = 'ImageAnalysisRun_test_' . time();
 
-# --- Happy path: create a run project -------------------------------
+# --- Single image via images_json ------------------------
+
+my $images_json_single = encode_json([
+    {
+        source_image_id  => $image_id,
+        source_stock_id  => $source_stock_id,
+        trial_id         => $trial_id,
+        overlay_image_id => $image_id,
+        tissue_samples   => [ map { { stock_id => $_ } } @tissue_sample_ids ],
+    }
+]);
 
 $mech->post_ok(
     'http://localhost:3010/ajax/image_analysis/create_run_project',
     [
-        trial_id           => $trial_id,
         run_name           => $run_name,
         service_name       => 'Image Multi Object Multi Trait Analysis',
         run_date           => '2026-07-09',
         analysis_info_json => $analysis_info_json,
-        source_stock_id    => $source_stock_id,
-        source_image_id    => $image_id,
-        overlay_image_id   => $image_id,
         trait_ids          => $trait_ids_json,
-        tissue_samples     => $tissue_samples_json,
+        images_json        => $images_json_single,
     ]
 );
 
 my $create_result = decode_json $mech->content;
-print STDERR "create result: " . Dumper $create_result;
 ok($create_result->{success}, "create_run_project returned success");
 ok($create_result->{run_project_id}, "run_project_id returned");
 is($create_result->{run_name}, $run_name, "run_name echoed back");
+is($create_result->{image_count}, 1, "one image reported");
 is($create_result->{traits_associated}, 1, "one trait associated");
+ok($create_result->{stock_count} >= 1, "stock_count reported");
 
 my $run_project_id = $create_result->{run_project_id};
 
@@ -345,7 +395,12 @@ my $nd_experiment_id = $nep_rs->first->nd_experiment_id;
 my $nes_rs = $schema->resultset('NaturalDiversity::NdExperimentStock')->search({
     nd_experiment_id => $nd_experiment_id,
 });
-# source stock + 2 tissue samples = 3
+diag("source_stock_id: $source_stock_id");
+diag("tissue_sample_ids: " . join(',', @tissue_sample_ids));
+my %uniq = map { $_ => 1 } ($source_stock_id, @tissue_sample_ids);
+diag("distinct stocks expected: " . scalar(keys %uniq));
+diag("linked in db: " . join(',', map { $_->stock_id } $nes_rs->all));
+
 is($nes_rs->count, scalar(@tissue_sample_ids),
    "nd_experiment links source stock and tissue samples");
 
@@ -368,36 +423,53 @@ my ($src_img_count) = $img_check->fetchrow_array();
 is($src_img_count, 1, "source image linked to run project");
 
 # create_run_project validation / error tests
+# Missing run_name
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [ images_json => $images_json_single ]
+);
+my $err_name = decode_json $mech->content;
+like($err_name->{error}, qr/run_name/, "error when run_name missing");
 
-# Missing required params -> error
+# No images_json at all
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [ run_name => 'no_images_' . time() ]
+);
+my $err_none = decode_json $mech->content;
+like($err_none->{error}, qr/At least one image/, "error when images_json absent");
+
+# Incomplete image entry
 $mech->post_ok(
     'http://localhost:3010/ajax/image_analysis/create_run_project',
     [
-        run_name       => 'incomplete_run',
-        tissue_samples => $tissue_samples_json,
-        # no trial_id / source_stock_id / source_image_id
+        run_name    => 'incomplete_' . time(),
+        images_json => encode_json([ { source_image_id => $image_id } ]),
     ]
 );
-my $err1 = decode_json $mech->content;
-ok($err1->{error}, "error returned when required params missing");
-like($err1->{error}, qr/required/, "error mentions required params");
+my $err_fields = decode_json $mech->content;
+like($err_fields->{error}, qr/requires/, "error names the missing fields");
 
-# No tissue samples -> error
+# Non-numeric ids
 $mech->post_ok(
     'http://localhost:3010/ajax/image_analysis/create_run_project',
     [
-        trial_id        => $trial_id,
-        run_name        => 'no_samples_run_' . time(),
-        service_name    => 'Test',
-        run_date        => '2026-07-09',
-        source_stock_id => $source_stock_id,
-        source_image_id => $image_id,
-        tissue_samples  => '[]',
+        run_name    => 'nonnumeric_' . time(),
+        images_json => encode_json([
+            { source_image_id => 'abc', source_stock_id => $source_stock_id, trial_id => $trial_id }
+        ]),
     ]
 );
-my $err2 = decode_json $mech->content;
-ok($err2->{error}, "error returned when no tissue samples");
-like($err2->{error}, qr/tissue_sample/, "error mentions tissue_sample");
+my $err_num = decode_json $mech->content;
+like($err_num->{error}, qr/numeric/, "non-numeric ids rejected");
+
+# Malformed JSON returns JSON, not a 500
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [ run_name => 'badjson_' . time(), images_json => '{not valid json' ]
+);
+my $err_json = decode_json $mech->content;
+like($err_json->{error}, qr/images_json/, "malformed images_json rejected cleanly");
 
 # run_object_results test (uses the run project created above)
 
@@ -442,8 +514,107 @@ ok($ror_empty->{error}, "error returned when no stored analysis results");
 ok(ref($ror_empty->{table_data}) eq 'ARRAY', "table_data present as empty array");
 is(scalar(@{ $ror_empty->{table_data} }), 0, "table_data is empty");
 
+# --- Multi-image, multi-trial ---------------------------------------
+
+my @trial_rows = $schema->resultset('Project::Project')->search(
+    undef, { rows => 2, order_by => { -desc => 'project_id' } }
+)->all;
+my $trial_id_2 = $trial_rows[1] ? $trial_rows[1]->project_id() : $trial_id;
+
+my $multi_run_name = 'ImageAnalysisRun_multi_' . time();
+
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [
+        run_name           => $multi_run_name,
+        service_name       => 'Image Multi Object Multi Trait Analysis',
+        run_date           => '2026-07-09',
+        analysis_info_json => $analysis_info_json,
+        trait_ids          => $trait_ids_json,
+        images_json        => encode_json([
+            { source_image_id => $image_id,   source_stock_id => $source_stock_id,
+              trial_id => $trial_id,   overlay_image_id => $image_id,
+              tissue_samples => [ { stock_id => $tissue_sample_ids[0] } ] },
+            { source_image_id => $image_id_2, source_stock_id => $plant_id,
+              trial_id => $trial_id_2, overlay_image_id => undef,
+              tissue_samples => [ { stock_id => $tissue_sample_ids[1] } ] },
+        ]),
+    ]
+);
+
+my $multi = decode_json $mech->content;
+ok($multi->{success}, "multi-image run created");
+is($multi->{image_count}, 2, "two images reported");
+
+my $multi_run_id = $multi->{run_project_id};
+my $expected_exp = ($trial_id_2 == $trial_id) ? 1 : 2;
+
+is($schema->resultset('NaturalDiversity::NdExperimentProject')
+     ->search({ project_id => $multi_run_id })->count,
+   $expected_exp, "one nd_experiment per distinct trial");
+
+is($schema->resultset('Project::ProjectRelationship')
+     ->search({ subject_project_id => $multi_run_id, type_id => $rel_id })->count,
+   $expected_exp, "each trial linked to the run");
+
+# Both source images linked
+foreach my $iid ($image_id, $image_id_2) {
+    $img_check->execute($multi_run_id, $iid, $src_img_type_id);
+    my ($cnt) = $img_check->fetchrow_array();
+    is($cnt, 1, "source image $iid linked to run");
+}
+
+# Image/stock map projectprop
+my $map_type_id = SGN::Model::Cvterm->get_cvterm_row(
+    $schema, 'image_analysis_image_stock_map_json', 'project_property')->cvterm_id();
+my $map_prop = $schema->resultset('Project::Projectprop')->find({
+    project_id => $multi_run_id, type_id => $map_type_id,
+});
+ok($map_prop && $map_prop->value, "image_stock_map projectprop stored");
+my $map = decode_json($map_prop->value);
+is(scalar(@$map), 2, "map has one entry per image");
+is($map->[0]{trial_id}, $trial_id, "map entry carries trial_id");
+ok(scalar(@{ $map->[0]{tissue_sample_ids} }), "map entry carries tissue samples");
+
+# --- Regression: two images of the SAME plot --------------------------
+# This is what crashed the original code on nd_experiment_stock's
+# (nd_experiment_id, stock_id, type_id) unique constraint.
+
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [
+        run_name    => 'same_plot_' . time(),
+        images_json => encode_json([
+            { source_image_id => $image_id,   source_stock_id => $source_stock_id,
+              trial_id => $trial_id, tissue_samples => [ { stock_id => $tissue_sample_ids[0] } ] },
+            { source_image_id => $image_id_2, source_stock_id => $source_stock_id,
+              trial_id => $trial_id, tissue_samples => [ { stock_id => $tissue_sample_ids[1] } ] },
+        ]),
+    ]
+);
+my $same = decode_json $mech->content;
+ok($same->{success}, "two images of the same plot save without constraint violation");
+is($same->{stock_count}, 2, "shared plot counted once, both samples counted");
+
+# --- Duplicate image id is deduped ----------------------------------
+
+$mech->post_ok(
+    'http://localhost:3010/ajax/image_analysis/create_run_project',
+    [
+        run_name    => 'dup_image_' . time(),
+        images_json => encode_json([
+            { source_image_id => $image_id, source_stock_id => $source_stock_id,
+              trial_id => $trial_id, tissue_samples => [ { stock_id => $tissue_sample_ids[0] } ] },
+            { source_image_id => $image_id, source_stock_id => $source_stock_id,
+              trial_id => $trial_id, tissue_samples => [ { stock_id => $tissue_sample_ids[1] } ] },
+        ]),
+    ]
+);
+my $dup = decode_json $mech->content;
+is($dup->{image_count}, 1, "duplicate source_image_id deduped");
+
 # Delete test image
-my $dbh = SGN::Test::Fixture->new()->dbh();
+$dbh = SGN::Test::Fixture->new()->dbh();
 my $i = CXGN::Image->new(dbh => $dbh, image_id => $image_id, image_dir => $mech->context->config->{'image_dir'});
 $i->hard_delete();
 
