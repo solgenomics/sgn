@@ -22,7 +22,7 @@ my $plot_id2 = $schema->resultset('Stock::Stock')->find({uniquename=>'test_trial
 
 $mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
 $response = decode_json $mech->content;
-print STDERR Dumper $response;
+print STDERR "BRAPI LOGIN: ", Dumper $response;
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
@@ -59,7 +59,7 @@ $req->content( $j );
 my $ua = LWP::UserAgent->new();
 my $res = $ua->request($req);
 $response = decode_json $res->content;
-print STDERR Dumper $response;
+print STDERR "BRAPI V1 OBSERVATIONS: ", Dumper $response;
 is_deeply($response, {
           'result' => undef,
           'metadata' => {

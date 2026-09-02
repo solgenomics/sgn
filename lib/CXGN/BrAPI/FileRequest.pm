@@ -26,6 +26,12 @@ has 'schema' => (
     required => 1,
 );
 
+has 'metadata_schema' => (
+    isa => 'CXGN::Metadata::Schema',
+    is => 'rw',
+    required => 1,
+);
+
 has 'user_id' => (
     is => 'ro',
     isa => 'Int',
@@ -81,6 +87,7 @@ sub get_path {
 sub observations {
     my $self = shift;
     my $schema = $self->schema;
+    my $metadata_schema = $self->metadata_schema;
     my $data = $self->data;
     my $user_id = $self->user_id;
     my $user_type = $self->user_type;
@@ -108,11 +115,6 @@ sub observations {
             print $fh "\n";
         }
     close $fh;
-
-    my $metadata_schema = CXGN::Metadata::Schema->connect(
-        sub { $schema->storage()->dbh() },
-        { on_connect_do => [ 'SET search_path TO metadata'], limit_dialect => 'LimitOffset' }
-    );
 
     my $uploader = CXGN::UploadFile->new({
         tempfile => $upload_tempfile,
