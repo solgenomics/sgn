@@ -1,4 +1,4 @@
-package CXGN::Stock::Seedlot::ParseUpload::Plugin::AccessionsCrossesToExistingSeedlotsGeneric;
+package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotsToSeedlotsGeneric;
 
 use Moose::Role;
 use CXGN::File::Parse;
@@ -19,10 +19,10 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'from_content_name', 'to_seedlot_name', 'operator_name'],
+        required_columns => [ 'from_seedlot_name', 'to_seedlot_name', 'operator_name'],
         optional_columns => ['amount', 'weight_gram', 'transaction_description'],
         column_aliases => {
-            'from_stockcontent_name' => ['from content name', 'from_accession_name', 'from accession name', 'from_cross_unique_id', 'from cross unique id'],
+            'from_seedlot_name' => ['from seedlot name'],
             'to_seedlot_name' => ['to seedlot name'],
             'operator_name' => ['operator name', 'operator'],
             'weight_gram' => ['weight(g)'],
@@ -51,10 +51,10 @@ sub _validate_with_plugin {
         return;
     }
 
-    my @seedlot_content_pairs;
+    my @from_seedlot_to_seedlot_pairs;
     for my $row ( @$parsed_data ) {
         my $row_num = $row->{_row};
-        my $content_name = $row->{'from_content_name'};
+        my $content_name = $row->{'from_seedlot_name'};
         my $seedlot_name = $row->{'to_seedlot_name'};
         my $amount = $row->{'amount'};
         my $weight = $row->{'weight_gram'};
@@ -63,27 +63,27 @@ sub _validate_with_plugin {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
         }
 
-        push @seedlot_content_pairs, [$seedlot_name, $content_name];
+        push @from_seedlot_to_seedlot_pairs, [$from_seedlot_name, $to_seedlot_name];
     }
 
-    my $seen_content_names = $parsed_values->{'from_content_name'};
-    my $seen_seedlot_names = $parsed_values->{'to_seedlot_name'};
+    my $seen_from_seedlot_names = $parsed_values->{'from_seedlot_name'};
+    my $seen_to_seedlot_names = $parsed_values->{'to_seedlot_name'};
 
-    my $accessions_crosses_validator = CXGN::List::Validate->new();
-    my @accessions_crosses_missing = @{$accessions_crosses_validator->validate($schema,'accessions_or_crosses',$seen_content_names)->{'missing'}};
+    my $from_seedlots_validator = CXGN::List::Validate->new();
+    my @from_seedlots_missing = @{$from_seedlots_validator->validate($schema,'seedlots',$seen_from_seedlot_names)->{'missing'}};
 
-    if (scalar(@accessions_crosses_missing) > 0) {
-        push @error_messages, "The following accessions or cross unique ids are not in the database as uniquenames: ".join(',',@accessions_crosses_missing);
+    if (scalar(@from_seedlots_missing) > 0) {
+        push @error_messages, "The following from seedlot names are not in the database as uniquenames: ".join(',',@from_seedlots_missing);
     }
 
-    my $seedlots_validator = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$seedlots_validator->validate($schema,'seedlots',$seen_seedlot_names)->{'missing'}};
+    my $to_seedlots_validator = CXGN::List::Validate->new();
+    my @to_seedlots_missing = @{$to_seedlots_validator->validate($schema,'seedlots',$seen_to_seedlot_names)->{'missing'}};
 
-    if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database as uniquenames: ".join(',',@seedlots_missing);
+    if (scalar(@to_seedlots_missing) > 0) {
+        push @error_messages, "The following to seedlot names are not in the database as uniquenames: ".join(',',@to_seedlots_missing);
     }
 
-    my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_content_pairs);
+    my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs);
     if (exists($pairs_error->{error})){
         push @error_messages, $pairs_error->{error};
     }
@@ -108,27 +108,15 @@ sub _parse_with_plugin {
     my $parsed_values = $parsed->{values};
     my %parsed_seedlots;
 
-    my $content_names = $parsed_values->{'from_content_name'};
-    my $seedlot_names = $parsed_values->{'to_seedlot_name'};
+    my $from_seedlot_names = $parsed_values->{'from_seedlot_name'};
+    my $to_seedlot_names = $parsed_values->{'to_seedlot_name'};
+    my $all_seedlots = [@$from_seedlot_names, @$to_seedlot_names];
 
-    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
-    my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
-
-    my $content_rs = $schema->resultset("Stock::Stock")->search({
-        'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => $content_names },
-        'type_id' => [$accession_cvterm_id, $cross_cvterm_id]
-    });
-
-    my %content_lookup;
-    while (my $r = $content_rs->next){
-        $content_lookup{$r->uniquename} = $r->stock_id;
-    }
 
     my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => $seedlot_names },
+        'uniquename' => { -in => $all_seedlots },
         'type_id' => $seedlot_cvterm_id
     });
 
@@ -140,16 +128,16 @@ sub _parse_with_plugin {
     my @transactions;
     for my $row ( @$parsed_data ) {
         my $row_num;
-        my $content_name;
-        my $seedlot_name;
+        my $from_seedlot_name;
+        my $to_seedlot_name;
         my $amount;
         my $weight;
         my $operator_name;
         my $description;
 
         $row_num = $row->{_row};
-        $content_name = $row->{'from_content_name'};
-        $seedlot_name = $row->{'to_seedlot_name'};
+        $from_seedlot_name = $row->{'from_seedlot_name'};
+        $to_seedlot_name = $row->{'to_seedlot_name'};
         $amount = $row->{'amount'};
         $weight = $row->{'weight_gram'};
         $operator_name = $row->{'operator_name'};
@@ -161,19 +149,20 @@ sub _parse_with_plugin {
             $weight = 'NA';
         }
 
-        my $content_stock_id = $content_lookup{$content_name};
-        my $seedlot_stock_id = $seedlot_lookup{$seedlot_name};
+        my $from_seedlot_id = $seedlot_lookup{$from_seedlot_name};
+        my $to_seedlot_id = $seedlot_lookup{$to_seedlot_name};
 
         push @transactions, {
-            from_stock_name => $content_name,
-            from_stock_id => $content_stock_id,
-            to_seedlot_name => $seedlot_name,
-            to_seedlot_id => $seedlot_stock_id,
+            from_seedlot_name => $from_seedlot_name,
+            from_seedlot_id => $from_seedlot_id,
+            to_seedlot_name => $to_seedlot_name,
+            to_seedlot_id => $to_seedlot_id,
             amount => $amount,
             weight => $weight,
             transaction_description => $description,
             operator => $operator_name
         }
+
     }
 
     $parsed_seedlots{transactions} = \@transactions;
