@@ -23,7 +23,7 @@ my $analysis_abbr = $analysis_type =~ /correlation/ ? 'corr' : $analysis_type;
 $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List"] &>
+<& /util/import_javascript.mas, classes => [ "solGS.Dataset", "CXGN.List", "solGS.dataTableTabs"] &>
 
 <div id="lists_datasets_canvas">
 
@@ -33,10 +33,20 @@ $wizard_link_txt = 'Create a new list or dataset' if !$wizard_link_txt;
     <& /solgs/spinner/spinner.mas &>
     </div>
 
-<!-- The container for the list of populations selected for analysis -->
-<div class="sub_infosectioncontent" id="<% $analysis_abbr %>_pops_data_div" style="display:none; margin-top:25px"></div>
-<br>
+<ul class="nav nav-tabs" id="<% $analysis_abbr %>_population_tabs" style="margin-top:25px">
+    <li class="active"><a class="population-tab" data-target="#<% $analysis_abbr %>_private_datasets" data-source="dataset" data-ownership="private">Private datasets</a></li>
+    <li><a class="population-tab" data-target="#<% $analysis_abbr %>_public_datasets" data-source="dataset" data-ownership="public">Public datasets</a></li>
+    <li><a class="population-tab" data-target="#<% $analysis_abbr %>_private_lists" data-source="list" data-ownership="private">Private lists</a></li>
+    <li><a class="population-tab" data-target="#<% $analysis_abbr %>_public_lists" data-source="list" data-ownership="public">Public lists</a></li>
+</ul>
 
+<div class="tab-content sub_infosectioncontent" id="<% $analysis_abbr %>_pops_data_div">
+    <div class="tab-pane active" id="<% $analysis_abbr %>_private_datasets" style="display:block"></div>
+    <div class="tab-pane" id="<% $analysis_abbr %>_public_datasets" style="display:none"></div>
+    <div class="tab-pane" id="<% $analysis_abbr %>_private_lists" style="display:none"></div>
+    <div class="tab-pane" id="<% $analysis_abbr %>_public_lists" style="display:none"></div>
+</div>
+<br>
 
 <div id="create_new_list_dataset" class="pull-right margin-bottom-lg" style="display:none;">
     <a type="button" class="btn btn-success" href="/solgs/breeder_search/<% $breeder_search_params %>" style="color:#ffffff"><%
