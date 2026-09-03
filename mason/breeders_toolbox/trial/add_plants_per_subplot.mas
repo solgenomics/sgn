@@ -113,56 +113,6 @@ $trial_name => undef
     </div>
 </div>
 
-<div class="modal fade" id="upload_plants_subplot_spreadsheet_info_dialog" name="upload_plants_subplot_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPlantsSubplotInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsSubplotInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>This is for recording individual plants in a subplot.</b>
-                    <br/>
-                    <b>Plant names may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>subplot_name</td>
-                                <td>plant_name</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <br/>
-                    subplot_name (must exist in the database already)
-                    <br />
-                    plant_name (must be globally unique. usually this is a concatenation of subplot_name + plant_number, such as MyTrial_plot101_subplot1_plant1)
-                    <br>
-                    <b>Optional fields:</b>
-                    <br>
-                    - row_num
-                    <br>
-                    - col_num
-                    <br>
-                    Rows and columns are at the subplot level if each subplot contains multiple plants. If including this data, both fields must be present.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_upload_plants_subplot_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 <div class="modal fade" id="upload_plants_subplot_with_index_number_dialog" name="upload_plants_subplot_with_index_number_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPlantsSubplotWithIndexNumberDialog">
     <div class="modal-dialog modal-lg" role="document">
@@ -207,56 +157,6 @@ $trial_name => undef
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" name="upload_plants_subplot_with_index_number_cancel_button" id="upload_plants_subplot_with_index_number_cancel_button" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="upload_plants_subplot_with_index_number_save_button" id="upload_plants_subplot_with_index_number_save_button" title="Upload">Upload</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="upload_plants_subplot_with_index_number_spreadsheet_info_dialog" name="upload_plants_subplot_with_index_number_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPlantsSubplotWithIndexNumberInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsSubplotWithIndexNumberInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>This is for recording individual plants in a subplot. The plant name will be saved as a concatenation of subplot_name + _ + plant_index_number</b>
-                    <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>subplot_name</td>
-                                <td>plant_index_number</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <br/>
-                    subplot_name (must exist in the database already)
-                    <br />
-                    plant_index_number (must be a number. the saved plant name will be a concatenation of subplot_name + plant_index_number, such as MyTrial_plot101_subplot1_plant1.)
-                    <br>
-                    <b>Optional fields:</b>
-                    <br>
-                    - row_num
-                    <br>
-                    - col_num
-                    <br>
-                    Rows and columns are at the subplot level if each subplot contains multiple plants. If including this data, both fields must be present.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_upload_plants_subplot_with_index_number_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -310,55 +210,7 @@ $trial_name => undef
     </div>
 </div>
 
-<div class="modal fade" id="upload_plants_subplot_with_num_plants_spreadsheet_info_dialog" name="upload_plants_subplot_with_num_plants_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadPlantsSubplotWithNumPlantsInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadPlantsSubplotWithNumPlantsInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>This is for recording individual plants in a subplot. The plant name will be saved as a concatenation of subplot_name + _ + plant_index_number for as many plants as specfied by num_plants_per_subplot</b>
-                    <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>subplot_name</td>
-                                <td>num_plants_per_subplot</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <br/>
-                    subplot_name (must exist in the database already)
-                    <br />
-                    num_plants_per_subplot (must be a number. the number of plants in the subplot. the saved plant name will be a concatenation of subplot_name + plant_number, such as MyTrial_plot101_subplot1_plant1)
-                    <br>
-                    <b>Optional fields:</b>
-                    <br>
-                    - num_rows
-                    <br>
-                    - num_cols
-                    <br>
-                    The number of spaces given by the rows and columns should be greater than or equal to the num_plants_per_subplot. Plants will be assigned rows and columns in zigzag pattern, starting from (1,1).
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_upload_plants_subplot_with_number_plants_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<& /file_formats/subplot_plant_upload.mas &>
 
 
 <script>

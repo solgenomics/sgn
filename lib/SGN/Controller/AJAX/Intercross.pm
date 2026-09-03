@@ -431,11 +431,13 @@ sub upload_intercross_file_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'intercross_upload',
+        metadata_schema => $metadata_schema
     });
 
     ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -466,19 +468,7 @@ sub upload_intercross_file_POST : Args(0) {
 
     if ($parsed_data){
 
-        my $md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-        $md_row->insert();
-        my $upload_file = CXGN::UploadFile->new();
-        my $md5 = $upload_file->get_md5($archived_filename_with_path);
-        my $md5checksum = $md5->hexdigest();
-        my $file_row = $metadata_schema->resultset("MdFiles")->create({
-            basename => basename($archived_filename_with_path),
-            dirname => dirname($archived_filename_with_path),
-            filetype => 'intercross_upload',
-            md5checksum => $md5checksum,
-            metadata_id => $md_row->metadata_id(),
-        });
-        my $file_id = $file_row->file_id();
+        my $file_id = $archived_file_id;
 
         my %intercross_data = %{$parsed_data};
         my $crossing_experiment_name = $intercross_data{'crossing_experiment_name'};

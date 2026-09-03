@@ -30,6 +30,8 @@ use CXGN::Login;
 use CXGN::People::Person;
 use CXGN::Genotype::Protocol;
 use CXGN::Genotype::GenotypingProject;
+use CXGN::File;
+use CXGN::Job;
 use File::Basename qw | basename dirname|;
 use JSON;
 
@@ -58,6 +60,8 @@ sub upload_genotype_verify_POST : Args(0) {
     my $user_id;
     my $user_role;
     my $user_name;
+    my $user_first_name;
+    my $user_last_name;
     if ($session_id){
         my $dbh = $c->dbc->dbh;
         my @user_info = CXGN::Login->new($dbh)->query_from_cookie($session_id);
@@ -69,6 +73,8 @@ sub upload_genotype_verify_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload this VCF genotype info!'};
@@ -77,6 +83,8 @@ sub upload_genotype_verify_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
     }
 
     if ($user_role ne 'submitter' && $user_role ne 'curator') {
@@ -155,32 +163,48 @@ sub upload_genotype_verify_POST : Args(0) {
 
     #archive uploaded file
     my $upload_vcf = $c->req->upload('upload_genotype_vcf_file_input');
+    my $archived_vcf_file_id = $c->req->param('archived_vcf_file_id') || undef;
     my $upload_tassel_hdf5 = $c->req->upload('upload_genotype_tassel_hdf5_file_input');
+    my $archived_tassel_file_id = $c->req->param('archived_tassel_file_id') || undef;
     my $upload_transposed_vcf = $c->req->upload('upload_genotype_transposed_vcf_file_input');
     my $upload_intertek_genotypes = $c->req->upload('upload_genotype_intertek_file_input');
+    my $archived_intertek_file_id = $c->req->param('archived_intertek_file_id') || undef;
     my $upload_inteterk_marker_info = $c->req->upload('upload_genotype_intertek_snp_file_input');
+    my $archived_intertek_marker_info_file_id = $c->req->param('archived_intertek_marker_info_file_id') || undef;
     my $upload_ssr_data = $c->req->upload('upload_genotype_ssr_file_input');
+    my $archived_ssr_file_id = $c->req->param('archived_ssr_file_id') || undef;
     my $upload_kasp_genotypes = $c->req->upload('upload_genotype_data_kasp_file_input');
+    my $archived_kasp_file_id = $c->req->param('archived_kasp_file_id') || undef;
     my $upload_kasp_marker_info = $c->req->upload('upload_genotype_kasp_marker_info_file_input');
-    if (defined $upload_kasp_genotypes) {
-        if (!defined $assay_type) {
-            $assay_type = 'KASP';
-        }
+    my $archived_kasp_marker_info_file_id = $c->req->param('archived_kasp_marker_info_file_id') || undef;
+    my $has_vcf      = defined($upload_vcf)               || defined($archived_vcf_file_id);
+    my $has_tassel   = defined($upload_tassel_hdf5)        || defined($archived_tassel_file_id);
+    my $has_intertek = defined($upload_intertek_genotypes) || defined($archived_intertek_file_id);
+    my $has_intertek_marker = defined($upload_inteterk_marker_info) || defined($archived_intertek_marker_info_file_id);
+    my $has_kasp     = defined($upload_kasp_genotypes)     || defined($archived_kasp_file_id);
+
+    # The upload manager archives a file before calling here, so a file that is already in the
+    # archive is one it is going to follow the job for itself. The upload dialog posts the file
+    # directly and reports the outcome to the user, so it waits for the job to finish.
+    my $from_upload_manager = ($archived_vcf_file_id || $archived_tassel_file_id || $archived_intertek_file_id || $archived_ssr_file_id || $archived_kasp_file_id) ? 1 : 0;
+
+    if ($has_kasp && !defined $assay_type) {
+        $assay_type = 'KASP';
     }
 
-    if (defined($upload_vcf) && defined($upload_intertek_genotypes)) {
+    if ($has_vcf && $has_intertek) {
         $c->stash->{rest} = { error => 'Do not try to upload both VCF and Intertek at the same time!' };
         $c->detach();
     }
-    if (defined($upload_vcf) && defined($upload_tassel_hdf5)) {
+    if ($has_vcf && $has_tassel) {
         $c->stash->{rest} = { error => 'Do not try to upload both VCF and Tassel HDF5 at the same time!' };
         $c->detach();
     }
-    if (defined($upload_intertek_genotypes) && defined($upload_tassel_hdf5)) {
+    if ($has_intertek && $has_tassel) {
         $c->stash->{rest} = { error => 'Do not try to upload both Intertek and Tassel HDF5 at the same time!' };
         $c->detach();
     }
-    if ((defined($upload_intertek_genotypes) && !defined($upload_inteterk_marker_info)) || (!defined($upload_intertek_genotypes) && defined($upload_inteterk_marker_info))) {
+    if ($has_intertek != $has_intertek_marker) {
         $c->stash->{rest} = { error => 'To upload Intertek genotype data please provide both the Grid Genotypes File and the Marker Info File.' };
         $c->detach();
     }
@@ -192,11 +216,18 @@ sub upload_genotype_verify_POST : Args(0) {
     my $upload_tempfile;
     my $subdirectory;
     my $parser_plugin;
-    if ($upload_vcf) {
-        $upload_original_name = $upload_vcf->filename();
-        $upload_tempfile = $upload_vcf->tempname;
-        $subdirectory = "genotype_vcf_upload";
-        $parser_plugin = 'VCF';
+    my $archived_filename_with_path;
+    my $archived_main_file_id;
+    my $archived_marker_info_file;
+    my $tassel_hdf5_file;
+    my $genotype_file_type;
+    if ($upload_vcf || $archived_vcf_file_id) {
+        $genotype_file_type = 'genotype_data_vcf';
+        if ($upload_vcf) {
+            $upload_original_name = $upload_vcf->filename();
+            $upload_tempfile = $upload_vcf->tempname;
+            $subdirectory = "genotype_vcf_upload";
+            $parser_plugin = 'VCF';
 
         if ($transpose_vcf_for_loading) {
             #archive a copy of the original (non-transposed) VCF file as uploaded, so that
@@ -211,9 +242,11 @@ sub upload_genotype_verify_POST : Args(0) {
                 archive_filename => $upload_original_name,
                 timestamp => $timestamp,
                 user_id => $user_id,
-                user_role => $user_role
+                user_role => $user_role,
+                file_type => 'genotyping_data',
+                metadata_schema => $metadata_schema
             });
-            my $archived_original_vcf = $original_uploader->archive();
+            my ($archived_original_vcf_id, $archived_original_vcf) = $original_uploader->archive();
             if (!$archived_original_vcf) {
                 $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
                 $c->detach();
@@ -222,41 +255,68 @@ sub upload_genotype_verify_POST : Args(0) {
             my $dir = $c->tempfiles_subdir('/genotype_data_upload_transpose_VCF');
             my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_transpose_VCF/fileXXXX');
 
-            open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
-            open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
-            my @outline;
-            my $lastcol = -1;
-            while (<$F>) {
-		$_ =~ s/\r//g;
-                if ($_ =~ m/^\##/) {
-                    print $Fout $_;
-                } else {
-                    chomp;
-                    my @line = split /\t/;
-                    my $oldlastcol = $lastcol;
-                    $lastcol = $#line if $#line > $lastcol;
-                    for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
-                        if ($oldlastcol > 0) {
-                            $outline[$i] = "\t" x $oldlastcol;
+                open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
+                open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
+                my @outline;
+                my $lastcol = -1;
+                while (<$F>) {
+                    $_ =~ s/\r//g;
+                    if ($_ =~ m/^\##/) {
+                        print $Fout $_;
+                    } else {
+                        chomp;
+                        my @line = split /\t/;
+                        my $oldlastcol = $lastcol;
+                        $lastcol = $#line if $#line > $lastcol;
+                        for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
+                            if ($oldlastcol > 0) {
+                                $outline[$i] = "\t" x $oldlastcol;
+                            }
+                        }
+                        for (my $i=0; $i <=$lastcol; $i++) {
+                            $outline[$i] .= "$line[$i]\t"
                         }
                     }
-                    for (my $i=0; $i <=$lastcol; $i++) {
-                        $outline[$i] .= "$line[$i]\t"
-                    }
                 }
+                for (my $i=0; $i <= $lastcol; $i++) {
+                    $outline[$i] =~ s/\s*$//g;
+                    print $Fout $outline[$i]."\n";
+                }
+                close($F);
+                close($Fout);
+                $upload_tempfile = $temp_file_transposed;
+                $upload_original_name = basename($temp_file_transposed);
+                $subdirectory = "genotype_transposed_vcf_upload";
+                $parser_plugin = 'transposedVCF';
             }
-            for (my $i=0; $i <= $lastcol; $i++) {
-                $outline[$i] =~ s/\s*$//g;
-                print $Fout $outline[$i]."\n";
+
+            my $vcf_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile,
+                subdirectory => $subdirectory,
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                file_type => $genotype_file_type,
+                metadata_schema => $metadata_schema
+            });
+            ($archived_main_file_id, $archived_filename_with_path) = $vcf_uploader->archive();
+            my $md5 = $vcf_uploader->get_md5($archived_filename_with_path);
+            if (!$archived_filename_with_path) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
             }
-            close($F);
-            close($Fout);
-            $upload_tempfile = $temp_file_transposed;
-            #NOTE: $upload_original_name is intentionally left as the original uploaded
-            #filename, so that the transposed file archived below (in genotype_vcf_upload)
-            #shares the same archive basename as the original file archived above (in
-            #genotype_vcf_archive).
-            $parser_plugin = 'transposedVCF';
+            unlink $upload_tempfile;
+        } else {
+            my $archived_vcf = CXGN::File->new({
+                file_id => $archived_vcf_file_id,
+                metadata_schema => $metadata_schema,
+                archive_path => $c->config->{archive_path}
+            });
+            $archived_filename_with_path = $archived_vcf->get_path();
+            $archived_main_file_id = $archived_vcf_file_id;
+            $parser_plugin = 'VCF';
         }
     }
     if ($upload_transposed_vcf) {
@@ -264,77 +324,76 @@ sub upload_genotype_verify_POST : Args(0) {
         $upload_tempfile = $upload_transposed_vcf->tempname;
         $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
-    }
-    if ($upload_tassel_hdf5) {
-        $upload_original_name = $upload_tassel_hdf5->filename();
-        $upload_tempfile = $upload_tassel_hdf5->tempname;
-        $subdirectory = "genotype_tassel_hdf5_upload";
+        $genotype_file_type = 'genotype_data_vcf';
 
-        my $uploader = CXGN::UploadFile->new({
+        my $tvcf_uploader = CXGN::UploadFile->new({
             tempfile => $upload_tempfile,
             subdirectory => $subdirectory,
             archive_path => $c->config->{archive_path},
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            file_type => $genotype_file_type,
+            metadata_schema => $metadata_schema
         });
-        my $archived_tassel_hdf5_file = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_tassel_hdf5_file);
-        if (!$archived_tassel_hdf5_file) {
+        ($archived_main_file_id, $archived_filename_with_path) = $tvcf_uploader->archive();
+        my $md5 = $tvcf_uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
             $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
             $c->detach();
         }
         unlink $upload_tempfile;
+    }
+    if ($upload_tassel_hdf5 || $archived_tassel_file_id) {
+        $genotype_file_type = 'genotype_data_tassel';
+        my $archived_tassel_hdf5_file;
+        if ($upload_tassel_hdf5) {
+            $upload_original_name = $upload_tassel_hdf5->filename();
+            $upload_tempfile = $upload_tassel_hdf5->tempname;
+            $subdirectory = "genotype_tassel_hdf5_upload";
 
-        my $output_dir = $c->tempfiles_subdir('/genotype_upload_tassel_hdf5');
-        $upload_tempfile = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/temp_vcf_XXXX').".vcf";
-        my $cmd = "perl ".$c->config->{rootpath}."/tassel-5-standalone/run_pipeline.pl -Xmx12g -h5 ".$archived_tassel_hdf5_file." -export ".$upload_tempfile." -exportType VCF";
-        print STDERR Dumper $cmd;
-        my $status = system($cmd);
-
-        my $temp_file_transposed = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_upload_tassel_hdf5/fileXXXX');
-
-        open (my $Fout, "> :encoding(UTF-8)", $temp_file_transposed) || die "Can't open file $temp_file_transposed\n";
-        open (my $F, "< :encoding(UTF-8)", $upload_tempfile) or die "Can't open file $upload_tempfile \n";
-        my @outline;
-        my $lastcol = -1;
-        while (<$F>) {
-	    $_ =~ s/\r//g;
-            if ($_ =~ m/^\##/) {
-                print $Fout $_;
-            } else {
-                chomp;
-                my @line = split /\t/;
-                my $oldlastcol = $lastcol;
-                $lastcol = $#line if $#line > $lastcol;
-                for (my $i=$oldlastcol + 1; $i <= $lastcol; $i++) {
-                    if ($oldlastcol) {
-                        $outline[$i] = "\t" x $oldlastcol;
-                    }
-                }
-                for (my $i=0; $i <=$lastcol; $i++) {
-                    $outline[$i] .= "$line[$i]\t"
-                }
+            my $tassel_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile,
+                subdirectory => $subdirectory,
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                file_type => $genotype_file_type,
+                metadata_schema => $metadata_schema
+            });
+            my $tassel_file_id;
+            ($tassel_file_id, $archived_tassel_hdf5_file) = $tassel_uploader->archive();
+            my $md5 = $tassel_uploader->get_md5($archived_tassel_hdf5_file);
+            if (!$archived_tassel_hdf5_file) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
             }
+            $archived_main_file_id = $tassel_file_id;
+            unlink $upload_tempfile;
+        } else {
+            my $archived_tassel = CXGN::File->new({
+                file_id => $archived_tassel_file_id,
+                metadata_schema => $metadata_schema,
+                archive_path => $c->config->{archive_path}
+            });
+            $archived_tassel_hdf5_file = $archived_tassel->get_path();
+            $archived_main_file_id = $archived_tassel_file_id;
         }
-        for (my $i=0; $i <= $lastcol; $i++) {
-            $outline[$i] =~ s/\s*$//g;
-            print $Fout $outline[$i]."\n";
-        }
-        close($F);
-        close($Fout);
-        $upload_tempfile = $temp_file_transposed;
-        $upload_original_name = basename($temp_file_transposed);
 
+        # Exporting the HDF5 file to VCF and transposing it is by far the slowest part of a Tassel
+        # upload, so it is left to the background script along with the parsing and storing that
+        # follow it. What is recorded here is the archived HDF5 file it starts from.
+        $tassel_hdf5_file = $archived_tassel_hdf5_file;
+        $archived_filename_with_path = $archived_tassel_hdf5_file;
         $subdirectory = "genotype_transposed_vcf_upload";
         $parser_plugin = 'transposedVCF';
     }
 
-    my $archived_marker_info_file;
-    if ($upload_intertek_genotypes) {
-        $upload_original_name = $upload_intertek_genotypes->filename();
-        $upload_tempfile = $upload_intertek_genotypes->tempname;
+    if ($upload_intertek_genotypes || $archived_intertek_file_id) {
+        $genotype_file_type = 'genotype_data_intertek';
         $subdirectory = "genotype_intertek_upload";
         $parser_plugin = 'IntertekCSV';
 
@@ -342,86 +401,179 @@ sub upload_genotype_verify_POST : Args(0) {
             $include_lab_numbers = 1;
         }
 
-        my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
-        my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();
+        if ($upload_intertek_genotypes) {
+            $upload_original_name = $upload_intertek_genotypes->filename();
+            $upload_tempfile = $upload_intertek_genotypes->tempname;
 
-        my $uploader = CXGN::UploadFile->new({
-            tempfile => $upload_inteterk_marker_info_tempfile,
-            subdirectory => $subdirectory,
-            archive_path => $c->config->{archive_path},
-            archive_filename => $upload_inteterk_marker_info_original_name,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_role
-        });
-        $archived_marker_info_file = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_marker_info_file);
-        if (!$archived_marker_info_file) {
-            push @error_status, "Could not save file $upload_inteterk_marker_info_original_name in archive.";
-            return (\@success_status, \@error_status);
+            my $intertek_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile,
+                subdirectory => $subdirectory,
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                file_type => $genotype_file_type,
+                metadata_schema => $metadata_schema
+            });
+            ($archived_main_file_id, $archived_filename_with_path) = $intertek_uploader->archive();
+            my $md5 = $intertek_uploader->get_md5($archived_filename_with_path);
+            if (!$archived_filename_with_path) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+            unlink $upload_tempfile;
         } else {
-            push @success_status, "File $upload_inteterk_marker_info_original_name saved in archive.";
+            my $archived_intertek = CXGN::File->new({
+                file_id => $archived_intertek_file_id,
+                metadata_schema => $metadata_schema,
+                archive_path => $c->config->{archive_path}
+            });
+            $archived_filename_with_path = $archived_intertek->get_path();
+            $archived_main_file_id = $archived_intertek_file_id;
         }
-        unlink $upload_inteterk_marker_info_tempfile;
+
+        if ($upload_inteterk_marker_info) {
+            my $upload_inteterk_marker_info_original_name = $upload_inteterk_marker_info->filename();
+            my $upload_inteterk_marker_info_tempfile = $upload_inteterk_marker_info->tempname();
+
+            my $intertek_marker_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_inteterk_marker_info_tempfile,
+                subdirectory => $subdirectory,
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_inteterk_marker_info_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                file_type => 'genotype_data_intertek_marker_info',
+                metadata_schema => $metadata_schema
+            });
+            my ($intertek_marker_file_id, $intertek_marker_path) = $intertek_marker_uploader->archive();
+            my $md5 = $intertek_marker_uploader->get_md5($intertek_marker_path);
+            if (!$intertek_marker_path) {
+                $c->stash->{rest} = { error => "Could not save file $upload_inteterk_marker_info_original_name in archive." };
+                $c->detach();
+            }
+            $archived_marker_info_file = $intertek_marker_path;
+            unlink $upload_inteterk_marker_info_tempfile;
+        } elsif ($archived_intertek_marker_info_file_id) {
+            my $archived_intertek_marker = CXGN::File->new({
+                file_id => $archived_intertek_marker_info_file_id,
+                metadata_schema => $metadata_schema,
+                archive_path => $c->config->{archive_path}
+            });
+            $archived_marker_info_file = $archived_intertek_marker->get_path();
+        }
     }
 
-    if ($upload_ssr_data) {
-        $upload_original_name = $upload_ssr_data->filename();
-        $upload_tempfile = $upload_ssr_data->tempname;
+    if ($upload_ssr_data || $archived_ssr_file_id) {
+        $genotype_file_type = 'genotype_data_ssr';
         $subdirectory = "ssr_data_upload";
         $parser_plugin = 'SSRExcel';
+
+        if ($upload_ssr_data) {
+            $upload_original_name = $upload_ssr_data->filename();
+            $upload_tempfile = $upload_ssr_data->tempname;
+
+            my $ssr_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile,
+                subdirectory => $subdirectory,
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                file_type => $genotype_file_type,
+                metadata_schema => $metadata_schema
+            });
+            ($archived_main_file_id, $archived_filename_with_path) = $ssr_uploader->archive();
+            my $md5 = $ssr_uploader->get_md5($archived_filename_with_path);
+            if (!$archived_filename_with_path) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+            unlink $upload_tempfile;
+        } else {
+            my $archived_ssr = CXGN::File->new({
+                file_id => $archived_ssr_file_id,
+                metadata_schema => $metadata_schema,
+                archive_path => $c->config->{archive_path}
+            });
+            $archived_filename_with_path = $archived_ssr->get_path();
+            $archived_main_file_id = $archived_ssr_file_id;
+        }
     }
 
-    if ($upload_kasp_genotypes) {
-        $upload_original_name = $upload_kasp_genotypes->filename();
-        $upload_tempfile = $upload_kasp_genotypes->tempname;
+    if ($upload_kasp_genotypes || $archived_kasp_file_id) {
+        $genotype_file_type = 'genotype_data_kasp';
         $subdirectory = "genotype_kasp_upload";
         $parser_plugin = 'KASP';
 
-        my $upload_kasp_marker_info_original_name = $upload_kasp_marker_info->filename();
-        my $upload_kasp_marker_info_tempfile = $upload_kasp_marker_info->tempname();
+        if ($upload_kasp_genotypes) {
+            $upload_original_name = $upload_kasp_genotypes->filename();
+            $upload_tempfile = $upload_kasp_genotypes->tempname;
 
-        my $uploader = CXGN::UploadFile->new({
-            tempfile => $upload_kasp_marker_info_tempfile,
-            subdirectory => $subdirectory,
-            archive_path => $c->config->{archive_path},
-            archive_filename => $upload_kasp_marker_info_original_name,
-            timestamp => $timestamp,
-            user_id => $user_id,
-            user_role => $user_role
-        });
-        $archived_marker_info_file = $uploader->archive();
-        my $md5 = $uploader->get_md5($archived_marker_info_file);
-        if (!$archived_marker_info_file) {
-            push @error_status, "Could not save file $upload_kasp_marker_info_original_name in archive.";
-            return (\@success_status, \@error_status);
+            my $kasp_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_tempfile,
+                subdirectory => $subdirectory,
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                file_type => $genotype_file_type,
+                metadata_schema => $metadata_schema
+            });
+            ($archived_main_file_id, $archived_filename_with_path) = $kasp_uploader->archive();
+            my $md5 = $kasp_uploader->get_md5($archived_filename_with_path);
+            if (!$archived_filename_with_path) {
+                $c->stash->{rest} = { error => "Could not save file $upload_original_name in archive." };
+                $c->detach();
+            }
+            unlink $upload_tempfile;
         } else {
-            push @success_status, "File $upload_kasp_marker_info_original_name saved in archive.";
+            my $archived_kasp = CXGN::File->new({
+                file_id => $archived_kasp_file_id,
+                metadata_schema => $metadata_schema,
+                archive_path => $c->config->{archive_path}
+            });
+            $archived_filename_with_path = $archived_kasp->get_path();
+            $archived_main_file_id = $archived_kasp_file_id;
         }
-        unlink $upload_kasp_marker_info_tempfile;
+
+        if ($upload_kasp_marker_info) {
+            my $upload_kasp_marker_info_original_name = $upload_kasp_marker_info->filename();
+            my $upload_kasp_marker_info_tempfile = $upload_kasp_marker_info->tempname();
+
+            my $kasp_marker_uploader = CXGN::UploadFile->new({
+                tempfile => $upload_kasp_marker_info_tempfile,
+                subdirectory => $subdirectory,
+                archive_path => $c->config->{archive_path},
+                archive_filename => $upload_kasp_marker_info_original_name,
+                timestamp => $timestamp,
+                user_id => $user_id,
+                user_role => $user_role,
+                file_type => 'genotype_data_kasp_marker_info',
+                metadata_schema => $metadata_schema
+            });
+            my ($kasp_marker_file_id, $kasp_marker_path) = $kasp_marker_uploader->archive();
+            my $md5 = $kasp_marker_uploader->get_md5($kasp_marker_path);
+            if (!$kasp_marker_path) {
+                $c->stash->{rest} = { error => "Could not save file $upload_kasp_marker_info_original_name in archive." };
+                $c->detach();
+            }
+            $archived_marker_info_file = $kasp_marker_path;
+            unlink $upload_kasp_marker_info_tempfile;
+        } elsif ($archived_kasp_marker_info_file_id) {
+            my $archived_kasp_marker = CXGN::File->new({
+                file_id => $archived_kasp_marker_info_file_id,
+                metadata_schema => $metadata_schema,
+                archive_path => $c->config->{archive_path}
+            });
+            $archived_marker_info_file = $archived_kasp_marker->get_path();
+        }
     }
 
-    my $archived_filename_with_path;
-    if ($upload_original_name) {
-      my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
-      });
-      $archived_filename_with_path = $uploader->archive();
-      my $md5 = $uploader->get_md5($archived_filename_with_path);
-      if (!$archived_filename_with_path) {
-        push @error_status, "Could not save file $upload_original_name in archive.";
-        return (\@success_status, \@error_status);
-      } else {
-        push @success_status, "File $upload_original_name saved in archive.";
-      }
-    }
-    unlink $upload_tempfile;
 
     #if protocol_id provided, a new one will not be created
     if ($protocol_id){
@@ -458,405 +610,120 @@ sub upload_genotype_verify_POST : Args(0) {
 	print STDERR "organism species not defined\n";
     }
 
-    my $parser;
-    if ($upload_original_name) {
-      $parser = CXGN::Genotype::ParseUpload->new({
-        chado_schema => $schema,
-        filename => $archived_filename_with_path,
-        filename_marker_info => $archived_marker_info_file,
-        observation_unit_type_name => $obs_type,
-        organism_id => $organism_id,
-        create_missing_observation_units_as_accessions => $add_accessions,
-        igd_numbers_included => $include_igd_numbers,
-        # lab_numbers_included => $include_lab_numbers
-      });
-      $parser->load_plugin($parser_plugin);
-    }
-
-    my $dir = $c->tempfiles_subdir('/genotype_data_upload_SQL_COPY');
-    my $temp_file_sql_copy = $c->config->{basepath}."/".$c->tempfile( TEMPLATE => 'genotype_data_upload_SQL_COPY/fileXXXX');
-
-    my $vcf_genotyping_type =  'vcf_snp_genotyping';#for now only SNP type are uploaded from VCF using the web interface
-    my $genotyping_type;
-    my $genotype_data_type;
-
-    if ($vcf_genotyping_type =~ /vcf_phg_genotyping/) {
-    $genotyping_type = 'phg genotyping';
-    $genotype_data_type = 'PHG';
-
-} else {
-    $genotyping_type = 'snp genotyping';
-    $genotype_data_type = 'SNP';
-}
-
-    my $store_args = {
-        bcs_schema=>$schema,
-        metadata_schema=>$metadata_schema,
-        phenome_schema=>$phenome_schema,
-        observation_unit_type_name=>$obs_type,
-        project_id=>$project_id,
-        protocol_id=>$protocol_id,
-        genotyping_facility=>$genotyping_facility, #projectprop
-        breeding_program_id=>$breeding_program_id, #project_rel
-        project_year=>$year, #projectprop
-        project_location_id=>$location_id, #ndexperiment and projectprop
-        project_name=>$project_name, #project_attr
-        project_description=>$description, #project_attr
-        protocol_name=>$protocol_name,
-        protocol_description=>$protocol_description,
-        organism_id=>$organism_id,
-        igd_numbers_included=>$include_igd_numbers,
-        lab_numbers_included=>$include_lab_numbers,
-        user_id=>$user_id,
-        archived_filename=>$archived_filename_with_path,
-        archived_file_type=>'genotype_vcf', #can be 'genotype_vcf' or 'genotype_dosage' to disntiguish genotyprop between old dosage only format and more info vcf format
-        temp_file_sql_copy=>$temp_file_sql_copy,
-        vcf_genotyping_type => $vcf_genotyping_type,
-        genotyping_type => $genotyping_type,
-        genotyping_data_type=> $genotype_data_type,
-    };
-
-    my $return;
-    #For VCF files, memory was an issue so we parse them with an iterator
-    if ($parser_plugin eq 'VCF' || $parser_plugin eq 'transposedVCF') {
-        my $parser_return = $parser->parse_with_iterator();
-
-        if ($parser->get_parse_errors()) {
-            my $return_error = '';
-            my $parse_errors = $parser->get_parse_errors();
-            print STDERR Dumper $parse_errors;
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
-            }
-            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-            $c->detach();
-        }
-
-        my $protocol = $parser->protocol_data();
-        my $observation_unit_names_all = $parser->observation_unit_names();
-        $store_args->{observation_unit_uniquenames} = $observation_unit_names_all;
-
-        if ($parser_plugin eq 'VCF') {
-            $store_args->{marker_by_marker_storage} = 1;
-        }
-
-        $protocol->{'reference_genome_name'} = $reference_genome_name;
-        $protocol->{'species_name'} = $organism_species;
-        $protocol->{'assay_type'} = $assay_type;
-        my $store_genotypes;
-        my ($observation_unit_names, $genotype_info) = $parser->next();
-        if (scalar(keys %$genotype_info) > 0) {
-            #print STDERR Dumper [$observation_unit_names, $genotype_info];
-            print STDERR "Parsing first genotype and extracting protocol info... \n";
-
-            $store_args->{protocol_info} = $protocol;
-            $store_args->{genotype_info} = $genotype_info;
-
-            $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
-            my $verified_errors = $store_genotypes->validate();
-
-            if (scalar(@{$verified_errors->{error_messages}}) > 0){
-                my $error_string;
-                foreach my $error (@{$verified_errors->{error_messages}}) {
-                    $error_string .= $error."<br>";
-                }
-                $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
-                $c->detach();
-            }
-
-            my @all_warnings;
-            my $previous_genotypes_exist;
-            if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-                push @all_warnings, @{$verified_errors->{warning_messages}};
-                $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
-            }
-
-            if ($protocol_id) {
-                my @protocol_match_errors;
-                my $new_marker_data = $protocol->{markers};
-                my $stored_protocol = CXGN::Genotype::Protocol->new({
-                    bcs_schema => $schema,
-                    nd_protocol_id => $protocol_id
-                });
-                my $stored_markers = $stored_protocol->markers();
-
-                my @all_stored_markers = keys %$stored_markers;
-                my %compare_marker_names = map {$_ => 1} @all_stored_markers;
-		my $total_marker_count = 0;
-                my @mismatch_marker_names;
-		my @mismatch_markers;
-                while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-                    while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
-			$total_marker_count++;
-                        if (exists($compare_marker_names{$marker_name})) {
-                            for my $key (qw(chrom pos name ref alt)) {
-                                my $value = $new_marker_details->{$key};
-                                if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                    push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
-                                }
-                            }
-                        } else {
-                            push @mismatch_marker_names, $marker_name;
-			    push @mismatch_markers, [$chrom, $marker_name];
-                        }
-                    }
-                }
-
-                if (scalar(@mismatch_marker_names)) {
-		    if ($add_markers) {
-                        if ($total_marker_count && (scalar(@mismatch_marker_names) / $total_marker_count) < 0.1) {
-			    print STDERR "Adding new markers\n";
-			    $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
-			} else {
-			    $c->stash->{rest} = { error => "Too many new markers"};
-                            $c->detach();
-		        }
-		    } else {
-                        my $marker_name_error = "<br>";
-                        foreach my $error ( sort @mismatch_marker_names) {
-                            $marker_name_error .= $error."<br>";
-                        }
-			$c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error", missing_markers => \@mismatch_marker_names };
-                        $c->detach();
-                    }
-                }
-
-                push @all_warnings, @protocol_match_errors;
-	    }
-
-            if (scalar(@all_warnings) > 0 && !$accept_warnings) {
-                my $warning_string = join("<br>", @all_warnings);
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
-                $c->detach();
-            }
-
-            $store_genotypes->store_metadata();
-            $store_genotypes->store_identifiers();
-        }
-
-        print STDERR "Done loading first line, moving on...\n";
-
-        my $continue_iterate = 1;
-        while ($continue_iterate == 1) {
-            my ($observation_unit_names, $genotype_info) = $parser->next();
-            if (scalar(keys %$genotype_info) > 0) {
-                $store_genotypes->genotype_info($genotype_info);
-                $store_genotypes->observation_unit_uniquenames($observation_unit_names);
-                $store_genotypes->store_identifiers();
-            } else {
-                $continue_iterate = 0;
-                last;
-            }
-        }
-        $return = $store_genotypes->store_genotypeprop_table();
-    }
-    #For smaller Intertek files, memory is not usually an issue so can parse them without iterator
-    elsif (($parser_plugin eq 'IntertekCSV') || ($parser_plugin eq 'KASP')) {
-        if (defined $protocol_id) {
-            $parser->{nd_protocol_id} = $protocol_id;
-        }
-        my $parsed_data = $parser->parse();
-        my $parse_errors;
-        if (!$parsed_data) {
-            my $return_error = '';
-            if (!$parser->has_parse_errors() ){
-                $return_error = "Could not get parsing errors";
-                $c->stash->{rest} = {error_string => $return_error,};
-            } else {
-                $parse_errors = $parser->get_parse_errors();
-        	#print STDERR Dumper $parse_errors;
-                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                    $return_error=$return_error.$error_string."<br>";
-                }
-            }
-            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-            $c->detach();
-        }
-        #print STDERR Dumper $parsed_data;
-        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-        my $genotype_info = $parsed_data->{genotypes_info};
-        my $protocol_info = $parsed_data->{protocol_info};
-        my $marker_info_keys = $parsed_data->{marker_info_keys};
-        $protocol_info->{'reference_genome_name'} = $reference_genome_name;
-        $protocol_info->{'species_name'} = $organism_species;
-        $protocol_info->{'marker_info_keys'} = $marker_info_keys;
-        $protocol_info->{'assay_type'} = $assay_type;
-
-        $store_args->{protocol_info} = $protocol_info;
-        $store_args->{genotype_info} = $genotype_info;
-        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
-
-        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
-        my $verified_errors = $store_genotypes->validate();
-
-        if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string;
-            foreach my $error (@{$verified_errors->{error_messages}}) {
-                $error_string .= $error."<br>";
-            }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
-            $c->detach();
-        }
-
-        my @all_warnings;
-        my $previous_genotypes_exist;
-        if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            push @all_warnings, @{$verified_errors->{warning_messages}};
-            $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
-        }
-
-        if ($protocol_id) {
-            my @protocol_match_errors;
-            my $new_marker_data = $protocol_info->{markers};
-            my $stored_protocol = CXGN::Genotype::Protocol->new({
-                bcs_schema => $schema,
-                nd_protocol_id => $protocol_id
-            });
-            my $stored_markers = $stored_protocol->markers();
-	    my @all_stored_markers = keys %$stored_markers;
-	    my %compare_marker_names = map {$_ => 1} @all_stored_markers;
-	    my $total_marker_count = 0;
-            my @mismatch_marker_names;
-            my @mismatch_markers;
-            while (my ($chrom, $new_marker_data_1) = each %$new_marker_data) {
-                while (my ($marker_name, $new_marker_details) = each %$new_marker_data_1) {
-                    $total_marker_count++;
-                    if (exists($compare_marker_names{$marker_name})) {
-                        for my $key (qw(chrom pos name ref alt)) {
-                            my $value = $new_marker_details->{$key};
-                            if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                push @protocol_match_errors, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
-                            }
-                        }
-                    } else {
-                        push @mismatch_marker_names, $marker_name;
-                        push @mismatch_markers, [$chrom, $marker_name];
-                    }
-                }
-	    }
-
-            if (scalar(@mismatch_marker_names)){
-		if ($add_markers) {
-		    if (scalar(@mismatch_marker_names) < 20) {
-                        print STDERR "Adding new markers\n";
-                        $store_genotypes->store_new_markers_in_protocolprop(\@mismatch_markers);
-                    } else {
-			print STDERR "Too many new markers, should be less than 20\n";
-		        $c->stash->{rest} = { error => "Too many new markers, should be less than 20"};
-                        $c->detach();
-                    }
-		} else {
-		    my $marker_name_error = "<br>";
-                    foreach my $error ( sort @mismatch_marker_names) {
-                        $marker_name_error .= $error."<br>";
-                    }
-		    $c->stash->{rest} = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
-                    $c->detach();
-                }
-            }
-
-            push @all_warnings, @protocol_match_errors;
-	}
-
-        if (scalar(@all_warnings) > 0 && !$accept_warnings) {
-            my $warning_string = join("<br>", @all_warnings);
-            $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $previous_genotypes_exist };
-            $c->detach();
-        }
-
-        $store_genotypes->store_metadata();
-        $store_genotypes->store_identifiers();
-        $return = $store_genotypes->store_genotypeprop_table();
-
-    } elsif ($parser_plugin eq 'SSRExcel') {
-        my $parsed_data = $parser->parse();
-        print STDERR "SSR PARSED DATA =".Dumper($parsed_data)."\n";
-        my $parse_errors;
-        if (!$parsed_data) {
-            my $return_error = '';
-            if (!$parser->has_parse_errors() ){
-                $return_error = "Could not get parsing errors";
-                $c->stash->{rest} = {error_string => $return_error,};
-            } else {
-                $parse_errors = $parser->get_parse_errors();
-                #print STDERR Dumper $parse_errors;
-                foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                    $return_error=$return_error.$error_string."<br>";
-                }
-            }
-            $c->stash->{rest} = {error_string => $return_error, missing_stocks => $parse_errors->{'missing_stocks'}};
-            $c->detach();
-        }
-
-        my $observation_unit_uniquenames = $parsed_data->{observation_unit_uniquenames};
-        my $genotype_info = $parsed_data->{genotypes_info};
-
-        my @protocol_id_list;
-        push @protocol_id_list, $protocol_id;
-        my $genotypes_search = CXGN::Genotype::Search->new({
-        	bcs_schema=>$schema,
-        	people_schema=>$people_schema,
-        	protocol_id_list=>\@protocol_id_list,
-        });
-        my $result = $genotypes_search->get_pcr_genotype_info();
-        my $protocol_marker_names = $result->{'marker_names'};
-        my $previous_protocol_marker_names = decode_json $protocol_marker_names;
-
-        my %protocolprop_info;
-        $protocolprop_info{'sample_observation_unit_type_name'} = 'accession';
-        $protocolprop_info{'marker_names'} = $previous_protocol_marker_names;
-
-        $store_args->{genotype_info} = $genotype_info;
-        $store_args->{observation_unit_uniquenames} = $observation_unit_uniquenames;
-        $store_args->{protocol_info} = \%protocolprop_info;
-        $store_args->{observation_unit_type_name} = 'accession';
-        $store_args->{genotyping_data_type} = 'ssr';
-
-        my $store_genotypes = CXGN::Genotype::StoreVCFGenotypes->new($store_args);
-        my $verified_errors = $store_genotypes->validate();
-
-        if (scalar(@{$verified_errors->{error_messages}}) > 0){
-            my $error_string;
-            foreach my $error (@{$verified_errors->{error_messages}}) {
-                $error_string .= $error."<br>";
-            }
-            $c->stash->{rest} = { error => "There exist errors in your file. $error_string", missing_stocks => $verified_errors->{missing_stocks}, missing_markers => $verified_errors->{missing_markers} };
-            $c->detach();
-        }
-
-        if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            my $warning_string;
-            foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
-                $warning_string .= $error_string."<br>";
-            }
-            if (!$accept_warnings){
-                $c->stash->{rest} = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-                $c->detach();
-            }
-        }
-
-        $store_genotypes->store_metadata();
-        $return = $store_genotypes->store_identifiers();
-
-    } else {
-        print STDERR "Parser plugin $parser_plugin not recognized!\n";
-	#$c->stash->{rest} = { error => "Parser plugin $parser_plugin not recognized!" };
+    # Nothing recognizable was uploaded. Submitting a job for it would only produce a background
+    # failure that is harder to read than saying so here.
+    if (!$genotype_file_type || !$archived_filename_with_path || !$parser_plugin) {
+        $c->stash->{rest} = { error => 'You must upload a genotype data file!' };
         $c->detach();
     }
 
-    my $basepath = $c->config->{basepath};
     my $dbhost = $c->config->{dbhost};
     my $dbname = $c->config->{dbname};
     my $dbuser = $c->config->{dbuser};
     my $dbpass = $c->config->{dbpass};
-    my $bs = CXGN::BreederSearch->new( { dbh=>$c->dbc->dbh, dbname=>$dbname, } );
-    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
+    my $basepath = $c->config->{basepath};
+    my $archive_path = $c->config->{archive_path};
+    my $tempfiles_subdir = $c->config->{tempfiles_subdir};
 
-    # Rebuild and refresh the materialized_markerview table
-    my $async_refresh = CXGN::Tools::Run->new();
-    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+    # Everything that describes the upload goes on the job rather than on the command line. Most of
+    # it is text the uploader typed, which does not belong in a shell string, and the design of a
+    # protocol would not fit on one anyway.
+    my $upload_params = {
+        parser_plugin => $parser_plugin,
+        genotype_file_type => $genotype_file_type,
+        archived_filename => $archived_filename_with_path,
+        archived_marker_info_file => $archived_marker_info_file,
+        tassel_hdf5_file => $tassel_hdf5_file,
+        rootpath => $c->config->{rootpath},
+        user_id => $user_id,
+        obs_type => $obs_type,
+        organism_id => $organism_id,
+        organism_species => $organism_species,
+        add_accessions => $add_accessions,
+        add_markers => $add_markers,
+        include_igd_numbers => $include_igd_numbers,
+        include_lab_numbers => $include_lab_numbers,
+        accept_warnings => $accept_warnings,
+        project_id => $project_id,
+        protocol_id => $protocol_id,
+        genotyping_facility => $genotyping_facility,
+        breeding_program_id => $breeding_program_id,
+        year => $year,
+        location_id => $location_id,
+        project_name => $project_name,
+        description => $description,
+        protocol_name => $protocol_name,
+        protocol_description => $protocol_description,
+        reference_genome_name => $reference_genome_name,
+        assay_type => $assay_type
+    };
 
-    $c->stash->{rest} = $return;
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job, and can read the upload it is to run off it.
+    my $cmd = "perl \"$basepath/bin/upload_genotype_data.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -tf \"$tempfiles_subdir\" -j __SP_JOB_ID__";
+
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
+        cmd => $cmd,
+        name => basename($archived_filename_with_path)." genotype data upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            final_upload => 1,
+            file_type => $genotype_file_type,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_main_file_id,
+            upload_params => $upload_params
+        }
+    });
+
+    my $submit_error;
+    try {
+        $upload_job->submit();
+    } catch {
+        $submit_error = $_;
+    };
+    if ($submit_error) {
+        $c->stash->{rest} = { error => "Could not submit the genotype data upload: $submit_error" };
+        $c->detach();
+    }
+
+    if ($from_upload_manager) {
+        $c->stash->{rest} = { success => 1, job_id => $upload_job->sp_job_id() };
+        $c->detach();
+    }
+
+    $upload_job->wait();
+
+    # The script reports its results by writing them to the job, so they have to be read back from
+    # the database rather than from the object that submitted it. The answer the dialog gets is
+    # recorded whole, so that a file that was waited on reads exactly the same as it used to.
+    my $finished_job = CXGN::Job->new({
+        sp_job_id => $upload_job->sp_job_id(),
+        schema => $schema,
+        people_schema => $people_schema
+    });
+    my $job_args = $finished_job->additional_args() || {};
+    print STDERR Dumper $job_args->{result};
+    print STDERR Dumper $job_args->{success_messages};
+    print STDERR Dumper $job_args->{warning_messages};
+    print STDERR Dumper $job_args->{error_messages};
+
+    if (!$job_args->{result}) {
+        # The job left the queue without recording an outcome, which happens if the script died
+        # before it could report anything.
+        $c->stash->{rest} = { error => "The genotype data upload did not report a result. Check the status of upload job ".$upload_job->sp_job_id()."." };
+        $c->detach();
+    }
+
+    $c->stash->{rest} = $job_args->{result};
 }
 
 1;

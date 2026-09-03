@@ -14,6 +14,9 @@ use CXGN::Genotype::CreatePlateOrder;
 use CXGN::Genotype::StoreGenotypingProject;
 use CXGN::Stock::TissueSample::Search;
 use CXGN::Genotype::Delete;
+use CXGN::Job;
+use CXGN::File;
+use File::Basename qw | basename |;
 
 BEGIN { extends 'Catalyst::Controller::REST' }
 
@@ -94,6 +97,18 @@ sub generate_genotype_trial_POST : Args(0) {
 }
 
 
+=head2 parse_genotype_trial_file_POST()
+
+Archives an uploaded genotyping plate layout file and hands it to the background script that reads
+it. The design the script builds is recorded on the job, so that storing the plate afterwards does
+not have to read the file again.
+
+The upload manager archives the file before calling here and follows the job itself, so it gets an
+answer as soon as the job has been submitted. The upload dialog posts the file directly and lays
+out the plate it gets back, so it waits for the job to finish before it is answered.
+
+=cut
+
 sub parse_genotype_trial_file : Path('/ajax/breeders/parsegenotypetrial') : ActionClass('REST') { }
 sub parse_genotype_trial_file_POST : Args(0) {
     my ($self, $c) = @_;
@@ -101,32 +116,40 @@ sub parse_genotype_trial_file_POST : Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $chado_schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
     my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
-    my $phenome_schema = $c->dbic_schema("CXGN::Phenome::Schema", undef, $sp_person_id);
-    my $dbh = $c->dbc->dbh;
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $genotyping_plate_name = $c->req->param('genotyping_trial_name');
     my $upload_xls = $c->req->upload('genotyping_trial_layout_upload');
     my $upload_coordinate = $c->req->upload('genotyping_trial_layout_upload_coordinate');
     my $upload_coordinate_custom = $c->req->upload('genotyping_trial_layout_upload_coordinate_template');
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $file_type = $c->req->param('genotyping_plate_upload_type') || undef;
     my $facility_identifiers= $c->req->param('upload_include_facility_identifiers');
     my $include_facility_identifiers;
     if ($facility_identifiers){
         $include_facility_identifiers = 1;
     }
+    #These describe the plate being created, but are not needed to parse the layout file. They are only recorded on the job for tracking purposes.
+    my $genotyping_project_id = $c->req->param('genotyping_project_id');
+    my $genotyping_plate_format = $c->req->param('genotyping_plate_format');
+    my $genotyping_plate_sample_type = $c->req->param('genotyping_plate_sample_type');
+    my $genotyping_plate_description = $c->req->param('genotyping_plate_description');
 
+    #The upload manager archives a file before calling here, so a file that is already in the archive is one it is going to follow the job for itself.
+    my $from_upload_manager = $archived_file_id ? 1 : 0;
 
-    if ($upload_xls && $upload_coordinate){
-        $c->stash->{rest} = {error => "Do not upload both XLS and Coordinate file at the same time!" };
+    #Maps the granular upload type (used for job/file tracking) to the CXGN::Trial::ParseUpload plugin that handles it.
+    my %genotyping_plate_upload_plugins = (
+        genotyping_plate_excel => 'GenotypeTrialXLS',
+        genotyping_plate_default_android => 'GenotypeTrialCoordinate',
+        genotyping_plate_custom_android => 'GenotypeTrialCoordinateTemplate',
+    );
+
+    my $uploaded_file_count = grep { $_ } ($upload_xls, $upload_coordinate, $upload_coordinate_custom, $archived_file_id);
+    if ($uploaded_file_count > 1){
+        $c->stash->{rest} = {error => "Do not upload more than one genotyping plate file at the same time!" };
         return;
     }
-    if ($upload_xls && $upload_coordinate_custom){
-        $c->stash->{rest} = {error => "Do not upload both XLS and Custom Coordinate file at the same time!" };
-        return;
-    }
-    if ($upload_coordinate && $upload_coordinate_custom){
-        $c->stash->{rest} = {error => "Do not upload both Coordinate file and Custom Coordinate file at the same time!" };
-        return;
-    }
-    if (!$upload_xls && !$upload_coordinate && !$upload_coordinate_custom){
+    if ($uploaded_file_count < 1){
         $c->stash->{rest} = {error => "You must upload a genotyping plate file!" };
         return;
     }
@@ -134,45 +157,45 @@ sub parse_genotype_trial_file_POST : Args(0) {
         $c->stash->{rest} = {error => 'Genotyping plate id must be given!'};
         return;
     }
-    my $parser;
-    my $parsed_data;
+
     my $upload;
-    my $upload_type;
     if ($upload_xls){
         $upload = $upload_xls;
-        $upload_type = 'GenotypeTrialXLS';
+        $file_type = 'genotyping_plate_excel';
     }
     if ($upload_coordinate){
         $upload = $upload_coordinate;
-        $upload_type = 'GenotypeTrialCoordinate';
+        $file_type = 'genotyping_plate_default_android';
     }
     if ($upload_coordinate_custom){
         $upload = $upload_coordinate_custom;
-        $upload_type = 'GenotypeTrialCoordinateTemplate';
+        $file_type = 'genotyping_plate_custom_android';
     }
-    my $upload_original_name = $upload->filename();
-    my $upload_tempfile = $upload->tempname;
+    if ($archived_file_id && (!$file_type || !$genotyping_plate_upload_plugins{$file_type})){
+        $c->stash->{rest} = {error => "A valid genotyping plate upload type must be given for an already-archived file." };
+        return;
+    }
+    my $upload_type = $genotyping_plate_upload_plugins{$file_type};
+
     my $subdirectory = "genotyping_trial_upload";
     my $archived_filename_with_path;
-    my $md5;
-    my $validate_file;
-    my $parsed_file;
-    my $parse_errors;
-    my %parsed_data;
-    my %upload_metadata;
     my $time = DateTime->now();
     my $timestamp = $time->ymd()."_".$time->hms();
-    my $error;
 
-    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
-        print STDERR "File name must not have spaces or slashes.\n";
-        $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
-        return;
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
+            print STDERR "File name must not have spaces or slashes.\n";
+            $c->stash->{rest} = {error => "Uploaded file name must not contain spaces or slashes." };
+            return;
+        }
     }
 
     my $user_id;
     my $user_name;
     my $user_role;
+    my $user_first_name;
+    my $user_last_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -186,6 +209,8 @@ sub parse_genotype_trial_file_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
@@ -194,6 +219,8 @@ sub parse_genotype_trial_file_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
@@ -201,79 +228,131 @@ sub parse_genotype_trial_file_POST : Args(0) {
         $c->detach();
     }
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $user_role
+    if (!$archived_file_id) {
+        my $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            file_type => 'genotyping_plate',
+            metadata_schema => $metadata_schema
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        my $md5 = $uploader->get_md5($archived_filename_with_path);
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+            return;
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $metadata_schema,
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+    }
+
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+    my $archive_path = $c->config->{archive_path};
+
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job, and can read the name of the plate off it. The plate
+    # name is whatever the uploader typed, so it is passed on the job rather than on the command
+    # line.
+    my $cmd = "perl \"$basepath/bin/parse_genotype_trial_file.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -i \"$archived_file_id\" -t \"$upload_type\" -fi \"".($include_facility_identifiers ? 1 : 0)."\" -j __SP_JOB_ID__";
+
+    my $upload_job = CXGN::Job->new({
+        schema => $chado_schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
+        cmd => $cmd,
+        name => basename($archived_filename_with_path)." $genotyping_plate_name genotyping plate upload",
+        job_type => 'upload',
+        results_page => '/breeders/genotyping_projects',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            is_validation => 1,
+            file_type => $file_type,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id,
+            genotyping_plate_name => $genotyping_plate_name,
+            genotyping_project_id => $genotyping_project_id,
+            genotyping_plate_format => $genotyping_plate_format,
+            genotyping_plate_sample_type => $genotyping_plate_sample_type,
+            genotyping_plate_description => $genotyping_plate_description
+        }
     });
-    $archived_filename_with_path = $uploader->archive();
-    $md5 = $uploader->get_md5($archived_filename_with_path);
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
+
+    my $submit_error;
+    try {
+        $upload_job->submit();
+    } catch {
+        $submit_error = $_;
+    };
+    if ($submit_error) {
+        $c->stash->{rest} = {error => "Could not submit the genotyping plate upload: $submit_error"};
         return;
     }
-    unlink $upload_tempfile;
 
-    #Parse of Coordinate Template formatted file requires the plate name to be passed, so that a unique sample name can be created by concatenating the plate name to the well position.
-    my %parse_args = (
-        genotyping_plate_id => $genotyping_plate_name
-    );
-
-    #parse uploaded file with appropriate plugin
-    $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path, facility_identifiers_included => $include_facility_identifiers);
-    $parser->load_plugin($upload_type);
-    $parsed_data = $parser->parse(\%parse_args);
-
-    if (!$parsed_data) {
-        my $return_error = '';
-
-        if (! $parser->has_parse_errors() ){
-            $return_error = "Could not get parsing errors";
-            $c->stash->{rest} = {error_string => $return_error,};
-        }
-        else {
-            $parse_errors = $parser->get_parse_errors();
-            #print STDERR Dumper $parse_errors;
-            foreach my $error_string (@{$parse_errors->{'error_messages'}}){
-                $return_error=$return_error.$error_string."<br>";
-            }
-        }
-
-        $c->stash->{rest} = {error_string => $return_error, missing_accessions => $parse_errors->{'missing_accessions'}};
+    if ($from_upload_manager) {
+        $c->stash->{rest} = {success => 1, job_id => $upload_job->sp_job_id()};
         return;
     }
-    #print STDERR Dumper $parsed_data;
 
-    #Turn parased data into same format as generate_genotype_trial above
-    my %design;
-    foreach (sort keys %$parsed_data){
-        my $val = $parsed_data->{$_};
-        $design{$val->{well}} = {
-            plot_name => $val->{sample_id},
-            stock_name => $val->{source_stock_uniquename},
-            plot_number => $val->{well},
-            row_number => $val->{row},
-            col_number => $val->{column},
-            is_blank => $val->{is_blank},
-            concentration => $val->{concentration},
-            volume => $val->{volume},
-            tissue_type => $val->{tissue_type},
-            dna_person => $val->{dna_person},
-            extraction => $val->{extraction},
-            acquisition_date => $val->{date},
-            notes => $val->{notes},
-            ncbi_taxonomy_id => $val->{ncbi_taxonomy_id},
-            facility_identifier => $val->{facility_identifier}
-        };
+    $upload_job->wait();
+
+    # The script reports its results by writing them to the job, so they have to be read back from
+    # the database rather than from the object that submitted it.
+    my $finished_job = CXGN::Job->new({
+        sp_job_id => $upload_job->sp_job_id(),
+        schema => $chado_schema,
+        people_schema => $people_schema
+    });
+    my $job_args = $finished_job->additional_args() || {};
+
+    if ($job_args->{error_messages}) {
+        $c->stash->{rest} = {error_string => $job_args->{error_messages}, missing_accessions => $job_args->{missing_accessions}};
+        return;
+    }
+    if (!$job_args->{design}) {
+        # The job left the queue without recording an outcome, which happens if the script died
+        # before it could report anything.
+        $c->stash->{rest} = {error_string => "The genotyping plate upload did not report a result. Check the status of upload job ".$upload_job->sp_job_id()."."};
+        return;
     }
 
-    $c->stash->{rest} = {success => "1", design=>\%design};
+    $c->stash->{rest} = {success => "1", design=>$job_args->{design}};
 }
+
+=head2 store_genotype_trial_POST()
+
+Hands a genotyping plate to the background script that saves it. The plate is described either by a
+layout file that was parsed beforehand or by a layout that was generated on the site, and it is
+recorded on the job rather than passed on the command line, since a full plate is too big for one.
+
+The upload manager follows the job itself, so it gets an answer as soon as the job has been
+submitted. The upload dialog reports the outcome to the user and passes the saved plate on to the
+genotyping facility when that was asked for, so it waits for the job to finish before it is
+answered.
+
+=cut
 
 sub store_genotype_trial : Path('/ajax/breeders/storegenotypetrial') ActionClass('REST') {}
 sub store_genotype_trial_POST : Args(0) {
@@ -283,6 +362,8 @@ sub store_genotype_trial_POST : Args(0) {
     my $user_id;
     my $user_name;
     my $user_role;
+    my $user_first_name;
+    my $user_last_name;
     my $session_id = $c->req->param("sgn_session_id");
 
     if ($session_id){
@@ -296,6 +377,8 @@ sub store_genotype_trial_POST : Args(0) {
         $user_role = $user_info[1];
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else{
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload a genotyping plate!'};
@@ -304,6 +387,8 @@ sub store_genotype_trial_POST : Args(0) {
         $user_id = $c->user()->get_object()->get_sp_person_id();
         $user_name = $c->user()->get_object()->get_username();
         $user_role = $c->user->get_object->get_user_type();
+        $user_first_name = $c->user()->get_object()->get_first_name();
+        $user_last_name = $c->user()->get_object()->get_last_name();
     }
 
     if ($user_role ne 'curator' && $user_role ne 'submitter') {
@@ -312,144 +397,95 @@ sub store_genotype_trial_POST : Args(0) {
     }
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
+    my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $user_id);
     my $plate_info = decode_json $c->req->param("plate_data");
 #    print STDERR "PLATE INFO =".Dumper($plate_info)."\n";
+    my $archived_file_id = $c->req->param('archived_file_id') || undef;
+    my $file_type = $c->req->param('genotyping_plate_upload_type') || undef;
+
+    #The upload manager stores a plate whose layout file it has already archived, and it follows the job for itself.
+    my $from_upload_manager = $archived_file_id ? 1 : 0;
 
     if ( !$plate_info->{design} || !$plate_info->{genotyping_facility_submit} || !$plate_info->{genotyping_project_id} || !$plate_info->{name} || !$plate_info->{sample_type} || !$plate_info->{plate_format} ) {
         $c->stash->{rest} = { error => "Please provide all parameters in the plate information section" };
         $c->detach();
     }
 
-    my $field_nd_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'field_layout', 'experiment_type')->cvterm_id();
-    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id;
-    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id;
-    my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id;
-    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot', 'stock_type')->cvterm_id;
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
 
-    my %source_stock_names;
-    foreach (values %{$plate_info->{design}}){
-        $source_stock_names{$_->{stock_name}}++;
-    }
-    my @source_stock_names = keys %source_stock_names;
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job, and can read the plate it is to store off it.
+    my $cmd = "perl \"$basepath/bin/store_genotype_trial.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -un \"$user_name\" -j __SP_JOB_ID__";
 
-    #If plots or subplot or plants or tissue samples are provided as the source, we can get the field trial and use it to save the link between genotyping plate and field trial directly.
-    my %field_trial_ids;
-    my $plant_rs = $schema->resultset('Stock::Stock')->search({'me.uniquename' => {-in => \@source_stock_names}, 'me.type_id' => {-in => [$plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id]}, 'nd_experiment_stocks.type_id'=>$field_nd_experiment_type_id, 'nd_experiment.type_id'=>$field_nd_experiment_type_id}, {'join' => {'nd_experiment_stocks' => {'nd_experiment' => 'nd_experiment_projects'}}, '+select'=>['nd_experiment_projects.project_id'], '+as'=>['trial_id']});
-    while(my $r=$plant_rs->next){
-        $field_trial_ids{$r->get_column('trial_id')}++;
-    }
-    my @field_trial_ids = keys %field_trial_ids;
-    #print STDERR Dumper \@field_trial_ids;
+    my $upload_job = CXGN::Job->new({
+        schema => $schema,
+        people_schema => $people_schema,
+        sp_person_id => $user_id,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
+        cmd => $cmd,
+        name => "$plate_info->{name} genotyping plate upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            final_upload => 1,
+            file_type => $file_type,
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id,
+            genotyping_plate_name => $plate_info->{name},
+            plate_data => $plate_info
+        }
+    });
 
-
-    my $genotyping_project_id = $plate_info->{genotyping_project_id};
-    my $trial = CXGN::Trial->new( { bcs_schema => $schema, trial_id => $genotyping_project_id });
-    my $location_data = $trial->get_location();
-    my $location_id = $location_data->[0];
-    my $location_name = $location_data->[1];
-
-    my $description;
-    my $plate_description = $plate_info->{description};
-    if ($plate_description) {
-        $description = $plate_description;
-    } else {
-        $description = $trial->get_description();
-    }
-
-    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
-    my $breeding_program_data = $program_object->get_breeding_programs_by_trial($genotyping_project_id);
-    my $breeding_program_id = $breeding_program_data->[0]->[0];
-    my $breeding_program_name = $breeding_program_data->[0]->[1];
-    my $genotyping_facility = $trial->get_genotyping_facility();
-    my $plate_year = $trial->get_year();
-
-    print STDERR "Creating the genotyping plate...\n";
-
-    my $message;
-    my $coderef = sub {
-
-        my $ct = CXGN::Trial::TrialCreate->new( {
-            chado_schema => $schema,
-            dbh => $c->dbc->dbh(),
-            owner_id => $user_id,
-            operator => $user_name,
-            trial_year => $plate_year,
-            trial_location => $location_name,
-            program => $breeding_program_name,
-            trial_description => $description,
-            design_type => 'genotyping_plate',
-            design => $plate_info->{design},
-            trial_name => $plate_info->{name},
-            is_genotyping => 1,
-            genotyping_user_id => $user_id,
-            genotyping_project_id => $genotyping_project_id,
-            genotyping_facility_submitted => $plate_info->{genotyping_facility_submit},
-            genotyping_facility => $genotyping_facility,
-            genotyping_plate_format => $plate_info->{plate_format},
-            genotyping_plate_sample_type => $plate_info->{sample_type},
-            genotyping_trial_from_field_trial => \@field_trial_ids,
-        });
-
-        $message = $ct->save_trial();
-    };
-
+    my $submit_error;
     try {
-        $schema->txn_do($coderef);
+        $upload_job->submit();
     } catch {
-        print STDERR "Transaction Error: $_\n";
-        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $_"};
-        $c->detach;
+        $submit_error = $_;
     };
-
-    my $error;
-    if ($message->{'error'}) {
-        $error = $message->{'error'};
-    }
-    if ($error){
-        $c->stash->{rest} = {error => "Error saving genotyping plate in the database: $error"};
-        $c->detach;
-    }
-    #print STDERR Dumper(%message);
-
-#    my $dbh = $c->dbc->dbh();
-#    my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
-#    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
-
-    my $saved_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $message->{trial_id}, experiment_type=>'genotyping_layout'});
-    my $saved_design = $saved_layout->get_design();
-    #print STDERR Dumper $saved_design;
-
-    my @brapi_samples;
-    foreach (values %$saved_design){
-        push @brapi_samples, {
-            sampleDbId => $_->{plot_id},
-            sampleName => $_->{plot_name},
-            well => $_->{plot_number},
-            row => $_->{row_number},
-            column => $_->{col_number},
-            concentration => $_->{concentration},
-            volume => $_->{volume},
-            tissueType => $_->{tissue_type},
-            taxonId => {
-                sourceName => 'NCBI',
-                taxonId => $_->{ncbi_taxonomy_id}
-            }
-        };
+    if ($submit_error) {
+        $c->stash->{rest} = {error => "Could not submit the genotyping plate upload: $submit_error"};
+        return;
     }
 
-    my $brapi_plate_data = {
-        vendorProjectDbId => $plate_info->{project_name},
-        clientPlateDbId => $message->{trial_id},
-        clientPlateName => $plate_info->{name},
-        plateFormat => $plate_info->{plate_format},
-        sampleType => $plate_info->{sample_type},
-        samples => \@brapi_samples
-    };
+    if ($from_upload_manager) {
+        $c->stash->{rest} = {success => 1, job_id => $upload_job->sp_job_id()};
+        return;
+    }
+
+    $upload_job->wait();
+
+    # The script reports its results by writing them to the job, so they have to be read back from
+    # the database rather than from the object that submitted it.
+    my $finished_job = CXGN::Job->new({
+        sp_job_id => $upload_job->sp_job_id(),
+        schema => $schema,
+        people_schema => $people_schema
+    });
+    my $job_args = $finished_job->additional_args() || {};
+
+    if ($job_args->{error_messages}) {
+        $c->stash->{rest} = {error => $job_args->{error_messages}};
+        return;
+    }
+    if (!$job_args->{trial_id}) {
+        # The job left the queue without recording an outcome, which happens if the script died
+        # before it could report anything.
+        $c->stash->{rest} = {error => "The genotyping plate upload did not report a result. Check the status of upload job ".$upload_job->sp_job_id()."."};
+        return;
+    }
 
     $c->stash->{rest} = {
-        message => "Successfully stored the genotyping plate.",
-        trial_id => $message->{trial_id},
-        plate_data => $brapi_plate_data
+        message => $job_args->{success_messages},
+        trial_id => $job_args->{trial_id},
+        plate_data => $job_args->{brapi_plate_data}
     };
 }
 
@@ -490,7 +526,7 @@ sub get_genotyping_data_projects_GET : Args(0) {
     foreach (@$data){
         my @res;
         if ($checkbox_select_name){
-            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{trial_id}'>";
+            push @res, "<input type='checkbox' name='$checkbox_select_name' trial_name='$_->{trial_name}' value='$_->{trial_id}'>";
         }
         push @res, (
             "<a href=\"/breeders_toolbox/trial/$_->{trial_id}\">$_->{trial_name}</a>",
@@ -527,7 +563,7 @@ sub get_genotyping_data_protocols_GET : Args(0) {
     foreach (@$data){
         my @res;
         if ($checkbox_select_name){
-            push @res, "<input type='checkbox' name='$checkbox_select_name' value='$_->{protocol_id}'>";
+            push @res, "<input type='checkbox' name='$checkbox_select_name' protocol_name='$_->{protocol_name}' value='$_->{protocol_id}'>";
         }
         my $num_markers = $_->{marker_count};
         my @trimmed;

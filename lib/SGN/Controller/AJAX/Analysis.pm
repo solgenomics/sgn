@@ -37,6 +37,7 @@ sub store_analysis_json_POST {
     my $c = shift;
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema", undef, $sp_person_id);
     print STDERR Dumper $c->req->params();
     my $analysis_to_save_boolean = $c->req->param("analysis_to_save_boolean");
     my $analysis_name = $c->req->param("analysis_name");
@@ -181,6 +182,8 @@ sub store_analysis_spreadsheet_POST {
     my $timestamp = $time->ymd()."_".$time->hms();
     my $subdirectory = 'upload_analysis_generic';
 
+    my $metadata_schema = $c->dbic_schema("CXGN::Metadata::Schema");
+
     my $analysis_model_auxiliary_files;
     if ($analysis_model_auxiliary_file_1 && $analysis_model_auxiliary_file_type_1) {
         my $upload_original_name = $analysis_model_auxiliary_file_1->filename();
@@ -193,16 +196,17 @@ sub store_analysis_spreadsheet_POST {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
             $c->detach();
         }
         unlink $upload_tempfile;
-        
+
         push @$analysis_model_auxiliary_files, {
             auxiliary_model_file_archive_type => $analysis_model_auxiliary_file_type_1,
             auxiliary_model_file => $archived_filename_with_path
@@ -219,9 +223,10 @@ sub store_analysis_spreadsheet_POST {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
@@ -245,9 +250,10 @@ sub store_analysis_spreadsheet_POST {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
@@ -273,9 +279,10 @@ sub store_analysis_spreadsheet_POST {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
@@ -298,9 +305,10 @@ sub store_analysis_spreadsheet_POST {
             archive_filename => $upload_original_name,
             timestamp => $timestamp,
             user_id => $user_id,
-            user_role => $user_role
+            user_role => $user_role,
+            metadata_schema => $metadata_schema
         });
-        my $archived_filename_with_path = $uploader->archive();
+        my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
         my $md5 = $uploader->get_md5($archived_filename_with_path);
         if (!$archived_filename_with_path) {
             $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};
@@ -354,9 +362,10 @@ sub store_analysis_spreadsheet_POST {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive."};

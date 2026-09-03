@@ -302,10 +302,10 @@ sub update_fieldmap_precheck {
         bcs_schema => $self->bcs_schema,
         trial_id => $trial_id
     });
-    my $triat_name = $trial->get_traits_assayed();
+    my $trait_name = $trial->get_traits_assayed();
     #print STDERR Dumper($triat_name);
 
-    if (scalar(@{$triat_name}) != 0)  {
+    if (scalar(@{$trait_name}) != 0)  {
         $error = "One or more traits have been assayed for this trial; Map/Layout can not be modified. Please contact us.";
         return $error;
     }

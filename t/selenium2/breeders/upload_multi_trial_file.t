@@ -60,7 +60,9 @@ for my $extension ("xlsx", "xls", "csv") {
         archive_filename => "demo_multiple_trial_design.$extension",
         timestamp        => $timestamp,
         user_id          => 41,
-        user_role        => 'curator' 
+        user_role        => 'curator',
+        metadata_schema  => $f->metadata_schema(),
+        file_type        => 'trials'
     });
 
     ##store uploaded temprarly file info in archive

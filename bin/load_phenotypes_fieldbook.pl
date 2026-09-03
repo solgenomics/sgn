@@ -110,9 +110,11 @@ my $uploader = CXGN::UploadFile->new({
    archive_filename => basename($upload),
    timestamp => $timestamp,
    user_id => $sp_person_id,
-   user_role => 'curator'
+   user_role => 'curator',
+   metadata_schema => $metadata_schema,
+   file_type => 'fieldbook_phenotypes'
 });
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 if (!$archived_filename_with_path) {
     die "Could not archive file!\n";
@@ -122,6 +124,7 @@ if (!$archived_filename_with_path) {
 
 my %phenotype_metadata;
 $phenotype_metadata{'archived_file'} = $archived_filename_with_path;
+$phenotype_metadata{'archived_file_id'} = $archived_file_id;
 $phenotype_metadata{'archived_file_type'} = $metadata_file_type;
 $phenotype_metadata{'operator'} = $opt_u;
 $phenotype_metadata{'date'} = $timestamp;
