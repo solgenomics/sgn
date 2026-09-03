@@ -440,10 +440,27 @@ $facilities
                                     </div>
                                 </div>
 
-                                <div id="upload_genotypes_errors_div">
+% if ($c->user() && $c->user()->has_role("curator")) {
+                                <div id="upload_genotypes_mismatched_marker_div" style="display:none">
+                                    <div class="form-group">
+                                        <label class="col-sm-5 control-label">
+                                            Update mismatched markers?
+                                            <small class="help-block">If a marker name already exists in the selected protocol but its chromosome, position, ref, or alt differs from this file.</small>
+                                        </label>
+                                        <div class="col-sm-7">
+                                            <select class="form-control" id="upload_genotype_update_markers" name="upload_genotype_update_markers">
+                                                <option value="0">No</option>
+                                                <option value="1">Yes</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+% }
+
+                                <div id="upload_genotypes_errors_div" class="alert alert-danger" role="alert" style="display:none; margin-top:10px;">
                                 </div>
 
-                                <div id="upload_genotypes_warnings_div" style="display:none">
+                                <div id="upload_genotypes_warnings_div" class="alert alert-warning" role="alert" style="display:none; margin-top:10px;">
                                     <div id="upload_genotypes_warnings_html">
                                     </div>
                                 </div>
