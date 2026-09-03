@@ -202,6 +202,11 @@ solGS.pca = {
         if (selectedPopDiv) {
             var selectedPopData = selectedPopDiv.dataset;
             var selectedPop = JSON.parse(selectedPopData.selectedPop);
+
+            if (runPcaElemId.match(/save_pcs/)) {
+                return selectedPop;
+            }
+
             pcaPopId = selectedPop.pca_pop_id;
 
             var pcaArgs = selectedPopData.selectedPop;
