@@ -262,13 +262,13 @@ export function init(trial_id, trial_name) {
                   var header = d.value + " shared accession" + (d.value === 1 ? "" : "s");
                   var lines = [header].concat(shown);
                   if (d.names.length > shown.length){
-                    lines.push("…and " + (d.names.length - shown.length) + " more");
+                    lines.push("...and " + (d.names.length - shown.length) + " more");
                   }
                   draw_tooltip((d.source.x1 + d.target.x0) / 2 + 10, (d.y0 + d.y1) / 2, lines);
                 }
 
                 function show_node_tooltip(d){
-                  var lines = ["Trial: " + d.id, "Trial Type: " + (d.trialType || "—")];
+                  var lines = ["Trial: " + d.id, "Trial Type: " + (d.trialType || "")];
                   var leftX = d.x1 + 12;
                   if (leftX + TOOLTIP_WIDTH > sankeyWidth) leftX = d.x0 - 12 - TOOLTIP_WIDTH;
                   draw_tooltip(leftX, (d.y0 + d.y1) / 2, lines);
