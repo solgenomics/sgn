@@ -156,7 +156,8 @@ sub image_associated_objects_GET {
         }
 
         if ($type eq "cvterm" ) {
-            $link = qq { <a href="/cvterm/$id/view/">Cvterm: $name</a> };
+            $link = qq { <a href="/cvterm/$id/view/">$name</a> };
+            $type = "trait";
         }
 
         push @results, {
