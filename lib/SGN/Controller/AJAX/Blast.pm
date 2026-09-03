@@ -43,55 +43,55 @@ sub run : Path('/tools/blast/run') Args(0) {
     my $valid = $input_query->validate($c, $params->{input_options}, $params->{sequence});
 
     if ($valid ne "OK") {
-      $c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input." };
-      return;
+        $c->stash->{rest} = { error => "Your input contains illegal characters. Please verify your input." };
+        return;
     }
 
     $params->{sequence} = $input_query->process($c, $params->{input_options}, $params->{sequence});
 
-	if ($params->{input_options} eq 'autodetect') {
-		my $detected_type = $input_query->autodetect_seq_type($c, $params->{input_options}, $params->{sequence});
+    if ($params->{input_options} eq 'autodetect') {
+        my $detected_type = $input_query->autodetect_seq_type($c, $params->{input_options}, $params->{sequence});
 
-		# print STDERR "SGN BLAST detected your sequence is: $detected_type\n";
+        # print STDERR "SGN BLAST detected your sequence is: $detected_type\n";
 
-		# create a hash with the valid options =1 and check and if result 0 return error
-		my %blast_seq_db_program = (
-			nucleotide => {
-				nucleotide => {
-					blastn => 1,
-					tblastx => 1,
-				},
-				protein => {
-					blastx => 1,
-				},
-			},
-			protein => {
-				protein => {
-					blastp => 1,
-				},
-				nucleotide => {
-					tblastn => 1,
-				},
-			},
-		);
+        # create a hash with the valid options =1 and check and if result 0 return error
+        my %blast_seq_db_program = (
+            nucleotide => {
+                nucleotide => {
+                    blastn => 1,
+                    tblastx => 1,
+                },
+                protein => {
+                    blastx => 1,
+                },
+            },
+            protein => {
+                protein => {
+                    blastp => 1,
+                },
+                nucleotide => {
+                    tblastn => 1,
+                },
+            },
+        );
 
-		if (!$blast_seq_db_program{$detected_type}{$params->{db_type}}{$params->{program}}) {
-			$c->stash->{rest} = { error => "the program ".$params->{program}." can not be used with a ".$detected_type." sequence (autodetected) and a ".$params->{db_type}." database.\n\nPlease, use different options and disable the autodetection of the query type if it is wrong." };
-			return;
-		}
-	}
+        if (!$blast_seq_db_program{$detected_type}{$params->{db_type}}{$params->{program}}) {
+            $c->stash->{rest} = { error => "the program ".$params->{program}." can not be used with a ".$detected_type." sequence (autodetected) and a ".$params->{db_type}." database.\n\nPlease, use different options and disable the autodetection of the query type if it is wrong." };
+            return;
+        }
+    }
 
     my $seq_count = 1;
     my $blast_tmp_output = $c->config->{cluster_shared_tempdir}."/cluster";
     mkdir $blast_tmp_output if ! -d $blast_tmp_output;
     if ($params->{sequence} =~ /\>/) {
-    	$seq_count= $params->{sequence} =~ tr/\>/\>/;
+        $seq_count= $params->{sequence} =~ tr/\>/\>/;
     }
 
     print STDERR "SEQ COUNT = $seq_count\n";
     my ($seq_fh, $seqfile) = tempfile(
-      "blast_XXXXXX",
-      DIR=> $blast_tmp_output,
+        "blast_XXXXXX",
+        DIR=> $blast_tmp_output,
     );
 
 #    my $jobid = basename($seqfile);
@@ -101,146 +101,146 @@ sub run : Path('/tools/blast/run') Args(0) {
     my $schema = $c->dbic_schema("SGN::Schema", undef, $sp_person_id);
 
     my %arg_handlers =
-	(
+    (
 
-	 sequence =>
-	 sub {
-	     my $sequence = $params->{sequence};
-	      if( $sequence ) {
-	      	 $sequence =~ s/^\s+|\s+$|\n\s*\n//g; #< trim out leading and trailing whitespace and blank lines
-	     # 	 if ($sequence !~ /^\s*>/) {
-	      #	     $sequence = ">WEB-USER-SEQUENCE (Unknown)\n$sequence";
-	      #	 }
-	      #	 $sequence .= "\n"; #< add a final newline
+     sequence =>
+     sub {
+         my $sequence = $params->{sequence};
+         if( $sequence ) {
+             $sequence =~ s/^\s+|\s+$|\n\s*\n//g; #< trim out leading and trailing whitespace and blank lines
+             #    if ($sequence !~ /^\s*>/) {
+             #        $sequence = ">WEB-USER-SEQUENCE (Unknown)\n$sequence";
+             #    }
+             #    $sequence .= "\n"; #< add a final newline
 
-	         print STDERR "Opening file for sequence ($seqfile)... ";
-		 open(my $FH, ">", $seqfile) || die "Can't open file for query ($seqfile)\n";
-		 print $FH $sequence if $sequence;
-		 close($FH);
+             print STDERR "Opening file for sequence ($seqfile)... ";
+             open(my $FH, ">", $seqfile) || die "Can't open file for query ($seqfile)\n";
+             print $FH $sequence if $sequence;
+             close($FH);
 
-     # print STDERR "Done.\n";
+             # print STDERR "Done.\n";
 
-#	     if(my $file_upload = $page->get_upload) {
-#		 if ( my $fh = $file_upload->fh ) {
-#		     print $seq_fh $_ while <$fh>;
-#		 }
-#	     }
+#            if(my $file_upload = $page->get_upload) {
+#                if ( my $fh = $file_upload->fh ) {
+#                    print $seq_fh $_ while <$fh>;
+#                }
+#            }
 
-		 print STDERR "Parsing with bioperl... ";
-		 my $i = Bio::SeqIO->new(
-		     -format   => 'fasta',
-		     -file       => $seqfile,
-		     );
-		 
-		 try {
-		     while ( my $s = $i->next_seq ) {
-			 $s->length or $c->throw(
-			     message  => 'Sequence '.encode_entities('"'.$s->id.'"').' is empty, this is not allowed by BLAST.',
-			     is_error => 0,
-			     );
-		     }
-		 } catch {
-		     print STDERR $@;
-		     die $_ if ref; #< throw it onward if it's an exception
-		     my $full_error = $_;
-		     if( /MSG:([^\n]+)/ ) {
-			 $_ = $1;
-		     }
-		     s/at \/[\-\w \/\.]+ line \d+.+//; # remove anything resembling backtraces
-		     $c->throw( message  => $_,
-				is_error => 0,
-				developer_message => $full_error,
-			 );
-		 };
-		 
-		 $seq_count >= 1 or $c->throw( message => 'no sequence submitted, cannot run BLAST',
-					       is_error => 0,
-					       developer_message => Data::Dumper::Dumper({
-						   '$seq_count' => $seq_count,
-						   '$seq_filename' => $seqfile,
-											 }),
-		     );
-		 
-		 return -query => $seqfile;
-		 
-	      }
-	 },
+             print STDERR "Parsing with bioperl... ";
+             my $i = Bio::SeqIO->new(
+                 -format   => 'fasta',
+                 -file       => $seqfile,
+                 );
 
+             try {
+                 while ( my $s = $i->next_seq ) {
+                     $s->length or $c->throw(
+                         message  => 'Sequence '.encode_entities('"'.$s->id.'"').' is empty, this is not allowed by BLAST.',
+                         is_error => 0,
+                         );
+                 }
+             } catch {
+                 print STDERR $@;
+                 die $_ if ref; #< throw it onward if it's an exception
+                 my $full_error = $_;
+                 if( /MSG:([^\n]+)/ ) {
+                     $_ = $1;
+                 }
+                 s/at \/[\-\w \/\.]+ line \d+.+//; # remove anything resembling backtraces
+                 $c->throw( message  => $_,
+                            is_error => 0,
+                            developer_message => $full_error,
+                     );
+             };
 
-	 expect =>
-	 sub {
-	     $params->{evalue} =~ s/[^\d\.e\-\+]//gi; #can only be these characters
-	     return -evalue =>  $params->{evalue} ? $params->{evalue} : 1;
-	 },
+             $seq_count >= 1 or $c->throw( message => 'no sequence submitted, cannot run BLAST',
+                                           is_error => 0,
+                                           developer_message => Data::Dumper::Dumper({
+                                               '$seq_count' => $seq_count,
+                                               '$seq_filename' => $seqfile,
+                                           }),
+                 );
 
-	 word_size =>
-	 sub {
-	     print STDERR "WORD SIZE = $params->{word_size}\n";
-	     $params->{word_size} =~ s/[^\d]//gi; # filter numbers only
-	     return -word_size => $params->{word_size} ? $params->{word_size} : 11;
-	 },
+             return -query => $seqfile;
 
-	 maxhits =>
-	 sub {
-	     my $h = $params->{maxhits} || 20;
-	     $h =~ s/\D//g; #only digits allowed
-	     return -max_hsps => $h;
-	 },
-
-	 # hits_list =>
-	 # sub {
-	 #     my $h = $params->{maxhits} || 20;
-	 #     $h =~ s/\D//g; #only digits allowed
-	 #     return -v => $h;
-	 # },
-
-	 filterq =>
-	 sub {
-	     if ($params->{program} eq "blastn") { 
-		 return -dust  => $params->{filterq} ? 'yes' : 'no';
-	     }
-	     else { 
-		 return ""; 
-	     }
-	     
-	 },
-
-	 # outformat =>
-	 # sub {
-	 #     $params->{outformat} =~ s/\D//g; #only digits allowed
-	 #     return -m => $params->{outformat};
-	 # },
-
-	 database =>
-
-	 sub {
-	     my $bdb = $schema->resultset("BlastDb")->find($params->{database} )
-		 or die "could not find bdb with file_base '$params->{database}'";
-
-	     my $basename = File::Spec->catfile($c->config->{blast_db_path},$bdb->file_base());
-	     #returns '/data/shared/blast/databases/genbank/nr'
-	     #remember the ID of the blast db the user just blasted with
-
-	     return -db => $basename;
-	 },
-
-	 # program =>
-	 # sub {
-	 #     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
-	 #     return -p => $params->{program};
-	 # },
-	);
+         }
+     },
 
 
-    if (! $params->{program} eq "blastn") { 
-	$arg_handlers{matrix} = sub {
-	    my $m = $params->{matrix};
-	    $m =~ /^(BLOSUM|PAM)\d+$/
-		or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
-	    return -M => $m;
-	};
+     expect =>
+     sub {
+         $params->{evalue} =~ s/[^\d\.e\-\+]//gi; #can only be these characters
+         return -evalue =>  $params->{evalue} ? $params->{evalue} : 1;
+     },
+
+     word_size =>
+     sub {
+         print STDERR "WORD SIZE = $params->{word_size}\n";
+         $params->{word_size} =~ s/[^\d]//gi; # filter numbers only
+         return -word_size => $params->{word_size} ? $params->{word_size} : 11;
+     },
+
+     maxhits =>
+     sub {
+         my $h = $params->{maxhits} || 20;
+         $h =~ s/\D//g; #only digits allowed
+         return -max_hsps => $h;
+     },
+
+     # hits_list =>
+     # sub {
+     #     my $h = $params->{maxhits} || 20;
+     #     $h =~ s/\D//g; #only digits allowed
+     #     return -v => $h;
+     # },
+
+     filterq =>
+     sub {
+         if ($params->{program} eq "blastn") {
+             return -dust  => $params->{filterq} ? 'yes' : 'no';
+         }
+         else {
+             return "";
+         }
+
+     },
+
+     # outformat =>
+     # sub {
+     #     $params->{outformat} =~ s/\D//g; #only digits allowed
+     #     return -m => $params->{outformat};
+     # },
+
+     database =>
+
+     sub {
+         my $bdb = $schema->resultset("BlastDb")->find($params->{database} )
+             or die "could not find bdb with file_base '$params->{database}'";
+
+         my $basename = File::Spec->catfile($c->config->{blast_db_path},$bdb->file_base());
+         #returns '/data/shared/blast/databases/genbank/nr'
+         #remember the ID of the blast db the user just blasted with
+
+         return -db => $basename;
+     },
+
+     # program =>
+     # sub {
+     #     $params->{program} =~ s/[^a-z]//g; #only lower-case letters
+     #     return -p => $params->{program};
+     # },
+    );
+
+
+    if (! $params->{program} eq "blastn") {
+        $arg_handlers{matrix} = sub {
+            my $m = $params->{matrix};
+            $m =~ /^(BLOSUM|PAM)\d+$/
+                or $c->throw( is_error => 0, message => "invalid matrix '$m'" );
+            return -M => $m;
+        };
     }
-    
+
     print STDERR "BUILDING COMMAND...\n";
 
 
@@ -249,11 +249,11 @@ sub run : Path('/tools/blast/run') Args(0) {
     my @command = ($params->{program});
     foreach my $k (keys %arg_handlers) {
 
-      print STDERR "evaluating $k...";
-      my @x = $arg_handlers{$k}->();
-      print STDERR "component:
+        print STDERR "evaluating $k...";
+        my @x = $arg_handlers{$k}->();
+        print STDERR "component:
       ", (join ",", @x)."\n";
-      @command = (@command, @x);
+        @command = (@command, @x);
     }
 
     # To get the proper format for gi sequences (CitrusGreening.org case)
@@ -272,66 +272,62 @@ sub run : Path('/tools/blast/run') Args(0) {
 
     my $job;
     my $jobid;
-    my $job_record;
     my $job_record_id;
 
     eval {
 
-    my $config = { 
-	    backend => $c->config->{backend},
-	    submit_host => $c->config->{cluster_host},
-	    temp_base => $blast_tmp_output,
-	    queue => $c->config->{'web_cluster_queue'},
-	    do_cleanup => 0,
-	    # don't block and wait if the cluster looks full
-	    max_cluster_jobs => 1_000_000_000,
-	    
-	};
-    $job_record = CXGN::Job->new({
-        schema => $c->dbic_schema("Bio::Chado::Schema"),
-        people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_person_id => $sp_person_id,
-        name => $params->{program}.' analysis',
-        job_type => 'sequence_analysis',
-        cmd => join(' ', @command),
-        cxgn_tools_run_config => $config,
-        finish_logfile => $c->config->{job_finish_log}
-    });
+        my $config = {
+            backend => $c->config->{backend},
+            submit_host => $c->config->{cluster_host},
+            temp_base => $blast_tmp_output,
+            queue => $c->config->{'web_cluster_queue'},
+            do_cleanup => 0,
+            # don't block and wait if the cluster looks full
+            max_cluster_jobs => 1_000_000_000,
 
-    $job_record->update_status('submitted');
-	    
-	$job = CXGN::Tools::Run->new($config);
-	$job->do_not_cleanup(1);
+        };
 
-	$job->run_cluster(@command);
+        $job = CXGN::Job->new({
+            schema => $c->dbic_schema("Bio::Chado::Schema"),
+            people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            dbhost => $c->config->{dbhost},
+            dbname => $c->config->{dbname},
+            dbuser => $c->config->{dbuser},
+            dbpass => $c->config->{dbpass},
+            basepath => $c->config->{basepath},
+            sp_person_id => $sp_person_id,
+            name => $params->{program}.' analysis',
+            job_type => 'sequence_analysis',
+            cmd => join(' ', @command),
+            cxgn_tools_run_config => $config
+        });
 
-    $job_record_id = $job_record->sp_job_id();
-   
+        $job_record_id = $job->submit();
+
     };
 
     if ($@) {
-    $job_record->update_status('failed');
-	print STDERR "An error occurred! $@\n";
-	$c->stash->{rest} = { error => $@ };
+        $job->update_status('failed');
+        print STDERR "An error occurred! $@\n";
+        $c->stash->{rest} = { error => $@ };
     }
     else {
-	# write data in blast.log
-	my $blast_log_path = $c->config->{blast_log};
-	my $blast_log_fh;
-	if (-e $blast_log_path) {
-	    open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
-	} else {
-	    open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
-	    print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
-	}
-	print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
-	
-	
-	print STDERR "Passing jobid code ".$job->jobid()."\n";
-	$c->stash->{rest} = { jobid => $job->jobid(),
-  	                      seq_count => $seq_count,
-                          job_dbid => $job_record_id
-	};
+        # write data in blast.log
+        my $blast_log_path = $c->config->{blast_log};
+        my $blast_log_fh;
+        if (-e $blast_log_path) {
+            open($blast_log_fh, ">>", $blast_log_path) || print STDERR "cannot create $blast_log_path\n";
+        } else {
+            open($blast_log_fh, ">", $blast_log_path) || print STDERR "cannot open $blast_log_path\n";
+            print $blast_log_fh "Seq_num\tDB_id\tProgram\teval\tMaxHits\tMatrix\tDate\n";
+        }
+        print $blast_log_fh "$seq_count\t".$params->{database}."\t".$params->{program}."\t".$params->{evalue}."\t".$params->{maxhits}."\t".$params->{matrix}."\t".localtime()."\n";
+
+        print STDERR "Passing jobid code ".$job->cxgn_tools_run_config->{jobid}."\n";
+        $c->stash->{rest} = { jobid => $job->cxgn_tools_run_config->{jobid},
+                              seq_count => $seq_count,
+                              job_dbid => $job_record_id
+        };
     }
 }
 
@@ -345,8 +341,7 @@ sub check : Path('/tools/blast/check') Args(2) {
     my $job_record = CXGN::Job->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
-        sp_job_id => $job_record_id,
-        finish_logfile => $c->config->{job_finish_log}
+        sp_job_id => $job_record_id
     });
 
     # my $t0 = [gettimeofday]; #-------------------------- TIME CHECK
@@ -356,14 +351,7 @@ sub check : Path('/tools/blast/check') Args(2) {
     #my $jobid =~ s/\.\.//g; # prevent hacks
     my $job_file = File::Spec->catfile($cluster_tmp_dir, $jobid, "job");
 
-    my $job = CXGN::Tools::Run->new( 
-	{ 
-	    job_file => $job_file, 
-	    submit_host => $c->config->{cluster_host},
-	    backend => $c->config->{backend},
-	});
-
-    if ( $job->alive()) {
+    if ( $job_record->alive()) {
       # my $t1 = [gettimeofday]; #-------------------------- TIME CHECK
 
       sleep(1);
@@ -387,7 +375,7 @@ sub check : Path('/tools/blast/check') Args(2) {
       #
       my $result_file = $self->jobid_to_file($c, $jobid.".out");
 
-      my $job_out_file = $job->out_file();
+      my $job_out_file = $job_record->cxgn_tools_run_config->{out_file};
 
       print STDERR "Job out file = $job_out_file...\n";
       for( 1..10 ) {

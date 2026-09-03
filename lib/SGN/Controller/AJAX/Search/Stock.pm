@@ -110,8 +110,6 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
             my $name_link;
             if ($type eq "cross"){
                 $name_link = qq{<a href="/cross/$stock_id">$uniquename</a>};
-            } elsif ($type eq "family_name"){
-                $name_link = qq{<a href="/family/$stock_id">$uniquename</a>};
             } elsif ($type eq "seedlot"){
                 $name_link = qq{<a href="/breeders/seedlot/$stock_id">$uniquename</a>};
             } else {

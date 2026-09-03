@@ -1470,8 +1470,6 @@ sub add_stock_parent : Local : ActionClass('REST') { }
 
 sub add_stock_parent_GET :Args(0) {
     my ($self, $c) = @_;
-
-    print STDERR "Add_stock_parent function...\n";
     if (!$c->user()) {
 	print STDERR "User not logged in... not associating stocks.\n";
 	$c->stash->{rest} = {error => "You need to be logged in to add pedigree information." };
@@ -1487,68 +1485,21 @@ sub add_stock_parent_GET :Args(0) {
     my $stock_id = $c->req->param('stock_id');
     my $parent_name = $c->req->param('parent_name');
     my $parent_type = $c->req->param('parent_type');
+    my $cross_type = $c->req->param('cross_type');
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado");
 
-    my $cvterm_name = "";
-    my $cross_type = "";
-    if ($parent_type eq "male") {
-        $cvterm_name = "male_parent";
-    }
-    elsif ($parent_type eq "female") {
-        $cvterm_name = "female_parent";
-        $cross_type = $c->req->param('cross_type');
-    }
+    my $stock = CXGN::Stock->new(
+        schema => $schema,
+        stock_id => $stock_id
+	);
 
-    my $type_id_row = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, "stock_relationship" )->cvterm_id();
+    my $error = $stock->add_parent($parent_name, $parent_type, $cross_type);
 
-    # check if a parent of this parent_type is already associated with this stock
-    #
-    my $previous_parent = $schema->resultset("Stock::StockRelationship")->find({
-        type_id => $type_id_row,
-        object_id => $stock_id
-    });
-
-    if ($previous_parent) {
-	print STDERR "The stock ".$previous_parent->subject_id." is already associated with stock $stock_id - returning.\n";
-	$c->stash->{rest} = { error => "A $parent_type parent with id ".$previous_parent->subject_id." is already associated with this stock. Please specify another parent." };
-	return;
+    if ($error) {
+	$c->stash->{rest} = { error => $error };
     }
 
-    print STDERR "PARENT_NAME = $parent_name STOCK_ID $stock_id  $cvterm_name\n";
-
-    my $stock = $schema->resultset("Stock::Stock")->find( { stock_id => $stock_id });
-
-   my $parent = $schema->resultset("Stock::Stock")->find( { uniquename => $parent_name } );
-
-
-
-    if (!$stock) {
-	$c->stash->{rest} = { error => "Stock with $stock_id is not found in the database!"};
-	return;
-    }
-    if (!$parent) {
-	$c->stash->{rest} = { error => "Stock with uniquename $parent_name was not found, Either this is not unique name or it is not in the database!"};
-	return;     }
-
-    my $new_row = $schema->resultset("Stock::StockRelationship")->new(
-	{
-	    subject_id => $parent->stock_id,
-	    object_id  => $stock->stock_id,
-	    type_id    => $type_id_row,
-        value => $cross_type
-	});
-
-    eval {
-	$new_row->insert();
-    };
-
-    if ($@) {
-	$c->stash->{rest} = { error => "An error occurred: $@"};
-    }
-    else {
-	$c->stash->{rest} = { error => '', };
-    }
 }
 
 
@@ -1888,7 +1839,7 @@ sub get_phenotypes_by_stock_and_trial :Chained('/stock/get_stock') PathPart('dat
     my $stock_type = $c->stash->{stock}->get_type()->name();
 
     my $q;
-    if ($stock_type eq 'accession'){
+    if ($stock_type eq 'accession' || $stock_type eq 'family_name' || $stock_type eq 'cross'){
         $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN stock_relationship ON (stock.stock_id=stock_relationship.object_id) JOIN  nd_experiment_stock ON (nd_experiment_stock.stock_id=stock_relationship.subject_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
     } else {
         $q = "SELECT stock.stock_id, stock.uniquename, cvterm_id, cvterm.name, avg(phenotype.value::REAL), stddev(phenotype.value::REAL), count(phenotype.value::REAL) FROM stock JOIN nd_experiment_stock USING(stock_id) JOIN nd_experiment_project ON (nd_experiment_stock.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN nd_experiment_phenotype ON (nd_experiment_phenotype.nd_experiment_id=nd_experiment_project.nd_experiment_id) JOIN phenotype USING(phenotype_id) JOIN cvterm ON (phenotype.cvalue_id=cvterm.cvterm_id) WHERE project_id=? AND stock.stock_id=? GROUP BY stock.stock_id, stock.uniquename, cvterm_id, cvterm.name";
@@ -2119,8 +2070,6 @@ sub get_trial_related_stock:Chained('/stock/get_stock') PathPart('datatables/tri
 
         if ($cvterm_name eq 'cross') {
             $url = qq{<a href = "/cross/$stock_id">$stock_name</a>};
-        } elsif ($cvterm_name eq 'family_name') {
-            $url = qq{<a href = "/family/$stock_id/">$stock_name</a>};
         } else {
             $url = qq{<a href = "/stock/$stock_id/view">$stock_name</a>};
         }

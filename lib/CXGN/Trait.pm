@@ -795,11 +795,12 @@ sub delete_existing_synonyms {
 
 sub interactive_store {
 	my $self = shift;
-    my $parent_term = shift;
+    my $parent_terms_json = shift;
+	my $db_name = shift || die "No trait ontology supplied to store the new term in.\n"; # db name of the ontology the new term belongs to, e.g. CO_334
 
     my $schema = $self->bcs_schema();
 
-	my $parent_id;
+	my @parent_ids;
 
     my $name = $self->name() || die "No name found.\n";
     my $definition = $self->definition() || die "No definition found.\n";
@@ -858,48 +859,43 @@ sub interactive_store {
         "$category_details_cvterm_id" => $category_details
     );
 
-	my $trait_ontology_cvterm_id = $schema->resultset("Cv::Cvterm")->find({
-        name => 'trait_ontology'
-    })->cvterm_id();
-	my $trait_cv_id = $schema->resultset("Cv::Cvprop")->find({
-		type_id => $trait_ontology_cvterm_id
-	})->cv_id();
+	# it is possible to have multiple trait ontologies, so find the root node of the one that was requested
+	my $ontology_obj = CXGN::Onto->new({
+		schema => $schema
+	});
+	my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology'); # each entry is [ cv_id, "DB:accession Term name" ]
+
+	my ($root_node) = grep { $_->[1] =~ m/^\Q$db_name\E:/ } @root_nodes;
+
+	if (!$root_node) {
+		die "No trait ontology named $db_name could be found in the database.\n";
+	}
+
+	my $trait_cv_id = $root_node->[0];
 	my $trait_ontology = $schema->resultset("Cv::Cv")->find({
 		cv_id => $trait_cv_id
 	})->name();
 
-	my $get_db_from_cv_sql = "SELECT DISTINCT(db.name) FROM cvterm 
-	JOIN dbxref USING (dbxref_id)
-	JOIN db USING (db_id)
-	WHERE cv_id=?";
+	my $parent_terms = [];
+	if ($parent_terms_json) {
+		$parent_terms = decode_json($parent_terms_json);
+	}
 
-	my $h = $schema->storage->dbh->prepare($get_db_from_cv_sql);
-    $h->execute($trait_cv_id);
-
-	my $db_name = $h->fetchrow_array();
-
-	if ($parent_term) {
+	if (@$parent_terms) {
 		my $lt = CXGN::List::Transform->new();
-    
-		my $transform = $lt->transform($schema, "traits_2_trait_ids", [$parent_term]);
+		my $transform = $lt->transform($schema, "traits_2_trait_ids", $parent_terms);
 
-		if (@{$transform->{missing}}>0) { 
-			die "Parent term $parent_term could not be found in the database.\n";
+		if (@{$transform->{missing}} > 0) {
+			die "Parent term(s) " . join(", ", @{$transform->{missing}}) . " could not be found in the database.\n";
 		}
 
-		my @parent_id_list = @{$transform->{transform}};
-		$parent_id = $parent_id_list[0];
-	} else {
-		my $ontology_obj = CXGN::Onto->new({
-			schema => $schema
-		});
-		my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+		@parent_ids = @{$transform->{transform}};
+	} else { # default to the root term of the ontology the new term is being added to
+		my $root_term_name = $root_node->[1] =~ s/\w+:\d+ //r;
 
-		my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
-
-		$parent_id = $schema->resultset("Cv::Cvterm")->find({
+		push @parent_ids, $schema->resultset("Cv::Cvterm")->find({
 			name => $root_term_name,
-			cv_id => $root_nodes[0]->[0]
+			cv_id => $trait_cv_id
 		})->cvterm_id();
 	}
 
@@ -923,7 +919,7 @@ sub interactive_store {
         $isa_id = $isa_relationship->cvterm_id();
     }
 
-    $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
+    my $h = $schema->storage->dbh->prepare($get_db_accessions_sql);
     $h->execute($db_name);
 
     my @accessions;
@@ -947,18 +943,20 @@ sub interactive_store {
 				dbxref => "$zeroes"."$accession_num"
 			})->cvterm_id();
 
-			if ($format eq "ontology") {
-				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
-					object_id => $parent_id,
-					subject_id => $new_trait_id,
-					type_id => $isa_id
-				});
-			} else {
-				$schema->resultset("Cv::CvtermRelationship")->find_or_create({
-					object_id => $parent_id,
-					subject_id => $new_trait_id,
-					type_id => $variable_of_id
-				});
+			foreach my $pid (@parent_ids) {
+				if ($format eq "ontology") {
+					$schema->resultset("Cv::CvtermRelationship")->find_or_create({
+						object_id => $pid,
+						subject_id => $new_trait_id,
+						type_id => $isa_id
+					});
+				} else {
+					$schema->resultset("Cv::CvtermRelationship")->find_or_create({
+						object_id => $pid,
+						subject_id => $new_trait_id,
+						type_id => $variable_of_id
+					});
+				}
 			}
 
 			$new_trait = $schema->resultset("Cv::Cvterm")->find({

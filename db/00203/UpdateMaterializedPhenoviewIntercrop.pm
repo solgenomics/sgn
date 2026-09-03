@@ -252,7 +252,11 @@ SELECT trial.project_id AS trial_id,
    JOIN project_relationship ON(breeding_program.project_id = object_project_id AND project_relationship.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'breeding_program_trial_relationship'))
    JOIN project trial ON(subject_project_id = trial.project_id)
    JOIN projectprop on(trial.project_id = projectprop.project_id)
-   WHERE projectprop.type_id NOT IN (SELECT cvterm.cvterm_id FROM cvterm WHERE cvterm.name::text = 'cross'::text OR cvterm.name::text = 'trial_folder'::text OR cvterm.name::text = 'folder_for_trials'::text OR cvterm.name::text = 'folder_for_crosses'::text OR cvterm.name::text = 'folder_for_genotyping_trials'::text)
+   WHERE projectprop.type_id = (
+      SELECT cvterm_id FROM cvterm WHERE name = 'design' AND cv_id = (
+        SELECT cv_id FROM cv WHERE name = 'project_property'
+      )
+   ) AND projectprop.value NOT IN ('treatment', 'genotyping_data_project', 'pcr_genotype_data_project', 'genotyping_plate', 'drone_run', 'drone_run_band', 'Meeting')
    GROUP BY trial.project_id, trial.name;
 ALTER VIEW trials OWNER TO web_usr;
 

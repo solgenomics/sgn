@@ -196,6 +196,7 @@ export function WizardDownloads(main_id,wizard){
         var entry_numbers = d3.selectAll('.wizard-download-phenotypes-entry-numbers').property('checked')?1:0;
         var trait_synonyms = d3.selectAll('.wizard-download-phenotypes-trait-synonyms').property('checked')?1:0;
         var intercrop = d3.selectAll('.wizard-download-phenotypes-intercrop').property('checked')?1:0;
+        var pedigree_parents = d3.selectAll('.wizard-download-phenotypes-pedigree_parents').property('checked')?1:0;
         var outliers = d3.selectAll('.wizard-download-phenotypes-outliers').property('checked')?1:0;
         var names = JSON.stringify(d3.select(".wizard-download-phenotypes-name").node().value.split(","));
         var min = d3.select(".wizard-download-phenotypes-min").node().value;
@@ -206,7 +207,7 @@ export function WizardDownloads(main_id,wizard){
 
 	  //alert('start date = '+phenotype_start_date);
 	  //alert('repetitive type = '+repetitive_measurements);
-	  
+
         var url = document.location.origin+'/breeders/trials/phenotype/download';
         openWindowWithPost(url, {
             trial_list: trial_ids,
@@ -229,7 +230,7 @@ export function WizardDownloads(main_id,wizard){
             trait_contains: names,
             include_row_and_column_numbers: 1,
             exclude_phenotype_outlier: outliers,
-            include_pedigree_parents: 0,
+            include_pedigree_parents: pedigree_parents,
 	          repetitive_measurements: repetitive_measurements,
 	          phenotype_start_date: phenotype_start_date,
 	          phenotype_end_date: phenotype_end_date
@@ -243,15 +244,15 @@ export function WizardDownloads(main_id,wizard){
     var locations = categories.indexOf("locations")!=-1 ? selections["locations"] : [];
     var years = categories.indexOf("years")!=-1 ? selections["years"] : [];
     var tissue_samples = categories.indexOf("tissue_sample")!=-1 ? selections["tissue_sample"] : [];
-    var protocols = categories.indexOf("protocols")!=-1 ? selections["protocols"] : [];
-    var instances = categories.indexOf("instances")!=-1 ? selections["instances"] : [];  
+    var hdp_protocols = categories.indexOf("protocols")!=-1 ? selections["protocols"] : [];
+    var instances = categories.indexOf("instances")!=-1 ? selections["instances"] : [];
 
     main.selectAll(".wizard-download-high-dim-phenotypes-info")
       .attr("value",`${trials.length||"Too few"} trials`);
     main.selectAll(".wizard-download-high-dim-phenotypes-protocol-info")
-      .attr("value", protocols.length === 1 ? `${protocols.length} protocols` : protocols.length > 1 ? "Please select only 1 protocol" : "No protocol selected");
+      .attr("value", hdp_protocols.length === 1 ? `${hdp_protocols.length} protocols` : hdp_protocols.length > 1 ? "Please select only 1 protocol" : "No protocol selected");
     main.selectAll(".wizard-download-high-dim-phenotypes")
-      .attr("disabled",trials.length>0 && protocols.length<=1 ? null:true)
+      .attr("disabled",trials.length>0 && hdp_protocols.length<=1 ? null:true)
       .on("click",()=>{
         var trial_ids = JSON.stringify(trials.map(d=>d.id));
         var accession_ids = JSON.stringify(accessions.map(d=>d.id));
@@ -260,7 +261,7 @@ export function WizardDownloads(main_id,wizard){
         var plant_ids = JSON.stringify(plants.map(d=>d.id));
         var location_ids = JSON.stringify(locations.map(d=>d.id));
         var year_ids = JSON.stringify(years.map(d=>d.id));
-        var protocol_ids = JSON.stringify(protocols.map(d=>d.id));
+        var hdp_protocol_ids = JSON.stringify(hdp_protocols.map(d=>d.id));
         var instance_ids = JSON.stringify(instances.map(d=>d.id));
 
         var speed = d3.select(".wizard-download-high-dim-phenotypes-speed").node().value;
@@ -279,7 +280,7 @@ export function WizardDownloads(main_id,wizard){
 
 	  //alert('start date = '+phenotype_start_date);
 	  //alert('repetitive type = '+repetitive_measurements);
-	  
+
         var url = document.location.origin+'/breeders/trials/phenotype/download';
         openWindowWithPost(url, {
             trial_list: trial_ids,
@@ -290,7 +291,7 @@ export function WizardDownloads(main_id,wizard){
             plant_list: plant_ids,
             location_list: location_ids,
             year_list: year_ids,
-            protocol_list: protocol_ids,
+            protocol_list: hdp_protocol_ids,
             instance_list: instance_ids,
             //dataLevel: level,
             data_type: "high_dimensional",
@@ -302,7 +303,7 @@ export function WizardDownloads(main_id,wizard){
             intercrop: intercrop,
             include_row_and_column_numbers: 1,
             //exclude_phenotype_outlier: outliers,
-            include_pedigree_parents: 0,
+            include_pedigree_parents: pedigree_parents,
 	          //repetitive_measurements: repetitive_measurements,
 	          phenotype_start_date: phenotype_start_date,
 	          phenotype_end_date: phenotype_end_date

@@ -26,7 +26,10 @@ sub create_treatment :Path('/ajax/treatment/create') {
         return;
     }
 
-    if (! $c->config->{allow_treatment_edits}) {
+    my $editable_ontologies_str = $c->config->{allow_trait_edits};
+    my @editable_ontologies = split(",", $editable_ontologies_str);
+
+    if (! grep {$_ eq "EXPERIMENT_TREATMENT"} @editable_ontologies) {
         $c->stash->{rest} = {error => "You do not have permission to design new treatments.\n"};
         return;
     }
@@ -40,11 +43,11 @@ sub create_treatment :Path('/ajax/treatment/create') {
     my $categories = $c->req->param('categories') ? $c->req->param('categories') : undef;
     my $category_details = $c->req->param('category_details') ? $c->req->param('category_details') : undef;
     my $repeat_type = $c->req->param('repeat_type') ? $c->req->param('repeat_type') : undef;
-    my $parent_term = $c->req->param('parent_term') || 'Experimental treatment ontology|EXPERIMENT_TREATMENT:0000000';
+    my $parent_terms = $c->req->param('parent_terms') ? $c->req->param('parent_terms') : undef;
 
     $name =~ s/^\s+//;
     $name =~ s/\s+$//;
-    $name =~ s/[^[:ascii:]]//g;
+    $name =~ s/\|//g;
 
     $definition =~ s/^\s+//;
     $definition =~ s/\s+$//;
@@ -138,7 +141,7 @@ sub create_treatment :Path('/ajax/treatment/create') {
             $new_treatment->default_value($default_value);
         }
 
-        $new_treatment->store($parent_term);
+        $new_treatment->store($parent_terms);
     };
 
     if ($@) {
