@@ -976,7 +976,7 @@ solGS.pca = {
 
                     groupName = "common to: " + groupName.join(", ");
                 } else {
-                    groupName = trialsNames[id];
+                    groupName = trialsNames[id] || id;
                 }
                 legendValues.push([cnt, id, groupName]);
                 cnt++;
