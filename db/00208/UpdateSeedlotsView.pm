@@ -1,0 +1,80 @@
+#!/usr/bin/env perl
+
+
+=head1 NAME
+
+  UpdateSeedlotsView
+
+=head1 SYNOPSIS
+
+mx-run UpdateSeedlotsView [options] -H hostname -D dbname -u username [-F]
+
+this is a subclass of L<CXGN::Metadata::Dbpatch>
+see the perldoc of parent class for more details.
+
+=head1 DESCRIPTION
+
+This is a test dummy patch.
+This subclass uses L<Moose>. The parent class uses L<MooseX::Runnable>
+
+=head1 AUTHOR
+
+David Waring <djw64@cornell.edu>
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2010 Boyce Thompson Institute for Plant Research
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
+
+package UpdateSeedlotsView;
+
+use Moose;
+extends 'CXGN::Metadata::Dbpatch';
+
+
+has '+description' => ( default => <<'' );
+This updates the seedlots view to filter out discarded seedlots
+
+has '+prereq' => (
+    default => sub {
+        [],
+    },
+  );
+
+sub patch {
+    my $self=shift;
+
+    print STDOUT "Executing the patch:\n " .   $self->name . ".\n\nDescription:\n  ".  $self->description . ".\n\nExecuted by:\n " .  $self->username . " .";
+
+    print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
+
+    print STDOUT "\nExecuting the SQL commands.\n";
+
+
+    $self->dbh()->do( <<EOSQL);
+--do your SQL here
+--
+DROP VIEW IF EXISTS public.seedlots;
+CREATE VIEW public.seedlots AS 
+SELECT stock.stock_id AS seedlot_id,
+   stock.uniquename AS seedlot_name
+   FROM stock
+   WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot') AND is_obsolete = 'f'
+   AND stock_id NOT IN (SELECT DISTINCT(stock_id) FROM stockprop WHERE type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'discarded_metadata'))
+   GROUP BY public.stock.stock_id, public.stock.uniquename;
+ALTER VIEW seedlots OWNER TO web_usr;
+
+EOSQL
+
+print "You're done!\n";
+}
+
+
+####
+1; #
+####

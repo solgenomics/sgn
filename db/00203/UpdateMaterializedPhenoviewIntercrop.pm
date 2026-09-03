@@ -295,6 +295,7 @@ SELECT stock.stock_id AS seedlot_id,
    stock.uniquename AS seedlot_name
    FROM stock
    WHERE stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'seedlot') AND is_obsolete = 'f'
+   AND stock_id NOT IN (SELECT DISTINCT(stock_id) FROM stockprop WHERE type_id = (SELECT cvterm_id FROM cvterm WHERE name = 'discarded_metadata'))
    GROUP BY public.stock.stock_id, public.stock.uniquename;
 ALTER VIEW seedlots OWNER TO web_usr;
 
