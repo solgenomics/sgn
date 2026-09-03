@@ -2143,7 +2143,7 @@ sub get_dataset_accession_trial_memberships {
     my $accession_placeholders = join( ', ', ('?') x @$accession_ids );
     my $trial_placeholders     = join( ', ', ('?') x @$trial_ids );
     my $query = qq{
-        SELECT accession.stock_id, accession.name, axt.trial_id
+        SELECT accession.stock_id, accession.uniquename, axt.trial_id
         FROM stock AS accession
         LEFT JOIN accessionsXtrials AS axt
           ON axt.accession_id = accession.stock_id
