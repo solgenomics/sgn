@@ -1,0 +1,170 @@
+
+<%args>
+$transformation_name
+$transformation_id
+$transformation_notes
+</%args>
+
+<& /util/import_javascript.mas, classes => ["jquery", "CXGN.Trial"] &>
+
+<div class="modal fade" id="transformation_details_edit_dialog" tabindex="-1" role="dialog" aria-labelledby="transformationDetailsEditDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="reset" class="close" id="edit_transformation_details_cancel_button_1" name="edit_transformation_details_cancel_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationDetailsEditDialog">Edit Transformation Details</h4>
+            </div>
+            <div class="modal-body" id="edit_transformation_details_body">
+                <div class="container-fluid">
+                    <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_transformation_name">Transformation ID: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input class="form-control col-sm-8" id="edit_transformation_name" type="text" value="<%$transformation_name%>"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label" for="edit_transformation_notes">Notes: </label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <textarea class="form-control" id="edit_transformation_notes" rows="5"><%$transformation_notes%></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <p class="text-success vertical-align pull-left"><span class="glyphicon glyphicon-pencil"></span> Indicates pending change</p>
+                <button type="button" class="btn btn-default" data-dismiss="modal" id="edit_transformation_details_cancel_button_2" name="edit_transformation_details_cancel_button">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save_transformation_details">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="transformation_details_saved_dialog" tabindex="-1" role="dialog" aria-labelledby="transformationDetailsSavedDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="transformationDetailsSavedDialog">Details Saved</h4>
+            </div>
+            <div class="modal-body" id="transformation_details_saved_body">
+                <ul class="list-group" id="transformation_details_saved_message"></ul>
+            </div>
+            <div class="modal-footer">
+                <button id="transformation_details_saved_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close & Reload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="edit_transformation_details_error_dialog" tabindex="-1" role="dialog" aria-labelledby="editTransformationDetailsErrorDialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content ui-front">
+            <div class="modal-header text-center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="editTransformationDetailsErrorDialog">Error Saving Transformation Details</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <table>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="transformation_details_error_close_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+jQuery(document).ready(function(){
+
+    jQuery('#edit_transformation_details_link').click(function(){
+        jQuery('#transformation_details_edit_dialog').modal("show");
+    });
+
+    jQuery('#edit_transformation_name').change(function(){
+        highlight_changed_details(jQuery('#edit_transformation_name'));
+    });
+
+    jQuery('#edit_transformation_notes').change(function(){
+        highlight_changed_details(jQuery('#edit_transformation_notes'));
+    });
+
+    jQuery('#save_transformation_details').click(function(){
+        let new_transformation_name;
+        let new_transformation_notes;
+        let success_message;
+
+        let changed_elements = document.getElementsByName("changed");
+        for(var i=0; i<changed_elements.length; i++){
+            let id = changed_elements[i].id;
+            let type;
+            if (id == 'edit_transformation_name') {
+                new_transformation_name = changed_elements[i].value;
+                type = 'Transformation ID';
+                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_name+"</b></li>";
+            } else if (id == 'edit_transformation_notes') {
+                new_transformation_notes = changed_elements[i].value;
+                type = 'Notes';
+                success_message += "<li class='list-group-item list-group-item-success'> Changed "+type+" to: <b>"+new_transformation_notes+"</b></li>";
+            }
+        }
+
+        jQuery.ajax({
+            url : '/ajax/transformation/update_transformation_metadata',
+            dataType: "json",
+            type: 'POST',
+            data : {
+                'transformation_stock_id': "<%$transformation_id%>",
+                'new_transformation_name': new_transformation_name,
+                'new_transformation_notes': new_transformation_notes,
+            },
+            beforeSend: function(response){
+                jQuery('#working_modal').modal('show');
+            },
+            success: function(response) {
+                jQuery('#working_modal').modal('hide');
+                if (response.success == 1) {
+                    jQuery("#transformation_details_edit_dialog").modal("hide");
+                    document.getElementById('transformation_details_saved_message').innerHTML = success_message;
+                    jQuery("#transformation_details_saved_dialog").modal("show");
+                    return;
+                }
+                if (response.error) {
+                    jQuery("#edit_transformation_details_error_dialog tbody").html('');
+                    jQuery("#edit_transformation_details_error_dialog tbody").append(response.error);
+                    jQuery("#edit_transformation_details_error_dialog").modal("show");
+                    return;
+                }
+            },
+            error: function(response){
+                jQuery('#working_modal').modal('hide');
+                alert('An error occurred updating transformation ID details');
+            }
+        });
+    });
+
+    var edit_details_body_html = document.getElementById('edit_transformation_details_body').innerHTML;
+
+    jQuery("[name='edit_transformation_details_cancel_button']").click(function() {
+        reset_dialog_body('edit_transformation_details_body', edit_details_body_html);
+        jQuery('#transformation_details_edit_dialog').modal('hide');
+    });
+
+    jQuery("#transformation_details_saved_close_button").click(function(){
+        location.reload();
+    });
+
+});
+
+</script>
