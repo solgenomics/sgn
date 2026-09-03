@@ -382,7 +382,7 @@ sub store_nirs_phenotypes {
         file_type => 'nirs',
         metadata_schema => $metadata_schema
     });
-    my (undef, $archived_agg_filename_with_path) = $uploader_agg->archive();
+    my ($archived_agg_file_id, $archived_agg_filename_with_path) = $uploader_agg->archive();
     my $md5_agg = $uploader_agg->get_md5($archived_agg_filename_with_path);
     if (!$archived_agg_filename_with_path) {
         abort("Could not save file $agg_file_name in archive.");
@@ -426,6 +426,7 @@ sub store_nirs_phenotypes {
 
     my %phenotype_metadata = (
         archived_file => $archived_agg_filename_with_path,
+        archived_file_id => $archived_agg_file_id,
         archived_file_type => $metadata_file_type,
         operator => $params->{user_name},
         date => $params->{timestamp}

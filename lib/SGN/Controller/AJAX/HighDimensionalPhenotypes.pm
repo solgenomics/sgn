@@ -159,7 +159,7 @@ sub _upload_nirs {
     if ($mode eq 'verify') {
         $additional_args->{is_validation} = 1;
         $additional_args->{ignore_warnings} = $ignore_warnings;
-        # The upload manager reads these back off a validation job to build the request that stores
+        # The upload factory reads these back off a validation job to build the request that stores
         # the file once someone has looked at the validation.
         $additional_args->{protocol_params} = {
             upload_nirs_spreadsheet_protocol_id => $protocol_id,
