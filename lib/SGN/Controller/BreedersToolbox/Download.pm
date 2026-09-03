@@ -1220,7 +1220,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     }
 
     my $geno = CXGN::Genotype::DownloadFactory->instantiate(
-        $download_format,    #can be either 'VCF' or 'DosageMatrix'
+        $download_format,    #can be either 'VCF' or 'DosageMatrix' or 'HapMap'
         {
             bcs_schema=>$schema,
             people_schema=>$people_schema,

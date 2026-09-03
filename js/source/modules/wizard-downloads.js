@@ -82,7 +82,7 @@ export function WizardDownloads(main_id,wizard){
         openWindowWithPost(url, {
             ids: accession_ids.join(","),
             protocol_id: protocol_id,
-	    project_id: project_id,
+            project_id: project_id,
             format: 'accession_ids',
             chromosome_number: chromosome_number,
             start_position: start_position,
