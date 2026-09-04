@@ -1,4 +1,4 @@
-
+use strict;
 use lib 't/lib';
 
 use Test::More 'tests'=>24;
@@ -121,7 +121,7 @@ $t->while_logged_in_as("submitter", sub {
     if ($alert_text) {
         $t->driver->accept_alert();
     }
-    ok(!$alert_text, 'no alert/error present after adding location');
+    ok(!$alert_text, 'no alert present after adding location');
 
     $t->get_ok('/breeders/locations');
     sleep(2);
