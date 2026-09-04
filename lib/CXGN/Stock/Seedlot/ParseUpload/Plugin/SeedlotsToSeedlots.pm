@@ -9,6 +9,11 @@ use Data::Dumper;
 use CXGN::List::Validate;
 use CXGN::Stock::Seedlot;
 
+
+#
+# DEPRECATED: This plugin has been replaced by the SeedlotsToSeedlotsGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
 
