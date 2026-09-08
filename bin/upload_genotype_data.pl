@@ -396,15 +396,7 @@ sub store_vcf_genotypes {
         my @all_warnings;
         my $previous_genotypes_exist;
         if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-            my $warning_string;
-            foreach my $error_string (@{$verified_errors->{'warning_messages'}}){
-                $warning_string .= $error_string."<br>";
-            }
-            push @warning_messages, $warning_string;
-            if (!$params->{accept_warnings}){
-                $result = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-                return;
-            }
+            push @warning_messages, @{$verified_errors->{warning_messages}};
             push @all_warnings, @{$verified_errors->{warning_messages}};
             $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
         }
@@ -414,6 +406,7 @@ sub store_vcf_genotypes {
             if (!$protocol_match_errors) {
                 return;
             }
+            push @warning_messages, @$protocol_match_errors;
             push @all_warnings, @$protocol_match_errors;
         }
 
@@ -515,18 +508,6 @@ sub check_vcf_protocol_markers {
         }
     }
 
-    if (scalar(@protocol_match_errors) > 0){
-        my $protocol_warning;
-        foreach my $match_error (@protocol_match_errors) {
-            $protocol_warning .= $match_error."<br>";
-        }
-        push @warning_messages, $protocol_warning;
-        if (!$params->{accept_warnings}){
-            $result = { warning => $protocol_warning };
-            return;
-        }
-    }
-
     return \@protocol_match_errors;
 }
 
@@ -593,15 +574,7 @@ sub store_intertek_or_kasp_genotypes {
     my @all_warnings;
     my $previous_genotypes_exist;
     if (scalar(@{$verified_errors->{warning_messages}}) > 0){
-        my $warning_string;
-        foreach my $error_string (@{$verified_errors->{'warning_messages'}}) {
-            $warning_string .= $error_string."<br>";
-        }
-        push @warning_messages, $warning_string;
-        if (!$params->{accept_warnings}){
-            $result = { warning => $warning_string, previous_genotypes_exist => $verified_errors->{previous_genotypes_exist} };
-            return;
-        }
+        push @warning_messages, @{$verified_errors->{warning_messages}};
         push @all_warnings, @{$verified_errors->{warning_messages}};
         $previous_genotypes_exist = $verified_errors->{previous_genotypes_exist};
     }
@@ -611,6 +584,7 @@ sub store_intertek_or_kasp_genotypes {
         if (!$protocol_match_errors) {
             return;
         }
+        push @warning_messages, @$protocol_match_errors;
         push @all_warnings, @$protocol_match_errors;
     }
 
@@ -690,18 +664,6 @@ sub check_intertek_or_kasp_protocol_markers {
             }
             push @error_messages, "These marker names in your file are not in the selected protocol. $marker_name_error";
             $result = { error => "These marker names in your file are not in the selected protocol. $marker_name_error"};
-            return;
-        }
-    }
-
-    if (scalar(@protocol_match_errors) > 0){
-        my $protocol_warning;
-        foreach my $match_error (@protocol_match_errors) {
-            $protocol_warning .= $match_error."<br>";
-        }
-        push @warning_messages, $protocol_warning;
-        if (!$params->{accept_warnings}){
-            $result = { warning => $protocol_warning };
             return;
         }
     }

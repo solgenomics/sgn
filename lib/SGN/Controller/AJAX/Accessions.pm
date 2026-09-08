@@ -227,10 +227,10 @@ sub verify_accessions_file_POST : Args(0) {
         }
         $user_id = $user_info[0];
         $user_role = $user_info[1];
-        $user_first_name = $c->user()->get_object()->get_first_name();
-        $user_last_name = $c->user()->get_object()->get_last_name();
         my $p = CXGN::People::Person->new($dbh, $user_id);
         $user_name = $p->get_username;
+        $user_first_name = $p->get_first_name();
+        $user_last_name = $p->get_last_name();
     } else {
         if (!$c->user){
             $c->stash->{rest} = {error=>'You must be logged in to upload this seedlot info!'};
