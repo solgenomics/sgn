@@ -396,6 +396,7 @@ Describes the file the values came out of, which is recorded alongside them.
 sub phenotype_metadata {
     return (
         archived_file => $params->{archived_filename},
+        archived_file_id => $params->{archived_file_id},
         archived_file_type => $metadata_file_type,
         operator => $params->{user_name},
         date => $params->{timestamp}
