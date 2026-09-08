@@ -201,13 +201,16 @@ sub upload_pedigrees_store : Path('/ajax/pedigrees/upload_store') Args(0)  {
     my $pedigree_hash = decode_json $pedigree_data;
     my $file_pedigree_info = $pedigree_hash->{'pedigrees'};
 
-    my $archived_file = CXGN::File->new({
-        file_id => $archived_file_id,
-        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
-        archive_path => $c->config->{archive_path}
-    });
+    my $filename = "anonymous";
+    if ($archived_file_id) {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
 
-    my $filename = $archived_file->filename();
+        $filename = $archived_file->filename();
+    }
 
     my $user_first_name = $c->user()->get_object()->get_first_name();
     my $user_last_name = $c->user()->get_object()->get_last_name();
