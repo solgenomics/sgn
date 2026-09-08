@@ -643,7 +643,7 @@ sub add_accession_list_POST : Args(0) {
 #    my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'stockprop', 'concurrent', $c->config->{basepath});
     $commit_job->additional_args->{success_messages} = "Accessions uploaded successfully.";
     $commit_job->update_status("finished");
-    $c->stash->{rest} = {success => 1};
+    $c->stash->{rest} = {success => 1, added => \@added_fullinfo_stocks};
     return;
 }
 
