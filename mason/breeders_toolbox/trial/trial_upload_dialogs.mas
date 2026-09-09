@@ -813,7 +813,7 @@ $design_types => ()
                     <p>trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number</p>
 
                     <b>Notes:</b><br/>
-                    <p>If the stocks that are being evaluated in any trial are crosses or family names, <b>trial_stock_type</b> column is required and indicates as 'cross' or 'family_name'.  All rows for the same trial must have the same trial stock type.</p>
+                    <p>Accessions and crosses can be mixed in the same trial. Existing crosses are detected automatically, including when <b>trial_stock_type</b> is blank or 'accession'; the trial is then saved as 'cross'. For family trials, set <b>trial_stock_type</b> to 'family_name'. All rows for the same trial must have the same trial stock type.</p>
 
                     <b> Required fields:</b>
                     <ul>
@@ -834,7 +834,7 @@ $design_types => ()
                     <li>plot_name (Must be unique across entire database. If not provided in the file, it will be automatically generated as <code>{trial_name}-PLOT_{plot_number}</code>)</li>
                     <li>plot_name_template (The name of a saved plot name template. Must be coherent with the breeding program supplied, and only one is allowed per trial. Can be used in place of plot_name.)</li>
                     <li>trial_type (The name of the trial type, must exist in the database. Possible values include Seedling Nursery, phenotyping_trial, Advanced Yield Trial, Preliminary Yield Trial, Uniform Yield Trial, Variety Release Trial, Clonal Evaluation, genetic_gain_trial, storage_trial, heterosis_trial, health_status_trial, grafting_trial, Screen House, Seed Multiplication, crossing_block_trial, Specialty Trial)</li>
-                    <li>trial_stock_type (The type of stocks that are being evaluated in the trial.  Can be either 'accession', 'cross', or 'family_name'.  When not provided, 'accession' is used as the default)
+                    <li>trial_stock_type (Can be 'accession', 'cross', or 'family_name'. Defaults to 'accession', with 'cross' detected automatically when the trial contains existing crosses. Cross trials can also contain accessions.)</li>
                     <li>plot_width (plot width in meters)</li>
                     <li>plot_length (plot length in meters)</li>
                     <li>field_size (field size in hectares)</li>

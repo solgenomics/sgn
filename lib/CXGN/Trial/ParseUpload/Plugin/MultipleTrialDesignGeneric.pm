@@ -178,8 +178,6 @@ sub _validate_with_plugin {
     ## These are checks on the individual plot-level data
     ##
 
-    my $trial_stock_type;
-
     foreach (@$parsed_data) {
         my $data = $_;
         my $row = $data->{'_row'};
@@ -220,7 +218,7 @@ sub _validate_with_plugin {
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
         my $entry_number = $data->{'entry_number'};
-        $trial_stock_type = $data->{'trial_stock_type'};
+        my $trial_stock_type = $data->{'trial_stock_type'} || 'accession';
 
         foreach my $treatment (@{$treatments}) {
             my $lt = CXGN::List::Transform->new();
@@ -486,35 +484,72 @@ sub _validate_with_plugin {
 
     #find unique synonyms. Sometimes trial uploads use synonym names instead of the unique accession name. We allow this if the synonym is unique and matches one accession in the database
     my @synonyms = @{$accessions_hashref->{'synonyms'}};
+    my %accession_synonym_lookup;
     foreach my $synonym (@synonyms) {
         my $found_acc_name_from_synonym = $synonym->{'uniquename'};
         my $matched_synonym = $synonym->{'synonym'};
 
         push @warning_messages, "File Accession $matched_synonym is a synonym of database accession $found_acc_name_from_synonym ";
-
-        @merged_stock_names = grep !/\Q$matched_synonym/, @merged_stock_names;
-        push @merged_stock_names, $found_acc_name_from_synonym;
+        $accession_synonym_lookup{$matched_synonym} = $found_acc_name_from_synonym;
     }
 
-    #now validate again the accession names
+    # Validate stock names against the stock type of their own trial.  A multi-trial
+    # file can contain accession trials and cross trials; using the type from the
+    # final spreadsheet row incorrectly validates every stock as that one type.
+    my %trial_stock_types;
+    my %trial_stock_names;
+    foreach my $data (@$parsed_data) {
+        my $trial_name = $data->{'trial_name'};
+        my $stock_type = $data->{'trial_stock_type'} || 'accession';
+        $trial_stock_types{$trial_name}->{$stock_type} = 1;
+        push @{$trial_stock_names{$trial_name}}, $data->{'accession_name'} if $data->{'accession_name'};
+        push @{$trial_stock_names{$trial_name}}, @{$data->{'intercrop_accession_name'} || []};
+    }
 
-    my @entry_names_missing = ();
-    if ($trial_stock_type eq 'cross') {
-        @entry_names_missing = @{$validator->validate($schema,'accessions_or_synonyms_or_crosses',\@merged_stock_names)->{'missing'}};
-        if (scalar(@entry_names_missing) > 0) {
-            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or cross stock type.";
+    # An accession/default trial may contain crosses as well as accession checks.
+    # Resolve existing crosses once, then use the same inferred type for validation
+    # and for the trial metadata passed to TrialCreate.
+    my @resolved_stock_names = uniq map { $accession_synonym_lookup{$_} || $_ } @merged_stock_names;
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
+    my %cross_names = map { $_ => 1 } $schema->resultset('Stock::Stock')->search({
+        uniquename => { -in => \@resolved_stock_names },
+        type_id => $cross_type_id,
+        is_obsolete => 'F',
+    })->get_column('uniquename')->all();
+    my %resolved_trial_stock_types;
+    my @entry_names_missing;
+    foreach my $trial_name (sort keys %trial_stock_names) {
+        my @stock_types = sort keys %{$trial_stock_types{$trial_name}};
+        if (scalar(@stock_types) > 1) {
+            push @error_messages, "Trial <strong>$trial_name</strong> has multiple trial_stock_type values: <strong>" . join(', ', @stock_types) . "</strong>. All rows for a trial must have the same trial_stock_type.";
+            next;
         }
-    } elsif ($trial_stock_type eq 'family_name') {
-        @entry_names_missing = @{$validator->validate($schema,'accessions_or_family_names',\@merged_stock_names)->{'missing'}};
-        if (scalar(@entry_names_missing) > 0) {
-            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database or are not accession or family name stock type.";
+
+        my $stock_type = $stock_types[0];
+        my @names = uniq map { $accession_synonym_lookup{$_} || $_ } @{$trial_stock_names{$trial_name}};
+        if ($stock_type eq 'accession' && grep { $cross_names{$_} } @names) {
+            $stock_type = 'cross';
         }
-    } else {
-        @entry_names_missing = @{$validator->validate($schema,'accessions',\@merged_stock_names)->{'missing'}};
-        if (scalar(@entry_names_missing) > 0) {
-            push @error_messages, "Stocks(s) <strong>".join(',',@entry_names_missing)."</strong> are not in the database as uniquenames or synonyms of accession stock type.";
+        $resolved_trial_stock_types{$trial_name} = $stock_type;
+        my ($validation_plugin, $missing_message);
+        if ($stock_type eq 'cross') {
+            $validation_plugin = 'accessions_or_synonyms_or_crosses';
+            $missing_message = 'are not in the database or are not accession or cross stock type';
+        } elsif ($stock_type eq 'family_name') {
+            $validation_plugin = 'accessions_or_family_names';
+            $missing_message = 'are not in the database or are not accession or family name stock type';
+        } else {
+            $validation_plugin = 'accessions';
+            $missing_message = 'are not in the database as uniquenames or synonyms of accession stock type';
+        }
+
+        my @missing = @{$validator->validate($schema, $validation_plugin, \@names)->{'missing'}};
+        if (scalar(@missing) > 0) {
+            push @entry_names_missing, @missing;
+            push @error_messages, "Stock(s) <strong>" . join(',', @missing) . "</strong> in trial <strong>$trial_name</strong> $missing_message.";
         }
     }
+    @entry_names_missing = uniq @entry_names_missing;
 
     if (scalar(@multiple_synonyms) > 0) {
         my @msgs;
@@ -563,7 +598,8 @@ sub _validate_with_plugin {
             if (exists($return->{error})) {
                 push @error_messages, $return->{error};
             }
-        } elsif ( scalar @accession_cross_seedlot_pairs_array > 0 ) {
+        }
+        if ( scalar @accession_cross_seedlot_pairs_array > 0 ) {
             $return = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, $accession_cross_seedlot_pairs);
             if (exists($return->{error})) {
                 push @error_messages, $return->{error};
@@ -637,6 +673,9 @@ sub _validate_with_plugin {
         return;
     }
 
+    foreach my $row (@$parsed_data) {
+        $row->{'trial_stock_type'} = $resolved_trial_stock_types{$row->{'trial_name'}};
+    }
     $self->_set_validated_data($parsed);
     return 1; #returns true if validation is passed
 }

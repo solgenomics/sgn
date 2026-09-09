@@ -1,0 +1,66 @@
+[1mdiff --cc js/source/legacy/solGS/trialsSelect.js[m
+[1mindex 5fefb9da54,2e3888c2db..0000000000[m
+[1m--- a/js/source/legacy/solGS/trialsSelect.js[m
+[1m+++ b/js/source/legacy/solGS/trialsSelect.js[m
+[36m@@@ -99,7 -99,8 +99,12 @@@[m [mjQuery(document).ready(function () [m
+                  // Process and display the trials[m
+                  console.log("Trials for dataset " + datasetName + ": ", trials);[m
+                  var trialSelect = jQuery("#trial_select");[m
+[32m++<<<<<<< HEAD[m
+[32m +                trialSelect.empty();[m
+[32m++=======[m
+[32m+                 trialSelect.empty(); [m
+[32m+ [m
+[32m++>>>>>>> 3e8418880e (populate dataset trials select menu)[m
+                  var datasetOption = jQuery("<option></option>")[m
+                      .attr("value", datasetId)[m
+                      .text("Dataset: " + datasetName);[m
+[36m@@@ -113,35 -114,12 +118,47 @@@[m
+                  });[m
+                  [m
+              } else {[m
+[32m++<<<<<<< HEAD[m
+[32m +                console.log("No trials found for dataset " + datasetId);[m
+[32m +            }[m
+[32m +        }).fail(function () {[m
+[32m +            console.error("Failed to retrieve trials for dataset " + datasetId);[m
+[32m +        });[m
+[32m +[m
+[32m +    }[m
+[32m +});[m
+[32m +[m
+[32m +jQuery(document).on("change", "#trial_select", function () {[m
+[32m +    var selectedTrial = jQuery(this).val();[m
+[32m +    console.log("Selected Trial: ", selectedTrial);[m
+[32m +    [m
+[32m +    if (selectedTrial) {[m
+[32m +        var popName = jQuery(this).find("option:selected").text()[m
+[32m +        console.log("Population Name: ", popName);[m
+[32m +        jQuery("#analysis_pop_name").val(popName);[m
+[32m +        if (!jQuery(this).find("option:selected").text().match(/Dataset:/)) {[m
+[32m +            jQuery("#data_structure").val("trial");[m
+[32m +            jQuery("#analysis_pop_id").val(selectedTrial);[m
+[32m +        } else {[m
+[32m +            jQuery("#data_structure").val("dataset");[m
+[32m +            jQuery("#analysis_pop_id").val(`dataset_${selectedTrial}`);[m
+[32m +            jQuery("#analysis_pop_name").val(jQuery("#dataset_name").val());[m
+[32m +            console.log("Data structure set to 'dataset'");[m
+[32m +            console.log("Data structure set to 'dataset'");[m
+[32m +        }[m
+[32m +        console.log("You have selected trial with ID: " + selectedTrial);[m
+[32m +    } else {[m
+[32m +        console.log("No trial selected.");[m
+[32m +    }[m
+[32m +});[m
+[32m++=======[m
+[32m+                 console.log("No trials found for dataset " + datasetName);[m
+[32m+             }[m
+[32m+         }).fail(function () {[m
+[32m+             console.error("Failed to retrieve trials for dataset " + datasetName);[m
+[32m+         });[m
+[32m+ [m
+[32m+     }[m
+[32m+ [m
+[31m -});[m
+[32m++});[m
+[32m++>>>>>>> 3e8418880e (populate dataset trials select menu)[m
