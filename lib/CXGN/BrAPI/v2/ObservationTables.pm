@@ -64,7 +64,6 @@ sub search {
     }
 
     my @data_files;
-    my $total_count = scalar(@data)-1;
     my @header_names = @{$data[0]};
     my @trait_names = @header_names[30 .. $#header_names];
     my @variables;
@@ -77,6 +76,8 @@ sub search {
         };
     }
 
+    @data = _rows_with_observations(\@data, scalar @variables);
+    my $total_count = scalar(@data)-1;
     my $start = $page_size*$page+1;
     my $end = $page_size*($page+1)+1;
     my @data_window;
@@ -147,7 +148,6 @@ sub search_observationunit_tables {
     }
 
     my @data_files;
-    my $total_count = scalar(@data)-1;
     my @header_names = @{$data[0]};
     my @trait_names = @header_names[30 .. $#header_names];
     my @variables;
@@ -160,6 +160,8 @@ sub search_observationunit_tables {
         };
     }
 
+    @data = _rows_with_observations(\@data, scalar @variables);
+    my $total_count = scalar(@data)-1;
     my $start = $page_size*$page+1;
     my $end = $page_size*($page+1)+1;
     my @data_window;
@@ -178,6 +180,23 @@ sub search_observationunit_tables {
 
     my $pagination = CXGN::BrAPI::Pagination->pagination_response($total_count,$page_size,$page);
     return CXGN::BrAPI::JSONResponse->return_success(\%result, $pagination, \@data_files, $status, 'Observation Units table result constructed');
+}
+
+# Download matrices include units with metadata only. Table pagination must
+# count and slice the same set of rows containing observations. Notes and
+# treatment columns are not observations; a zero phenotype is an observation.
+sub _rows_with_observations {
+    my ($data, $trait_count) = @_;
+    my @rows = ($data->[0]);
+    for my $row (@$data[1 .. $#$data]) {
+        for my $column (30 .. 29 + $trait_count) {
+            if (defined($row->[$column]) && $row->[$column] ne '') {
+                push @rows, $row;
+                last;
+            }
+        }
+    }
+    return @rows;
 }
 
 1;

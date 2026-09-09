@@ -49,6 +49,7 @@ use Data::Dumper;
 use SGN::Model::Cvterm;
 use CXGN::Stock::StockLookup;
 use CXGN::Trial;
+use CXGN::Project;
 use CXGN::Trial::TrialLayout;
 use CXGN::Calendar;
 
@@ -250,6 +251,13 @@ sub search {
 
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
 
+        my $has_observationunit_filter =
+            ($self->plot_list && @{$self->plot_list})
+            || ($self->plant_list && @{$self->plant_list})
+            || ($self->subplot_list && @{$self->subplot_list});
+        $trial_observationunit_list = []
+            if $self->data_level eq 'all' && !$has_observationunit_filter;
+
         $using_layout_hash = 1;
         foreach (@{$self->trial_list}){
             my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>$self->experiment_type()});
@@ -288,6 +296,13 @@ sub search {
             }
 
             print STDERR "\n\n fetching layout for  ".$self->data_level. " time: ".  localtime ."\n";
+            if (defined $trial_observationunit_list) {
+                # Prefetch explicit IDs to keep PostgreSQL from joining the
+                # global phenotype table before filtering large trial searches.
+                my $units = CXGN::Project->new({ bcs_schema => $schema, trial_id => $_ })
+                    ->get_observation_units_direct([qw(plot plant analysis_instance subplot tissue_sample)]);
+                push @$trial_observationunit_list, map { $_->[0] } @$units;
+            }
             if ($self->data_level eq 'plot'){
                 if (!$self->plot_list){
                     $self->plot_list([]);
@@ -339,41 +354,6 @@ sub search {
             }
 
 
-        }
-
-        # A trial-level "all" search otherwise relies only on the project join
-        # to limit observation units.  On large databases PostgreSQL can build
-        # the global phenotype join before applying that filter.  Resolve the
-        # selected trials' observation units first, as the level-specific
-        # searches above already do for plots, plants, and subplots.
-        my $has_observationunit_filter =
-            ($self->plot_list && scalar(@{$self->plot_list}) > 0)
-            || ($self->plant_list && scalar(@{$self->plant_list}) > 0)
-            || ($self->subplot_list && scalar(@{$self->subplot_list}) > 0);
-
-        if ($self->data_level eq 'all' && !$has_observationunit_filter) {
-            my @trial_ids = @{$self->trial_list};
-            my $trial_placeholders = join(',', ('?') x scalar(@trial_ids));
-            my $observationunit_type_ids = join(',',
-                $plot_type_id,
-                $plant_type_id,
-                $analysis_instance_id,
-                $subplot_type_id,
-                $tissue_sample_type_id,
-            );
-            my $trial_observationunit_query = "
-                SELECT DISTINCT nd_experiment_stock.stock_id
-                FROM nd_experiment_stock
-                JOIN nd_experiment_project USING (nd_experiment_id)
-                JOIN stock USING (stock_id)
-                WHERE nd_experiment_project.project_id IN ($trial_placeholders)
-                  AND stock.type_id IN ($observationunit_type_ids)
-            ";
-            $trial_observationunit_list = $schema->storage->dbh->selectcol_arrayref(
-                $trial_observationunit_query,
-                undef,
-                @trial_ids,
-            );
         }
     } else {
         print STDERR "\n\n design_layout_sql for  ".$self->data_level. " time: ".  localtime ."\n";
@@ -524,13 +504,16 @@ sub search {
                     external_references.value ".$design_layout_select;
 
     my @where_clause;
+    my @bind_values;
     my $accession_list = $self->accession_list;
     print STDERR "Native search Accession list is ".Dumper($accession_list)."\n";
 
     if (defined($trial_observationunit_list)) {
         if (scalar(@$trial_observationunit_list) > 0) {
-            my $observationunit_sql = _sql_from_arrayref($trial_observationunit_list);
-            push @where_clause, "observationunit.stock_id in ($observationunit_sql)";
+            my %seen;
+            my @unit_ids = grep { !$seen{$_}++ } @$trial_observationunit_list;
+            push @where_clause, "observationunit.stock_id = ANY(?::integer[])";
+            push @bind_values, \@unit_ids;
         } else {
             push @where_clause, "1 = 0";
         }
@@ -694,7 +677,7 @@ sub search {
         $location_id_lookup{$r->nd_geolocation_id} = $r->description;
     }
     my $h = $schema->storage->dbh()->prepare($q);
-    $h->execute();
+    $h->execute(@bind_values);
     my @result;
 
     my $calendar_funcs = CXGN::Calendar->new({});
