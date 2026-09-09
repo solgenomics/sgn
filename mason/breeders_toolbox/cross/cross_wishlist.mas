@@ -536,7 +536,8 @@ jQuery(document).ready(function($) {
             female_trial_ids_string = female_trial_ids;
         }
 
-        var ona_form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
+        let ona_form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text();
+        let checkName = "MultiParental";
 
         jQuery.ajax({
             url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
@@ -545,8 +546,8 @@ jQuery(document).ready(function($) {
                 var cross_wishlist_name;
                 if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
                     cross_wishlist_name = 'cross_wishlist_test.csv';
-                } else if (ona_form_name == 'BTracTSendusuMultiParental') {
-                    cross_wishlist_name = 'cross_wishlist_BTracTSendusuMultiParental.csv';
+                } else if (ona_form_name.includes(checkName)) {
+                    cross_wishlist_name = 'cross_wishlist_'+ona_form_name+'.csv';
                 } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
                     cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
                 } else {
@@ -573,7 +574,8 @@ jQuery(document).ready(function($) {
             female_trial_ids_string = female_trial_ids;
         }
 
-        var ona_form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
+        let ona_form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
+        let checkName = "MultiParental";
 
         jQuery.ajax({
             url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
@@ -583,8 +585,8 @@ jQuery(document).ready(function($) {
                 var cross_wishlist_name;
                 if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
                     cross_wishlist_name = 'cross_wishlist_test.csv';
-                } else if (ona_form_name == 'BTracTSendusuMultiParental') {
-                    cross_wishlist_name = 'cross_wishlist_BTracTSendusuMultiParental.csv';
+                } else if (ona_form_name.includes(checkName)) {
+                    cross_wishlist_name = 'cross_wishlist_'+ona_form_name+'.csv';
                 } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
                     cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
                 } else {
@@ -609,7 +611,8 @@ jQuery(document).ready(function($) {
             female_trial_ids_string = female_trial_ids;
         }
 
-        var ona_form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
+        let ona_form_name = jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()
+        let checkName = "MultiParental";
 
         jQuery.ajax({
             url: '/ajax/breeders/trial/'+female_trial_ids_array[0]+'/location',
@@ -618,8 +621,8 @@ jQuery(document).ready(function($) {
                 var cross_wishlist_name;
                 if ('<% $c->config->{odk_crossing_data_test_form_name} %>' == jQuery("#cross_wishlist_availabe_odk_crossing_forms option:selected").text()){
                     cross_wishlist_name = 'cross_wishlist_test.csv';
-                } else if (ona_form_name == 'BTracTSendusuMultiParental') {
-                    cross_wishlist_name = 'cross_wishlist_BTracTSendusuMultiParental.csv';
+                } else if (ona_form_name.includes(checkName)) {
+                    cross_wishlist_name = 'cross_wishlist_'+ona_form_name+'.csv';
                 } else if ('<% $c->config->{odk_crossing_data_separate_wishlist_by_location} %>' == '1') {
                     cross_wishlist_name = 'cross_wishlist_'+response.location[1]+'.csv'
                 } else {
