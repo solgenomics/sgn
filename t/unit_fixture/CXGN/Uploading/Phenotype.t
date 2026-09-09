@@ -95,7 +95,7 @@ my $uploader = CXGN::UploadFile->new({
     user_role => 'curator',
     metadata_schema => $f->metadata_schema(),
     file_type => 'phenotyping_spreadsheet'
-				     });
+});
 
 ## Store uploaded temporary file in archive
 my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
