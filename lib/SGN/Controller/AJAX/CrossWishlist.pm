@@ -212,6 +212,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($ona_form_name eq $test_ona_form_name){
         $is_test_form = 1;
     }
+    print STDERR "IS TEST FORM =".Dumper($is_test_form)."\n";
     #print STDERR Dumper $data;
     #print STDERR Dumper $selected_plot_ids;
 
@@ -275,6 +276,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     my $odk_ona_tempfiles_dir = $c->tempfiles_subdir('ODK_ONA_cross_info');
     my ($cross_wishlist_temp_file, $cross_wishlist_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_cross_wishlist_downloadXXXXX');
     my $cross_wishlist_temp_file_path = $cross_wishlist_temp_file->filename;
+    print STDERR "WISHLIST TEMP FILE PATH 1=".Dumper($cross_wishlist_temp_file_path)."\n";
     my ($germplasm_info_temp_file, $germplasm_info_uri1) = $c->tempfile( TEMPLATE => 'ODK_ONA_cross_info/ODK_ONA_germplasm_info_downloadXXXXX');
     my $germplasm_info_temp_file_path = $germplasm_info_temp_file->filename;
     my $cross_wihlist_ona_id;
@@ -294,14 +296,15 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($resp2->is_success) {
         my $message2 = $resp2->decoded_content;
         my $message_hash2 = decode_json $message2;
+        print STDERR "MESSAGE HASH 2=".Dumper($message_hash2)."\n";
         foreach my $t (@$message_hash2) {
             if (index($t->{data_value}, 'cross_wishlist') != -1) {
                 my $cross_wishlist_file_name = $t->{data_value};
-
+                print STDERR "FILE NAME =".Dumper($cross_wishlist_file_name)."\n";
                 $cross_wishlist_file_name =~ s/.csv//;
                 my $wishlist_file_name_loc = $cross_wishlist_file_name;
                 $wishlist_file_name_loc =~ s/cross_wishlist_//;
-#                print STDERR "WISHLIST FILE NAME LOC =".Dumper($wishlist_file_name_loc)."\n";
+                print STDERR "WISHLIST FILE NAME LOC =".Dumper($wishlist_file_name_loc)."\n";
                 if ($separate_crosswishlist_by_location){
                     if ($female_location_name eq $wishlist_file_name_loc) {
                         getstore($t->{media_url}, $cross_wishlist_temp_file_path);
@@ -313,6 +316,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 } else {
                     getstore($t->{media_url}, $cross_wishlist_temp_file_path);
                     $cross_wihlist_ona_id = $t->{id};
+                    print STDERR "ONA ID =".Dumper($cross_wihlist_ona_id)."\n";
                 }
             }
             if (index($t->{data_value}, 'germplasm_info') != -1) {
@@ -339,10 +343,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
     }
 
+
     my @previous_file_lines;
     my %previous_file_lookup;
     my $old_header_row;
     my @old_header_row_array;
+    print STDERR "PREVIOUS TEMP FILE PATH =".Dumper($cross_wishlist_temp_file_path)."\n";
     if ($cross_wihlist_ona_id){
         print STDERR "Previous cross_wishlist temp file $cross_wishlist_temp_file_path\n";
         open(my $fh, '<', $cross_wishlist_temp_file_path)
@@ -359,6 +365,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
     }
     #print STDERR Dumper \@previous_file_lines;
+    print STDERR "PREVIOUS FILE LOOKUP =".Dumper(\%previous_file_lookup)."\n";
+#    exit 0;
 
     my @previous_germplasm_info_lines;
     my %seen_info_obs_units;
@@ -735,6 +743,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         $archive_name = 'cross_wishlist_'.$site_name.'.csv';
     }
 
+    print STDERR "WISHLIST ARCHIVE NAME =".Dumper($archive_name)."\n";
+
     my $file_type;
     if ($is_test_form) {
         $file_type = 'cross_wishlist_test_'.$ona_form_id;
@@ -747,6 +757,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     } else {
         $file_type = 'cross_wishlist_'.$ona_form_id;
     }
+    print STDERR "FILE TYPE =".Dumper($file_type)."\n";
 
     my $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
@@ -803,6 +814,9 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     } else {
         $germplasm_info_archive_name = 'germplasm_info_'.$site_name.'.csv';
     }
+
+    print STDERR "GERMPLASM INFO ARCHIVE NAME =".Dumper($germplasm_info_archive_name)."\n";
+
 
     $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
@@ -882,14 +896,15 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         if ($resp->is_success) {
             my $message = $resp->decoded_content;
             my $message_hash = decode_json $message;
-            #print STDERR Dumper $message_hash;
+            print STDERR "ONA RESPONSE MESSAGE HASH 1=".Dumper($message_hash);
             if ($message_hash->{id}){
                 $c->stash->{rest}->{success} .= 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
             } else {
                 $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
             }
         } else {
-            #print STDERR Dumper $resp;
+            print STDERR "ONA RESPONSE MESSAGE HASH 2=".Dumper($resp);
+#            print STDERR Dumper $resp;
             $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
         }
 
