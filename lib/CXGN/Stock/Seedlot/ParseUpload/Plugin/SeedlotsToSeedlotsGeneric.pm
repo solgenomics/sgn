@@ -70,17 +70,48 @@ sub _validate_with_plugin {
     my $seen_to_seedlot_names = $parsed_values->{'to_seedlot_name'};
 
     my $from_seedlots_validator = CXGN::List::Validate->new();
-    my @from_seedlots_missing = @{$from_seedlots_validator->validate($schema,'seedlots',$seen_from_seedlot_names)->{'missing'}};
-
-    if (scalar(@from_seedlots_missing) > 0) {
-        push @error_messages, "The following from seedlot names are not in the database as uniquenames: ".join(',',@from_seedlots_missing);
+    my $from_seedlots_validation = $from_seedlots_validator->validate($schema,'seedlots', $seen_from_seedlot_names);
+    my @all_from_seedlots_missing = @{$from_seedlots_validation->{missing}};
+    my @from_seedlots_discarded = @{$from_seedlots_validation->{discarded}};
+    my @from_seedlots_missing;
+    my %from_seedlots_discarded_lookup = map {$_ => 1} @from_seedlot_discarded;
+    foreach my $from_seedlot (@all_from_seedlots_missing) {
+        if ($from_seedlots_discarded_lookup{$from_seedlot}) {
+            next;
+        } else {
+            push @from_seedlots_missing, $from_seedlot;
+        }
     }
 
+    if (scalar(@from_seedlots_missing) > 0) {
+        push @error_messages, "The following from seedlot names are not in the database: ".join(',',@from_seedlots_missing);
+    }
+
+    if (scalar(@from_seedlots_discarded) > 0) {
+        push @error_messages, "The following from seedlot names are marked as DISCARDED: ".join(',',@from_seedlots_discarded);
+    }
+
+
     my $to_seedlots_validator = CXGN::List::Validate->new();
-    my @to_seedlots_missing = @{$to_seedlots_validator->validate($schema,'seedlots',$seen_to_seedlot_names)->{'missing'}};
+    my $to_seedlots_validation = $to_seedlots_validator->validate($schema,'seedlots', $seen_to_seedlot_names);
+    my @all_to_seedlots_missing = @{$to_seedlots_validation->{missing}};
+    my @to_seedlots_discarded = @{$to_seedlots_validation->{discarded}};
+    my @to_seedlots_missing;
+    my %to_seedlots_discarded_lookup = map {$_ => 1} @to_seedlot_discarded;
+    foreach my $to_seedlot (@all_to_seedlots_missing) {
+        if ($to_seedlots_discarded_lookup{$to_seedlot}) {
+            next;
+        } else {
+            push @to_seedlots_missing, $to_seedlot;
+        }
+    }
 
     if (scalar(@to_seedlots_missing) > 0) {
-        push @error_messages, "The following to seedlot names are not in the database as uniquenames: ".join(',',@to_seedlots_missing);
+        push @error_messages, "The following to seedlot names are not in the database: ".join(',',@to_seedlots_missing);
+    }
+
+    if (scalar(@to_seedlots_discarded) > 0) {
+        push @error_messages, "The following to seedlot names are marked as DISCARDED: ".join(',',@to_seedlots_discarded);
     }
 
     my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs);

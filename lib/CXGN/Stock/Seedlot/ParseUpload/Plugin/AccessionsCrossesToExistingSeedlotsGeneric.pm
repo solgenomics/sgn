@@ -76,11 +76,26 @@ sub _validate_with_plugin {
         push @error_messages, "The following accessions or cross unique ids are not in the database as uniquenames: ".join(',',@accessions_crosses_missing);
     }
 
-    my $seedlots_validator = CXGN::List::Validate->new();
-    my @seedlots_missing = @{$seedlots_validator->validate($schema,'seedlots',$seen_seedlot_names)->{'missing'}};
+    my $existing_seedlot_validator = CXGN::List::Validate->new();
+    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_seedlot_names);
+    my @all_seedlots_missing = @{$validation->{missing}};
+    my @seedlots_discarded = @{$validation->{discarded}};
+    my @seedlots_missing;
+    my %discarded_lookup = map {$_ => 1} @seedlot_discarded;
+    foreach my $seedlot (@all_seedlots_missing) {
+        if ($discarded_lookup{$seedlot}) {
+            next;
+        } else {
+            push @seedlots_missing, $seedlot;
+        }
+    }
 
     if (scalar(@seedlots_missing) > 0) {
-        push @error_messages, "The following seedlots are not in the database as uniquenames: ".join(',',@seedlots_missing);
+        push @error_messages, "The following seedlots are not in the database: ".join(',',@seedlots_missing);
+    }
+
+    if (scalar(@seedlots_discarded) > 0) {
+        push @error_messages, "The following seedlots are marked as DISCARDED: ".join(',',@seedlots_discarded);
     }
 
     my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_accessions_crosses($schema, \@seedlot_content_pairs);

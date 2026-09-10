@@ -74,7 +74,8 @@ sub _validate_with_plugin {
     my $seen_from_seedlot_names = $parsed_values->{'from_seedlot_name'};
     my $seen_to_new_seedlot_names = $parsed_values->{'to_new_seedlot_name'};
 
-    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_from_seedlot_name);
+    my $existing_seedlot_validator = CXGN::List::Validate->new();
+    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_from_seedlot_names);
     my @all_seedlots_missing = @{$validation->{missing}};
     my @seedlots_discarded = @{$validation->{discarded}};
     my @seedlots_missing;
