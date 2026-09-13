@@ -229,6 +229,38 @@ tr.shown td.details-control {
       </div>
     </div>
 
+    <div class="modal fade" id="runNameModal" tabindex="-1" role="dialog" aria-labelledby="runNameModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="runNameModalTitle">Name Image Analysis Run</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted" style="font-size:12px;">
+                        All analyzed images below will be saved together as a single analysis run.
+                    </p>
+
+                    <div class="form-group">
+                        <label for="run_name_input" style="font-size:12px;">Run name</label>
+                        <input type="text" class="form-control" id="run_name_input" placeholder="e.g. Plot 101 leaf area analysis" />
+                    </div>
+
+                    <label style="font-size:12px;">Images included (<span id="run_image_count">0</span>)</label>
+                    <div id="run_image_list" style="max-height:260px;overflow-y:auto;border:1px solid #eee;"></div>
+
+                    <div id="run_name_error" class="text-danger" style="display:none;margin-top:6px;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="run_name_confirm">Save Results</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="saveResultModal" tabindex="-1" role="dialog" aria-labelledby="saveResultModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
@@ -269,6 +301,65 @@ tr.shown td.details-control {
     </div>
 </&>
 
+<&| /page/info_section.mas, title=>"Image Analysis Run Search Criteria", collapsible => 1, collapsed=>0, subtitle => "Search saved image analysis runs." &>
+
+    <div id="run_search_form" class="well well-sm">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Run name: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_run_name"
+                           name="run_search_run_name" placeholder="e.g. Seed size March 2025" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Source image filename: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_image_filename"
+                           name="run_search_image_filename" placeholder="e.g. 42200_branching" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Source stock name: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_stock_name"
+                           name="run_search_stock_name" placeholder="e.g. FieldPlot100" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-6 control-label">Pipeline name: </label>
+                <div class="col-sm-6">
+                    <input class="form-control" type="text" id="run_search_pipeline_name"
+                           name="run_search_pipeline_name" placeholder="e.g. seed_size_shape" />
+                </div>
+            </div>
+        </div>
+
+        <center>
+            <button class="btn btn-primary" id="run_search_submit">Search</button>
+        </center>
+    </div>
+</&>
+
+<&| /page/info_section.mas, title=>"Image Analysis Run Search Results", collapsible => 1, collapsed=>0 &>
+    <div class="well well-sm">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <table id="image_analysis_run_search_results" class="table table-hover table-striped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Run Name</th>
+                            <th>Source Image Filename</th>
+                            <th>Source Stock</th>
+                            <th>Pipeline Name</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</&>
+
 <script>
 
 var service_traits = {
@@ -300,6 +391,19 @@ jQuery(document).ready(function(){
             return false;
         }
         _load_image_search_results();
+    });
+
+    _load_run_search_results();
+
+    jQuery('#run_search_submit').click(function () {
+        jQuery('#image_analysis_run_search_results').DataTable().ajax.reload();
+    });
+
+    jQuery('#run_search_form').keypress( function( e ) {
+        var code = e.keyCode || e.which;
+        if( code == 13 ) {
+            jQuery('#run_search_submit').click();
+        }
     });
 
     jQuery("#image_submitter").autocomplete({
@@ -389,6 +493,8 @@ jQuery(document).ready(function(){
     const selected_image_ids = [];
     let submit_results;
     let is_multi_trait;
+    let analysis_metadata;
+    let output_image_overlays;
 
     jQuery('#image_analysis_submit').click(function(){
         jQuery('input[name="image_analysis_select"]').each(function() {
@@ -429,7 +535,7 @@ jQuery(document).ready(function(){
                 dataType:'json',
                 success: function(response) {
                     images_finished++;
-                    // console.log(response);
+                    console.log("submit response", response);
                     jQuery('#progress_msg').text('Responses received for '+images_finished+' out of '+image_total+' images');
                     current_progress += (1 / image_total) * 90;
                     progress_bar.css("width", current_progress + "%")
@@ -473,6 +579,7 @@ jQuery(document).ready(function(){
                 //alert("The image you submitted for analysis is associated with a plot. If you save these results a new plant will be created for this plot.")
             //}
 
+
             let metricsData = Object.entries(first.result.analysis_info)
                 .filter(([key, value]) => key != null && value != null)
                 .map(([key, value]) => ({
@@ -496,8 +603,8 @@ jQuery(document).ready(function(){
                     method: 'POST',
                     data: { 'result': JSON.stringify(results) },
                     success: function(response) {
-                        // console.log("Grouped Results are:");
-                        //console.log(response);
+                        console.log("Grouped Results are:");
+                        console.log(response);
                         current_progress = 100;
                         progress_bar.css("width", current_progress + "%")
                         .attr("aria-valuenow", current_progress)
@@ -505,11 +612,16 @@ jQuery(document).ready(function(){
                         jQuery('#progress_msg').text('Building results table.');
 
                         is_multi_trait = response.results.multi_trait_analysis;
-                        if (response.results.analyzed_image_overlay) {
-                            jQuery('#analysis_image').attr('src', response.results.analyzed_image_overlay);
-                            jQuery('#analysis_image_link').attr('href', response.results.analyzed_image_overlay);
-                            jQuery('#analysis_image_result').show()
+                        analysis_metadata = response.results.analysis_metadata;
+                        output_image_overlays = response.results.output_image_overlays;
+                        let overlayUrls = Object.values(output_image_overlays);
+
+                        if (overlayUrls.length === 1) {
+                            jQuery('#analysis_image').attr('src', overlayUrls[0]);
+                            jQuery('#analysis_image_link').attr('href', overlayUrls[0]);
+                            jQuery('#analysis_image_result').show();
                         }
+
                         jQuery('#image_analysis_result').show();
 
                         var table = jQuery('#image_analysis_result_table').DataTable( {
@@ -587,17 +699,269 @@ jQuery(document).ready(function(){
         console.log("submit results", submit_results);
         if (submit_results.stock_type_name === "plot") {
             jQuery('#plantCreationWarning').modal('show');
+        } else {
+            enterRunName();
         }
     });
 
     jQuery('#save_results_continue').click(function() {
         jQuery('#plantCreationWarning').modal('hide');
-        saveResults();
+        enterRunName();
     });
 
-    function saveResults() {
+    function enterRunName() {
+        jQuery('#run_name_error').hide().text('');
+        jQuery('#run_name_input').val('');
+
+        let partition = partitionTableDataByImage();
+        window.save_partition = partition;
+
+        let $list = jQuery('#run_image_list').empty();
+        jQuery('#run_image_count').text(partition.order.length);
+
+        partition.order.forEach(function(image_id) {
+            var rows    = partition.groups[image_id];
+            var label   = rows[0].source_image_filename || ('Image ' + image_id);
+            var overlay = (window.overlays_by_image && window.overlays_by_image[image_id]) || '';
+
+            $list.append(
+                '<div class="run-image-item" ' +
+                    'data-image-id="' + jQuery('<div>').text(image_id).html() + '" ' +
+                    'style="display:flex;align-items:center;border-bottom:1px solid #eee;padding:8px;">' +
+                    '<div style="flex:0 0 90px;">' +
+                        (overlay ? '<img src="' + overlay + '" style="max-height:60px;max-width:80px;">' : '') +
+                    '</div>' +
+                    '<div style="flex:1;font-size:12px;">' +
+                        jQuery('<div>').text(label).html() +
+                        '<span class="text-muted"> &mdash; ' + rows.length +
+                        (rows.length === 1 ? ' result' : ' results') + '</span>' +
+                    '</div>' +
+                '</div>'
+            );
+        });
+
+        jQuery('#runNameModal').modal('show');
+        setTimeout(function () { jQuery('#run_name_input').focus(); }, 300);
+    }
+
+    function partitionTableDataByImage(rows) {
+        var all_rows = rows || jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
+
+        var groups  = {};   // source_image_id -> [rows]
+        var order   = [];   // preserve first-seen order
+        var unknown = [];   // rows with no usable source_image_id
+
+        all_rows.forEach(function(row) {
+            var raw = row.source_image_id;
+            if (raw == null || raw === '' || !String(raw).match(/^\d+$/)) {
+                unknown.push(row);
+                return;
+            }
+            var img = String(raw);
+            if (!groups[img]) { groups[img] = []; order.push(img); }
+            groups[img].push(row);
+        });
+
+        return { groups: groups, order: order, unknown: unknown };
+    }
+    
+    jQuery('#run_name_confirm').click(function () {
+        jQuery('#run_name_error').hide().text('');
+
+        var runName = jQuery.trim(jQuery('#run_name_input').val());
+        if (!runName) {
+            showRunNameError('Please enter a name for this run.');
+            return;
+        }
+
+        var partition = window.save_partition;
+        if (!partition || !partition.order.length) {
+            showRunNameError('No analysis results found to save.');
+            return;
+        }
+
+        var images = partition.order.map(function(image_id) {
+            var rows = partition.groups[image_id];
+            return {
+                source_image_id:  image_id,
+                source_stock_id:  rows[0].source_stock_id,
+                overlay_image_id: (window.overlay_ids_by_image && window.overlay_ids_by_image[image_id]) || null,
+                tissue_samples:   rows.map(function(r) { return { stock_id: r.stock_id }; })
+            };
+        });
+
+        var $btn = jQuery('#run_name_confirm').prop('disabled', true).text('Checking...');
+
+        jQuery.ajax({
+            url: '/ajax/image_analysis/check_run_name',
+            method: 'GET',
+            data: { run_name: runName }
+        }).then(function(resp) {
+            $btn.prop('disabled', false).text('Save Results');
+
+            if (resp && resp.exists) {
+                showRunNameError('The name "' + runName + '" already exists. Please choose a different name.');
+                return;
+            }
+
+            jQuery('#runNameModal').modal('hide');
+            saveSingleRun(runName);
+        }, function () {
+            $btn.prop('disabled', false).text('Save Results');
+            showRunNameError('Could not verify the name. Please try again.');
+        });
+    });
+
+    function showRunNameError(msg) {
+        jQuery('#run_name_error').text(msg).show();
+    }
+
+    function saveSingleRun(runName) {
+        var partition = window.save_partition;
+        if (!partition || !partition.order.length) {
+            showSaveError('No analysis results found to save.');
+            return;
+        }
+
+        jQuery('#working_modal').modal('show');
+
+        var chain    = jQuery.Deferred().resolve().promise();
+        var images   = [];
+        var failures = [];
+
+        // Sequential: saveResults writes to the shared #upload_images_file_input node.
+        partition.order.forEach(function(image_id) {
+            chain = chain.then(function() {
+                return saveResults(partition.groups[image_id], image_id).then(
+                    function(descriptor) { images.push(descriptor); },
+                    function(err) { failures.push({ image_id: image_id, err: extractError(err) }); }
+                );
+            });
+        });
+
+        chain.always(function() {
+            if (!images.length) {
+                jQuery('#working_modal').modal('hide');
+                showSaveError('No images could be saved. ' + failures.map(function(f) {
+                    return 'Image ' + f.image_id + ': ' + f.err;
+                }).join('; '));
+                return;
+            }
+
+            createRunProject(images, runName, analysis_metadata)
+                .done(function(resp) {
+                    jQuery('#working_modal').modal('hide');
+                    if (!resp || resp.error) {
+                        showSaveError((resp && resp.error) || 'Unknown error creating the run.');
+                        return;
+                    }
+                    showRunSaveSummary(resp, runName, images.length, failures);
+                })
+                .fail(function(xhr) {
+                    jQuery('#working_modal').modal('hide');
+                    showSaveError(extractError(xhr));
+                });
+        });
+    }
+
+    function extractError(xhr) {
+        if (!xhr) return 'Unknown error';
+        if (xhr.responseJSON && xhr.responseJSON.error) return xhr.responseJSON.error;
+        if (xhr.status === 0)   return 'Network error — request did not reach the server.';
+        if (xhr.status === 504) return 'Server timed out. The run may still exist — check before retrying.';
+        return xhr.responseText || ('HTTP ' + xhr.status);
+    }
+
+    function showRunSaveSummary(resp, runName, okCount, failures) {
+        var runId = resp && resp.run_project_id;
+        var name  = (resp && resp.run_name) || runName;
+        var nameHtml = runId
+            ? '<a href="/image_analysis/run/' + runId + '">' + jQuery('<div>').text(name).html() + '</a>'
+            : jQuery('<div>').text(name).html();
+
+        var html = '<ul class="list-group">' +
+            '<li class="list-group-item list-group-item-success">' +
+                '<span class="badge"><span class="glyphicon glyphicon-ok"></span></span>' +
+                'Saved run: ' + nameHtml +
+                ' <span class="text-muted">(' + okCount + (okCount === 1 ? ' image' : ' images') + ')</span>' +
+            '</li>';
+
+        (failures || []).forEach(function(f) {
+            html += '<li class="list-group-item list-group-item-warning">' +
+                        '<span class="badge"><span class="glyphicon glyphicon-warning-sign"></span></span>' +
+                        'Image ' + jQuery('<div>').text(f.image_id).html() + ' was not saved: ' +
+                        jQuery('<div>').text(f.err).html() +
+                    '</li>';
+        });
+
+        html += '</ul>';
+        jQuery('#saveResultModalBody').html(html);
+        jQuery('#saveResultModal').modal('show');
+    }
+
+    function saveAllRuns(entries) {
+        jQuery('#working_modal').modal('show');
+
+        var chain = jQuery.Deferred().resolve(); 
+        var summaries = [];
+
+        entries.forEach(function(e) {
+            chain = chain.then(function() {
+                return saveResults(e.rows, e.runName).then(
+                    function(resp) { summaries.push({ ok: true,  name: e.runName, resp: resp }); },
+                    function(xhr)  { summaries.push({ ok: false, name: e.runName, err: xhr && (xhr.responseText || xhr) }); }
+                );
+            });
+        });
+
+        chain.always(function() {
+            jQuery('#working_modal').modal('hide');
+            showAllSaveSummaries(summaries);   // combined success/error list
+        });
+    }
+
+    function showAllSaveSummaries(summaries) {
+        var html = '<ul class="list-group">';
+        summaries.forEach(function(s) {
+            if (s.ok && s.resp && !s.resp.error) {
+                var runId   = s.resp.run_project_id;
+                var runName = s.resp.run_name || s.name;
+                var nameHtml = runId
+                    ? '<a href="/image_analysis/run/' + runId + '">' + jQuery('<div>').text(runName).html() + '</a>'
+                    : jQuery('<div>').text(runName).html();
+                html += '<li class="list-group-item list-group-item-success">' +
+                            '<span class="badge"><span class="glyphicon glyphicon-ok"></span></span>' +
+                            'Saved run: ' + nameHtml + '</li>';
+            } else {
+                var msg = (s.resp && s.resp.error) ? s.resp.error : (s.err || 'Unknown error');
+                html += '<li class="list-group-item list-group-item-danger">' +
+                            '<span class="badge"><span class="glyphicon glyphicon-remove"></span></span>' +
+                            'Failed to save "' + jQuery('<div>').text(s.name).html() + '": ' +
+                            jQuery('<div>').text(msg).html() + '</li>';
+            }
+        });
+        html += '</ul>';
+        jQuery('#saveResultModalBody').html(html);
+        jQuery('#saveResultModal').modal('show');
+    }
+
+    function getThumbFromRows(rows) {
+        var d = rows[0].details && rows[0].details[0];
+        var orig = (d && d.original_link) || rows[0].original_link;
+        if (!orig) return '';
+        return orig.replace(/\/[^\/]+$/, '/small.jpg');
+    }
+
+    function saveResults(table_data, imageId) {
+        let done = jQuery.Deferred();
+        console.log("processing image:", imageId, "rows:", table_data.length);
+        //console.log("saving run for image:", table_data[0].source_image_id, "->", runName);
+
+        //let this_image_id = table_data[0].source_image_id;
+        /*
         var table_data = jQuery('#image_analysis_result_table').DataTable().rows().data().toArray();
         console.log("table data:", table_data);
+        */
         let dt = new DataTransfer();
 
         jQuery('#working_modal').modal('show');
@@ -606,7 +970,7 @@ jQuery(document).ready(function(){
                 additionalInfo: {
                     observationUnitParent: table_data[0].observationUnitDbId
                 },
-                observationUnitName: table_data[0].observationUnitName + "_" + selected_image_ids[0] +  "_plant",
+                observationUnitName: table_data[0].observationUnitName + "_" + imageId +  "_plant",
                 studyDbId: table_data[0].studyDbId, // trial ID
                 germplasmDbId: table_data[0].germplasmDbId,
                 observationUnitPosition: {
@@ -679,13 +1043,20 @@ jQuery(document).ready(function(){
             let germplasmName = plantData[0].observationUnitName;
             let accessionId = table_data[0].germplasmDbId;
             let sampleName;
+            var seen_trait_ids = {};
+            var trait_ids = [];
 
             table_data.forEach(row => {
+                var trait_id = row.observationVariableDbId;
+                if (trait_id != null && !seen_trait_ids[trait_id]) {
+                    seen_trait_ids[trait_id] = true;
+                    trait_ids.push(trait_id);
+                }
                 row.details.forEach((detail, i) => {
                     const key = detail.object_name || detail.image_name;
 
                     if (!samples[key]) {
-                        let sampleNumber = parseInt(detail.sample_num) + i;
+                        let sampleNumber = parseInt(detail.sample_num);
                         if (is_multi_trait == 1) {
                             sampleName = germplasmName + '_' + 'sample' + sampleNumber;
                         } else {
@@ -745,7 +1116,7 @@ jQuery(document).ready(function(){
                     observationUnitPosition: {
                         observationLevel: {
                             levelName: "tissue_sample",
-                            levelCode: "tissue_sample_" + (index + 1),
+                            levelCode: "tissue_sample_test" + (index + 1),
                             levelOrder: 4
                         },
                         observationLevelRelationships: [
@@ -801,12 +1172,15 @@ jQuery(document).ready(function(){
                         headers: { "Authorization": "Bearer " + jQuery.cookie("sgn_session_id") },
                         data: JSON.stringify(observationData),
                         success: function (obsResponse) {
-                            jQuery('#working_modal').modal('hide');
-                            jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
-                            jQuery('#saveResultModal').modal('show');
+                            console.log("obsResponse raw:", obsResponse);
+                            console.log("obsResponse type:", typeof obsResponse);
+                            var tissue_sample_ids = Object.keys(sampleData);
+                            console.log("tissue_sample_ids test:", tissue_sample_ids);
+                            done.resolve(buildImageDescriptor(table_data, imageId, tissue_sample_ids, trait_ids));
                         },
                         error: function (err) {
                             console.error("Error saving observations", err.responseText);
+                            done.reject(err);
                         }
                     });
                 });
@@ -848,6 +1222,7 @@ jQuery(document).ready(function(){
                             
                         })
                         console.log("observationdata 2:", observationData);
+                        var unitResponseData = response.result.data;
 
                         jQuery.ajax({
                             type: 'POST',
@@ -859,11 +1234,14 @@ jQuery(document).ready(function(){
                                 let promise = (imageFiles && imageFiles.length) ? loadAllImages(imageFiles, imageData) : Promise.resolve();
                                 promise.then(function(uploadStatus) {
                                     console.log("Upload completed!");
-                                    jQuery('#working_modal').modal('hide');
-                                    jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
-                                    jQuery('#saveResultModal').modal('show');
+                                    var tissue_sample_ids = unitResponseData.map(function(unit) {
+                                        return unit.observationUnitDbId;
+                                    });
+                                    done.resolve(buildImageDescriptor(table_data, imageId, tissue_sample_ids, trait_ids));                               
+                                }, 
+                                function(err) {
+                                    done.reject(err);
                                 });
-                                
                             },
                             error: function(response) {
                                 jQuery('#working_modal').modal('hide');
@@ -892,10 +1270,9 @@ jQuery(document).ready(function(){
             },
             success: function(response) {
                 // console.log(response);
-                jQuery('#working_modal').modal('hide');
-                jQuery('#saveResultModalBody').html('<ul class="list-group"><li class="list-group-item list-group-item-success"><span class="badge"><span class="glyphicon glyphicon-ok"></span></span>Analysis results saved successfully in the database.</li></ul>');
-                jQuery('#saveResultModal').modal('show');
-            },
+                var tissue_sample_ids = [table_data[0].observationUnitDbId];
+                done.resolve(buildImageDescriptor(table_data, imageId, tissue_sample_ids, trait_ids));
+            },  
             error: function(response) {
                 // console.log(response);
                 jQuery('#working_modal').modal('hide');
@@ -904,6 +1281,7 @@ jQuery(document).ready(function(){
             }
         });
         }
+        return done.promise();
         
     }
 
@@ -945,6 +1323,132 @@ function getOrCreateSamples(sampleData) {
     return Promise.all(requests).then(() => existingSamples);
 }
 
+function buildImageDescriptor(table_data, imageId, tissue_sample_ids, trait_ids) {
+    var row = table_data[0];
+    return {
+        source_image_id:  parseInt(imageId, 10),
+        source_stock_id:  parseInt(row.observationUnitDbId, 10),
+        trial_id:         parseInt(row.studyDbId, 10),
+        overlay_image_id: resolveOverlayImageId(row),
+        tissue_samples:   dedupeStockIds(tissue_sample_ids),
+        trait_ids:        trait_ids || []
+    };
+}
+
+function dedupeStockIds(ids) {
+    var seen = {}, out = [];
+    (ids || []).forEach(function(id) {
+        var n = parseInt(id, 10);
+        if (isNaN(n) || seen[n]) return;
+        seen[n] = true;
+        out.push({ stock_id: n, result_image_id: null });
+    });
+    return out;
+}
+
+function createRunProject(images, runName, analysis_metadata) {
+    console.log("create run project triggered with", images.length, "images");
+
+    if (!images.length) {
+        return rejectWith('No saved images to attach to this run.');
+    }
+    var bad = images.filter(function(i) {
+        return !i.source_image_id || !i.source_stock_id || !i.trial_id;
+    });
+    if (bad.length) {
+        return rejectWith('Incomplete image data for source_image_id(s): ' +
+            bad.map(function(i) { return i.source_image_id || '(none)'; }).join(', '));
+    }
+
+    // Union trait ids across every image in the run.
+    var seen = {}, trait_ids = [];
+    images.forEach(function(img) {
+        (img.trait_ids || []).forEach(function(t) {
+            if (t != null && !seen[t]) { seen[t] = true; trait_ids.push(t); }
+        });
+    });
+
+    var payload = images.map(function(i) {
+        return {
+            source_image_id:  i.source_image_id,
+            source_stock_id:  i.source_stock_id,
+            trial_id:         i.trial_id,
+            overlay_image_id: i.overlay_image_id,
+            tissue_samples:   i.tissue_samples
+        };
+    });
+
+    var run_date = new Date().toISOString().slice(0,19).replace('T',' ');
+    console.log("createRunProject images_json:", JSON.stringify(payload));
+    console.log("run NAME:", runName);
+
+    return jQuery.ajax({
+        type : 'POST',
+        url  : '/ajax/image_analysis/create_run_project',
+        data : {
+            run_name          : runName,
+            service_name      : jQuery('#image_analysis_service_select option:selected').text(),
+            run_date          : run_date,
+            images_json       : JSON.stringify(payload),
+            trait_ids         : JSON.stringify(trait_ids),
+            analysis_info_json: JSON.stringify({ analysis_metadata: analysis_metadata })
+        }
+    });
+}
+
+function rejectWith(msg) {
+    console.error("createRunProject:", msg);
+    return jQuery.Deferred().reject({ responseJSON: { error: msg } }).promise();
+}
+
+function resolveOverlayImageId(row) {
+    var id = row.overlay_image_id;
+    if (id != null && String(id).match(/^\d+$/)) return parseInt(id, 10);
+    return null;
+}
+
+function showSaveSuccess(resp) {
+    if (resp && resp.error) {
+        showSaveError(resp.error);
+        return;
+    }
+
+    var runName = (resp && resp.run_name) ? resp.run_name : '';
+    var runId   = (resp && resp.run_project_id) ? resp.run_project_id : null;
+
+    var nameHtml;
+    if (runId) {
+        nameHtml = '<a href="/image_analysis/run/' + runId + '">' +
+                    jQuery('<div>').text(runName).html() +   
+                    '</a>';
+    } else {
+        nameHtml = jQuery('<div>').text(runName).html();
+    }
+
+    jQuery('#saveResultModalBody').html(
+        '<ul class="list-group">' +
+            '<li class="list-group-item list-group-item-success">' +
+                '<span class="badge"><span class="glyphicon glyphicon-ok"></span></span>' +
+                'New analysis run saved: ' + nameHtml +
+            '</li>' +
+        '</ul>'
+    );
+    jQuery('#saveResultModal').modal('show');
+}
+
+function showSaveError(msg) {
+    jQuery('#saveResultModalBody').html(
+        '<ul class="list-group">' +
+            '<li class="list-group-item list-group-item-danger">' +
+                '<span class="badge"><span class="glyphicon glyphicon-remove"></span></span>' +
+                'Error while trying to save the analysis results.' +
+                (msg ? ' Deets: ' + jQuery('<div>').text(msg).html() : '') +
+            '</li>' +
+        '</ul>'
+    );
+    jQuery('#saveResultModal').modal('show');
+}
+
 function _load_image_search_results() {
     images_table = jQuery('#image_analysis_image_search_results').DataTable({
         'destroy' : true,
@@ -963,6 +1467,28 @@ function _load_image_search_results() {
               d.image_tag = jQuery('#image_tag').val();
               d.image_stock_uniquename = jQuery('#image_stock_uniquename').val();
               d.image_project_name = jQuery('#html_image_analysis_trial_select').val();
+            }
+        }
+    });
+}
+
+function _load_run_search_results() {
+    jQuery('#image_analysis_run_search_results').DataTable({
+        'destroy'    : true,
+        'searching'  : false,
+        'ordering'   : false,
+        'processing' : true,
+        'serverSide' : true,
+        'scrollX'    : true,
+        'lengthMenu' : [10, 20, 50, 100, 1000],
+        'ajax': {
+            'url': '/ajax/image_analysis/search_runs',
+            'method': 'POST',
+            'data': function (d) {
+                d.run_name       = jQuery('#run_search_run_name').val();
+                d.image_filename = jQuery('#run_search_image_filename').val();
+                d.stock_name     = jQuery('#run_search_stock_name').val();
+                d.pipeline_name  = jQuery('#run_search_pipeline_name').val();
             }
         }
     });
