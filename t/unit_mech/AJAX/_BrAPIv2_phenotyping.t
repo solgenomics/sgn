@@ -106,7 +106,7 @@ $response = decode_json $mech->content;
 #print STDERR "\n\n observationunits/table response:" . Dumper $response;
 #14
 
-my $expected = {'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 196,'totalCount' => 1955,'currentPage' => 0,'pageSize' => 10},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::ObservationTables'},{'messageType' => 'INFO','message' => 'Observation Units table result constructed'}]},'result' => {'observationVariables' => [{'observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013','observationVariableDbId' => '77559'},{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','observationVariableDbId' => '77557'},{'observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010','observationVariableDbId' => '77556'},{'observationVariableName' => 'cass source leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000002','observationVariableDbId' => '77548'},{'observationVariableName' => 'cass source leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000007','observationVariableDbId' => '77553'},{'observationVariableDbId' => '77549','observationVariableName' => 'cass source leaf|ADP|ug/g|week 16|COMP:0000003'},{'observationVariableName' => 'cass storage root|3-phosphoglyceric acid|ug/g|week 16|COMP:0000006','observationVariableDbId' => '77552'},{'observationVariableDbId' => '77550','observationVariableName' => 'cass storage root|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000004'},{'observationVariableName' => 'cass storage root|ADP|ug/g|week 16|COMP:0000005','observationVariableDbId' => '77551'},{'observationVariableName' => 'cass upper stem|3-phosphoglyceric acid|ug/g|week 16|COMP:0000012','observationVariableDbId' => '77558'},{'observationVariableName' => 'cass upper stem|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000008','observationVariableDbId' => '77554'},{'observationVariableDbId' => '77555','observationVariableName' => 'cass upper stem|ADP|ug/g|week 16|COMP:0000009'},{'observationVariableDbId' => '70741','observationVariableName' => 'dry matter content percentage|CO_334:0000092'},{'observationVariableDbId' => '70666','observationVariableName' => 'fresh root weight|CO_334:0000012'},{'observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016','observationVariableDbId' => '70773'},{'observationVariableName' => 'harvest index variable|CO_334:0000015','observationVariableDbId' => '70668'}], 'data' => [['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38857,'test_trial21','1','1','1',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','test_accession3_synonym1','plot',38866,'test_trial210','3','1','10',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38840,'test_accession1','test_accession1_synonym1','plot',38867,'test_trial211','3','1','11',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38868,'test_trial212','3','1','12',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','test_accession2_synonym1,test_accession2_synonym2','plot',38869,'test_trial213','2','1','13',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38843,'test_accession4','','plot',38870,'test_trial214','3','1','14',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38841,'test_accession2','test_accession2_synonym1,test_accession2_synonym2','plot',38871,'test_trial215','3','1','15',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38844,'test_accession5','','plot',38858,'test_trial22','1','1','2',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','test_accession3_synonym1','plot',38859,'test_trial23','1','1','3',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef],['2014',134,'test','test',137,'test_trial','test trial','CRD',undef,undef,undef,undef,undef,'2017-July-04','2017-July-21','23','test_location',38842,'test_accession3','test_accession3_synonym1','plot',38860,'test_trial24','2','1','4',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef]],'headerRow' => ['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber']}};;
+my $expected = {'metadata' => {'datafiles' => [],'pagination' => {'totalPages' => 83,'totalCount' => 821,'currentPage' => 0,'pageSize' => 10},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=10','messageType' => 'INFO'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::ObservationTables'},{'messageType' => 'INFO','message' => 'Observation Units table result constructed'}]},'result' => {'observationVariables' => [{'observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013','observationVariableDbId' => '77559'},{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','observationVariableDbId' => '77557'},{'observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010','observationVariableDbId' => '77556'},{'observationVariableName' => 'cass source leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000002','observationVariableDbId' => '77548'},{'observationVariableName' => 'cass source leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000007','observationVariableDbId' => '77553'},{'observationVariableDbId' => '77549','observationVariableName' => 'cass source leaf|ADP|ug/g|week 16|COMP:0000003'},{'observationVariableName' => 'cass storage root|3-phosphoglyceric acid|ug/g|week 16|COMP:0000006','observationVariableDbId' => '77552'},{'observationVariableDbId' => '77550','observationVariableName' => 'cass storage root|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000004'},{'observationVariableName' => 'cass storage root|ADP|ug/g|week 16|COMP:0000005','observationVariableDbId' => '77551'},{'observationVariableName' => 'cass upper stem|3-phosphoglyceric acid|ug/g|week 16|COMP:0000012','observationVariableDbId' => '77558'},{'observationVariableName' => 'cass upper stem|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000008','observationVariableDbId' => '77554'},{'observationVariableDbId' => '77555','observationVariableName' => 'cass upper stem|ADP|ug/g|week 16|COMP:0000009'},{'observationVariableDbId' => '70741','observationVariableName' => 'dry matter content percentage|CO_334:0000092'},{'observationVariableDbId' => '70666','observationVariableName' => 'fresh root weight|CO_334:0000012'},{'observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016','observationVariableDbId' => '70773'},{'observationVariableName' => 'harvest index variable|CO_334:0000015','observationVariableDbId' => '70668'}], 'data' => [['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',38981,'UG120120','','plot',39819,'KASESE_TP2013_1002','1','53','36016',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'30.1','3.93','3',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',39174,'UG130050','','plot',39632,'KASESE_TP2013_1004','1','54','36018',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'24.2','7.26','12.5',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',38952,'UG120084','','plot',39919,'KASESE_TP2013_1006','1','54','36020',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'27.4','5.4','4.5',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',39049,'UG120202','','plot',39836,'KASESE_TP2013_1007','1','54','36021',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'16.3','0.47','6.5',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',39187,'UG130067','','plot',39602,'KASESE_TP2013_1010','1','54','36024',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'25','0.69','1.9',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',39243,'UG130133','','plot',39548,'KASESE_TP2013_1012','1','55','36026',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'22','1.85','8.5',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',39019,'UG120170','','plot',39467,'KASESE_TP2013_1013','1','55','36027',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'28.9','10.42','11',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',38955,'UG120087','','plot',39400,'KASESE_TP2013_1014','1','55','36028',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'27','5.69','10',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',38987,'UG120128','','plot',39637,'KASESE_TP2013_1015','1','56','36030',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'5.87','7',undef,undef],['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.','Alpha',undef,undef,undef,undef,undef,undef,undef,'23','test_location',39228,'UG130113','','plot',39545,'KASESE_TP2013_1018','1','56','36033',undef,undef,'test',undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,'19.6','2.13','2',undef,undef]],'headerRow' => ['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber']}};;
 #print STDERR "\n\nobservation_unit/table expected: ".Dumper($expected);
 
 is_deeply($response, $expected , "GET observationunits table test");
@@ -146,28 +146,28 @@ is_deeply($response,
         134,
         'test',
         'test',
-        137,
-        'test_trial',
-        'test trial',
-        'CRD',
+        139,
+        'Kasese solgs trial',
+        'This trial was loaded into the fixture to test solgs.',
+        'Alpha',
         undef,
         undef,
         undef,
         undef,
         undef,
-        '2017-July-04',
-        '2017-July-21',
+        undef,
+        undef,
         '23',
         'test_location',
-        38843,
-        'test_accession4',
+        38981,
+        'UG120120',
         '',
         'plot',
-        38857,
-        'test_trial21',
+        39819,
+        'KASESE_TP2013_1002',
         '1',
-        '1',
-        '1',
+        '53',
+        '36016',
         undef,
         undef,
         'test',
@@ -184,9 +184,9 @@ is_deeply($response,
         undef,
         undef,
         undef,
-        undef,
-        undef,
-        undef,
+        '30.1',
+        '3.93',
+        '3',
         undef,
         undef
       ],
@@ -195,28 +195,28 @@ is_deeply($response,
         134,
         'test',
         'test',
-        137,
-        'test_trial',
-        'test trial',
-        'CRD',
+        139,
+        'Kasese solgs trial',
+        'This trial was loaded into the fixture to test solgs.',
+        'Alpha',
         undef,
         undef,
         undef,
         undef,
         undef,
-        '2017-July-04',
-        '2017-July-21',
+        undef,
+        undef,
         '23',
         'test_location',
-        38842,
-        'test_accession3',
-        'test_accession3_synonym1',
+        39174,
+        'UG130050',
+        '',
         'plot',
-        38866,
-        'test_trial210',
-        '3',
+        39632,
+        'KASESE_TP2013_1004',
         '1',
-        '10',
+        '54',
+        '36018',
         undef,
         undef,
         'test',
@@ -233,9 +233,9 @@ is_deeply($response,
         undef,
         undef,
         undef,
-        undef,
-        undef,
-        undef,
+        '24.2',
+        '7.26',
+        '12.5',
         undef,
         undef
       ]
@@ -342,10 +342,10 @@ is_deeply($response,
   'metadata' => {
     'datafiles' => [],
     'pagination' => {
-      'totalCount' => 1955,
+      'totalCount' => 821,
       'pageSize' => 2,
       'currentPage' => 0,
-      'totalPages' => 978
+      'totalPages' => 411
     },
     'status' => [
       {
@@ -364,6 +364,34 @@ is_deeply($response,
   }
 }, "table test");
 
+# Study-only table requests default to all levels. The fixture includes units
+# without phenotypes; those must not occupy pages or inflate their counts.
+my ($observed_study_units) = $f->dbh->selectrow_array(q{
+    SELECT COUNT(DISTINCT nd_experiment_stock.stock_id)
+    FROM nd_experiment_stock
+    JOIN nd_experiment_project USING (nd_experiment_id)
+    JOIN nd_experiment_phenotype USING (nd_experiment_id)
+    JOIN phenotype USING (phenotype_id)
+    WHERE nd_experiment_project.project_id = 139
+      AND phenotype.value IS NOT NULL AND phenotype.value <> ''
+});
+ok($observed_study_units > 0, 'study fixture contains recorded observations');
+my $study_table_pages = int(($observed_study_units + 1) / 2);
+for my $endpoint (qw(observations/table observationunits/table)) {
+    for my $page (0, $study_table_pages - 1, $study_table_pages) {
+        $mech->get_ok("http://localhost:3010/brapi/v2/$endpoint?studyDbIds=139&pageSize=2&page=$page");
+        my $table = decode_json $mech->content;
+        is_deeply($table->{metadata}{pagination}, {
+            totalCount => $observed_study_units, totalPages => $study_table_pages,
+            pageSize => 2, currentPage => $page,
+        }, "$endpoint study-only pagination");
+        my $remaining = $observed_study_units - 2 * $page;
+        my $expected_rows = $remaining > 2 ? 2 : $remaining > 0 ? $remaining : 0;
+        is(scalar @{$table->{result}{data}}, $expected_rows,
+            "$endpoint fills pages with observed units");
+    }
+}
+
 
 # is_deeply($response, {'result' => {'observationVariables' => [{'observationVariableDbId' => '77559','observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013'},{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','observationVariableDbId' => '77557'},{'observationVariableDbId' => '77556','observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010'},{'observationVariableName' => 'cass source leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000002','observationVariableDbId' => '77548'},{'observationVariableName' => 'cass source leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000007','observationVariableDbId' => '77553'},{'observationVariableDbId' => '77549','observationVariableName' => 'cass source leaf|ADP|ug/g|week 16|COMP:0000003'},{'observationVariableName' => 'cass storage root|3-phosphoglyceric acid|ug/g|week 16|COMP:0000006','observationVariableDbId' => '77552'},{'observationVariableDbId' => '77550','observationVariableName' => 'cass storage root|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000004'},{'observationVariableDbId' => '77551','observationVariableName' => 'cass storage root|ADP|ug/g|week 16|COMP:0000005'},{'observationVariableDbId' => '77558','observationVariableName' => 'cass upper stem|3-phosphoglyceric acid|ug/g|week 16|COMP:0000012'},{'observationVariableDbId' => '77554','observationVariableName' => 'cass upper stem|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000008'},{'observationVariableName' => 'cass upper stem|ADP|ug/g|week 16|COMP:0000009','observationVariableDbId' => '77555'},{'observationVariableName' => 'dry matter content percentage|CO_334:0000092','observationVariableDbId' => '70741'},{'observationVariableName' => 'fresh root weight|CO_334:0000012','observationVariableDbId' => '70666'},{'observationVariableDbId' => '70773','observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016'},{'observationVariableDbId' => '70668','observationVariableName' => 'harvest index variable|CO_334:0000015'}],'data' => [[ '2014', 134, 'test', 'test', 139, 'Kasese solgs trial', 'This trial was loaded into the fixture to test solgs.', 'Alpha', undef, undef, undef, undef, undef, undef, undef, '23', 'test_location', 39086, 'UG120250', '', 'plot', 39691, 'KASESE_TP2013_1000', '1', '53', '36014', undef, undef, 'test', undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef ], [ '2014', 134, 'test', 'test', 139, 'Kasese solgs trial', 'This trial was loaded into the fixture to test solgs.', 'Alpha', undef, undef, undef, undef, undef, undef, undef, '23', 'test_location', 38960, 'UG120092', '', 'plot', 39493, 'KASESE_TP2013_1001', '1', '53', '36015', undef, undef, 'test', undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef ]],'headerRow' => ['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber']},'metadata' => {'pagination' => {'currentPage' => 0,'totalPages' => 508,'totalCount' => 1016,'pageSize' => 2},'status' => [{'message' => 'BrAPI base call found with page=0, pageSize=2','messageType' => 'INFO'},{'message' => 'Loading CXGN::BrAPI::v2::ObservationTables','messageType' => 'INFO'},{'message' => 'Observations table result constructed','messageType' => 'INFO'}],'datafiles' => []}}, "GET observations table test");
 #is_deeply ($response, {'result' => {  'headerRow' => ['studyYear','programDbId','programName','programDescription','studyDbId','studyName','studyDescription','studyDesign','plotWidth','plotLength','fieldSize','fieldTrialIsPlannedToBeGenotyped','fieldTrialIsPlannedToCross','plantingDate','harvestDate','locationDbId','locationName','germplasmDbId','germplasmName','germplasmSynonyms','observationLevel','observationUnitDbId','observationUnitName','replicate','blockNumber','plotNumber','rowNumber','colNumber','entryType','plantNumber'],  'data' => [['2014',134,'test','test',139,'Kasese solgs trial','This trial was loaded into the fixture to test solgs.', 'Alpha', undef, undef, undef, undef, undef, undef, undef, '23', 'test_location', 39086, 'UG120250', '','plot', 39691, 'KASESE_TP2013_1000', '1', '53', '36014', undef, undef, 'test', undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,'0', '0', '0', undef, undef  ],  ['2014', 134, 'test', 'test', 139, 'Kasese solgs trial', 'This trial was loaded into the fixture to test solgs.', 'Alpha', undef, undef, undef, undef, undef, undef, undef, '23', 'test_location', 38960, 'UG120092', '', 'plot', 39493, 'KASESE_TP2013_1001', '1', '53', '36015', undef, undef, 'test', undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, undef, '0', '0', '0', undef, undef]],  'observationVariables' => [{'observationVariableDbId' => '77559', 'observationVariableName' => 'cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013'},{'observationVariableDbId' => '77557','observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011'},{'observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010','observationVariableDbId' => '77556'},{  'observationVariableName' => 'cass source leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000002',  'observationVariableDbId' => '77548'},{  'observationVariableName' => 'cass source leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000007',  'observationVariableDbId' => '77553'},{  'observationVariableDbId' => '77549',  'observationVariableName' => 'cass source leaf|ADP|ug/g|week 16|COMP:0000003'},{  'observationVariableDbId' => '77552',  'observationVariableName' => 'cass storage root|3-phosphoglyceric acid|ug/g|week 16|COMP:0000006'},{  'observationVariableName' => 'cass storage root|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000004',  'observationVariableDbId' => '77550'},{  'observationVariableDbId' => '77551',  'observationVariableName' => 'cass storage root|ADP|ug/g|week 16|COMP:0000005'},{  'observationVariableName' => 'cass upper stem|3-phosphoglyceric acid|ug/g|week 16|COMP:0000012',  'observationVariableDbId' => '77558'},{  'observationVariableDbId' => '77554',  'observationVariableName' => 'cass upper stem|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000008'},{  'observationVariableName' => 'cass upper stem|ADP|ug/g|week 16|COMP:0000009',  'observationVariableDbId' => '77555'},{  'observationVariableDbId' => '70741',  'observationVariableName' => 'dry matter content percentage|CO_334:0000092'},{  'observationVariableDbId' => '70666',  'observationVariableName' => 'fresh root weight|CO_334:0000012'},{  'observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016',  'observationVariableDbId' => '70773'},{  'observationVariableName' => 'harvest index variable|CO_334:0000015',  'observationVariableDbId' => '70668'}]},  'metadata' => {'status' => [  {'message' => 'BrAPI base call found with page=0, pageSize=2',    'messageType' => 'INFO'  },  {'message' => 'Loading CXGN::BrAPI::v2::ObservationTables', 'messageType' => 'INFO'  },  {'message' => 'Observations table result constructed', 'messageType' => 'INFO'}],  'pagination' => {  'totalCount' => 1016,  'currentPage' => 0,  'pageSize' => 2,  'totalPages' => 508},  'datafiles' => []}}, "GET OBSERVATION  TABLE TEST");
@@ -380,7 +408,7 @@ is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','mess
 
 
 # POST /observations
-$data = '[ {"observationUnitDbId": 41294,  "uploadedBy": "Jane Doe", "observationTimeStamp": "2019-01-05T14:47:23Z", "observationVariableDbId":"70741", "season": "2011",   "value": "15", "externalReferences" : [{ "referenceId": "doi:10.155454/12341234", "referenceSource" : "DOI" } ], "additionalInfo" : { "year" : "2011" } } ]';
+$data = '[ {"observationUnitDbId": 41294,  "uploadedBy": "Jane Doe", "observationTimeStamp": "2019-01-05T14:47:23Z", "observationVariableDbId":"70741", "season": "2011",   "value": "0", "externalReferences" : [{ "referenceId": "doi:10.155454/12341234", "referenceSource" : "DOI" } ], "additionalInfo" : { "year" : "2011" } } ]';
 $mech->post('http://localhost:3010/brapi/v2/observations/', Content => $data);
 $response = decode_json $mech->content;
 
@@ -388,7 +416,7 @@ my $column = $f->bcs_schema()->resultset('Phenotype::Phenotype')->get_column('ph
 my $phenotype_id = $column->max();
 
 #21
-is_deeply($response,{"result"=>{"data"=>[{"value"=>"15","observationUnitName"=>"CASS_6Genotypes_307","observationVariableName"=>"dry matter content percentage","observationTimeStamp"=>"2019-01-05T14:47:23Z","collector"=>"janedoe","studyDbId"=>165,"uploadedBy"=>"janedoe","observationVariableDbId"=>"70741","observationDbId"=>$phenotype_id,"observationLevel"=>"plot","observationUnitDbId"=>41294,"germplasmName"=>"IITA-TMS-IBA980581","germplasmDbId"=>41283, "externalReferences" => [{ "referenceId"=> "doi:10.155454/12341234", "referenceSource" => "DOI" }], "additionalInfo" => { "year" => "2011" } } ]},"metadata"=>{"pagination"=>{"currentPage"=>0,"totalCount"=>1,"totalPages"=>1,"pageSize"=>10},"datafiles"=>[],"status"=>[{"message"=>"BrAPI base call found with page=0, pageSize=10","messageType"=>"INFO"},{"message"=>"Loading CXGN::BrAPI::v2::Observations","messageType"=>"INFO"},{"messageType"=>"info","message"=>"Request structure is valid"},{"message"=>"Request data is valid","messageType"=>"info"},{"messageType"=>"info","message"=>"File for incoming brapi obserations saved in archive."},{"messageType"=>"INFO","message"=>"All values in your file have been successfully processed!<br><br>1 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br>0 previously stored values removed<br><br>"}]} } , "check observation storage");
+is_deeply($response,{"result"=>{"data"=>[{"value"=>"0","observationUnitName"=>"CASS_6Genotypes_307","observationVariableName"=>"dry matter content percentage","observationTimeStamp"=>"2019-01-05T14:47:23Z","collector"=>"janedoe","studyDbId"=>165,"uploadedBy"=>"janedoe","observationVariableDbId"=>"70741","observationDbId"=>$phenotype_id,"observationLevel"=>"plot","observationUnitDbId"=>41294,"germplasmName"=>"IITA-TMS-IBA980581","germplasmDbId"=>41283, "externalReferences" => [{ "referenceId"=> "doi:10.155454/12341234", "referenceSource" => "DOI" }], "additionalInfo" => { "year" => "2011" } } ]},"metadata"=>{"pagination"=>{"currentPage"=>0,"totalCount"=>1,"totalPages"=>1,"pageSize"=>10},"datafiles"=>[],"status"=>[{"message"=>"BrAPI base call found with page=0, pageSize=10","messageType"=>"INFO"},{"message"=>"Loading CXGN::BrAPI::v2::Observations","messageType"=>"INFO"},{"messageType"=>"info","message"=>"Request structure is valid"},{"message"=>"Request data is valid","messageType"=>"info"},{"messageType"=>"info","message"=>"File for incoming brapi obserations saved in archive."},{"messageType"=>"INFO","message"=>"All values in your file have been successfully processed!<br><br>1 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br>0 previously stored values removed<br><br>"}]} } , "store a zero-valued observation");
 
 
 # GET /observations/{observationDbId}
@@ -396,7 +424,7 @@ is_deeply($response,{"result"=>{"data"=>[{"value"=>"15","observationUnitName"=>"
 $mech->get_ok('http://localhost:3010/brapi/v2/observations/' . $phenotype_id);
 $response = decode_json $mech->content;
 
-is_deeply($response,{'metadata' => { 'datafiles' => [], 'status' => [ {   'message' => 'BrAPI base call found with page=0, pageSize=10',   'messageType' => 'INFO' }, {   'message' => 'Loading CXGN::BrAPI::v2::Observations',   'messageType' => 'INFO' }, {   'messageType' => 'INFO',   'message' => 'Observations result constructed' } ], 'pagination' => { 'currentPage' => 0, 'pageSize' => 10, 'totalPages' => 1, 'totalCount' => 1 } },'result' => { 'uploadedBy' => 'janedoe', 'value' => '15', 'studyDbId' => '165', 'observationUnitName' => 'CASS_6Genotypes_307', 'season' => {   'seasonDbId' => '2017',   'season' => '2017',   'year' => '2017' } , 'observationDbId' => $phenotype_id, 'observationTimeStamp' => '2019-01-05T14:47:23Z', 'germplasmDbId' => '41283', 'observationVariableDbId' => '70741', 'observationVariableName' => 'dry matter content percentage|CO_334:0000092', 'collector' => 'janedoe', 'observationUnitDbId' => '41294', 'externalReferences' => [ {   'referenceId' => 'doi:10.155454/12341234',   'referenceSource' => 'DOI' } ], 'germplasmName' => 'IITA-TMS-IBA980581', 'additionalInfo' => { 'year' => '2011' } }} ,"check stored observation");
+is_deeply($response,{'metadata' => { 'datafiles' => [], 'status' => [ {   'message' => 'BrAPI base call found with page=0, pageSize=10',   'messageType' => 'INFO' }, {   'message' => 'Loading CXGN::BrAPI::v2::Observations',   'messageType' => 'INFO' }, {   'messageType' => 'INFO',   'message' => 'Observations result constructed' } ], 'pagination' => { 'currentPage' => 0, 'pageSize' => 10, 'totalPages' => 1, 'totalCount' => 1 } },'result' => { 'uploadedBy' => 'janedoe', 'value' => '0', 'studyDbId' => '165', 'observationUnitName' => 'CASS_6Genotypes_307', 'season' => {   'seasonDbId' => '2017',   'season' => '2017',   'year' => '2017' } , 'observationDbId' => $phenotype_id, 'observationTimeStamp' => '2019-01-05T14:47:23Z', 'germplasmDbId' => '41283', 'observationVariableDbId' => '70741', 'observationVariableName' => 'dry matter content percentage|CO_334:0000092', 'collector' => 'janedoe', 'observationUnitDbId' => '41294', 'externalReferences' => [ {   'referenceId' => 'doi:10.155454/12341234',   'referenceSource' => 'DOI' } ], 'germplasmName' => 'IITA-TMS-IBA980581', 'additionalInfo' => { 'year' => '2011' } }} ,"BrAPI serializes a zero-valued observation");
 
 # PUT /observations
 $data = '{ "740336":  { "observationUnitDbId": "41284",  "collector": "Jane Doe", "observationTimeStamp": "2020-01-01T14:47:23-07:00", "observationVariableDbId":"77559", "season": "2011",  "value": "value 5", "observationUnitName" : "CASS_6Genotypes_103", "externalReferences" : [{ "referenceId": "doi:10.155454/5555", "referenceSource" : "DOI" } ], "additionalInfo" : { "year" : "2011" } }}';
