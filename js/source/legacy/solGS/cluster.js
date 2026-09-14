@@ -810,17 +810,17 @@ solGS.cluster = {
 
   },
 
-  getClusterPops: function () {
-    var list = new solGSList();
-    var lists = list.getLists(["accessions", "plots", "trials"]);
-    lists = list.addDataStrAttr(lists);
-    lists = list.addDataTypeAttr(lists, "");
+  getClusterPops: function (source, ownership) {
+    if (source === "list") {
+      var list = new solGSList();
+      var lists = list.getLists(["accessions", "plots", "trials"], ownership);
+      lists = list.addDataStrAttr(lists);
+      return list.addDataTypeAttr(lists, "");
+    }
 
-    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"], ownership);
     datasets = solGS.dataset.addDataTypeAttr(datasets, "Clustering");
-    clusterPops = [lists, datasets];
-
-    return clusterPops.flat();
+    return datasets;
 
   },
 
@@ -1454,17 +1454,13 @@ jQuery(document).ready(function () {
 jQuery(document).ready(function () {
   if (location.pathname.match(/cluster\/analysis/)) {
 
-    clusterPopsDataDiv = solGS.cluster.clusterPopsDataDiv;
-    var tableId = 'cluster_pops_table';
-    var clusterPopsTable = solGS.cluster.createTable(tableId)
-    jQuery(clusterPopsDataDiv).append(clusterPopsTable).show();
-
-    var clusterPops = solGS.cluster.getClusterPops()
-    var clusterPopsRows = solGS.cluster.getClusterPopsRows(clusterPops);
-
-    solGS.cluster.displayClusterPopsTable(tableId, clusterPopsRows)
- 
-    jQuery("#create_new_list_dataset").show();
+    solGS.dataTableTabs.initialize({
+      prefix: "cluster",
+      createTable: function (tableId) { return solGS.cluster.createTable(tableId); },
+      getPopulations: function (source, ownership) { return solGS.cluster.getClusterPops(source, ownership); },
+      getRows: function (populations) { return solGS.cluster.getClusterPopsRows(populations); },
+      displayTable: function (tableId, rows) { solGS.cluster.displayClusterPopsTable(tableId, rows); }
+    });
     
   }
 });

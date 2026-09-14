@@ -17,15 +17,24 @@ solGS.listTypeSelectionPopulation = {
   predictedSelectionPops: {},
 
  
-  getSelectionListPops: function () {
-    var list = new solGSList();
-    var lists = list.getLists(["accessions"]);
-    lists = list.addDataStrAttr(lists);
+  getSelectionListPops: function (source, ownership) {
+    var selectionPops;
 
-    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-    var selectionPops = [lists, datasets];
+    if (source === "list") {
+      var list = new solGSList();
+      var lists = list.getLists(["accessions"], ownership);
+      selectionPops = list.addDataStrAttr(lists);
+    } else if (source === "dataset") {
+      selectionPops = solGS.dataset.getDatasetPops(["accessions", "trials"], ownership);
+    } else {
+      return [];
+    }
 
-    return selectionPops.flat();
+    return selectionPops.filter(function (selectionPop) {
+      return selectionPop &&
+        selectionPop.data_str === source &&
+        selectionPop.owner === ownership;
+    });
 
   },
 
@@ -145,6 +154,7 @@ solGS.listTypeSelectionPopulation = {
   },
 
   displaySelectionListPopsTable: function (tableId, data) {
+    tableId = tableId.charAt(0) === "#" ? tableId : "#" + tableId;
 
     var table = jQuery(tableId).DataTable({
       'searching': true,
@@ -242,11 +252,15 @@ solGS.listTypeSelectionPopulation = {
   },
 
   replaceSolgsBtn: function(selectionPopId, predictedLink) {
+    jQuery(this.selectionListPopsDataDiv + " table").each(function () {
+      var selDataTable = jQuery(this).DataTable();
+      var tableRowIdx = selDataTable.row("[id='" + selectionPopId + "']").index();
 
-    var tableId = this.selectionListPopsTable;
-    var selDataTable = jQuery(tableId).DataTable()
-    var tableRowIdx = selDataTable.row('[id='+selectionPopId + ']').index();
-    selDataTable.cell(tableRowIdx, 3).data(predictedLink).draw();  
+      if (tableRowIdx !== undefined) {
+        selDataTable.cell(tableRowIdx, 3).data(predictedLink).draw();
+        return false;
+      }
+    });
 
   },
 
@@ -409,23 +423,23 @@ jQuery(document).ready(function () {
 });
 
 jQuery(document).ready(function () {
-  jQuery("#lists_datasets_message").show();
-  jQuery("#lists_datasets_progress .multi-spinner-container").show();
-
-  var selectionPopsDataDiv = solGS.listTypeSelectionPopulation.selectionListPopsDataDiv;
-  var tableId = solGS.listTypeSelectionPopulation.selectionListPopsTable;
-  var selectionPopsTable = solGS.listTypeSelectionPopulation.createTable(tableId);
-
-  jQuery(selectionPopsDataDiv).append(selectionPopsTable).show();
-  
-  var selectionPops = solGS.listTypeSelectionPopulation.getSelectionListPops();
-  var selectionPopsRows = solGS.listTypeSelectionPopulation.getSelectionListPopsRows(selectionPops);
-
-  solGS.listTypeSelectionPopulation.displaySelectionListPopsTable(tableId, selectionPopsRows);
-  solGS.listTypeSelectionPopulation.initializePredictedSelectionPops(selectionPops);
-
-  jQuery("#lists_datasets_message").hide();
-  jQuery("#lists_datasets_progress .multi-spinner-container").hide();
-  jQuery("#create_new_list_dataset").show();
+  solGS.dataTableTabs.initialize({
+    prefix: "list_type_selection",
+    createTable: function (tableId) {
+      return solGS.listTypeSelectionPopulation.createTable(tableId);
+    },
+    getPopulations: function (source, ownership) {
+      return solGS.listTypeSelectionPopulation.getSelectionListPops(source, ownership);
+    },
+    getRows: function (populations) {
+      return solGS.listTypeSelectionPopulation.getSelectionListPopsRows(populations);
+    },
+    displayTable: function (tableId, rows) {
+      solGS.listTypeSelectionPopulation.displaySelectionListPopsTable(tableId, rows);
+    },
+    afterDisplay: function (populations) {
+      solGS.listTypeSelectionPopulation.initializePredictedSelectionPops(populations);
+    }
+  });
 
 });

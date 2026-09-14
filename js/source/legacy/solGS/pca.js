@@ -373,17 +373,18 @@ solGS.pca = {
         return pcaPopsRows;
     },
 
-    getPcaPops: function () {
-        var list = new solGSList();
-        var lists = list.getLists(["accessions", "plots", "trials"]);
-        lists = list.addDataStrAttr(lists);
-        lists = list.addDataTypeAttr(lists, "");
-        var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    getPcaPops: function (source, ownership) {
+        if (source === "list") {
+            var list = new solGSList();
+            var lists = list.getLists(["accessions", "plots", "trials"], ownership);
+            lists = list.addDataStrAttr(lists);
+            return list.addDataTypeAttr(lists, "");
+        }
+
+        var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"], ownership);
 
         datasets = solGS.dataset.addDataTypeAttr(datasets, "Population Structure");
-        var pcaPops = [lists, datasets];
-
-        return pcaPops.flat();
+        return datasets;
     },
 
     getDataTypeOpts: function () {
@@ -495,7 +496,7 @@ solGS.pca = {
         var pcaTable =
             `<table id="${tableId}" class="table table-striped"><thead><tr>` +
             "<th>Population</th>" +
-            "<th>Data structure type</th>" +
+            "<th>Data structure</th>" +
             "<th>Compatibility</th>" +
       "<th>Ownership</th>" +
             "<th>Data type</th>" +
@@ -1308,17 +1309,13 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
     if (location.pathname.match(/pca\/analysis/)) {
-        pcaPopsDataDiv = solGS.pca.pcaPopsDataDiv;
-        var tableId = "pca_pops_table";
-        var pcaPopsTable = solGS.pca.createTable(tableId);
-        jQuery(pcaPopsDataDiv).append(pcaPopsTable).show();
-
-        var pcaPops = solGS.pca.getPcaPops();
-        var pcaPopsRows = solGS.pca.getPcaPopsRows(pcaPops);
-
-        solGS.pca.displayPcaPopsTable(tableId, pcaPopsRows);
-
-        jQuery("#create_new_list_dataset").show();
+        solGS.dataTableTabs.initialize({
+            prefix: "pca",
+            createTable: function (tableId) { return solGS.pca.createTable(tableId); },
+            getPopulations: function (source, ownership) { return solGS.pca.getPcaPops(source, ownership); },
+            getRows: function (populations) { return solGS.pca.getPcaPopsRows(populations); },
+            displayTable: function (tableId, rows) { solGS.pca.displayPcaPopsTable(tableId, rows); }
+        });
     }
 });
 

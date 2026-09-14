@@ -122,7 +122,7 @@ solGS.kinship = {
     var kinshipTable =
       `<table id="${tableId}" class="table table-striped"><thead><tr>` +
       "<th>Population</th>" +
-      "<th>Data structure type</th>" +
+      "<th>Data structure</th>" +
       "<th>Compatibility</th>" + 
       "<th>Ownership</th>" +
       "<th>Data type</th>" +
@@ -250,17 +250,14 @@ solGS.kinship = {
 
   },
 
-  getKinshipPops: function () {
+  getKinshipPops: function (source, ownership) {
+    if (source === "list") {
+      var list = new solGSList();
+      var lists = list.getLists(["accessions", "trials"], ownership);
+      return list.addDataStrAttr(lists);
+    }
 
-    var list = new solGSList();
-    var lists = list.getLists(["accessions", "trials"]);
-    lists = list.addDataStrAttr(lists);
-
-    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
-
-    var kinshipPops = [lists, datasets];
-
-    return kinshipPops.flat();
+    return solGS.dataset.getDatasetPops(["accessions", "trials"], ownership);
 
   },
 
@@ -611,15 +608,12 @@ jQuery(document).ready(function () {
   var url = location.pathname;
 
   if (url.match(/kinship\/analysis/)) {
-    kinshipPopsDataDiv = solGS.kinship.kinshipPopsDataDiv;
-    var tableId = 'kinship_pops_table';
-    var kinshipPopsTable = solGS.kinship.createTable(tableId);
-    jQuery(kinshipPopsDataDiv).append(kinshipPopsTable).show();
-
-    var kinshipPops = solGS.kinship.getKinshipPops();
-    var kinshipPopsRows = solGS.kinship.getKinshipPopsRows(kinshipPops);
-
-    solGS.kinship.displayKinshipPopsTable(tableId, kinshipPopsRows);
-    jQuery("#create_new_list_dataset").show();
+    solGS.dataTableTabs.initialize({
+      prefix: "kinship",
+      createTable: function (tableId) { return solGS.kinship.createTable(tableId); },
+      getPopulations: function (source, ownership) { return solGS.kinship.getKinshipPops(source, ownership); },
+      getRows: function (populations) { return solGS.kinship.getKinshipPopsRows(populations); },
+      displayTable: function (tableId, rows) { solGS.kinship.displayKinshipPopsTable(tableId, rows); }
+    });
   }
 });

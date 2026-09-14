@@ -32,9 +32,6 @@ solGS.dataTableTabs = {
         var populations = options.getPopulations(source, ownership);
         var rows = options.getRows(populations);
         options.displayTable(tableId, rows);
-        if (options.afterDisplay) {
-          options.afterDisplay(populations, rows, tableId);
-        }
       } finally {
         $canvas.find("#lists_datasets_message").hide();
         $canvas.find("#lists_datasets_progress .multi-spinner-container").hide();

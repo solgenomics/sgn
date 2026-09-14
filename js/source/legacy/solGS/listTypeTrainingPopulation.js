@@ -15,17 +15,14 @@ solGS.listTypeTrainingPopulation = {
   trainingListPopsTable: "#list_type_training_pops_table",
 
  
-  getTrainingListPops: function () {
+  getTrainingListPops: function (source, ownership) {
+    if (source === "list") {
+      var list = new solGSList();
+      var lists = list.getLists(["plots", "trials"], ownership);
+      return list.addDataStrAttr(lists);
+    }
 
-    var list = new solGSList();
-    var lists = list.getLists(["plots", "trials"]);
-    lists = list.addDataStrAttr(lists);
-   
-    var datasets = solGS.dataset.getDatasetPops(["trials"]);
-   
-    var trainingPops = [lists, datasets];
-
-    return trainingPops.flat();
+    return solGS.dataset.getDatasetPops(["trials"], ownership);
 
   },
 
@@ -144,6 +141,7 @@ solGS.listTypeTrainingPopulation = {
   },
 
   displayTrainingListPopsTable: function (tableId, data) {
+    tableId = tableId.charAt(0) === "#" ? tableId : "#" + tableId;
 
     var table = jQuery(`${tableId}`).DataTable({
       'searching': true,
@@ -271,22 +269,20 @@ jQuery(document).ready(function () {
 
 jQuery(document).ready(function () {
 
-  jQuery("#lists_datasets_message").show();
-  jQuery("#lists_datasets_progress .multi-spinner-container").show();
- 
-  var trainingPopsDataDiv = solGS.listTypeTrainingPopulation.trainingListPopsDataDiv;
-  
-  var tableId = solGS.listTypeTrainingPopulation.trainingListPopsTable;
-  var trainingPopsTable = solGS.listTypeTrainingPopulation.createTable(tableId)
-
-  jQuery(trainingPopsDataDiv).append(trainingPopsTable).show();
-  var trainingPops = solGS.listTypeTrainingPopulation.getTrainingListPops()
-  var trainingPopsRows = solGS.listTypeTrainingPopulation.getTrainingListPopsRows(trainingPops);
-
-  solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, trainingPopsRows);
-
-  jQuery("#lists_datasets_message").hide();
-  jQuery("#lists_datasets_progress .multi-spinner-container").hide();
-  jQuery("#create_new_list_dataset").show();
+  solGS.dataTableTabs.initialize({
+    prefix: "list_type_training",
+    createTable: function (tableId) {
+      return solGS.listTypeTrainingPopulation.createTable(tableId);
+    },
+    getPopulations: function (source, ownership) {
+      return solGS.listTypeTrainingPopulation.getTrainingListPops(source, ownership);
+    },
+    getRows: function (populations) {
+      return solGS.listTypeTrainingPopulation.getTrainingListPopsRows(populations);
+    },
+    displayTable: function (tableId, rows) {
+      solGS.listTypeTrainingPopulation.displayTrainingListPopsTable(tableId, rows);
+    }
+  });
 
 });
