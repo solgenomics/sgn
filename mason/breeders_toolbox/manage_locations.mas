@@ -31,4 +31,6 @@ $user_id => undef
 
 </&>
 
+<& /breeders_toolbox/location_edit.mas &>
+
 </div>

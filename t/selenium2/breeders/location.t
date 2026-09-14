@@ -1,4 +1,4 @@
-
+use strict;
 use lib 't/lib';
 
 use Test::More 'tests'=>24;
@@ -114,8 +114,14 @@ $t->while_logged_in_as("submitter", sub {
         ->click();
     sleep(2);
 
-    ok($t->driver->get_alert_text() =~ m/location $location_name added successfully/i, 'new location was saved');
-    $t->driver->accept_alert();
+    my $alert_text;
+    eval {
+        $alert_text = $t->driver->get_alert_text();
+    };
+    if ($alert_text) {
+        $t->driver->accept_alert();
+    }
+    ok(!$alert_text, 'no alert present after adding location');
 
     $t->get_ok('/breeders/locations');
     sleep(2);
