@@ -788,16 +788,46 @@ sub get_default_cxgn_tools_run_config {
     return $cxgn_tools_run_config;
 }
 
-=head2 wait()
+=head2 wait($timeout)
 
-Blocking wait. Returns control when the job is finished. 
+Blocking wait. Returns control when the job is finished.
+
+Waits at most $timeout seconds, defaulting to four hours, which is long enough for
+anything that legitimately runs this long (a genomic selection model, say) and short
+enough that a job that will never finish does not hold its caller forever. A caller
+that knows its job should be quicker than that should say so: a web request waiting
+on an upload blocks a server worker for as long as it waits, so an upload that stalls
+takes a worker with it until the timeout expires.
+
+Gives up by canceling the job and recording it as timed out, then dies, so that a
+caller who cannot do anything useful without the job's results hears about it instead
+of reading them back as though the job had finished.
 
 =cut 
 
 sub wait {
     my $self = shift;
+    my $timeout = shift;
+    $timeout = 14400 if !defined($timeout);
 
+    # Elapsed time, not iterations: every pass shells out to the workload manager, so counting
+    # loops would make the timeout mean something other than what it says.
+    my $started = time();
     while($self->alive()) {
+        if (time() - $started >= $timeout) {
+            # A job that cannot be canceled is still a job that timed out, so record and report
+            # that either way rather than letting the workload manager's failure stand in for it.
+            my $cancel_error;
+            try {
+                $self->cancel();
+            } catch {
+                $cancel_error = $_;
+            } ;
+            $self->update_status('timed_out');
+            my $message = "Job ".$self->sp_job_id()." did not finish within $timeout seconds.\n";
+            $message .= $cancel_error if $cancel_error;
+            die $message;
+        }
         sleep (1);
     }
 

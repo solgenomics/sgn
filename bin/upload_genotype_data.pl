@@ -762,15 +762,32 @@ sub store_ssr_genotypes {
 
 Rebuilds the cached search tables so that the genotypes that were just stored can be searched for.
 
+Both refreshes run synchronously. CXGN::Tools::Run's async child stays in this script's process
+group (its setpgrp is commented out) and is never waited for, so under Slurm's pgid process
+tracking the batch job stays RUNNING until the refresh finishes anyway -- and a caller waiting
+on this job has no way to know that is all that is left.
+
 =cut
 
 sub refresh_matviews {
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$dbname, } );
-    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath);
+    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'fullview', 'concurrent', $basepath, 0);
 
-    # Rebuild and refresh the materialized_markerview table
-    my $async_refresh = CXGN::Tools::Run->new();
-    $async_refresh->run_async("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+    # A refresh already in progress makes this a no-op, and so does a currently_refreshing flag
+    # left set by one that was killed partway. The genotypes are stored either way, so say what
+    # happened rather than letting the upload imply the search tables are up to date.
+    if ($refresh && $refresh->{error}) {
+        push @warning_messages, "The search tables were not refreshed: ".$refresh->{error};
+    }
+
+    # Rebuild and refresh the materialized_markerview table. Failing to refresh does not undo the
+    # genotypes that were just stored, so this is a warning on a successful upload, not an error.
+    try {
+        my $markerview_refresh = CXGN::Tools::Run->new();
+        $markerview_refresh->run("perl $basepath/bin/refresh_materialized_markerview.pl -H $dbhost -D $dbname -U $dbuser -P $dbpass");
+    } catch {
+        push @warning_messages, "The marker search table was not refreshed: $_";
+    } ;
 }
 
 =head2 sql_copy_tempfile()

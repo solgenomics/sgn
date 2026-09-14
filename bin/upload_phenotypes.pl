@@ -373,7 +373,19 @@ sub store_phenotypes {
     push @success_messages, "Metadata saved for archived file.";
 
     my $bs = CXGN::BreederSearch->new({ dbh => $dbh, dbname => $dbname });
-    $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'phenotypes', 'concurrent', $basepath);
+    # Refresh synchronously. CXGN::Tools::Run's async child stays in this script's process
+    # group (its setpgrp is commented out) and is never waited for, so under Slurm's pgid
+    # process tracking the batch job stays RUNNING until the refresh finishes anyway --
+    # and a caller waiting on this job has no way to know that is all that is left.
+    my $refresh = $bs->refresh_matviews($dbhost, $dbname, $dbuser, $dbpass, 'phenotypes', 'concurrent', $basepath, 0);
+
+    # A refresh already in progress makes this a no-op, and so does a currently_refreshing flag
+    # left set by one that was killed partway. The values are stored either way, so say what
+    # happened rather than letting the upload imply the search tables are up to date.
+    if ($refresh && $refresh->{error}) {
+        push @warning_messages, "The search tables were not refreshed: ".$refresh->{error};
+    }
+
 }
 
 =head2 build_store_phenotypes($sp_person_id, $parsed_data, $plots, $traits, $phenotype_metadata, $image_zipfile_path, $for_storing)

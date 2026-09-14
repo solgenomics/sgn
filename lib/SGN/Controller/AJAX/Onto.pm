@@ -103,11 +103,20 @@ sub download_obo: Path('/ajax/onto/download_obo') Args(1) {
     };
 
     if ($@) {
-        $c->stash->rest = {error => "An error occurred starting the download: $@"};
+        $c->stash->{rest} = {error => "An error occurred starting the download: $@"};
         return;
     }
 
-    $obo_downloader->wait();
+    # Shorter than CXGN::Job::wait()'s default, because a server worker is held for as long as
+    # this waits, and there are only so many of them.
+    eval {
+        $obo_downloader->wait(300);
+    };
+
+    if ($@) {
+        $c->stash->{rest} = {error => "The download did not finish: $@"};
+        return;
+    }
 
     $c->res->content_type('application/octet-stream');
     $c->res->header('Content-Disposition' => "attachment; filename=\"$db_name.obo\"");

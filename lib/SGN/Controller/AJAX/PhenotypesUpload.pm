@@ -183,7 +183,19 @@ sub _upload_phenotypes {
         return;
     }
 
-    $upload_job->wait();
+    # Shorter than CXGN::Job::wait()'s default, because a server worker is held for as long as
+    # this waits, and there are only so many of them.
+    my $wait_error;
+    try {
+        $upload_job->wait(300);
+    } catch {
+        $wait_error = $_;
+    };
+    if ($wait_error) {
+        push @$error_status, "The phenotype upload did not finish: $wait_error";
+        $c->stash->{rest} = { success => $success_status, error => $error_status };
+        return;
+    }
 
     # The script reports its results by writing them to the job, so they have to be read back from
     # the database rather than from the object that submitted it.
