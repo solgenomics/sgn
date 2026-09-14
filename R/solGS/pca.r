@@ -1,6 +1,6 @@
  #SNOPSIS
 
- #runs population structure analysis using PCA from SNPRelate, a bioconductor R package
+ #runs population structure analysis using PCA on genotype or phenotype data
 
  #AUTHOR
  # Isaak Y Tecle (iyt2@cornell.edu)
@@ -60,13 +60,16 @@ pcaDataFile <- grepl("genotype", ignore.case=TRUE, inputFiles)
 dataType <- ifelse(isTRUE(pcaDataFile[1]), 'genotype', 'phenotype')
 
 if (dataType == 'genotype') {
-    if (length(inputFiles) > 1) {
-        genoData <- genoDataFilter::combineGenoData(inputFiles)
+    genoFiles <- grep("genotype_data", inputFiles, value = TRUE)
+    trialMembershipFile <- grep("pca_trial_membership", inputFiles, value = TRUE)
+
+    if (length(genoFiles) > 1) {
+        genoData <- genoDataFilter::combineGenoData(genoFiles)
         genoMetaData   <- genoData$trial
         genoData$trial <- NULL
 
     } else {
-        genoDataFile <- grep("genotype_data", inputFiles,  value = TRUE)
+        genoDataFile <- genoFiles
         genoData     <- fread(genoDataFile,
                               header = TRUE,
                               na.strings = c("NA", " ", "--", "-", "."))
@@ -84,6 +87,14 @@ if (dataType == 'genotype') {
         genoData <- unique(genoData, by='V1')
         genoData <- data.frame(genoData)
         genoData <- column_to_rownames(genoData, 'V1')
+
+        if (length(trialMembershipFile) == 1) {
+            trialMembership <- fread(trialMembershipFile, header = TRUE)
+            genoMetaData <- trialMembership$trial[
+                match(rownames(genoData), trialMembership$accession)
+            ]
+            genoMetaData[is.na(genoMetaData)] <- "unassigned"
+        }
 
     }
 } else if (dataType == 'phenotype') {

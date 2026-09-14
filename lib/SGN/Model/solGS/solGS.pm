@@ -2128,6 +2128,52 @@ sub get_dataset_data {
     return $dataset_data;
 }
 
+sub get_dataset_accession_trial_memberships {
+    my ( $self, $dataset_id ) = @_;
+
+    my $data          = $self->get_dataset_data($dataset_id);
+    my $categories    = $data->{categories} || {};
+    my $accession_ids = $categories->{accessions} || [];
+    my $trial_ids     = $categories->{trials} || [];
+
+    if (!@$accession_ids || !@$trial_ids) {
+        return [];
+    }
+
+    my $accession_placeholders = join( ', ', ('?') x @$accession_ids );
+    my $trial_placeholders     = join( ', ', ('?') x @$trial_ids );
+    my $query = qq{
+        SELECT accession.stock_id, accession.uniquename, axt.trial_id
+        FROM stock AS accession
+        LEFT JOIN accessionsXtrials AS axt
+          ON axt.accession_id = accession.stock_id
+         AND axt.trial_id IN ($trial_placeholders)
+        WHERE accession.stock_id IN ($accession_placeholders)
+        ORDER BY accession.stock_id, axt.trial_id
+    };
+
+    my $sth = $self->schema->storage->dbh->prepare($query);
+    $sth->execute( @$trial_ids, @$accession_ids );
+
+    my %memberships;
+    while ( my ( $accession_id, $accession_name, $trial_id ) =
+        $sth->fetchrow_array() )
+    {
+        $memberships{$accession_id}{name} = $accession_name;
+        push @{ $memberships{$accession_id}{trials} }, $trial_id
+          if defined $trial_id;
+    }
+
+    my @rows;
+    foreach my $accession_id ( sort { $a <=> $b } keys %memberships ) {
+        my @trials = uniq( @{ $memberships{$accession_id}{trials} || [] } );
+        my $trial_group = @trials ? join( '-', sort { $a <=> $b } @trials ) : 'unassigned';
+        push @rows, [ $memberships{$accession_id}{name}, $accession_id, $trial_group ];
+    }
+
+    return \@rows;
+}
+
 sub get_dataset_plots_list {
     my ( $self, $dataset_id ) = @_;
 

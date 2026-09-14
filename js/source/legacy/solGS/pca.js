@@ -202,6 +202,11 @@ solGS.pca = {
         if (selectedPopDiv) {
             var selectedPopData = selectedPopDiv.dataset;
             var selectedPop = JSON.parse(selectedPopData.selectedPop);
+
+            if (runPcaElemId.match(/save_pcs/)) {
+                return selectedPop;
+            }
+
             pcaPopId = selectedPop.pca_pop_id;
 
             var pcaArgs = selectedPopData.selectedPop;
@@ -932,6 +937,10 @@ solGS.pca = {
             popName = plotData.list_name;
         }
 
+        if (plotData.pca_pop_name) {
+            popName = plotData.pca_pop_name;
+        }
+
         popName = popName
             ? popName + " (" + plotData.data_type + ")"
             : " (" + plotData.data_type + ")";
@@ -972,7 +981,7 @@ solGS.pca = {
 
                     groupName = "common to: " + groupName.join(", ");
                 } else {
-                    groupName = trialsNames[id];
+                    groupName = trialsNames[id] || id;
                 }
                 legendValues.push([cnt, id, groupName]);
                 cnt++;
