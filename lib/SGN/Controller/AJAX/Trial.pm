@@ -56,6 +56,7 @@ use CXGN::File::Parse;
 use CXGN::People::Person;
 use CXGN::Tools::Run;
 use CXGN::Job;
+use CXGN::File;
 use Cwd;
 use CXGN::Phenotypes::StorePhenotypes;
 
@@ -1152,9 +1153,11 @@ sub upload_trial_file_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $c->user->get_object->get_user_type()
+        user_role => $c->user->get_object->get_user_type(),
+        file_type => 'trials',
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
     });
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};
@@ -1404,6 +1407,7 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $ignore_warnings            = $c->req->param('upload_multiple_trials_ignore_warnings') eq 'on';
     my $email_address              = $c->req->param('trial_email_address_upload');
     my $email_option_enabled       = $c->req->param('email_option_to_recieve_trial_upload_status') eq 'on';
+    my $archived_file_id           = $c->req->param('archived_file_id') || undef;
 
     my $dbhost                     = $c->config->{dbhost};
     my $dbname                     = $c->config->{dbname};
@@ -1412,8 +1416,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     my $dbuser                     = $c->config->{dbuser};
     my $time                       = DateTime->now();
     my $timestamp                  = $time->ymd()."_".$time->hms();
-    my $upload_original_name       = $upload->filename();
-    my $upload_tempfile            = $upload->tempname;
+    my $upload_original_name       = $upload ? $upload->filename() : "";
+    my $upload_tempfile            = $upload ? $upload->tempname : "";
     my $subdirectory               = "trial_upload";
     my $archive_filename           = $timestamp . "_" . $upload_original_name;
 
@@ -1429,6 +1433,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
     my $username = $c->user()->get_object()->get_username();
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
 
     # Check filename for spaces and/or slashes
     if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
@@ -1437,25 +1443,51 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         return;
     }
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $c->user->get_object->get_user_type()
-    });
-    my $archived_filename_with_path = $uploader->archive();
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
-        return;
+    my $archived_filename_with_path;
+    my $archive_path = $c->config->{archive_path};
+
+    if ($archived_file_id) {
+        print STDERR "Skipping archive step, already have a file with ID $archived_file_id\n";
     }
-    unlink $upload_tempfile;
+
+    if (! $archived_file_id) {
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $archive_path,
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $c->user->get_object->get_user_type(),
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            file_type => 'trials'
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        if (!$archived_filename_with_path) {
+            $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
+            return;
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+    }
+
+    my @split_path = split("/", $archived_filename_with_path);
+    my $clean_file_name = $split_path[-1];
+    $clean_file_name =~ s/\d+-\d+-\d+_\d+:\d+:\d+_//;
+
+    my $temp_basedir = $c->config->{tempfiles_subdir};
 
     # Build the backend script command to parse, validate, and upload the trials
-    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -i \"$archived_filename_with_path\" -un \"$username\"";
+    # __SP_JOB_ID__ is filled in by CXGN::Job when the job is submitted, so that the script can
+    # report its messages back to this job.
+    my $cmd = "perl \"$basepath/bin/upload_multiple_trial_design.pl\" -H \"$dbhost\" -D \"$dbname\" -U \"$dbuser\" -P \"$dbpass\" -w \"$basepath\" -ap \"$archive_path\" -i \"$archived_file_id\" -t \"$temp_basedir\" -un \"$username\" -j __SP_JOB_ID__";
     $cmd .= " -e \"$email_address\"" if $email_option_enabled && $email_address;
     $cmd .= " -iw" if $ignore_warnings;
 
@@ -1471,11 +1503,18 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
         basepath => $basepath,
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
         cmd => $cmd,
-        name => "$upload_original_name multiple trial designs upload",
+        name => "$clean_file_name multiple trial designs upload",
         results_page => '/breeders/trials',
-        job_type => 'upload'
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            final_upload => 1,
+            file_type => "trials",
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id
+        }
     });
-    if ( $email_option_enabled && $email_address ) {
+    if ( ($email_option_enabled && $email_address)) {
         #$runner->run_async($cmd);
         $job->submit();
         #my $err = $runner->err();
@@ -1539,11 +1578,15 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
         if ( scalar(@errors) > 0 ) {
             $c->stash->{rest} = {errors => \@errors};
+            print STDERR @errors;
+            $job->additional_args->{error_messages} = \@errors;
             $job->update_status("failed");
             return;
         }
         if ( scalar(@warnings) > 0 ) {
             $c->stash->{rest} = {warnings => \@warnings};
+            print STDERR @warnings;
+            $job->additional_args->{warning_messages} = \@warnings;
             $job->update_status("failed");
             return;
         }
@@ -1551,6 +1594,8 @@ sub upload_multiple_trial_designs_file_POST : Args(0) {
 
 
     # Return success
+    $job->additional_args->{success_messages} = "Trial uploaded successfully.";
+    $job->update_status("finished");
     $c->stash->{rest} = {success => "1"};
     return;
 
@@ -1563,6 +1608,7 @@ sub upload_trial_metadata_file_POST : Args(0) {
     my ($self, $c)                 = @_;
     my $upload                     = $c->req->upload('trial_metadata_upload_file');
     my $ignore_warnings            = $c->req->param('trial_metadata_upload_ignore_warnings');
+    my $archived_file_id           = $c->req->param('archived_file_id') || undef;
 
     my $chado_schema               = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
     my $dbhost                     = $c->config->{dbhost};
@@ -1572,10 +1618,7 @@ sub upload_trial_metadata_file_POST : Args(0) {
     my $dbuser                     = $c->config->{dbuser};
     my $time                       = DateTime->now();
     my $timestamp                  = $time->ymd()."_".$time->hms();
-    my $upload_original_name       = $upload->filename();
-    my $upload_tempfile            = $upload->tempname;
     my $subdirectory               = "trial_metadata";
-    my $archive_filename           = $timestamp . "_" . $upload_original_name;
 
     # Check if user is logged in and has curator or submitter privileges
     if (!$c->user()) {
@@ -1583,6 +1626,9 @@ sub upload_trial_metadata_file_POST : Args(0) {
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_role = $c->user->get_object->get_user_type();
+    my $user_first_name = $c->user()->get_object()->get_first_name();
+    my $user_last_name = $c->user()->get_object()->get_last_name();
     my $username = $c->user()->get_object()->get_username();
     my @user_roles = $c->user()->roles();
     my %has_roles = ();
@@ -1594,29 +1640,56 @@ sub upload_trial_metadata_file_POST : Args(0) {
         return;
     }
 
-    # Check filename for spaces and/or slashes
-    if ($upload_original_name =~ /\s/ || $upload_original_name =~ /\// || $upload_original_name =~ /\\/ ) {
-        print STDERR "File name must not have spaces or slashes.\n";
-        $c->stash->{rest} = {errors => "Uploaded file name must not contain spaces or slashes." };
-        return;
+    my $archived_filename_with_path;
+    my $upload_original_name;
+
+    if (!$archived_file_id) {
+        $upload_original_name = $upload->filename();
+        my $upload_tempfile = $upload->tempname;
+
+        ## Store uploaded temporary file in archive
+        my $uploader = CXGN::UploadFile->new({
+            tempfile => $upload_tempfile,
+            subdirectory => $subdirectory,
+            archive_path => $c->config->{archive_path},
+            archive_filename => $upload_original_name,
+            timestamp => $timestamp,
+            user_id => $user_id,
+            user_role => $user_role,
+            file_type => 'trial_metadata',
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
+        });
+        ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+        if ( !$archived_filename_with_path ) {
+            $c->stash->{rest} = { filename => $upload_original_name, error => "Could not save file $upload_original_name in archive" };
+            return;
+        }
+        unlink $upload_tempfile;
+    } else {
+        my $archived_file = CXGN::File->new({
+            file_id => $archived_file_id,
+            metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema"),
+            archive_path => $c->config->{archive_path}
+        });
+        $archived_filename_with_path = $archived_file->get_path();
+        $upload_original_name = basename($archived_filename_with_path);
     }
 
-    ## Store uploaded temporary file in archive
-    my $uploader = CXGN::UploadFile->new({
-        tempfile => $upload_tempfile,
-        subdirectory => $subdirectory,
-        archive_path => $c->config->{archive_path},
-        archive_filename => $upload_original_name,
-        timestamp => $timestamp,
-        user_id => $user_id,
-        user_role => $c->user->get_object->get_user_type()
+    my $upload_job = CXGN::Job->new({
+        schema => $chado_schema,
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        sp_person_id => $user_id,
+        name => $upload_original_name." trial metadata upload",
+        job_type => 'upload',
+        submit_page => ($c->req->referer ? $c->req->referer->as_string : undef),
+        additional_args => {
+            file_type => 'trial_metadata',
+            user_name => "$user_first_name $user_last_name",
+            file_id => $archived_file_id
+        }
     });
-    my $archived_filename_with_path = $uploader->archive();
-    if (!$archived_filename_with_path) {
-        $c->stash->{rest} = {errors => "Could not save file $archive_filename in archive",};
-        return;
-    }
-    unlink $upload_tempfile;
+
+    $upload_job->update_status("submitted");
 
     # parse uploaded file with trial metadata plugin
     my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $archived_filename_with_path);
@@ -1627,6 +1700,8 @@ sub upload_trial_metadata_file_POST : Args(0) {
     my @warnings;
     if (!$parsed_data) {
         my $parse_errors = $parser->get_parse_errors();
+        $upload_job->additional_args->{error_messages} = $parse_errors ? $parse_errors->{'error_messages'} : "Data could not be parsed.";
+        $upload_job->update_status("failed");
         $c->stash->{rest} = { errors => $parse_errors ? $parse_errors->{'error_messages'} : ['No data returned'] };
         return;
     }
@@ -1634,6 +1709,8 @@ sub upload_trial_metadata_file_POST : Args(0) {
     if ($parser->has_parse_warnings()) {
         unless ($ignore_warnings) {
             my $warnings = $parser->get_parse_warnings();
+            $upload_job->additional_args->{warning_messages} = $warnings->{'warning_messages'};
+            $upload_job->update_status("failed");
             $c->stash->{rest} = { warnings => $warnings->{'warning_messages'} };
             return;
         }
@@ -1649,6 +1726,8 @@ sub upload_trial_metadata_file_POST : Args(0) {
             }
         }
         if ( scalar(@missing_breeding_programs) > 0 ) {
+            $upload_job->additional_args->{error_messages} = "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s).";
+            $upload_job->update_status("failed");
             $c->stash->{rest} = { errors => "You need to be either a curator, or a submitter associated with the breeding program(s) " . join(', ', @missing_breeding_programs) . " to change the details of trial(s) associated with these program(s)." };
             return;
         }
@@ -1693,9 +1772,14 @@ sub upload_trial_metadata_file_POST : Args(0) {
         }
     };
     if ($@) {
+        $upload_job->additional_args->{error_messages} = "There was an error updating one or more trials: $@";
+        $upload_job->update_status("failed");
         $c->stash->{rest} = { errors => "There was an error updating one or more trials: $@" };
         return;
     };
+
+    $upload_job->additional_args->{success_messages} = "Trial metadata uploaded successfully.";
+    $upload_job->update_status("finished");
 
     # All Done
     $c->stash->{rest} = { success => 1 };
@@ -1778,9 +1862,11 @@ sub upload_soil_data_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        file_type => 'soil_data',
+        metadata_schema => $metadata_schema
     });
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {errors => "Could not save file $upload_original_name in archive",};

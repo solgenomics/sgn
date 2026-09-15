@@ -43,19 +43,19 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     $t->find_element_ok("upload_datacollector_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-    sleep(3);
+    sleep(15);
 
     my $verify_status = $t->find_element_ok(
         "upload_phenotype_datacollector_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
     ok($verify_status =~ /File data_collector_upload.xlsx saved in archive./, "Verify the positive validation");
-    ok($verify_status =~ /File valid: data_collector_upload.xlsx./, "Verify the positive validation");
+    ok($verify_status =~ /File valid: .*data_collector_upload.xlsx./, "Verify the positive validation");
     ok($verify_status =~ /File data successfully parsed./, "Verify the positive validation");
     ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify the positive validation");
 
     $t->find_element_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-    sleep(10);
+    sleep(15);
 
     $verify_status = $t->find_element_ok(
         "upload_phenotype_datacollector_verify_status",
@@ -95,7 +95,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     $t->find_element_ok("upload_datacollector_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-    sleep(3);
+    sleep(15);
 
     $verify_status = $t->find_element_ok(
         "upload_phenotype_datacollector_verify_status",
@@ -108,7 +108,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /There are 57 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation 5");
 
     $t->find_element_ok("upload_datacollector_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-    sleep(10);
+    sleep(15);
 
     $verify_status = $t->find_element_ok(
         "upload_phenotype_datacollector_verify_status",

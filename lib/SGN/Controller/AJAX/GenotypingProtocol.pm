@@ -319,11 +319,12 @@ sub genotyping_protocol_add_marker_metadata_POST : Args(1) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $c->dbic_schema("CXGN::Metadata::Schema")
     });
 
     ## Store uploaded temporary file in archive
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         push @errors, "Could not save file $upload_original_name in archive";

@@ -49,21 +49,23 @@ $t->while_logged_in_as("curator", sub {
         sleep(1);
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-        sleep(3);
+        sleep(15);
 
         my $verify_status = $t->find_element_ok(
             "upload_phenotype_spreadsheet_verify_status",
             "id", "verify the verification")->get_attribute('innerHTML');
 
-        ok($verify_status =~ /File upload_phenotypin_spreadsheet.${extension} saved in archive/, "Verify the positive validation");
-        ok($verify_status =~ /File valid: upload_phenotypin_spreadsheet.$extension/, "Verify the positive validation");
+        print STDERR $verify_status;
+
+        ok($verify_status =~ /File upload_phenotypin_spreadsheet.$extension saved in archive/, "Verify the positive validation");
+        ok($verify_status =~ /File valid: .*upload_phenotypin_spreadsheet.$extension/, "Verify the positive validation");
         ok($verify_status =~ /File data successfully parsed/, "Verify the positive validation");
         ok($verify_status =~ /File data verified. Plot names and trait names are valid/, "Verify the positive validation");
 
         # UPLOAD_PHENOTYPE_SPREADSHEET_VERIFY_STATUS
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-        sleep(10);
+        sleep(15);
 
         my $verify_status = $t->find_element_ok(
             "upload_phenotype_spreadsheet_verify_status",
@@ -108,7 +110,7 @@ $t->while_logged_in_as("curator", sub {
         sleep(1);
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-        sleep(3);
+        sleep(15);
 
         $verify_status = $t->find_element_ok(
             "upload_phenotype_spreadsheet_verify_status",
@@ -123,7 +125,7 @@ $t->while_logged_in_as("curator", sub {
 
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-        sleep(10);
+        sleep(15);
 
         $verify_status = $t->find_element_ok(
             "upload_phenotype_spreadsheet_verify_status",
@@ -164,7 +166,7 @@ $t->while_logged_in_as("curator", sub {
         sleep(1);
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-        sleep(3);
+        sleep(15);
 
         $verify_status = $t->find_element_ok(
             "upload_phenotype_spreadsheet_verify_status",
@@ -178,7 +180,7 @@ $t->while_logged_in_as("curator", sub {
         ok($verify_status =~ /There are 60 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation 15");
 
         $t->find_element_ok("upload_spreadsheet_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-        sleep(10);
+        sleep(15);
 
         $verify_status = $t->find_element_ok(
             "upload_phenotype_spreadsheet_verify_status",

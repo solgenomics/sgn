@@ -548,16 +548,19 @@ for my $extension ("xls", "xlsx") {
 		archive_filename => "family_trial_layout_with_seedlot_1.xlsx",
 		timestamp        => $timestamp,
 		user_id          => 41, #janedoe in fixture
-		user_role        => 'curator'
+		user_role        => 'curator',
+        metadata_schema  => $metadata_schema,
+        file_type        => 'spatial_layout'
 	});
 
 	## Store uploaded temporary file in archive
-	my $archived_filename_with_path = $uploader->archive();
+	my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 	my $md5 = $uploader->get_md5($archived_filename_with_path);
 	ok($archived_filename_with_path);
 	ok($md5);
 
 	$upload_metadata{'archived_file'} = $archived_filename_with_path;
+    $upload_metadata{'archived_file_id'} = $archived_file_id;
 	$upload_metadata{'archived_file_type'} = "trial upload file";
 	$upload_metadata{'user_id'} = 41;
 	$upload_metadata{'date'} = "2014-02-14_09:10:11";

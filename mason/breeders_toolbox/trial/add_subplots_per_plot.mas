@@ -87,48 +87,6 @@ $trial_name => undef
     </div>
 </div>
 
-<div class="modal fade" id="upload_subplots_spreadsheet_info_dialog" name="upload_subplots_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSubplotsInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>This is for recording individual subplots in a plot.</b>
-                    <br/>
-                    <b>Subplot names may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>plot_name</td>
-                                <td>subplot_name</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <br/>
-                    plot_name (must exist in the database already)
-                    <br />
-                    subplot_name (must be globally unique. usually this is a concatenation of plot_name + subplot_number, such as MyTrial_plot101_subplot1)
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_upload_subplot_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="upload_subplots_with_index_number_dialog" name="upload_subplots_with_index_number_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSubplotsWithIndexNumberDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -172,48 +130,6 @@ $trial_name => undef
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" name="upload_subplots_with_index_number_cancel_button" id="upload_subplots_with_index_number_cancel_button" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" name="upload_subplots_with_index_number_save_button" id="upload_subplots_with_index_number_save_button" title="Upload">Upload</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="upload_subplots_with_index_number_spreadsheet_info_dialog" name="upload_subplots_with_index_number_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSubplotsWithIndexNumberInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsWithIndexNumberInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number</b>
-                    <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>plot_name</td>
-                                <td>subplot_index_number</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <br/>
-                    plot_name (must exist in the database already)
-                    <br />
-                    subplot_index_number (must be a number. the saved subplot name will be a concatenation of plot_name + subplot_index_number, such as MyTrial_plot101_subplot1.)
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_upload_subplots_with_index_number_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -267,47 +183,7 @@ $trial_name => undef
     </div>
 </div>
 
-<div class="modal fade" id="upload_subplots_with_num_subplots_spreadsheet_info_dialog" name="upload_subplots_with_num_subplots_spreadsheet_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadSubplotsWithNumSubplotsInfoDialog">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSubplotsWithNumSubplotsInfoDialog">Upload Template Information</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <b>This is for recording individual subplots in a plot. The subplot name will be saved as a concatenation of plot_name + _ + subplot_index_number for as many subplots as specfied by num_subplots_per_plot</b>
-                    <br/>
-                    <b>May be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
-                    <b>Header:</b>
-                    <br>
-                    The first row (header) should contain the following:
-                    <br />
-
-                    <table class="table table-hover table-bordered table-condensed" >
-                        <thead></thead>
-                        <tbody>
-                            <tr>
-                                <td>plot_name</td>
-                                <td>num_subplots_per_plot</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <b>Required fields:</b>
-                    <br/>
-                    plot_name (must exist in the database already)
-                    <br />
-                    num_subplots_per_plot (must be a number. the number of subplots in the plot. the saved subplot name will be a concatenation of plot_name + subplot_number, such as MyTrial_plot101_subplot1)
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="close_upload_subplots_with_number_subplots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<& /file_formats/subplot_upload.mas &>
 
 
 <script>

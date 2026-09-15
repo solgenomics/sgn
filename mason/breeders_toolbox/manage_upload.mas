@@ -1,4 +1,5 @@
 <%args>
+$sp_person_id
 $locations
 $geojson_locations
 $breeding_programs
@@ -9,11 +10,21 @@ $editable_stock_props_definitions => {}
 $facilities => ()
 $management_factor_types => ()
 $design_types => ()
+$default_seedlot_material_type => undef
+$editable_vector_props
+$allowed_upload_types => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+<%perl>
+    my $user_role = '';
+    if ($c->user) {
+        $user_role = $c->user->get_object()->get_user_type();
+    }
+</%perl>
 
-<& /page/page_title.mas, title=>"Upload Data" &>
+<& /util/import_javascript.mas, entries => ["job", "upload_factory"], classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List', 'CXGN.BreedersToolbox.AddTrial','CXGN.BreedersToolbox.UploadTrial','CXGN.BreedersToolbox.Trial', 'CXGN.Trial','CXGN.BreedersToolbox.GenotypingTrial','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees','CXGN.BreedersToolbox.Crosses','CXGN.BreedersToolbox.FieldBook','CXGN.BreedersToolbox.UploadPhenotype', 'CXGN.BreedersToolbox.HTMLSelect', 'CXGN.BreederSearch', 'CXGN.Trial','CXGN.TrialTreeFolders' ] &>
+
+<& /page/page_title.mas, title=>"Upload Factory" &>
 
 <style>
 .ui-autocomplete {
@@ -24,259 +35,395 @@ $design_types => ()
 <div class="container-fluid">
 
 <div class="well well-sm">
-<h1>Traits</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a href="http://submit.rtbbase.org"><p>Go To Trait Request Form</p></a>
-</td>
-<td>
-<a href="/tools/onto"><p>Go To Ontology Browser</p></a>
-</td>
-<td>
-<a href="/search/traits"><p>Go To Trait Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
+    <h3>Uploaded files</h3>
+        <&| /page/info_section.mas, title => ' ', subtitle => 'Files that are stored in the site archive; their data has not necessarily been saved to the database.', id => 'archived_files_table_section', collapsible => 1, collapsed => 0 &>
+            <table style="width:100%">
+                <tr>
+                    <td>
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">Check formatting requirements: </label>
+                            <div class="col-sm-6">
+                                <select class="form-control form-control-sm" id="upload_factory_check_file_format">
+                                </select>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        &nbsp; &nbsp; &nbsp; &nbsp; 
+                    </td>
+                    <td>
+                        <div style="display:flex;justify-content:flex-end;">
+                            <form class="form-horizontal" role="form" method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_factory_file_form" name="upload_factory_file_form">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">Upload files: </label>
+                                    <div class="col-sm-6">
+                                        <input class="form-control form-control-sm" type="file" id="upload_factory_archive_new_file" name="upload_factory_archive_new_file[]" multiple>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <button type="submit" class="btn btn-primary" id="upload_factory_new_file_btn"><span class="glyphicon glyphicon-floppy-open"></span></button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </td>
+            <table id="upload_factory_archived_files_table">
+                <thead>
+                </thead>
+                <tbody>
+                </tbody>
+                <tfoot>
+                </tfoot>
+            </table>
+        </&>
 </div>
 
 <div class="well well-sm">
-<h1>Field Trials</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="upload_trial_link"><p>Upload An Existing Trial</p></a>
-<a id="add_project_link"><p>Design A New Trial</p></a>
-</td>
-<td>
-<a href="/breeders/trials"><p>Go To Manage Trials</p></a>
-</td>
-<td>
-<a href="/search/trials"><p>Go To Trial Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
+<h3>File validation</h3>
+    <&| /page/info_section.mas, title => ' ', subtitle => 'Some file types include a file validation step. Be sure to commit the data after passing validation. Warning and error conditions will cause an upload to fail.', id => 'in_progress_validations_table_section', collapsible => 1, collapsed => 1 &>
+        <img id="validation-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
+        <table id="upload_factory_validated_files_table">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </table>
+        </&>
 </div>
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
-<& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => $geojson_locations, breeding_programs => $breeding_programs, design_types => $design_types &>
 
 <div class="well well-sm">
-<h1>Genotyping Plates</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="create_genotyping_trial_link"><p>Create An IGD Genotyping Plate</p></a>
-</td>
-<td>
-<a href="/breeders/genotyping"><p>Go To Manage Genotyping Plates</p></a>
-</td>
-<td>
-<a href="/search/trials"><p>Go To Trial Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
+<h3>Data extraction in-progress</h3>
+    <&| /page/info_section.mas, title => ' ', id => 'in_progress_uploads_table_section', collapsible => 1, collapsed => 1 &>
+        <img id="uploads-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
+        <table id="upload_factory_in_progress_uploads_table">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </table>
+    </&>
 </div>
-<& /breeders_toolbox/genotyping_trials/create_genotyping_trial_dialogs.mas, facilities => $facilities &>
-
-<div class="well well-sm">
-<h1>Locations</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="upload_locations_link"><p>Upload Many New Locations</p></a>
-</td>
-<td>
-<a href="/breeders/locations"><p>Go To Manage Locations</p></a>
-</td>
-<td>
-<a href="/breeders/locations"><p>Go To Manage Locations</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<& /breeders_toolbox/upload_locations_dialogs.mas &>
-
-<div class="well well-sm">
-<h1>Accessions</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="add_accessions_link"><p>Add Accessions Using List</p></a>
-</td>
-<td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
-</td>
-<td>
-<a href="/search/stocks"><p>Go To Accessions Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
-
-<div class="well well-sm">
-<h1>Populations</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="manage_accessions_populations_new"><p>Add New Population</p></a>
-</td>
-<td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
-</td>
-<td>
-<a href="/search/stocks"><p>Go To Stock Search</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<& /breeders_toolbox/manage_populations_dialogs.mas &>
 
 
 <div class="well well-sm">
-<h1>Seedlots</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="seedlot_bulk_upload"><p>Upload Many Seedlots</p></a>
-<a name="add_seedlot_button"><p>Add A Seedlot</p></a>
-</td>
-<td>
-<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
-</td>
-<td>
-<a href="/breeders/seedlots"><p>Go To Manage Seedlots Page</p></a>
-</td>
-</tr>
-</tbody>
-</table>
+<h3>Processed uploads</h3>
+    <&| /page/info_section.mas, title => ' ', subtitle => 'Jobs for which data has been extracted and committed to the database.', id => 'completed_uploads_table_section', collapsible => 1, collapsed => 1 &>
+        <br>
+        <button id="dismiss_completed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all completed uploads</button> &nbsp; &nbsp;
+        <button id="dismiss_failed_uploads_btn" class="btn btn-sm btn-primary">Dismiss all failed and timed-out uploads</button> &nbsp; &nbsp;
+        <br>
+        <br>
+        <img id="completed-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
+        <table id="upload_factory_completed_uploads_table">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </table>
+    </&>
 </div>
-<& /breeders_toolbox/upload_seedlots_dialogs.mas &>
-<& /breeders_toolbox/add_seedlot_dialogs.mas, timestamp=>$timestamp &>
 
-<div class="well well-sm">
-<h1>Pedigrees</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="upload_pedigrees_link"><p>Upload Many Pedigrees</p></a>
-</td>
-<td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
-</td>
-<td>
-<a href="/search/cross"><p>Go To Search Crosses</p></a>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<& /breeders_toolbox/upload_pedigrees_dialogs.mas &>
 
-<div class="well well-sm">
-<h1>Crosses</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Plan</th><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a id="create_cross_wishlist" >Create Cross Wishlist</a>
-</td>
-<td>
-<a name="upload_crosses_link"><p>Upload Many New Crosses</p></a>
-<a name="create_cross_link"><p>Add A Cross</p></a>
-<a name="upload_cross_info"><p>Upload Cross Info of Existing Crosses</p></a>
-<a name="upload_progenies_new_accessions_link"><p>Upload progeny names that are NOT in database</p></a>
-<a name="upload_progenies_existing_accessions_link"><p>Upload progeny names that already EXIST in database</p></a>
-<a name="upload_family_names_link"><p>Upload Family Names</p></a>
-</td>
-<td>
-<a href="/breeders/crosses"><p>Go To Manage Crosses Page</p></a>
-</td>
-<td>
-<a href="/search/cross"><p>Go To Search Crosses</p></a>
-</td>
-</tr>
-</tbody>
-</table>
+<div class="modal fade" id="upload_type_choice_dialog" name="upload_type_choice_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadTypeChoiceDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="uploadTypeChoiceDialog">Available Upload Types</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>There are additional options for this upload:</b>
+                    <br>
+                    <br>
+                    <div id="upload_type_choices_div">
+                        <div id="plant_upload_type_choices_div" hidden>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_upload_type_choice_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
-<& /breeders_toolbox/cross/cross_wishlist.mas &>
-<& /breeders_toolbox/cross/add_cross_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
-<& /breeders_toolbox/cross/upload_crosses_dialogs.mas, programs=>$breeding_programs, locations=>$geojson_locations &>
-<& /breeders_toolbox/cross/upload_update_crosses.mas &>
-<& /breeders_toolbox/cross/add_progenies_dialogs.mas &>
 
-<div class="well well-sm">
-<h1>Phenotypes</h1><br/>
-<table class="table table-bordered">
-<thead>
-<tr><th>Collection</th><th>Add</th><th>Manage</th><th>Search</th></tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<a name="create_fieldbook_link"><p>Create Fieldbook Layout File</p></a>
-<a id="create_new_trait_file_link"><p>Create Fieldbook Trait File</p></a>
-<a name="create_spreadsheet_link"><p>Create Phenotyping Spreadsheet</p></a>
-</td>
-<td>
-<a id="upload_fieldbook_phenotypes_link"><p>Upload Fieldbook Database File</p></a>
-<a id="upload_spreadsheet_phenotypes_link"><p>Upload Phenotyping Spreadsheet</p></a>
-</td>
-<td>
-<a href="/breeders/phenotyping"><p>Go To Manage Phenotypes Page</p></a>
-</td>
-<td>
-<a href="/breeders/search"><p>Go To Search Wizard</p></a>
-</td>
-</tr>
-</tbody>
-</table>
+<div class="modal fade" id="validate_upload_confirm_submit" name="validate_upload_confirm_submit" tabindex="-1" role="dialog" aria-labelledby="validateUploadConfirmSubmit">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="validateUploadConfirmSubmit">Review Submission</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <b>Review the submission. Click 'Submit' when you are ready to start file processing.</b>
+                    <br>
+                    <br>
+                    <label class="control-label">Ignore warnings when possible: </label>
+                    <input id="upload_submit_ignore_warnings" name="upload_submit_ignore_warnings" type="checkbox" data-toggle="toggle" encoding="multipart/form-data">
+                    <i class="list-group-item-warning">For phenotype uploads, this may cause existing values to be overwritten or deleted.</i>
+                    <br>
+                    <br>
+                    <div id="validate_upload_review_text"></div>
+                    <div id="upload_validation_parameters" hidden></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_validate_upload_confirm_submit" type="button" class="btn btn-default" data-dismiss="modal">Close</button>&nbsp;<button class="btn btn-info" id="submit_validate_upload">Submit</button>
+            </div>
+        </div>
+    </div>
 </div>
-<& /fieldbook/create_fieldbook_dialog.mas &>
-<& /fieldbook/create_trait_file_dialog.mas &>
-<& /fieldbook/upload_phenotype_fieldbook.mas &>
-<& /breeders_toolbox/upload_phenotype_spreadsheet.mas &>
+
+<div class="modal fade" id="view_report_dialog" name="view_report_dialog" tabindex="-1" role="dialog" aria-labelledby="viewReport">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="viewReport">Upload Report</h4>
+            </div>
+            <div class="modal-body">
+                <div id="report_content_div"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="close_report_dialog_btn" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<& /file_formats/trial_upload.mas &>
+
+<& /file_formats/plant_upload.mas &>
+
+<& /file_formats/subplot_plant_upload.mas &>
+
+<& /file_formats/subplot_upload.mas &>
+
+<& /file_formats/genotype_plate_upload.mas &>
+
+<& /file_formats/genotype_data_upload.mas &>
+
+<& /file_formats/location_upload.mas &>
+
+<& /file_formats/accession_upload.mas, editable_stock_props => $editable_stock_props, editable_stock_props_definitions => $editable_stock_props_definitions &>
+
+<& /file_formats/seedlot_upload.mas &>
+
+<& /file_formats/pedigree_upload.mas &>
+
+<& /file_formats/cross_upload.mas &>
+
+<& /file_formats/gps_upload.mas &>
+
+<& /file_formats/change_accessions_upload.mas &>
+
+<& /file_formats/entry_numbers_upload.mas &>
+
+<& /file_formats/phenotype_upload.mas &>
+
 <& /breeders_toolbox/trial/create_spreadsheet_dialog.mas &>
 
-</div>
+<& /file_formats/high_dimensional_phenotype_upload.mas &>
+
+<& /file_formats/image_upload.mas &>
+
+<& /file_formats/soil_data_upload.mas &>
+
+<& /file_formats/vector_upload.mas, editable_vector_props => $editable_vector_props, editable_stock_props_definitions => $editable_stock_props_definitions &>
+
+<& /file_formats/spatial_layout.mas &>
+
+<& /file_formats/treatment_upload.mas &>
+
+<& /file_formats/trial_additional_file.mas &>
+
+<script>
+
+function upload_type_options() {
+    return "<% $allowed_upload_types %>";
+}
+
+function fire_refresh() {
+    jsMod["upload_factory"].refresh_upload_tables('<% $sp_person_id %>');
+}
+
+jQuery(document).ready(function(){
+
+    jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>');
+    jsMod["upload_factory"].refresh_upload_tables('<% $sp_person_id %>');
+
+    setInterval(fire_refresh, 60000);
+
+    jQuery('#upload_factory_new_file_btn').click(function(event){
+        event.preventDefault();
+        var uploadFiles = document.getElementById('upload_factory_archive_new_file').files;
+        if (!uploadFiles || uploadFiles.length === 0) {
+            alert("Please select at least one file.");
+            return;
+        }
+
+        console.log(uploadFiles);
+
+        jQuery('#working_modal').modal("show");
+        jQuery("#upload_factory_file_form").attr("action", '/ajax/tools/documents/upload');
+        jQuery("#upload_factory_file_form").submit();
+    });
+
+    jQuery("#upload_factory_file_form").iframePostForm({
+        json: true,
+        post: function () { },
+        timeout: 180,
+        complete: function (response) {
+            jQuery('#working_modal').modal("hide");
+            if (response.error){
+                alert("File upload failed, check console");
+            } else {
+                jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>');
+            }
+        }
+    });
+
+    jQuery(document).on('click','.process-file-btn',function() {
+        let file_id = jQuery(this).attr('id').replace('process_file_', '');
+        let file_name = jQuery('#file_timestamp_'+file_id).text()+"_"+jQuery('#file_name_'+file_id).text();
+        let upload_type = jQuery("#upload_select_type_"+file_id).val();
+
+        jsMod["upload_factory"].process_file({file_name : file_name, file_id : file_id}, upload_type, {
+            default_seedlot_material_type : "<%$default_seedlot_material_type%>",
+            user_role : "<%$user_role%>"
+        });
+    });
+
+    jQuery('#upload_factory_check_file_format').html(upload_type_options());
+
+    jQuery(document).on('change', '#upload_factory_check_file_format', function() {
+        let upload_type = jQuery('#upload_factory_check_file_format').val();
+        jsMod["upload_factory"].display_upload_formats(upload_type, {
+            default_seedlot_material_type : "<%$default_seedlot_material_type%>",
+            user_role : "<%$user_role%>"
+        });
+    });
+
+    // jQuery(document).on('click','.check-format-btn', function() {
+    //     let file_id = jQuery(this).attr('id').replace('check_format_', '');
+    //     let upload_type = jQuery("#upload_select_type_"+file_id).val();
+    //     jsMod["upload_factory"].display_upload_formats(upload_type, {
+    //         default_seedlot_material_type : "<%$default_seedlot_material_type%>",
+    //         user_role : "<%$user_role%>"
+    //     });
+    // });
+
+    jQuery(document).on('change', '.upload-type-select', function() {
+        let file_id = jQuery(this).attr('id').replace('upload_select_type_', '');
+        let upload_type = jQuery("#upload_select_type_"+file_id).val();
+        if (upload_type != null && upload_type != "" && upload_type != "null_choice" && upload_type != "fieldbook_phenotypes") {
+            jQuery('#check_format_'+file_id).prop('disabled', false);
+        } else {
+            jQuery('#check_format_'+file_id).prop('disabled', true);
+        }
+        jsMod["upload_factory"].save_file_type(file_id, upload_type);
+    });
+
+    jQuery(document).on('click', '.job-dismiss-btn', function() {
+        let job_id = jQuery(this).attr("id").replace('dismiss_job_', '');
+        jsMod["job"].dismiss_job(job_id);
+    });
+
+    jQuery(document).on('click', '.job-cancel-btn', function() {
+        let job_id = jQuery(this).attr("id").replace('cancel_job_', '');
+        jsMod["job"].cancel_job(job_id);
+    });
+
+    jQuery(document).on('click', '.validation-commit-btn', function() {
+        let job_id = jQuery(this).attr("id").replace('validation_commit_', '');
+        jsMod["upload_factory"].commit_upload_job(job_id);
+    });
+
+    jQuery(document).on('click', '.view-report-btn', function() {
+        let job_id = jQuery(this).attr("id").replace('job_report_', '');
+        jQuery('#view_report_dialog').modal("show");
+        let success = '';
+        let warnings = '';
+        let errors = '';
+        let other = '';
+        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.success_messages) {
+            success = `<p class="list-group-item-success" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.success_messages}</p>`;
+        }
+        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.warning_messages) {
+            warnings = `<p class="list-group-item-warning" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.warning_messages}</p>`;
+        }
+        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.error_messages) {
+            errors = `<p class="list-group-item-danger" >${jsMod["upload_factory"].job_dict[job_id].args.additional_args.error_messages}</p>`;
+        }
+        if (jsMod["upload_factory"].job_dict[job_id].args.additional_args?.verify_accessions_report) {
+            other = `<p>${jsMod["upload_factory"].job_dict[job_id].args.additional_args.verify_accessions_report}</p>`;
+        }
+        jQuery('#report_content_div').html(`${success}${warnings}${errors}${other}`);
+    });
+
+    jQuery('#dismiss_completed_uploads_btn').on('click', function(){
+        jQuery.ajax({
+            url : '/ajax/job/dismiss_completed_uploads/'+"<% $sp_person_id %>",
+            beforeSend : function() {
+                jQuery('#working_modal').modal("show");
+            },
+            success : function(response) {
+                jQuery('#working_modal').modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert("Uploads dismissed.");
+                    jsMod["upload_factory"].refresh_upload_tables();
+                }
+            },
+            error : function() {
+                jQuery('#working_modal').modal("hide");
+                alert("An error occurred dismissing completed uploads, check console.");
+            }
+        });
+    });
+
+    jQuery('#dismiss_failed_uploads_btn').on('click', function(){
+        jQuery.ajax({
+            url : '/ajax/job/dismiss_dead_uploads/'+"<% $sp_person_id %>",
+            beforeSend : function() {
+                jQuery('#working_modal').modal("show");
+            },
+            success : function(response) {
+                jQuery('#working_modal').modal("hide");
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert("Uploads dismissed.");
+                    jsMod["upload_factory"].refresh_upload_tables();
+                }
+            },
+            error : function() {
+                jQuery('#working_modal').modal("hide");
+                alert("An error occurred dismissing failed and timed out uploads, check console.");
+            }
+        });
+    });
+
+    // jQuery('#check_file_format_select').html(upload_type_options());
+
+    // jQuery('#check_file_format_select').on('change', function(){
+    //     let upload_type = jQuery('#check_file_format_select').val();
+    //     jsMod["upload_factory"].display_upload_formats(upload_type, {
+    //         default_seedlot_material_type : "<%$default_seedlot_material_type%>",
+    //         user_role : "<%$user_role%>"
+    //     });
+    // });
+
+    jQuery('#submit_validate_upload').on('click', jsMod["upload_factory"].submit_upload_job);
+
+});
+</script>
