@@ -38,6 +38,24 @@ sub get_genotype_protocols: Path('/get/genotyping/protocols/') Args() {
 sub genotype_protocols {
     my ($self, $c) = @_;
 
+    # my $cached = $self->get_cached_genotype_protocols($c);
+    # if ($cached) {
+    #     return $cached;
+    # }
+
+    
+    my $protocols = $c->controller('solGS::Search')->model($c)->get_all_genotyping_protocols();
+
+    # print STDERR "Genotyping protocols: " . Dumper $protocols;
+    # write_file($file, { binmode => ':utf8' }, encode_json($protocols));
+
+    return $protocols;
+
+}
+
+sub get_cached_genotype_protocols {
+    my ($self, $c) = @_;
+
     my $file = $c->controller('solGS::Files')->genotyping_protocols_file($c);
     print STDERR "genotyping protocols file: $file\n";
 
@@ -53,13 +71,7 @@ sub genotype_protocols {
         
     }
 
-    my $protocols = $c->controller('solGS::Search')->model($c)->get_all_genotyping_protocols();
-
-    print STDERR "Genotyping protocols: " . Dumper $protocols;
-    write_file($file, { binmode => ':utf8' }, encode_json($protocols));
-
-    return $protocols;
-
+    return;
 }
 
 
