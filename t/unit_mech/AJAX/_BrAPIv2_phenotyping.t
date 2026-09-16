@@ -116,13 +116,13 @@ is_deeply($response, $expected , "GET observationunits table test");
 $mech->get_ok('http://localhost:3010/brapi/v2/observations?pageSize=2');
 $response = decode_json $mech->content;
 
-#print STDERR "\n\nOBSERVATIONS RESPONSE: " . Dumper $response;
+print STDERR "\n\nOBSERVATIONS RESPONSE: " . Dumper $response;
 
 #15
 
-my $expected = { 'metadata' => { 'status' => [ { 'message' => 'BrAPI base call found with page=0, pageSize=2', 'messageType' => 'INFO' }, { 'message' => 'Loading CXGN::BrAPI::v2::Observations', 'messageType' => 'INFO' }, { 'message' => 'Observations result constructed', 'messageType' => 'INFO' } ], 'pagination' => { 'totalCount' => 2781, 'pageSize' => 2, 'totalPages' => 1391, 'currentPage' => 0 }, 'datafiles' => [] }, 'result' => { 'data' => [ { 'observationVariableDbId' => '70773', 'collector' => undef, 'studyDbId' => '139', 'germplasmDbId' => '38981', 'observationUnitDbId' => '39819', 'observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016', 'value' => '3', 'observationTimeStamp' => undef, 'additionalInfo' => undef, 'season' => { 'seasonDbId' => '2014', 'season' => '2014', 'year' => '2014' }, 'uploadedBy' => undef, 'externalReferences' => undef, 'germplasmName' => 'UG120120', 'observationUnitName' => 'KASESE_TP2013_1002', 'observationDbId' => '737974' }, { 'season' => { 'seasonDbId' => '2014', 'season' => '2014', 'year' => '2014' }, 'additionalInfo' => undef, 'observationTimeStamp' => undef, 'value' => '30.1', 'observationVariableName' => 'dry matter content percentage|CO_334:0000092', 'observationUnitDbId' => '39819', 'germplasmDbId' => '38981', 'studyDbId' => '139', 'collector' => undef, 'observationVariableDbId' => '70741', 'observationDbId' => '737975', 'observationUnitName' => 'KASESE_TP2013_1002', 'germplasmName' => 'UG120120', 'uploadedBy' => undef, 'externalReferences' => undef } ] }};
+my $expected = { 'metadata' => { 'status' => [ { 'message' => 'BrAPI base call found with page=0, pageSize=2', 'messageType' => 'INFO' }, { 'message' => 'Loading CXGN::BrAPI::v2::Observations', 'messageType' => 'INFO' }, { 'message' => 'Observations result constructed', 'messageType' => 'INFO' } ], 'pagination' => { 'totalCount' => 2781, 'pageSize' => 2, 'totalPages' => 1391, 'currentPage' => 0 }, 'datafiles' => [] }, 'result' => { 'data' => [ { 'observationVariableDbId' => '70773', 'collector' => undef, 'studyDbId' => '139', 'trialDbId' => undef, 'germplasmDbId' => '38981', 'observationUnitDbId' => '39819', 'observationVariableName' => 'fresh shoot weight measurement in kg|CO_334:0000016', 'value' => '3', 'observationTimeStamp' => undef, 'additionalInfo' => undef, 'season' => { 'seasonDbId' => '2014', 'season' => '2014', 'year' => '2014' }, 'uploadedBy' => undef, 'externalReferences' => undef, 'germplasmName' => 'UG120120', 'observationUnitName' => 'KASESE_TP2013_1002', 'observationDbId' => '737974' }, { 'season' => { 'seasonDbId' => '2014', 'season' => '2014', 'year' => '2014' }, 'additionalInfo' => undef, 'observationTimeStamp' => undef, 'value' => '30.1', 'observationVariableName' => 'dry matter content percentage|CO_334:0000092', 'observationUnitDbId' => '39819', 'germplasmDbId' => '38981', 'studyDbId' => '139', 'trialDbId' => undef, 'collector' => undef, 'observationVariableDbId' => '70741', 'observationDbId' => '737975', 'observationUnitName' => 'KASESE_TP2013_1002', 'germplasmName' => 'UG120120', 'uploadedBy' => undef, 'externalReferences' => undef } ] }};
 
-#print STDERR "\n\nOBSERVATIONS EXPECTED: " . Dumper $expected;
+print STDERR "\n\nOBSERVATIONS EXPECTED: " . Dumper $expected;
 
 is_deeply($response, $expected, "GET observations pageSize 2 test");
 
@@ -130,7 +130,7 @@ $mech->get_ok('http://localhost:3010/brapi/v2/observations/740338');
 $response = decode_json $mech->content;
 print STDERR "\n\n" . Dumper$response;
 #16
-is_deeply($response,  {'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Observations'},{'messageType' => 'INFO','message' => 'Observations result constructed'}],'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10}},'result' => {'externalReferences' => undef,'value' => '655.92','germplasmDbId' => '41283','season' => {'seasonDbId' => '2017','season' => '2017','year' => '2017'},'studyDbId' => '165','observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010','observationVariableDbId' => '77556','observationUnitDbId' => '41284','germplasmName' => 'IITA-TMS-IBA980581','observationTimeStamp' => undef,'uploadedBy' => undef,'collector' => undef,'observationUnitName' => 'CASS_6Genotypes_103','observationDbId' => '740338','additionalInfo' => undef}}, "GET observations test");
+is_deeply($response,  {'metadata' => {'datafiles' => [],'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Observations'},{'messageType' => 'INFO','message' => 'Observations result constructed'}],'pagination' => {'totalCount' => 1,'totalPages' => 1,'currentPage' => 0,'pageSize' => 10}},'result' => {'externalReferences' => undef,'value' => '655.92','germplasmDbId' => '41283','season' => {'seasonDbId' => '2017','season' => '2017','year' => '2017'},'studyDbId' => '165', 'trialDbId'=> undef,'observationVariableName' => 'cass sink leaf|ADP|ug/g|week 16|COMP:0000010','observationVariableDbId' => '77556','observationUnitDbId' => '41284','germplasmName' => 'IITA-TMS-IBA980581','observationTimeStamp' => undef,'uploadedBy' => undef,'collector' => undef,'observationUnitName' => 'CASS_6Genotypes_103','observationDbId' => '740338','additionalInfo' => undef}}, "GET observations test");
 
 $mech->get_ok('http://localhost:3010/brapi/v2/observations/table?pageSize=2');
 $response = decode_json $mech->content;
@@ -376,7 +376,7 @@ $mech->get_ok('http://localhost:3010/brapi/v2/search/observations/'. $searchId);
 $response = decode_json $mech->content;
 #print STDERR "\n\n" . Dumper$response;
 #18
-is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'datafiles' => []},'result' => { 'data' => [{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','germplasmDbId' => '41283','studyDbId' => '165','observationTimeStamp' => undef,'collector' => undef,'value' => '39.84365','observationVariableDbId' => '77557','observationDbId' => '740337','observationUnitName' => 'CASS_6Genotypes_103','externalReferences' => undef,'observationUnitDbId' => '41284','season' => {'seasonDbId' => '2017','season' => '2017','year' => '2017'},'uploadedBy' => undef,'germplasmName' => 'IITA-TMS-IBA980581','additionalInfo' => undef}]}}, "Search observations test");
+is_deeply($response, {'metadata' => {'status' => [{'messageType' => 'INFO','message' => 'BrAPI base call found with page=0, pageSize=10'},{'messageType' => 'INFO','message' => 'Loading CXGN::BrAPI::v2::Results'},{'message' => 'search result constructed','messageType' => 'INFO'}],'pagination' => {'totalCount' => 1,'currentPage' => 0,'pageSize' => 10,'totalPages' => 1},'datafiles' => []},'result' => { 'data' => [{'observationVariableName' => 'cass sink leaf|ADP alpha-D-glucoside|ug/g|week 16|COMP:0000011','germplasmDbId' => '41283','studyDbId' => '165', 'trialDbId'=> undef, 'observationTimeStamp' => undef,'collector' => undef,'value' => '39.84365','observationVariableDbId' => '77557','observationDbId' => '740337','observationUnitName' => 'CASS_6Genotypes_103','externalReferences' => undef,'observationUnitDbId' => '41284','season' => {'seasonDbId' => '2017','season' => '2017','year' => '2017'},'uploadedBy' => undef,'germplasmName' => 'IITA-TMS-IBA980581','additionalInfo' => undef}]}}, "Search observations test");
 
 
 # POST /observations
@@ -388,15 +388,40 @@ my $column = $f->bcs_schema()->resultset('Phenotype::Phenotype')->get_column('ph
 my $phenotype_id = $column->max();
 
 #21
-is_deeply($response,{"result"=>{"data"=>[{"value"=>"15","observationUnitName"=>"CASS_6Genotypes_307","observationVariableName"=>"dry matter content percentage","observationTimeStamp"=>"2019-01-05T14:47:23Z","collector"=>"janedoe","studyDbId"=>165,"uploadedBy"=>"janedoe","observationVariableDbId"=>"70741","observationDbId"=>$phenotype_id,"observationLevel"=>"plot","observationUnitDbId"=>41294,"germplasmName"=>"IITA-TMS-IBA980581","germplasmDbId"=>41283, "externalReferences" => [{ "referenceId"=> "doi:10.155454/12341234", "referenceSource" => "DOI" }], "additionalInfo" => { "year" => "2011" } } ]},"metadata"=>{"pagination"=>{"currentPage"=>0,"totalCount"=>1,"totalPages"=>1,"pageSize"=>10},"datafiles"=>[],"status"=>[{"message"=>"BrAPI base call found with page=0, pageSize=10","messageType"=>"INFO"},{"message"=>"Loading CXGN::BrAPI::v2::Observations","messageType"=>"INFO"},{"messageType"=>"info","message"=>"Request structure is valid"},{"message"=>"Request data is valid","messageType"=>"info"},{"messageType"=>"info","message"=>"File for incoming brapi obserations saved in archive."},{"messageType"=>"INFO","message"=>"All values in your file have been successfully processed!<br><br>1 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br>0 previously stored values removed<br><br>"}]} } , "check observation storage");
+is_deeply($response,{"result"=>{"data"=>[{"value"=>"15","observationUnitName"=>"CASS_6Genotypes_307","observationVariableName"=>"dry matter content percentage","observationTimeStamp"=>"2019-01-05T14:47:23Z","collector"=>"janedoe","studyDbId"=>165, "uploadedBy"=>"janedoe","observationVariableDbId"=>"70741","observationDbId"=>$phenotype_id,"observationLevel"=>"plot","observationUnitDbId"=>41294,"germplasmName"=>"IITA-TMS-IBA980581","germplasmDbId"=>41283, "externalReferences" => [{ "referenceId"=> "doi:10.155454/12341234", "referenceSource" => "DOI" }], "additionalInfo" => { "year" => "2011" } } ]},"metadata"=>{"pagination"=>{"currentPage"=>0,"totalCount"=>1,"totalPages"=>1,"pageSize"=>10},"datafiles"=>[],"status"=>[{"message"=>"BrAPI base call found with page=0, pageSize=10","messageType"=>"INFO"},{"message"=>"Loading CXGN::BrAPI::v2::Observations","messageType"=>"INFO"},{"messageType"=>"info","message"=>"Request structure is valid"},{"message"=>"Request data is valid","messageType"=>"info"},{"messageType"=>"info","message"=>"File for incoming brapi obserations saved in archive."},{"messageType"=>"INFO","message"=>"All values in your file have been successfully processed!<br><br>1 new values stored<br>0 previously stored values skipped<br>0 previously stored values overwritten<br>0 previously stored values removed<br><br>"}]} } , "check observation storage");
 
 
 # GET /observations/{observationDbId}
+# Create folder for trialDbId in test response
+my $schema = $f->bcs_schema;
+
+my $breeding_program_id = $schema->resultset('Project::Project')->find({name=>'CASS_6Genotypes_Sampling_2015'})->project_id();
+
+$mech->post_ok('http://localhost:3010/ajax/folder/new', [ "folder_name"=> "test_folder_trialdbid", "breeding_program_id"=> $breeding_program_id, "project_type" => 'field_trial']);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+my $folder_id = $response->{'folder_id'};
+
+$mech->get_ok("http://localhost:3010/ajax/folder/165/associate/parent/$folder_id");
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{'success'}, '1');
+
 #21 verify
 $mech->get_ok('http://localhost:3010/brapi/v2/observations/' . $phenotype_id);
 $response = decode_json $mech->content;
 
-is_deeply($response,{'metadata' => { 'datafiles' => [], 'status' => [ {   'message' => 'BrAPI base call found with page=0, pageSize=10',   'messageType' => 'INFO' }, {   'message' => 'Loading CXGN::BrAPI::v2::Observations',   'messageType' => 'INFO' }, {   'messageType' => 'INFO',   'message' => 'Observations result constructed' } ], 'pagination' => { 'currentPage' => 0, 'pageSize' => 10, 'totalPages' => 1, 'totalCount' => 1 } },'result' => { 'uploadedBy' => 'janedoe', 'value' => '15', 'studyDbId' => '165', 'observationUnitName' => 'CASS_6Genotypes_307', 'season' => {   'seasonDbId' => '2017',   'season' => '2017',   'year' => '2017' } , 'observationDbId' => $phenotype_id, 'observationTimeStamp' => '2019-01-05T14:47:23Z', 'germplasmDbId' => '41283', 'observationVariableDbId' => '70741', 'observationVariableName' => 'dry matter content percentage|CO_334:0000092', 'collector' => 'janedoe', 'observationUnitDbId' => '41294', 'externalReferences' => [ {   'referenceId' => 'doi:10.155454/12341234',   'referenceSource' => 'DOI' } ], 'germplasmName' => 'IITA-TMS-IBA980581', 'additionalInfo' => { 'year' => '2011' } }} ,"check stored observation");
+is_deeply($response,{'metadata' => { 'datafiles' => [], 'status' => [ {   'message' => 'BrAPI base call found with page=0, pageSize=10',   'messageType' => 'INFO' }, {   'message' => 'Loading CXGN::BrAPI::v2::Observations',   'messageType' => 'INFO' }, {   'messageType' => 'INFO',   'message' => 'Observations result constructed' } ], 'pagination' => { 'currentPage' => 0, 'pageSize' => 10, 'totalPages' => 1, 'totalCount' => 1 } },'result' => { 'uploadedBy' => 'janedoe', 'value' => '15', 'studyDbId' => '165', 'trialDbId' => $folder_id, 'observationUnitName' => 'CASS_6Genotypes_307', 'season' => {   'seasonDbId' => '2017',   'season' => '2017',   'year' => '2017' } , 'observationDbId' => $phenotype_id, 'observationTimeStamp' => '2019-01-05T14:47:23Z', 'germplasmDbId' => '41283', 'observationVariableDbId' => '70741', 'observationVariableName' => 'dry matter content percentage|CO_334:0000092', 'collector' => 'janedoe', 'observationUnitDbId' => '41294', 'externalReferences' => [ {   'referenceId' => 'doi:10.155454/12341234',   'referenceSource' => 'DOI' } ], 'germplasmName' => 'IITA-TMS-IBA980581', 'additionalInfo' => { 'year' => '2011' } }} ,"check stored observation");
+
+$mech->get_ok("http://localhost:3010/ajax/folder/165/associate/parent/0");
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{'success'}, '1');
+
+$mech->get_ok("http://localhost:3010/ajax/folder/$folder_id/delete");
+$response = decode_json $mech->content;
+print STDERR Dumper $response;
+is($response->{'success'}, '1');
 
 # PUT /observations
 $data = '{ "740336":  { "observationUnitDbId": "41284",  "collector": "Jane Doe", "observationTimeStamp": "2020-01-01T14:47:23-07:00", "observationVariableDbId":"77559", "season": "2011",  "value": "value 5", "observationUnitName" : "CASS_6Genotypes_103", "externalReferences" : [{ "referenceId": "doi:10.155454/5555", "referenceSource" : "DOI" } ], "additionalInfo" : { "year" : "2011" } }}';
