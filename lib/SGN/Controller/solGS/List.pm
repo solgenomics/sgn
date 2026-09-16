@@ -30,7 +30,7 @@ use List::MoreUtils qw /uniq firstidx/;
 use CXGN::People::Person;
 use POSIX qw(strftime);
 use Storable qw/ nstore retrieve /;
-use String::CRC;
+use String::CRC32;
 use Try::Tiny;
 
 use solGS::queryJobs;
@@ -41,7 +41,7 @@ sub generate_check_value : Path('/solgs/generate/checkvalue') Args(0) {
     my ( $self, $c ) = @_;
 
     my $file_name   = $c->req->param('string');
-    my $check_value = crc($file_name);
+    my $check_value = crc32($file_name);
 
     my $ret->{status} = 'failed';
 
@@ -209,7 +209,7 @@ sub get_genotypes_list_details {
 sub get_list_breeding_program {
     my ($self, $c) = @_;
     my $trials_ids = [];
-    
+
     my $list_id = $c->stash->{list_id};
     $self->stash_list_metadata($c, $list_id);
     if ($c->stash->{list_type} eq 'trials') {
@@ -220,7 +220,7 @@ sub get_list_breeding_program {
         my $accessions_ids = $c->stash->{genotypes_ids};
         $trials_ids = $c->controller('solGS::Search')->model($c)->get_trial_id_by_accession($accessions_ids->[0]);
     }
-    
+
     my $program_id = $c->controller('solGS::Search')->model($c)->trial_breeding_program_id($trials_ids->[0]);
 
     return $program_id;

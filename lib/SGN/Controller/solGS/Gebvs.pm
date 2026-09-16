@@ -14,7 +14,7 @@ use File::Basename;
 use JSON;
 use List::MoreUtils qw /uniq/;
 use Scalar::Util qw /weaken reftype/;
-use String::CRC;
+use String::CRC32;
 use Try::Tiny;
 
 
@@ -77,7 +77,7 @@ sub get_traits_selection_id :Path('/solgs/get/traits/selection/id') Args(0) {
     if (@traits_ids > 1) {
         $self->catalogue_traits_selection($c, \@traits_ids);
         my $traits_selection_id = $self->create_traits_selection_id(\@traits_ids);
-    
+
         $c->stash->{rest} = {
             'status' => 1,
             'traits_selection_id' => $traits_selection_id,
@@ -200,7 +200,7 @@ sub get_gebv_files_of_traits {
         $valid_gebv_files = join("\t", @{$c->stash->{training_pop_analyzed_valid_traits_files}});
     }
 
-    my $pred_file_suffix;    
+    my $pred_file_suffix;
     $pred_file_suffix =   '_' . $selection_pop_id if $selection_pop_id;
     my $name = "gebv_files_of_traits_${training_pop_id}${pred_file_suffix}";
     my $temp_dir = $c->stash->{solgs_tempfiles_dir};
@@ -289,7 +289,7 @@ sub create_traits_selection_id {
     my ($self, $traits_ids) = @_;
 
     if ($traits_ids) {
-        return  crc(join('', sort(uniq(@$traits_ids))));
+        return  crc32(join('', sort(uniq(@$traits_ids))));
     } else {
         return 0;
     }

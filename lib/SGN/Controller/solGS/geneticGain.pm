@@ -26,7 +26,7 @@ use File::Spec::Functions;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use List::MoreUtils qw /uniq/;
-use String::CRC;
+use String::CRC32;
 use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -110,7 +110,7 @@ sub genetic_gain_boxplot : Path('/solgs/genetic/gain/boxplot/') Args(0) {
     else {
         $c->stash->{rest}{Error} = 'Error occured plotting the boxplot(s).';
     }
-    
+
 }
 
 sub check_genetic_gain_output {
@@ -162,7 +162,7 @@ sub get_selection_pop_gebv_file {
     my $gebv_file;
 
     if ( $selection_pop_id && $trait_id && $training_pop_id ) {
-        
+
         $c->controller('solGS::Files')
           ->rrblup_selection_gebvs_file( $c, $training_pop_id,
             $selection_pop_id, $trait_id, $protocol_id);
@@ -183,7 +183,7 @@ sub boxplot_id {
 
     my $multi_traits = $c->stash->{training_traits_ids};
     if ($multi_traits && scalar(@$multi_traits) > 1 ) {
-        $trait_id = crc( join( '', @$multi_traits ) );
+        $trait_id = crc32( join( '', @$multi_traits ) );
     }
 
     $c->stash->{boxplot_id} =
