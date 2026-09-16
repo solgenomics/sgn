@@ -6,7 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
@@ -133,10 +133,10 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     );
 
     print STDERR "TEMPFILE NOW = $tempfile\n";
-    
+
     my $pheno_filepath = $tempfile . "_phenotype.txt";
-    
-    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;    
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
 
@@ -147,7 +147,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
 
     my $phenotype_data_ref = $ds->retrieve_phenotypes($pheno_filepath);
 
-    
+
 
     my $h2File = $tempfile . "_" . "h2File.json";
     my $h2CsvFile = $tempfile . "_" . "h2CsvFile.csv";
@@ -177,7 +177,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
     ));
     my $job = CXGN::Job->new({
         schema => $schema,
-        people_schema => $people_schema, 
+        people_schema => $people_schema,
         sp_person_id => $sp_person_id,
         job_type => 'heritability_analysis',
         name => $ds->name().' heritability analysis',
@@ -218,7 +218,7 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
 	} else {
 		$job->update_status("finished");
 	}
-   
+
     my $figure_path = $c->{basepath} . "./documents/tempfiles/heritability_files/";
     copy($h2File, $figure_path);
     copy($h2CsvFile, $figure_path);
@@ -235,14 +235,13 @@ sub generate_results: Path('/ajax/heritability/generate_results') : {
         open my $fh, '<', $errorFile or die "Can't open error file $!";
         $errors = do { local $/; <$fh> };
     }
-        
+
     $c->stash->{rest} = {
         h2Table => $h2File_response,
         dummy_response => $dataset_id,
         error => $errors,
-        h2CsvTable => $h2CsvFile_response     
+        h2CsvTable => $h2CsvFile_response
     };
 }
 
 1
-

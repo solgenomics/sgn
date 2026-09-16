@@ -6,7 +6,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
@@ -37,7 +37,7 @@ sub shared_phenotypes: Path('/ajax/stability/shared_phenotypes') : {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
     my $ds = CXGN::Dataset->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id);
     my $traits = $ds->retrieve_traits();
-    
+
     $c->tempfiles_subdir("stability_files");
     my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"stability_files/trait_XXXXX");
     my $temppath = $c->config->{basepath}."/".$tempfile;
@@ -140,7 +140,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     );
 
     my $pheno_filepath = $tempfile . "_phenotype.txt";
-    
+
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $people_schema = $c->dbic_schema("CXGN::People::Schema", undef, $sp_person_id);
     my $schema = $c->dbic_schema("Bio::Chado::Schema", "sgn_chado", $sp_person_id);
@@ -219,7 +219,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
     #         $job_record->generate_finish_timestamp_cmd()
     # );
 
-    # while ($cmd->alive) { 
+    # while ($cmd->alive) {
 	# sleep(1);
     # }
 
@@ -253,7 +253,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 
     my $jsonSummaryBasename = basename($jsonSummary);
     my $jsonSummary_response = "/documents/tempfiles/stability_files/" . $jsonSummaryBasename;
-    
+
 
     $c->stash->{rest} = {
         myMessage => $messageFile_response,
@@ -265,4 +265,3 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
 }
 
 1
-

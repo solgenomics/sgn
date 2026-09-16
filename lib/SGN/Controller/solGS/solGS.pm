@@ -3,7 +3,6 @@ package SGN::Controller::solGS::solGS;
 use Moose;
 use namespace::autoclean;
 
-use String::CRC;
 use URI::FromHash 'uri';
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
@@ -598,7 +597,7 @@ sub output_files {
       $c->controller('solGS::Path')->page_type( $c, $c->req->referer );
     my $analysis_type = $c->stash->{analysis_type} || $page_type;
     $analysis_type =~ s/\s+/_/g;
-   
+
     my $trait_abbr = $c->stash->{trait_abbr};
     my $trait_id   = $c->stash->{trait_id};
     $c->stash->{cache_dir} = $c->stash->{solgs_cache_dir};
@@ -630,7 +629,7 @@ sub output_files {
 
         $c->controller('solGS::Files')->rrblup_selection_genetic_values_file($c);
         $c->controller('solGS::Files')->rrblup_combined_selection_gebvs_genetic_values_file($c);
-        
+
         $c->controller('solGS::Files')->filtered_selection_genotype_file($c);
     }
 

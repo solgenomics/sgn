@@ -1,5 +1,5 @@
 
-=head1 NAME 
+=head1 NAME
 
 SGN::Genefamily - a class to deal with (currently disk-based) genefamilies for tomato annotation purposes
 
@@ -26,7 +26,7 @@ with 'MooseX::Object::Pluggable';
 use namespace::autoclean;
 use Data::Dumper;
 use File::Slurp qw/slurp/;
-use File::Spec qw | catfile |;
+use File::Spec;
 use File::Spec::Functions;
 use File::Basename qw/basename/;
 
@@ -218,7 +218,7 @@ sub get_sequence {
     my $sequence = shift;
 
     my $file = File::Spec->catfile($self->get_path(), 'fasta', $self->name().".fa");
-    
+
     my @seqs = ();
     my $io = Bio::SeqIO->new( -format => 'fasta', -file => $file );
 
@@ -243,7 +243,7 @@ sub get_members {
     my $defs = File::Spec->catfile($self->get_path(), $self->genefamily_defs_file());
 
     print STDERR "Getting member info for family $family from file $defs\n";
-    
+
     open(my $F, "<", $defs) || die "Can't open gene families definition file at $defs";
 
     my @all_members;
@@ -252,15 +252,15 @@ sub get_members {
 
 	my ($family_name, @members) = split/\t/;
 
-	if ($family_name eq $family) { 
+	if ($family_name eq $family) {
 	    foreach my $m (@members) {
-		
+
 		my @species_members = split/\,/, $m;
 		foreach my $id (@species_members) {
 		    $id = '<a href="'.$self->sequence_link()."/".$self->build()."/$family/$id".'">'.$id."</a>";
 		}
 		@all_members = (@all_members, @species_members);
-	    }   
+	    }
 	}
     }
     return \@all_members;

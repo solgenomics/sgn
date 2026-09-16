@@ -5,7 +5,7 @@ use Moose;
 
 use Data::Dumper;
 use File::Slurp;
-use File::Spec qw | catfile |;
+use File::Spec;
 use JSON::Any;
 use File::Basename qw | basename |;
 use DateTime;
@@ -44,7 +44,7 @@ sub model_string: Path('/ajax/mixedmodels/modelstring') Args(0) {
     my $dependent_variables = $params->{dependent_variables};
 
     my $engine = $params->{engine};
-    
+
     my $mm = CXGN::MixedModels->new();
     if ($dependent_variables) {
 	$mm->dependent_variables($dependent_variables);
@@ -163,9 +163,9 @@ sub prepare: Path('/ajax/mixedmodels/prepare') Args(0) {
 sub run: Path('/ajax/mixedmodels/run') Args(0) {
     my $self = shift;
     my $c = shift;
-    
+
     my $params = $c->req()->params();
-    
+
     my $tempfile = $params->{tempfile};
     my $dependent_variables = $params->{'dependent_variables[]'};
     if (!ref($dependent_variables)) {
@@ -173,7 +173,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     }
     my $model  = $params->{model};
 
-    
+
 
 
     my $random_factors = $params->{'random_factors[]'}; #
@@ -188,33 +188,33 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
     elsif (!ref($fixed_factors)) {
         $fixed_factors = [ $fixed_factors ];  # Wrap in an array if it's a scalar
     }
-    
+
     # print Dumper($params);
     # print Dumper($model);
     # print Dumper($fixed_factors);
     # print Dumper($random_factors);
 
-    
+
     print STDERR "sub run: FIXED FACTORS: ".Dumper($fixed_factors)." RANDOM FACTORS: ".Dumper($random_factors)."\n";
     my $engine = $params->{engine};
 
     print STDERR "ENGINE = $engine\n";
-    
+
     my $mm = CXGN::MixedModels->new( { tempfile => $c->config->{basepath}."/".$tempfile });
-    
+
     $mm->dependent_variables($dependent_variables);
     $mm->random_factors($random_factors);
     $mm->fixed_factors($fixed_factors);
     $mm->engine($engine);
     my $job_record_config = {
-        user => $c->user->get_object()->get_sp_person_id(), 
-        schema => $c->dbic_schema("Bio::Chado::Schema"), 
-        people_schema => $c->dbic_schema("CXGN::People::Schema"), 
+        user => $c->user->get_object()->get_sp_person_id(),
+        schema => $c->dbic_schema("Bio::Chado::Schema"),
+        people_schema => $c->dbic_schema("CXGN::People::Schema"),
         finish_logfile => $c->config->{job_finish_log},
         name => "$dependent_variables mixed model computation"
     };
     my $error = $mm->run_model($c->config->{backend}, $c->config->{cluster_host}, $c->config->{cluster_shared_tempdir} . "/mixed_models", $job_record_config);
-    
+
     my $temppath = $c->config->{basepath}."/".$tempfile;
 
     my $adjusted_blups_file = $temppath.".adjustedBLUPs";
@@ -251,7 +251,7 @@ sub run: Path('/ajax/mixedmodels/run') Args(0) {
 	($adjusted_blues_data, $adjusted_blues_html, $accession_names, $traits) = $self->result_file_to_hash($c, $adjusted_blues_file);
     }
     else {
-	if (! $error) { 
+	if (! $error) {
 	    $error = "The analysis could not be completed. The factors may not have sufficient numbers of levels to complete the analysis. Please choose other parameters.";
 	}
 	$c->stash->{rest} = { error => $error };
@@ -331,18 +331,18 @@ sub result_file_to_hash {
 	my ($accession_name, @values) = split /\t/, $line;
 	push @accession_names, $accession_name;
 	$html .= "<tr><td>$accession_name</td>";
-	
+
         for (my $k=0; $k<@value_cols; $k++) {
 	    #print STDERR "adding  $values[$k] to column $value_cols[$k]\n";
 	    $html .= "<td>".($values[$k])."</td>";
         }
-	
+
 	for(my $n=0; $n<@values; $n++) {
 	    #print STDERR "Building hash for trait $accession_name and value $value_cols[$n]\n";
 	    $analysis_data{$accession_name}->{$value_cols[$n]} = [ $values[$n], $timestamp, $operator, "", "" ];
-	    
-	    
-	    
+
+
+
 	}
         $html .= "</tr>"
 
