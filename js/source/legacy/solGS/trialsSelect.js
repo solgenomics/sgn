@@ -108,7 +108,7 @@ jQuery(document).ready(function () {
                 Object.keys(trials).forEach(function (key) {
                     var option = jQuery("<option></option>")
                         .attr("value", key)
-                        .text(trials[key]);
+                        .text('Trial: ' + trials[key]);
                     trialSelect.append(option);
                 });
                 
@@ -128,17 +128,15 @@ jQuery(document).on("change", "#trial_select", function () {
     
     if (selectedTrial) {
         var popName = jQuery(this).find("option:selected").text()
-        console.log("Population Name: ", popName);
         jQuery("#analysis_pop_name").val(popName);
-        if (!jQuery(this).find("option:selected").text().match(/Dataset:/)) {
+        if (jQuery(this).find("option:selected").text().match(/Trial:/)) {
             jQuery("#data_structure").val("trial");
             jQuery("#analysis_pop_id").val(selectedTrial);
         } else {
             jQuery("#data_structure").val("dataset");
             jQuery("#analysis_pop_id").val(`dataset_${selectedTrial}`);
             jQuery("#analysis_pop_name").val(jQuery("#dataset_name").val());
-            console.log("Data structure set to 'dataset'");
-            console.log("Data structure set to 'dataset'");
+            
         }
         console.log("You have selected trial with ID: " + selectedTrial);
     } else {

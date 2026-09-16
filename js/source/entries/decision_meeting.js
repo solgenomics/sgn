@@ -982,7 +982,9 @@
         if (!$sel.length) return;
         $sel.empty().append('<option value="">(choose a list)</option>');
         ((resp && resp.lists) || []).forEach(function(li){
-          $sel.append('<option value="' + (li.list_id || '') + '">' + (li.name || ('List ' + li.list_id)) + '</option>');
+          var id = li.list_id || '';
+          var name = li.name || ('List ' + id);
+          $sel.append($('<option></option>').val(String(id)).text(String(name)));
         });
       });
     }
@@ -1045,8 +1047,8 @@
       var cur = normDecision(current);
       return '' +
         '<select class="dm-decision-select form-control input-sm ' + colorClass(cur) + '" ' +
-                'data-acc="' + String(acc || '').replace(/"/g, '&quot;') + '" ' +
-                'data-bp="' + String(bp || '').replace(/"/g, '&quot;') + '">' +
+                'data-acc="' + escapeHtml(acc) + '" ' +
+                'data-bp="' + escapeHtml(bp) + '">' +
           '<option value="">(select)</option>' +
           '<option value="drop"' +    (cur === 'drop'    ? ' selected' : '') + '>Drop</option>' +
           '<option value="hold"' +    (cur === 'hold'    ? ' selected' : '') + '>Hold</option>' +
@@ -1072,23 +1074,6 @@
         meeting_name: $checked.data('meeting-name'),
         meeting_date: $checked.data('meeting-date')
       };
-    }
-
-    function extractYearFromStage(stageValue){
-      var stage = String(stageValue || '').trim();
-      if (!stage) return '';
-
-      var parts = stage.split('-').map(function(part){
-        return String(part || '').trim();
-      }).filter(Boolean);
-
-      for (var i = 0; i < parts.length; i++) {
-        if (/^\d{2}$/.test(parts[i]) || /^\d{4}$/.test(parts[i])) {
-          return parts[i];
-        }
-      }
-
-      return '';
     }
 
     function normalizeStageList(raw){
@@ -1243,6 +1228,12 @@
         scrollX:true,
         scrollCollapse:true,
         deferRender:true,
+        columnDefs: [{
+          targets: [0, 1, 2, 3, 5, 6, 7, 8],
+          render: function(data, type){
+            return type === 'display' ? escapeHtml(data) : data;
+          }
+        }],
         drawCallback: function () {
           var api = this.api();
           setTimeout(function () {
@@ -1629,6 +1620,10 @@
         var dlg = document.getElementById('dm_save_dialog');
         if (dlg) dlg.close('saved');
 
+        document.dispatchEvent(new CustomEvent('meeting:decisions-saved', {
+          detail: { meeting_id: payload.meeting_id }
+        }));
+
         alert((data && (data.message || data.detail)) || 'All decisions were saved successfully.');
       } catch (e) {
         alert('Failed to save all decisions: ' + (e && e.message ? e.message : e));
@@ -1822,13 +1817,12 @@
         }
 
         var stageText = rowObj ? (rowObj.stage || '') : '';
-        var originalYear = rowObj ? (rowObj.year || '') : '';
         var previousNewStage = rowObj ? (rowObj.new_stage || '') : '';
         var stockId = rowObj ? (rowObj.stock_id || '') : '';
 
         var meetingYearFull = '';
         if (meetingDate) {
-          var m = String(meetingDate).match(/^(\d{4})-/);
+          var m = String(meetingDate).match(/^(\d{4})[\/-]/);
           if (m) {
             meetingYearFull = m[1];
           } else {
@@ -1883,7 +1877,7 @@
         }
 
         var selectedStage = '';
-        var stageYear = v === 'drop' ? (extractYearFromStage(stageText) || originalYear) : meetingYearFull;
+        var stageYear = meetingYearFull;
         if (v === 'advance' || v === 'jump') {
           $.ajax({
             url: (window.DM_API_BASE || '/ajax/decisionmeeting') + '/compute_new_stage',
@@ -2047,6 +2041,15 @@
     $('#create-meeting-error').hide().text('');
   }
 
+  function dmEscapeHtml(value){
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function ensureMultiProgramControl() {
     const $sel = $('#mtg_program');
     if (!$sel.length) return;
@@ -2094,6 +2097,61 @@
     $sel.attr('size', n);
   }
 
+  function twoDigit(value) {
+    return value < 10 ? '0' + value : String(value);
+  }
+
+  function formatMeetingDateForDisplay(date) {
+    return date.getFullYear() + '-' +
+      twoDigit(date.getMonth() + 1) + '-' +
+      twoDigit(date.getDate());
+  }
+
+  function meetingDateForServer(value) {
+    const match = $.trim(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return '';
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const parsed = new Date(year, month - 1, day);
+
+    if (parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day) {
+      return '';
+    }
+
+    return String(year) + '-' + twoDigit(month) + '-' + twoDigit(day);
+  }
+
+  function ensureMeetingDatePicker() {
+    const $date = $('#mtg_date');
+    if (!$date.length || !$.fn.datepicker) return;
+    if ($date.data('dmDatePickerInitialized')) return;
+
+    $date
+      .off('changeDate.dmMeetingDate')
+      .on('changeDate.dmMeetingDate', function(event) {
+        if (event && event.date instanceof Date && !isNaN(event.date.getTime())) {
+          $(this).val(formatMeetingDateForDisplay(event.date));
+        }
+      });
+
+    $date.datepicker({
+      // jQuery UI uses dateFormat; Bootstrap Datepicker uses format.
+      dateFormat: 'yy-mm-dd',
+      format: 'yyyy-mm-dd',
+      changeMonth: true,
+      changeYear: true,
+      autoclose: true,
+      onSelect: function(dateText) {
+        $(this).val(dateText);
+      }
+    });
+    $date.data('dmDatePickerInitialized', true);
+  }
+
   function buildPayload(){
     const progVals = $('#mtg_program').val();
     const programs = Array.isArray(progVals)
@@ -2106,7 +2164,7 @@
       breeding_programs:  programs,
       location:           $.trim($('#mtg_location').val() || ''),
       year:               String($('#mtg_year').val() || ''),
-      date:               $('#mtg_date').val() || '',
+      date:               meetingDateForServer($('#mtg_date').val()),
       data:               $.trim($('#mtg_data').val() || ''),
       attendees:          parseAttendees($('#mtg_attendees').val()).join(',')
     };
@@ -2115,8 +2173,9 @@
   function validate(p){
     if (!p.meeting_name) return 'Please enter the Meeting name.';
     if (!p.location) return 'Please enter the Location.';
-    if (!p.year || isNaN(Number(p.year))) return 'Please enter a valid Year.';
-    if (!p.date) return 'Please choose a Date.';
+    if (!/^\d{4}$/.test(p.year)) return 'Please enter the Year in YYYY format.';
+    if (!$.trim($('#mtg_date').val() || '')) return 'Please enter the Date in YYYY-MM-DD format.';
+    if (!p.date) return 'Please enter a valid Date in YYYY-MM-DD format.';
     if (!p.breeding_programs || p.breeding_programs.length === 0) return 'Please select at least one Breeding Program.';
     return '';
   }
@@ -2126,7 +2185,11 @@
     if (!$sel.length) return;
     if (!API_BASE) return;
     $sel.find('option:not([value=""])').remove();
-    $.ajax({ url: API_BASE + '/locations', dataType: 'json' })
+    $.ajax({
+      url: API_BASE + '/locations',
+      dataType: 'json',
+      cache: false
+    })
       .done(function(items){
         if (!items || !items.length) {
           return;
@@ -2134,7 +2197,9 @@
         (items || []).forEach(function(l){
           const id = l.location_id ?? '';
           const nm = l.name ?? String(id);
-          if (id !== '') $sel.append('<option value="' + id + '">' + nm + '</option>');
+          if (id !== '') {
+            $sel.append($('<option></option>').val(String(id)).text(String(nm)));
+          }
         });
       })
       .fail(function(){});
@@ -2146,11 +2211,17 @@
   let PEOPLE_PAGE = 1;
   let PEOPLE_SELECTED = new Set();
 
+  function dm_updateSelectedAttendeeCount() {
+    const count = PEOPLE_SELECTED.size;
+    $('#people_selected_count').text(count + ' selected');
+  }
+
   function normPerson(p){
+    p = p && typeof p === 'object' ? p : {};
     return {
-      first_name:    (p.first_name ?? p.first ?? p.given_name ?? '').trim(),
-      last_name:     (p.last_name  ?? p.last  ?? p.family_name ?? '').trim(),
-      contact_email: (p.contact_email ?? p.email ?? '').trim()
+      first_name:    String(p.first_name ?? p.first ?? p.given_name ?? '').trim(),
+      last_name:     String(p.last_name  ?? p.last  ?? p.family_name ?? '').trim(),
+      contact_email: String(p.contact_email ?? p.email ?? '').trim()
     };
   }
 
@@ -2202,6 +2273,7 @@
       $tbody.html('<tr><td colspan="4">No people found.</td></tr>');
       $('#people_pager').remove();
       dm_syncSelectAllState();
+      dm_updateSelectedAttendeeCount();
       return;
     }
 
@@ -2213,15 +2285,19 @@
       const key = personKey(p);
       const em  = p.contact_email || '';
       const checked = PEOPLE_SELECTED.has(key) ? ' checked' : '';
+      const safeKey = dmEscapeHtml(key);
+      const safeEmail = dmEscapeHtml(em);
+      const safeFirst = dmEscapeHtml(p.first_name || '');
+      const safeLast = dmEscapeHtml(p.last_name || '');
       return (
         '<tr>'
           + '<td class="text-center">'
             + `<input type="checkbox" class="person-check attendee-check" id="${id}"`
-              + ` data-key="${key}" data-email="${em}" data-first="${p.first_name || ''}" data-last="${p.last_name || ''}"${checked}>`
+              + ` data-key="${safeKey}" data-email="${safeEmail}" data-first="${safeFirst}" data-last="${safeLast}"${checked}>`
           + '</td>'
-          + `<td><label for="${id}" class="sr-only">Select ${p.first_name || 'person'}</label>${p.first_name || ''}</td>`
-          + `<td>${p.last_name || ''}</td>`
-          + `<td>${em}</td>`
+          + `<td><label for="${id}" class="sr-only">Select ${safeFirst || 'person'}</label>${safeFirst}</td>`
+          + `<td>${safeLast}</td>`
+          + `<td>${safeEmail}</td>`
         + '</tr>'
       );
     }).join('');
@@ -2234,6 +2310,7 @@
       $('#people_table').closest('.table-responsive').after(pagerHtml);
     }
     dm_syncSelectAllState();
+    dm_updateSelectedAttendeeCount();
   }
 
   function applyPeopleSearch(){
@@ -2301,6 +2378,7 @@
       else PEOPLE_SELECTED.delete(key);
       $row.toggleClass('selected', on);
       dm_syncSelectAllState();
+      dm_updateSelectedAttendeeCount();
     });
 
   $(document)
@@ -2316,24 +2394,22 @@
     });
 
   function dm_collectSelectedNames() {
-    const out = [];
-    $('#people_table tbody input.person-check:checked, #people_table tbody input.attendee-check:checked').each(function(){
-      const $cb   = $(this);
-      const first = String($cb.data('first') || '').trim();
-      const last  = String($cb.data('last') || '').trim();
-      let name    = [first, last].filter(Boolean).join(' ').trim();
-      if (!name) {
-        const $tr   = $cb.closest('tr');
-        const tds   = $tr.children('td');
-        const alt   = [tds.eq(1).text(), tds.eq(2).text()].map(function(s){ return (s || '').trim(); }).filter(Boolean).join(' ');
-        name = alt || String($cb.data('email') || '').trim();
-      }
-      if (name) out.push(name);
-    });
+    const out = PEOPLE_ALL
+      .filter(function(person) {
+        return PEOPLE_SELECTED.has(personKey(person));
+      })
+      .map(function(person) {
+        const name = [person.first_name, person.last_name]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        return name || person.contact_email || '';
+      })
+      .filter(Boolean);
     const seen = new Set();
-    return out.filter(function(n){
-      n = n.trim();
-      return n && !seen.has(n) && seen.add(n);
+    return out.filter(function(name){
+      const normalized = name.trim();
+      return normalized && !seen.has(normalized) && seen.add(normalized);
     });
   }
 
@@ -2345,7 +2421,8 @@
       if ($form.length) $form[0].reset();
       const now = new Date();
       $('#mtg_year').val(now.getFullYear());
-      $('#mtg_date').val(now.toISOString().slice(0,10));
+      ensureMeetingDatePicker();
+      $('#mtg_date').val(formatMeetingDateForDisplay(now));
       hideErr();
       ensureMultiProgramControl();
       $.ajax({ url: API_BASE + '/programs', dataType: 'json' })
@@ -2356,7 +2433,7 @@
           (items || []).forEach(function(p){
             const id = (p.program_id ?? p.name ?? '');
             const nm = (p.name ?? String(p.program_id));
-            $sel.append('<option value="' + id + '">' + nm + '</option>');
+            $sel.append($('<option></option>').val(String(id)).text(String(nm)));
           });
           upgradeMultiProgramUI(items);
           $sel.trigger('change');
@@ -2365,6 +2442,7 @@
       $('#people_search').val('');
       PEOPLE_PAGE = 1;
       PEOPLE_SELECTED = new Set();
+      dm_updateSelectedAttendeeCount();
       $('#mtg_attendees').val('');
       dm_loadPeople();
       const $modal = $('#createMeetingModal');
@@ -2435,12 +2513,12 @@
           $('#createMeetingModal').modal('hide');
           document.dispatchEvent(new CustomEvent('meeting:created', { detail: Object.assign({}, p, r) }));
         } else {
-          showErr((r && (r.message || r.detail)) || 'Unexpected server response.');
+          showErr((r && (r.message || r.msg || r.detail)) || 'Unexpected server response.');
         }
       })
       .fail(function (xhr) {
         const serverMsg =
-          (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.detail)) ||
+          (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.msg || xhr.responseJSON.detail)) ||
           xhr.responseText ||
           '';
 
@@ -2522,6 +2600,7 @@
   }
 
   function parseJSON(s){
+    if (s && typeof s === 'object') return s;
     try { return JSON.parse(s || '{}') || {}; }
     catch (e) { return {}; }
   }
@@ -2534,25 +2613,47 @@
     if (j.decisions_saved === true) return true;
     if (String(j.status || '').toLowerCase() === 'saved') return true;
     if (String(j.save_status || '').toLowerCase() === 'saved') return true;
+    if (String(j.saved_status || '').toLowerCase() === 'successfully') return true;
     if (j.saved_at) return true;
     if (j.date_saved) return true;
     return false;
   }
 
   function getMeetingProgramsText(j){
+    if (Array.isArray(j.breeding_program_names) && j.breeding_program_names.length) {
+      return j.breeding_program_names.join(', ');
+    }
+    if (j.breeding_program_name) return j.breeding_program_name;
     return Array.isArray(j.breeding_programs)
       ? j.breeding_programs.join(', ')
       : (j.breeding_programs || j.breeding_program || '');
   }
 
   function getMeetingAttendeesText(j){
-    return Array.isArray(j.attendees_list)
-      ? j.attendees_list.join(', ')
-      : (j.attendees || '');
+    if (Array.isArray(j.attendees_list)) return j.attendees_list.join(', ');
+    if (Array.isArray(j.attendees)) return j.attendees.join(', ');
+    return j.attendees || '';
   }
 
   function getMeetingNotesText(j){
     return j.notes || j.meeting_notes || j.data || '';
+  }
+
+  function normalizeMeetingDateForDisplay(value){
+    var match = String(value || '').trim().match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})$/);
+    if (!match) return '';
+
+    var year = Number(match[1]);
+    var month = Number(match[2]);
+    var day = Number(match[3]);
+    var parsed = new Date(year, month - 1, day);
+    if (parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day) {
+      return '';
+    }
+
+    return match[1] + '-' + match[2] + '-' + match[3];
   }
 
   function meetingCheckboxHtml(id, name, date, saved){
@@ -2630,13 +2731,13 @@
 
   function rowsToArrays(rows){
     return (rows || []).map(function(r){
-      var j = parseJSON(r.meeting_json);
+      var j = parseJSON(r.meeting_data || r.meeting_json);
       var id    = r.project_id;
-      var name  = j.meeting_name || r.project_name || '';
-      var date  = j.date || '';
-      var loc   = j.location_name || j.location || '';
-      var progs = getMeetingProgramsText(j);
-      var atts  = getMeetingAttendeesText(j);
+      var name  = r.meeting_name || j.meeting_name || r.project_name || '';
+      var date  = normalizeMeetingDateForDisplay(r.meeting_date || j.date || j.meeting_date || '');
+      var loc   = r.meeting_location || j.location_name || j.location || j.location_raw || '';
+      var progs = r.meeting_programs || getMeetingProgramsText(j);
+      var atts  = r.meeting_attendees || getMeetingAttendeesText(j);
       var notes = getMeetingNotesText(j);
       var saved = isMeetingSaved(j);
 
@@ -2674,7 +2775,10 @@
     $tbl.addClass('dm-loading');
 
     try {
-      var r = await fetch(url, { headers:{ 'Accept':'application/json' } });
+      var r = await fetch(url, {
+        cache: 'no-store',
+        headers:{ 'Accept':'application/json' }
+      });
       if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + r.statusText);
       var j = await r.json();
       var rows = j.rows || [];
@@ -2695,9 +2799,16 @@
   async function downloadMeetingReport(meetingId){
     var base = (window.DM_API_BASE || '/ajax/decisionmeeting');
     var url = base + '/meeting_report_html?meeting_id=' + encodeURIComponent(meetingId);
+    var reportWindow = window.open('', '_blank');
+
+    if (!reportWindow) {
+      throw new Error('Your browser blocked the report window. Allow pop-ups for this site and try again.');
+    }
+    reportWindow.opener = null;
 
     try {
       var resp = await fetch(url, {
+        cache: 'no-store',
         headers: { 'Accept': 'text/html,application/json' }
       });
 
@@ -2713,16 +2824,19 @@
         }
       }
 
-      window.open(url, '_blank');
+      reportWindow.location.href = url;
     } catch (err) {
-      alert(err && err.message ? err.message : 'Could not open meeting report.');
+      reportWindow.close();
       throw err;
     }
   }
 
-  document.addEventListener('meeting:created', function(){
+  function refreshMeetingTracker(){
     setTimeout(loadMeetingTracker, 200);
-  });
+  }
+
+  document.addEventListener('meeting:created', refreshMeetingTracker);
+  document.addEventListener('meeting:decisions-saved', refreshMeetingTracker);
 
   var dmMeetingResizeTimer = null;
 
@@ -2768,7 +2882,7 @@
       try {
         await downloadMeetingReport(meetingId);
       } catch (e) {
-        alert('Could not open the meeting report.');
+        alert(e && e.message ? e.message : 'Could not open the meeting report.');
       } finally {
         $btn.prop('disabled', false).text(original);
       }
