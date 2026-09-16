@@ -13,7 +13,7 @@ use CXGN::People::Person;
 use CXGN::Dataset;
 use CXGN::Dataset::File;
 use CXGN::Phenotypes::File;
-use File::Spec qw(catfile);
+use File::Spec;
 use File::Basename qw(basename);
 use File::Path qw(make_path);
 use Scalar::Util qw(looks_like_number);
