@@ -345,6 +345,7 @@ sub _search {
                     season => \%season,
                     collector => $_->{operator},
                     studyDbId => qq|$_->{trial_id}|,
+                    trialDbId => $_-> {folder_id} ? qq|$_->{folder_id}| : undef,
                     uploadedBy=> $_->{operator},
                     value => qq|$_->{phenotype_value}|,
                     # geoCoordinates => undef #needs to be implemented for v2.1
