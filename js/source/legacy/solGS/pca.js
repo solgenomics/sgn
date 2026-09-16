@@ -353,7 +353,15 @@ solGS.pca = {
             ],
             'rowId': function (a) {
                 return a[6];
-            }
+            },
+            columnDefs: [
+        {
+            targets: [1, 2, 3, 4, 5],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
        
         });
 

@@ -245,10 +245,18 @@ getSelectedPopCorrArgs: function (runCorrElemId) {
       'processing': true,
       'paging': true,
       'info': false,
-      'pageLength': 15,
+      'pageLength': 5,
       'rowId': function (a) {
         return a[6]
-      }
+      },
+      columnDefs: [
+        {
+            targets: [1, 2, 3, 4, 5],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
     });
   
     table.rows.add(data).draw();

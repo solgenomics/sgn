@@ -168,7 +168,15 @@ solGS.listTypeSelectionPopulation = {
       },
       "oLanguage": {
         "sSearch": "Filter"
-      }
+      },
+      columnDefs: [
+        {
+            targets: [1, 2, 3],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
     });
 
     table.rows.add(data).draw();

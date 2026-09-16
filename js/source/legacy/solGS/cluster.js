@@ -787,7 +787,15 @@ solGS.cluster = {
       'pageLength': 5,
       'rowId': function (a) {
         return a[8]
-      }
+      },
+      columnDefs: [
+        {
+            targets: [1, 2, 3, 4, 5, 6, 7],
+            orderable: false
+        }
+    ],
+
+    order: [[0, "asc"]]
     });
 
     table.rows.add(data).draw();
