@@ -254,6 +254,21 @@ has '_tissue_sample_of_cvterm_id' => (
     is => 'rw'
 );
 
+has '_plot_of_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
+has '_plant_of_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
+has '_subplot_of_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
 has '_protocolprop_markers_h' => (
     isa => 'Ref',
     is => 'rw'
@@ -407,6 +422,9 @@ sub get_genotype_info {
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot_of', 'stock_relationship')->cvterm_id();
 
     my @trials_accessions;
     foreach (@$trial_list){
@@ -442,6 +460,7 @@ sub get_genotype_info {
         push @where_clause, "stock.stock_id in ($stock_sql)";
         push @where_clause, "stock.type_id = $tissue_sample_cvterm_id";
     }
+    my $relationship_of_type_ids = "$tissue_sample_of_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id";
 
     #For genotyping_data_project
     if ($genotype_data_project_list && scalar(@$genotype_data_project_list)>0) {
@@ -504,7 +523,7 @@ sub get_genotype_info {
     my $q = "SELECT $stock_select, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype.genotype_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
-        LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
+        LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id IN ($relationship_of_type_ids))
         LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id)
         JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
         JOIN nd_experiment USING(nd_experiment_id)
@@ -546,7 +565,7 @@ sub get_genotype_info {
             $stock_obj_id = $stock_id;
         }
 
-        if ($stock_type_name eq 'tissue_sample'){
+        if ($stock_type_name eq 'tissue_sample' || $stock_type_name eq 'plot' || $stock_type_name eq 'plant' || $stock_type_name eq 'subplot'){
             if ($sample_unit_level eq 'genotyping_plate_sample_name') {
                 $germplasmName = $stock_name;
                 $germplasmDbId = $stock_id;
@@ -793,6 +812,13 @@ sub init_genotype_iterator {
     $self->_plant_cvterm_id($plant_cvterm_id);
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     $self->_tissue_sample_of_cvterm_id($tissue_sample_of_cvterm_id);
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    $self->_plot_of_cvterm_id($plot_of_cvterm_id);
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    $self->_plant_of_cvterm_id($plant_of_cvterm_id);
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+    $self->_subplot_of_cvterm_id($subplot_of_cvterm_id);
+    my $relationship_of_type_ids = "$tissue_sample_of_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id";
 
     my @trials_accessions;
     foreach (@$trial_list){
@@ -953,7 +979,7 @@ sub init_genotype_iterator {
     my $q = "SELECT $stock_select, igd_number_genotypeprop.value, nd_protocol.nd_protocol_id, nd_protocol.name, stock.uniquename, stock.type_id, stock_cvterm.name, genotype.genotype_id, genotype.uniquename, genotype.description, project.project_id, project.name, project.description, accession_of_tissue_sample.stock_id, accession_of_tissue_sample.uniquename, count(genotype.genotype_id) OVER() AS full_count
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
-        LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
+        LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id IN ($relationship_of_type_ids))
         LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id)
         JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
         JOIN nd_experiment USING(nd_experiment_id)
@@ -990,7 +1016,7 @@ sub init_genotype_iterator {
             $germplasmDbId = $stock_id;
             $stock_obj_id = $stock_id;
         }
-        if ($stock_type_name eq 'tissue_sample'){
+        if ($stock_type_name eq 'tissue_sample' || $stock_type_name eq 'plot' || $stock_type_name eq 'plant' || $stock_type_name eq 'subplot'){
             if ($sample_unit_level eq 'genotyping_plate_sample_name') {
                 $germplasmName = $stock_name;
                 $germplasmDbId = $stock_id;
