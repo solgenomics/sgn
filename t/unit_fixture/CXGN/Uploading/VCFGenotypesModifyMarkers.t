@@ -216,6 +216,7 @@ $upload_response = $ua->post(
         "upload_genotype_update_markers"=>1,
     ]
 );
+sleep(20);
 ok($upload_response->is_success, 'update-markers upload request succeeded at the HTTP level');
 $message_hash = decode_json $upload_response->decoded_content;
 is($message_hash->{success}, 1, 'upload succeeds when requesting the mismatched marker be updated') or diag(Dumper($message_hash));
