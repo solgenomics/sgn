@@ -179,12 +179,13 @@ $response = $ua5->post(
         "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
         "upload_genotype_add_new_accessions"=>0,
         "assay_type"=>"KASP",
+        "upload_genotype_accept_warnings"=>1,
     ]
 );
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-ok($message_hash->{nd_protocol_id}, "stocks-mode KASP upload with SampleName header succeeds");
+ok($message_hash->{nd_protocol_id}, "stocks-mode KASP upload with SampleName header succeeds") or diag(Dumper($message_hash));
 
 my $kasp_protocol_id_3 = $message_hash->{nd_protocol_id};
 
