@@ -172,7 +172,7 @@ solGS.heatmap = {
       .attr("id", heatmapPlotDivId)
       .attr("transform", "translate(0, 0)");
 
-    corrplot
+    var yAxisLabels = corrplot
       .append("g")
       .attr("class", "y_axis")
       .attr("transform", `translate(${pad.left}, ${pad.top})`)
@@ -402,7 +402,22 @@ solGS.heatmap = {
       if (!heatmapPlotDivId.match("#")) {
         heatmapPlotDivId = "#" + heatmapPlotDivId;
       }
-      jQuery(heatmapPlotDivId).append('<p style="margin: 20px 0px 0px 40px">' + downloadLinks + "</p>");
+
+    var longestYAxisLabelWidth = 0;
+    yAxisLabels.each(function () {
+      longestYAxisLabelWidth = Math.max(
+        longestYAxisLabelWidth,
+        this.getComputedTextLength()
+      );
+    });
+
+      var yAxisLabelsLeft = Math.max(
+      0,
+      Math.floor(pad.left - 10 - longestYAxisLabelWidth)
+    );
+      jQuery(heatmapPlotDivId).append(
+        `<p style="margin: 20px 0 0 ${yAxisLabelsLeft}px">${downloadLinks}</p>`
+      );
     }
   },
 
