@@ -52,6 +52,7 @@ sub get_selected_stocks {
     
     my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $protocol_info = $parameters[0];
@@ -239,7 +240,7 @@ sub get_selected_stocks {
 
                 SELECT DISTINCT stock1.stock_id, stock1.uniquename, stock2.stock_id, stock2.uniquename, cvterm.name FROM stock_table
                 JOIN stock AS stock1 ON (stock_table.stock_name = stock1.uniquename) AND stock1.type_id = ?
-                JOIN stock_relationship ON (stock_relationship.object_id = stock1.stock_id) AND stock_relationship.type_id IN (?,?,?)
+                JOIN stock_relationship ON (stock_relationship.object_id = stock1.stock_id) AND stock_relationship.type_id IN (?,?,?,?)
                 JOIN nd_experiment_stock ON stock_relationship.subject_id = nd_experiment_stock.stock_id
                 JOIN stock AS stock2 ON (nd_experiment_stock.stock_id = stock2.stock_id)
                 JOIN cvterm ON (stock2.type_id = cvterm.cvterm_id)
@@ -249,7 +250,7 @@ sub get_selected_stocks {
                 WHERE genotypeprop.value @> ?";
 
             my $h2= $schema->storage->dbh()->prepare($q2);
-            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1], $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1]);
+            $h2->execute($accession_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1], $accession_cvterm_id, $plot_of_cvterm_id, $plant_of_cvterm_id, $subplot_of_cvterm_id, $tissue_sample_of_cvterm_id, $genotyping_experiment_cvterm_id, $protocol_id, $vcf_snp_genotyping_cvterm_id, $param->[0], $param->[1]);
 
             while (my ($selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type) = $h2->fetchrow_array()){
                 push @selected_stocks_details, [$selected_accession_id, $selected_accession_name, $selected_sample_id, $selected_sample_name, $sample_type, $genotype_string ];

@@ -138,6 +138,79 @@ my $genotypes_search_1 = CXGN::Genotype::Search->new({
 my ($total_count_1, $data_1) = $genotypes_search_1->get_genotype_info();
 is($total_count_1, 5);
 
+#test upload kasp data using observation_unit_type_name "stocks" (mixed stock types).
+#Regression test: KASP.pm used to derive the CXGN::List::Validate plugin name by
+#appending 's' to the stock_type ('stocks' -> 'stockss'), which does not match any
+#plugin and caused this upload to die when the sample name header is "SampleName".
+my $add_genotyping_project_3 = CXGN::Genotype::StoreGenotypingProject->new({
+    chado_schema        => $schema,
+    dbh                 => $f->dbh(),
+    project_name        => 'kasp_project_3',
+    breeding_program_id => $breeding_program_id,
+    project_facility    => 'intertek',
+    data_type           => 'snp',
+    year                => '2023',
+    project_description => 'genotyping project for test',
+    nd_geolocation_id   => $location_id,
+    owner_id            => 41
+});
+ok(my $store_return_3 = $add_genotyping_project_3->store_genotyping_project(), "store genotyping project 3");
+
+my $gp_rs_3 = $schema->resultset('Project::Project')->find({ name => 'kasp_project_3' });
+my $genotyping_project_id_3 = $gp_rs_3->project_id();
+
+my $ua5 = LWP::UserAgent->new;
+$response = $ua5->post(
+    'http://localhost:3010/ajax/genotype/upload',
+    Content_Type => 'form-data',
+    Content => [
+        upload_genotype_data_kasp_file_input => [ $file, 'kasp_data_upload' ],
+        upload_genotype_kasp_marker_info_file_input => [ $marker_info_file, 'kasp_marker_info_upload' ],
+        "sgn_session_id"=>$sgn_session_id,
+        "upload_genotypes_species_name_input"=>"Manihot esculenta",
+        "upload_genotype_project_id"=>$genotyping_project_id_3,
+        "upload_genotype_location_select"=>$location_id,
+        "upload_genotype_year_select"=>"2023",
+        "upload_genotype_breeding_program_select"=>$breeding_program_id,
+        "upload_genotype_vcf_observation_type"=>"stocks",
+        "upload_genotype_vcf_facility_select"=>"intertek",
+        "upload_genotype_vcf_project_description"=>"test",
+        "upload_genotype_vcf_protocol_name"=>"kasp_protocol_3",
+        "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
+        "upload_genotype_add_new_accessions"=>0,
+        "assay_type"=>"KASP",
+        "upload_genotype_accept_warnings"=>1,
+    ]
+);
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+ok($message_hash->{nd_protocol_id}, "stocks-mode KASP upload with SampleName header succeeds") or diag(Dumper($message_hash));
+
+my $kasp_protocol_id_3 = $message_hash->{nd_protocol_id};
+
+my $protocol_3 = CXGN::Genotype::Protocol->new({
+    bcs_schema => $schema,
+    nd_protocol_id => $kasp_protocol_id_3
+});
+is($protocol_3->sample_observation_unit_type_name, 'stocks', "stocks-mode protocol stores sample_observation_unit_type_name as 'stocks'");
+
+my $genotypes_search_3 = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    people_schema=>$people_schema,
+    protocol_id_list=>[$kasp_protocol_id_3],
+});
+my ($total_count_3, $data_3) = $genotypes_search_3->get_genotype_info();
+is($total_count_3, 5, "stocks-mode upload stores the same genotype data as accession-mode upload");
+
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$kasp_protocol_id_3?sgn_session_id=$sgn_session_id");
+$response = decode_json $mech->content;
+is_deeply($response, {success=>1});
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$genotyping_project_id_3.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
 #test KASP data download from project page
 
 my $kasp_project_response = $ua->get("http://localhost:3010/breeders/download_kasp_genotyping_data_csv/?genotyping_project_id=$genotyping_project_id_1");
