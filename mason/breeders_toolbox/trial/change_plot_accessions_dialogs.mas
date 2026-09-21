@@ -34,7 +34,8 @@ $trial_stock_type
                             <div class="panel-body">
                                 <b>Header:</b><br>
                                 The first row (header) must contain the columns 'plot_name' and 'accession_name' or 'cross_unique_id' or 'family_name', depending on the stock type in this trial.<br>
-                                An optional additional column, 'new_plot_name' can be added to change the plot names:<br>
+                                An optional additional column, 'new_plot_name' can be added to change the plot names.<br>
+                                Alternatively, if a plot name template has been saved in association with this trial, 'new_plot_name' can be left blank and the template will be used to rename the plot.<br>
 
                                 <table style="margin-top: 3%;" class="table table-bordered table-hover">
                                   <tbody>

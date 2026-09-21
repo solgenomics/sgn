@@ -100,6 +100,13 @@ sub retrieve {
     my @overall_trait_names = sort keys %$overall_performance_hash;
     my @exact_trait_names = sort keys %$exact_performance_hash;
 
+    # for accession stockprops like synonym and variety, it is way too slow to create a CXGN::Stock::Accession for each plot.
+    # Instead, there needs to be one big call at the start to retrieve these stockprops and index them for the next loop
+    my %accessionprops = ();
+    if ($selected_cols{"variety"} || $selected_cols{"synonyms"}) {
+        %accessionprops = %{$self->_get_trial_accessionprops()};
+    }
+
     foreach my $design_info (@plot_design) {
         my $line;
         foreach (@possible_cols){
@@ -120,11 +127,9 @@ sub retrieve {
                     my $col = $design_info->{"col_number"} ? $design_info->{"col_number"} : '';
                     push @$line, $row."/".$col;
                 } elsif ($_ eq 'synonyms'){
-                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, join ',', @{$accession->synonyms}
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{synonyms} // "";
                 } elsif ($_ eq 'variety'){
-                    my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
-                    push @$line, $accession->variety;
+                    push @$line, $accessionprops{$design_info->{accession_id}}->{variety} // "";
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } else {

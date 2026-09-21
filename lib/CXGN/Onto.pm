@@ -118,7 +118,7 @@ sub get_root_nodes {
                     JOIN dbxref USING(dbxref_id)
                     JOIN db USING(db_id)
                     LEFT JOIN cvterm_relationship ON(cvterm.cvterm_id=cvterm_relationship.subject_id)
-                    WHERE cvterm_relationship.subject_id IS NULL AND cvterm.is_obsolete= 0 AND cvterm.is_relationshiptype = 0";
+                    WHERE cvterm_relationship.subject_id IS NULL AND cvterm.is_obsolete= 0 AND cvterm.is_relationshiptype = 0 AND db.name <> '' AND db.name <> 'null'";
 
       my $h = $self->schema->storage->dbh->prepare($query);
       $h->execute($cv_type);

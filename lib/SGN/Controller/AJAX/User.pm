@@ -38,7 +38,7 @@ sub login : Path('/ajax/user/login') Args(0) {
 	return;
     }
     elsif (exists($login_info->{account_disabled}) && $login_info->{account_disabled}) {
-	$c->stash->{rest} = { error => "This account has been disabled due to $login_info->{account_disabled}. Please contact the database to fix this problem." };
+	$c->stash->{rest} = { error => "This account has been deactivated due to $login_info->{account_disabled}. Please contact the database administrator to re-instate the account." };
 	return;
     }
     else {
@@ -398,7 +398,7 @@ sub forgot_username : Path('/ajax/user/forgot_username') Args(0) {
     $self->send_forgot_username_email_message($c, $email, \@person_ids);
 
     $c->stash->{rest} = {
-        message => "Username email sent. Please check your email for a message containing the username(s) of any accounts associated with your email address."
+        message => "Username email requested. If you have an account on this database with this email, you will receive a message that includes the username associated with this email address.  If you do not have an account with this email address, you will not receive a message."
     };
 }
 
@@ -410,33 +410,16 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
     my $email = $c->req->param('password_reset_email');
 
     my @person_ids = CXGN::People::Login->get_login_by_email($c->dbc->dbh(), $email);
-
-    if (!@person_ids) {
-	$c->stash->{rest} = { error => "The provided email ($email) is not associated with any account." };
-	return;
-    }
-
-    if (@person_ids > 1) {
-	$c->stash->{rest} = { message => "The provided email ($email) is associated with multiple accounts. An email is sent for each account. Please notify the database team using the contact form to consolidate the accounts." };
-    }
-
-    my @reset_links;
-    my @reset_tokens;
     foreach my $pid (@person_ids) {
         my $email_reset_token = $self->tempname();
         my $reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
-        print STDERR "Sending reset link $reset_link\n";
         $self->send_reset_email_message($c, $pid, $email, $reset_link, $person->{username});
-        push @reset_links, $reset_link;
-        push @reset_tokens, $email_reset_token;
     }
 
     $c->stash->{rest} = {
-        message => "Reset link sent. Please check your email and click on the link.",
-        reset_links => \@reset_links,
-        reset_tokens => \@reset_tokens
+        message => "Password reset email requested. If you have an account on this database with this email, you will receive a message with a password reset link.  If you do not have an account with this email address, you will not receive a message.",
     };
 }
 
@@ -487,14 +470,16 @@ sub send_forgot_username_email_message {
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         push(@usernames, $person->get_username());
     }
-    my $username_message = @usernames > 0 ? "The following username(s) are associated with your email address: " . join(', ', @usernames)
-        : "There are no accounts associated with your email address.";
 
-    my $project_name = $c->config->{project_name};
-    my $subject = "[$project_name] Forgot Username Request";
-    my $main_url = $c->config->{main_production_site_url};
+    # Only send a message if there is an account associated with the specified email address
+    if ( @usernames > 0 ) {
+        my $username_message = "The following username(s) are associated with your email address: " . join(', ', @usernames);
 
-    my $body = <<END_HEREDOC;
+        my $project_name = $c->config->{project_name};
+        my $subject = "[$project_name] Forgot Username Request";
+        my $main_url = $c->config->{main_production_site_url};
+
+        my $body = <<END_HEREDOC;
 
 Hi,
 
@@ -512,7 +497,8 @@ Your friends at $project_name
 
 END_HEREDOC
 
-   CXGN::Contact::send_email($subject, $body, $email);
+        CXGN::Contact::send_email($subject, $body, $email);
+    }
 }
 
 sub send_reset_email_message {
@@ -708,7 +694,7 @@ ername.";}
     $new_user_login->set_password($password);
 
     $new_user_login->store();
-    
+
     my $new_user_person_id=$new_user_login->get_sp_person_id();
     my $new_user = CXGN::People::Person->new($c->dbc->dbh, $new_user_person_id);
 
@@ -718,7 +704,7 @@ ername.";}
 	$new_user->set_user_type(encode_entities($new_user_type));
 	$new_user->set_first_name(encode_entities($first_name));
 	$new_user->set_last_name(encode_entities($last_name));
-	
+
 	$new_user->store();
     };
 

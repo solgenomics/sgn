@@ -167,16 +167,26 @@ sub get_rosners_test_outliers :Path('/ajax/dataset/rosner_test') Args(1) {
         $stat_file_path
     ));
 
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
+
     my $job = CXGN::Job->new({
         schema => $c->dbic_schema("Bio::Chado::Schema"),
         people_schema => $c->dbic_schema("CXGN::People::Schema"),
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $user,
         name => $dataset->name()." Rosner's test outliers",
         results_page => "/dataset/$dataset_id",
         job_type => 'phenotypic_analysis',
         cmd => $cmd_str,
-        cxgn_tools_run_config => $cxgn_tools_run_config,
-        finish_logfile => $c->config->{job_finish_log}
+        cxgn_tools_run_config => $cxgn_tools_run_config
     });
 
     $job->submit();
@@ -481,6 +491,7 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
     my $dbuser = $c->config->{dbuser};
     my $dbname = $c->config->{dbname};
     my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
     
     my $cmd = "mx-run CXGN::Dataset::ToolCompatibility".
                 " --dataset_id $dataset_id".
@@ -496,12 +507,16 @@ sub calc_tool_compatibility :Path('/ajax/dataset/calc_tool_compatibility') Args(
         my $job = CXGN::Job->new({
             schema => $c->dbic_schema("Bio::Chado::Schema"),
             people_schema => $c->dbic_schema("CXGN::People::Schema"),
+            dbhost => $dbhost,
+            dbname => $dbname,
+            dbuser => $dbuser,
+            dbpass => $dbpass,
+            basepath => $basepath,
             sp_person_id => $user,
             name => $dataset->name()." tool compatibility check",
             results_page => "/dataset/$dataset_id",
             job_type => 'tool_compatibility',
-            cmd => $cmd,
-            finish_logfile => $c->config->{job_finish_log}
+            cmd => $cmd
         });
 
         $job->submit();

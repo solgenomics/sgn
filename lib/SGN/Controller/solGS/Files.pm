@@ -1027,7 +1027,7 @@ sub get_solgs_dirs {
     my $solgs_lists     = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'lists');
     my $solgs_datasets  = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'datasets');
 
-    make_path([$solgs_lists, $solgs_datasets, $analysis_log_dir], { mode => oct('0755') });
+    make_path(($solgs_lists, $solgs_datasets, $analysis_log_dir), { mode => oct('0755') });
     $c->stash->{solgs_lists_dir} = $solgs_lists;
     $c->stash->{solgs_datasets_dir} = $solgs_datasets;
     $c->stash->{analysis_log_dir} = $analysis_log_dir;

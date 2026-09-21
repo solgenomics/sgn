@@ -986,6 +986,27 @@ sub get_stocks_with_images {
         push @query_values, $stock_type_name;
     }
 
+    $q .= "
+        UNION
+
+        SELECT DISTINCT acc.uniquename
+        FROM project AS p
+        JOIN nd_experiment_project AS nep ON nep.project_id = p.project_id
+        JOIN nd_experiment AS ne ON ne.nd_experiment_id = nep.nd_experiment_id
+        JOIN nd_experiment_stock AS nes ON nes.nd_experiment_id = ne.nd_experiment_id
+        JOIN stock AS plot ON plot.stock_id = nes.stock_id
+        JOIN stock_relationship AS sr ON sr.subject_id = plot.stock_id
+        JOIN cvterm AS srt ON srt.cvterm_id = sr.type_id AND srt.name = 'plot_of'
+        JOIN stock AS acc ON acc.stock_id = sr.object_id
+        JOIN cvterm AS acct ON acct.cvterm_id = acc.type_id AND acct.name = 'accession'
+        JOIN phenome.stock_image AS si2 ON si2.stock_id = acc.stock_id
+        JOIN metadata.md_image AS mi2 ON mi2.image_id = si2.image_id
+        JOIN phenome.project_md_image AS pmi ON pmi.image_id = mi2.image_id
+        JOIN cvterm AS pmit ON pmit.cvterm_id = pmi.type_id AND pmit.name = 'trial_associated_image'
+        WHERE p.project_id = ? AND mi2.obsolete = 'f' AND pmi.project_id = ?
+    ";
+    push @query_values, ($trial_id, $trial_id);
+
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute(@query_values);
     while (my ($stock_name) = $h->fetchrow_array()) {

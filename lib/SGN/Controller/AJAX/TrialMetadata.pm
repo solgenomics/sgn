@@ -139,7 +139,7 @@ sub delete_trial_data_GET : Chained('trial') PathPart('delete') Args(1) {
 
         $error = $c->stash->{trial}->delete_phenotype_metadata($metadata_schema, $phenome_schema);
         $error .= $c->stash->{trial}->delete_phenotype_data($c->config->{basepath}, $c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, $temp_file_nd_experiment_id);
-        
+
         my $trial_id = $c->stash->{trial}->get_trial_id();
         ### remove cached analyses result from this trial data
         $c->controller('solGS::clearCache')->clear_cached_analyses_result($c, {'trials' => [$trial_id]});
@@ -384,14 +384,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $rel_type_id;
     my $total_complete_number;
     # print STDERR "trial phenotypes: START DATE: $start_date. END DATE: $end_date, INLCUDE DATELESS $include_dateless_items, DIPLAY = $display\n";
-    my $stocks_per_accession;
     if ($display eq 'plots') {
         if ($group_by_accession) {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
             $select_clause_additional = ', accession.uniquename, accession.stock_id';
             $group_by_additional = ', accession.stock_id, accession.uniquename';
-            $stocks_per_accession = $c->stash->{trial}->get_plots_per_accession();
             $order_by_additional = ' , accession.uniquename DESC';
         } else {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
@@ -406,7 +404,6 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
             $select_clause_additional = ', accession.uniquename, accession.stock_id';
             $group_by_additional = ', accession.stock_id, accession.uniquename';
-            $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
             $order_by_additional = ' , accession.uniquename DESC';
         } else {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
@@ -427,13 +424,12 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
             $select_clause_additional = ', accession.uniquename, accession.stock_id';
             $group_by_additional = ', accession.stock_id, accession.uniquename';
-            $stocks_per_accession = $c->stash->{trial}->get_plants_per_accession();
             $order_by_additional = ' , accession.uniquename DESC';
         } else {
             $stock_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
             $rel_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
-            my $subplots = $c->stash->{trial}->get_subplots();
-            $total_complete_number = scalar (@$subplots);
+            my $tissue_samples = $c->stash->{trial}->get_tissue_samples();
+            $total_complete_number = scalar (@$tissue_samples);
         }
     }
     if ($display eq 'analysis_instance') {
@@ -516,11 +512,78 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     # print STDERR "date params : $date_params\n";
 
+    # When the results are grouped, the denominator of the percent missing
+    # calculation has to be the number of observation units in the group, not
+    # the number of observation units in the whole trial. This matters most for
+    # treatments, which are grouped by cvterm AND value (eg 'fertilizer=high'):
+    # an observation unit that received the same treatment at a different level
+    # belongs to a different group and must not be counted as missing here.
+    # This also collects every group in the trial, so that groups with no
+    # measurement at all of a given trait can be reported rather than
+    # dropped from the table.
+    my $group_key = sub {
+        my ($accession_id, $treatment) = @_;
+        return join('|', defined $accession_id ? $accession_id : '', defined $treatment ? $treatment : '');
+    };
+    my %group_totals;
+    my %group_info;
+
+    # $stocks_measured counts distinct observation units, not observations: an
+    # observation unit measured more than once for the same trait is still a
+    # single observation unit that is not missing. This fixes %missing being 
+    # wrong for repetitive measurements, where num phenotypes could be greater
+    # than num stocks (even if some stocks didn't get measured!)
+    my $percent_missing_for = sub {
+        my ($stocks_measured, $group_size) = @_;
+        return "0%" if (!$group_size || $group_size <= $stocks_measured);
+        return sprintf("%.2f", 100 - (($stocks_measured/$group_size)*100))."%";
+    };
+
+    my $is_grouped = $select_clause_additional || $group_by_treatments;
+
+    # This is where we get group totals for treatments, accessions, and treatments+accessions
+    if ($is_grouped) {
+        my $group_by_clause = "$group_by_additional $treatment_group_by";
+        $group_by_clause =~ s/^\s*,\s*//;#make sure no extra commas get put in between clauses
+
+        my $qg = "$treatment_with
+        SELECT
+            count(DISTINCT plot.stock_id) AS n_stocks
+            $select_clause_additional
+            $treatment_select
+            FROM stock AS plot
+            JOIN nd_experiment_stock ON nd_experiment_stock.stock_id = plot.stock_id
+            JOIN nd_experiment_project USING(nd_experiment_id)
+            JOIN stock_relationship ON plot.stock_id = stock_relationship.subject_id
+            JOIN stock AS accession ON accession.stock_id = stock_relationship.object_id
+            $treatment_join
+            WHERE project_id                = ?
+            AND stock_relationship.type_id  = ?
+            AND plot.type_id                = ?
+            AND accession.type_id           = ?
+            GROUP BY $group_by_clause";
+
+        my $hg = $dbh->prepare($qg);
+        $hg->execute($trial_id, $rel_type_id, $stock_type_id, $trial_stock_type_id);
+
+        while (my @group_row = $hg->fetchrow_array()) {
+            my $n_stocks = shift @group_row;
+            my ($accession_name, $accession_id, $treatment, $treatment_id);
+            ($accession_name, $accession_id) = splice(@group_row, 0, 2) if $select_clause_additional;
+            ($treatment, $treatment_id) = splice(@group_row, 0, 2) if $group_by_treatments;
+
+            my $key = $group_key->($accession_id, $treatment);
+            $group_totals{$key} = $n_stocks;
+            $group_info{$key} = [ $accession_name, $accession_id, $treatment, $treatment_id ];
+        }
+    }
+
     my $q1 = "$treatment_with
     SELECT
         (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
         count(phenotype.value)                             AS n_obs,
+        count(DISTINCT plot.stock_id)                      AS n_stocks,
         to_char(avg(phenotype.value::real), 'FM999990.990') AS avg_val,
         to_char(max(phenotype.value::real), 'FM999990.990') AS max_val,
         to_char(min(phenotype.value::real), 'FM999990.990') AS min_val,
@@ -559,12 +622,21 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @phenotype_data;
     my %numeric_trait_ids;
+    my %traits_seen;
+    my %groups_seen_by_trait;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $treatment, $treatment_id) = $h1->fetchrow_array()) {
+    while (my @row = $h1->fetchrow_array()) {
+
+        my ($trait, $trait_id, $count, $stock_count, $average, $max, $min, $stddev) = splice(@row, 0, 8);
+        my ($stock_name, $stock_id, $treatment, $treatment_id);
+        ($stock_name, $stock_id) = splice(@row, 0, 2) if $select_clause_additional;
+        ($treatment, $treatment_id) = splice(@row, 0, 2) if $group_by_treatments;
 
         next if ($trait =~ m/_TREATMENT/);
 
         $numeric_trait_ids{$trait_id} = 1;
+        $traits_seen{$trait_id} = $trait;
+        $groups_seen_by_trait{$trait_id}->{ $group_key->($stock_id, $treatment) } = 1;
 
         my $cv = 0;
         if ($stddev && $average != 0) {
@@ -578,25 +650,26 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
         my @return_array;
         if ($select_clause_additional && $stock_name && $stock_id) {
-            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
         if ($group_by_treatments) {
-            if ($select_clause_additional) {
-                push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
-            }
-            else {
-                push @return_array, qq{<a href="/cvterm/$stock_id/view">$stock_name</a>};
-            }
-        }
-        my $percent_missing = '';
-        if ($total_complete_number > $count){
-            $percent_missing = sprintf("%.2f", 100 -(($count/$total_complete_number)*100))."%";
-        } else {
-            $percent_missing = "0%";
+            push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
         }
 
-        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+        if ($is_grouped) {
+            $total_complete_number = $group_totals{ $group_key->($stock_id, $treatment) } || 0;
+        }
+
+        my $percent_missing = $percent_missing_for->($stock_count, $total_complete_number);
+
+        my $trait_histogram_link = '';
+        if ($group_by_treatments || $group_by_accession || $percent_missing eq "100%" || !$trait_id) {
+            $trait_histogram_link = '<span class="glyphicon glyphicon-stats"></span>';
+        } else {
+            $trait_histogram_link = qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>};
+        }
+
+        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, $trait_histogram_link );
         push @phenotype_data, \@return_array;
 
     }
@@ -617,7 +690,8 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     SELECT
         (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
         cvterm.cvterm_id,
-        count(phenotype.value) AS n_obsx
+        count(phenotype.value) AS n_obsx,
+        count(DISTINCT plot.stock_id) AS n_stocks
         $select_clause_additional
         $treatment_select
         FROM phenotype
@@ -648,23 +722,60 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     $h->execute($c->stash->{trial_id}, $rel_type_id, $stock_type_id, $trial_stock_type_id, @date_placeholders);
 
-    while (my ($trait, $trait_id, $count, $stock_name, $stock_id, $treatment, $treatment_id) = $h->fetchrow_array()) {
+    while (my @row = $h->fetchrow_array()) {
+
+        my ($trait, $trait_id, $count, $stock_count) = splice(@row, 0, 4);
+        my ($stock_name, $stock_id, $treatment, $treatment_id);
+        ($stock_name, $stock_id) = splice(@row, 0, 2) if $select_clause_additional;
+        ($treatment, $treatment_id) = splice(@row, 0, 2) if $group_by_treatments;
+
         next if ($trait =~ m/_TREATMENT/);
+
+        $traits_seen{$trait_id} = $trait;
+        $groups_seen_by_trait{$trait_id}->{ $group_key->($stock_id, $treatment) } = 1;
+
 	    my @return_array;
         if ($select_clause_additional && $stock_name && $stock_id) {
-            $total_complete_number = scalar (@{$stocks_per_accession->{$stock_id}});
             push @return_array, qq{<a href="/stock/$stock_id/view">$stock_name</a>};
         }
         if ($group_by_treatments) {
-            if ($select_clause_additional) {
-                push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
-            }
-            else {
-                push @return_array, qq{<a href="/cvterm/$stock_id/view">$stock_name</a>};
+            push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
+        }
+
+        if ($is_grouped) {
+            $total_complete_number = $group_totals{ $group_key->($stock_id, $treatment) } || 0;
+        }
+
+        my $percent_missing = $percent_missing_for->($stock_count, $total_complete_number);
+
+	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, $percent_missing, qq{<span class="glyphicon glyphicon-stats"></span></a>} );
+        push @phenotype_data, \@return_array;
+    }
+
+    # Both queries above get stocks after first getting phenotypes, which means
+    # that an accession could be in the trial that has NO values measured for a
+    # trait. The result is that a 100% missing row is dropped entirely and not
+    # reported at all. This section is for that case. 
+    if ($is_grouped) {
+        foreach my $trait_id (sort keys %traits_seen) {
+            my $trait = $traits_seen{$trait_id};
+
+            foreach my $key (sort keys %group_totals) {
+                next if $groups_seen_by_trait{$trait_id}->{$key};
+
+                my ($accession_name, $accession_id, $treatment, $treatment_id) = @{$group_info{$key}};
+
+                my @return_array;
+                if ($select_clause_additional && $accession_name && $accession_id) {
+                    push @return_array, qq{<a href="/stock/$accession_id/view">$accession_name</a>};
+                }
+                if ($group_by_treatments) {
+                    push @return_array, qq{<a href="/cvterm/$treatment_id/view">$treatment</a>};
+                }
+                push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", 0, $percent_missing_for->(0, $group_totals{$key}), qq{<span class="glyphicon glyphicon-stats"></span>} );
+                push @phenotype_data, \@return_array;
             }
         }
-	    push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, "NA", "NA", "NA", "NA", "NA", $count, "NA", qq{<span class="glyphicon glyphicon-stats"></span></a>} );
-        push @phenotype_data, \@return_array;
     }
 
     $c->stash->{rest} = { data => \@phenotype_data };
@@ -2292,8 +2403,8 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
     }
     unlink $upload_tempfile;
     my $parser = CXGN::Trial::ParseUpload->new(
-        chado_schema => $schema, 
-        filename => $archived_filename_with_path, 
+        chado_schema => $schema,
+        filename => $archived_filename_with_path,
         trial_id => $trial_id
     );
     $parser->load_plugin('TrialChangePlotAccessions');
@@ -2341,66 +2452,144 @@ sub trial_change_plot_accessions_upload : Chained('trial') PathPart('change_plot
             schema => $schema,
             trial_id => $trial_id,
             data_level => 'plots',
-            selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1},
+            selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1,"block_number"=>1,"rep_number"=>1,"range_number"=>1,"row_number"=>1,"col_number"=>1,"trial_name"=>1},
         });
     my @layout = @{$trial_layout_download->get_layout_output()->{output}};
-    shift @layout;
+    my $layout_header = shift @layout;
+    my %col_idx;
+    for my $i (0..$#$layout_header) { $col_idx{$layout_header->[$i]} = $i; }
+
+    # Look up naming template for this trial
+    my ($template_name_attributes, $bp_name);
+    my $plot_name_template_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_autogenerated_name_metadata', 'project_property');
+    if ($plot_name_template_cvterm) {
+        my $tmpl_rs = $schema->resultset("Project::Projectprop")->find({
+            project_id => $trial_id,
+            type_id    => $plot_name_template_cvterm->cvterm_id,
+        });
+        if ($tmpl_rs) {
+            my $tmpl = decode_json($tmpl_rs->value);
+            my ($fmt) = keys %$tmpl;
+            $template_name_attributes = $tmpl->{$fmt}->{name_attributes};
+            my $program_object = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+            my $bp_data = $program_object->get_breeding_programs_by_trial($trial_id);
+            $bp_name = $bp_data->[0]->[1] // '';
+        }
+    }
 
     my $rep_hash = {};
+    my %valid_plot_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
 
     my $upload_change_plot_accessions_txn = sub {
+        my %plot_info_by_id;
 
         foreach my $plot_row (@layout) {
-            my @row = @$plot_row;
-            my $plot_name = $row[0];
-            my $plot_id = $row[1];
-            my $accession_name = $row[2];
-            my $accession_id = $row[3];
-            my $plot_number = $row[4];
+            my $plot_name    = $plot_row->[$col_idx{plot_name}];
+            my $plot_id_v    = $plot_row->[$col_idx{plot_id}];
+            my $accession_name = $plot_row->[$col_idx{accession_name}];
+            my $accession_id = $plot_row->[$col_idx{accession_id}];
+            my $plot_number  = $plot_row->[$col_idx{plot_number}];
+            my $block_number = $plot_row->[$col_idx{block_number}];
+            my $range_number = $plot_row->[$col_idx{range_number}];
+            my $row_number   = $plot_row->[$col_idx{row_number}];
+            my $col_number   = $plot_row->[$col_idx{col_number}];
+            my $trial_name_v = $plot_row->[$col_idx{trial_name}];
 
             $parsed_data->{$plot_name}->{'old_accession_name'} = $accession_name;
             $parsed_data->{$plot_name}->{'old_accession_id'} = $accession_id;
-            $parsed_data->{$plot_name}->{'plot_id'} = $plot_id;
+            $parsed_data->{$plot_name}->{'plot_id'} = $plot_id_v;
             $parsed_data->{$plot_name}->{'plot_number'} = $plot_number;
 
-            $rep_hash->{$accession_id}->{'start'}->{$plot_id} = {
-                plot_number => $plot_number
+            $rep_hash->{$accession_id}->{'start'}->{$plot_id_v} = { plot_number => $plot_number };
+
+            $plot_info_by_id{$plot_id_v} = {
+                plot_name      => $plot_name,
+                accession_name => $accession_name,
+                plot_number    => $plot_number  // '',
+                block_number   => $block_number // '',
+                range_number   => $range_number // '',
+                row_number     => $row_number   // '',
+                col_number     => $col_number   // '',
+                trial_name     => $trial_name_v || '',
             };
         }
 
+        my %new_plot_names_by_id;
+        foreach my $val (values %$parsed_data) {
+            next unless $val->{plot_id} && $val->{new_plot_name};
+            $new_plot_names_by_id{$val->{plot_id}} = $val->{new_plot_name};
+        }
+
+        # swap accessions
+        my %swapped_plots;
         while (my ($key, $val) = each(%$parsed_data)){
-            my $plot_id = $val->{plot_id};
-            my $new_accession_name = $val->{new_accession_name} ? $val->{new_accession_name} : undef;
+            my $plot_id_v        = $val->{plot_id};
             my $new_accession_id = $val->{new_accession_id} ? $val->{new_accession_id} : undef;
             my $old_accession_id = $val->{old_accession_id};
-            my $old_accession_name = $val->{old_accession_name};
-            my $old_plot_name = $val->{old_plot_name};
-            my $new_plot_name = $val->{new_plot_name} ? $val->{new_plot_name} : undef;
-            my $plot_number = $val->{plot_number};
-
-
+            my $plot_number      = $val->{plot_number};
 
             if ($new_accession_id) {
-                $rep_hash->{$new_accession_id}->{add}->{$plot_id} = {
-                    plot_number => $plot_number
-                };
-                $rep_hash->{$old_accession_id}->{remove}->{$plot_id} = {
-                    plot_number => $plot_number
-                };
-                my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
+                $rep_hash->{$new_accession_id}->{add}->{$plot_id_v}    = { plot_number => $plot_number };
+                $rep_hash->{$old_accession_id}->{remove}->{$plot_id_v} = { plot_number => $plot_number };
+                my $replace_accession_error = $replace_accession_fieldmap->replace_plot_accession_fieldMap($plot_id_v, $old_accession_id, $new_accession_id, $plot_of_type_id);
                 if ($replace_accession_error) {
                     die "$replace_accession_error\n";
                 }
-                if ($new_plot_name) {
-                    my $replace_plot_name_error = $replace_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $old_plot_name, $new_plot_name);
-                    if ($replace_plot_name_error) {
-                        die "$replace_plot_name_error\n";
-                    }
-                }
+                $swapped_plots{$plot_id_v} = $val->{new_accession_name};
             }
         }
 
         $replace_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
+
+        # apply new plot names to all rep-affected plots
+        my %affected_ids;
+        foreach my $acc_id (keys %$rep_hash) {
+            next unless $rep_hash->{$acc_id}->{add} || $rep_hash->{$acc_id}->{remove};
+            $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{start} // {}};
+            $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{add}   // {}};
+        }
+
+        foreach my $affected_id (keys %affected_ids) {
+            next unless $plot_info_by_id{$affected_id};
+            my $current_plot_name = $plot_info_by_id{$affected_id}->{plot_name};
+            my $effective_new_name;
+
+            if ($new_plot_names_by_id{$affected_id}) {
+                $effective_new_name = $new_plot_names_by_id{$affected_id};
+            } elsif ($template_name_attributes) {
+                my $rep_row = $schema->resultset("Stock::Stockprop")->find({ type_id => $rep_number_id, stock_id => $affected_id });
+                my $new_rep_number = $rep_row ? $rep_row->value : '';
+                my $acc_name = exists $swapped_plots{$affected_id} ? $swapped_plots{$affected_id} : $plot_info_by_id{$affected_id}->{accession_name};
+                my %source = (
+                    breedingProgram => $bp_name,
+                    trialName       => $plot_info_by_id{$affected_id}->{trial_name},
+                    accessionName   => $acc_name,
+                    plotNumber      => $plot_info_by_id{$affected_id}->{plot_number},
+                    blockNumber     => $plot_info_by_id{$affected_id}->{block_number},
+                    repNumber       => $new_rep_number,
+                    rangeNumber     => $plot_info_by_id{$affected_id}->{range_number},
+                    rowNumber       => $plot_info_by_id{$affected_id}->{row_number},
+                    colNumber       => $plot_info_by_id{$affected_id}->{col_number},
+                );
+                my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
+                $effective_new_name = join('_', @parts);
+            } else {
+                my $old_acc_name = $plot_info_by_id{$affected_id}->{accession_name};
+                my $new_acc_name = exists $swapped_plots{$affected_id} ? $swapped_plots{$affected_id} : $old_acc_name;
+                if ($new_acc_name ne $old_acc_name) {
+                    (my $candidate = $current_plot_name) =~ s/\Q$old_acc_name\E/$new_acc_name/;
+                    $effective_new_name = $candidate if $candidate ne $current_plot_name;
+                }
+            }
+
+            if ($effective_new_name && $effective_new_name ne $current_plot_name) {
+                my $err = $replace_accession_fieldmap->replace_plot_name_fieldMap($affected_id, $current_plot_name, $effective_new_name);
+                if ($err) {
+                    die "$err\n";
+                }
+            }
+        }
+
         $replace_accession_fieldmap->_regenerate_trial_layout_cache();
     };
     eval {
@@ -3141,47 +3330,85 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
         schema => $schema,
         trial_id => $trial_id,
         data_level => 'plots',
-        selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1},
+        selected_columns => {"plot_name"=>1,"plot_id"=>1,"accession_name"=>1,"accession_id"=>1,"plot_number"=>1,"block_number"=>1,"rep_number"=>1,"range_number"=>1,"row_number"=>1,"col_number"=>1,"trial_name"=>1},
     });
-    my @layout = @{$trial_layout_download->get_layout_output()->{output}};
-    shift @layout;
+    my @layout_rows = @{$trial_layout_download->get_layout_output()->{output}};
+    my $layout_header = shift @layout_rows;
+    my %col_idx;
+    for my $i (0..$#$layout_header) { $col_idx{$layout_header->[$i]} = $i; }
 
     my $rep_hash = {};
     my $plot_hash = {};
+    my %plot_info;
 
-    foreach my $plot_row (@layout) {
-        my @row = @$plot_row;
-        my $plot_name = $plot_row->[0];
-        my $plot_id = $plot_row->[1];
-        my $accession_name = $plot_row->[2];
-        my $accession_id = $plot_row->[3];
-        my $plot_number = $plot_row->[4];
+    foreach my $plot_row (@layout_rows) {
+        my $pname        = $plot_row->[$col_idx{plot_name}];
+        my $pid          = $plot_row->[$col_idx{plot_id}];
+        my $acc_name     = $plot_row->[$col_idx{accession_name}];
+        my $acc_id       = $plot_row->[$col_idx{accession_id}];
+        my $plot_number  = $plot_row->[$col_idx{plot_number}];
+        my $block_number = $plot_row->[$col_idx{block_number}];
+        my $range_number = $plot_row->[$col_idx{range_number}];
+        my $row_number   = $plot_row->[$col_idx{row_number}];
+        my $col_number   = $plot_row->[$col_idx{col_number}];
+        my $trial_name_v = $plot_row->[$col_idx{trial_name}];
 
-        $rep_hash->{$accession_id}->{'start'}->{$plot_id} = {
-            plot_number => $plot_number
-        };
-
-        $plot_hash->{$plot_id} = {
-            plot_number => $plot_number
+        $rep_hash->{$acc_id}->{'start'}->{$pid} = { plot_number => $plot_number };
+        $plot_hash->{$pid} = { plot_number => $plot_number };
+        $plot_info{$pid} = {
+            plot_name      => $pname,
+            accession_name => $acc_name,
+            plot_number    => $plot_number  // '',
+            block_number   => $block_number // '',
+            range_number   => $range_number // '',
+            row_number     => $row_number   // '',
+            col_number     => $col_number   // '',
+            trial_name     => $trial_name_v || '',
         };
     }
 
+    # Look up naming template for this trial
+    my ($template_name_attributes, $bp_name);
+    my $plot_name_template_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_autogenerated_name_metadata', 'project_property');
+    if ($plot_name_template_cvterm) {
+        my $tmpl_rs = $schema->resultset("Project::Projectprop")->find({
+            project_id => $trial_id,
+            type_id    => $plot_name_template_cvterm->cvterm_id,
+        });
+        if ($tmpl_rs) {
+            my $tmpl = decode_json($tmpl_rs->value);
+            my ($fmt) = keys %$tmpl;
+            $template_name_attributes = $tmpl->{$fmt}->{name_attributes};
+            my $program_object = CXGN::BreedersToolbox::Projects->new({ schema => $schema });
+            my $bp_data = $program_object->get_breeding_programs_by_trial($trial_id);
+            $bp_name = $bp_data->[0]->[1] || '';
+        }
+    }
 
     my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $accession_rs = $schema->resultset("Stock::Stock")->search({
         uniquename => $new_accession
     });
+    if (!$accession_rs || $accession_rs->count() < 1) {
+        $c->stash->{rest} = { error => "Could not find accession $new_accession - does it exist?" };
+        return;
+    }
     $accession_rs = $accession_rs->next();
     my $new_accession_id = $accession_rs->stock_id;
     my $old_accession_rs = $schema->resultset("Stock::Stock")->search({
         uniquename => $old_accession
     });
+    if (!$old_accession_rs || $old_accession_rs->count() < 1) {
+        $c->stash->{rest} = { error => "Could not find accession $old_accession - does it exist?" };
+        return;
+    }
     $old_accession_rs = $old_accession_rs->next();
     my $old_accession_id = $old_accession_rs->stock_id;
 
     $rep_hash->{$old_accession_id}->{'remove'}->{$plot_id} = $plot_hash->{$plot_id};
     $rep_hash->{$new_accession_id}->{'add'}->{$plot_id} = $plot_hash->{$plot_id};
 
+    # Swap accession
     print "Calling Replace Function...............\n";
     my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($plot_id, $old_accession_id, $new_accession_id, $plot_of_type_id);
     if ($replace_return_error) {
@@ -3189,17 +3416,61 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
         return;
     }
 
-    if ($new_plot_name) {
-        my $replace_plot_name_return_error = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($plot_id, $old_plot_name, $new_plot_name);
-        if ($replace_plot_name_return_error) {
-            $c->stash->{rest} = { error => $replace_plot_name_return_error };
-            return;
+    my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
+    $replace_plot_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
+
+    # new plot names for all rep-affected plots
+    my %valid_plot_attrs = map { $_ => 1 } qw(breedingProgram trialName accessionName plotNumber blockNumber rangeNumber repNumber rowNumber colNumber);
+
+    my %affected_ids;
+    foreach my $acc_id (keys %$rep_hash) {
+        next unless $rep_hash->{$acc_id}->{add} || $rep_hash->{$acc_id}->{remove};
+        $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{start} // {}};
+        $affected_ids{$_}++ for keys %{$rep_hash->{$acc_id}->{add}   // {}};
+    }
+
+    foreach my $affected_id (keys %affected_ids) {
+        next unless $plot_info{$affected_id};
+        my $current_plot_name = $plot_info{$affected_id}->{plot_name};
+        my $effective_new_name;
+
+        if ($affected_id == $plot_id && $new_plot_name) {
+            $effective_new_name = $new_plot_name;
+        } elsif ($template_name_attributes) {
+            my $rep_row = $schema->resultset("Stock::Stockprop")->find({ type_id => $rep_number_id, stock_id => $affected_id });
+            my $new_rep_number = $rep_row ? $rep_row->value : '';
+            my $acc_name = ($affected_id == $plot_id) ? $new_accession : $plot_info{$affected_id}->{accession_name};
+            my %source = (
+                breedingProgram => $bp_name,
+                trialName       => $plot_info{$affected_id}->{trial_name},
+                accessionName   => $acc_name,
+                plotNumber      => $plot_info{$affected_id}->{plot_number},
+                blockNumber     => $plot_info{$affected_id}->{block_number},
+                repNumber       => $new_rep_number,
+                rangeNumber     => $plot_info{$affected_id}->{range_number},
+                rowNumber       => $plot_info{$affected_id}->{row_number},
+                colNumber       => $plot_info{$affected_id}->{col_number},
+            );
+            my @parts = map { ref $_ eq 'HASH' ? ($_->{text} || '') : ($valid_plot_attrs{$_} ? ($source{$_} // '') : '') } @$template_name_attributes;
+            $effective_new_name = join('_', @parts);
+        } else {
+            my $old_acc_name = $plot_info{$affected_id}->{accession_name};
+            my $new_acc_name = ($affected_id == $plot_id) ? $new_accession : $old_acc_name;
+            if ($new_acc_name ne $old_acc_name) {
+                (my $candidate = $current_plot_name) =~ s/\Q$old_acc_name\E/$new_acc_name/;
+                $effective_new_name = $candidate if $candidate ne $current_plot_name;
+            }
+        }
+
+        if ($effective_new_name && $effective_new_name ne $current_plot_name) {
+            my $err = $replace_plot_accession_fieldmap->replace_plot_name_fieldMap($affected_id, $current_plot_name, $effective_new_name);
+            if ($err) {
+                $c->stash->{rest} = { error => $err };
+                return;
+            }
         }
     }
 
-    my $rep_number_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
-
-    $replace_plot_accession_fieldmap->rebuild_trial_plot_replicates($rep_hash, $rep_number_id);
     $replace_plot_accession_fieldmap->_regenerate_trial_layout_cache();
     my $dbh = $c->dbc->dbh();
     my $bs = CXGN::BreederSearch->new( { dbh=>$dbh, dbname=>$c->config->{dbname}, } );
@@ -3876,7 +4147,6 @@ sub upload_trial_coordinates : Path('/ajax/breeders/trial/coordsupload') Args(0)
         name => $trial_obj->get_name()." spatial layout upload",
         job_type => 'upload',
         cmd => "",
-        finish_logfile => $c->config->{job_finish_log},
         submit_page =>  $c->request->headers->referer,
         results_page =>  $c->request->headers->referer
     });
@@ -4052,7 +4322,7 @@ sub cross_progenies_trial : Chained('trial') PathPart('cross_progenies_trial') A
     my @crosses;
     foreach my $r (@$result){
         my ($cross_id, $cross_name, $cross_combination, $family_id, $family_name, $progeny_number) =@$r;
-        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/family/$family_id/">$family_name</a>}];
+        push @crosses, [qq{<a href = "/cross/$cross_id">$cross_name</a>}, $cross_combination, $progeny_number, qq{<a href = "/stock/$family_id/view">$family_name</a>}];
     }
 
     $c->stash->{rest} = { data => \@crosses };
@@ -5867,7 +6137,7 @@ sub delete_trial_plants_POST : Args(0) {
     my %trial_plants_map = map {$_->[1] => $_->[0]} @trial_plants;
 
     my @delete_stock_ids = ();
-    
+
     my @mismatch_plants = ();
     foreach my $plant (@delete_plants) {
         if (!defined($trial_plants_map{$plant})) {
@@ -5938,7 +6208,7 @@ sub delete_trial_subplots_POST : Args(0) {
     my %trial_subplots_map = map {$_->[1] => $_->[0]} @trial_subplots;
 
     my @delete_stock_ids = ();
-    
+
     my @mismatch_subplots = ();
     foreach my $subplot (@delete_subplots) {
         if (!defined($trial_subplots_map{$subplot})) {
@@ -6788,12 +7058,10 @@ sub stock_entry_summary_trial : Chained('trial') PathPart('stock_entry_summary')
     foreach my $entry (@$stock_entries) {
         my ($parent_stock_name, $parent_stock_id, $parent_stock_type, $plot_name, $plot_id, $plant_name, $plant_id, $tissue_sample_name, $tissue_sample_id) =@$entry;
         my $parent_stock_link;
-        if ($parent_stock_type eq 'accession') {
+        if (($parent_stock_type eq 'accession') || ($parent_stock_type eq 'family_name')) {
             $parent_stock_link = qq{<a href="/stock/$parent_stock_id/view">$parent_stock_name</a>};
         } elsif ($parent_stock_type eq 'cross') {
             $parent_stock_link = qq{<a href="/cross/$parent_stock_id">$parent_stock_name</a>};
-        } elsif ($parent_stock_type eq 'family_name') {
-            $parent_stock_link = qq{<a href="/family/$parent_stock_id">$parent_stock_name</a>};
         }
 
         push @summary, [$parent_stock_link, qq{<a href="/stock/$plot_id/view">$plot_name</a>}, $plant_id ? qq{<a href="/stock/$plant_id/view">$plant_name</a>} : '', $tissue_sample_id ? qq{<a href="/stock/$tissue_sample_id/view">$tissue_sample_name</a>} : ''];

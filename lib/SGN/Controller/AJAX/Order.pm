@@ -256,6 +256,7 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -270,33 +271,21 @@ sub get_user_current_orders :Path('/ajax/order/current') Args(0) {
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
 
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
-    my $all_orders_ref = $orders->get_orders_from_person_id();
+    my $clone_list_format_type;
+    if ($conf_catalog_criteria) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
 
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
+    my $all_orders_ref = $orders->get_orders_from_person_id();
     my @current_orders;
     my @all_orders = @$all_orders_ref;
     foreach my $order (@all_orders) {
-        if (($order->{'order_status'}) ne 'completed') {
-            my $clone_list = $order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $all_details_string;
-            my $empty_string = '';
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
-                }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
-                push @all_item_details, $details_string;
-            }
-            $all_details_string = join("<br>", @all_item_details);
-            push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
+        if (($order->{'order_status'} ne 'completed') && ($order->{'order_status'} ne 'cancelled'))  {
+            my $formatted_clone_list = $order->{'formatted_clone_list'};
+            push @current_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $formatted_clone_list, $order->{'order_status'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
     }
 
@@ -309,6 +298,7 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -322,34 +312,23 @@ sub get_user_completed_orders :Path('/ajax/order/completed') Args(0) {
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id});
+
+    my $clone_list_format_type;
+    if ($conf_catalog_criteria) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
+
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_from_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
     my $all_orders_ref = $orders->get_orders_from_person_id();
     my @completed_orders;
     my @all_orders = @$all_orders_ref;
 
     foreach my $order (@all_orders) {
-        if (($order->{'order_status'}) eq 'completed') {
-            my $clone_list = $order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $empty_string = '';
-            my $all_details_string;
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
-                }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
-                push @all_item_details, $details_string;
-            }
-            $all_details_string = join("<br>", @all_item_details);
-
-            push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $all_details_string, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
+        if (($order->{'order_status'} eq 'completed') || ($order->{'order_status'} eq 'cancelled')) {
+            my $formatted_clone_list = $order->{'formatted_clone_list'};
+            push @completed_orders, [qq{<a href="/order/details/view/$order->{'order_id'}">$order->{'order_id'}</a>}, $order->{'create_date'}, $formatted_clone_list, $order->{'order_status'}, $order->{'completion_date'}, $order->{'order_to_name'}, $order->{'comments'}]
         }
     }
 
@@ -364,6 +343,7 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -377,35 +357,23 @@ sub get_vendor_current_orders :Path('/ajax/order/vendor_current_orders') Args(0)
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+
+    my $clone_list_format_type;
+    if ($conf_catalog_criteria) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
+
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
     my @vendor_current_orders;
     my @all_vendor_orders = @$vendor_orders_ref;
     foreach my $vendor_order (@all_vendor_orders) {
-        if (($vendor_order->{'order_status'}) ne 'completed') {
-            my $clone_list = $vendor_order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $all_details_string;
-            my $empty_string = '';
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
-                }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
-
-                push @all_item_details, $details_string;
-            }
-            $all_details_string = join("<br>", @all_item_details);
-
-            $vendor_order->{'order_details'} = $all_details_string;
+        if (($vendor_order->{'order_status'} ne 'completed') && ($vendor_order->{'order_status'} ne 'cancelled')) {
+            my $formatted_clone_list = $vendor_order->{'formatted_clone_list'};
+            $vendor_order->{'order_details'} = $formatted_clone_list;
             push @vendor_current_orders, $vendor_order
         }
     }
@@ -421,6 +389,7 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
     my $dbh = $c->dbc->dbh;
     my $order_properties = $c->config->{order_properties};
     my @properties = split ',',$order_properties;
+    my $conf_catalog_criteria = $c->config->{catalog_criteria};
     my $user_id;
 
     if (!$c->user){
@@ -434,33 +403,23 @@ sub get_vendor_completed_orders :Path('/ajax/order/vendor_completed_orders') Arg
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $user_id);
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
-    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id});
+
+    my $clone_list_format_type;
+    if ($conf_catalog_criteria) {
+        $clone_list_format_type = 'grouped_items';
+    } else {
+        $clone_list_format_type = 'individual_item'
+    }
+
+    my $orders = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, order_to_id => $user_id, clone_list_format_type => $clone_list_format_type, properties => \@properties});
     my $vendor_orders_ref = $orders->get_orders_to_person_id();
 
     my @vendor_completed_orders;
     my @all_vendor_orders = @$vendor_orders_ref;
     foreach my $vendor_order (@all_vendor_orders) {
-        if (($vendor_order->{'order_status'}) eq 'completed') {
-            my $clone_list = $vendor_order->{'clone_list'};
-            my $item_name;
-            my @all_item_details = ();
-            my $empty_string = '';
-            my $all_details_string;
-            foreach my $each_item (@$clone_list) {
-                my @request_details = ();
-                $item_name = (keys %$each_item)[0];
-                push @request_details, "<b>"."Item Name"."<b>". ":"."".$item_name;
-                foreach my $field (@properties) {
-                    my $each_detail = $each_item->{$item_name}->{$field};
-                    my $detail_string = $field. ":"."".$each_detail;
-                    push @request_details, $detail_string;
-                }
-                push @request_details, $empty_string;
-                my $details_string = join("<br>", @request_details);
-                push @all_item_details, $details_string;
-            }
-            $all_details_string = join("<br>", @all_item_details);
-            $vendor_order->{'order_details'} = $all_details_string;
+        if (($vendor_order->{'order_status'} eq 'completed') || ($vendor_order->{'order_status'} eq 'cancelled')) {
+            my $formatted_clone_list = $vendor_order->{'formatted_clone_list'};
+            $vendor_order->{'order_details'} = $formatted_clone_list;
 
             push @vendor_completed_orders, $vendor_order
         }
@@ -494,15 +453,16 @@ sub update_order_POST : Args(0) {
 
     my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
     my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
+    my $order_result = $order_obj->get_order_details();
+    my $vendor_id = $order_result->[7];
+    my $order_from_id = $order_result->[9];
 
     if ($new_status eq 're-opened') {
         my $re_open_by_person= CXGN::People::Person->new($dbh, $user_id);
         my $re_open_name = $re_open_by_person->get_first_name()." ".$re_open_by_person->get_last_name();
         $new_status = 're-opened by'." ".$re_open_name;
 
-        my $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id});
-        my $order_result = $order_obj->get_order_details();
-        my $vendor_id = $order_result->[7];
         if ($user_id != $vendor_id) {
             my $contact_person = CXGN::People::Person -> new($dbh, $vendor_id);
             my $contact_email = $contact_person->get_contact_email();
@@ -525,7 +485,7 @@ END_HEREDOC
     }
 
     my $order_obj;
-    if ($new_status eq 'completed') {
+    if (($new_status eq 'completed') || ($new_status eq 'cancelled')) {
         $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, completion_date => $timestamp, comments => $contact_person_comments});
     } else {
         $order_obj = CXGN::Stock::Order->new({ bcs_schema => $schema, dbh => $dbh, people_schema => $people_schema, sp_order_id => $order_id, order_to_id => $user_id, order_status => $new_status, comments => $contact_person_comments});
@@ -561,6 +521,25 @@ END_HEREDOC
         return;
     }
 
+    my $requester_person = CXGN::People::Person -> new($dbh, $order_from_id);
+    my $requester_email = $requester_person->get_contact_email();
+    print STDERR "REQUESTER EMAIL =".Dumper($requester_email)."\n";
+
+    my $host = $c->config->{main_production_site_url};
+    my $project_name = $c->config->{project_name};
+    my $subject="Ordering Notification from $project_name";
+    my $body=<<END_HEREDOC;
+
+You have an order update submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    CXGN::Contact::send_email($subject,$body,$requester_email);
+
     $c->stash->{rest} = {success => "1",};
 
 }
@@ -581,8 +560,8 @@ sub single_step_submission_POST : Args(0) {
 
     $details{$item_name} = $order_details;
     if (!$c->user()) {
-        print STDERR "User not logged in... not adding a catalog item.\n";
-        $c->stash->{rest} = {error_string => "You must be logged in to add a catalog item." };
+        print STDERR "User not logged in... not adding order.\n";
+        $c->stash->{rest} = {error_string => "You must be logged in to submit an order." };
         return;
     }
     my $user_id = $c->user()->get_object()->get_sp_person_id();
@@ -651,6 +630,111 @@ $project_name Team
 END_HEREDOC
 
     CXGN::Contact::send_email($subject,$body,$contact_email);
+
+    $c->stash->{rest}->{success} .= 'Your request has been submitted successfully and the vendor has been notified.';
+
+}
+
+
+sub request_form_submission : Path('/ajax/order/request_form_submission') : ActionClass('REST'){ }
+
+sub request_form_submission_POST : Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $dbh = $c->dbc->dbh();
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+    my $request_date = $time->ymd();
+    my $item_info = decode_json ($c->req->param('item_info'));
+    my $order_details = decode_json ($c->req->param('order_details'));
+    my $vendor_id = $c->req->param('vendor_id');
+    my %details;
+    my @item_list;
+
+    foreach my $item (keys %$item_info) {
+        if (!$item_info->{$item}) {
+            $c->stash->{rest} = {error_string => "Please provide quantity for: $item" };
+            return;
+        }
+    }
+
+    $details{'item_info'} = $item_info;
+    $details{'order_details'} = $order_details;
+    push @item_list, \%details;
+
+    if (!$c->user()) {
+        print STDERR "User not logged in.\n";
+        $c->stash->{rest} = {error_string => "You must be logged in to submit request form." };
+        return;
+    }
+    my $user_id = $c->user()->get_object()->get_sp_person_id();
+    my $user_name = $c->user()->get_object()->get_username();
+    my $user_role = $c->user->get_object->get_user_type();
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $user_id);
+    my $people_schema = $c->dbic_schema('CXGN::People::Schema', undef, $user_id);
+    my @history = ();
+    my $history_info = {};
+
+    my $new_order = CXGN::Stock::Order->new( { bcs_schema => $schema, people_schema => $people_schema, dbh => $dbh});
+    $new_order->order_from_id($user_id);
+    $new_order->order_to_id($vendor_id);
+    $new_order->order_status("submitted");
+    $new_order->create_date($timestamp);
+    my $order_id = $new_order->store();
+    if (!$order_id){
+        $c->stash->{rest} = {error_string => "Error saving your order",};
+        return;
+    }
+
+    $history_info ->{'submitted'} = $timestamp;
+    push @history, $history_info;
+
+    my $order_prop = CXGN::Stock::OrderBatch->new({ bcs_schema => $schema, people_schema => $people_schema});
+    $order_prop->clone_list(\@item_list);
+    $order_prop->parent_id($order_id);
+    $order_prop->history(\@history);
+    my $order_prop_id = $order_prop->store_sp_orderprop();
+
+    if (!$order_prop_id){
+        $c->stash->{rest} = {error_string => "Error saving your request",};
+        return;
+    }
+
+    my $vendor_person = CXGN::People::Person -> new($dbh, $vendor_id);
+    my $vendor_email = $vendor_person->get_contact_email();
+    print STDERR "VENDOR EMAIL =".Dumper($vendor_email)."\n";
+
+    my $requester_person = CXGN::People::Person -> new($dbh, $user_id);
+    my $requester_email = $requester_person->get_contact_email();
+    print STDERR "REQUESTER EMAIL =".Dumper($requester_email)."\n";
+
+    my $host = $c->config->{main_production_site_url};
+    my $project_name = $c->config->{project_name};
+    my $subject="Ordering Notification from $project_name";
+    my $body1=<<END_HEREDOC;
+
+You order was submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    CXGN::Contact::send_email($subject,$body1,$requester_email);
+
+    my $body2=<<END_HEREDOC;
+
+You have an order submitted to $project_name ($host/order/stocks/view).
+Please do *NOT* reply to this message.
+
+Thank you,
+$project_name Team
+
+END_HEREDOC
+
+    CXGN::Contact::send_email($subject,$body2,$vendor_email);
 
     $c->stash->{rest}->{success} .= 'Your request has been submitted successfully and the vendor has been notified.';
 

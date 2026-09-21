@@ -39,6 +39,7 @@ sub run {
     my $output_details = retrieve( $self->output_details_file );
     $self->process_analysis_status($output_details);
 
+    return 0;
 }
 
 sub process_analysis_status {
@@ -53,7 +54,7 @@ sub process_analysis_status {
 sub check_analysis_status {
     my ( $self, $output_details ) = @_;
 
-    my $analysis_type = $output_details->{analysis_profile}->{analysis_type};
+    my $analysis_type = $self->analysis_type($output_details);
 
     if ( $analysis_type =~ /training_dataset/ ) {
         $output_details = $self->check_population_download($output_details);
@@ -634,7 +635,7 @@ sub email_addresses {
 sub email_body {
     my ( $self, $output_details ) = @_;
 
-    my $analysis_type = $output_details->{analysis_profile}->{analysis_type};
+    my $analysis_type = $self->analysis_type($output_details);
 
     my $msg;
 
@@ -659,6 +660,28 @@ sub email_body {
 
     return $msg;
 
+}
+
+sub analysis_type {
+    my ($self, $output_details) = @_;
+
+    my $analysis_profile = $output_details->{analysis_profile} || {};
+
+    if ($analysis_profile->{analysis_type}) {
+        return $analysis_profile->{analysis_type};
+    }
+
+    if (!$analysis_profile->{arguments}) {
+        die "Analysis report is missing analysis_profile.arguments.\n";
+    }
+
+    my $analysis_args = JSON->new->decode($analysis_profile->{arguments});
+
+    if (!$analysis_args->{analysis_type}) {
+        die "Analysis report is missing analysis_type in analysis_profile.arguments.\n";
+    }
+    
+    return $analysis_args->{analysis_type};
 }
 
 sub multi_modeling_message {
