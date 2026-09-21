@@ -3,8 +3,6 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <& /page/page_title.mas, title=>'Accession Usage' &>
 
@@ -85,21 +83,24 @@ jQuery(document).ready(function(){
   jQuery('#accession_usage_trials').DataTable({
 
      'ordering' : false,
-     'ajax':'ajax/accession_usage_trials'
+     'ajax':'ajax/accession_usage_trials',
+     'scrollX': true,
   });
 
 
   jQuery('#accession_usage_female').DataTable({
 
      'ordering' : false,
-     'ajax':'ajax/accession_usage_female'
+     'ajax':'ajax/accession_usage_female',
+     'scrollX': true,
   });
 
 
   jQuery('#accession_usage_male').DataTable({
 
      'ordering' : false,
-     'ajax':'ajax/accession_usage_male'
+     'ajax':'ajax/accession_usage_male',
+     'scrollX': true,
   });
 
   var stock_table = jQuery('#accession_usage_phenotypes').DataTable({
@@ -109,7 +110,8 @@ jQuery(document).ready(function(){
       'processing': true,
       'serverSide': true,
       'lengthMenu': [10,20,50,100,1000,5000],
-      'ajax': { 'url':  '/ajax/accession_usage_phenotypes?display=plots_accession' }
+      'ajax': { 'url':  '/ajax/accession_usage_phenotypes?display=plots_accession' },
+      'scrollX': true,
   });
 
 });

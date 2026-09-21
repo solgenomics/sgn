@@ -187,7 +187,12 @@ function renderLinksColumn(data, type, row) {
 
             // Init DataTable
             jQuery("#<% $id %>").DataTable({
-                dom: 'rtip',
+                layout: {
+                    topStart: null,
+                    topEnd: null,
+                    bottomStart: 'info',
+                    bottomEnd: 'paging'
+                },
                 autoWidth: false,
                 data: [],
                 columns: [

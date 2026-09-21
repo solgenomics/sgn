@@ -2,8 +2,7 @@
 $stock_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.Accessions' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.Accessions' ] &>
 
 <div class = "well well-sm">
     <form id="download_population_seedlots_action" action="/breeders/download_population_seedlots_action" method="POST">

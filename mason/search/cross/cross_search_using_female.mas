@@ -40,7 +40,6 @@
 </&>
 <&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0&>
     <div class="well well-sm">
-        <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <table id="cross_female_male_search_results" width="100%" class="table table-hover table-striped">
@@ -117,7 +116,8 @@ jQuery(document).ready(function (){
             'ajax':{'url':'/ajax/search/crosses',
                 'data':{'female_parent':jQuery('#cross_female_parent').val(),
                     'male_parent':jQuery('#cross_male_parent').val()},
-            }
+            },
+            'scrollX': true,
         });
 
         jQuery('#cross_female_male_search_results').on( 'draw.dt', function (){
@@ -146,7 +146,8 @@ jQuery(document).ready(function (){
             'destroy': true,
             'ajax':{'url':'/ajax/search/crosses',
                 data:{'female_parent':jQuery('#cross_female_parent').val()},
-            }
+            },
+            'scrollX': true,
         });
 
         jQuery('#cross_female_male_search_results').on( 'draw.dt', function (){

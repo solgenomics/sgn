@@ -16,8 +16,7 @@ $purpose
 
 </%args>
 
-<& /util/import_javascript.mas, classes => ["jquery", "jqueryui", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List", "jquery.dataTables"] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => ["thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.List"] &>
 
 
 <& /page/page_title.mas, title => "Details for Propagation Group ID '$propagation_group_name'" &>

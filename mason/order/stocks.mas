@@ -8,7 +8,7 @@ $user_id
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery/dataTables', 'CXGN.BreedersToolbox.HTMLSelect.js', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.HTMLSelect.js' ] &>
 
 % if ($check_vendor_role == 1) {
     <&| /page/page_title.mas, title => "Manage Orders for Vendor" &>

@@ -11,8 +11,7 @@ $catalog_stock_property => undef
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'jquery', 'jquery.dataTables', 'CXGN.List'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form' ] &>
 
 <& /page/page_title.mas, title => "Order Form and Catalog" &>
 

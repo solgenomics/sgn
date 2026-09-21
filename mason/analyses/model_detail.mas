@@ -28,7 +28,7 @@ $model_files
 $identifier_prefix
 </%args>
 
-<& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'jquery', 'jquery.dataTables' ],  &>
+<& /util/import_javascript.mas, entries => ['analyses'] &>
 
 <& /page/page_title.mas, title => "Model <span id=\"model_name_title\">$model_name</span>" &>
 

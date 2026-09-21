@@ -2,8 +2,6 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <& /page/page_title.mas, title => "Genotyping Project Search" &>
 
 <div class="well well-sm">

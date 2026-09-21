@@ -3,7 +3,6 @@ $trial_id => undef
 $data_level => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
 
 <div class="well well-sm">
     <button class="btn btn-primary" id="trial_detail_page_analysis_numerical_derivative_workflow">Numerical Derivatives Across Row and Columns On Saved Measurements</button>

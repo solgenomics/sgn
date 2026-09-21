@@ -2,8 +2,6 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jquery.dataTables-buttons-min', 'jszip-min', 'buttons.bootstrap-min', 'buttons.html5-min' ],  &>
-
 <p>Filter the sequence metadata by position, sequence metadata type and/or protocol, and/or by protocol attribute value(s).</p>
 
 <br />
@@ -389,7 +387,12 @@ jQuery(document).ready(function() {
 
     // Init DataTable
     jQuery('#sequence_metadata_filter_results').DataTable({
-        dom: 'Bfrtip',
+        layout: {
+            topStart: 'buttons',
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         autoWidth: false,
         data: [],
         columns: [

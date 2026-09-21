@@ -13,7 +13,7 @@
 
 <& '/page/page_title.mas', title => "Graphical Filtering" &>
 
-<& '/util/import_javascript.mas', classes => [ 'jquery', 'jqueryui', 'jquery.dataTables-buttons-min', 'jquery.dataTables-buttons-html5-min', 'jszip-min', 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
+<& '/util/import_javascript.mas', classes => [ 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
 
 <div id="select_div" class="row" hidden="true">
     <!-- form for selecting a list -->

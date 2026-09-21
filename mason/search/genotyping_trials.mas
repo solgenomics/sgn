@@ -3,8 +3,6 @@
 $nd_geolocation => 'not_provided'
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <& /page/page_title.mas, title => "Genotyping Plate Search" &>
 
 <div class="well well-sm">

@@ -268,7 +268,12 @@ jQuery(document).ready(function() {
               'data' : data.data,
               'columns': headers,
 
-              dom: 'Bfrtip',
+              layout: {
+                topStart: 'buttons',
+                topEnd: 'search',
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+              },
               buttons: [
                 'copy',
                 'csv',

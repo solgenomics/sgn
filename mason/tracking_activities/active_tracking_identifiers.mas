@@ -4,8 +4,6 @@ $field_headers
 $activity_type
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <div style="overflow:scroll">
     <table class="table table-hover table-bordered" id="project_active_tracking_identifiers_table">

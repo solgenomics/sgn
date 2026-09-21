@@ -4,7 +4,6 @@ $stock_uniquename => undef
 $stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 % if ($stock_type eq 'accession'){
     <& /breeders_toolbox/add_seedlot_dialogs.mas, accession_uniquename=>$stock_uniquename &>

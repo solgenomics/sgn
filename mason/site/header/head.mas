@@ -17,7 +17,6 @@
     '/css/daterangepicker.css',
     '/css/flatpickr.css',
     '/css/buttons/buttons.bootstrap.min.css',
-    '/css/buttons/buttons.dataTables.css',
     '/css/bootstrap3-xl-class.css',
     '/css/bootstrap-select.min.css'
   ] &>
@@ -31,12 +30,41 @@
    MochiKit = {__export__: false};
 </script>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jqueryui", "sgn", "jquery.simpletooltip", "jquery.cookie", "CXGN.Effects", "CXGN.Dataset", "CXGN.Page.FormattingHelpers", "CXGN.UserPrefs", "CXGN.Page.Toolbar", "CXGN.List", "CXGN.Login", "bootstrap_min", "CXGN.BreedersToolbox.HTMLSelect", "bootstrap-toggle_min"] &>
-% if ($c->config->{production_server}) {
-    <& /util/import_javascript.mas, classes => [ "jquerymigrate-min", "jquery.dataTables" ] &>
-% } else {
-    <& /util/import_javascript.mas, classes => [ "jquerymigrate", "jquery.dataTables" ] &>
-% }
+<& /util/import_javascript.mas, classes => [
+    "jquery",
+    "jqueryui",
+    "sgn",
+    "jquery.simpletooltip",
+    "jquery.cookie",
+    "CXGN.Effects",
+    "CXGN.Dataset",
+    "CXGN.Page.FormattingHelpers",
+    "CXGN.UserPrefs",
+    "CXGN.Page.Toolbar",
+    "CXGN.List",
+    "CXGN.Login",
+    "bootstrap_min",
+    "CXGN.BreedersToolbox.HTMLSelect",
+    "bootstrap-toggle_min"
+] &>
+
+<%perl>
+    my @all_environments = qw(
+        jszip-min pdfmake.pdfmake-min pdfmake.vfs_fonts
+        jquery.dataTables-buttons-min
+        jquery.dataTables-buttons-bootstrap-min
+        jquery.dataTables-buttons-html5-min
+        jquery.dataTables-buttons-print-min
+        jquery.dataTables-colReorder-min
+        jquery.dataTables-fixedColumns-min
+        jquery.dataTables-fixedHeader-min
+        jquery.dataTables-responsive-min
+        jquery.dataTables-searchPanes-min
+        jquery.dataTables-select-min
+    );
+    my @current_environment = $c->config->{production_server} ? qw(jquerymigrate-min jquery.dataTables-min) : qw(jquerymigrate jquery.dataTables);
+</%perl>
+<& /util/import_javascript.mas, classes => [ @current_environment, @all_environments ] &>
 
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">

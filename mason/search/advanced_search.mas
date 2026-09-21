@@ -2,7 +2,7 @@
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'thickbox', 'jquery.dataTables' ] &>
+<& /util/import_javascript.mas, classes => [ 'thickbox' ] &>
 
 <center>
     <table class="boxbgcolor2" width="100%" summary="">

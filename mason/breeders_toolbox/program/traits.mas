@@ -4,8 +4,7 @@ $program_id
 $collapse_phenotypes_section => 1
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
-
+<& /util/import_javascript.mas, classes => [ 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
 
 <div class="well well-sm table-responsive">
   <center><h4>Raw Data Statistics</h4></center>
@@ -55,10 +54,6 @@ $collapse_phenotypes_section => 1
 
   </div>
 </div>
-
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-
 
 <script>
 var d3 = d3v4;

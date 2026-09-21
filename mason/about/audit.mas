@@ -45,8 +45,6 @@ results and returns the appropriate URL for going to that page of results
 
 <!--here is where I pasted in the drop down and search code -->
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">

@@ -7,9 +7,6 @@ $program_name
 $source_info
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 <div class="modal fade" id="add_new_transformant_names_dialog" name="add_new_transformant_names_dialog" tabindex="-1" role="dialog" aria-labelledby="addNewTransformantNamesDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">

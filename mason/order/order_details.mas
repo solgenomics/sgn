@@ -16,9 +16,6 @@ $tracking_order_activity => undef
 </%args>
 
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 <& /page/page_title.mas, title => "Details for Order Number: $order_id" &>
 
 <&| /page/info_section.mas, title=>"Details",  collapsible => 1, collapsed=>0 &>

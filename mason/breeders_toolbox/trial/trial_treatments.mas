@@ -4,7 +4,6 @@ $trial_id
 $user_can_modify
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
 
 % if ($user_can_modify) {
     <button class="btn btn-sm btn-primary" style="margin:3px" id="trial_detail_page_add_treatment">Add Treatments</button>

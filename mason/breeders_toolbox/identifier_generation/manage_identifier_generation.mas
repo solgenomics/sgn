@@ -1,7 +1,6 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
 
 <& /util/import_css.mas, paths => [ ] &>
 

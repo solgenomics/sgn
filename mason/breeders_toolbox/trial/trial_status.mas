@@ -16,8 +16,6 @@ $phenotypes_fully_uploaded => undef
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery','jquery.dataTables'] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 %  if ($user_can_modify) {
 <button class="btn btn-sm btn-primary" style="margin:3px" id="update_trial_status_link">Update Trial Status</button>

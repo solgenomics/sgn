@@ -1,8 +1,6 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
-
 <div class="container-fluid">
 
 <& /page/page_title.mas, title=>'Gene annotation and families' &>

@@ -3,9 +3,6 @@ $trial_id
 $trial_stock_type
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
 
 <style>
 @media (min-width: 768px) {

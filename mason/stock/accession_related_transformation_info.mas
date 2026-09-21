@@ -106,7 +106,12 @@ jQuery(document).ready(function(){
             'ajax': '/ajax/transformation/transformant_experiment_info/'+stock_id,
             'autoWidth': false,
             'searching' : false,
-            'dom': 'rtip',
+            layout: {
+                topStart: null,
+                topEnd: null,
+                bottomStart: 'info',
+                bottomEnd: 'paging'
+            },
             'order': false,
             'paging': false,
             'info': false,

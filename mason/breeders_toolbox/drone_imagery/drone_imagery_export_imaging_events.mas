@@ -1,7 +1,6 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
 
 <!--button class='btn btn-default' style='margin:3px' id='export_drone_imagery_events'>Export Imaging Events</button-->
 

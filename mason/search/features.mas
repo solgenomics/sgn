@@ -6,8 +6,6 @@
 <& /util/import_javascript.mas, classes => 'SGN.Search.Feature' &>
 
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <div class="container-fluid">
 
 <& /page/page_title.mas, title=>'Search genomic sequences and annotations' &>

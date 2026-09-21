@@ -2,8 +2,7 @@
 $trial_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Transformation' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.Transformation' ] &>
 
 <&| /page/info_section.mas, id=>'delete_transformation_ids_section', title => 'Delete Transformation IDs', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">

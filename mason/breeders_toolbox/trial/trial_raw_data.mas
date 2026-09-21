@@ -425,7 +425,8 @@ jQuery(window).ready( function() {
 						{ title: '', }
 					],
 				'data' : data,
-				'order': [[4, 'asc']] 
+				'order': [[4, 'asc']],
+				'scrollX': true,
 			});
 		} else {
 			jQuery('#raw_trait_data_table').DataTable( {
@@ -439,7 +440,8 @@ jQuery(window).ready( function() {
 						{ title: 'collector' }
 					],
 				'data' : data,
-				'order': [[4, 'asc']] 
+				'order': [[4, 'asc']],
+				'scrollX': true,
 			});
 		}
     }

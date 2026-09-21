@@ -2,10 +2,6 @@
 $program_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-
 <div class="well well-sm">
     <div class="panel panel-default">
         <div class="panel-body">
@@ -46,7 +42,12 @@ jQuery(document).ready(function (){
             var table = jQuery('#program_location_table').DataTable({
                 'autoWidth': false,
                 data: locationJSON,
-                dom: 'Bfrtip',
+                layout: {
+                    topStart: 'buttons',
+                    topEnd: 'search',
+                    bottomStart: 'info',
+                    bottomEnd: 'paging'
+                },
                 select: true,
                 rowId: 'properties.Id',
                 "columns": [

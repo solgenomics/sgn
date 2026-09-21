@@ -4,7 +4,6 @@ $management_factor_types => (),
 $user_can_modify => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ "jquery", "jquery.dataTables", 'jquery.dataTables-buttons-min'] &>
 
 <div class="well well-sm">
 
@@ -175,7 +174,8 @@ jQuery(document).ready( function() {
                             <button class="btn btn-success edit_management_factor_btn" data-row="${row_json}"><span class="glyphicon glyphicon-pencil"></span></button>`;
                         }
                     }
-                ]
+                ],
+                'scrollX': true,
             });
 
         } catch (error) {

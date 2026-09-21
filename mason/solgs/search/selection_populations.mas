@@ -32,8 +32,7 @@ if ($c->req->path =~ /solgs\/traits\/all\/population/) {
 </%perl>
 
 
-<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.Dataset", "jquery.dataTables", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.Dataset", "solGS.selectionPopulations",  "solGS.ajaxAutocomplete"] &>
 
 <&| /page/info_section.mas,
     collapsible => 1,

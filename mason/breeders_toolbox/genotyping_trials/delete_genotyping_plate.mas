@@ -3,8 +3,7 @@ $trial_id
 $number_of_samples_with_data => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.BreedersToolbox.GenotypingTrial' ] &>
 
 <&| /page/info_section.mas, id=>'delete_genotyping_data_section', title => 'Delete Genotyping Data', subtitle => '<font color="red">Deletion cannot be undone</font>', collapsible=>1, collapsed=>1 &>
     <div class="well well-sm">

@@ -3,15 +3,13 @@ $trial_id
 $project_id
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <table class="table table-hover table-bordered" id="audit_results">
 
 </table>
 
-<script> 
+<script>
     jQuery(document).ready(function () {
       var trial_id = "<% $trial_id %>";
       jQuery.ajax({

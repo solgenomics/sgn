@@ -3,8 +3,6 @@ $stock_id
 $type_name
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-
 <div class="panel panel-default">
 	<div class="panel-body panel-body-sm">
 		<b> Trials </b>
@@ -36,8 +34,6 @@ $type_name
 	</div>
 </div>
 % }
-
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
 
 <script>
 

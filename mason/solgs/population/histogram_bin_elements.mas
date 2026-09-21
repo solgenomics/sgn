@@ -20,8 +20,7 @@ Isaak Y Tecle (iyt2@cornell.edu)
 </%perl>
 
 
- <& /util/import_javascript.mas, classes => [ "jquery.dataTables"] &>
-
+ 
 <div class="bin_elements" style="display:none">
 
 <table class="table bin_elements_table" style="text-align: left;">

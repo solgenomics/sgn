@@ -69,8 +69,8 @@ $edit_privs
 
 <!-- & /util/import_javascript.mas, entries => [ "vectorViewer" ] & -->
 <& /util/import_javascript.mas,
-   classes => ["bootstrap_min", "d3.d3v4Min", "jquery", "jqueryui", "jquery.dataTables-buttons-min", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock", "jquery.dataTables"] , entries => [ "vectorViewer" ] &>
-  
+   classes => ["bootstrap_min", "d3.d3v4Min", "thickbox", "CXGN.Page.FormattingHelpers", "jquery.cookie", "CXGN.Stock"] , entries => [ "vectorViewer" ] &>
+
 <!-- Add a svg area, empty -->
 <div id="vector_div"></div>
 

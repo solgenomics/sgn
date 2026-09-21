@@ -22,7 +22,6 @@ $user_name
 $main_production_site_url
 </%args>
 
-<& /util/import_javascript.mas, classes => [] &>
 
 
 <& /page/page_title.mas, title=>"Export Data to Expression Atlas" &>
