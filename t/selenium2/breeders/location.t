@@ -114,14 +114,8 @@ $t->while_logged_in_as("submitter", sub {
         ->click();
     sleep(2);
 
-    my $alert_text;
-    eval {
-        $alert_text = $t->driver->get_alert_text();
-    };
-    if ($alert_text) {
-        $t->driver->accept_alert();
-    }
-    ok(!$alert_text, 'no alert present after adding location');
+    ok($t->driver->get_alert_text() =~ m/location $location_name added successfully/i, 'new location was saved');
+    $t->driver->accept_alert();
 
     $t->get_ok('/breeders/locations');
     sleep(2);

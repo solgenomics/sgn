@@ -393,7 +393,8 @@
                 },
                 success: function(response) {
                     if (response.error) { alert(response.error); }
-                    else {
+                    else if (response.success) {
+                        alert(response.success);
                         var token = '<% $c->config->{noaa_ncdc_access_token} %>';
                         if (noaa_station_id === '') {
                             $('#store_location_dialog').modal("hide");
