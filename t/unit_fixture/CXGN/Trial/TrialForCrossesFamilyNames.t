@@ -537,64 +537,43 @@ for my $extension ("xls", "xlsx") {
 
 
     #test mixed cross and accession stock types trial upload
-    my %upload_metadata;
-	my $file_name = "t/data/trial/cross_trial_layout.xlsx";
-	my $time = DateTime->now();
-	my $timestamp = $time->ymd() . "_" . $time->hms();
+    my %upload_metadata_1;
+    my $file_name_1 = "t/data/trial/cross_trial_layout.xlsx";
+    my $time_1 = DateTime->now();
+    my $timestamp_1 = $time_1->ymd() . "_" . $time_1->hms();
 
-	my $uploader = CXGN::UploadFile->new({
-		tempfile         => $file_name,
-		subdirectory     => 'temp_trial_upload',
-		archive_path     => '/tmp',
-		archive_filename => "cross_trial_layout.xlsx",
-		timestamp        => $timestamp,
-		user_id          => 41,
-		user_role        => 'curator'
-	});
-
-	## Store uploaded temporary file in archive
-	my $archived_filename_with_path = $uploader->archive();
-	my $md5 = $uploader->get_md5($archived_filename_with_path);
-	ok($archived_filename_with_path);
-	ok($md5);
-
-	$upload_metadata{'archived_file'} = $archived_filename_with_path;
-	$upload_metadata{'archived_file_type'} = "trial upload file";
-	$upload_metadata{'user_id'} = 41;
-	$upload_metadata{'date'} = "2026-09-14_09:10:11";
-
-	#parse uploaded file with appropriate plugin
-	my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path, trial_stock_type => 'cross');
-	$parser->load_plugin('TrialGeneric');
-	my $return = $parser->parse();
-	my $parsed_data = $return->{'design'};
-	ok($parsed_data, "Check if parse validate excel file works");
-	ok(!$parser->has_parse_errors(), "Check that parse returns no errors");
-
-    my $trial_create = CXGN::Trial::TrialCreate
-        ->new({
-        chado_schema      => $schema,
-        dbh               => $dbh,
-        owner_id          => 41,
-        trial_year        => "2026",
-        trial_description => "Test mixed cross and accession trial Upload",
-        trial_stock_type  => "cross",
-        trial_location    => "test_location",
-        trial_name        => "mixed_cross_accession_stock_types",
-        design_type       => "RCBD",
-        design            => $parsed_data,
-        program           => "test",
-        upload_trial_file => $archived_filename_with_path,
-        operator          => "janedoe"
+    my $uploader_1 = CXGN::UploadFile->new({
+        tempfile         => $file_name_1,
+        subdirectory     => 'temp_trial_upload',
+        archive_path     => '/tmp',
+        archive_filename => "cross_trial_layout.xlsx",
+        timestamp        => $timestamp_1,
+        user_id          => 41,
+        user_role        => 'curator'
     });
 
-    $trial_create->save_trial();
+    ## Store uploaded temporary file in archive
+    my $archived_filename_with_path_1 = $uploader_1->archive();
+    my $md5_1 = $uploader_1->get_md5($archived_filename_with_path_1);
+    ok($archived_filename_with_path_1);
+    ok($md5_1);
 
-    ok($trial_create, "check that trial_create worked");
+    $upload_metadata_1{'archived_file'} = $archived_filename_with_path_1;
+    $upload_metadata_1{'archived_file_type'} = "trial upload file";
+    $upload_metadata_1{'user_id'} = 41;
+    $upload_metadata_1{'date'} = "2026-09-14_09:10:11";
+
+    #parse uploaded file with appropriate plugin
+    my $parser_1 = CXGN::Trial::ParseUpload->new(chado_schema => $schema, filename => $archived_filename_with_path_1, trial_stock_type => 'cross');
+    $parser_1->load_plugin('TrialGeneric');
+    my $return_1 = $parser_1->parse();
+    my $parsed_data_1 = $return_1->{'design'};
+    ok($parsed_data_1, "Check if parse validate excel file works");
+    ok(!$parser_1->has_parse_errors(), "Check that parse returns no errors");
 
     #test family trial upload with seedlot
     my %upload_metadata;
-	my $file_name = "t/data/trial/family_trial_layout_with_seedlot_1.xlsx";
+    my $file_name = "t/data/trial/family_trial_layout_with_seedlot_1.xlsx";
 	my $time = DateTime->now();
 	my $timestamp = $time->ymd() . "_" . $time->hms();
 
