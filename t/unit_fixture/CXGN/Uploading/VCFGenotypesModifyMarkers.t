@@ -136,9 +136,9 @@ ok($upload_response->is_success, 'mismatched-marker upload request succeeded at 
 $message_hash = decode_json $upload_response->decoded_content;
 ok(!$message_hash->{success}, 'upload with a mismatched marker and no accept_warnings is not stored') or diag(Dumper($message_hash));
 ok($message_hash->{warning}, 'a warning is returned describing the mismatched marker');
-like($message_hash->{warning}, qr/Marker S1_21594 in your file has 21600 for pos, but in the previously stored protocol shows 21594/, 'warning describes the pos mismatch');
-like($message_hash->{warning}, qr/Marker S1_21594 in your file has C for ref, but in the previously stored protocol shows G/, 'warning describes the ref mismatch');
-like($message_hash->{warning}, qr/Marker S1_21594 in your file has T for alt, but in the previously stored protocol shows A/, 'warning describes the alt mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 was matched to the stored protocol by name, but its pos differs: your file has "21600", the stored protocol has "21594"/, 'warning describes the pos mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 was matched to the stored protocol by name, but its ref differs: your file has "C", the stored protocol has "G"/, 'warning describes the ref mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 was matched to the stored protocol by name, but its alt differs: your file has "T", the stored protocol has "A"/, 'warning describes the alt mismatch');
 is($message_hash->{previous_genotypes_exist}, 1, 'previous_genotypes_exist is set since these accessions already have genotypes stored for this protocol');
 is_deeply($message_hash->{mismatched_markers}, ['S1_21594'], 'mismatched_markers lists the one marker with differing info');
 
@@ -180,9 +180,9 @@ print STDERR "message_hash\n";
 diag(Dumper($message_hash));
 ok(!$message_hash->{success}, 'upload with a mismatched marker is not stored even when accept_warnings is set, without requesting an update') or diag(Dumper($message_hash));
 ok($message_hash->{warning}, 'a warning is still returned describing the mismatched marker');
-like($message_hash->{warning}, qr/Marker S1_21594 in your file has 21600 for pos, but in the previously stored protocol shows 21594/, 'warning describes the pos mismatch');
-like($message_hash->{warning}, qr/Marker S1_21594 in your file has C for ref, but in the previously stored protocol shows G/, 'warning describes the ref mismatch');
-like($message_hash->{warning}, qr/Marker S1_21594 in your file has T for alt, but in the previously stored protocol shows A/, 'warning describes the alt mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 was matched to the stored protocol by name, but its pos differs: your file has "21600", the stored protocol has "21594"/, 'warning describes the pos mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 was matched to the stored protocol by name, but its ref differs: your file has "C", the stored protocol has "G"/, 'warning describes the ref mismatch');
+like($message_hash->{warning}, qr/Marker S1_21594 was matched to the stored protocol by name, but its alt differs: your file has "T", the stored protocol has "A"/, 'warning describes the alt mismatch');
 is($message_hash->{previous_genotypes_exist}, 1, 'previous_genotypes_exist is set since these accessions already have genotypes stored for this protocol');
 is_deeply($message_hash->{mismatched_markers}, ['S1_21594'], 'mismatched_markers lists the one marker with differing info');
 
