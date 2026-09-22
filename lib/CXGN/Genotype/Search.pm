@@ -2294,14 +2294,9 @@ sub get_cached_file_HapMap {
         @all_marker_objects = sort { $a->{chrom} cmp $b->{chrom} || $a->{pos} <=> $b->{pos} || $a->{name} cmp $b->{name} } @all_marker_objects;
         @all_marker_objects = $self->_check_filtered_markers(\@all_marker_objects);
 
-        print STDERR "\n\n\n\n===> ALL MARKER OBJECTS:\n";
-        print STDERR Dumper \@all_marker_objects;
-
         my $counter = 0;
         my $usingGT;
         while (my $geno = $self->get_next_genotype_info) {
-            print STDERR "----> GENO:\n";
-            print STDERR Dumper $geno;
 
             # OLD GENOTYPING PROTCOLS DID NOT HAVE ND_PROTOCOLPROP INFO...
             if (scalar(@all_marker_objects) == 0) {
@@ -2326,7 +2321,9 @@ sub get_cached_file_HapMap {
                 foreach my $m (@all_marker_objects) {
                     my $ref = $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{ref};
                     my @alts = split /, ?/, $geno->{selected_protocol_hash}->{markers}->{$m->{name}}->{alt};
-                    $genotype_string .= $ref . "/" . join('/', @alts) . "\t";
+                    my $sep = "/";
+                    $sep = ";" if grep { length($_) > 1 } ($ref, @alts);
+                    $genotype_string .= join($sep, ($ref, @alts)) . "\t";
                 }
                 $genotype_string .= "\n";
 
@@ -2421,12 +2418,9 @@ sub get_cached_file_HapMap {
 
                 else {
                     # check if the values are simple A,C,T,G nucleotides
-                    my $not_nucleotides = 0;
-                    foreach (@values) {
-                        $not_nucleotides = 1 if length($_) > 1;
-                    }
+                    my $not_nucleotides = grep { length($_) > 1 } (@values);
 
-                    # if they are not simple nucleotides, join them with a /
+                    # if they are not simple nucleotides, join them with a ;
                     if ( $not_nucleotides ) {
 
                         # if the values are all equal, just display the value once
@@ -2434,9 +2428,9 @@ sub get_cached_file_HapMap {
                             $current_g = $values[0];
                         }
 
-                        # if the values are different, joing them with a /
+                        # if the values are different, joing them with a ;
                         else {
-                            $current_g = join('/', @values);
+                            $current_g = join(';', @values);
                         }
                     }
 
