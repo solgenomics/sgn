@@ -19,7 +19,7 @@ sub validate {
     my $accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
 
-    my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE (stock.type_id=? OR stock.type_id=? OR stock.type_id=?) AND stock.is_obsolete = 'F';";
+    my $q = "SELECT stock.uniquename, stockprop.value, stockprop.type_id FROM stock LEFT JOIN stockprop USING(stock_id) WHERE (stock.type_id=? OR stock.type_id=?) AND stock.is_obsolete = 'F';";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute($accession_type_id, $cross_type_id);
     my %result;
