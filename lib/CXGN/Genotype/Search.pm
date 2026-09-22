@@ -85,6 +85,11 @@ has 'protocol_id_list' => (
     is => 'rw',
 );
 
+has 'project_name_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is => 'rw'
+);
+
 has 'markerprofile_id_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
@@ -531,6 +536,7 @@ sub get_genotype_info {
     my %genotype_hash;
     my %genotypeprop_hash;
     my %protocolprop_hash;
+    my %project_hash;
     while (my ($stock_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
@@ -587,9 +593,13 @@ sub get_genotype_info {
         };
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
+        $project_hash{$project_name}++;
     }
 
     my @found_protocolprop_ids = keys %protocolprop_hash;
+
+    my @project_names = keys %project_hash;
+    $self->project_name_list(\@project_names);
 
     my @protocolprop_marker_hash_select_arr;
     foreach (@$protocolprop_marker_hash_select){
@@ -976,6 +986,7 @@ sub init_genotype_iterator {
     $h->execute();
     my @genotypeprop_infos;
     my %seen_protocol_ids;
+    my %project_hash;
     while (my ($stock_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $genotyping_facility, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
 
         my $germplasmName = '';
@@ -1032,6 +1043,7 @@ sub init_genotype_iterator {
         );
         $seen_protocol_ids{$protocol_id}++;
         push @genotypeprop_infos, \%genotypeprop_info;
+        $project_hash{$project_name}++;
     }
 
     $self->_genotypeprop_infos(\@genotypeprop_infos);
@@ -1039,6 +1051,9 @@ sub init_genotype_iterator {
 
     my @seen_protocol_ids = keys %seen_protocol_ids;
     my %protocolprop_top_key_select_hash = map {$_ => 1} @protocolprop_top_key_select_arr;
+    my @project_names = keys %project_hash;
+    $self->project_name_list(\@project_names);
+
     my %selected_protocol_marker_info;
     my %selected_protocol_top_key_info;
     my $val;
@@ -2388,7 +2403,7 @@ sub get_cached_file_HapMap {
 
                 $genotype_string .= "panelLSID\t";
                 foreach my $m (@all_marker_objects) {
-                    my $projName = $geno->{genotypingDataProjectName};
+                    my $projName = join(';', @{$self->project_name_list()});
                     $genotype_string .= "$projName\t";
                 }
                 $genotype_string .= "\n";
@@ -2712,7 +2727,7 @@ sub get_cached_file_HapMap_compute_from_parents {
 
                     $genotype_string .= "panelLSID\t";
                     foreach my $m (@all_marker_objects) {
-                        my $projName = $geno->{genotypingDataProjectName};
+                        my $projName = join(';', @{$self->project_name_list()});
                         $genotype_string .= "$projName\t";
                     }
                     $genotype_string .= "\n";
