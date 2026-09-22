@@ -59,11 +59,13 @@ for my $extension ("xls", "xlsx", "csv") {
 		archive_filename => "trial_layout_example.$extension",
 		timestamp        => $timestamp,
 		user_id          => 41, #janedoe in fixture
-		user_role        => 'curator'
+		user_role        => 'curator',
+		metadata_schema  => $f->metadata_schema(),
+		file_type        => 'trials'
 	});
 
 	## Store uploaded temporary file in archive
-	my $archived_filename_with_path = $uploader->archive();
+	my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 	my $md5 = $uploader->get_md5($archived_filename_with_path);
 	ok($archived_filename_with_path);
 	ok($md5);
@@ -535,11 +537,13 @@ for my $extension ("xls", "xlsx", "csv") {
 		archive_filename => "trial_layout_with_seedlot_example.$extension",
 		timestamp        => $timestamp,
 		user_id          => 41, #janedoe in fixture
-		user_role        => 'curator'
+		user_role        => 'curator',
+		metadata_schema  => $f->metadata_schema(),
+		file_type		 => 'trials'
 	});
 
 	## Store uploaded temporary file in archive
-	my $archived_filename_with_path = $uploader->archive();
+	my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 	my $md5 = $uploader->get_md5($archived_filename_with_path);
 	ok($archived_filename_with_path);
 	ok($md5);
@@ -1277,11 +1281,13 @@ for my $extension ("xls", "xlsx", "csv") {
 		archive_filename => "trial_layout_example_with_treatment.$extension",
 		timestamp        => $timestamp,
 		user_id          => 41, #janedoe in fixture
-		user_role        => 'curator'
+		user_role        => 'curator',
+		metadata_schema  => $f->metadata_schema(),
+		file_type 		 => 'trials'
 	});
 
 	## Store uploaded temporary file in archive
-	my $treatment_archived_filename_with_path = $uploader->archive();
+	my ($archived_treatment_file_id, $treatment_archived_filename_with_path) = $uploader->archive();
 	my $md5_treatment = $uploader->get_md5($treatment_archived_filename_with_path);
 	ok($treatment_archived_filename_with_path);
 	ok($md5_treatment);
@@ -1475,11 +1481,13 @@ for my $extension ("xls", "xlsx", "csv") {
 		archive_filename => "trial_layout_example_flexible.$extension",
 		timestamp        => $timestamp,
 		user_id          => 41, #janedoe in fixture
-		user_role        => 'curator'
+		user_role        => 'curator',
+		metadata_schema  => $f->metadata_schema(),
+		file_type        => 'trials'
 	});
 
 	## Store uploaded temporary file in archive
-	my $archived_filename_with_path = $uploader->archive();
+	my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 	my $md5 = $uploader->get_md5($archived_filename_with_path);
 	ok($archived_filename_with_path);
 	ok($md5);

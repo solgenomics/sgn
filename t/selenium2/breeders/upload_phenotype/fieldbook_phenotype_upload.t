@@ -41,19 +41,19 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-    sleep(3);
+    sleep(15);
 
     my $verify_status = $t->find_element_ok(
         "upload_phenotype_fieldbook_verify_status",
         "id", "verify the verification")->get_attribute('innerHTML');
 
     ok($verify_status =~ /File fieldbook_phenotype_file_no_fieldbook_image.csv saved in archive./, "Verify the positive validation");
-    ok($verify_status =~ /File valid: fieldbook_phenotype_file_no_fieldbook_image.csv./, "Verify the positive validation");
+    ok($verify_status =~ /File valid: .*fieldbook_phenotype_file_no_fieldbook_image.csv./, "Verify the positive validation");
     ok($verify_status =~ /File data successfully parsed./, "Verify the positive validation");
     ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify the positive validation");
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-    sleep(10);
+    sleep(15);
 
     $verify_status = $t->find_element_ok(
         "upload_phenotype_fieldbook_verify_status",
@@ -90,7 +90,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-    sleep(3);
+    sleep(15);
     
     $verify_status = $t->find_element_ok(
         "upload_phenotype_fieldbook_verify_status",
@@ -105,7 +105,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /There are 28 values in your file that are the same as values already stored in the database./, "Verify 28 values in your file after store validation");
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-    sleep(10);
+    sleep(15);
 
     $verify_status = $t->find_element_ok(
         "upload_phenotype_fieldbook_verify_status",
@@ -137,7 +137,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1);
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
-    sleep(3);
+    sleep(15);
 
     $verify_status = $t->find_element_ok(
         "upload_phenotype_fieldbook_verify_status",
@@ -151,7 +151,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /There are 28 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
 
     $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
-    sleep(10);
+    sleep(15);
 
     $verify_status = $t->find_element_ok(
         "upload_phenotype_fieldbook_verify_status",

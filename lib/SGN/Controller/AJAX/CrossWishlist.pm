@@ -756,22 +756,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
        archive_filename => $archive_name,
        timestamp => $timestamp,
        user_id => $user_id,
-       user_role => $c->user->get_object->get_user_type()
+       user_role => $c->user->get_object->get_user_type(),
+       file_type => $file_type,
+       metadata_schema => $metadata_schema
     });
-    my $uploaded_file = $uploader->archive();
+    my ($uploaded_file_id, $uploaded_file) = $uploader->archive();
     my $md5 = $uploader->get_md5($uploaded_file);
 #    print STDERR "WISHLIST UPLOADED FILE =".Dumper($uploaded_file)."\n";
-
-    my $wishlist_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $wishlist_md_row->insert();
-    my $wishlist_md5checksum = $md5->hexdigest();
-    my $wishlist_file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($uploaded_file),
-        dirname => dirname($uploaded_file),
-        filetype => $file_type,
-        md5checksum => $wishlist_md5checksum,
-        metadata_id => $wishlist_md_row->metadata_id(),
-    });
 
     my ($file_path3, $uri3) = $c->tempfile( TEMPLATE => "download/cross_wishlist_accession_info_XXXXX");
     $file_path3 .= '.csv';
@@ -812,21 +803,13 @@ sub create_cross_wishlist_submit_POST : Args(0) {
        archive_filename => $germplasm_info_archive_name,
        timestamp => $timestamp,
        user_id => $user_id,
-       user_role => $c->user->get_object->get_user_type()
+       user_role => $c->user->get_object->get_user_type(),
+       file_type => $file_type,
+       metadata_schema => $metadata_schema
     });
-    my $germplasm_info_uploaded_file = $uploader->archive();
+    my ($germplasm_info_uploaded_file_id, $germplasm_info_uploaded_file) = $uploader->archive();
     my $germplasm_info_md5 = $uploader->get_md5($germplasm_info_uploaded_file);
 #    print STDERR "GERMPLASM INFO UPLOADED FILE =".Dumper($germplasm_info_uploaded_file)."\n";
-    my $germplasm_info_md_row = $metadata_schema->resultset("MdMetadata")->create({create_person_id => $user_id});
-    $germplasm_info_md_row->insert();
-    my $germplasm_info_md5checksum = $germplasm_info_md5->hexdigest();
-    my $germplasm_info_file_row = $metadata_schema->resultset("MdFiles")->create({
-        basename => basename($germplasm_info_uploaded_file),
-        dirname => dirname($germplasm_info_uploaded_file),
-        filetype => $file_type,
-        md5checksum => $germplasm_info_md5checksum,
-        metadata_id => $germplasm_info_md_row->metadata_id(),
-    });
 
     my $odk_crossing_data_service_name = $c->config->{odk_crossing_data_service_name};
     my $odk_crossing_data_service_url = $c->config->{odk_crossing_data_service_url};
@@ -1019,11 +1002,12 @@ sub create_wishlist_by_uploading_POST : Args(0) {
         archive_filename => $upload_original_name,
         timestamp => $timestamp,
         user_id => $user_id,
-        user_role => $user_role
+        user_role => $user_role,
+        metadata_schema => $metadata_schema
     });
 
     ## Store uploaded temporary file in arhive
-    $archived_filename_with_path = $uploader->archive();
+    (my $archived_file_id, $archived_filename_with_path) = $uploader->archive();
     $md5 = $uploader->get_md5($archived_filename_with_path);
     if (!$archived_filename_with_path) {
         $c->stash->{rest} = {error => "Could not save file $upload_original_name in archive",};

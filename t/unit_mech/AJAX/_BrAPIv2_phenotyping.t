@@ -12,6 +12,7 @@ use DateTime;
 use Spreadsheet::WriteExcel;
 use Spreadsheet::Read;
 use CXGN::Dataset;
+use CXGN::UploadFile;
 use CXGN::Phenotypes::ParseUpload;
 use CXGN::Phenotypes::StorePhenotypes;
 
@@ -620,12 +621,30 @@ for my $extension ("xls", "xlsx") {
 
     my $parser = CXGN::Phenotypes::ParseUpload->new();
     my $filename = "t/data/trial/upload_phenotypin_spreadsheet_large.$extension";
+
+    my $time = DateTime->now();
+    my $timestamp = $time->ymd()."_".$time->hms();
+
+    my $uploader = CXGN::UploadFile->new({
+        tempfile => $filename,
+        subdirectory => 'brapi_v2_phenotyping_test',
+        archive_path => '/tmp',
+        archive_filename => "upload_phenotypin_spreadsheet_large.$extension",
+        timestamp => $timestamp,
+        user_id => 41, #janedoe in fixture
+        user_role => 'curator',
+        metadata_schema => $f->metadata_schema(),
+        file_type => 'phenotyping_spreadsheet'
+    });
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
+
     my $parsed_file = $parser->parse('phenotype spreadsheet', $filename, 0, 'plots', $f->bcs_schema);
     ok($parsed_file, "Check if parse parse phenotype spreadsheet works");
 
     my %phenotype_metadata;
     $phenotype_metadata{'archived_file'} = $filename;
-    $phenotype_metadata{'archived_file_type'} = "spreadsheet phenotype file";
+    $phenotype_metadata{'archived_file_id'} = $archived_file_id;
+    $phenotype_metadata{'archived_file_type'} = "phenotyping_spreadsheet";
     $phenotype_metadata{'operator'} = "janedoe";
     $phenotype_metadata{'date'} = "2016-02-17_05:15:21";
     my %parsed_data = %{$parsed_file->{'data'}};

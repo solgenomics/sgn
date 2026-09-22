@@ -979,7 +979,7 @@ sub store_metadata {
     my $file = $self->archived_filename;
     my $md_row = $self->metadata_schema->resultset("MdMetadata")->create({create_person_id => $self->user_id});
     $md_row->insert();
-    my $upload_file = CXGN::UploadFile->new();
+    my $upload_file = CXGN::UploadFile->new({ metadata_schema => $self->metadata_schema });
     my $md5 = $upload_file->get_md5($file);
     my $md5checksum = $md5->hexdigest();
     my $file_row = $self->metadata_schema->resultset("MdFiles")->create({

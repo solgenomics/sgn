@@ -1,0 +1,31 @@
+<div class="well well-sm">
+    <& /help/file_upload_type.mas, type => "Accession exchanges", optional_column => 0 &>
+    <br/>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <b>Header:</b><br>
+            The first row (header) must contain the columns 'plot_name' and 'accession_name' or 'cross_unique_id' or 'family_name', depending on the stock type in this trial.<br>
+            An optional additional column, 'new_plot_name' can be added to change the plot names.<br>
+            Alternatively, if a plot name template has been saved in association with this trial, 'new_plot_name' can be left blank and the template will be used to rename the plot.<br>
+
+            <table style="margin-top: 3%;" class="table table-bordered table-hover">
+                <tbody>
+                <tr>
+                <td>plot_name</td>
+                <td>accession_name</td>
+                <td>new_plot_name (optional)</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <b>Required columns:</b><br>
+    <b>plot_name:</b> name of plot to change the accession for<br>
+    <b>accession_name or cross_unique_id or family_name:</b> name of the accession or cross unique id or family name that the plot should be connected to.<br>
+    <br><b>Optional column:</b><br>
+    <b>new_plot_name:</b> new name for plot.<br>
+    <div class="list-group-item-warning" >
+        <p><i>Warning: the new plot name will replace the old plot name in subplots, plants, and tissue samples if possible. If a plot name template is saved in assocation with this trial, it will be used to rename the plot unless a new plot name is manually specified. Changing plot accessions/cross_unique_ids/family_names may change plot replicate numbers. You may need to reprint labels after the changes are applied.</i></p>
+    </div>
+</div>
