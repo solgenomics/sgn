@@ -42,8 +42,7 @@ solGS.pca = {
     },
 
     getArgsFromOtherUrls: function () {
-        var protocolId =
-            solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+        
 
         var pcaPopId;
         var selectionPopId;
@@ -51,6 +50,8 @@ solGS.pca = {
         var dataStr;
 
         var page = location.pathname;
+        var protocolId;
+
         if ( page.match(/solgs\/trait\/|solgs\/model\/combined\/trials\/|\/breeders\/trial\//)
 ) {
             trainingPopId = jQuery("#training_pop_id").val();
@@ -72,6 +73,8 @@ solGS.pca = {
                 dataStr = "list";
             } else if (pcaPopId.match(/dataset/)) {
                 dataStr = "dataset";
+                var datasetId = selectionPopId.replace(/dataset_/, "");
+                protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
             }
         } else if (
             page.match(
@@ -89,6 +92,10 @@ solGS.pca = {
             if (comboPopsId) {
                 var dataSetType = "combined_populations";
             }
+        }
+
+        if (!protocolId) {
+            protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
         }
 
         var dataType = this.getSelectedDataType(pcaPopId);
@@ -191,6 +198,7 @@ solGS.pca = {
         var pcaArgs;
         var selectedPopDiv = document.getElementById(runPcaElemId);
 
+        var protocolId;
         if (selectedPopDiv) {
             var selectedPopData = selectedPopDiv.dataset;
             var selectedPop = JSON.parse(selectedPopData.selectedPop);
@@ -198,6 +206,21 @@ solGS.pca = {
 
             var pcaArgs = selectedPopData.selectedPop;
             pcaArgs = JSON.parse(pcaArgs);
+            if (pcaArgs.data_structure.match(/dataset/)) {
+                var datasetId = pcaArgs.dataset_id;
+                protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+            }
+
+            if (!protocolId) {
+                protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+            }
+
+            var page = `/pca/analysis/${pcaPopId}/gp/${protocolId}`;
+            
+            pcaArgs["analysis_type"] = "pca analysis";
+            pcaArgs["genotyping_protocol_id"] = protocolId;
+            pcaArgs["analysis_page"] = page;
+
             if (!selectedPop.data_type) {
                 pcaArgs["data_type"] = this.getSelectedDataType(pcaPopId);
             }
@@ -243,14 +266,18 @@ solGS.pca = {
 
     var listId;
     var datasetId;
+    var protocolId;
 
     if (dataStr.match(/dataset/)) {
         datasetId = popId;
+        protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
     } else if (dataStr.match(/list/)) {
         listId = popId;
     }
-    var protocolId =
-        solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+
+    if (!protocolId) {
+        protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+    }
 
     var pcaArgs = {
         pca_pop_id: pcaPopId,
@@ -297,19 +324,19 @@ solGS.pca = {
         if (dataStr.match(/dataset/)) {
             if (toolCompatibility == null || toolCompatibility == "(not calculated)"){
             compatibilityMessage = "(not calculated)";
-        } else {
-            if (toolCompatibility["Population Structure"]['compatible'] == 0) {
-            compatibilityMessage = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
             } else {
-                if ('warn' in toolCompatibility["Population Structure"]) {
-                    compatibilityMessage = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + toolCompatibility["Population Structure"]['warn'] + '"></span></b>';
+                if (toolCompatibility["Population Structure"]['compatible'] == 0) {
+                compatibilityMessage = '<b><span class="glyphicon glyphicon-remove" style="color:red"></span></b>'
                 } else {
-                    compatibilityMessage = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+toolCompatibility["Population Structure"]['types']+'"></span></b>';
+                    if ('warn' in toolCompatibility["Population Structure"]) {
+                        compatibilityMessage = '<b><span class="glyphicon glyphicon-warning-sign" style="color:orange;font-size:14px" title="' + toolCompatibility["Population Structure"]['warn'] + '"></span></b>';
+                    } else {
+                        compatibilityMessage = '<b><span class="glyphicon glyphicon-ok" style="color:green" title="'+toolCompatibility["Population Structure"]['types']+'"></span></b>';
+                    }
                 }
             }
         }
-        }
-        console.log(`compatibilityMessage: ${compatibilityMessage}`);
+
         return compatibilityMessage;
     },
 
@@ -597,8 +624,17 @@ solGS.pca = {
 
     generatePcaUrl: function (pcaPopId) {
         var traitId = jQuery("#trait_id").val();
-        var protocolId =
-            solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+
+        var protocolId;
+        if (pcaPopId.match(/dataset/)) {
+            var datasetId = pcaPopId.replace(/dataset_/g, "");
+            protocolId = solGS.dataset.getDatasetGenoProtocolId(datasetId);
+
+        } 
+
+        if (!protocolId) {
+            protocolId = solGS.genotypingProtocol.getGenotypingProtocolId("pca_div");
+        }
 
         var solgsPages =
             "solgs/population/" +
@@ -1087,8 +1123,15 @@ jQuery(document).ready(function () {
             var canvas = solGS.pca.canvas;
             var pcaMsgDiv = solGS.pca.pcaMsgDiv;
 
-            var pcaUrl = solGS.pca.generatePcaUrl(pcaPopId);
-            pcaArgs["analysis_page"] = pcaUrl;
+            if (!pcaArgs.analysis_page) {
+                pcaPopId = pcaArgs.pca_pop_id;
+                var protocolId = pcaArgs.genotyping_protocol_id;
+                var pcaUrl = `/pca/analysis/${pcaPopId}/gp/${protocolId}`;
+                //    solGS.kinship.generateKinshipUrl(kinshipPopId);
+                pcaArgs["analysis_page"] = pcaUrl;
+            }
+        
+    
 
             solGS.pca
                 .checkCachedPca(pcaArgs)
@@ -1109,9 +1152,7 @@ jQuery(document).ready(function () {
                         solGS.pca.cleanUpOnSuccess(pcaPopId);
                     } else {
                         var page = location.pathname;
-                        var pcaUrl = solGS.pca.generatePcaUrl(
-                            pcaArgs.pca_pop_id
-                        );
+                        var pcaUrl = solGS.pca.generatePcaUrl(pcaArgs.pca_pop_id);
                         pcaArgs["analysis_page"] = pcaUrl;
 
                         runPcaBtnId = `#${runPcaBtnId}`;

@@ -129,6 +129,20 @@ is($after_adding_transformation_id, $before_adding_transformation_id + 1);
 my $after_adding_transformation_id_relationship = $schema->resultset("Stock::StockRelationship")->search({})->count();
 is($after_adding_transformation_id_relationship, $before_adding_transformation_id_relationship + 2);
 
+#test editing Notes
+my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
+my $stockprop_rs = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $transformation_notes_cvterm_id});
+my $notes = $stockprop_rs->value();
+is($notes, 'test');
+
+$mech->post_ok('http://localhost:3010/ajax/transformation/update_transformation_metadata', [ 'transformation_stock_id' => $transformation_stock_id, 'new_transformation_notes' => 'test updating notes']);
+$response = decode_json $mech->content;
+is($response->{'success'}, '1');
+
+my $stockprop_rs_2 = $schema->resultset("Stock::Stockprop")->find({stock_id => $transformation_stock_id, type_id => $transformation_notes_cvterm_id});
+my $updated_notes = $stockprop_rs_2->value();
+is($updated_notes, 'test updating notes');
+
 #adding control vector
 my $new_control_vector_ = $schema->resultset('Stock::Stock')->create({
     organism_id => $organism->organism_id,

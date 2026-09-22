@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use File::Basename;
-use File::Path qw / mkpath  /;
+use File::Path qw /make_path /;
 use File::Slurp qw /write_file read_file/;
 use File::Spec::Functions qw / catfile catdir/;
 use List::MoreUtils qw /uniq/;
@@ -116,7 +116,7 @@ sub prep_download_si_files {
     my $tmp_dir = catfile($c->config->{tempfiles_subdir}, 'selectionindex');
     my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
 
-    mkpath ([$base_tmp_dir], 0, 0755);
+    make_path($base_tmp_dir, { mode => oct('0755') });
 
     $self->selection_index_file($c);
     my $sindex_file = $c->stash->{selection_index_only_file};
@@ -168,7 +168,7 @@ sub si_input_files {
         );
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-    my $temp_dir = $c->stash->{selection_index_temp_dir};
+    my $temp_dir = $self->selection_index_temp_dir($c);
 
     my $in_name = "input_files_selection_index_${file_id}";
     my $input_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $in_name);
@@ -192,7 +192,7 @@ sub si_output_files {
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
     my $out_name = "output_files_selection_index_${file_id}";
-    my $temp_dir = $c->stash->{selection_index_temp_dir};
+    my $temp_dir = $self->selection_index_temp_dir($c);
     my $output_file = $c->controller('solGS::Files')->create_tempfile($temp_dir, $out_name);
     write_file($output_file, {binmode => ':utf8'}, $output_files);
 
@@ -205,7 +205,9 @@ sub calc_selection_index {
     my ($self, $c) = @_;
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{selection_index_temp_dir};
+    my $temp_dir = $self->selection_index_temp_dir($c);
+
+    $c->stash->{analysis_tempfiles_dir} = $c->stash->{selectionIndex_tempfiles};
     $c->stash->{output_files} = $self->si_output_files($c);
     $c->stash->{input_files}  = $self->si_input_files($c);
     $c->stash->{r_temp_file}  = "selection_index_${file_id}";
@@ -282,18 +284,18 @@ sub gebvs_selection_index_file {
     my ($self, $c) = @_;
 
    my $file_id = $c->stash->{sindex_name};
-   if (!$file_id)
-   {
+   if (!$file_id) {
        $file_id = $c->controller('solGS::Files')->create_file_id($c);
    }
 
     my $name = "gebvs_selection_index_${file_id}";
-    my $dir = $c->stash->{selection_index_cache_dir};
+    my $dir = $self->selection_index_cache_dir($c);
 
-    my $cache_data = { key       => $name,
-		       file      => $name,
-		       stash_key => 'gebvs_selection_index_file',
-		       cache_dir => $dir
+    my $cache_data = { 
+        key       => $name,
+		file      => $name,
+		stash_key => 'gebvs_selection_index_file',
+		cache_dir => $dir
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
@@ -305,37 +307,62 @@ sub selection_index_file {
     my ($self, $c) = @_;
 
     my $file_id = $c->stash->{sindex_name};
-    if (!$file_id)
-    {
+    if (!$file_id) {
 	    $file_id = $c->controller('solGS::Files')->create_file_id($c);
     }
 
     my $name = "selection_index_only_${file_id}";
-    my $dir = $c->stash->{selection_index_cache_dir};
+    my $dir = $self->selection_index_cache_dir($c);
 
-    my $cache_data = { key       => $name,
-		       file      => $name,
-		       stash_key => 'selection_index_only_file',
-		       cache_dir => $dir
+    my $cache_data = { 
+        key       => $name,
+		file      => $name,
+		stash_key => 'selection_index_only_file',
+		cache_dir => $dir
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);
 
 }
 
+sub selection_index_cache_dir {
+    my ( $self, $c, $pop_id ) = @_;
+
+    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
+
+    my $cache_dir = catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'cache' );
+    make_path($cache_dir, { mode => oct('0755') }) unless -d $cache_dir;
+
+    return $cache_dir;
+
+}
+
+
+sub selection_index_temp_dir {
+    my ( $self, $c, $pop_id ) = @_;
+
+    $pop_id = $c->stash->{training_pop_id} if !$pop_id;
+
+    my $temp_dir = catdir( $c->stash->{selectionIndex_dir}, $pop_id, 'tempfiles' );
+    make_path($temp_dir, { mode => oct('0755') }) unless -d $temp_dir;
+
+    return $temp_dir;
+
+}   
 
 sub rel_weights_file {
     my ($self, $c) = @_;
 
     my $file_id = $c->controller('solGS::Files')->create_file_id($c);
 
-    my $dir = $c->stash->{selection_index_cache_dir};
+    my $dir = $self->selection_index_cache_dir($c);
     my $name =  "rel_weights_${file_id}";
 
-    my $cache_data = { key       => $name,
-    		       file      => $name,
-    		       stash_key => 'rel_weights_file',
-    		       cache_dir => $dir
+    my $cache_data = {
+        key       => $name,
+    	file      => $name,
+    	stash_key => 'rel_weights_file',
+    	cache_dir => $dir
     };
 
     $c->controller('solGS::Files')->cache_file($c, $cache_data);

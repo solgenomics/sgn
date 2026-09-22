@@ -188,16 +188,25 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         $jsonSummary
     ));
     my $user = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
 
     my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema,
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $user,
         name => $ds->name()." stability analysis",
         job_type => 'stability_analysis',
         cmd => $cmd_str,
-        cxgn_tools_run_config => $cxgn_tools_run_config,
-        finish_logfile => $c->config->{job_finish_log}
+        cxgn_tools_run_config => $cxgn_tools_run_config
     });
 
     $job->submit();
@@ -227,7 +236,7 @@ sub generate_results: Path('/ajax/stability/generate_results') : {
         sleep(1);
     }
 
-    my $finished = $job->read_finish_timestamp();
+    my $finished = $job->retrieve_finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {

@@ -7,6 +7,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use File::Path qw/remove_tree/;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -17,8 +18,7 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
-print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 my $accessions_list_name = $accessions_list->{list_name};
@@ -54,8 +54,8 @@ print STDERR "\ntrials list: $trials_list_name -- $trials_list_id\n";
 print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n";
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
-`rm -r $cache_dir`;
-
+remove_tree($cache_dir, {safe => 1});
+sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
 
@@ -113,9 +113,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(130);
     $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "Predict")]', 'xpath', 'click training pop')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP selection pred list tr');
+    $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('Test DMCP selection pred list tr');
     sleep(2);
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
@@ -231,9 +231,10 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
+
     $d->find_element_ok('//table[@id="selection_pops_table"]//*[contains(text(), "FRW")]', 'xpath', 'go back')->click();
     sleep(5);
 
@@ -242,18 +243,19 @@ $d->while_logged_in_as("submitter", sub {
 
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel multi traits pred')->click();
     sleep(5);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('clones list dmc-frw sel pred');
+    $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('clones list dmc-frw sel pred');
     sleep(2);
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "Predict")]', 'xpath', 'accessions list sel pred')->click();
     sleep(5);
+
     $d->find_element_ok('//tr[@id="' . $accessions_list_id .'"]//*[contains(text(), "FRW")]', 'xpath', 'Go to FRW selection prediction page')->click();
     sleep(5);
 
@@ -269,7 +271,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
@@ -282,12 +284,14 @@ $d->while_logged_in_as("submitter", sub {
     sleep(10);
 
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
+    sleep(5);
+
     $d->driver->refresh();
     sleep(5);
+
     $d->get('/solgs', 'solgs home page');
     sleep(4);
-
 
     $d->find_element_ok('//tr[@id="' . $trials_list_id .'"]//*[starts-with(@id, "run_solgs")]', 'xpath', 'trials list sel pred')->click(); 
     sleep(3);
@@ -315,7 +319,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->go_back();
     sleep(5);
 
-    `rm -r $cache_dir`;
+    remove_tree($cache_dir, {safe => 1});
     sleep(5);
 
     $d->driver->refresh();
@@ -382,9 +386,9 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
     sleep(3);
-    $d->find_element_ok('queue_job', 'id', 'no job queueing')->click();
+    $d->find_element_ok('queue_job', 'id', 'job queueing')->click();
     sleep(2);
-    $d->find_element_ok('analysis_name', 'id', 'no job queueing')->send_keys('Test DMCP model trials dataset tr');
+    $d->find_element_ok('analysis_name', 'id', 'analysis name')->send_keys('Test DMCP model trials dataset tr');
     sleep(2);
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);

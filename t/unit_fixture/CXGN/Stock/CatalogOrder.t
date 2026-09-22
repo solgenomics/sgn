@@ -145,7 +145,9 @@ is($after_adding_an_order, $before_adding_an_order + 1);
 CXGN::List::delete_list($dbh, $your_cart_id);
 
 #test retrieving order from janedoe
-my $buyer_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, order_from_id => $janedoe_id });
+my $clone_list_format_type = 'individual_item';
+my @properties = ('Quantity','Comments');
+my $buyer_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, order_from_id => $janedoe_id, clone_list_format_type => $clone_list_format_type, properties => \@properties });
 my $buyer_orders = $buyer_order_obj->get_orders_from_person_id();
 my $first_order_info = $buyer_orders->[0];
 is($first_order_info->{'order_id'}, '1');
@@ -157,7 +159,7 @@ my $buyer_num_items = @$items;
 is($buyer_num_items, '2');
 
 #test retrieving order to johndoe
-my $vendor_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, order_to_id => $johndoe_id });
+my $vendor_order_obj = CXGN::Stock::Order->new({ dbh => $dbh, bcs_schema => $schema, people_schema => $people_schema, order_to_id => $johndoe_id, clone_list_format_type => $clone_list_format_type, properties => \@properties });
 my $vendor_orders = $vendor_order_obj->get_orders_to_person_id();
 
 my $order = $vendor_orders->[0];
@@ -166,10 +168,7 @@ is($order->{'order_status'}, 'submitted');
 is($order->{'order_from_name'}, 'Jane Doe');
 is($order->{'completion_date'}, undef);
 is($order->{'contact_person_comments'}, undef);
-
-my $clone_list = $order->{'clone_list'};
-my $vendor_num_items = @$clone_list;
-is($vendor_num_items, '2');
+is($order->{'formatted_clone_list'}, '<b>Item Name</b>:UG120001<br>Quantity:2<br>Comments:<br> <br><b>Item Name</b>:UG120002<br>Quantity:3<br>Comments:<br> ');
 
 #test updating order status by johndoe
 my $time = DateTime->now();

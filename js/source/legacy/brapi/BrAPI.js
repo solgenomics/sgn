@@ -146,7 +146,7 @@ class ThreadNode {
         let fc = fray_data=>fray_data.forEach(d=>{
             Promise.resolve(d).then(datum=>{
                 try {
-                    return (datum instanceof Array) ? fc(datum) : c(datum.val,datum.key);
+                    return Array.isArray(datum) ? fc(datum) : c(datum.val,datum.key);
                 } catch (e) {
                     new NodeFrayError(e);
                     return []
@@ -164,7 +164,7 @@ class ThreadNode {
         let edge = frayed._connect(this);
         let fc = fray_data=>fray_data.map(d=>{
             return Promise.resolve(d).then(datum=>{
-                if(datum instanceof Array) return fc(datum);
+                if(Array.isArray(datum)) return fc(datum);
                 var returnVal;
                 try {
                     returnVal = fray_func(datum,edge.send);
@@ -222,7 +222,7 @@ class ThreadNode {
         let edge = joined._connect(this);
         let fci = i => fray_data => fray_data.map(d=>{
             return Promise.resolve(d).then(datum=>{
-                if(datum instanceof Array) return fci(i)(datum);
+                if(Array.isArray(datum)) return fci(i)(datum);
                 return joinmap.join(datum,i);
             })
         });
@@ -241,7 +241,7 @@ class ThreadNode {
     _flatten_filaments(arr){
         return Promise.all(arr).then(res_arr=>{
             return Promise.all(res_arr.map(d=>{
-                return Promise.resolve(d).then(d=>(d instanceof Array)?this._flatten_filaments(d):[d])
+                return Promise.resolve(d).then(d=>Array.isArray(d)?this._flatten_filaments(d):[d])
             })).then(peices=>peices.reduce((a, v)=>a.concat(v),[]))
         })
     }
@@ -2794,7 +2794,7 @@ class BrAPICallController {
                 param_string+="&";
             }
             param_string+=param+"=";
-            if (params[param] instanceof Array){
+            if (Array.isArray(params[param])){
                 param_string+=params[param].map(String).join("%2C");
             }
             else {

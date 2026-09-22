@@ -212,39 +212,59 @@ is_deeply($all_locations,[
 my $all_locations = $p->get_locations();
 print STDERR Dumper $all_locations;
 is_deeply($all_locations, [
-          [
-            24,
-            'Cornell Biotech',
-            '42.45345',
-            '-76.4735',
-            '274',
-            0
-          ],
-          [
-            23,
-            'test_location',
-            '32.61359',
-            '-115.86428',
-            '109',
-            5456
-          ],
-          [
-            25,
-            'NA',
-            undef,
-            undef,
-            undef,
-            0
-          ],
-          [
-            26,
-            '[Computation]',
-            undef,
-            undef,
-            undef,
-            0
-          ]
-        ], 'get all locations');
+  [
+      23,
+      'test_location',
+      '32.61359',
+      '-115.86428',
+      '109',
+      5456,
+      undef,
+      'USA',
+      'United States',
+      undef,
+      undef
+  ],
+  [
+      24,
+      'Cornell Biotech',
+      '42.45345',
+      '-76.4735',
+      '274',
+      0,
+      undef,
+      'USA',
+      'United States',
+      undef,
+      undef
+  ],
+  [
+      25,
+      'NA',
+      undef,
+      undef,
+      undef,
+      0,
+      undef,
+      undef,
+      undef,
+      undef,
+      undef
+  ],
+  [
+      26,
+      '[Computation]',
+      undef,
+      undef,
+      undef,
+      0,
+      undef,
+      undef,
+      undef,
+      undef,
+      undef
+  ]
+], 'get all locations');
 
 my @all_years = $p->get_all_years();
 print STDERR Dumper \@all_years;

@@ -132,7 +132,7 @@ sub create_heritability_phenodata_file {
     }
 
 
-    my $h2_cache_dir = $c->stash->{heritability_cache_dir};
+    my $h2_cache_dir = $self->heritability_cache_dir($c);
 
     copy($phenotype_file, $h2_cache_dir)
     or die "could not copy $phenotype_file to $h2_cache_dir";
@@ -143,12 +143,12 @@ sub create_heritability_phenodata_file {
 }
 
 
-sub create_heritability_dir {
-    my ($self, $c) = @_;
+# sub create_heritability_dir {
+#     my ($self, $c) = @_;
 
-    $c->controller('solGS::Files')->get_solgs_dirs($c);
+#     $c->controller('solGS::Files')->get_solgs_dirs($c);
 
-}
+# }
 
 
 sub pheno_heritability_output_files {
@@ -156,8 +156,8 @@ sub pheno_heritability_output_files {
 
     my $pop_id = $c->stash->{pop_id};
 
-    $self->create_heritability_dir($c);
-    my $h2_cache_dir = $c->stash->{heritability_cache_dir};
+    # $self->create_heritability_dir($c);
+    my $h2_cache_dir = $self->heritability_cache_dir($c);
 
     my $file_cache  = Cache::File->new(cache_root => $h2_cache_dir);
     $file_cache->purge();
@@ -229,8 +229,8 @@ sub pheno_heritability_analysis_output :Path('/phenotypic/heritability/analysis/
 sub download_phenotypic_heritability : Path('/download/phenotypic/heritability/population') Args(1) {
     my ($self, $c, $id) = @_;
 
-    $self->create_heritability_dir($c);
-    my $h2_dir = $c->stash->{heritability_cache_dir};
+    # $self->create_heritability_dir($c);
+    my $h2_dir = $self->heritability_cache_dir($c);
     my $h2_file = catfile($h2_dir,  "h2_coefficients_table_${id}");
 
     unless (!-e $h2_file || -s $h2_file <= 1)
@@ -266,9 +266,9 @@ sub temp_pheno_h2_output_file {
               $c->stash->{h2_coefficients_json_file},
     );
 
-    my $tmp_dir = $c->stash->{heritability_temp_dir};
+    my $temp_dir = $self->heritability_temp_dir($c);
     my $name = "pheno_h2_output_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, $files);
 
     $c->stash->{temp_pheno_h2_output_file} = $tempfile;
@@ -299,9 +299,9 @@ sub temp_pheno_h2_input_file {
               $c->req->referer,
     );
 
-    my $tmp_dir = $c->stash->{heritability_temp_dir};
+    my $temp_dir = $self->heritability_temp_dir($c);
     my $name = "pheno_h2_input_files_${pop_id}";
-    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($tmp_dir, $name);
+    my $tempfile =  $c->controller('solGS::Files')->create_tempfile($temp_dir, $name);
     write_file($tempfile, $files);
     $c->stash->{temp_pheno_h2_input_file} = $tempfile;
 
@@ -365,7 +365,7 @@ sub h2_pheno_r_jobs {
     $c->stash->{r_temp_file}  = "${h2_type}-${pop_id}";
     $c->stash->{r_script}     = $c->stash->{heritability_script};
 
-    $c->stash->{analysis_tempfiles_dir} = $c->stash->{heritability_temp_dir};
+    $c->stash->{analysis_tempfiles_dir} = $self->heritability_temp_dir($c);
 
     $c->controller('solGS::AsyncJob')->get_cluster_r_job_args($c);
     my $jobs  = $c->stash->{cluster_r_job_args};
@@ -386,7 +386,7 @@ sub h2_pheno_r_jobs_file {
     $self->h2_pheno_r_jobs($c);
     my $jobs = $c->stash->{h2_pheno_r_jobs};
 
-    my $temp_dir = $c->stash->{heritability_temp_dir};
+    my $temp_dir = $self->heritability_temp_dir($c);
     my $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'h2-r-jobs-file');
 
     nstore $jobs, $jobs_file
@@ -422,19 +422,41 @@ sub h2_pheno_query_jobs_file {
 
     my $jobs_file;
 
-    if ($jobs->[0])
-    {
-	my $temp_dir = $c->stash->{heritability_temp_dir};
-	$jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');
+    if ($jobs->[0]) {
+        my $temp_dir = $self->heritability_temp_dir($c);
+        $jobs_file =  $c->controller('solGS::Files')->create_tempfile($temp_dir, 'pheno-h2-query-jobs-file');
 
-	nstore $jobs, $jobs_file
-	    or croak "heritability pheno query jobs : $! serializing heritability phenoquery jobs to $jobs_file";
+        nstore $jobs, $jobs_file
+            or croak "heritability pheno query jobs : $! serializing heritability phenoquery jobs to $jobs_file";
     }
 
     $c->stash->{h2_pheno_query_jobs_file} = $jobs_file;
 
 }
 
+sub heritability_cache_dir {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->stash->{trial_id} || $c->stash->{pop_id};
+    print STDERR "heritability trial id: $trial_id\n";
+    my $heritability_cache_dir = catdir($c->stash->{heritability_dir}, $trial_id, 'cache');
+
+    return $heritability_cache_dir;
+
+}
+
+
+sub heritability_temp_dir {
+    my ($self, $c) = @_;
+
+    my $trial_id = $c->stash->{trial_id} || $c->stash->{pop_id};
+    my $heritability_temp_dir = catdir($c->stash->{heritability_dir}, $trial_id, 'tempfiles');
+    mkpath($heritability_temp_dir, 0, 755);
+
+    $c->stash->{heritability_temp_dir} = $heritability_temp_dir;
+
+    return $heritability_temp_dir;
+}
 
 sub begin : Private {
     my ($self, $c) = @_;

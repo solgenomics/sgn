@@ -141,16 +141,16 @@ sub brapi : Chained('/') PathPart('brapi') CaptureArgs(1) {
 	if (defined $c->request->data){
 		# All POST requests accept for search methods require a json array body
 		if ($c->request->method eq "POST" && index($c->request->env->{REQUEST_URI}, "search") == -1){
-			if (ref $c->request->data ne 'ARRAY') {
-				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON array body required', 400);
-				_standard_response_construction($c, $response);
-			}
+			# if (ref $c->request->data ne 'ARRAY') {
+			# 	my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON array body required', 400);
+			# 	_standard_response_construction($c, $response);
+			# }
 			$c->stash->{clean_inputs} = _clean_inputs($c->req->params,$c->request->data);
 		} elsif ($c->request->method eq "PUT") {
-			if (ref $c->request->data eq 'ARRAY') {
-				my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON hash body required', 400);
-				_standard_response_construction($c, $response);
-			}
+			# if (ref $c->request->data eq 'ARRAY') {
+			# 	my $response = CXGN::BrAPI::JSONResponse->return_error($c->stash->{status}, 'JSON hash body required', 400);
+			# 	_standard_response_construction($c, $response);
+			# }
 			$c->stash->{clean_inputs} = $c->request->data;
 		} else {
 			$c->stash->{clean_inputs} = $c->request->data;

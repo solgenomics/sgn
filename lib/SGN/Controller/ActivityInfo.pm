@@ -173,6 +173,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     my $program_name;
     my $source_info_string;
     my $can_obsolete;
+    my $vector_id;
 
     if ($identifier_name) {
         my $identifier_rs = $schema->resultset("Stock::Stock")->find({uniquename => $identifier_name});
@@ -197,6 +198,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
             my $info = $transformation_obj->get_transformation_info();
             my $plant_material_name = $info->[0]->[1];
             my $vector_name = $info->[0]->[3];
+            $vector_id = $info->[0]->[2];
             my $transformation_project_name = $associated_projects->[0]->[5];
             my $source_info_hash = {};
             $source_info_hash->{'breedingProgram'} = $program_name;
@@ -255,6 +257,7 @@ sub record_activity :Path('/activity/record') :Args(0) {
     $c->stash->{program_name} = $program_name;
     $c->stash->{source_info} = $source_info_string;
     $c->stash->{can_obsolete} = $can_obsolete;
+    $c->stash->{vector_id} = $vector_id;
     $c->stash->{template} = '/tracking_activities/record_activity.mas';
 
 }

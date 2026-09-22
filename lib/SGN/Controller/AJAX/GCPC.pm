@@ -402,15 +402,24 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         # don't block and wait if the cluster looks full
         max_cluster_jobs => 1_000_000_000,
     };
+    my $dbhost = $c->config->{dbhost};
+    my $dbname = $c->config->{dbname};
+    my $dbuser = $c->config->{dbuser};
+    my $dbpass = $c->config->{dbpass};
+    my $basepath = $c->config->{basepath};
     my $job = CXGN::Job->new({
         schema => $schema,
         people_schema => $people_schema, 
+        dbhost => $dbhost,
+        dbname => $dbname,
+        dbuser => $dbuser,
+        dbpass => $dbpass,
+        basepath => $basepath,
         sp_person_id => $sp_person_id,
         job_type => 'genomic_prediction',
         name => $ds->name().' GCPC',
         cmd => $cmd_str,
         cxgn_tools_run_config => $cxgn_tools_run_config,
-        finish_logfile => $c->config->{job_finish_log},
         results_page => '/tools/gcpc'
     });
 #     my $cmd = CXGN::Tools::Run->new($cxgn_tools_run_config);
@@ -438,7 +447,7 @@ sub generate_results: Path('/ajax/gcpc/generate_results') : {
         sleep(1);
     }
 
-    my $finished = $job->read_finish_timestamp();
+    my $finished = $job->retrieve_finish_timestamp();
 	if (!$finished) {
 		$job->update_status("failed");
 	} else {

@@ -62,6 +62,7 @@ $phenotypes_fully_uploaded => undef
 $user_can_modify => undef
 $latest_trial_activity => undef
 $has_col_and_row_numbers => undef
+$plot_name_template => undef
 
 #Specific to stock detail page
 $type_name => undef
@@ -188,6 +189,18 @@ $field_headers => ()
 $propagation_type => undef
 $date => undef
 $logged_in_name => undef
+
+#specific to family page
+$family_id => undef
+$family_type => undef
+$family_name => undef
+$family_type_string => undef
+
+#Specific to dataset detail page
+$dataset_id => undef
+$dataset_name => undef
+$is_dataset_owner => 0
+$is_dataset_public => 0
 
 
 </%args>
@@ -437,7 +450,7 @@ $logged_in_name => undef
                                 <& /breeders_toolbox/tissue_samples/sampling_trials.mas &>
 % } #End manage_tissue_samples_sampling_trials
 % if ($info_section_id eq 'trial_details'){
-                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, transplanting_date=>$transplanting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity &>
+                                <& /breeders_toolbox/trial/trial_details.mas, trial_id=>$trial_id, trial_name=>$trial_name, breeding_program_name=>$breeding_program_name, breeding_program_id=>$breeding_program_id, location_name=>$location_name, country_name=>$country_name, year=>$year, trial_type=>$trial_type, planting_date=>$planting_date, transplanting_date=>$transplanting_date, harvest_date=>$harvest_date, trial_description=>$trial_description, folder_name=>$folder_name, folder_id=>$folder_id, identifier_prefix=>$identifier_prefix, plot_width=>$plot_width, plot_length=>$plot_length, field_size=>$field_size, field_trial_is_planned_to_be_genotyped=>$field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross=>$field_trial_is_planned_to_cross, trial_stock_type => $trial_stock_type, trial_stock_count => $trial_stock_count, trial_owner => $trial_owner, latest_trial_activity => $latest_trial_activity, plot_name_template => $plot_name_template &>
 % } #End trial_details
 % if ($info_section_id eq 'stocks_search_graphical_filtering'){
                                 <& /search/stocks_graphicalfiltering.mas &>
@@ -553,6 +566,26 @@ $logged_in_name => undef
 % if ($info_section_id eq 'intercross_section'){
                                 <& /breeders_toolbox/cross/intercross_file_info.mas, trial_id => $trial_id  &>
 %} #End intercross_section
+
+% if ($info_section_id eq 'family_parents_section'){
+                                <& /breeders_toolbox/cross/family_parents.mas, family_id => $family_id, family_type => $family_type  &>
+%} #End family_parents_section
+
+% if ($info_section_id eq 'crosses_in_family_section'){
+                                <& /breeders_toolbox/cross/crosses_in_family.mas, family_id => $family_id, family_name => $family_name, family_type_string => $family_type_string &>
+%} #End crosses_in_family_section
+
+% if ($info_section_id eq 'progenies_from_family_section'){
+                                <& /breeders_toolbox/cross/progenies_from_family.mas, family_id => $family_id &>
+%} #End progenies_from_family_section
+
+% if ($info_section_id eq 'family_delete_section'){
+                                <& /breeders_toolbox/cross/family_deletion.mas, family_id => $family_id &>
+%} #End family_deletion_section
+
+
+
+
 
 % if ($info_section_id eq 'progeny_search_section'){
                                 <& /search/cross/progeny_search_section.mas &>
@@ -693,6 +726,19 @@ $logged_in_name => undef
 % if ($info_section_id eq 'propagation_group_ids_in_project_section'){
                                 <& /propagation/propagation_groups_in_project.mas, trial_id=>$trial_id &>
 % } #End propagation_group_ids_in_project_section
+
+% if ($info_section_id eq 'dataset_outlier_detection') {
+    <& /dataset/outliers.mas, dataset_id => $dataset_id, dataset_name => $dataset_name &>
+% }
+% if ( $info_section_id eq 'dataset_analysis_tools') {
+    <& /solgs/tools/dataset_trials_analysis.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, data_structure => 'dataset' &>
+% }
+% if ( $info_section_id eq 'dataset_tool_compatibility') {
+    <& /dataset/tool_compatibility.mas, dataset_id => $dataset_id, dataset_name => $dataset_name &>
+% }
+% if ( $info_section_id eq 'dataset_publish') {
+    <& /dataset/publish.mas, dataset_id => $dataset_id, dataset_name => $dataset_name, is_dataset_owner => $is_dataset_owner, is_dataset_public => $is_dataset_public &>
+% }
 
 % if (!$info_section_id){
                                 <p>No section specified! Main content goes here!</p>

@@ -490,7 +490,6 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
                 my %details_hash = ();
                 $details = $info_hash{$type};
                 %details_hash = %{$details};
-
                 if (($type =~ m/number/) || ($type =~ m/count/)) {
                     $input = 0;
                     foreach my $key (keys %details_hash) {
@@ -508,7 +507,7 @@ sub get_activity_summary :Path('/ajax/tracking_activity/summary') :Args(1) {
                     } else {
                         push @summary, $input;
                     }
-                } elsif ($type =~ m/date/) {
+                } else {
                     foreach my $key (keys %details_hash) {
                         $input = $details_hash{$key}{'input'};
                     }

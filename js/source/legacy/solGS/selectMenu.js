@@ -48,12 +48,16 @@ class SelectMenu {
   createOptionElement(dt) {
     var option = document.createElement("option");
 
-    option.value = dt.id;
+    option.value = this.getOptionValue(dt);
     option.dataset.pop = JSON.stringify(dt);
     option.innerHTML = dt.name;
 
     return option;
 
+  }
+
+  getOptionValue(dt) {
+    return dt.menu_id || dt.id;
   }
 
   createOptions(data) {
@@ -62,21 +66,31 @@ class SelectMenu {
       menu = this.createSelectMenu();
     }
 
-    data.forEach(function (dt) {
-      var option = this.createOptionElement(dt);
-      menu.appendChild(option);
-    }.bind(this));
+    data.forEach((dt) => {
+        if (dt && !this.hasOption(menu.options, this.getOptionValue(dt))) {
+            const option = this.createOptionElement(dt);
+            menu.appendChild(option);
+        }
+    });
 
     return menu;
   }
 
+  hasOption(options, value) {
+    return Array.from(options).some(function (option) {
+      return option.value === String(value);
+    });
+  }
+
   updateOptions(newPop) {
     var options = this.getSelectMenuOptions();
-    if (options) {
-      if (newPop){
-        var newOption = this.createOptionElement(newPop);
-        options.add(newOption);
-      }
+    if (
+      options &&
+      newPop &&
+      !this.hasOption(options, this.getOptionValue(newPop))
+    ) {
+      var newOption = this.createOptionElement(newPop);
+      options.add(newOption);
     }
 
   }

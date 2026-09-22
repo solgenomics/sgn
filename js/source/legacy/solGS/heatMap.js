@@ -402,7 +402,7 @@ solGS.heatmap = {
       if (!heatmapPlotDivId.match("#")) {
         heatmapPlotDivId = "#" + heatmapPlotDivId;
       }
-      jQuery(heatmapPlotDivId).append('<p style="margin-left: 40px">' + downloadLinks + "</p>");
+      jQuery(heatmapPlotDivId).append('<p style="margin: 20px 0px 0px 40px">' + downloadLinks + "</p>");
     }
   },
 

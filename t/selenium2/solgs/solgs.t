@@ -8,6 +8,7 @@ use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
 use Config::Any;
+use File::Path qw(remove_tree);
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -18,7 +19,7 @@ my $solgs_data = SGN::Test::solGSData->new({
     'plots_list_subset' => 60,
     'user_id' => 40,
 });
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
 print STDERR "\nsite_cluster_shared_dir-- $cache_dir\n";
 
 
@@ -54,13 +55,14 @@ print STDERR "\naccessions list: $accessions_list_name -- $accessions_list_id\n"
 print STDERR "\nplots list: $plots_list_name -- $plots_list_id\n";
 
 
-`rm -r $cache_dir`;
+remove_tree($cache_dir, {safe => 1});
 sleep(5);
 
 $d->while_logged_in_as("submitter", sub {
     sleep(2);
     $d->get('/solgs', 'solgs home page');
     sleep(4);
+
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(5);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
@@ -88,7 +90,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(3);
     $d->find_element_ok('Phenotype data', 'partial_link_text',  'download training pop phenotype data');
     sleep(3);
-    sleep(3);
+    
    # #  #trial type training population: single trait modeling
 
     $d->find_element_ok('dry matter', 'partial_link_text',  'build model')->click();
@@ -319,7 +321,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->driver->refresh();
     sleep(3);
 
-      $d->find_element_ok('Kasese solgs trial', 'partial_link_text', 'back to model page')->click();
+    $d->find_element_ok('Kasese solgs trial', 'partial_link_text', 'back to model page')->click();
     sleep(5);
 	$d->find_element_ok('Kasese solgs trial', 'partial_link_text', 'back to training pop page')->click();
 	sleep(5);

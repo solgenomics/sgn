@@ -1,11 +1,10 @@
 <%args>
-    $exp_treatment_root
     $db_name
 </%args>
 
 <div style="text-align: center; margin: 2em 0">
    <h2 style="margin-bottom: 1em">Design new experimental treatments</h2>
-   <h4>Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit their treatments from their parent stocks.</h4>
+   <h4>Experimental treatments are applied to the stocks of a trial. Subplots, plants, and tissue samples inherit treatments from their parent stocks.</h4>
 
    <h4> Check the <a href='/search/treatments'>treatment search page</a> to see if your treatment has already been made before designing new treatments.</h4>
 
@@ -16,7 +15,7 @@
         <div class="form-group">
                 <label class="col-sm-3 control-label"> New treatment name: </label>
                 <div class="col-sm-9">
-                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="ASCII characters only. Non-ASCII characters and pipes (|)  will be removed."/>
+                    <input style="width:70%;" class="form-control" id="new_treatment_name" name="new_treatment_name" type="text" placeholder="Pipes (|)  will be removed from name."/>
                 </div>
             </div>
             <div class="form-group">
@@ -105,7 +104,12 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
 <button id="download_ontology_btn" class="btn btn-primary">Download Treatment Ontology</button>
 <br>
 <br>
-<& /ontology/embedded_browser.mas, cvterm => $exp_treatment_root &>
+% 
+% my $root_nodes = $db_name =~ s/,/ /gr; # should just be EXPERIMENT_TREATMENT
+% 
+<&| /page/info_section.mas, title=>"Treatment terms", collapsible=>1 &>
+    <& /ontology/browser.mas, root_nodes=>$root_nodes, expand=>0 &>
+</&>
 
 <script>
     jQuery(document).ready(function () {
@@ -148,7 +152,8 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                     categories : categories,
                     category_details : category_details,
                     parent_terms : parent_terms_json,
-                    repeat_type : repeat_type
+                    repeat_type : repeat_type,
+                    parent_dbs : "<% $db_name %>"
                 },
                 success: function(response) { 
                     jQuery('#working_modal').modal("hide");
@@ -168,7 +173,7 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
         });
 
         jQuery('#new_treatment_parent_term').autocomplete({
-            source : '/ajax/cvterm/autocompleteslim' + "?db_name=<% $db_name %>"
+            source : '/ajax/cvterm/autocompleteslim' + "?db_names=<% $db_name %>"
         });
 
         jQuery('#new_treatment_add_parent_btn').on('click', function(e) {
@@ -339,6 +344,8 @@ Will be the treatment root term by default if none are added."></span>&nbsp;Chai
                     console.error('Download failed:', error)
                 });
         });
+
+        jQuery("[title='ontology browser input form']").hide();
 
         function html_table_to_json(html_str) {
             let list = html_str.replace(/^<tr>|<\/?table>|<tr>|^\s+|<td>|<\/td>|<\/tr>$|\s+$/g,'').split("</tr>").filter(str => str.trim() !== '');

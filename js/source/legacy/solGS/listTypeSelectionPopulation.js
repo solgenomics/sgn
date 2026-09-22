@@ -14,6 +14,7 @@ solGS.listTypeSelectionPopulation = {
   selectionPopsSelectMenuId: "#list_type_selection_pops_select",
   selectionListPopsDataDiv: "#list_type_selection_pops_data_div",
   selectionListPopsTable: "#list_type_selection_pops_table",
+  predictedSelectionPops: {},
 
  
   getSelectionListPops: function () {
@@ -260,6 +261,75 @@ solGS.listTypeSelectionPopulation = {
       return predictedPopArgs;
   },
 
+  getPredictedSelectionPops: function() {
+    return Object.values(this.predictedSelectionPops || {});
+  },
+
+  registerPredictedSelectionPop: function(selectionPopArgs) {
+    var predictedPop = this.getPredictedSelectionPopArgs(selectionPopArgs);
+    this.predictedSelectionPops[predictedPop.id] = predictedPop;
+
+    return predictedPop;
+  },
+
+  updateAnalysisMenus: function(predictedPop) {
+    if (!document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
+      return;
+    }
+
+    solGS.sIndex.populateSindexMenu(predictedPop);
+    solGS.correlation.populateGenCorrMenu(predictedPop);
+    solGS.geneticGain.populateGeneticGainMenu(predictedPop);
+    solGS.cluster.populateClusterMenu(predictedPop);
+  },
+
+  handlePredictedSelectionPop: function(selectionPopArgs, output) {
+    var selectionPopId = selectionPopArgs.selection_pop_id;
+    this.replaceSolgsBtn(selectionPopId, output);
+
+    var predictedPop = this.registerPredictedSelectionPop(selectionPopArgs);
+    this.updateAnalysisMenus(predictedPop);
+  },
+
+  hasPredictedOutput: function(output) {
+    return output && !output.match(/Predict/i);
+  },
+
+  checkPredictedSelectionPop: function(selectionPop) {
+    var selectionPopArgs = this.getSelectionPopArgs(selectionPop);
+    var checkPredicted;
+
+    if (selectionPop.data_str.match(/list/)) {
+      checkPredicted = this.checkPredictedListSelection(selectionPop.id);
+    } else if (selectionPop.data_str.match(/dataset/)) {
+      var trainingProtocolId = jQuery("#genotyping_protocol_id").val();
+      if (String(trainingProtocolId) !== String(selectionPopArgs.genotyping_protocol_id)) {
+        return;
+      }
+
+      checkPredicted = solGS.dataset.checkPredictedDatasetSelection(
+        selectionPop.id,
+        selectionPop.name
+      );
+    }
+
+    if (checkPredicted) {
+      checkPredicted.done((res) => {
+        if (this.hasPredictedOutput(res.output)) {
+          this.handlePredictedSelectionPop(selectionPopArgs, res.output);
+        }
+      });
+    }
+  },
+
+  initializePredictedSelectionPops: function(selectionPops) {
+    selectionPops.forEach((selectionPop) => {
+      if (selectionPop) {
+        this.checkPredictedSelectionPop(selectionPop);
+      }
+    });
+  },
+
 };
 
 jQuery.fn.doesExist = function () {
@@ -287,17 +357,11 @@ jQuery(document).ready(function () {
             solGS.listTypeSelectionPopulation
               .checkPredictedListSelection(listId)
               .done(function (res) {
-                if (!res.output.match(/Predict/)) {
-                  solGS.listTypeSelectionPopulation.replaceSolgsBtn(selectionPopId, res.output);
-   
-                  if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-                    var predictedPop = solGS.listTypeSelectionPopulation.getPredictedSelectionPopArgs(selectedPop)
-
-                    solGS.sIndex.populateSindexMenu(predictedPop);
-                    solGS.correlation.populateGenCorrMenu(predictedPop);
-                    solGS.geneticGain.populateGeneticGainMenu(predictedPop);
-                    solGS.cluster.populateClusterMenu(predictedPop);
-                  }
+                if (solGS.listTypeSelectionPopulation.hasPredictedOutput(res.output)) {
+                  solGS.listTypeSelectionPopulation.handlePredictedSelectionPop(
+                    selectedPop,
+                    res.output
+                  );
                 } else {
                   solGS.listTypeSelectionPopulation.showJobSubmissionDialog(listId);
                 }
@@ -317,18 +381,21 @@ jQuery(document).ready(function () {
           var datasetId = selectedPop.selection_pop_id.replace(/\w+_/,'');
           var datasetName = selectedPop.selection_pop_name;
 
-          solGS.dataset.checkPredictedDatasetSelection(datasetId, datasetName).done(function (res) { 
-            if (!res.output.match(/Predict/)) {
-              solGS.listTypeSelectionPopulation.replaceSolgsBtn(selectionPopId, res.output);
-            
-              if (document.URL.match(/solgs\/traits\/all\/|solgs\/models\/combined\//)) {
-                var predictedPop = solGS.listTypeSelectionPopulation.getPredictedSelectionPopArgs(selectedPop)
+          var checkPredicted = solGS.dataset.checkPredictedDatasetSelection(
+            datasetId,
+            datasetName
+          );
 
-                solGS.sIndex.populateSindexMenu(predictedPop);
-                solGS.correlation.populateGenCorrMenu(predictedPop);
-                solGS.geneticGain.populateGeneticGainMenu(predictedPop);
-                solGS.cluster.populateClusterMenu(predictedPop);
-              }
+          if (!checkPredicted) {
+            return;
+          }
+
+          checkPredicted.done(function (res) {
+            if (solGS.listTypeSelectionPopulation.hasPredictedOutput(res.output)) {
+              solGS.listTypeSelectionPopulation.handlePredictedSelectionPop(
+                selectedPop,
+                res.output
+              );
             } else {
               solGS.dataset.queueDatasetSelectionPredictionJob(datasetId, datasetName);
             }
@@ -355,6 +422,7 @@ jQuery(document).ready(function () {
   var selectionPopsRows = solGS.listTypeSelectionPopulation.getSelectionListPopsRows(selectionPops);
 
   solGS.listTypeSelectionPopulation.displaySelectionListPopsTable(tableId, selectionPopsRows);
+  solGS.listTypeSelectionPopulation.initializePredictedSelectionPops(selectionPops);
 
   jQuery("#lists_datasets_message").hide();
   jQuery("#lists_datasets_progress .multi-spinner-container").hide();

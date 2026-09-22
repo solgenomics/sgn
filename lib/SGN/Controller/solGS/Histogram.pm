@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
 use File::Spec::Functions qw / catfile catdir/;
-use File::Path qw / mkpath  /;
+use File::Path qw / make_path /;
 use File::Copy;
 use File::Basename;
 use File::Temp qw / tempfile tempdir /;

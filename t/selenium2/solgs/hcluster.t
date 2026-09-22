@@ -19,10 +19,9 @@ my $solgs_data = SGN::Test::solGSData->new({
     'user_id' => 40,
 });
 
-my $cache_dir = $solgs_data->site_cluster_shared_dir();
-my $protocol_dir = $solgs_data->default_protocol_dir();
-my $cluster_dir =  catdir($protocol_dir, 'cluster');
-my $log_dir = catdir($protocol_dir, 'log');
+my $cache_dir = $solgs_data->base_analyses_cache_dir();
+my $cluster_dir =  catdir($cache_dir, 'cluster');
+my $log_dir = catdir($cache_dir, 'log');
 
 my $accessions_list =  $solgs_data->load_accessions_list();
 # my $accessions_list = $solgs_data->get_list_details('accessions');
@@ -207,7 +206,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $analysis_tools = $d->find_element('Analysis Tools', 'partial_link_text', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);
@@ -228,7 +227,7 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
 
     my $analysis_tools = $d->find_element('cluster_canvas', 'id', 'toogle analysis tools');
-    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-50);", $analysis_tools);
+    my $elem = $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $analysis_tools);
     sleep(5);
     $d->find_element_ok('Analysis Tools', 'partial_link_text', 'toogle analysis tools')->click();
     sleep(5);

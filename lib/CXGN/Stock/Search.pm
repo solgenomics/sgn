@@ -853,7 +853,6 @@ ORDER BY organism_id ASC;";
         push @result, $result_hash{$_};
     }
 
-    print STDERR "RESULT AFTER SEARCH: ".Dumper(\@result);
     print STDERR "CXGN::Stock::Search search end\n";
     return (\@result, $records_total);
 }

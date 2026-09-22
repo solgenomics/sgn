@@ -30,7 +30,7 @@ $t->while_logged_in_as("submitter", sub {
 	# SCREEN 2 /Trial information/
 	$t->find_element_ok('select_breeding_program', 'id', 'find breeding program select and click "test"')->click();
 	sleep(1);
-	$t->find_element_ok('//select[@id="select_breeding_program"]/option[@value="test"]', 'xpath', "Select 'test' as value for breeding program")->click();
+	$t->find_element_ok('//select[@id="select_breeding_program"]/option[@value="134"]', 'xpath', "Select 'test' as value for breeding program")->click();
 
 	$t->find_element_ok('//select[@id="add_project_location"]/option[@value="test_location"]',
 		'xpath',
@@ -90,7 +90,7 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('next_step_design_information_button', 'id', 'go to next screen - Design Information')->click();
 	sleep(2);
 
-	# SCREEN 4 /Trail Linkage/
+	# SCREEN 4 /Trial Linkage/
 
 	$t->find_element_ok('add_project_trial_sourced', 'id', "find add project trial sourced select")->click();
 	$t->find_element_ok('//select[@id="add_project_trial_sourced"]/option[contains(@value, "no")]', "xpath", "select project trial source option as 'no'")->click();
@@ -113,6 +113,7 @@ $t->while_logged_in_as("submitter", sub {
 	sleep(1);
 
 	# SCREEN 6 /Custom plot naming/
+	$t->find_element_ok('//a[@href="#plot_naming_tab_custom"]', 'xpath', "Open custom plot naming tab")->click();
 	$t->find_element_ok('plot_prefix', 'id', "find plot prefix input")->send_keys("prefix_sel_");
 	$t->find_element_ok('start_number', 'id', "find plot start number select")->click();
 	$t->find_element_ok('//select[@id="start_number"]//option[contains(@value, "101")]', "xpath", "find checks for list")->click();

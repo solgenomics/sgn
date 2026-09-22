@@ -24,12 +24,39 @@ use JSON;
 
 extends 'CXGN::Stock';
 
-has 'family_stock_id' => (isa => "Int",
+has 'family_stock_id' => (
+    isa => "Int",
     is => 'rw',
     required => 1,
 );
 
-has 'family_name' => (isa => 'Maybe[Str]',
+has 'family_name' => (
+    isa => "Str",
+    is => 'rw',
+);
+
+has 'family_type' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'female_parent_stock_id' => (
+    isa => "Int",
+    is => 'rw',
+);
+
+has 'male_parent_stock_id' => (
+    isa => "Int",
+    is => 'rw',
+);
+
+has 'cross_stock_id' => (
+    isa => 'Maybe[Int]',
+    is => 'rw',
+);
+
+has 'cross_list' => (
+    isa =>'ArrayRef[Str]',
     is => 'rw',
 );
 
@@ -49,10 +76,25 @@ sub BUILD {
         $self->family_name($family_uniquename);
         $self->family_stock_id($family_id);
     }
+
+    my $family_female_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
+    my $family_male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
+    my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_type', 'stock_property')->cvterm_id();
+
+    my $family_prop = $schema->resultset("Stock::Stockprop")->find({ stock_id => $family_id, type_id => $family_type_id});
+    if ($family_prop){
+        my  $family_type = $family_prop->value();
+        $self->family_type($family_type)
+    }
+
+    my $female_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({ object_id => $family_id, type_id => $family_female_parent_type_id})->subject_id();
+    my $male_parent_stock_id = $schema->resultset("Stock::StockRelationship")->find({ object_id => $family_id, type_id => $family_male_parent_type_id})->subject_id();
+    $self->female_parent_stock_id($female_parent_stock_id);
+    $self->male_parent_stock_id($male_parent_stock_id);
 }
 
 
-sub get_family_parents {
+sub get_family_parent_info {
     my $self = shift;
     my $schema = $self->schema();
     my $family_stock_id = $self->family_stock_id();
@@ -85,7 +127,7 @@ sub get_family_parents {
 }
 
 
-sub get_family_members {
+sub get_family_members_and_info {
     my $self = shift;
     my $schema = $self->schema();
     my $family_stock_id = $self->family_stock_id();
@@ -150,6 +192,125 @@ sub get_all_progenies {
     print STDERR Dumper(\@progenies);
     return \@progenies;
 }
+
+
+sub get_family_members {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $family_stock_id = $self->family_stock_id();
+    my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+    my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
+    my $q = "SELECT stock.stock_id, stock.uniquename
+        FROM stock_relationship
+        JOIN stock ON (stock_relationship.subject_id = stock.stock_id) AND stock_relationship.type_id = ? AND stock.type_id = ?
+        WHERE stock_relationship.object_id = ?";
+
+        my $h = $schema->storage->dbh()->prepare($q);
+
+        $h->execute($cross_member_of_type_id, $cross_type_id, $family_stock_id);
+
+        my @data =();
+        while(my($cross_id, $cross_name) = $h->fetchrow_array()){
+            push @data, [$cross_id, $cross_name]
+        }
+        return \@data;
+}
+
+
+sub remove_family_member {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $family_id = $self->family_stock_id();
+    my $cross_id = $self->cross_stock_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $stock_obj = CXGN::Stock->new(schema => $schema, stock_id => $family_id);
+        my @trial_list = $stock_obj->get_trials();
+        if (scalar(@trial_list) > 0) {
+            print STDERR "This family is used in a trial. Cannot remove any member.\n";
+            die "This family is used in a trial. Cannot remove any member.\n";
+        }
+
+        my $cross_member_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross_member_of", "stock_relationship")->cvterm_id();
+        my $family_name_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+        my $cross_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "cross", "stock_type")->cvterm_id();
+
+        my $population_id;
+        my $family_member_rs = $schema->resultset("Stock::StockRelationship")->find({subject_id => $cross_id, object_id => $family_id, type_id => $cross_member_of_type_id});
+        if (!$family_member_rs) {
+            print STDERR "This cross is not a family member. Cannot delete.\n";
+	        die "This cross is not a family member. Cannot delete.\n";
+        } else {
+            my $stock_obj = CXGN::Stock->new(schema => $schema, stock_id => $family_id);
+            my @trial_list = $stock_obj->get_trials();
+            print STDERR "TRIAL LIST =".Dumper(\@trial_list)."\n";
+            if (scalar(@trial_list) > 0) {
+                print STDERR "This family is used in a trial. Cannot remove any member.\n";
+    	        die "This family is used in a trial. Cannot remove any member.\n";
+            }
+        }
+
+        $family_member_rs->delete;
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting family member "."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
+}
+
+
+sub delete_family {
+    my $self = shift;
+    my $dbh = $self->schema()->storage()->dbh();
+    my $schema = $self->schema();
+    my $family_id = $self->family_stock_id();
+
+    eval {
+        $dbh->begin_work();
+
+        my $stock_obj = CXGN::Stock->new(schema => $schema, stock_id => $family_id);
+        my @trial_list = $stock_obj->get_trials();
+        if (scalar(@trial_list) > 0) {
+            print STDERR "This family is used in a trial. Cannot delete.\n";
+            die "This family is used in a trial. Cannot delete.\n";
+        }
+
+        my $family_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, "family_name", "stock_type")->cvterm_id();
+
+        my $family_rs = $schema->resultset("Stock::Stock")->find ({stock_id => $family_id, type_id => $family_type_id});
+        if (!$family_rs) {
+            print STDERR "This stock id is not a family. Cannot delete.\n";
+	        die "This stock id is not a family. Cannot delete.\n";
+        }
+
+        my $q = "delete from phenome.stock_owner where stock_id = ?";
+	    my $h = $dbh->prepare($q);
+	    $h->execute($family_id);
+
+	    my $q2 = "delete from stock where stock.stock_id = ? and stock.type_id = ?";
+	    my $h2 = $dbh->prepare($q2);
+	    $h2->execute($family_id, $family_type_id);
+    };
+
+    if ($@) {
+	    print STDERR "An error occurred while deleting family id ".$family_id."$@\n";
+	    $dbh->rollback();
+	    return $@;
+    } else {
+	    $dbh->commit();
+	    return 0;
+    }
+}
+
 
 
 ###
