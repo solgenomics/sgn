@@ -1,0 +1,143 @@
+<&| /page/info_section.mas,
+    id          => "manage_images_collections",
+    title       => "Image &amp; File Folders",
+    collapsible => 1,
+    collapsed   => 0,
+    subtitle    => "Browse, search, and create named folders of images and files."
+&>
+
+<div style="margin-bottom:10px;">
+  <button class="btn btn-primary btn-sm" id="create_collection_button">
+    <span class="glyphicon glyphicon-folder-open"></span> New Folder
+  </button>
+  <label style="margin-left:15px; font-weight:normal;">
+    <input type="checkbox" id="collections_mine_only"> Show only my folders
+  </label>
+</div>
+
+<table id="manage_images_collections_table"
+       class="table table-hover table-condensed" style="width:100%">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Owner</th>
+      <th>Trial</th>
+      <th>Images</th>
+      <th>Files</th>
+      <th>Created</th>
+      <th></th>
+    </tr>
+  </thead>
+</table>
+
+</&>
+
+<!-- Reuse the same create dialog from the image-search "add to folder" flow -->
+<div class="modal fade" id="create_collection_dialog" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"><h4 class="modal-title">New Folder</h4></div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Folder name</label>
+          <input type="text" class="form-control" id="new_collection_name">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-control" id="new_collection_description" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="create_collection_submit">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+jQuery(document).ready(function () {
+
+    var collections_table = jQuery('#manage_images_collections_table').DataTable({
+        'ajax': {
+            'url':  '/ajax/collection/list',
+            'dataSrc': function (json) {
+                if (json.error) { console.error(json.error); return []; }
+                return json.collections || [];
+            }
+        },
+        'columns': [
+            { 'data': 'name', 'render': function (name, type, row) {
+                return '<a href="/collection/' + row.collection_id + '">' + name + '</a>';
+            } },
+            { 'data': 'username', 'defaultContent': '<span class="text-muted">—</span>' },
+            { 'data': 'projects', 'render': function (projects) {
+                if (!projects || !projects.length) {
+                    return '<span class="text-muted">—</span>';
+                }
+                return projects.map(function (p) {
+                    return '<a href="/breeders/trial/' + p.project_id + '">' + p.name + '</a>';
+                }).join(', ');
+            } },
+            { 'data': 'image_count' },
+            { 'data': 'file_count' },
+            { 'data': 'create_date' },
+            { 'data': null, 'orderable': false, 'render': function (data, type, row) {
+                return row.user_can_modify
+                    ? '<button class="btn btn-danger btn-xs delete-collection-btn" ' +
+                      'data-collection-id="' + row.collection_id + '">Delete</button>'
+                    : '';
+            } }
+        ],
+        'order': [[0, 'asc']]
+    });
+
+    jQuery('#collections_mine_only').change(function () {
+        var params = jQuery(this).is(':checked') ? { mine_only: 1 } : {};
+        collections_table.ajax.url('/ajax/collection/list?' + jQuery.param(params)).load();
+    });
+
+    jQuery('#create_collection_button').click(function () {
+        jQuery('#new_collection_name').val('');
+        jQuery('#new_collection_description').val('');
+        jQuery('#create_collection_dialog').modal('show');
+    });
+
+    jQuery('#create_collection_submit').click(function () {
+        var name = jQuery('#new_collection_name').val();
+        if (!name || !name.trim()) {
+            alert('Please enter a folder name.');
+            return;
+        }
+        jQuery.ajax({
+            url: '/ajax/collection/create',
+            type: 'POST',
+            data: {
+                name:        name,
+                description: jQuery('#new_collection_description').val()
+            },
+            success: function (response) {
+                if (response.error) { alert(response.error); return; }
+                jQuery('#create_collection_dialog').modal('hide');
+                window.location.href = '/collection/' + response.collection_id;
+            },
+            error: function () { alert('An error occurred creating the folder.'); }
+        });
+    });
+
+    jQuery('#manage_images_collections_table').on('click', '.delete-collection-btn', function () {
+        var id = jQuery(this).data('collection-id');
+        if (!confirm('Delete this folder? Its images and files are not deleted.')) { return; }
+        jQuery.ajax({
+            url: '/ajax/collection/delete',
+            type: 'POST',
+            data: { collection_id: id },
+            success: function (response) {
+                if (response.error) { alert(response.error); return; }
+                collections_table.ajax.reload();
+            },
+            error: function () { alert('An error occurred deleting the folder.'); }
+        });
+    });
+});
+</script>
