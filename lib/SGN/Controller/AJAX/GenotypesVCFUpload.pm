@@ -604,7 +604,7 @@ sub upload_genotype_verify_POST : Args(0) {
                             for my $key (qw(chrom pos name ref alt)) {
                                 my $value = $new_marker_details->{$key};
                                 if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                    push @field_diffs, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                                    push @field_diffs, "Marker $marker_name was matched to the stored protocol by name, but its $key differs: your file has \"$value\", the stored protocol has \"".$stored_markers->{$marker_name}->{$key}."\"";
                                 }
                             }
                             if (scalar(@field_diffs)) {
@@ -657,7 +657,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
                 push @all_warnings, @protocol_match_errors;
                 if (scalar(@protocol_match_errors)) {
-                    push @warning_groups, { title => 'Markers with mismatched chrom, pos, name, ref, or alt compared to the previously stored protocol', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+                    push @warning_groups, { title => 'Markers matched to the previously stored protocol by name, but differing in chrom, pos, ref, or alt', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
                 }
 	    }
 
@@ -774,7 +774,7 @@ sub upload_genotype_verify_POST : Args(0) {
                         for my $key (qw(chrom pos name ref alt)) {
                             my $value = $new_marker_details->{$key};
                             if ($value ne ($stored_markers->{$marker_name}->{$key})) {
-                                push @field_diffs, "Marker $marker_name in your file has $value for $key, but in the previously stored protocol shows ".$stored_markers->{$marker_name}->{$key};
+                                push @field_diffs, "Marker $marker_name was matched to the stored protocol by name, but its $key differs: your file has \"$value\", the stored protocol has \"".$stored_markers->{$marker_name}->{$key}."\"";
                             }
                         }
                         if (scalar(@field_diffs)) {
@@ -828,7 +828,7 @@ sub upload_genotype_verify_POST : Args(0) {
 
             push @all_warnings, @protocol_match_errors;
             if (scalar(@protocol_match_errors)) {
-                push @warning_groups, { title => 'Markers with mismatched chrom, pos, name, ref, or alt compared to the previously stored protocol', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
+                push @warning_groups, { title => 'Markers matched to the previously stored protocol by name, but differing in chrom, pos, ref, or alt', count => scalar(@protocol_match_errors), messages => \@protocol_match_errors };
             }
 	}
 
