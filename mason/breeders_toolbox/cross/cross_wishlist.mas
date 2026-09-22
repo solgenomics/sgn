@@ -243,7 +243,7 @@
             </div>
 
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" id="dismiss_wishlist_response_dialog" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -996,6 +996,9 @@ jQuery(document).ready(function($) {
 
     }
 
+    jQuery("#dismiss_wishlist_response_dialog").click(function(){
+        location.reload();
+    });
 
 });
 
