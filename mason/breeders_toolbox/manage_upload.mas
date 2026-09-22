@@ -34,6 +34,7 @@ $allowed_upload_types => undef
 
 <div class="container-fluid">
 
+<button id="upload_factory_matviews_refresh_btn" class="btn btn-primary">Refresh materialized views</button><img id="matviews-loading-spinner" src="/img/wheel.gif" alt="loading" hidden>
 <div class="well well-sm">
     <h3>Uploaded files</h3>
         <&| /page/info_section.mas, title => ' ', subtitle => 'Files that are stored in the site archive; their data has not necessarily been saved to the database.', id => 'archived_files_table_section', collapsible => 1, collapsed => 0 &>
@@ -422,6 +423,29 @@ jQuery(document).ready(function(){
     //         user_role : "<%$user_role%>"
     //     });
     // });
+
+    jQuery('#upload_factory_matviews_refresh_btn').on('click', function(){
+        jQuery.ajax({
+            url : '/ajax/breeder/refresh',
+            method : 'POST',
+            timeout : 60000,
+            beforeSend : function() {
+                jQuery('#matviews-loading-spinner').show();
+            },
+            success : function(response) {
+                jQuery('#matviews-loading-spinner').hide();
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert(response.message);
+                }
+            },
+            error : function() {
+                jQuery('#matviews-loading-spinner').hide();
+                alert("An error occurred starting the materialized view refresh, check console.");
+            }
+        });
+    });
 
     jQuery('#submit_validate_upload').on('click', jsMod["upload_factory"].submit_upload_job);
 
