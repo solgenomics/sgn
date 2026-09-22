@@ -344,7 +344,7 @@ $response = $ua3->post(
 
 $message = $response->decoded_content;
 $message_hash = decode_json $message;
-like($message_hash->{warning}, qr/^Marker S01_0001 in your/, 'error starts with "Marker S01_0001 in your"');
+like($message_hash->{warning}, qr/^Marker S01_0001 was matched to the stored protocol by name/, 'warning starts with "Marker S01_0001 was matched to the stored protocol by name"');
 
 #checking protocol metadata
 my $protocol = CXGN::Genotype::Protocol->new({
