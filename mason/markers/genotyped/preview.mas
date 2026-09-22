@@ -69,7 +69,7 @@ A hashref containing the variants and the markers related to one or more of the 
 
 
 
-<& /page/page_title.mas, title=> $title &>
+<& /page/page_title.mas, title=> "$title Preview" &>
 <& /page/page_title.mas, title=> $subtitle &>
 
 <br /><br />
@@ -93,23 +93,26 @@ A hashref containing the variants and the markers related to one or more of the 
 <!-- RELATED VARIANTS LINKS -->
 <& /markers/genotyped/related_markers.mas, variant_name => $variant_name, schema => $schema &>
 
-<br />
+<div class='alert' style='color: #31708f; background-color: #d9edf7; border-color: #bce8f1;'>
+  <p style='font-size: 120%; border-bottom: 1px solid rgb(49, 112, 143, 0.2); margin-bottom: 15px'><strong>View More Information</strong></p>
+  <p>To view all of the information about this variant, <strong>create an account</strong> and <strong>log in</strong>.</p>
+  <br />
+  <a href="/user/new?goto_url=/variant/<% $variant_name %>/details" class="btn btn-info btn-large btn-home">
+    <span class="glyphicon glyphicon-plus"></span>&nbsp;Create an Account
+  </a>
+  <a href="/user/login?goto_url=/variant/<% $variant_name %>/details" class="btn btn-primary btn-large btn-home">
+    <span class="glyphicon glyphicon-user"></span>&nbsp;Login
+  </a>
+</div>
 
-<!-- EXTERNAL LINKS -->
-<& /markers/genotyped/external_links.mas, markers => $markers, schema => $schema &>
-
-<br />
-
-<!-- JBROWSE LINKS -->
-<&| /page/info_section.mas, title=>'Genome Browser', collapsible=>1 &>
-    <& /feature/jbrowse_exact_match.mas, feature=> $jbrowse_location, src_feature=> $ref &>
-</&>
-
-<br />
-
-<!-- SEQUENCE METADATA RESULTS -->
-<&| /page/info_section.mas, title=>'Sequence Metadata', collapsible=>1, collapsed=>0 &>
-  <& /tools/sequence_metadata/quick_query_sequence_metadata.mas, params=>\%smd_params &>
-</&>
-
-
+<style>
+    .btn-info, .btn-primary {
+      color: #fff !important;
+    }
+    .btn-info:hover {
+      background-color: #31b0d5 !important;
+    }
+    .btn-primary:hover {
+      background-color: #286090 !important;
+    }
+</style>

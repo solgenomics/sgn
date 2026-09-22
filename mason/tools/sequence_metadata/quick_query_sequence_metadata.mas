@@ -107,19 +107,22 @@ function quick_query(id, species, reference, feature, start, end) {
  * @param {Object} data Query Results
  */
 function display_results(id, data) {
-    let dt = jQuery('#' + id).DataTable();
-    dt.clear();
-    if ( data && data.error ) {
+    if ( data?.error ) {
         console.log("ERROR: Could not query sequence metadata")
         console.log(data.error);
+        jQuery(`#${id}`).hide();
     }
-    else if ( data && data.results && data.results.length > 0) {
+    else if ( data?.results?.length > 0 ) {
+        jQuery(`#${id}`).show();
+        let dt = jQuery('#' + id).DataTable();
+        dt.clear();
         dt.rows.add(data.results);
+        dt.draw();
     }
     else {
         console.log("No sequence metadata results found");
+        jQuery(`#${id}`).hide();
     }
-    dt.draw();
 }
 
 /**

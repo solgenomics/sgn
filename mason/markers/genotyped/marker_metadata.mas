@@ -26,6 +26,8 @@
     }
 </%init>
 
+<&| /page/info_section.mas, title=>'Marker Metadata', collapsible=>1, collapsed=>scalar(@metadata) < 1 &>
+
 % if ( scalar(@metadata) > 0 ) {
 
 <table class="table table-striped">
@@ -36,7 +38,6 @@
             <th>Locus</th>
             <th>Description</th>
             <th>Alleles</th>
-            <th>References</th>
         </tr>
     </thead>
     <tbody>
@@ -65,20 +66,6 @@
 % }
                 </ul>
             </td>
-            <td>
-                <ul style="padding-left: 15px">
-% foreach my $ref (@{$md->{'references'}}) {
-                    <li>
-                        <a href="<% $ref->{'url'} %>" target="_blank">
-                            <% $ref->{'db_name'} %>:<% $ref->{'dbxref_accession'} %>
-% if ( defined $ref->{'cvterm_name'} ) {
-                            (<% $ref->{'cvterm_name'} %>)
-% }
-                        </a>
-                    </li>
-% }
-                </ul>
-            </td>
         </tr>
 % }
     </tbody>
@@ -89,3 +76,5 @@
 <p><em>This marker does not have any associated metadata.</em></p>
 
 % }
+
+</&>

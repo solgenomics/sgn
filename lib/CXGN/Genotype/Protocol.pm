@@ -437,6 +437,34 @@ sub list_simple {
     return \@results;
 }
 
+#class method
+sub snp_refs {
+    my $schema = shift;
+    my $marker_names = shift;
+    my $dbh = $schema->storage->dbh();
+
+    my @propinfo = ();
+    my $q = "select cvterm_id from public.cvterm where name = 'vcf_snp_dbxref'";
+    my $h = $dbh->prepare($q);
+    $h->execute();
+    my ($type_id) = $h->fetchrow_array(); 
+
+    $q = "select value from nd_protocolprop where type_id = ?";
+    $h = $dbh->prepare($q);
+    $h->execute($type_id);
+    while (my @row = $h->fetchrow_array()) {
+        my $data = decode_json($row[0]);
+        foreach (@{$data->{markers}}) {
+            my $n = $_->{marker_name};
+            if ( grep( /^$n$/, @$marker_names) ) {
+                push @propinfo, { url => $data->{url}, type_name => $data->{dbxref}, marker_name => "$_->{marker_name}", xref_name => "$_->{xref_name}"};
+            }
+        }
+    }
+
+    return \@propinfo;
+}
+
 
 sub set_name {
     my $self = shift;

@@ -14,7 +14,9 @@
     }
     my @unique_marker_names = do { my %seen; grep { !$seen{$_}++ } @marker_names };
 
-    my @metadata = ();
+    my $propinfo = CXGN::Genotype::Protocol::snp_refs($schema, \@unique_marker_names);
+
+    my @metadata_references = ();
     foreach my $marker (@$markers) {
         my $protocol_id = $marker->{nd_protocol_id};
         my $marker_name = $marker->{marker_name};
@@ -25,11 +27,20 @@
         });
         my $marker_metadata = $protocol->get_marker_metadata($marker_name);
 
-        foreach my $m (keys %$marker_metadata) {
-            push @metadata, $marker_metadata->{$m};
+        foreach my $mn (keys %$marker_metadata) {
+            if ( exists $marker_metadata->{$mn}->{references} ) {
+                foreach my $ref (@{$marker_metadata->{$mn}->{references}}) {
+                    $ref->{marker_name} = $mn;
+                    push @metadata_references, $ref;
+                }
+            }
         }
     }
+
+    my $link_count = scalar(@$propinfo) + scalar(@metadata_references);
 </%init>
+
+<&| /page/info_section.mas, title=>'External Links', collapsible=>1, collapsed=>$link_count < 1 &>
 
 <style>
     #external-links-list {
@@ -47,82 +58,38 @@
             </tr>
         </thead>
         <tbody id="external-links-table">
-            <tr><td colspan="2"><p><em>Loading...</em></p></td></tr>
+% if ( $link_count > 0 ) {
+
+% foreach my $prop (@$propinfo) {
+            <tr>
+                <td><% $prop->{marker_name} %></td>
+                <td>
+                    <a href="<% $prop->{url} %><% $prop->{xref_name} %>" target="_new">
+                        <% $prop->{type_name} %>:<% $prop->{xref_name} %>
+                    </a>
+                </td>
+            </tr>
+% }
+
+% foreach my $ref ( @metadata_references ) {
+        <tr>
+            <td><% $ref->{'marker_name'} %></td>
+            <td>
+                <a href='<% $ref->{url} %>' target='_new'>
+                    <% $ref->{db_name} %>:<% $ref->{dbxref_accession} %>
+% if ( defined $ref->{cvterm_name} ) {
+                    <% ' (' . $ref->{cvterm_name} . ')' %>
+% }
+                </a>
+            </td>
+        </tr>
+% }
+
+% } else {
+    <tr><td colspan=2><p><em>No external links found</em></p></td></tr>
+% }
         </tbody>
     </table>
 </div>
 
-
-<script defer>
-
-    /**
-     * on ready: get the marker props
-     */
-    jQuery(document).ready(function() {
-        getProps();
-    });
-
-    /**
-     * Get the marker props for the current marker name
-     */
-    function getProps() {
-        jQuery.ajax({
-            type: 'GET',
-            url: '/ajax/markers/genotyped/props',
-            data: { marker_names: "<% join(',', @unique_marker_names) %>" },
-            success: function(response) {
-                let props = [];
-                if ( response ) {
-                    for ( let i = 0; i < response.length; i++ ) {
-                        props.push(response[i]);
-                    }
-                }
-                renderLinks(props);
-            },
-            error: function(response) {
-                console.log("Could not load marker props");
-                console.log(response);
-            }
-        });
-    }
-
-    /**
-     * Generate the external links HTML
-     * @param  {Object[]} props A list of marker_name props
-     */
-    function renderLinks(props = []) {
-        let html = "";
-
-        for ( let i = 0; i < props.length; i++ ) {
-            let prop = props[i];
-            let url = prop.url;
-            let type_name = prop.type_name;
-            let marker_name = prop.marker_name;
-            let xref_name = prop.xref_name;
-            html += `<tr><td>${marker_name}</td><td><a href="${url}${xref_name}" target="_new">${type_name}:${xref_name}</a></td></tr>`;
-        }
-
-% foreach my $md ( @metadata ) {
-% if ( exists $md->{references} ) {
-% foreach my $ref ( @{$md->{references}} ) {
-        html += "<tr>";
-        html += "<td><% $md->{'marker_name'} %></td>";
-        html += "<td>";
-        html += "<a href='<% $ref->{url} %>' target='_new'>";
-        html += "<% $ref->{db_name} %>:<% $ref->{dbxref_accession} %>"
-% if ( defined $ref->{cvterm_name} ) {
-        html += " (<% $ref->{cvterm_name} %>)";
-% }
-        html += "</a>";
-        html += "</td>";
-        html += "</tr>";
-% }
-% }
-% }
-
-        if ( html === "" ) html = "<tr><td colspan=2><p><em>No external links found</em></p></td></tr>";
-
-        jQuery("#external-links-table").html(html);
-    }
-
-</script>
+</&>

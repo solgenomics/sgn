@@ -8,6 +8,8 @@
     }
 </%init>
 
+<&| /page/info_section.mas, title=>'Genotype Locations', collapsible=>1, collapsed=>scalar(@$markers) < 1 &>
+
 <table class="table table-striped">
     <thead>
         <tr>
@@ -40,3 +42,5 @@
 % }
     </tbody>
   </table>
+
+  </&>

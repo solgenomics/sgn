@@ -1,24 +1,65 @@
 <%args>
-    $blast_db => undef
-    $chrom => undef
-    $pos => undef
+    $markers => undef
 </%args>
 
 <%init>
-    if ( !$blast_db ) {
-        print "<p><strong>ERROR: </strong>Missing blast_db id!</p>";
+    # Get flanking sequence(s) from markers
+    my %fs = ();
+    foreach my $marker (@$markers) {
+        my $f = $marker->{flanking_sequence_snp};
+        my $m = $marker->{marker_name};
+        if ( !exists($fs{$f}) ) {
+            $fs{$f} = ();
+        }
+        push(@{$fs{$f}}, $m);
     }
-    if ( !$chrom ) {
-        print "<p><strong>ERROR: </strong>Missing chrom name!</p>";
-    }
-    if ( !$pos ) {
-        print "<p><strong>ERROR: </strong>Missing pos!</p>";
+
+    my $fs_count = 0;
+    while (my ($fs) = each (%fs)) {
+        $fs_count++ if $fs && $fs ne '';
     }
 </%init>
 
+<&| /page/info_section.mas, title=>'Flanking Sequence', collapsible=>1, collapsed=>$fs_count < 1 &>
 
-<p>
-    <a href="/tools/blast/match/show?blast_db_id=<% $blast_db %>;id=<% $chrom %>;hilite_coords=<% $pos %>-<% $pos %>" target="_blank">
-        View the marker flanking sequence
-    </a>
-</p>
+% if (%fs) {
+
+% while (my ($flanking_sequence, $marker_names) = each (%fs)) {
+
+    <p><strong><% join(", ", @$marker_names) %></strong></p>
+
+% if ( $flanking_sequence && $flanking_sequence ne '' ) {
+    
+    <p class="flanking-sequence"><% $flanking_sequence =~ s/\[(.*)\]/<span class='flanking-sequence-snp'>[$1]<\/span>/r %></p>
+
+% } else {
+
+    <p><em>No flanking sequence found for this marker</em></p>
+
+% }
+
+    <br />
+
+% }
+
+% } else {
+
+    <em>No flanking sequence(s) found</em>
+
+% }
+
+<style>
+    .flanking-sequence {
+        word-break: break-all;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 5px;
+    }
+    .flanking-sequence-snp {
+        font-weight: bolder;
+        color: #A2AD00;
+    }
+</style>
+
+</&>
