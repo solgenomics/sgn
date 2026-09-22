@@ -445,7 +445,7 @@ $facilities
                                     <div class="form-group">
                                         <label class="col-sm-5 control-label">
                                             Update mismatched markers?
-                                            <small class="help-block">If a marker name already exists in the selected protocol but its chromosome, position, ref, or alt differs from this file.</small>
+                                            <small class="help-block">If a marker name already exists in the selected protocol but its position, ref, or alt differs from this file. Note: chromosome reassignment is not supported; a marker will always be updated in its existing chromosome's storage row.</small>
                                         </label>
                                         <div class="col-sm-7">
                                             <select class="form-control" id="upload_genotype_update_markers" name="upload_genotype_update_markers">
