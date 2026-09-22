@@ -2490,28 +2490,6 @@ sub get_cached_file_HapMap {
         open my $in,  '<',  $transpose_tempfile or die "Can't read input file: $!";
         open my $out, '>', $transpose_tempfile_hdr or die "Can't write output file: $!";
 
-        #Get synonyms of the accessions
-        my $stocklookup = CXGN::Stock::StockLookup->new({schema => $self->bcs_schema});
-        my @accession_ids = keys %unique_germplasm;
-        my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
-        my $synonym_string = "##SynonymsOfAccessions=\"";
-        while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
-            if(scalar(@{$synonym_list})>0){
-                if(not length($synonym_string)<1){
-                    $synonym_string.=" ";
-                }
-                $synonym_string.=$uniquename."=(";
-                $synonym_string.= (join ", ", @{$synonym_list}).")";
-            }
-        }
-        $synonym_string .= "\"";
-        push @all_protocol_info_lines, $synonym_string;
-
-        my $vcf_header = join "\n", @all_protocol_info_lines;
-        $vcf_header .= "\n";
-
-        print $out $vcf_header;
-
         while( <$in> ) {
             print $out $_;
         }
@@ -2820,28 +2798,6 @@ sub get_cached_file_HapMap_compute_from_parents {
 
         open my $in,  '<',  $transpose_tempfile or die "Can't read input file: $!";
         open my $out, '>', $transpose_tempfile_hdr or die "Can't write output file: $!";
-
-        #Get synonyms of the accessions
-        my $stocklookup = CXGN::Stock::StockLookup->new({schema => $self->bcs_schema});
-        my @accession_ids = keys %unique_germplasm;
-        my $synonym_hash = $stocklookup->get_stock_synonyms('stock_id', 'accession', \@accession_ids);
-        my $synonym_string = "##SynonymsOfAccessions=\"";
-        while( my( $uniquename, $synonym_list ) = each %{$synonym_hash}){
-            if(scalar(@{$synonym_list})>0){
-                if(not length($synonym_string)<1){
-                    $synonym_string.=" ";
-                }
-                $synonym_string.=$uniquename."=(";
-                $synonym_string.= (join ", ", @{$synonym_list}).")";
-            }
-        }
-        $synonym_string .= "\"";
-        push @all_protocol_info_lines, $synonym_string;
-
-        my $vcf_header = join "\n", @all_protocol_info_lines;
-        $vcf_header .= "\n";
-
-        print $out $vcf_header;
 
         while( <$in> )
             {
