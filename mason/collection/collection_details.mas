@@ -6,7 +6,7 @@ $owner_username  => undef
 $user_can_modify => 0
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery', 'jquery.dataTables'] &>
+<& /util/import_javascript.mas, classes => ['jquery', 'thickbox', 'jquery.dataTables'] &>
 
 <& /page/page_title.mas, title => "Image Folder: " . $collection_name &>
 
