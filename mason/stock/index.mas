@@ -533,7 +533,6 @@ function jqueryStuff() {
 <script>
     jQuery(document).ready(function() {
 
-
         const header = document.querySelector('.details-header');
 
         window.addEventListener('scroll', () => {
