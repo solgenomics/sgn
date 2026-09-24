@@ -255,9 +255,9 @@ function jqueryStuff() {
 }
 </script>
 
-
-<& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
-
+<div class="details-header">
+    <& /page/page_title.mas, title=> join( ': ', grep $_, ucfirst($type_name), $uniquename ) || 'Create a new stock' &>
+</div>
 
 <&| /page/info_section.mas, title=>"Stock details" , collapsible=>1, collapsed=>0, subtitle => "<button class='btn btn-sm btn-default' style='margin:3px' name='stock_new_qtl_link'>New QTL population</button> <button class='btn btn-sm btn-default' style='margin:3px' name='stock_go_to_stock_search'>Back to stock search</button>"  &>
 
@@ -532,6 +532,18 @@ function jqueryStuff() {
 
 <script>
     jQuery(document).ready(function() {
+
+
+        const header = document.querySelector('.details-header');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 20) {
+            header.classList.add('is-stuck');
+            } else {
+            header.classList.remove('is-stuck');
+            }
+        });
+
         stock_detail_page_init_dialogs();
 
         jQuery('[name="stock_new_qtl_link"]').click(function(){
