@@ -1753,7 +1753,7 @@ sub seedlot_maintenance_event_upload_POST : Args(0) {
             filename => $archived_filepath,
             event_ontology_root => $c->config->{seedlot_maintenance_event_ontology_root}
         );
-        $parser->load_plugin('SeedlotMaintenanceEventXLS');
+        $parser->load_plugin('SeedlotMaintenanceEventGeneric');
         my $parsed_data = $parser->parse();
 
         # No parsed data returned...
@@ -1973,11 +1973,11 @@ sub upload_transactions_POST : Args(0) {
     my $parser_type;
     if (defined $upload_seedlots_to_seedlots){
         $upload = $upload_seedlots_to_seedlots;
-        $parser_type = 'SeedlotsToSeedlots';
+        $parser_type = 'SeedlotsToSeedlotsGeneric';
     }
     if (defined $upload_seedlots_to_new_seedlots){
         $upload = $upload_seedlots_to_new_seedlots;
-        $parser_type = 'SeedlotsToNewSeedlots';
+        $parser_type = 'SeedlotsToNewSeedlotsGeneric';
     }
     if (defined $upload_seedlots_to_plots){
         $upload = $upload_seedlots_to_plots;
@@ -1985,7 +1985,7 @@ sub upload_transactions_POST : Args(0) {
     }
     if (defined $upload_seedlots_to_unspecified_names){
         $upload = $upload_seedlots_to_unspecified_names;
-        $parser_type = 'SeedlotsToUnspecifiedNames';
+        $parser_type = 'SeedlotsToUnspecifiedNamesGeneric';
     }
     if (defined $upload_accessions_crosses_to_existing_seedlots){
         $upload = $upload_accessions_crosses_to_existing_seedlots;
@@ -2035,7 +2035,7 @@ sub upload_transactions_POST : Args(0) {
         $c->detach();
     }
 
-    if (defined $parsed_data && ($parser_type eq 'SeedlotsToSeedlots')) {
+    if (defined $parsed_data && ($parser_type eq 'SeedlotsToSeedlotsGeneric')) {
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
         eval {
@@ -2082,7 +2082,7 @@ sub upload_transactions_POST : Args(0) {
                 $current_from_seedlot->set_current_weight_property();
             }
         };
-    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlots')) {
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToNewSeedlotsGeneric')) {
         my @added_seedlots;
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
@@ -2146,7 +2146,7 @@ sub upload_transactions_POST : Args(0) {
                 });
             }
         };
-    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToUnspecifiedNames')) {
+    } elsif (defined $parsed_data && ($parser_type eq 'SeedlotsToUnspecifiedNamesGeneric')) {
         my $transactions = $parsed_data->{transactions};
         my @all_transactions = @$transactions;
         eval {

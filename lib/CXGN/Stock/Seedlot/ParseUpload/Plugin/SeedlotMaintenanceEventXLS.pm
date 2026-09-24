@@ -8,6 +8,11 @@ use CXGN::List::Validate;
 use CXGN::Onto;
 use Data::Dumper;
 
+
+#
+# DEPRECATED: This plugin has been replaced by SeedlotMaintenanceEventGeneric plugin
+#
+
 sub _validate_with_plugin {
     my $self = shift;
     my $filename = $self->get_filename();
