@@ -73,7 +73,7 @@ $project_id => undef
 
 <br/>
 
-<div class="trial-header">
+<div class="details-header">
   <& /page/page_title.mas, title=>"Trial detail for ".$trial_name &>
 </div>
 
@@ -286,7 +286,7 @@ icon_class => "glyphicon glyphicon-list-alt", info_section_id => "trial_design_s
 
 jQuery(document).ready(function () {
 
-  const header = document.querySelector('.trial-header');
+  const header = document.querySelector('.details-header');
 
   window.addEventListener('scroll', () => {
     if (window.scrollY > 20) {
