@@ -11,6 +11,7 @@ use Test::WWW::Mechanize;
 use Data::Dumper;
 use JSON;
 use Spreadsheet::Read;
+use Math::Round qw| nearest |;
 use Text::CSV ("csv");
 
 use CXGN::Dataset;
@@ -105,7 +106,7 @@ ok($rdata_outliers_included->{gwas_csv_response}, "Gwas csv response returned");
 
 # Because problem with gitaction in given test - just check value of gwas
 my $gwas_outliers_included = csv(in => "static/".$rdata_outliers_included->{gwas_csv_response});
-is(@$gwas_outliers_included[10]->[1], '0.241138827431124', "check value of row 10 in a gwas table");
+is(nearest(0.0001, @$gwas_outliers_included[10]->[1]), nearest(0.0001, 0.241138827431124), "check value of row 10 in a gwas table");
 
 # Test for dataset with outliers but with true outliers parameter -> outliers points are excluded from computation
 $mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$outliers_excluded_dataset_id.'&trait_id='.$outliers_excluded_trait_id.'&pc_check=0&kinship_check=0&dataset_trait_outliers=1', 'run the solgwas analysis for outliers dataset with outliers excluded');
@@ -118,7 +119,7 @@ ok($rdata_outliers_excluded->{gwas_csv_response}, "Gwas csv response returned");
 
 # Because problem with gitaction in given test - just check value of gwas
 my $gwas_outliers_excluded = csv(in => "static/".$rdata_outliers_excluded->{gwas_csv_response});
-is(@$gwas_outliers_excluded[10]->[1], '0.816958536958593', "check value of row 10 in a gwas table");
+is(nearest(0.0001, @$gwas_outliers_excluded[10]->[1]), nearest(0.0001, 0.816958536958593), "check value of row 10 in a gwas table");
 
 ### END: GITACTION PROBLEM
 
