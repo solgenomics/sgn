@@ -292,7 +292,7 @@
                                 <td>from_seedlot_name</td>
                                 <td>to_seedlot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                             </tr>
@@ -303,9 +303,9 @@
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li><b>to_seedlot_name:</b> Must exist in the database. Seeds were added to this seedlot.</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                     </ul>
@@ -342,7 +342,7 @@
                             <tr>
                                 <td>from_seedlot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                                 <td>to_new_seedlot_name</td>
@@ -356,9 +356,9 @@
                     <ul>
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                         <li><b>to_new_seedlot_name:</b> Must NOT exist in the database. New seedlot will be created using amount/weight of seeeds from existing seedlot.</li>
@@ -402,7 +402,7 @@
                                 <td>from_seedlot_name</td>
                                 <td>to_plot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                             </tr>
@@ -413,9 +413,9 @@
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li><b>to_plot_name:</b> Must exist in the database. Seeds were used for this plot. You can also record seedlot used for each plot during uploading existing trial on the Manage Trials page</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                     </ul>
@@ -451,7 +451,7 @@
                             <tr>
                                 <td>from_seedlot_name</td>
                                 <td>amount</td>
-                                <td>weight(g)</td>
+                                <td>weight_gram</td>
                                 <td>operator_name</td>
                                 <td>transaction_description</td>
                             </tr>
@@ -461,9 +461,9 @@
                     <ul>
                         <li><b>from_seedlot_name:</b> Must exist in the database. Seeds were taken from this seedlot.</li>
                         <li>
-                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being transaferred. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
-                            <b>weight(g):</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight(g) or both.
+                            <b>weight_gram:</b> Weight in grams of seedlot being transferred. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
                         <li><b>operator_name:</b> Name of the person who oversaw the transaction process. Can be any name.</li>
                         <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
@@ -509,7 +509,7 @@
                         <li><b>from_content_name:</b> Must exist in the database. Content name can be either accession or cross stock type. </li>
                         <li><b>to_seedlot_name:</b> Must exist in the database. The accession or cross indicated in the content_name column must be the same as the content of the corresponding seedlot..</li>
                         <li>
-                            <b>amount:</b> Number of seeds being added. Can be provided in conjunction with weight(g). Must provide a value for amount or weight(g) or both.
+                            <b>amount:</b> Number of seeds being added. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
                             <b>weight_gram:</b> Weight in grams of seedlot being added. Can be provided in conjunction with amount. Must provide a value for amount or weight_gram or both.
                         </li>
