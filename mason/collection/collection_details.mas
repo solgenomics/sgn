@@ -8,7 +8,7 @@ $user_can_modify => 0
 
 <& /util/import_javascript.mas, classes => ['jquery', 'thickbox', 'jquery.dataTables'] &>
 
-<& /page/page_title.mas, title => "Image Folder: " . $collection_name &>
+<& /page/page_title.mas, title => "Folder: " . $collection_name &>
 
 <&| /page/info_section.mas, title => "Folder Details", collapsible => 1, collapsed => 0 &>
   <table class="table table-bordered table-condensed">
@@ -36,16 +36,13 @@ $user_can_modify => 0
 
 % if ($user_can_modify) {
   <div style="margin-bottom:10px;">
+    <button class="btn btn-primary btn-sm" id="open_add_images_modal_button">
+      <span class="glyphicon glyphicon-plus"></span> Add Images
+    </button>
     <button class="btn btn-danger btn-sm" id="remove_selected_button">
       Remove selected images from folder
     </button>
   </div>
-% }
-
-% if ($user_can_modify) {
-<button class="btn btn-primary btn-sm" id="open_add_images_modal_button">
-  <span class="glyphicon glyphicon-plus"></span> Add Images
-</button>
 % }
 
   <table id="collection_images_table" class="table table-hover table-condensed" style="width:100%">
