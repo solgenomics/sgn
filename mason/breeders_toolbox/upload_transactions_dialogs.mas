@@ -66,7 +66,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_seedlots_file" id="seedlots_to_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
@@ -117,7 +117,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_new_seedlots_file" id="seedlots_to_new_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
@@ -150,7 +150,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_plots_file" id="seedlots_to_plots_file" encoding="multipart/form-data" />
                                                             </div>
@@ -183,7 +183,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="seedlots_to_unspecified_names_file" id="seedlots_to_unspecified_names_file" encoding="multipart/form-data" />
                                                             </div>
@@ -216,7 +216,7 @@
                                                 <div class="panel panel-default">
                                                     <div class="panel-body">
                                                         <div class="form-group">
-                                                            <label class="col-sm-6 control-label">Select an .xls or .xlsx File: </label>
+                                                            <label class="col-sm-6 control-label">Select a File: </label>
                                                             <div class="col-sm-6">
                                                                 <input type="file" name="accessions_crosses_to_seedlots_file" id="accessions_crosses_to_seedlots_file" encoding="multipart/form-data" />
                                                             </div>
@@ -281,8 +281,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -316,6 +314,7 @@
                         <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlots_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -333,8 +332,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -374,6 +371,7 @@
                         <li><b>new_seedlot_quality:</b> Status or condition of the seedlot, for example "ok", "moldy", "insect damage" etc.</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlots_to_new_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -392,7 +390,6 @@
             <div class="modal-body">
                 <div class="container-fluid">
                     <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -444,8 +441,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -474,6 +469,7 @@
                         <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 0 &>
             </div>
             <div class="modal-footer">
                 <button id="close_seedlots_to_unspecified_names_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -491,8 +487,6 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <b>Transactions may be uploaded in an Excel file (.xls or .xlsx)</b>
-                    <br />
                     <b>Header:</b>
                     <br>
                     The first row (header) must contain the following:
@@ -526,6 +520,7 @@
                         <li><b>transaction_description:</b> Information about why this transaction is processed.</li>
                     </ul>
                 </div>
+                <& /help/file_upload_type.mas, type => "Seedlot Transactions", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_accessions_crossses_to_seedlots_info_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
