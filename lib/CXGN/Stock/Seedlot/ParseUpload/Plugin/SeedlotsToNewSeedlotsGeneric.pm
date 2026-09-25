@@ -20,13 +20,13 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'from_seedlot_name', 'operator_name', 'to_new_seedlot_name', 'new_seedlot_box_name'],
-        optional_columns => ['amount', 'weight(g)', 'transaction_description', 'new_seedlot_description', 'new_seedlot_quality'],
+        optional_columns => ['amount', 'weight_gram', 'transaction_description', 'new_seedlot_description', 'new_seedlot_quality'],
         column_aliases => {
             'from_seedlot_name' => ['from seedlot name'],
             'operator_name' => ['operator name', 'operator'],
             'to_new_seedlot_name' => ['to new seedlot name'],
             'new_seedlot_box_name' => ['new seedlot box name'],
-            'weight(g)' => ['weight_gram'],
+            'weight_gram' => ['weight(g)'],
             'transaction_description' => ['transaction description'],
             'new_seedlot_description' => ['new seedlot description'],
             'new_seedlot_quality' => ['new seedlot quality']
@@ -79,7 +79,7 @@ sub _validate_with_plugin {
     my @all_seedlots_missing = @{$validation->{missing}};
     my @seedlots_discarded = @{$validation->{discarded}};
     my @seedlots_missing;
-    my %discarded_lookup = map {$_ => 1} @seedlot_discarded;
+    my %discarded_lookup = map {$_ => 1} @seedlots_discarded;
     foreach my $seedlot (@all_seedlots_missing) {
         if ($discarded_lookup{$seedlot}) {
             next;
@@ -155,16 +155,19 @@ sub _parse_with_plugin {
     for my $row ( @$parsed_data ) {
         my $row_num;
         my $from_seedlot_name;
-        my $to_seedlot_name;
         my $amount;
         my $weight;
         my $operator_name;
-        my $description;
+        my $transaction_description;
+        my $to_new_seedlot_name;
+        my $new_seedlot_box_name;
+        my $new_seedlot_description;
+        my $new_seedlot_quality;
 
         $row_num = $row->{_row};
         $from_seedlot_name = $row->{'from_seedlot_name'};
         $amount = $row->{'amount'};
-        $weight = $row->{'weight(g)'};
+        $weight = $row->{'weight_gram'};
         $operator_name = $row->{'operator_name'};
         $transaction_description = $row->{'transaction_description'};
         $to_new_seedlot_name = $row->{'to_new_seedlot_name'};

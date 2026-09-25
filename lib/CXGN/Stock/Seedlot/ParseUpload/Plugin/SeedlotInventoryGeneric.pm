@@ -71,7 +71,7 @@ sub _validate_with_plugin {
     my @all_seedlots_missing = @{$validation->{missing}};
     my @seedlots_discarded = @{$validation->{discarded}};
     my @seedlots_missing;
-    my %discarded_lookup = map {$_ => 1} @seedlot_discarded;
+    my %discarded_lookup = map {$_ => 1} @seedlots_discarded;
     foreach my $seedlot (@all_seedlots_missing) {
         if ($discarded_lookup{$seedlot}) {
             next;

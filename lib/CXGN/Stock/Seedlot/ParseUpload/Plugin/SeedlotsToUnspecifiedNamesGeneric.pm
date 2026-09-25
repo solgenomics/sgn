@@ -20,11 +20,11 @@ sub _validate_with_plugin {
     my $parser = CXGN::File::Parse->new (
         file => $filename,
         required_columns => [ 'from_seedlot_name', 'operator_name', 'transaction_description'],
-        optional_columns => ['amount', 'weight(g)'],
+        optional_columns => ['amount', 'weight_gram'],
         column_aliases => {
             'from_seedlot_name' => ['from seedlot name'],
             'operator_name' => ['operator name', 'operator'],
-            'weight(g)' => ['weight_gram'],
+            'weight_gram' => ['weight(g)', 'weight gram'],
             'transaction_description' => ['transaction description', 'description'],
         },
     );
@@ -69,7 +69,7 @@ sub _validate_with_plugin {
     my @all_seedlots_missing = @{$validation->{missing}};
     my @seedlots_discarded = @{$validation->{discarded}};
     my @seedlots_missing;
-    my %discarded_lookup = map {$_ => 1} @seedlot_discarded;
+    my %discarded_lookup = map {$_ => 1} @seedlots_discarded;
     foreach my $seedlot (@all_seedlots_missing) {
         if ($discarded_lookup{$seedlot}) {
             next;

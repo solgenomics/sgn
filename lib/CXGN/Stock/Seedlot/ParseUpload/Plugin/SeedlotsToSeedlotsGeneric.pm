@@ -25,7 +25,7 @@ sub _validate_with_plugin {
             'from_seedlot_name' => ['from seedlot name'],
             'to_seedlot_name' => ['to seedlot name'],
             'operator_name' => ['operator name', 'operator'],
-            'weight_gram' => ['weight(g)'],
+            'weight_gram' => ['weight(g)', 'weight gram'],
             'transaction_description' => ['transaction description', 'description'],
         },
     );
@@ -54,8 +54,8 @@ sub _validate_with_plugin {
     my @from_seedlot_to_seedlot_pairs;
     for my $row ( @$parsed_data ) {
         my $row_num = $row->{_row};
-        my $content_name = $row->{'from_seedlot_name'};
-        my $seedlot_name = $row->{'to_seedlot_name'};
+        my $from_seedlot_name = $row->{'from_seedlot_name'};
+        my $to_seedlot_name = $row->{'to_seedlot_name'};
         my $amount = $row->{'amount'};
         my $weight = $row->{'weight_gram'};
 
@@ -74,7 +74,7 @@ sub _validate_with_plugin {
     my @all_from_seedlots_missing = @{$from_seedlots_validation->{missing}};
     my @from_seedlots_discarded = @{$from_seedlots_validation->{discarded}};
     my @from_seedlots_missing;
-    my %from_seedlots_discarded_lookup = map {$_ => 1} @from_seedlot_discarded;
+    my %from_seedlots_discarded_lookup = map {$_ => 1} @from_seedlots_discarded;
     foreach my $from_seedlot (@all_from_seedlots_missing) {
         if ($from_seedlots_discarded_lookup{$from_seedlot}) {
             next;
@@ -97,7 +97,7 @@ sub _validate_with_plugin {
     my @all_to_seedlots_missing = @{$to_seedlots_validation->{missing}};
     my @to_seedlots_discarded = @{$to_seedlots_validation->{discarded}};
     my @to_seedlots_missing;
-    my %to_seedlots_discarded_lookup = map {$_ => 1} @to_seedlot_discarded;
+    my %to_seedlots_discarded_lookup = map {$_ => 1} @to_seedlots_discarded;
     foreach my $to_seedlot (@all_to_seedlots_missing) {
         if ($to_seedlots_discarded_lookup{$to_seedlot}) {
             next;
