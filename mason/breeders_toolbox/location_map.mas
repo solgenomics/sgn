@@ -131,6 +131,7 @@ function initialize_map (id, locationJSON, table) {
     };
 
     var location_layer = L.geoJSON(locationJSON, {
+        filter: has_coordinates,
         pointToLayer: function (feature, latlng) {
            return L.marker(latlng, style(feature));
        },
@@ -191,16 +192,7 @@ function initialize_map (id, locationJSON, table) {
 
     var searchControl = L.esri.Geocoding.geosearch({
         providers: [
-          arcgisOnline,
-          L.esri.Geocoding.featureLayerProvider({
-            url: 'https://services.arcgis.com/uCXeTVveQzP4IIcx/arcgis/rest/services/gisday/FeatureServer/0/',
-            searchFields: ['Name', 'Organization'],
-            label: 'GIS Day Events',
-            bufferRadius: 5000,
-            formatSuggestion: function(feature){
-              return feature.properties.Name + ' - ' + feature.properties.Organization;
-            }
-          })
+          arcgisOnline
       ],
       position: 'topright',
       expanded: true
@@ -215,7 +207,7 @@ function initialize_map (id, locationJSON, table) {
         layerControl.removeLayer(location_layer);
         location_layer = L.geoJson(locationJSON, {
             filter: function(feature, layer) {
-                return ids[feature.properties.Id];
+                return ids[feature.properties.Id] && has_coordinates(feature);
             },
             pointToLayer: function (feature, latlng) {
                return L.marker(latlng, style(feature));
@@ -225,7 +217,12 @@ function initialize_map (id, locationJSON, table) {
 
         layerControl.addOverlay(location_layer, "Locations");
         location_layer.addTo(mymap);
-        mymap.fitBounds(location_layer.getBounds());
+        if ( location_layer.getBounds().isValid() ) {
+            mymap.fitBounds(location_layer.getBounds());
+        }
+        else {
+            mymap.fitWorld();
+        }
     });
     return;
 }
@@ -241,6 +238,17 @@ function location_html_escape(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+}
+
+// Locations without latitude/longitude have coordinates [null, null], which Leaflet would place at 0,0
+function has_coordinates(feature) {
+    var coordinates = feature.geometry ? feature.geometry.coordinates : undefined;
+    if (!coordinates || coordinates.length < 2) {
+        return false;
+    }
+    return [coordinates[0], coordinates[1]].every(function(value) {
+        return value !== null && value !== '' && isFinite(value);
+    });
 }
 
 function style(feature) {
@@ -309,7 +317,7 @@ function onEachFeature(feature, layer) {
     function add_from_map(coordinate_string) {
         //console.log("coordinate_string is"+coordinate_string);
         var latlng = coordinate_string.split(',');
-        latitude = latlng[0], longitude = latlng[1];
+        var latitude = latlng[0], longitude = latlng[1];
         var coordinates = [parseFloat(latitude),parseFloat(longitude)];
 
 
@@ -340,6 +348,7 @@ function onEachFeature(feature, layer) {
             // $('#location_altitude').val(elevation);
             $('#location_country').val('');
             $('#location_altitude').val('');
+            $('#location_noaa_station_id').val('');
             $('#location_latitude').val(coordinates[0]);
             $('#location_longitude').val(coordinates[1]);
             $('#store_location_dialog').modal("show");
