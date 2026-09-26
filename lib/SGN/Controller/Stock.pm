@@ -517,7 +517,7 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $genotype_id = $c->req->param('genotype_id');
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    if (!$genotype_id || $genotype_id !~ /^\d+$/) {
+    if (!$genotype_id || $genotype_id !~ /^[0-9]+\z/) {
 
 	my $referer = $c->req->referer;
 	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
