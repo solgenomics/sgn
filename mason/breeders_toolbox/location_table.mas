@@ -39,4 +39,110 @@ $user_id => undef
     jQuery(document).ready(function() {
         initialize_table();
     });
+
+    // user-entered text is escaped for display; sorting, searching and exports use the raw value
+    function render_text(data, type, full, meta) {
+        return type === 'display' ? location_html_escape(data) : data;
+    }
+
+    function createLocationsTable() {
+        var export_message = 'Location data from ' + window.location.href;
+        table = jQuery('#location_table').DataTable({
+            data: [],
+            dom: 'Bfrtip',
+            rowId: 'properties.Id',
+            "columns": [
+                { "data": "properties.Id" },
+                { "data": "properties.Name", "render": render_text },
+                { "data": "properties.Abbreviation", "render": render_text },
+                { "data": "properties.Code",
+                    "render":function(data, type, full, meta){
+                        return render_text(full.properties.Code + ' ' + full.properties.Country, type);
+                    }
+                },
+                { "data": "properties.Program", "render": render_text },
+                { "data": "properties.Type", "render": render_text },
+                { "data": "properties.Latitude" },
+                { "data": "properties.Longitude" },
+                { "data": "properties.Altitude" },
+                { "data": "properties.Trials" },
+                { "data": "properties.NOAAStationID",
+                    "render":function(data, type, full, meta) {
+                        var station_id = location_html_escape(full.properties.NOAAStationID);
+                        return station_id ? "<a href='https://www.ncdc.noaa.gov/cdo-web/datasets/GHCND/stations/" + station_id + "/detail' target=_blank>"+ station_id + "</a>" : "";
+                    }
+                }
+            ],
+            buttons: [ 'colvis',
+                {
+                    extend: 'copy',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'excelHtml5',
+                    title: document.title +'_locations',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'csvHtml5',
+                    title: document.title +'_locations',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    title: document.title +'_locations',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    message: export_message
+                },
+                {
+                    extend: 'print',
+                    exportOptions: {
+                        columns: ':visible'
+                    },
+                    message: export_message
+                }
+            ],
+            drawCallback: function( settings ) {
+                var api = this.api();
+                var name_data = api.column(1, { search:'applied' } ).data();
+                var names = [];
+                for (var i = 0; i < name_data.length; i++) { //extract names from data object
+                    names.push(name_data[i]+'\n');
+                }
+                $('#location_names').text(names.join(''));
+                addToListMenu('locations_to_list_menu', 'location_names', {
+                    listType: 'locations'
+                });
+            }
+        });
+    }
+
+    function updateLocationsTable() {
+
+        // Filter locations by list items, if a list is selected
+        var filtered_locations = locations;
+        var list_id = jQuery("#locations_list_list_select option:selected").val();
+        if ( list_id ) {
+            var data = lo.getListData(list_id);
+            var names = data.elements.map((x) => x[1]);
+            filtered_locations = filtered_locations.filter((loc) => names.includes(loc.properties.Name));
+        }
+
+        // Update table with filtered locations
+        table.clear();
+        table.rows.add(filtered_locations);
+        table.draw();
+
+    }
+
+});
+
 </script>
