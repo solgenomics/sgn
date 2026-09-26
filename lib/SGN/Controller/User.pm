@@ -2,6 +2,7 @@
 package SGN::Controller::User;
 
 use Moose;
+use HTML::Entities;
 
 BEGIN { extends 'Catalyst::Controller' };
 
@@ -56,18 +57,32 @@ sub confirm_user :Path('/user/confirm') Args(0) {
 
     my $sp = CXGN::People::Login->get_login( $c->dbc()->dbh(), $username );
 
+    # the username comes from the query string and is shown in the page
+    #
+    my $html_username = encode_entities($username);
+
     if ( !$sp ) {
-	confirm_failure($c, "Username \"$username\" was not found.");
+	confirm_failure($c, "Username \"$html_username\" was not found.");
 	return;
     }
 
     if ( !$sp->get_confirm_code() ) {
-	confirm_failure($c, "No confirmation is required for user <b>$username</b>. This account has already been confirmed. <p><a href='/user/login'>[Login Page]</a></p>");
+	confirm_failure($c, "No confirmation is required for user <b>$html_username</b>. This account has already been confirmed. <p><a href='/user/login'>[Login Page]</a></p>");
 	return;
     }
 
     if ( $sp->get_confirm_code() ne $confirm_code ) {
 	confirm_failure($c, "Confirmation code is not valid!\n");
+	return;
+    }
+
+    # only new accounts that are waiting for confirmation can be confirmed.
+    # accounts that were disabled for another reason (for example by an
+    # administrator) must not be re-enabled with a confirmation code or
+    # with a password reset token, which is stored in the same column.
+    #
+    if ( ($sp->get_disabled() || '') ne 'unconfirmed account' ) {
+	confirm_failure($c, "This account is not waiting for confirmation.");
 	return;
     }
 
@@ -101,7 +116,7 @@ END_HEREDOC
     }
 
     $c->stash->{template} = '/generic_message.mas';
-    $c->stash->{message} = "Confirmation successful for username <b>$username</b>";
+    $c->stash->{message} = "Confirmation successful for username <b>$html_username</b>";
 }
 
 sub confirm_failure {
@@ -131,7 +146,7 @@ sub reset_password_form :Path('/user/reset_password_form') Args(0) {
 	my $person = CXGN::People::Person->new($c->dbc->dbh(), $person_id);
 	$c->stash->{token} = $token;
 	$c->stash->{person_id} = $person_id;
-	$c->stash->{username} = $person->get_username();
+	$c->stash->{username} = encode_entities($person->get_username());
 	$c->stash->{template} = '/user/reset_password_form.mas';
     }
     else {
