@@ -415,7 +415,12 @@ sub reset_password :Path('/ajax/user/reset_password') Args(0) {
         my $reset_link = $c->config->{main_production_site_url}."/user/reset_password_form?reset_password_token=$email_reset_token";
         my $person = CXGN::People::Login->new( $c->dbc->dbh(), $pid);
         $person->update_confirm_code($email_reset_token);
-        $self->send_reset_email_message($c, $pid, $email, $reset_link, $person->{username});
+        # Mail the link to the account's own stored address, never to the
+        # $email value from the request. get_login_by_email() matches with
+        # an SQL ILIKE, so a request address that only matches through a
+        # wildcard (for example "_" standing in for ".") must not receive
+        # another account's reset link.
+        $self->send_reset_email_message($c, $pid, $person->get_private_email(), $reset_link, $person->{username});
     }
 
     $c->stash->{rest} = {
@@ -448,7 +453,7 @@ sub process_reset_password_form :Path('/ajax/user/process_reset_password') Args(
     # never be used to look up an account.
     #
     my $person_id;
-    if (defined($token) && !ref($token) && $token =~ m/^[A-Za-z0-9]{16}$/) {
+    if (defined($token) && !ref($token) && $token =~ m/^[A-Za-z0-9]{16}\z/) {
         eval {
             my $dbh = $c->dbc->dbh();
             my $token_person_id = CXGN::People::Login->get_login_by_token($dbh, $token);
