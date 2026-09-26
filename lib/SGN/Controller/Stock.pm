@@ -514,10 +514,10 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
     my $stock_row = $c->stash->{stock_row};
     my $stock_id = $stock_row->stock_id;
     my $stock_name = $stock_row->uniquename;
-    my $genotype_id = $c->req->param('genotype_id') ? [$c->req->param('genotype_id')] : undef;
+    my $genotype_id = $c->req->param('genotype_id');
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
 
-    if (!$genotype_id) {
+    if (!$genotype_id || $genotype_id !~ /^\d+$/) {
 
 	my $referer = $c->req->referer;
 	my $message = "<p>Genotype data download for the stock is missing an associated genotype id. <br/>"
@@ -537,11 +537,22 @@ sub download_genotypes : Chained('get_stock') PathPart('genotypes') Args(0) {
 	my $stock_type = $stock->type();
 
 	if ($stock_id) {
+	    # the VCF header lines and marker order come from the genotyping protocol
+	    my $protocol_ids = $schema->storage->dbh()->selectcol_arrayref(
+		"SELECT DISTINCT nd_experiment_protocol.nd_protocol_id
+		FROM nd_experiment_genotype
+		JOIN nd_experiment_protocol USING(nd_experiment_id)
+		WHERE nd_experiment_genotype.genotype_id = ?",
+		undef,
+		$genotype_id,
+		);
+
 	    my %genotype_download_factory = (
 		bcs_schema=>$schema,
 		people_schema=>$people_schema,
 		cache_root_dir=>$c->config->{cache_file_path},
-		markerprofile_id_list=>$genotype_id,
+		markerprofile_id_list=>[$genotype_id],
+		protocol_id_list=>$protocol_ids,
 		#genotype_data_project_list=>$genotype_data_project_list,
 		#marker_name_list=>['S80_265728', 'S80_265723'],
 		#limit=>$limit,
