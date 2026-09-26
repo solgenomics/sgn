@@ -105,7 +105,12 @@ $user_id => undef
                 {
                     extend: 'print',
                     exportOptions: {
-                        columns: ':visible'
+                        columns: ':visible',
+                        // The escaped display value already contains entities (e.g. &lt;img&gt;).
+                        // DataTables Buttons' print export runs decodeEntities on the display value
+                        // before print-min.js writes it into the print window with innerHTML, which
+                        // would turn it back into live markup. Keep it as literal text.
+                        decodeEntities: false
                     },
                     message: export_message
                 }
