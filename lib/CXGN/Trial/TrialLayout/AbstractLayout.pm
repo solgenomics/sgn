@@ -13,6 +13,7 @@ use CXGN::Stock::StockLookup;
 use CXGN::Location::LocationLookup;
 use SGN::Model::Cvterm;
 use CXGN::Chado::Stock;
+use CXGN::JSONUtils qw(decode_stored_json);
 
 
 has 'schema' => (
@@ -620,7 +621,7 @@ sub retrieve_plot_info {
 	$design_info{"range_number"}=$range_number_prop;
     }
 	if ($plot_geo_json_prop) {
-	    $design_info{"plot_geo_json"} = decode_json $plot_geo_json_prop;
+	    $design_info{"plot_geo_json"} = decode_stored_json($plot_geo_json_prop);
 	}
     if ($is_a_control_prop) {
 	    $design_info{"is_a_control"}=$is_a_control_prop;
