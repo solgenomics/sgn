@@ -73,8 +73,18 @@ sub check_no_session {
     my $brapi = Test::WWW::Mechanize->new;
     $brapi->post_ok('http://localhost:3010/brapi/v2/token', [ username => $username, password => $password, grant_type => 'password' ]);
     $response = decode_json $brapi->content;
-    ok(!$response->{access_token}, "$label: no BrAPI access token");
-    unlike($brapi->res->header('Set-Cookie') || '', qr/sgn_session_id=\w/, "$label: no session cookie is set by BrAPI");
+    ok(!$response->{access_token}, "$label: no BrAPI v2 access token");
+    unlike($brapi->res->header('Set-Cookie') || '', qr/sgn_session_id=\w/, "$label: no session cookie is set by BrAPI v2");
+
+    # /brapi/v1/token and /brapi/v2/token are the same controller action
+    # (Chained('brapi'), the version is only the chain root), so v1 is
+    # affected the same way; check it too.
+    #
+    my $brapi_v1 = Test::WWW::Mechanize->new;
+    $brapi_v1->post_ok('http://localhost:3010/brapi/v1/token', [ username => $username, password => $password, grant_type => 'password' ]);
+    $response = decode_json $brapi_v1->content;
+    ok(!$response->{access_token}, "$label: no BrAPI v1 access token");
+    unlike($brapi_v1->res->header('Set-Cookie') || '', qr/sgn_session_id=\w/, "$label: no session cookie is set by BrAPI v1");
 
     is(session_count($login->get_sp_person_id()), 0, "$label: no session is stored");
 }
