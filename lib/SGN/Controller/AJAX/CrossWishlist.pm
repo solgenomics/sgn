@@ -101,10 +101,10 @@ sub create_cross_wishlist_POST : Args(0) {
 
     my $female_trial_layout = CXGN::Trial::TrialLayout->new({ schema => $schema, trial_id => $female_trial_id, experiment_type=>'field_layout' });
     my $design_layout = $female_trial_layout->get_design();
-    print STDERR Dumper $design_layout;
+#    print STDERR Dumper $design_layout;
 
     my %block_plot_hash;
-    print STDERR "NUM PLOTS:".scalar(keys %$design_layout);
+#    print STDERR "NUM PLOTS:".scalar(keys %$design_layout);
     while ( my ($key,$value) = each %$design_layout){
         $block_plot_hash{$value->{block_number}}->{$value->{plot_number}} = $value;
     }
@@ -212,6 +212,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     if ($ona_form_name eq $test_ona_form_name){
         $is_test_form = 1;
     }
+    print STDERR "IS TEST FORM =".Dumper($is_test_form)."\n";
     #print STDERR Dumper $data;
     #print STDERR Dumper $selected_plot_ids;
 
@@ -285,19 +286,31 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     );
     $ua->credentials( 'api.ona.io:443', 'DJANGO', $c->config->{odk_crossing_data_service_username}, $c->config->{odk_crossing_data_service_password} );
     my $login_resp = $ua->get("https://api.ona.io/api/v1/user.json");
+    die "Login failed: " . $login_resp->status_line . "\n" . $login_resp->decoded_content
+    unless $login_resp->is_success;
+
+    my $login_json = decode_json($login_resp->decoded_content);
+    my $token = $login_json->{temp_token};
+    print STDERR "TOKEN =".Dumper($token)."\n";
+    die "No temp_token returned\n" unless $token;
+
+    my $auth_header = "Temptoken $token";
+
     my $server_endpoint = "https://api.ona.io/api/v1/data/$ona_form_id";
     print STDERR $server_endpoint."\n";
-    my $resp = $ua->get($server_endpoint);
+    my $resp = $ua->get($server_endpoint, Authorization => $auth_header);
 
     my $server_endpoint2 = "https://api.ona.io/api/v1/metadata?xform=".$ona_form_id;
-    my $resp2 = $ua->get($server_endpoint2);
+    my $resp2 = $ua->get($server_endpoint2, Authorization => $auth_header);
+#    print STDERR "CHECK GETTING FILE =".Dumper($resp2)."\n";
     if ($resp2->is_success) {
         my $message2 = $resp2->decoded_content;
         my $message_hash2 = decode_json $message2;
+#        print STDERR "MESSAGE HASH 2=".Dumper($message_hash2)."\n";
         foreach my $t (@$message_hash2) {
             if (index($t->{data_value}, 'cross_wishlist') != -1) {
                 my $cross_wishlist_file_name = $t->{data_value};
-
+#                print STDERR "FILE NAME =".Dumper($cross_wishlist_file_name)."\n";
                 $cross_wishlist_file_name =~ s/.csv//;
                 my $wishlist_file_name_loc = $cross_wishlist_file_name;
                 $wishlist_file_name_loc =~ s/cross_wishlist_//;
@@ -313,6 +326,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
                 } else {
                     getstore($t->{media_url}, $cross_wishlist_temp_file_path);
                     $cross_wihlist_ona_id = $t->{id};
+                    print STDERR "ONA ID =".Dumper($cross_wihlist_ona_id)."\n";
                 }
             }
             if (index($t->{data_value}, 'germplasm_info') != -1) {
@@ -339,12 +353,12 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
     }
 
+
     my @previous_file_lines;
     my %previous_file_lookup;
     my $old_header_row;
     my @old_header_row_array;
     if ($cross_wihlist_ona_id){
-        print STDERR "Previous cross_wishlist temp file $cross_wishlist_temp_file_path\n";
         open(my $fh, '<', $cross_wishlist_temp_file_path)
             or die "Could not open file '$cross_wishlist_temp_file_path' $!";
         $old_header_row = <$fh>;
@@ -359,11 +373,11 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
     }
     #print STDERR Dumper \@previous_file_lines;
+    print STDERR "PREVIOUS FILE LOOKUP =".Dumper(\%previous_file_lookup)."\n";
 
     my @previous_germplasm_info_lines;
     my %seen_info_obs_units;
     if ($germplasm_info_ona_id){
-        print STDERR "PREVIOUS germplasm_info temp file $germplasm_info_temp_file_path\n";
         open(my $fh, '<', $germplasm_info_temp_file_path)
             or die "Could not open file '$germplasm_info_temp_file_path' $!";
         my $header_row = <$fh>;
@@ -747,6 +761,7 @@ sub create_cross_wishlist_submit_POST : Args(0) {
     } else {
         $file_type = 'cross_wishlist_'.$ona_form_id;
     }
+    print STDERR "FILE TYPE =".Dumper($file_type)."\n";
 
     my $uploader = CXGN::UploadFile->new({
        include_timestamp => 0,
@@ -845,7 +860,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
         if ($cross_wihlist_ona_id){
             my $delete_resp = $ua->delete(
-                $server_endpoint."/$cross_wihlist_ona_id"
+                $server_endpoint."/$cross_wihlist_ona_id",
+                Authorization => $auth_header
             );
             if ($delete_resp->is_success) {
                 print STDERR "Deleted cross wishlist file on ONA $cross_wihlist_ona_id, in order to replace the file.\n";
@@ -857,7 +873,8 @@ sub create_cross_wishlist_submit_POST : Args(0) {
         }
         if ($germplasm_info_ona_id){
             my $delete_resp = $ua->delete(
-                $server_endpoint."/$germplasm_info_ona_id"
+                $server_endpoint."/$germplasm_info_ona_id",
+                Authorization => $auth_header
             );
             if ($delete_resp->is_success) {
                 print STDERR "Deleted germplasm info file on ONA $germplasm_info_ona_id, in order to replace the file.\n";
@@ -870,34 +887,39 @@ sub create_cross_wishlist_submit_POST : Args(0) {
 
         my $resp = $ua->post(
             $server_endpoint,
+            Authorization => $auth_header,
             Content_Type => 'form-data',
             Content => [
-                data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/plain', ],
+                data_file => [ $uploaded_file, $uploaded_file, Content_Type => 'text/csv', ],
                 "xform"=>$ona_form_id,
                 "data_type"=>"media",
                 "data_value"=>$uploaded_file
             ]
         );
+        print STDERR "ONA RESPONSE=".Dumper($resp);
+
+        print STDERR "ONA SUCCESS RESPONSE=".Dumper($resp->is_success);
 
         if ($resp->is_success) {
             my $message = $resp->decoded_content;
             my $message_hash = decode_json $message;
-            #print STDERR Dumper $message_hash;
             if ($message_hash->{id}){
                 $c->stash->{rest}->{success} .= 'The cross wishlist is now ready to be used on the ODK tablet application. Files uploaded to ONA here: <a href="'.$message_hash->{media_url}.'">'.$message_hash->{data_value}.'</a> with <a href="'.$message_hash->{url}.'">metadata entry</a>.';
             } else {
                 $c->stash->{rest}->{error} = 'The cross wishlist was not posted to ONA. Please try again.';
             }
         } else {
-            #print STDERR Dumper $resp;
+#            print STDERR "ONA RESPONSE MESSAGE HASH 2=".Dumper($resp);
+#            print STDERR Dumper $resp;
             $c->stash->{rest}->{error} = "There was an error submitting cross wishlist to ONA. Please try again.";
         }
 
         my $germplasm_info_resp = $ua->post(
             $server_endpoint,
+            Authorization => $auth_header,
             Content_Type => 'form-data',
             Content => [
-                data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/plain', ],
+                data_file => [ $germplasm_info_uploaded_file, $germplasm_info_uploaded_file, Content_Type => 'text/csv', ],
                 "xform"=>$ona_form_id,
                 "data_type"=>"media",
                 "data_value"=>$germplasm_info_uploaded_file
