@@ -79,7 +79,7 @@ use Moose;
 use JSON;
 
 use SGN::Context;
-use SGN::Model::Cvterm
+use SGN::Model::Cvterm;
 
 
 has 'shell_script_dir' => (
