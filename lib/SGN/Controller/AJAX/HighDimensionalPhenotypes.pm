@@ -186,6 +186,11 @@ sub high_dimensional_phenotypes_nirs_upload_verify_POST : Args(0) {
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    if ($cmd_status != 0) {
+        push @error_status, "Error filtering and aggregating NIRS spectra (outlier detection failed).";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
 
     my $parsed_file_agg = $parser->parse($validate_type, $output_csv_filepath, $timestamp_included, $data_level, $schema, $archived_image_zipfile_with_path, $user_id, $c, $protocol_id, $nd_protocol_filename);
     if (!$parsed_file_agg) {
@@ -400,6 +405,11 @@ sub high_dimensional_phenotypes_nirs_upload_store_POST : Args(0) {
     my $cmd_s = "Rscript ".$c->config->{basepath} . "/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    if ($cmd_status != 0) {
+        push @error_status, "Error filtering and aggregating NIRS spectra (outlier detection failed).";
+        $c->stash->{rest} = {success => \@success_status, error => \@error_status };
+        $c->detach();
+    }
 
     my %parsed_data_agg;
 
