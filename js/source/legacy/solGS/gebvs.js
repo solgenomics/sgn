@@ -132,10 +132,8 @@ jQuery(document).ready(function () {
                 var gebvsDownloadLinks = solGS.gebvs.createGebvsDownloadLinks(res);
                 var geneticValuesDownloadLinks = solGS.gebvs.createGeneticValuesDownloadLinks(res);
                 var downloadLinks = `${gebvsDownloadLinks} | ${geneticValuesDownloadLinks}`;
-                console.log(`Calling getGebvsData`)
 
                 solGS.gebvs.getGebvsData().done(function (res) {
-                    console.log(`getGebvsData res: ${JSON.stringify(res)}`)
                     solGS.gebvs.plotGebvs(res.gebvs_data, downloadLinks);
                 });
             });
