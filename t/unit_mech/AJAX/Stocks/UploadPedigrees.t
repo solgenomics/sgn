@@ -25,7 +25,9 @@ my $response = JSON::XS->new->decode($mech->content);
 is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
 my $sgn_session_id = $response->{access_token};
 
-my $file = $f->config->{basepath}."/t/data/cross/pedigree_upload.xlsx";
+my $pedigree_upload_datafile = "/t/data/cross/pedigree_upload.xlsx";
+my $file = $f->config->{basepath}.$pedigree_upload_datafile;
+
 my $ua = LWP::UserAgent->new;
 $response = $ua->post(
     'http://localhost:3010/ajax/pedigrees/upload_verify',
@@ -52,7 +54,7 @@ is($rows->[1]->{'female parent accession'}, 'XG120261');
 is($rows->[1]->{'male parent accession'}, 'XG120261');
 is($rows->[1]->{'type'}, 'self');
 
-$mech->post_ok('http://localhost:3010/ajax/pedigrees/upload_store', [ 'pedigree_data' => $pedigrees_string ]);
+$mech->post_ok('http://localhost:3010/ajax/pedigrees/upload_store', [ 'pedigree_data' => $pedigrees_string]);
 $response = decode_json $mech->content;
 is($response->{'success'}, '1');
 

@@ -87,6 +87,7 @@ sub observations_store {
     ## Archive in file
     my $archived_request = CXGN::BrAPI::FileRequest->new({
         schema=>$schema,
+        metadata_schema => $metadata_schema,
         user_id => $user_id,
         user_type => $user_type,
         tempfiles_subdir => $tempfiles_subdir,

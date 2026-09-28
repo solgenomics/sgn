@@ -54,6 +54,9 @@ sub markerprofiles_search {
 
     open my $fh, "<&", $file_handle or die "Can't open output file: $!";
     my $header_line = <$fh>;
+    # No header line means the search matched no genotypes, since the marker header
+    # is only written once there is a first result. It cannot mean a truncated cache
+    # entry any more: get_cached_file_search_json discards zero-length entries.
     if ($header_line) {
         while( <$fh> ) {
             if ($counter >= $start_index && $counter <= $end_index) {

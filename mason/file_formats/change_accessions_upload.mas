@@ -1,0 +1,15 @@
+<div class="modal fade" id="change_accessions_upload_file_format" name="change_accessions_upload_file_format" tabindex="-1" role="dialog" aria-labelledby="changeAccessionsUploadFileFormat">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <& /file_formats/change_accessions_file_desc.mas &>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

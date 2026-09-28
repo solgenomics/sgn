@@ -181,9 +181,11 @@ if ($opt_c eq 'VCF' && !$opt_w) {
         archive_filename => basename($file),
         timestamp => $timestamp,
         user_id => $sp_person_id,
-        user_role => 'curator'
+        user_role => 'curator',
+        metadata_schema => $metadata_schema,
+        file_type => 'genotyping_data'
     });
-    my $archived_original = $original_uploader->archive();
+    my ($vcf_archive_id, $archived_original) = $original_uploader->archive();
     if (!$archived_original) {
         die "Could not archive original VCF file!\n";
     }
@@ -226,9 +228,11 @@ my $uploader = CXGN::UploadFile->new({
    archive_filename => basename($file),
    timestamp => $timestamp,
    user_id => $sp_person_id,
-   user_role => 'curator'
+   user_role => 'curator',
+   metadata_schema => $metadata_schema,
+    file_type => 'genotyping_data'
 });
-my $archived_filename_with_path = $uploader->archive();
+my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
 my $md5 = $uploader->get_md5($archived_filename_with_path);
 if (!$archived_filename_with_path) {
     die "Could not archive file!\n";

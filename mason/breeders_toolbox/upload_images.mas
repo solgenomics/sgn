@@ -74,58 +74,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="upload_images_info_dialog" name="upload_images_info_dialog" tabindex="-1" role="dialog" aria-labelledby="uploadImagesInfoDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadImagesInfoDialog">Template Information</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-
-            <h4>Images Alone:</h4>
-            <ul>
-                <li>Select multiple images directly for upload.</li>
-                <li>If the images being uploaded were taken using Fieldbook, they have EXIF data that contains the observationUnitName, traitname, and timestamp. They can be uploaded without needing to change the file name.</li>
-                <li>If images were NOT taken using Fieldbook, image file names should consist of the observationUnitName, traitname, number, and timestamp, all joined by underscores (the default naming system used by Fieldbook App).</li>
-            </ul>
-            <br/>
-            <h4>Images with Barcodes:</h4>
-            <ul>
-                <li>Upload multiple selected images that contain a barcode with a stock ID.</li>
-                <li>There should only be one barcode in each image, and the associated stock must already exist in the database.</li>
-            </ul>
-            <br/>
-            <h4>Images with Associated Phenotypes:</h4>
-            <ul>
-                <li>The "Associated Images" format is useful for uploading a zipfile of images in association with phenotype values.</li>
-                <li>The phenotype values should be included in a .xls or .xlsx spreadsheet with the following columns:</li>
-                <br/><table class="table table-hover table-bordered table-condensed table-responsive" >
-                    <thead></thead>
-                    <tbody>
-                        <tr>
-                            <td>observationUnitName</td>
-                            <td>observationVariableName</td>
-                            <td>value</td>
-                            <td>timestamp</td>
-                            <td>image_name</td>
-                            <td>person</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <li>The values in the <b>image_name</b> column should should match the image filenames in the zipfile.</li>
-            </ul>
-
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
+<& /file_formats/image_upload.mas &>
 
 <script defer="defer">
 

@@ -13,6 +13,7 @@ use DateTime;
 
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema();
+my $metadata_schema = $f->metadata_schema();
 
 for my $extension ("xls", "xlsx") {
 
@@ -40,11 +41,13 @@ for my $extension ("xls", "xlsx") {
         archive_filename => "location_test_file.$extension",
         timestamp        => $timestamp,
         user_id          => 41, #janedoe in fixture
-        user_role        => 'curator'
+        user_role        => 'curator',
+        metadata_schema  => $metadata_schema,
+        file_type        => 'locations'
     });
 
     ## Store uploaded temporary file in archive
-    my $archived_filename_with_path = $uploader->archive();
+    my ($archived_file_id, $archived_filename_with_path) = $uploader->archive();
     my $md5 = $uploader->get_md5($archived_filename_with_path);
     ok($archived_filename_with_path);
     ok($md5);

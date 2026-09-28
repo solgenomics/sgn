@@ -245,7 +245,8 @@ my $treatment_uploader = CXGN::UploadFile->new({
     archive_filename => "Kasese_solgs_treatment_upload.xlsx",
     timestamp => $treatment_timestamp,
     user_id => 41, #janedoe in fixture
-    user_role => 'curator'
+    user_role => 'curator',
+    metadata_schema => $f->metadata_schema()
 });
 
 my $archived_treatment_file = $treatment_uploader->archive();

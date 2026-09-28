@@ -396,7 +396,6 @@ sub get_genotype_info {
     my @where_clause;
 
     my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id({protocol_id => $protocol_id_list->[0],genotype_id => $markerprofile_id_list->[0]});
-    my $vcf_genotyping_cvterm_id = $self->search_vcf_genotyping_cvterm_id();
 
     my $vcf_map_details_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details', 'protocol_property')->cvterm_id();
     my $vcf_map_details_markers_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'vcf_map_details_markers', 'protocol_property')->cvterm_id();
@@ -1257,7 +1256,18 @@ sub get_cached_file_search_json {
     my $file_handle;
     if ($self->cache()->exists($key) && !$self->forbid_cache()) {
         $file_handle = $self->cache()->handle($key);
-    } else {
+        # The cache index can disagree with its backing file, leaving an entry that
+        # exists but reads as empty. Serving that looks exactly like "no genotypes
+        # found", so throw it away and regenerate instead. Note that the index size
+        # cannot be trusted here, it is the thing that is wrong; stat the handle.
+        if (!$file_handle || (stat($file_handle))[7] == 0) {
+            print STDERR "discarding empty cached json file for key $key, regenerating\n";
+            undef $file_handle;
+            $self->cache()->remove($key);
+        }
+    }
+
+    if (!$file_handle) {
         # Set the temp dir and temp output file
         my $tmp_output_dir = $shared_cluster_dir_config."/tmp_genotype_download_json";
 	print STDERR "creating cached json file in $tmp_output_dir\n";

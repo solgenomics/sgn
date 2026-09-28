@@ -6,7 +6,7 @@ upload_multiple_trial_design.pl
 
 =head1 SYNOPSIS
 
-upload_multiple_trial_design.pl -H [dbhost] -D [dbname] -P [dbpass] -w [basepath] -U [dbuser] -i infile -un [username] -e [email address]
+upload_multiple_trial_design.pl -H [dbhost] -D [dbname] -P [dbpass] -w [basepath] -U [dbuser] -ap [archive_path] -i infile_id -t [tempfiles_subdir] -un [username] -e [email address] -j [sp_job_id]
 
 =head1 COMMAND-LINE OPTIONS
 ARGUMENTS
@@ -15,10 +15,13 @@ ARGUMENTS
  -U database username Ex: "postgres"
  -P database userpass Ex: "postgres"
  -w basepath (required) Ex: /home/production/cxgn/sgn
- -i path to infile (required)
+ -ap archive path (required) Ex: /home/production/volume/archive
+ -i id if archived infile (required)
+ -t tempfile basedir (from config) (required)
  -un username of uploader (required)
  -e email address of the user
-if loading trial data from metadata file, phenotypes + layout from infile 
+ -j sp_job_id of the job that submitted this script (required)
+if loading trial data from metadata file, phenotypes + layout from infile
 
 =head2 DESCRIPTION
 
@@ -48,22 +51,28 @@ use CXGN::Contact;
 use CXGN::TrialStatus;
 use File::Temp qw/tempfile/;
 use CXGN::Phenotypes::StorePhenotypes;
+use CXGN::File;
+use CXGN::Job;
+use CXGN::People::Schema;
 
-my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $infile, $username, $email_address, $ignore_warnings);
+my ( $help, $dbhost, $dbname, $basepath, $dbuser, $dbpass, $archive_path, $file_id, $username, $temp_basedir, $email_address, $ignore_warnings, $sp_job_id);
 GetOptions(
     'dbhost|H=s'           => \$dbhost,
     'dbname|D=s'           => \$dbname,
     'dbuser|U=s'           => \$dbuser,
     'dbpass|P=s'           => \$dbpass,
     'basepath|w=s'         => \$basepath,
-    'i=s'                  => \$infile,
+    'archive_path|ap=s'    => \$archive_path,
+    'i=s'                  => \$file_id,
     'user|un=s'            => \$username,
+    'temp_basedir|t=s'     => \$temp_basedir,
     'email|e=s'            => \$email_address,
     'ignore_warnings|iw!'  => \$ignore_warnings,
+    'jobid|j=s'            => \$sp_job_id,
     'help'                 => \$help,
 );
 pod2usage(1) if $help;
-if (!$infile || !$username || !$basepath || !$dbname || !$dbhost ) { 
+if (!$file_id || !$username || !$basepath || !$dbname || !$dbhost || !$archive_path || !defined($sp_job_id)) {
     pod2usage({ -msg => 'Error. Missing options!', -verbose => 1, -exitval => 1 });
 }
 
@@ -89,12 +98,25 @@ else {
     });
 }
 my $chado_schema = Bio::Chado::Schema->connect(sub { $dbh },  { on_connect_do => ['SET search_path TO  public, sgn, metadata, phenome;'] });
+my $people_schema = CXGN::People::Schema->connect(sub { $dbh }, { on_connect_do => ['SET search_path TO public, sgn, sgn_people;'] });
 print STDOUT "Database connection ok!\n";
 
 my $parsed_data;
 my $validation_coderef = sub {
     # Parse uploaded file with appropriate plugin
-    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $infile);
+    my $metadata_schema = CXGN::Metadata::Schema->connect( 
+        sub { $dbh }, 
+        { on_connect_do => ['SET search_path TO public,metadata;'] }
+    );
+    my $file = CXGN::File->new({
+        file_id => $file_id,
+        metadata_schema => $metadata_schema,
+        archive_path => $archive_path
+    });
+
+    my $filename = $file->get_path();
+
+    my $parser = CXGN::Trial::ParseUpload->new(chado_schema => $chado_schema, filename => $filename);
     $parser->load_plugin('MultipleTrialDesignGeneric');
     $parsed_data = $parser->parse();
 
@@ -139,19 +161,18 @@ my $coderef = sub {
 
     my $phenotime = DateTime->now();
     my $phenotimestamp = $phenotime->ymd()."_".$phenotime->hms();
-    my $phenotype_metadata = {
-        archived_file => $infile,
-        archived_file_type => 'multi trial upload',
+    my $phenotype_metadata =  {
+        archived_file_id => $file_id,
+        archive_path => $archive_path,
+        archived_file_type => 'trials',
         operator => $username,
         date => $phenotimestamp
     };
-    my $temp_basedir_key = `cat $basepath/sgn.conf $basepath/sgn_local.conf | grep tempfiles_subdir`;
-    my (undef, $temp_basedir) = split(/\s+/, $temp_basedir_key);
-    $temp_basedir = "$basepath/$temp_basedir";
-    if (! -d "$temp_basedir/delete_nd_experiment_ids/"){
-        mkdir("$temp_basedir/delete_nd_experiment_ids/");
+
+    if (! -d "$basepath/$temp_basedir/delete_nd_experiment_ids/"){
+        mkdir("$basepath/$temp_basedir/delete_nd_experiment_ids/");
     }
-    my (undef, $tempfile) = tempfile("$temp_basedir/delete_nd_experiment_ids/fileXXXX"); #tempfile
+    my (undef, $tempfile) = tempfile("$basepath/$temp_basedir/delete_nd_experiment_ids/fileXXXX"); #tempfile
 
     my @phenostore_stocks;
     my %phenostore_traits;
@@ -165,6 +186,13 @@ my $coderef = sub {
         sub { $dbh },
         { on_connect_do => ['SET search_path TO public,phenome;'] }
     );
+
+    my $archived_file = CXGN::File->new({
+        file_id => $file_id,
+        metadata_schema => $metadata_schema,
+        archive_path => $archive_path
+    });
+    my $filename = $archived_file->get_path();
 
     for my $trial_name ( keys %all_designs ) {
         my $trial_design = $all_designs{$trial_name};
@@ -193,7 +221,7 @@ my $coderef = sub {
             trial_stock_type => $trial_design->{'trial_stock_type'},
             design => $trial_design->{'design_details'},
             program => $trial_design->{'breeding_program'},
-            upload_trial_file => $infile,
+            upload_trial_file => $filename,
             operator => $username,
             owner_id => $sp_person_id
         );
@@ -279,7 +307,7 @@ my $coderef = sub {
     }
 
     my $store_phenotypes = CXGN::Phenotypes::StorePhenotypes->new({
-        basepath => $temp_basedir,
+        basepath => "$basepath/$temp_basedir",
         dbhost => $dbhost,
         dbname => $dbname,
         dbuser => $dbuser,
@@ -331,6 +359,31 @@ sub finish {
     foreach (@warnings) {
         print STDERR "WARNING: $_\n";
     }
+
+    # Report the outcome back to the submitting job. Warnings only reach here when they blocked
+    # the upload (ignore_warnings was false), so they count as a failure for job status purposes,
+    # the same as errors.
+    try {
+        my $job = CXGN::Job->new({
+            sp_job_id => $sp_job_id,
+            schema => $chado_schema,
+            people_schema => $people_schema
+        });
+
+        if (!$job->additional_args()) {
+            $job->additional_args({});
+        }
+        if (scalar(@warnings) > 0) {
+            $job->additional_args->{warning_messages} = join("<br>", @warnings);
+        }
+        if (scalar(@errors) > 0) {
+            $job->additional_args->{error_messages} = join("<br>", @errors);
+        }
+
+        $job->update_status((scalar(@errors) > 0 || scalar(@warnings) > 0) ? "failed" : "finished");
+    } catch {
+        print STDERR "Could not report the results of this upload to job $sp_job_id: $_\n";
+    };
 
     # Send email message, if requested
     # Exit the script: 0 = success, 1 = errors, 2 = warnings

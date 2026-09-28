@@ -113,6 +113,12 @@ agg.spectra %>%
     comments = NA) %>%
   rename(sample_name = Group.1) %>%
   rename(device_type_rename = Group.2) %>%
-  dplyr::select(sample_name, starts_with("nirs_spectra")) %>%
-  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.", "")) %>%
+  # device_id and comments are carried through because this file is read back by the same
+  # parser as the original upload, which takes the first three columns to be sample_name,
+  # device_id and comments and everything after them to be wavelengths.
+  dplyr::select(sample_name, device_id, comments, starts_with("nirs_spectra")) %>%
+  # The X comes from the uploaded file being read into a spectra hash keyed "X" plus the
+  # wavelength, so it has to come off again here: this file is read back by the same parser
+  # as the original upload, which requires bare numeric wavelength headers.
+  rename_at(vars(starts_with("nirs_spectra")), ~str_replace(., "nirs_spectra.X", "")) %>%
   write.csv(x=., file = args[2], row.names=FALSE)
