@@ -4,7 +4,7 @@ use Moose;
 use namespace::autoclean;
 
 use Carp qw/ carp confess croak /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Path qw / make_path  /;
 use File::Temp qw / tempfile tempdir /;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
@@ -675,7 +675,7 @@ sub pca_cache_dir {
     my ( $self, $c ) = @_;
 
     my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
-    my $pca_cache_dir = catdir( $c->stash->{pca_dir}, $pca_analysis_id, 'cache');
+    my $pca_cache_dir = File::Spec->catdir( $c->stash->{pca_dir}, $pca_analysis_id, 'cache');
     make_path( $pca_cache_dir, { mode => oct('0755') });
 
     return $pca_cache_dir;
@@ -685,7 +685,7 @@ sub pca_temp_dir {
     my ($self, $c) = @_;
 
     my $pca_analysis_id = $c->stash->{pca_pop_id} || $c->stash->{trial_id};
-    my $pca_temp_dir = catdir($c->stash->{pca_dir}, $pca_analysis_id, 'tempfiles');
+    my $pca_temp_dir = File::Spec->catdir($c->stash->{pca_dir}, $pca_analysis_id, 'tempfiles');
     make_path($pca_temp_dir, { mode => oct('0755') });
 
     $c->stash->{pca_temp_dir} = $pca_temp_dir;

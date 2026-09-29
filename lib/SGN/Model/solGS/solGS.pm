@@ -29,11 +29,10 @@ use CXGN::People::Schema;
 
 use Bio::Chado::NaturalDiversity::Reports;
 use File::Path qw / mkpath /;
-use File::Spec::Functions;
+use File::Spec;
 use List::MoreUtils qw / uniq /;
 use JSON::Any;
 use Scalar::Util qw(looks_like_number);
-use File::Spec::Functions qw / catfile catdir/;
 use File::Slurp qw /write_file read_file :edit prepend_file/;
 use Math::Round::Var;
 use CXGN::Genotype::Search;
@@ -1169,7 +1168,7 @@ sub prediction_pops {
           readdir($dh);
         closedir $dh;
 
-        $geno_file = catfile( $dir, $geno_file );
+        $geno_file = File::Spec->catfile( $dir, $geno_file );
         open my $fh, "<", $geno_file or die "can't open genotype file: $!";
 
         my $markers = <$fh>;
@@ -1192,7 +1191,7 @@ sub prediction_pops {
           readdir($dh);
         closedir $dh;
 
-        $geno_file = catfile( $dir, $geno_file );
+        $geno_file = File::Spec->catfile( $dir, $geno_file );
         open my $fh, "<", $geno_file or die "can't open genotype file: $!";
 
         my $markers = <$fh>;

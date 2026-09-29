@@ -7,7 +7,7 @@ use Moose;
 use Data::Dumper;
 use File::Temp qw | tempfile |;
 use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;
@@ -436,7 +436,7 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         print $filehandle_out $line;
     }
     close $filehandle;
-    close $filehandle_out;    
+    close $filehandle_out;
 
 #
 # # Hardcoded number of markers to be selected - make this selectable by user?

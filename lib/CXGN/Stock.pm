@@ -1746,6 +1746,7 @@ sub get_pedigree_string {
         my $pf_parent_string = $self->_get_parent_string($pedigree_hashref->{'male_parent'}->{'male_parent'});
         return "$mm_parent_string//$mf_parent_string///$pm_parent_string//$pf_parent_string";
     }
+    return "";
 }
 
 sub _get_parent_string {
