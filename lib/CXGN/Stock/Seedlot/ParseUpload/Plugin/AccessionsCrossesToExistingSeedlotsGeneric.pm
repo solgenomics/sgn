@@ -63,7 +63,7 @@ sub _validate_with_plugin {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
         }
 
-        push @seedlot_content_pairs, [$seedlot_name, $content_name];
+        push @seedlot_content_pairs, [$seedlot_name, $source_name];
     }
 
     my $seen_source_names = $parsed_values->{'from_source_name'};
@@ -81,7 +81,7 @@ sub _validate_with_plugin {
     my @all_seedlots_missing = @{$validation->{missing}};
     my @seedlots_discarded = @{$validation->{discarded}};
     my @seedlots_missing;
-    my %discarded_lookup = map {$_ => 1} @seedlot_discarded;
+    my %discarded_lookup = map {$_ => 1} @seedlots_discarded;
     foreach my $seedlot (@all_seedlots_missing) {
         if ($discarded_lookup{$seedlot}) {
             next;

@@ -1959,7 +1959,7 @@ sub upload_transactions_POST : Args(0) {
     my $upload_seedlots_to_new_seedlots = $c->req->upload('seedlots_to_new_seedlots_file');
     my $upload_seedlots_to_plots = $c->req->upload('seedlots_to_plots_file');
     my $upload_seedlots_to_unspecified_names = $c->req->upload('seedlots_to_unspecified_names_file');
-    my $upload_accessions_crosses_to_existing_seedlots = $c->req->upload('accessions_crosses_to_seedlots_file');
+    my $upload_accessions_crosses_to_existing_seedlots = $c->req->upload('sources_to_existing_seedlots_file');
 
     my $new_seedlot_breeding_program_id = $c->req->param("new_seedlot_breeding_program_id");
     my $new_seedlot_location = $c->req->param("new_seedlot_location");
