@@ -495,7 +495,7 @@
                         <thead></thead>
                         <tbody>
                             <tr>
-                                <td>from_content_name</td>
+                                <td>from_source_name</td>
                                 <td>to_seedlot_name</td>
                                 <td>amount</td>
                                 <td>weight_gram</td>
@@ -506,8 +506,8 @@
                     </table>
                     <b>Required fields:</b>
                     <ul>
-                        <li><b>from_content_name:</b> Must exist in the database. Content name can be either accession or cross stock type. </li>
-                        <li><b>to_seedlot_name:</b> Must exist in the database. The accession or cross indicated in the content_name column must be the same as the content of the corresponding seedlot..</li>
+                        <li><b>from_source_name:</b> Must be the same as the content of seedlot.</li>
+                        <li><b>to_seedlot_name:</b> Must exist in the database.</li>
                         <li>
                             <b>amount:</b> Number of seeds being added. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
                             <br/><b>AND/OR</b><br/>
@@ -556,12 +556,14 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_plots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").hide();
             jQuery("#submit_transactions_button_section").hide();
+            jQuery("#accessions_crosses_to_seedlots_section").hide();
         }
         if (jQuery(this).val() == "seedlots_to_seedlots"){
             jQuery("#seedlots_to_seedlots_section").show();
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#accessions_crosses_to_seedlots_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if(jQuery(this).val() == "seedlots_to_new_seedlots"){
@@ -569,6 +571,7 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_new_seedlots_section").show();
             jQuery("#seedlots_to_plots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#accessions_crosses_to_seedlots_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if (jQuery(this).val() == "seedlots_to_plots" ){
@@ -576,12 +579,14 @@ jQuery(document).ready(function(){
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").show();
             jQuery("#seedlots_to_unspecified_names_section").hide();
+            jQuery("#accessions_crosses_to_seedlots_section").hide();
             jQuery("#submit_transactions_button_section").show();
         }
         if (jQuery(this).val() == "seedlots_to_unspecified_names" ){
             jQuery("#seedlots_to_seedlots_section").hide();
             jQuery("#seedlots_to_new_seedlots_section").hide();
             jQuery("#seedlots_to_plots_section").hide();
+            jQuery("#accessions_crosses_to_seedlots_section").hide();
             jQuery("#seedlots_to_unspecified_names_section").show();
             jQuery("#submit_transactions_button_section").show();
         }

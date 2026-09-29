@@ -19,10 +19,10 @@ sub _validate_with_plugin {
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'from_content_name', 'to_seedlot_name', 'operator_name'],
+        required_columns => [ 'from_source_name', 'to_seedlot_name', 'operator_name'],
         optional_columns => ['amount', 'weight_gram', 'transaction_description'],
         column_aliases => {
-            'from_stockcontent_name' => ['from content name', 'from_accession_name', 'from accession name', 'from_cross_unique_id', 'from cross unique id'],
+            'from_source_name' => ['from source name', 'from_accession_name', 'from accession name', 'from_cross_unique_id', 'from cross unique id'],
             'to_seedlot_name' => ['to seedlot name'],
             'operator_name' => ['operator name', 'operator'],
             'weight_gram' => ['weight(g)'],
@@ -54,7 +54,7 @@ sub _validate_with_plugin {
     my @seedlot_content_pairs;
     for my $row ( @$parsed_data ) {
         my $row_num = $row->{_row};
-        my $content_name = $row->{'from_content_name'};
+        my $source_name = $row->{'from_source_name'};
         my $seedlot_name = $row->{'to_seedlot_name'};
         my $amount = $row->{'amount'};
         my $weight = $row->{'weight_gram'};
@@ -66,11 +66,11 @@ sub _validate_with_plugin {
         push @seedlot_content_pairs, [$seedlot_name, $content_name];
     }
 
-    my $seen_content_names = $parsed_values->{'from_content_name'};
+    my $seen_source_names = $parsed_values->{'from_source_name'};
     my $seen_seedlot_names = $parsed_values->{'to_seedlot_name'};
 
     my $accessions_crosses_validator = CXGN::List::Validate->new();
-    my @accessions_crosses_missing = @{$accessions_crosses_validator->validate($schema,'accessions_or_crosses',$seen_content_names)->{'missing'}};
+    my @accessions_crosses_missing = @{$accessions_crosses_validator->validate($schema,'accessions_or_crosses',$seen_source_names)->{'missing'}};
 
     if (scalar(@accessions_crosses_missing) > 0) {
         push @error_messages, "The following accessions or cross unique ids are not in the database as uniquenames: ".join(',',@accessions_crosses_missing);
@@ -123,22 +123,22 @@ sub _parse_with_plugin {
     my $parsed_values = $parsed->{values};
     my %parsed_seedlots;
 
-    my $content_names = $parsed_values->{'from_content_name'};
+    my $source_names = $parsed_values->{'from_source_name'};
     my $seedlot_names = $parsed_values->{'to_seedlot_name'};
 
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
 
-    my $content_rs = $schema->resultset("Stock::Stock")->search({
+    my $source_rs = $schema->resultset("Stock::Stock")->search({
         'is_obsolete' => { '!=' => 't' },
-        'uniquename' => { -in => $content_names },
+        'uniquename' => { -in => $source_names },
         'type_id' => [$accession_cvterm_id, $cross_cvterm_id]
     });
 
-    my %content_lookup;
-    while (my $r = $content_rs->next){
-        $content_lookup{$r->uniquename} = $r->stock_id;
+    my %source_lookup;
+    while (my $r = $source_rs->next){
+        $source_lookup{$r->uniquename} = $r->stock_id;
     }
 
     my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
@@ -155,7 +155,7 @@ sub _parse_with_plugin {
     my @transactions;
     for my $row ( @$parsed_data ) {
         my $row_num;
-        my $content_name;
+        my $source_name;
         my $seedlot_name;
         my $amount;
         my $weight;
@@ -163,7 +163,7 @@ sub _parse_with_plugin {
         my $description;
 
         $row_num = $row->{_row};
-        $content_name = $row->{'from_content_name'};
+        $source_name = $row->{'from_source_name'};
         $seedlot_name = $row->{'to_seedlot_name'};
         $amount = $row->{'amount'};
         $weight = $row->{'weight_gram'};
@@ -176,12 +176,12 @@ sub _parse_with_plugin {
             $weight = 'NA';
         }
 
-        my $content_stock_id = $content_lookup{$content_name};
+        my $source_stock_id = $source_lookup{$source_name};
         my $seedlot_stock_id = $seedlot_lookup{$seedlot_name};
 
         push @transactions, {
-            from_stock_name => $content_name,
-            from_stock_id => $content_stock_id,
+            from_stock_name => $source_name,
+            from_stock_id => $source_stock_id,
             to_seedlot_name => $seedlot_name,
             to_seedlot_id => $seedlot_stock_id,
             amount => $amount,
