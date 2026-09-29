@@ -77,6 +77,7 @@ use strict;
 use warnings;
 use Moose;
 use JSON;
+use POSIX qw(WIFSIGNALED WTERMSIG WIFEXITED WEXITSTATUS);
 
 use SGN::Context;
 use SGN::Model::Cvterm;
@@ -157,10 +158,12 @@ sub verify {
     if ($rv == -1) {
         $results{'error'} = "Could not launch pre-processing script: $!";
     }
-    elsif (my $s = $rv & 127) { 
+    elsif (WIFSIGNALED($rv)) {
+        my $s = WTERMSIG($rv);
         $results{'error'} = "Pre-processing script died from signal $s";
     }
-    elsif (my $e = $rv >> 8)  { 
+    elsif (WIFEXITED($rv) && WEXITSTATUS($rv)) {
+        my $e = WEXITSTATUS($rv);
         $results{'error'} = "Pre-processing script exited with code $e"; 
     }
 
