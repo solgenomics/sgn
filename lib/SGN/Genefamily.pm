@@ -27,7 +27,6 @@ use namespace::autoclean;
 use Data::Dumper;
 use File::Slurp qw/slurp/;
 use File::Spec;
-use File::Spec::Functions;
 use File::Basename qw/basename/;
 
 =head2 accessors genefamily_method()
@@ -124,7 +123,7 @@ has 'build' => (
 sub get_alignment {
     my $self = shift;
     my $file =
-      catfile( $self->get_path(), "alignments", $self->name() . ".fa.align" );
+      File::Spec->catfile( $self->get_path(), "alignments", $self->name() . ".fa.align" );
 
     if ( !-e $file ) {
         die "No alignment file available for family " . $self->name();
@@ -147,7 +146,7 @@ sub get_alignment {
 
 sub get_fasta {
     my $self = shift;
-    my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
+    my $file = File::Spec->catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
 
     print STDERR "Retrieving fasta file $file for family ".$self->name()."\n";
     unless( -f $file ) {
@@ -172,7 +171,7 @@ sub get_fasta {
 
 sub get_seqs {
     my $self = shift;
-    my $file = catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
+    my $file = File::Spec->catfile( $self->get_path(), "fasta", $self->name() . ".fa" );
     if ( !-e $file ) {
         die "The fasta information for family "
           . $self->name()
@@ -200,7 +199,7 @@ sub get_seqs {
 sub get_tree {
     my $self = shift;
     my $file =
-      catfile( $self->get_path(), "/trees/" . $self->name() . ".tree" );
+      File::Spec->catfile( $self->get_path(), "/trees/" . $self->name() . ".tree" );
     if ( !-e $file ) {
         die "The tree information for family "
           . $self->name()
@@ -286,7 +285,7 @@ sub get_available_builds {
 
 sub get_path {
     my $self = shift;
-    return catfile( $self->files_dir(), $self->build() );
+    return File::Spec->catfile( $self->files_dir(), $self->build() );
 }
 
 sub table {

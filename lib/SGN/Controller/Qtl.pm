@@ -8,7 +8,7 @@ package SGN::Controller::Qtl;
 
 use Moose;
 use namespace::autoclean;
-use File::Spec::Functions;
+use File::Spec;
 use List::MoreUtils qw /uniq/;
 use File::Temp qw / tempfile /;
 use File::Path qw / mkpath  /;
@@ -133,7 +133,7 @@ sub download_correlation : Path('/qtl/download/correlation') Args(1) {
     if ($c->stash->{is_qtl_pop})
     {
     
-        my $corr_file = catfile($c->path_to($c->config->{cluster_shared_tempdir}), 'correlation', 'cache',  "corre_coefficients_table_${id}");
+        my $corr_file = File::Spec->catfile($c->path_to($c->config->{cluster_shared_tempdir}), 'correlation', 'cache',  "corre_coefficients_table_${id}");
        
         unless (!-e $corr_file || -s $corr_file <= 1) 
         {
@@ -187,8 +187,8 @@ sub _analyze_correlation  {
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};
     my $r_qtl_dir       = $c->config->{solqtl};
-    my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
-    my $corre_temp_dir  = catfile($r_qtl_dir, "cache");
+    my $corre_image_dir = File::Spec->catfile($base_path, $temp_image_dir, "correlation");
+    my $corre_temp_dir  = File::Spec->catfile($r_qtl_dir, "cache");
     
     if (-s $pheno_file) 
     {
@@ -290,7 +290,7 @@ sub _correlation_output {
     my $pop             = $c->{stash}->{pop};
     my $base_path       = $c->config->{basepath};
     my $temp_image_dir  = $c->config->{tempfiles_subdir};   
-    my $corre_image_dir = catfile($base_path, $temp_image_dir, "correlation");
+    my $corre_image_dir = File::Spec->catfile($base_path, $temp_image_dir, "correlation");
     my $cache           = Cache::File->new( cache_root  => $corre_image_dir);
     $cache->purge();
 
@@ -492,7 +492,7 @@ sub stat_options_file {
     {
         my $qtl = CXGN::Phenome::Qtl->new($login_id);
         my ($temp_qtl_dir, $temp_user_dir) = $qtl->create_user_qtl_dir($c);
-        return  catfile( $temp_user_dir, "stat_options_pop_${pop_id}.txt" );
+        return  File::Spec->catfile( $temp_user_dir, "stat_options_pop_${pop_id}.txt" );
     }
     else 
     {

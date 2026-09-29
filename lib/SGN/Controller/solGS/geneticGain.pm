@@ -22,7 +22,7 @@ use namespace::autoclean;
 use File::Copy;
 use File::Basename;
 use File::Path qw / make_path /;
-use File::Spec::Functions;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use List::MoreUtils qw /uniq/;
@@ -344,8 +344,8 @@ sub run_boxplot {
 sub boxplot_download_files {
     my ( $self, $c ) = @_;
 
-    my $tmp_dir = catfile( $c->config->{tempfiles_subdir}, 'genetic_gain' );
-    my $base_tmp_dir = catfile( $c->config->{basepath}, $tmp_dir );
+    my $tmp_dir = File::Spec->catfile( $c->config->{tempfiles_subdir}, 'genetic_gain' );
+    my $base_tmp_dir = File::Spec->catfile( $c->config->{basepath}, $tmp_dir );
 
     make_path($base_tmp_dir, {mode => "0755"});
 
@@ -363,13 +363,13 @@ sub boxplot_download_files {
     $c->controller('solGS::Files')->copy_file( $data_file,    $base_tmp_dir );
 
     $boxplot_file = fileparse($boxplot_file);
-    $boxplot_file = catfile( $tmp_dir, $boxplot_file );
+    $boxplot_file = File::Spec->catfile( $tmp_dir, $boxplot_file );
 
     $error_file = fileparse($error_file);
-    $error_file = catfile( $tmp_dir, $error_file );
+    $error_file = File::Spec->catfile( $tmp_dir, $error_file );
 
     $data_file = fileparse($data_file);
-    $data_file = catfile( $tmp_dir, $data_file );
+    $data_file = File::Spec->catfile( $tmp_dir, $data_file );
 
     $c->stash->{download_boxplot} = $boxplot_file;
     $c->stash->{download_error}   = $error_file;

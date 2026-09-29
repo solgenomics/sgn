@@ -20,7 +20,7 @@ use Moose;
 use Try::Tiny;
 use DateTime;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use File::Copy;
 use File::Basename;
 use List::MoreUtils qw /any /;

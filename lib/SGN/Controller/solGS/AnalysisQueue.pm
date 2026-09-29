@@ -3,7 +3,7 @@ package SGN::Controller::solGS::AnalysisQueue;
 use Moose;
 use namespace::autoclean;
 use File::Path qw / make_path  /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use CXGN::Tools::Run;
@@ -1429,7 +1429,7 @@ sub create_analysis_log_dir {
     $c->controller('solGS::Files')->get_solgs_dirs($c);
     my $log_dir = $c->stash->{analysis_log_dir};
 
-    $log_dir = catdir( $log_dir, $user_id );
+    $log_dir = File::Spec->catdir( $log_dir, $user_id );
 
     make_path($log_dir, { mode => oct('0755') });
 

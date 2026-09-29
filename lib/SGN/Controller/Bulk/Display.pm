@@ -17,7 +17,7 @@ package SGN::Controller::Bulk::Display;
 use Moose;
 
 use Cache::File;
-use File::Spec::Functions;
+use File::Spec;
 use File::Slurp qw | read_file |;
 use CXGN::Page::FormattingHelpers qw | html_break_string |;
 BEGIN { extends 'Catalyst::Controller' };
@@ -114,7 +114,7 @@ sub display_summary_page : Path('/tools/bulk/summary') Args(1){
     my $dumpfile = shift;
 
     print STDERR "DUMPFILE = $dumpfile\n";
-    my $cache_root = catfile($c->config->{basepath}, $c->tempfiles_subdir("bulk"), $dumpfile.".summary");;
+    my $cache_root = File::Spec->catfile($c->config->{basepath}, $c->tempfiles_subdir("bulk"), $dumpfile.".summary");;
     print STDERR "CACHE_ROOT: $cache_root\n";
     my $cache = Cache::File->new( cache_root =>$cache_root);
 
