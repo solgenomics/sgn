@@ -2,7 +2,6 @@ package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotMaintenanceEventGeneri
 
 use Moose::Role;
 use CXGN::File::Parse;
-use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
@@ -91,11 +90,11 @@ sub _validate_with_plugin {
 
     my $seen_seedlot_names = $parsed_values->{'seedlot'};
     my $existing_seedlot_validator = CXGN::List::Validate->new();
-    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_from_seedlot_names);
+    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_seedlot_names);
     my @all_seedlots_missing = @{$validation->{missing}};
     my @seedlots_discarded = @{$validation->{discarded}};
     my @seedlots_missing;
-    my %discarded_lookup = map {$_ => 1} @seedlot_discarded;
+    my %discarded_lookup = map {$_ => 1} @seedlots_discarded;
     foreach my $seedlot (@all_seedlots_missing) {
         if ($discarded_lookup{$seedlot}) {
             next;

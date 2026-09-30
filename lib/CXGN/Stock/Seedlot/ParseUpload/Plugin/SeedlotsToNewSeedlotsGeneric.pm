@@ -2,7 +2,6 @@ package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotsToNewSeedlotsGeneric;
 
 use Moose::Role;
 use CXGN::File::Parse;
-use CXGN::Stock::StockLookup;
 use SGN::Model::Cvterm;
 use Data::Dumper;
 use CXGN::List::Validate;
