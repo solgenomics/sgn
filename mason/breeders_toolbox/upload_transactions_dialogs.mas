@@ -506,7 +506,7 @@
                     </table>
                     <b>Required fields:</b>
                     <ul>
-                        <li><b>from_source_name:</b> Must be the same as the content of seedlot.</li>
+                        <li><b>from_source_name:</b> Must be the same as the corresponding seedlot content.</li>
                         <li><b>to_seedlot_name:</b> Must exist in the database.</li>
                         <li>
                             <b>amount:</b> Number of seeds being added. Can be provided in conjunction with weight_gram. Must provide a value for amount or weight_gram or both.
@@ -604,31 +604,6 @@ jQuery(document).ready(function(){
         upload_transactions_file();
     });
 
-    jQuery('#upload_transactions_form').iframePostForm({
-        json: true,
-        post: function() {
-            jQuery("#working_modal").modal("show");
-        },
-        complete: function(response) {
-            jQuery("#working_modal").modal("hide");
-            if (response.error_string) {
-                jQuery("#upload_transactions_error_display tbody").html('');
-                jQuery("#upload_transactions_error_display tbody").append(response.error_string);
-                jQuery("#upload_transactions_error_display").modal("show");
-
-                return;
-            }
-            if (response.error) {
-                alert(response.error);
-                return;
-            }
-            if (response.success) {
-                Workflow.focus("#transactions_upload_workflow", -1); //Go to success page
-                Workflow.check_complete("#transactions_upload_workflow");
-            }
-        }
-    });
-
     jQuery("#seedlots_to_seedlots_format").click(function() {
         jQuery("#seedlots_to_seedlots_info_dialog").modal("show");
     });
@@ -696,9 +671,32 @@ function upload_transactions_file() {
         }
     }
 
-    jQuery('#upload_transactions_form').attr("action", "/ajax/breeders/upload_transactions");
+    jQuery("#working_modal").modal("show");
+    jQuery.ajax({
+        url: "/ajax/breeders/upload_transactions",
+        type: 'POST',
+        data: new FormData(jQuery("#upload_transactions_form")[0]),
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            jQuery("#working_modal").modal("hide");
+            if (response.error_string) {
+                jQuery("#upload_transactions_error_display tbody").html('');
+                jQuery("#upload_transactions_error_display tbody").append(response.error_string);
+                jQuery("#upload_transactions_error_display").modal("show");
 
-    jQuery("#upload_transactions_form").submit();
+                return;
+            }
+            if (response.error) {
+                alert(response.error);
+                return;
+            }
+            if (response.success) {
+                Workflow.focus("#transactions_upload_workflow", -1); //Go to success page
+                Workflow.check_complete("#transactions_upload_workflow");
+            }
+        }
+    });
 }
 
 
