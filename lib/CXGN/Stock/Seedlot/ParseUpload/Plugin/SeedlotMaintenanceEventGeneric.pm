@@ -113,7 +113,7 @@ sub _validate_with_plugin {
 
     my $seen_events = $parsed_values->{'type'};
     my @events_missing = ();
-    foreach my $event (@seen_events) {
+    foreach my $event (@$seen_events) {
         if ( !exists $valid_events{$event} ) {
             push(@events_missing, $event);
         }
@@ -145,7 +145,7 @@ sub _parse_with_plugin {
     my %parsed_result;
     my %seen_seedlot_names;
 
-    my $seedlot_names = $parsed_values->{'seedlot_name'};
+    my $seedlot_names = $parsed_values->{'seedlot'};
 
     # Generate lookup of event name -> cvterm id
     my %event_lookup;
