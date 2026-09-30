@@ -39,7 +39,12 @@ sub _validate_with_plugin {
     foreach my $category (@$ontology) {
         my $events = $category->{children};
         foreach my $event (@$events) {
-            $valid_events{$event->{name}} = 1;
+            my $children = $event->{children} || ();
+            my %values;
+            foreach my $child (@$children) {
+                $values{$child->{name}} = 1;
+            }
+            $valid_events{$event->{name}} = \%values;
         }
     }
 
@@ -72,20 +77,6 @@ sub _validate_with_plugin {
         ];
         $self->_set_parse_errors(\%errors);
         return;
-    }
-
-    for my $row ( @$parsed_data ) {
-        my $row_num = $row->{_row};
-        my $seedlot = $row->{'seedlot'};
-        if ($seedlot =~ /\s/ || $seedlot =~ /\// || $seedlot =~ /\\/) {
-            push(@error_messages, "Row: $row_num: seedlot must not contain spaces or slashes.");
-        }
-
-        my $timestamp = $row->{'timestamp'};
-        if ( $timestamp !~ /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/ ) {
-            push(@error_messages, "Row: $row_num: timestamp not valid format [YYYY-MM-DD HH:MM:SS]");
-        }
-
     }
 
     my $seen_seedlot_names = $parsed_values->{'seedlot'};
@@ -121,6 +112,27 @@ sub _validate_with_plugin {
     if (scalar(@events_missing) > 0) {
         push(@error_messages, "The following events are not valid: ".join(',',@events_missing));
         $errors{'missing_events'} = \@events_missing;
+    }
+
+    for my $row ( @$parsed_data ) {
+        my $row_num = $row->{_row};
+        my $seedlot = $row->{'seedlot'};
+        if ($seedlot =~ /\s/ || $seedlot =~ /\// || $seedlot =~ /\\/) {
+            push(@error_messages, "Row: $row_num: seedlot must not contain spaces or slashes.");
+        }
+
+        my $timestamp = $row->{'timestamp'};
+        if ( $timestamp !~ /^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/ ) {
+            push(@error_messages, "Row: $row_num: timestamp not valid format [YYYY-MM-DD HH:MM:SS]");
+        }
+
+        # check to make sure values are valid, if specific values are defined by the ontology
+        my $event = $row->{type};
+        my $value = $row->{value};
+        my $valid_values = $valid_events{$event};
+        if ( keys %$valid_values > 0 && !exists $valid_values->{$value} ) {
+            push(@error_messages, "Row: $row_num: the event value $value is not valid for the event type of $event [" . join(', ', keys %$valid_values) . "]");
+        }
     }
 
     if (scalar(@error_messages) >= 1) {
