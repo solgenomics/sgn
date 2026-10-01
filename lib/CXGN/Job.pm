@@ -76,6 +76,7 @@ use File::Slurp qw( write_file read_file );
 use File::Path qw( make_path );
 use JSON::Any;
 use CXGN::Tools::Run;
+use CXGN::Tools::Run::Tsp;
 use CXGN::People::Schema;
 use Try::Tiny;
 
@@ -355,7 +356,9 @@ sub check_status {
         } 
     } else { # no finish timestamp in db. Is this job running? Or did it die?
         my $now_timestamp = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
-        if (defined($backend_id)) {
+        if (defined($backend_id) && $self->uses_tsp()) {
+            return $self->update_status_from_tsp();
+        } elsif (defined($backend_id)) {
             my $squeue = `squeue --job=$backend_id`;
             my @job_results = split("\n", $squeue);
             if (scalar(@job_results) < 2) {
@@ -425,7 +428,7 @@ sub delete {
 
 =head2 cancel()
 
-If the job is still alive and running, runs scancel to kill it. 
+If the job is still alive and running, kills it (scancel for Slurm, tsp/podman for Tsp).
 
 =cut
 
@@ -439,7 +442,11 @@ sub cancel {
     my $backend_id = $self->backend_id();
 
     try {
-        system("scancel $backend_id");
+        if ($self->uses_tsp()) {
+            CXGN::Tools::Run::Tsp::cancel($backend_id, $self->tsp_label());
+        } else {
+            system("scancel $backend_id");
+        }
 
         $self->status('canceled');
         my $formatted_time = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
@@ -695,6 +702,73 @@ sub update_status_from_slurm {
         : $job_status;
 }
 
+=head2 uses_tsp()
+
+True if the job was submitted with the Tsp backend (task-spooler, see
+CXGN::Tools::Run::Plugin::Tsp) rather than Slurm.
+
+=cut
+
+sub uses_tsp {
+    my $self = shift;
+    my $config = $self->cxgn_tools_run_config() || {};
+    return lc($config->{backend} // '') eq 'tsp';
+}
+
+=head2 tsp_label()
+
+The tsp job label (and podman container name) of a Tsp job, or undef if unknown.
+
+=cut
+
+sub tsp_label {
+    my $self = shift;
+    my $config = $self->cxgn_tools_run_config() || {};
+    return $config->{jobid} ? 'bbjob-'.$config->{jobid} : undef;
+}
+
+=head2 update_status_from_tsp()
+
+Updates the job status from tsp's record of the job: running jobs older than two days are
+canceled and marked timed_out, jobs that exited with an error, were killed, or that tsp no
+longer knows about (for example after a restart of the tsp server) are marked failed.
+Returns the job status.
+
+=cut
+
+sub update_status_from_tsp {
+    my $self = shift;
+
+    my $backend_id = $self->backend_id();
+    my $state = CXGN::Tools::Run::Tsp::job_state($backend_id, $self->tsp_label());
+
+    if ($state->{state} eq 'queued' || $state->{state} eq 'running') {
+        my $create_timestamp = $self->create_timestamp() // '';
+        $create_timestamp =~ s/ /T/;
+        if ($create_timestamp) {
+            my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+            my $age = (DateTime->now(time_zone => 'local')->epoch - $start_time->epoch) / 86400;
+            if ($age >= 2) {
+                CXGN::Tools::Run::Tsp::cancel($backend_id, $self->tsp_label());
+                $self->update_status('timed_out');
+            }
+        }
+        return $self->status();
+    }
+
+    # the finish timestamp is recorded by the job itself; check whether it was written
+    if ($self->has_sp_job_id() && $self->retrieve_finish_timestamp()) {
+        $self->status('finished');  # keep the finish timestamp recorded by the job
+        $self->store();
+    } elsif ($state->{state} eq 'finished' && defined($state->{exit}) && $state->{exit} == 0) {
+        $self->update_status('finished');
+    } else {
+        $self->update_status('failed');
+    }
+
+    return $self->status();
+}
+
 =head2 get_default_cxgn_tools_run_config()
 
 Returns a hashref of the default config options for cxgn tools run. Used when no cxgn_tools_run_config found.
@@ -738,7 +812,7 @@ sub wait {
 
 =head2 alive()
 
-Returns true as long as squeue says job is still alive.
+Returns true as long as the backend (squeue, or tsp) says job is still alive.
 
 =cut
 
@@ -750,6 +824,11 @@ sub alive {
     }
 
     my $backend_id = $self->backend_id();
+
+    if ($self->uses_tsp()) {
+        my $state = CXGN::Tools::Run::Tsp::job_state($backend_id, $self->tsp_label())->{state};
+        return ($state eq 'queued' || $state eq 'running') ? 1 : 0;
+    }
 
     my $squeue = `squeue --job=$backend_id`;
     my @job_results = split("\n", $squeue);
