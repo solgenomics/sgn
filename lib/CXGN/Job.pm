@@ -75,8 +75,8 @@ use Data::Dumper;
 use File::Slurp qw( write_file read_file );
 use File::Path qw( make_path );
 use JSON::Any;
+use File::Spec;
 use CXGN::Tools::Run;
-use CXGN::Tools::Run::Tsp;
 use CXGN::People::Schema;
 use Try::Tiny;
 
@@ -156,7 +156,7 @@ has 'sp_person_id' => ( isa => 'Maybe[Int]', is => 'rw' );
 
 =head2 backend_id()
 
-ID of the running process, as used by the workload manager (assumed to be Slurm). Useful for checking job status. 
+ID of the job in the CXGN::Tools::Run backend (Slurm job id, tsp job id, ...). Useful for checking job status. 
 
 =cut
 
@@ -180,7 +180,7 @@ has 'finish_timestamp' => ( isa => 'Maybe[Str]', is => 'rw', predicate => 'has_f
 
 =head2 status()
 
-Current status of the job. May be stored in DB or may be gathered from Slurm (and then stored)
+Current status of the job. May be stored in DB or may be gathered from the job backend (and then stored)
 
 =cut 
 
@@ -251,7 +251,7 @@ Config keys include:
 - is_cluster (true by default)
 - do_cleanup (0 by default)
 - sleep (undef by default)
-- backend (likely to be Slurm)
+- backend (CXGN::Tools::Run backend plugin, e.g. Slurm or Tsp)
 
 =cut
 
@@ -355,27 +355,8 @@ sub check_status {
             $self->store();
         } 
     } else { # no finish timestamp in db. Is this job running? Or did it die?
-        my $now_timestamp = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
-        if (defined($backend_id) && $self->uses_tsp()) {
-            return $self->update_status_from_tsp();
-        } elsif (defined($backend_id)) {
-            my $squeue = `squeue --job=$backend_id`;
-            my @job_results = split("\n", $squeue);
-            if (scalar(@job_results) < 2) {
-                # Jobs normally disappear from squeue after reaching a terminal
-                # state. Ask Slurm for that state instead of assuming failure.
-                return $self->update_status_from_slurm();
-            } else { #job is live 
-                my ($JOBID,$PARTITION,$NAME,$USER,$ST,$TIME,$NODES,$NODELIST) = split(/\s+/, $job_results[1]);
-                my @timestamp = split("-", $TIME);#squeue time outputs look like Days-Hours:Mins:Seconds, but days are ommitted for short lived jobs. 
-                if (scalar(@timestamp) > 1) {#The length will be greater than one if the job has been running greater than 24 hours
-                    if (int($timestamp[0]) >= 2) { #job is timed out!
-                        $self->status("timed_out");
-                        system("scancel $backend_id");
-                        $self->store();
-                    }
-                }
-            }
+        if (defined($backend_id)) {
+            return scalar($self->update_status_from_backend());
         } else { #job has no backend ID and no finish timestamp.
             if (!$self->create_timestamp()) { #something is weird if it has no create timestamp. 
                 $self->status("failed");
@@ -428,7 +409,7 @@ sub delete {
 
 =head2 cancel()
 
-If the job is still alive and running, kills it (scancel for Slurm, tsp/podman for Tsp).
+If the job is still alive and running, kills it through its CXGN::Tools::Run backend.
 
 =cut
 
@@ -439,14 +420,8 @@ sub cancel {
         die "Cannot cancel a job without a backend ID.\n";
     }
 
-    my $backend_id = $self->backend_id();
-
     try {
-        if ($self->uses_tsp()) {
-            CXGN::Tools::Run::Tsp::cancel($backend_id, $self->tsp_label());
-        } else {
-            system("scancel $backend_id");
-        }
+        $self->run_object()->cancel();
 
         $self->status('canceled');
         my $formatted_time = DateTime->now(time_zone => 'local')->strftime('%Y-%m-%d %H:%M:%S');
@@ -519,6 +494,7 @@ sub submit {
     $self->backend_id($backend_id);
     $self->cxgn_tools_run_config->{out_file} = $job->out_file();
     $self->cxgn_tools_run_config->{jobid} = $job->jobid();
+    $self->{run_object} = $job; # see run_object()
     $self->update_status($status);
 
     return $sp_job_id;
@@ -649,124 +625,91 @@ sub update_status {
     $self->store();
 }
 
-=head2 update_status_from_slurm()
+=head2 run_object()
 
-Query Slurm for the job's terminal state, update the database status, and return
-the mapped database status. In list context, also returns the Slurm state.
+The CXGN::Tools::Run object of a submitted job, rebuilt from its stored
+cxgn_tools_run_config and backend_id. All interaction with the job queue
+(state, cancel) goes through it, so that CXGN::Job works with any
+CXGN::Tools::Run backend.
 
 =cut
 
-sub update_status_from_slurm {
+sub run_object {
     my $self = shift;
 
-    my $backend_id = $self->backend_id();
-    if (!defined($backend_id) || $backend_id !~ /^\d+(?:_\d+)?$/) {
-        die "Cannot check Slurm status without a valid backend job ID.\n";
+    if (!$self->has_backend_id()) {
+        die "Job has not been submitted!\n";
     }
+    return $self->{run_object} if $self->{run_object};
 
-    my $slurm_states = qr/^(?:COMPLETED|FAILED|CANCELLED|TIMEOUT)$/;
-    my $state;
-    for my $attempt (1 .. 5) {
-        my $job_info = `scontrol show job -o $backend_id 2>/dev/null`;
-        ($state) = $job_info =~ /\bJobState=(\S+)/;
+    my %config = %{ $self->cxgn_tools_run_config() || $self->get_default_cxgn_tools_run_config() };
+    $config{backend} ||= 'Slurm'; # jobs stored before the backend was recorded
 
-        if (defined($state) && $state =~ $slurm_states) {
-            last;
+    # use the job's own jobid and tempdir, so that no new job dir is created
+    my $jobid = $config{jobid} || 'sp_job_'.($self->sp_job_id() // 'unknown');
+    my %run_args = (%config, is_cluster => 1, jobid => $jobid, cluster_job_id => "".$self->backend_id());
+    $run_args{job_tempdir} = File::Spec->catdir($config{temp_base}, $jobid) if $config{temp_base};
+
+    $self->{run_object} = CXGN::Tools::Run->new(\%run_args);
+    return $self->{run_object};
+}
+
+=head2 update_status_from_backend()
+
+Query the job's CXGN::Tools::Run backend for the job's state, update the database status,
+and return the new status. In list context, also returns the backend's description of the
+state. Jobs that are still queued or running after two days are canceled and marked
+timed_out. Jobs the backend doesn't know (anymore) stay submitted for a day, then are
+marked failed.
+
+=cut
+
+sub update_status_from_backend {
+    my $self = shift;
+
+    my ($state, $backend_state) = $self->run_object()->job_state();
+
+    my $job_status;
+    if ($state eq 'queued' || $state eq 'running') {
+        if ($self->_age_in_days() >= 2) {
+            $self->run_object()->cancel();
+            $job_status = 'timed_out';
+        } else {
+            $job_status = 'submitted';
         }
-
-        sleep 1 if $attempt < 5;
     }
-
-    my $job_status = 'submitted';
-    if (!defined($state)) {
-        $state = 'UNKNOWN';
+    elsif ($state eq 'finished' || $state eq 'failed' || $state eq 'canceled' || $state eq 'timed_out') {
+        $job_status = $state;
     }
-
-    if ($state eq 'COMPLETED') {
-        $job_status = 'finished';
-    }
-    elsif ($state eq 'FAILED') {
-        $job_status = 'failed';
-    }
-    elsif ($state eq 'CANCELLED') {
-        $job_status = 'canceled';
-    }
-    elsif ($state eq 'TIMEOUT') {
-        $job_status = 'timed_out';
+    else {
+        $job_status = $self->_age_in_days() > 1 ? 'failed' : 'submitted';
     }
 
     $self->update_status($job_status);
 
     return wantarray
-        ? ($job_status, $state)
+        ? ($job_status, $backend_state)
         : $job_status;
 }
 
-=head2 uses_tsp()
+=head2 update_status_from_slurm()
 
-True if the job was submitted with the Tsp backend (task-spooler, see
-CXGN::Tools::Run::Plugin::Tsp) rather than Slurm.
+Old name of update_status_from_backend(), kept for existing callers.
 
 =cut
 
-sub uses_tsp {
+sub update_status_from_slurm {
     my $self = shift;
-    my $config = $self->cxgn_tools_run_config() || {};
-    return lc($config->{backend} // '') eq 'tsp';
+    return $self->update_status_from_backend(@_);
 }
 
-=head2 tsp_label()
-
-The tsp job label (and podman container name) of a Tsp job, or undef if unknown.
-
-=cut
-
-sub tsp_label {
-    my $self = shift;
-    my $config = $self->cxgn_tools_run_config() || {};
-    return $config->{jobid} ? 'bbjob-'.$config->{jobid} : undef;
-}
-
-=head2 update_status_from_tsp()
-
-Updates the job status from tsp's record of the job: running jobs older than two days are
-canceled and marked timed_out, jobs that exited with an error, were killed, or that tsp no
-longer knows about (for example after a restart of the tsp server) are marked failed.
-Returns the job status.
-
-=cut
-
-sub update_status_from_tsp {
+sub _age_in_days {
     my $self = shift;
 
-    my $backend_id = $self->backend_id();
-    my $state = CXGN::Tools::Run::Tsp::job_state($backend_id, $self->tsp_label());
-
-    if ($state->{state} eq 'queued' || $state->{state} eq 'running') {
-        my $create_timestamp = $self->create_timestamp() // '';
-        $create_timestamp =~ s/ /T/;
-        if ($create_timestamp) {
-            my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
-            my $age = (DateTime->now(time_zone => 'local')->epoch - $start_time->epoch) / 86400;
-            if ($age >= 2) {
-                CXGN::Tools::Run::Tsp::cancel($backend_id, $self->tsp_label());
-                $self->update_status('timed_out');
-            }
-        }
-        return $self->status();
-    }
-
-    # the finish timestamp is recorded by the job itself; check whether it was written
-    if ($self->has_sp_job_id() && $self->retrieve_finish_timestamp()) {
-        $self->status('finished');  # keep the finish timestamp recorded by the job
-        $self->store();
-    } elsif ($state->{state} eq 'finished' && defined($state->{exit}) && $state->{exit} == 0) {
-        $self->update_status('finished');
-    } else {
-        $self->update_status('failed');
-    }
-
-    return $self->status();
+    my $create_timestamp = $self->create_timestamp() or return 0;
+    $create_timestamp =~ s/ /T/;
+    my $start_time = DateTime::Format::ISO8601->parse_datetime($create_timestamp);
+    return (DateTime->now(time_zone => 'local')->epoch - $start_time->epoch) / 86400;
 }
 
 =head2 get_default_cxgn_tools_run_config()
@@ -812,32 +755,15 @@ sub wait {
 
 =head2 alive()
 
-Returns true as long as the backend (squeue, or tsp) says job is still alive.
+Returns true as long as the job's CXGN::Tools::Run backend says the job is queued or running.
 
 =cut
 
 sub alive {
     my $self = shift;
 
-    if (!$self->has_backend_id()) {
-        die "Job has not been submitted!";
-    }
-
-    my $backend_id = $self->backend_id();
-
-    if ($self->uses_tsp()) {
-        my $state = CXGN::Tools::Run::Tsp::job_state($backend_id, $self->tsp_label())->{state};
-        return ($state eq 'queued' || $state eq 'running') ? 1 : 0;
-    }
-
-    my $squeue = `squeue --job=$backend_id`;
-    my @job_results = split("\n", $squeue);
-
-    if (scalar(@job_results) < 2) { #Squeue gives only header line if no job to show
-       return 0;
-    } else {
-        return 1;
-    }
+    my ($state) = $self->run_object()->job_state();
+    return ($state eq 'queued' || $state eq 'running') ? 1 : 0;
 }
 
 =head1 CLASS METHODS
