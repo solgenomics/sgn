@@ -266,10 +266,10 @@ sub _validate_with_plugin {
 
     # Trial Name: cannot already exist in the database, cannot contain spaces, should not contain slashes
     my @already_used_trial_names;
-    my @missing_trial_names = @{$validator->validate($schema,'trials',[$trial_name])->{'missing'}};
-    my %unused_trial_names = map { $missing_trial_names[$_] => $_ } 0..$#missing_trial_names;
+    if ($schema->resultset('Project::Project')->find({ name => $trial_name })) {
+        push @already_used_trial_names, $trial_name;
+    }
     foreach (($trial_name)) {
-        push(@already_used_trial_names, $_) unless exists $unused_trial_names{$_};
         if ($_ =~ /\s/) {
             push @error_messages, "trial_name <strong>$_</strong> must not contain spaces.";
         }
