@@ -95,6 +95,7 @@ sub _validate_with_plugin {
     my $to_seedlots_validation = $to_seedlots_validator->validate($schema,'seedlots', $seen_to_seedlot_names);
     my @all_to_seedlots_missing = @{$to_seedlots_validation->{missing}};
     my @to_seedlots_discarded = @{$to_seedlots_validation->{discarded}};
+
     my @to_seedlots_missing;
     my %to_seedlots_discarded_lookup = map {$_ => 1} @to_seedlots_discarded;
     foreach my $to_seedlot (@all_to_seedlots_missing) {
@@ -113,9 +114,11 @@ sub _validate_with_plugin {
         push @error_messages, "The following to seedlot names are marked as DISCARDED: ".join(',',@to_seedlots_discarded);
     }
 
-    my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs);
-    if (exists($pairs_error->{error})){
-        push @error_messages, $pairs_error->{error};
+    if ((scalar @all_from_seedlots_missing == 0) && (scalar @all_to_seedlots_missing == 0)) {
+        my $pairs_error = CXGN::Stock::Seedlot->verify_seedlot_seedlot_compatibility($schema, \@from_seedlot_to_seedlot_pairs);
+        if (exists($pairs_error->{error})){
+            push @error_messages, $pairs_error->{error};
+        }
     }
 
     if (scalar(@error_messages) >= 1) {
