@@ -17,7 +17,7 @@ package SGN::Controller::Bulk::Display;
 use Moose;
 
 use Cache::File;
-use File::Spec::Functions;
+use File::Spec;
 use File::Slurp qw | read_file |;
 use CXGN::Page::FormattingHelpers qw | html_break_string |;
 BEGIN { extends 'Catalyst::Controller' };
@@ -114,7 +114,7 @@ sub display_summary_page : Path('/tools/bulk/summary') Args(1){
     my $dumpfile = shift;
 
     print STDERR "DUMPFILE = $dumpfile\n";
-    my $cache_root = catfile($c->config->{basepath}, $c->tempfiles_subdir("bulk"), $dumpfile.".summary");;
+    my $cache_root = File::Spec->catfile($c->config->{basepath}, $c->tempfiles_subdir("bulk"), $dumpfile.".summary");;
     print STDERR "CACHE_ROOT: $cache_root\n";
     my $cache = Cache::File->new( cache_root =>$cache_root);
 
@@ -147,15 +147,15 @@ sub render_fasta_page {
 
     my $fasta = "";
 
-    open( F, "< :encoding(UTF-8)" . $self->{tempdir} . "/" . $self->{dumpfile} )
+    open( my $fasta_fh, '<:encoding(UTF-8)', $self->{tempdir} . "/" . $self->{dumpfile} )
       || $self->{page}->error_page( "Can't open " . $self->{dumpfile} );
 
     # read column definitions
     my @output_fields;
-    my $defs = <F>;
+    my $defs = <$fasta_fh>;
     if ($defs) { chomp($defs); @output_fields = split /\t/, $defs; }
 
-    while (<F>) {
+    while (<$fasta_fh>) {
         chomp;
         my @f    = split /\t/;
 
@@ -285,7 +285,7 @@ sub render_fasta_page {
         $fasta .= ">$output$seq";    # do not add new lines to this string
 
     }
-    close(F);
+    close($fasta_fh);
 
     # print header
     #
@@ -547,5 +547,4 @@ sub no_data_error_page {
   /bulk/input.pl
 
 =cut
-
 

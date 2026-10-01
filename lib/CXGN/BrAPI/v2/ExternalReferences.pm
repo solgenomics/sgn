@@ -63,6 +63,9 @@ sub search {
         }
     }
 
+    $query .=  " order by o_dbxref.$table\_dbxref_id";  ### ORDER THE OUTPUT SO IT IS REPRODUCIBLE FOR THE TEST.
+
+    print STDERR "QUERY = $query\n";
     my $sth = $self->bcs_schema->storage()->dbh()->prepare($query);
     $sth->execute();
 

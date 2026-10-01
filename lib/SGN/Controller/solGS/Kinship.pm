@@ -8,7 +8,7 @@ use Carp qw/ carp confess croak /;
 use File::Slurp qw /write_file read_file/;
 use File::Copy;
 use File::Basename;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Path qw / make_path  /;
 use Scalar::Util qw /weaken reftype/;
 use Storable qw/ nstore retrieve /;
@@ -326,8 +326,8 @@ sub kinship_query_jobs {
 sub prep_download_kinship_files {
     my ( $self, $c ) = @_;
 
-    my $tmp_dir      = catfile( $c->config->{tempfiles_subdir}, 'kinship' );
-    my $base_tmp_dir = catfile( $c->config->{basepath},         $tmp_dir );
+    my $tmp_dir      = File::Spec->catfile( $c->config->{tempfiles_subdir}, 'kinship' );
+    my $base_tmp_dir = File::Spec->catfile( $c->config->{basepath},         $tmp_dir );
 
     make_path($base_tmp_dir, { mode => oct('0755') });
 
@@ -348,13 +348,13 @@ sub prep_download_kinship_files {
       ->copy_file( $ave_kinship_file, $base_tmp_dir );
 
     $kinship_txt_file = fileparse($kinship_txt_file);
-    $kinship_txt_file = catfile( $tmp_dir, $kinship_txt_file );
+    $kinship_txt_file = File::Spec->catfile( $tmp_dir, $kinship_txt_file );
 
     $inbreeding_file = fileparse($inbreeding_file);
-    $inbreeding_file = catfile( $tmp_dir, $inbreeding_file );
+    $inbreeding_file = File::Spec->catfile( $tmp_dir, $inbreeding_file );
 
     $ave_kinship_file = fileparse($ave_kinship_file);
-    $ave_kinship_file = catfile( $tmp_dir, $ave_kinship_file );
+    $ave_kinship_file = File::Spec->catfile( $tmp_dir, $ave_kinship_file );
 
     $c->stash->{download_kinship_table}    = $kinship_txt_file;
     $c->stash->{download_kinship_averages} = $ave_kinship_file;
@@ -475,7 +475,7 @@ sub kinship_cache_dir {
     my ( $self, $c ) = @_;
 
     my $kinship_analysis_id = $c->stash->{kinship_pop_id} || $c->stash->{trial_id};
-    my $cache_dir = catdir( $c->stash->{kinship_dir}, $kinship_analysis_id, 'cache' );
+    my $cache_dir = File::Spec->catdir( $c->stash->{kinship_dir}, $kinship_analysis_id, 'cache' );
     make_path($cache_dir, { mode => oct('0755') });
 
     return $cache_dir;
@@ -485,7 +485,7 @@ sub kinship_temp_dir {
     my ($self, $c) = @_;
 
     my $kinship_analysis_id = $c->stash->{kinship_pop_id} || $c->stash->{trial_id};
-    my $kinship_temp_dir = catdir($c->stash->{kinship_dir}, $kinship_analysis_id, 'tempfiles');
+    my $kinship_temp_dir = File::Spec->catdir($c->stash->{kinship_dir}, $kinship_analysis_id, 'tempfiles');
     make_path($kinship_temp_dir, { mode => oct('0755') });
 
     $c->stash->{kinship_temp_dir} = $kinship_temp_dir;

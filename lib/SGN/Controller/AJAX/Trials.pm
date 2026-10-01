@@ -8,7 +8,7 @@ use CXGN::Trial::Folder;
 use Data::Dumper;
 use Carp;
 use File::Path qw(make_path);
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw | read_file |;
 use SGN::Model::Cvterm;
 
@@ -46,7 +46,7 @@ sub get_trials_with_folders : Path('/ajax/breeders/get_trials_with_folders') Arg
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    my $dir = catdir($c->config->{static_content_path}, "folder");
+    my $dir = File::Spec->catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
         print STDERR "Couldn't create $dir: $@";
@@ -101,7 +101,7 @@ sub get_trials_with_folders_cached : Path('/ajax/breeders/get_trials_with_folder
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    my $dir = catdir($c->config->{static_content_path}, "folder");
+    my $dir = File::Spec->catdir($c->config->{static_content_path}, "folder");
     eval { make_path($dir) };
     if ($@) {
         print "Couldn't create $dir: $@";
