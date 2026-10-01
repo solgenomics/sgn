@@ -29,7 +29,7 @@ my $job = CXGN::Job->new({
         'is_cluster' => 1,
         'do_cleanup' => 0,
         'sleep' => undef,
-        'backend' => 'Slurm'
+        'backend' => 'Tsp'
     },
     name => 'Sample download',
     job_type => 'download',
@@ -731,7 +731,7 @@ sub get_default_cxgn_tools_run_config {
         'is_cluster' => 1,
         'do_cleanup' => 0,
         'sleep' => undef,
-        'backend' => 'Slurm'
+        'backend' => 'Tsp'
     };
 
     return $cxgn_tools_run_config;
