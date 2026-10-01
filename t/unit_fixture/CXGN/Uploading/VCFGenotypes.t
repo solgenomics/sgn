@@ -278,6 +278,155 @@ $response = decode_json $mech->content;
 is(scalar(@{$response->{data}}), 3);
 
 
+#####
+# Regression test: adding a project to an EXISTING genotyping protocol whose
+# observation units are "stocks" (mixed stock types, not just accessions).
+#
+# GenotypesVCFUpload.pm re-derives observation_unit_type_name from the
+# EXISTING protocol's own stored sample_observation_unit_type_name whenever a
+# protocol_id is submitted, overriding whatever the upload form's radio
+# button says. The second upload below deliberately (and incorrectly) submits
+# "accession" as the observation type even though its samples are
+# tissue_samples: if that override ever broke, these tissue_sample names
+# would fail "accession" validation and the upload would error out with
+# missing_stocks instead of succeeding.
+#####
+
+my $mixed_organism = $schema->resultset('Organism::Organism')->find({ species => 'Manihot esculenta' });
+my $mixed_organism_id = $mixed_organism->organism_id;
+
+my $mixed_accession_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
+my $mixed_tissue_sample_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+my $mixed_tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+
+foreach my $n (1..4) {
+    my $mixed_accession = $schema->resultset('Stock::Stock')->create({
+        organism_id => $mixed_organism_id,
+        name       => "mixed_add_project_acc_$n",
+        uniquename => "mixed_add_project_acc_$n",
+        type_id    => $mixed_accession_type_id,
+    });
+
+    my $mixed_tissue_sample = $schema->resultset('Stock::Stock')->create({
+        organism_id => $mixed_organism_id,
+        name       => "mixed_add_project_ts_$n",
+        uniquename => "mixed_add_project_ts_$n",
+        type_id    => $mixed_tissue_sample_type_id,
+    });
+
+    $schema->resultset('Stock::StockRelationship')->create({
+        subject_id => $mixed_tissue_sample->stock_id,
+        object_id  => $mixed_accession->stock_id,
+        type_id    => $mixed_tissue_sample_of_cvterm_id,
+        value      => 'tissue_sample',
+    });
+}
+
+my $mixed_stock_vcf_file_1 = $f->config->{basepath}."/t/data/genotype_data/mixed_stock_add_project_1.vcf";
+my $mixed_stock_vcf_file_2 = $f->config->{basepath}."/t/data/genotype_data/mixed_stock_add_project_2.vcf";
+
+#create a brand-new protocol with observation_unit_type "stocks", using tissue_sample names as the observation units
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/genotype/upload',
+        Content_Type => 'form-data',
+        Content => [
+            upload_genotype_vcf_file_input => [ $mixed_stock_vcf_file_1, 'genotype_vcf_data_upload' ],
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_genotypes_species_name_input"=>"Manihot esculenta",
+            "upload_genotype_vcf_project_name"=>"Mixed stock genotype project 1",
+            "upload_genotype_location_select"=>$location_id,
+            "upload_genotype_year_select"=>"2018",
+            "upload_genotype_breeding_program_select"=>$breeding_program_id,
+            "upload_genotype_vcf_observation_type"=>"stocks",
+            "upload_genotype_vcf_facility_select"=>"IGD",
+            "upload_genotype_vcf_project_description"=>"Mixed stock genotype project 1",
+            "upload_genotype_vcf_protocol_name"=>"Mixed stock protocol",
+            "upload_genotype_vcf_include_igd_numbers"=>0,
+            "upload_genotype_vcf_reference_genome_name"=>"Mesculenta_511_v7",
+            "upload_genotype_add_new_accessions"=>0,
+        ]
+    );
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+#print STDERR Dumper $message_hash;
+is($message_hash->{success}, 1, "mixed stocks-mode VCF upload (tissue_sample observation units) succeeds");
+ok(my $mixed_project_id_1 = $message_hash->{project_id}, "mixed stocks-mode upload returns project_id");
+ok(my $mixed_protocol_id = $message_hash->{nd_protocol_id}, "mixed stocks-mode upload returns nd_protocol_id");
+
+my $mixed_protocol = CXGN::Genotype::Protocol->new({
+    bcs_schema => $schema,
+    nd_protocol_id => $mixed_protocol_id
+});
+is($mixed_protocol->sample_observation_unit_type_name, 'stocks', "new protocol stores sample_observation_unit_type_name as 'stocks'");
+
+my $genotypes_search_mixed_1 = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    people_schema=>$people_schema,
+    protocol_id_list=>[$mixed_protocol_id],
+});
+my ($mixed_total_count_1, $mixed_data_1) = $genotypes_search_mixed_1->get_genotype_info();
+is($mixed_total_count_1, 2, "mixed stocks-mode protocol stores genotype data for both tissue_sample observation units");
+my %mixed_germplasm_names_1 = map { $_->{germplasmName} => 1 } @$mixed_data_1;
+is_deeply(\%mixed_germplasm_names_1, { 'mixed_add_project_acc_1' => 1, 'mixed_add_project_acc_2' => 1 }, "genotype search resolves the parent accession name for tissue_sample observation units");
+
+#add a second project's genotype data to the SAME existing 'stocks' protocol, using two
+#different tissue_sample names, while the form incorrectly claims observation_type "accession"
+$ua = LWP::UserAgent->new;
+$response = $ua->post(
+        'http://localhost:3010/ajax/genotype/upload',
+        Content_Type => 'form-data',
+        Content => [
+            upload_genotype_vcf_file_input => [ $mixed_stock_vcf_file_2, 'genotype_vcf_data_upload' ],
+            "sgn_session_id"=>$sgn_session_id,
+            "upload_genotype_protocol_id"=>$mixed_protocol_id,
+            "upload_genotypes_species_name_input"=>"Manihot esculenta",
+            "upload_genotype_vcf_project_name"=>"Mixed stock genotype project 2",
+            "upload_genotype_location_select"=>$location_id,
+            "upload_genotype_year_select"=>"2018",
+            "upload_genotype_breeding_program_select"=>$breeding_program_id,
+            "upload_genotype_vcf_observation_type"=>"accession",
+            "upload_genotype_vcf_facility_select"=>"IGD",
+            "upload_genotype_vcf_project_description"=>"Mixed stock genotype project 2",
+            "upload_genotype_vcf_include_igd_numbers"=>0,
+            "upload_genotype_add_new_accessions"=>0,
+        ]
+    );
+
+$message = $response->decoded_content;
+$message_hash = decode_json $message;
+#print STDERR Dumper $message_hash;
+is($message_hash->{success}, 1, "adding a second project (tissue_sample observation units) to the existing 'stocks' protocol succeeds");
+is($message_hash->{nd_protocol_id}, $mixed_protocol_id, "second project is stored under the same existing protocol");
+ok(my $mixed_project_id_2 = $message_hash->{project_id}, "second upload returns a project_id");
+isnt($mixed_project_id_2, $mixed_project_id_1, "second project is a different project from the first");
+
+my $genotypes_search_mixed_2 = CXGN::Genotype::Search->new({
+    bcs_schema=>$schema,
+    people_schema=>$people_schema,
+    protocol_id_list=>[$mixed_protocol_id],
+});
+my ($mixed_total_count_2, $mixed_data_2) = $genotypes_search_mixed_2->get_genotype_info();
+is($mixed_total_count_2, 4, "genotype data from both projects is now stored under the same 'stocks' protocol");
+my %mixed_germplasm_names_2 = map { $_->{germplasmName} => 1 } @$mixed_data_2;
+is_deeply(\%mixed_germplasm_names_2, { 'mixed_add_project_acc_1' => 1, 'mixed_add_project_acc_2' => 1, 'mixed_add_project_acc_3' => 1, 'mixed_add_project_acc_4' => 1 }, "genotype search resolves the parent accession name for all four tissue_sample observation units across both projects");
+my %mixed_project_names_2 = map { $_->{genotypingDataProjectName} => 1 } @$mixed_data_2;
+is_deeply(\%mixed_project_names_2, { 'Mixed stock genotype project 1' => 1, 'Mixed stock genotype project 2' => 1 }, "genotype search returns data from both projects under the shared protocol");
+
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/delete/$mixed_protocol_id?sgn_session_id=$sgn_session_id");
+$response = decode_json $mech->content;
+is_deeply($response, {success=>1}, "mixed stocks protocol deleted");
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$mixed_project_id_1.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1', "mixed stock genotyping project 1 deleted");
+
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$mixed_project_id_2.'/delete/genotyping_project');
+$response = decode_json $mech->content;
+is($response->{'success'}, '1', "mixed stock genotyping project 2 deleted");
+
+
 my $file = $f->config->{basepath}."/t/data/genotype_data/10acc_200Ksnps.transposedVCF.hd.txt";
 
 #test upload with file where sample names are not in the database
