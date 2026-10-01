@@ -1,4 +1,4 @@
-package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotInventoryGeneric;
+package CXGN::Stock::Seedlot::ParseUpload::Plugin::SeedlotsToUnspecifiedNamesGeneric;
 
 use Moose::Role;
 use CXGN::File::Parse;
@@ -14,20 +14,17 @@ sub _validate_with_plugin {
 
     my @error_messages;
     my %errors;
-    my %missing_seedlots;
+    my %missing_accessions;
 
     my $parser = CXGN::File::Parse->new (
         file => $filename,
-        required_columns => [ 'box_id', 'seed_id', 'inventory_date', 'inventory_person'],
-        optional_columns => ['weight_gram', 'amount'],
+        required_columns => [ 'from_seedlot_name', 'operator_name', 'transaction_description'],
+        optional_columns => ['amount', 'weight_gram'],
         column_aliases => {
-            'box_id' => ['box id', 'box name', 'box_name'],
-            'seed_id' => ['seed id', 'seedlot_name', 'seedlot name'],
-            'inventory_date' => ['inventory date'],
-            'inventory_person' => ['inventory person'],
+            'from_seedlot_name' => ['from seedlot name'],
+            'operator_name' => ['operator name', 'operator'],
             'weight_gram' => ['weight(g)', 'weight gram'],
-            'amount' => ['count'],
-
+            'transaction_description' => ['transaction description', 'description'],
         },
     );
 
@@ -52,21 +49,22 @@ sub _validate_with_plugin {
         return;
     }
 
+    my @from_seedlot_to_seedlot_pairs;
     for my $row ( @$parsed_data ) {
         my $row_num = $row->{_row};
-        my $seedlot_name = $row->{'seed_id'};
         my $amount = $row->{'amount'};
         my $weight = $row->{'weight_gram'};
 
-        if (!defined $amount && !defined $weight) {
+        if ((!$amount || $amount eq '') && (!$weight || $weight eq '')) {
             push @error_messages, "On row:$row_num you must provide either a weight in grams or a seed count amount.";
         }
+
     }
 
-    my $seen_seedlot_names = $parsed_values->{'seed_id'};
+    my $seen_from_seedlot_names = $parsed_values->{'from_seedlot_name'};
 
     my $existing_seedlot_validator = CXGN::List::Validate->new();
-    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_seedlot_names);
+    my $validation = $existing_seedlot_validator->validate($schema,'seedlots', $seen_from_seedlot_names);
     my @all_seedlots_missing = @{$validation->{missing}};
     my @seedlots_discarded = @{$validation->{discarded}};
     my @seedlots_missing;
@@ -105,47 +103,63 @@ sub _parse_with_plugin {
     my $parsed = $self->_parsed_data();
     my $parsed_data = $parsed->{data};
     my $parsed_values = $parsed->{values};
-    my %parsed_result;
-    my %seen_seedlot_names;
+    my %parsed_seedlots;
 
-    my $accession_names = $parsed_values->{'accession_name'};
-    my $seedlot_names = $parsed_values->{'seedlot_name'};
+    my $from_seedlot_names = $parsed_values->{'from_seedlot_name'};
 
-    for my $row (@$parsed_data) {
+    my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'seedlot', 'stock_type')->cvterm_id();
+
+    my $seedlot_rs = $schema->resultset("Stock::Stock")->search({
+        'is_obsolete' => { '!=' => 't' },
+        'uniquename' => { -in => $from_seedlot_names },
+        'type_id' => $seedlot_cvterm_id
+    });
+
+    my %seedlot_lookup;
+    while (my $r = $seedlot_rs->next){
+        $seedlot_lookup{$r->uniquename} = $r->stock_id;
+    }
+
+    my @transactions;
+    for my $row ( @$parsed_data ) {
         my $row_num;
-        my $seed_id;
-        my $box_id;
-        my $inventory_date;
-        my $inventory_person;
-        my $weight;
+        my $from_seedlot_name;
         my $amount;
+        my $weight;
+        my $operator_name;
+        my $description;
+
         $row_num = $row->{_row};
-        $seed_id = $row->{'seed_id'};
-        $box_id = $row->{'box_id'};
-        $inventory_date = $row->{'inventory_date'};
-        $inventory_person = $row->{'inventory_person'};
-        $weight = $row->{'weight_gram'};
+        $from_seedlot_name = $row->{'from_seedlot_name'};
         $amount = $row->{'amount'};
-        $seen_seedlot_names{$seed_id}++;
+        $weight = $row->{'weight_gram'};
+        $operator_name = $row->{'operator_name'};
+        $description = $row->{'transaction_description'};
 
-        $parsed_result{$seed_id} = {
-            box_id => $box_id,
-            seedlot_name => $seed_id,
-            inventory_date => $inventory_date,
-            inventory_person => $inventory_person,
-            weight_gram => $weight,
-            amount => $amount
-        };
+        if (!$amount || $amount eq '') {
+            $amount = 'NA';
+        } elsif (!$weight || $weight eq '') {
+            $weight = 'NA';
+        }
+
+        my $from_seedlot_id = $seedlot_lookup{$from_seedlot_name};
+
+        push @transactions, {
+            from_seedlot_name => $from_seedlot_name,
+            from_seedlot_id => $from_seedlot_id,
+            to_seedlot_name => $from_seedlot_name,
+            to_seedlot_id => $from_seedlot_id,
+            amount => $amount,
+            weight => $weight,
+            transaction_description => $description,
+            operator => $operator_name,
+            factor => -1
+        }
     }
 
-    my @seedlot_names = keys %seen_seedlot_names;
-    my $seedlots_rs = $schema->resultset("Stock::Stock")->search({uniquename => {-in => \@seedlot_names}});
-    while (my $r = $seedlots_rs->next){
-        $parsed_result{$r->uniquename}{seedlot_id} = $r->stock_id;
-    }
+    $parsed_seedlots{transactions} = \@transactions;
 
-    $self->_set_parsed_data(\%parsed_result);
-
+    $self->_set_parsed_data(\%parsed_seedlots);
     return 1;
 
 }
