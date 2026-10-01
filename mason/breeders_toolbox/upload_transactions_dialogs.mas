@@ -631,6 +631,7 @@ jQuery(document).ready(function(){
         jQuery('#seedlots_to_plots_file').val('');
         jQuery('#seedlots_to_new_seedlots_file').val('');
         jQuery('#seedlots_to_unspecified_names_file').val('');
+        jQuery('#sources_to_existing_seedlots_file').val('');
         jQuery('#new_seedlot_location').val('');
         jQuery('#new_seedlot_organization_name').val('');
         location.reload();
