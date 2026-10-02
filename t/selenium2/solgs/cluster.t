@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -22,8 +22,8 @@ my $solgs_data = SGN::Test::solGSData->new(
 
 my $cache_dir    = $solgs_data->site_cluster_shared_dir();
 my $protocol_dir = $solgs_data->default_protocol_dir();
-my $cluster_dir  = catdir( $protocol_dir, 'cluster' );
-my $log_dir      = catdir( $protocol_dir, 'log' );
+my $cluster_dir  = File::Spec->catdir( $protocol_dir, 'cluster' );
+my $log_dir      = File::Spec->catdir( $protocol_dir, 'log' );
 
 my $accessions_list = $solgs_data->load_accessions_list();
 

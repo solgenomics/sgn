@@ -105,6 +105,7 @@ sub run {
 	}
     }
 
+    return 0;
 }
 
 sub get_args {

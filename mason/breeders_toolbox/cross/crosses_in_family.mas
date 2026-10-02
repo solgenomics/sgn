@@ -1,0 +1,65 @@
+<%args>
+$family_id
+$family_name
+$family_type_string
+</%args>
+
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+
+<div class = "panel-body">
+    <div style="overflow:scroll">
+        <table class="table table-hover table-bordered" id="crosses_in_family_table">
+        </table>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <&| /page/info_section.mas, title => 'Add Crosses to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Adding crosses in this family to a new or exisiting list</i>'&>
+                <br>
+                <div id="members_to_new_list" style="display:none"></div>
+                <div id="members_add_to_list"></div>
+            </&>
+        </div>
+    </div>
+</div>
+
+<& /breeders_toolbox/cross/add_family_members_using_list_dialog.mas, family_id => $family_id, family_name => $family_name, family_type_string => $family_type_string &>
+
+<script>
+
+jQuery(document).ready(function(){
+    const family_id = "<%$family_id%>";
+    const crosses_in_family = jQuery('#crosses_in_family_table').DataTable({
+        'ajax': '/ajax/family/members_and_info/'+family_id,
+        'destroy': true,
+        'autoWidth': false,
+        columns: [
+            { title: "Cross Unique ID", "data": null, "render": function ( data, type, row ) { return "<a href='/cross/"+row.cross_id+"'>"+row.cross_name+"</a>"; } },
+            { title: "Cross Type", "data": "cross_type" },
+            { title: "Number of Progenies", "data": "progeny_number" },
+            { title: "Crossing Experiment", "data": null, "render": function ( data, type, row ) { return "<a href='/breeders/trial/"+row.crossing_experiment_id+"'>"+row.crossing_experiment_name+"</a>"; } },
+        ],
+        "fnInitComplete": function(oSettings, json) {
+            //console.log(json);
+            if (!isLoggedIn()) {
+                jQuery('#members_add_to_list').html("<div class='well well-sm'><h3>Please login to use lists!</h3></div>");
+            } else {
+                var html = "";
+                for(var i=0; i<json.data.length; i++){
+                    html += json.data[i].cross_name+"\n";
+                }
+                jQuery("#members_to_new_list").html(html);
+                addToListMenu("members_add_to_list", "members_to_new_list", {
+                    selectText: true,
+                    listType: 'crosses',
+                });
+            }
+        }
+    });
+
+    jQuery('#add_family_members_link').click(function() {
+        jQuery("#add_family_members_using_list_dialog").modal("show");
+    });
+
+});
+
+</script>

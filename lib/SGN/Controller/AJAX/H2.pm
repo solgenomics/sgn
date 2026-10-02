@@ -7,7 +7,7 @@ use Carp qw/ carp confess croak /;
 use Cache::File;
 use CXGN::Tools::Run;
 use File::Temp qw / tempfile tempdir /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use File::Path qw / mkpath  /;
 use File::Copy;
@@ -138,7 +138,7 @@ sub create_heritability_phenodata_file {
     or die "could not copy $phenotype_file to $h2_cache_dir";
 
     my $file = basename($phenotype_file);
-    $c->stash->{phenotype_file_name} = catfile($h2_cache_dir, $file);
+    $c->stash->{phenotype_file_name} = File::Spec->catfile($h2_cache_dir, $file);
 
 }
 
@@ -169,12 +169,12 @@ sub pheno_heritability_output_files {
 
     unless ($h2_coefficients_file && $h2_coefficients_json_file )
     {
-        $h2_coefficients_file = catfile($h2_cache_dir, "h2_coefficients_table_${pop_id}");
+        $h2_coefficients_file = File::Spec->catfile($h2_cache_dir, "h2_coefficients_table_${pop_id}");
 
         write_file($h2_coefficients_file);
         $file_cache->set($key_table, $h2_coefficients_file, '30 days');
 
-        $h2_coefficients_json_file = catfile($h2_cache_dir, "h2_coefficients_json_${pop_id}");
+        $h2_coefficients_json_file = File::Spec->catfile($h2_cache_dir, "h2_coefficients_json_${pop_id}");
 
         write_file($h2_coefficients_json_file);
         $file_cache->set($key_json, $h2_coefficients_json_file, '30 days');
@@ -231,7 +231,7 @@ sub download_phenotypic_heritability : Path('/download/phenotypic/heritability/p
 
     # $self->create_heritability_dir($c);
     my $h2_dir = $self->heritability_cache_dir($c);
-    my $h2_file = catfile($h2_dir,  "h2_coefficients_table_${id}");
+    my $h2_file = File::Spec->catfile($h2_dir,  "h2_coefficients_table_${id}");
 
     unless (!-e $h2_file || -s $h2_file <= 1)
     {
@@ -439,7 +439,7 @@ sub heritability_cache_dir {
 
     my $trial_id = $c->stash->{trial_id} || $c->stash->{pop_id};
     print STDERR "heritability trial id: $trial_id\n";
-    my $heritability_cache_dir = catdir($c->stash->{heritability_dir}, $trial_id, 'cache');
+    my $heritability_cache_dir = File::Spec->catdir($c->stash->{heritability_dir}, $trial_id, 'cache');
 
     return $heritability_cache_dir;
 
@@ -450,7 +450,7 @@ sub heritability_temp_dir {
     my ($self, $c) = @_;
 
     my $trial_id = $c->stash->{trial_id} || $c->stash->{pop_id};
-    my $heritability_temp_dir = catdir($c->stash->{heritability_dir}, $trial_id, 'tempfiles');
+    my $heritability_temp_dir = File::Spec->catdir($c->stash->{heritability_dir}, $trial_id, 'tempfiles');
     mkpath($heritability_temp_dir, 0, 755);
 
     $c->stash->{heritability_temp_dir} = $heritability_temp_dir;

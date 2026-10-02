@@ -13,35 +13,27 @@ sub treatment_design_page : Path('/treatments/design/') Args(0) {
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    if (! $c->config->{allow_treatment_edits}) {
+    if (!($c->user() && $c->user->check_roles('curator'))) {
         $c->stash->{template} = '/site/error/permission_denied.mas';
-    } else {
+        return;
+    }
 
-        if ($c->user() && $c->user->check_roles('curator')) {
-            my $ontology_obj = CXGN::Onto->new({
-			    schema => $schema
-            });
-            my @root_nodes = $ontology_obj->get_root_nodes('experiment_treatment_ontology');
+    my $editable_ontologies_str = $c->config->{allow_trait_edits}; #this can be 1 or a list of dbnames
 
-            my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
-            my $db_name = $root_nodes[0]->[1] =~ s/:.*//r;
+    if ($editable_ontologies_str == 1) { #shorthand for first trait ontology only - not treatments
+        $c->stash->{template} = '/site/error/permission_denied.mas';
+    } else { #need to actually check if treatment ontology is editable
+        my @editable_ontologies = split(",", $editable_ontologies_str);
 
-            my $cvterm_id = $schema->resultset("Cv::Cvterm")->find({
-                name => $root_term_name,
-                cv_id => $root_nodes[0]->[0]
-            })->cvterm_id();
-            my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $cvterm_id } );
+        if (grep {$_ eq "EXPERIMENT_TREATMENT"} @editable_ontologies) {
             $c->stash(
                 template => '/tools/treatment_designer.mas',
-                exp_treatment_root => $cvterm,
-                db_name => $db_name
+                db_name => "EXPERIMENT_TREATMENT"
             );
         } else {
             $c->stash->{template} = '/site/error/permission_denied.mas';
         }
-
     }
-
 }
 
 1;
