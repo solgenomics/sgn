@@ -279,12 +279,22 @@ sub get_phenotype_matrix {
         }
     );
 
+    # Selected traits must have columns even when the search finds no observations.
+    my %selected_traits;
+    my %selected_trait_ids = map { $_ => 1 } @{$self->trait_list || []};
+    for my $trait_id (keys %selected_trait_ids) {
+        my $trait_name = SGN::Model::Cvterm::get_trait_from_cvterm_id(
+            $self->bcs_schema, $trait_id, 'extended');
+        $selected_traits{$trait_name} = $trait_id if defined($trait_name) && $trait_name ne '';
+    }
+
     my ($data, $unique_traits, $trait_synonyms);
     my @info;
     my @metadata_headers = ( 'studyYear', 'programDbId', 'programName', 'programDescription', 'studyDbId', 'studyName', 'studyDescription', 'studyDesign', 'plotWidth', 'plotLength', 'fieldSize', 'fieldTrialIsPlannedToBeGenotyped', 'fieldTrialIsPlannedToCross', 'plantingDate', 'harvestDate', 'locationDbId', 'locationName', 'germplasmDbId', 'germplasmName', 'germplasmSynonyms', 'observationLevel', 'observationUnitDbId', 'observationUnitName', 'replicate', 'blockNumber', 'plotNumber', 'rowNumber', 'colNumber', 'entryType', 'plantNumber');
 
     if ($self->search_type eq 'MaterializedViewTable'){
         ($data, $unique_traits, $trait_synonyms) = $phenotypes_search->search();
+        $unique_traits = { %$unique_traits, %selected_traits };
         print STDERR "No of lines retrieved: ".scalar(@$data)."\n";
         print STDERR "Construct Pheno Matrix Start:".localtime."\n";
 
@@ -438,7 +448,7 @@ sub get_phenotype_matrix {
 #        print STDERR "the download data structure =". Dumper($data)."\n";
 
         my %obsunit_data;
-        my %traits;
+        my %traits = %selected_traits;
 
         print STDERR "PhenotypeMatrix No of lines retrieved (Native Search): ".scalar(@$data)."\n";
         print STDERR "PhenotypeMatrix Construct Pheno Matrix Start:".localtime."\n";
@@ -472,9 +482,9 @@ sub get_phenotype_matrix {
         }
 
         foreach my $d (@$data) {
-            # Native all-level searches also return observation units that have
-            # no phenotype.  Keep those rows for their metadata below, but do
-            # not create an empty trait column for the NULL side of the join.
+            # A LEFT JOIN row without a trait has no observation to collect.
+            # Its unit metadata is retained below; selected traits have columns
+            # regardless of whether any observations were returned for them.
             next unless defined($d->{trait_name}) && $d->{trait_name} ne '';
 
             my $value = "";
