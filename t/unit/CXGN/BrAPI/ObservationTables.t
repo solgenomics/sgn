@@ -34,7 +34,7 @@ for my $method (qw(search search_observationunit_tables)) {
         # and trait lookup mocked so these regressions need no database.
         my $api = bless {
             bcs_schema => bless({}, 'Bio::Chado::Schema'),
-            page_size => 1, page => 0, status => [],
+            page_size => 2, page => 0, status => [],
         }, 'CXGN::BrAPI::v2::ObservationTables';
         my $zero = $method eq 'search' ? '0,2026-01-01T00:00:00Z' : '0';
         @matrix = (
@@ -42,18 +42,20 @@ for my $method (qw(search search_observationunit_tables)) {
             row(1, undef, ''), row(2, $zero, undef),
             row(3, '', undef), row(4, undef, 'measured'), row(5, undef, undef),
         );
-        for my $page (0 .. 2) {
+        for my $page (0 .. 3) {
             $api->page($page);
             my $response = $api->$method({ studyDbIds => [139] });
             is($matrix_args{data_level}, 'all', 'study-only request defaults to all levels');
             is_deeply($matrix_args{trial_list}, [139], 'study filter reaches matrix');
             is_deeply($response->{pagination}, {
-                pageSize => 1, currentPage => $page, totalCount => 2, totalPages => 2,
-            }, "page $page counts only observed units");
-            my @expected = $page < 2 ? ($page == 0 ? 2 : 4) : ();
+                pageSize => 2, currentPage => $page, totalCount => 5, totalPages => 3,
+            }, "page $page counts all units, including those without observations");
+            my @expected = $page == 0 ? (1, 2) : $page == 1 ? (3, 4) : $page == 2 ? (5) : ();
             is_deeply([map { $_->[21] } @{$response->{result}{data}}], \@expected,
-                'filtering precedes pagination, including a page beyond the end');
-            is($response->{result}{data}[0][30], $zero, 'zero phenotype preserved') if $page == 0;
+                'empty rows retain their place, including the last and out-of-range pages');
+            is_deeply($response->{result}{data}, [map { $matrix[$_] } @expected],
+                'metadata and phenotype values are preserved');
+            is($response->{result}{data}[1][30], $zero, 'zero phenotype preserved') if $page == 0;
         }
         $api->page(0);
         for my $rows (
@@ -62,13 +64,17 @@ for my $method (qw(search search_observationunit_tables)) {
         ) {
             @matrix = ($matrix[0], @$rows);
             my $response = $api->$method({ studyDbIds => [139] });
-            is($response->{pagination}{totalCount}, 0, 'empty result has zero count');
-            is($response->{pagination}{totalPages}, 0, 'empty result has zero pages');
-            is_deeply($response->{result}{data}, [], 'empty result has no rows');
+            is($response->{pagination}{totalCount}, scalar @$rows,
+                'count distinguishes empty phenotype values from an empty result');
+            is($response->{pagination}{totalPages}, @$rows ? 1 : 0,
+                'units with empty phenotype values still occupy a page');
+            is_deeply($response->{result}{data}, $rows, 'units with empty phenotype values are retained');
         }
         @matrix = ([('metadata') x 30, 'notes', 'treatment'], row(1));
         my $response = $api->$method({ studyDbIds => [139] });
-        is($response->{pagination}{totalCount}, 0, 'notes and treatments alone do not count');
+        is($response->{pagination}{totalCount}, 1, 'units without any trait columns still count');
+        is($response->{pagination}{totalPages}, 1, 'units without any trait columns occupy a page');
+        is_deeply($response->{result}{data}, [row(1)], 'metadata-only row is retained');
         is_deeply($response->{result}{observationVariables}, [], 'no phantom trait column');
     };
 }
