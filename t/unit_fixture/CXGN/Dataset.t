@@ -4,6 +4,7 @@ use strict;
 use lib 't/lib';
 
 use Test::More;
+use Test::MockModule;
 use Data::Dumper;
 use SGN::Test::Fixture;
 use CXGN::Dataset;
@@ -20,7 +21,7 @@ my $backend_config = $t->config->{backend};
 my $cluster_host_config = $t->config->{cluster_host};
 my $web_cluster_queue_config = $t->config->{'web_cluster_queue'};
 my $basepath_config = $t->config->{basepath};
-my $forbid_cache = 0;
+my $forbid_cache = 1;
 
 my $ds = CXGN::Dataset->new( people_schema => $t->people_schema(), schema => $t->bcs_schema());
 $ds->accessions( [ 38913, 38914, 38915 ]);
@@ -114,8 +115,29 @@ foreach my $ds (@datasets) {
     my $phenotypes = $ds->retrieve_phenotypes();
 
     if ($ds->isa("CXGN::Dataset::File")) {
+	# Execute the actual matrix conversion locally; cluster scheduling is
+	# outside the scope of this dataset fixture test.
+	my $runner = Test::MockModule->new('CXGN::Tools::Run');
+	my $original_new = CXGN::Tools::Run->can('new');
+	$runner->mock(new => sub {
+	    my ($class, $options) = @_;
+	    my %local_options = %$options;
+	    delete $local_options{backend};
+	    return $original_new->($class, \%local_options);
+	});
+	$runner->mock(run_cluster => sub {
+	    my ($job, @command) = @_;
+	    # Slurm joins these arguments into a shell command; the local
+	    # runner needs the executable without surrounding whitespace.
+	    $command[0] =~ s/^\s+|\s+$//g;
+	    return $job->run(@command);
+	});
 	my$geno_filename = $ds->file_name()."_genotype.txt";
 	my $genotypes = $ds->retrieve_genotypes(1,$geno_filename,$cache_root_dir,$cluster_shared_tempdir_config,$backend_config,$cluster_host_config,$web_cluster_queue_config,$basepath_config,$forbid_cache);
+	ok(-s $geno_filename, 'genotype matrix file contains data');
+	my $header = <$genotypes>;
+	like($header, qr/^Marker\t/, 'genotype matrix was transposed to marker rows');
+	ok(defined scalar <$genotypes>, 'genotype matrix contains marker data');
     } else {
 	my $genotypes = $ds->retrieve_genotypes(1);
     }

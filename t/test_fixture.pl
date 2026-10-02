@@ -146,6 +146,7 @@ close($NEWCONF);
 if (! $nopatch) {
     print STDERR "Running patches... ";
     system("t/data/fixture/patches/run_fixture_and_db_patches.pl -u postgres -p $db_postgres_password -h $dbhost -d $dbname -e janedoe -s 157 > /dev/null");
+    die "Fixture database patching failed (status $?).\n" if $? != 0;
     print STDERR "Done\n";
 }
 
