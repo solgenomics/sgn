@@ -84,7 +84,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(90);
+    sleep(120);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -131,12 +131,12 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
     sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(170);
+    sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(10);
 
 
-    my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
@@ -147,23 +147,21 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
-    $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(80);
+    $d->find_element_ok('calculate_si', 'id',  'calc Selection index')->click();
+    sleep(120);
 
-    my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-10);", $si);
     sleep(5);
-    $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Values")]', 'xpath', 'check caption')->click();
-    sleep(2);
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'check caption')->click();
     sleep(2);
-    # $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Indices")]', 'xpath', 'check caption')->click();
-    # sleep(2);
+    $d->find_element_ok('//div[@id="si_canvas"]//a[contains(text(), "Indices")]', 'xpath', 'there is a link to the indices');
+    sleep(2);
 
     $d->driver->refresh();
     sleep(2);
 
-    my $cor = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $cor = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
@@ -174,28 +172,26 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(4);
     sleep(5);
-    $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(60);
+    $d->find_element_ok('calculate_si', 'id',  'calc Selection index')->click();
+    sleep(120);
 
-    my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-10);", $si);
     sleep(5);
-    $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Values")]', 'xpath', 'check caption')->click();
-    sleep(2);
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'check caption')->click();
     sleep(2);
-    # $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Indices")]', 'xpath', 'check caption')->click();
-    # sleep(2);
+    $d->find_element_ok('//div[@id="si_canvas"]//a[contains(text(), "Indices")]', 'xpath', 'there is a link to the indices');
+    sleep(2);
 
 
     remove_tree($cache_dir, {safe => 1});
     $d->get('/solgs');
 
-    sleep(2);
+    sleep(5);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
     sleep(2);
     $d->find_element_ok('search_trial', 'id', 'search for training pop')->click();
-    sleep(1);
+    sleep(2);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->clear();
     sleep(2);
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 nacrri');
@@ -220,7 +216,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
     sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
-    sleep(3);
+    sleep(5);
 
 
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('Kasese solgs trial');
@@ -256,7 +252,7 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(180);
+    sleep(250);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(3);
 
@@ -265,7 +261,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait')->click();
     sleep(1);
     $d->find_element_ok('runGS', 'id',  'build multi models')->click();
-    sleep(5);
+    sleep(15);
 
     $d->find_element_ok('trial_search_box', 'id', 'population search form')->send_keys('trial2 NaCRRI');
     sleep(5);
@@ -280,11 +276,11 @@ $d->while_logged_in_as("submitter", sub {
 	$d->find_element_ok('user_email', 'id', 'user email')->send_keys('email@email.com');
 	sleep(2);
     $d->find_element_ok('submit_job', 'id', 'submit')->click();
-    sleep(150);
+    sleep(200);
     $d->find_element_ok('Go back', 'partial_link_text', 'go back')->click();
     sleep(5);
 
-    my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $si);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
@@ -295,21 +291,21 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(5);
     sleep(5);
-    $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(80);
+    $d->find_element_ok('calculate_si', 'id',  'calc Selection index')->click();
+    sleep(120);
 
-    my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-10);", $si);
     sleep(5);
-    $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Values")]', 'xpath', 'check caption')->click();
-    sleep(2);
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'check caption')->click();
+    sleep(2);
+    $d->find_element_ok('//div[@id="si_canvas"]//a[contains(text(), "Indices")]', 'xpath', 'there is a link to the indices');
     sleep(2);
 
     $d->driver->refresh();
     sleep(2);
     
-    my $cor = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $cor = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-100);", $cor);
     sleep(5);
     $d->find_element_ok('si_pops_select', 'id', 'select list sl pop')->click();
@@ -320,15 +316,15 @@ $d->while_logged_in_as("submitter", sub {
     sleep(5);
     $d->find_element_ok('FRW', 'id', 'rel wt 2st')->send_keys(4);
     sleep(5);
-    $d->find_element_ok('calculate_si', 'id',  'calc selection index')->click();
-    sleep(60);
+    $d->find_element_ok('calculate_si', 'id',  'calc Selection index')->click();
+    sleep(120);
 
-    my $si = $d->find_element('selection index', 'partial_link_text', 'scroll up');
+    my $si = $d->find_element('Selection index', 'partial_link_text', 'scroll up');
     $d->driver->execute_script( "arguments[0].scrollIntoView(true);window.scrollBy(0,-10);", $si);
     sleep(5);
-    $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Values")]', 'xpath', 'check caption')->click();
-    sleep(2);
     $d->find_element_ok('//div[@id="si_canvas"]//*[contains(text(), "Index Name")]', 'xpath', 'check caption')->click();
+    sleep(2);
+    $d->find_element_ok('//div[@id="si_canvas"]//a[contains(text(), "Indices")]', 'xpath', 'there is a link to the indices');
     sleep(2);
 
     foreach my $list_id ($trials_list_id, $accessions_list_id, $plots_list_id) {

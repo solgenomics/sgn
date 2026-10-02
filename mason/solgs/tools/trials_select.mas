@@ -28,6 +28,7 @@ $title => undef
 <%perl>
 
 
+
 if (!$data_structure) {
    if ($dataset_id) {
       $data_structure = 'dataset';
@@ -45,6 +46,9 @@ my $collapsible = 0;
 
 </%perl>
 
+<& /util/import_javascript.mas, classes => ["solGS.trialsSelect"] &>
+
+
 <div id='trials_select_div' class="col-xs-12 col-sm-6 col-md-4" style="margin-top: 18px;">
     <select id="trial_select" class="form-control">
         <option value="" disabled selected>Select a trial</option>
@@ -60,4 +64,4 @@ my $collapsible = 0;
 <input type="hidden" id="data_set_type" value="<% $data_set_type %>" />
 
 
-<& /util/import_javascript.mas, classes => ["solGS.trialsSelect"] &>
+

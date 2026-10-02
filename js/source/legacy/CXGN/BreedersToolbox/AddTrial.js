@@ -524,7 +524,7 @@ jQuery(document).ready(function ($) {
     function apply_treatment_autocomplete() {
         jQuery('.treatment-name-input-box').each( function() {
             jQuery(this).autocomplete({
-                source : '/ajax/cvterm/autocompleteslim' + "?db_name=_TREATMENT",
+                source : '/ajax/cvterm/autocompleteslim' + "?db_names=EXPERIMENT_TREATMENT,COMP_EXP_TREATMENT",
                 appendTo : '#add_project_dialog'
             });
         });

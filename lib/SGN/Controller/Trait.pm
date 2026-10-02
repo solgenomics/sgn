@@ -7,36 +7,52 @@ use CXGN::Cvterm;
 
 BEGIN { extends 'Catalyst::Controller'; }
 
-sub treatment_design_page : Path('/traits/design/') Args(0) {
+sub trait_design_page : Path('/traits/design/') Args(0) {
     my $self = shift;
     my $c = shift;
 
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
     my $schema = $c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id);
 
-    if (! $c->config->{allow_trait_edits}) {
+    if (!($c->user() && $c->user->check_roles('curator'))) {
         $c->stash->{template} = '/site/error/permission_denied.mas';
-    } else {
+        return;
+    }
 
-        if ($c->user() && $c->user->check_roles('curator')) {
-            my $ontology_obj = CXGN::Onto->new({
-			    schema => $schema
-            });
-            my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
+    my $ontology_obj = CXGN::Onto->new({
+        schema => $schema
+    });
+    my @root_nodes = $ontology_obj->get_root_nodes('trait_ontology');
 
-            my $root_term_name = $root_nodes[0]->[1] =~ s/\w+:\d+ //r;
-            my $db_name = $root_nodes[0]->[1] =~ s/:.*//r;
+    my @db_names;
 
-            my $cvterm_id = $schema->resultset("Cv::Cvterm")->find({
-                name => $root_term_name,
-                cv_id => $root_nodes[0]->[0]
-            })->cvterm_id();
+    my @root_terms = map {{name => $_->[1] =~ s/\w+:\d+ //r, cv_id => $_->[0], db_name => $_->[1] =~ s/:.*//r}} @root_nodes;
+    foreach my $term (@root_terms) {
+        push @db_names, $term->{db_name};
+    }
 
-            my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $cvterm_id } );
+    my %seen; # an ontology can have more than one root node, but should only be listed once
+    @db_names = grep { !$seen{$_}++ } @db_names;
+
+    my $editable_ontologies_str = $c->config->{allow_trait_edits}; #this can be 1 or a list of dbnames
+
+    if ($editable_ontologies_str == 1) { #every trait ontology is editable
+        $c->stash(
+            template => '/tools/trait_designer.mas',
+            db_names => join(",",@db_names)
+        );
+    } else { #need to actually check if trait ontology is editable
+        my @editable_ontologies = split(",", $editable_ontologies_str);
+        my @editable_dbnames;
+        foreach my $db_name (@db_names) {
+            if (grep {$_ eq $db_name} @editable_ontologies) { #if this ontology is editable per the config, add it to the list
+                push @editable_dbnames, $db_name;
+            }
+        }
+        if (scalar(@editable_dbnames > 0)) {
             $c->stash(
                 template => '/tools/trait_designer.mas',
-                trait_root => $cvterm,
-                db_name => $db_name
+                db_names => join(",",@editable_dbnames)
             );
         } else {
             $c->stash->{template} = '/site/error/permission_denied.mas';

@@ -49,8 +49,6 @@ solGS.heatmap = {
       jQuery("#" + scatterPlotDivId).before("<div id=" + scatterPlotMsgDivId + "></div>");
     }
 
-    
-
     var parsedScatterInputData = null;
     if (scatterInputData) {
         parsedScatterInputData = JSON.parse(scatterInputData);
@@ -65,11 +63,11 @@ solGS.heatmap = {
     }
 
     var nLabels = parsedHeatmaprInputData.labels.length;
+    var fontSize = "0.85em";
 
     if (nLabels >= 100) {
       height = 600;
       width = 600;
-      fontSize = "0.75em";
     } else {
       height = 500;
       width = 500;
@@ -89,8 +87,6 @@ solGS.heatmap = {
     var nral = "#98AFC7"; //blue gray
     var txtColor = "#523CB5";
 
-    var fontSize = "0.95em";
-    
     var corr = [];
     var coefs = [];
 
@@ -172,7 +168,7 @@ solGS.heatmap = {
       .attr("id", heatmapPlotDivId)
       .attr("transform", "translate(0, 0)");
 
-    corrplot
+    yAxisLabels = corrplot
       .append("g")
       .attr("class", "y_axis")
       .attr("transform", `translate(${pad.left}, ${pad.top})`)
@@ -184,7 +180,7 @@ solGS.heatmap = {
       .attr("fill", txtColor)
       .style("font-size", fontSize);
 
-    corrplot
+    var xAxisLabels = corrplot
       .append("g")
       .attr("class", "x_axis")
       .attr("transform", `translate(${pad.left}, ${pad.top + height})`)
@@ -197,6 +193,18 @@ solGS.heatmap = {
       .attr("transform", "rotate(-90)")
       .attr("fill", txtColor)
       .style("font-size", fontSize);
+
+    var longestXAxisLabelWidth = 0;
+    xAxisLabels.each(function () {
+      longestXAxisLabelWidth = Math.max(
+        longestXAxisLabelWidth,
+        this.getComputedTextLength()
+      );
+    });
+
+    pad.bottom = Math.max(pad.bottom, Math.ceil(longestXAxisLabelWidth + 25));
+    totalH = height + pad.top + pad.bottom;
+    svg.attr("height", totalH);
       
     corrplot
       .selectAll()
@@ -402,7 +410,22 @@ solGS.heatmap = {
       if (!heatmapPlotDivId.match("#")) {
         heatmapPlotDivId = "#" + heatmapPlotDivId;
       }
-      jQuery(heatmapPlotDivId).append('<p style="margin: 20px 0px 0px 40px">' + downloadLinks + "</p>");
+      
+    var longestYAxisLabelWidth = 0;
+    yAxisLabels.each(function () {
+      longestYAxisLabelWidth = Math.max(
+        longestYAxisLabelWidth,
+        this.getComputedTextLength()
+      );
+    });
+
+    var yAxisLabelsLeft = Math.max(
+      0,
+      Math.ceil(pad.left - 10 - longestYAxisLabelWidth)
+    );
+      jQuery(heatmapPlotDivId).append(
+        `<p style="margin: 20px 0 0 ${yAxisLabelsLeft}px">${downloadLinks}</p>`
+      );
     }
   },
 

@@ -50,7 +50,7 @@ sub autocomplete_GET :Args(0) {
     my ( $self, $c ) = @_;
 
     #my $term = $c->req->param('term_name');
-    my $db_name = $c->request->param('db_name');
+    my $db_names = $c->request->param('db_names');
     # trim and regularize whitespace
     #$term =~ s/(^\s+|\s+)$//g;
     #$term =~ s/\s+/ /g;
@@ -62,11 +62,11 @@ sub autocomplete_GET :Args(0) {
                JOIN dbxref USING (db_id ) JOIN cvterm USING (dbxref_id)
                JOIN cv USING (cv_id )
                LEFT JOIN cvtermsynonym USING (cvterm_id )
-               WHERE db.name = ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0 AND is_relationshiptype = 0
+               WHERE db.name = ANY(regexp_split_to_array(?, '\\s*,\\s*')) AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0 AND is_relationshiptype = 0
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name
 ORDER BY cv.name, cvterm.name limit 30";
     my $sth= $schema->storage->dbh->prepare($query);
-    $sth->execute($db_name, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
+    $sth->execute($db_names, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
     my @response_list;
     while (my ($cvterm_id, $cv_name, $cvterm_name, $accession) = $sth->fetchrow_array() ) {
         push @response_list, $cv_name . "--" . $accession . "--" . $cvterm_name ;
@@ -80,8 +80,7 @@ sub autocompleteslim_GET :Args(0) {
     my ( $self, $c ) = @_;
 
     #my $term = $c->req->param('term_name');
-    my $db_name = $c->request->param('db_name');
-    $db_name = '%'.$db_name.'%';
+    my $db_names = $c->request->param('db_names');
     # trim and regularize whitespace
     #$term =~ s/(^\s+|\s+)$//g;
     #$term =~ s/\s+/ /g;
@@ -93,11 +92,11 @@ sub autocompleteslim_GET :Args(0) {
                JOIN dbxref USING (db_id ) JOIN cvterm USING (dbxref_id)
                JOIN cv USING (cv_id )
                LEFT JOIN cvtermsynonym USING (cvterm_id )
-               WHERE db.name ilike ? AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0 AND is_relationshiptype = 0
+               WHERE db.name = ANY(regexp_split_to_array(?, '\\s*,\\s*')) AND (cvterm.name ilike ? OR cvtermsynonym.synonym ilike ? OR cvterm.definition ilike ?) AND cvterm.is_obsolete = 0 AND is_relationshiptype = 0
 GROUP BY cvterm.cvterm_id,cv.name, cvterm.name, dbxref.accession, db.name
 ORDER BY cv.name, cvterm.name limit 30";
     my $sth= $schema->storage->dbh->prepare($query);
-    $sth->execute($db_name, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
+    $sth->execute($db_names, "\%$term_name\%", "\%$term_name\%", "\%$term_name\%");
     my @response_list;
     while (my ($cvterm_id, $cv_name, $cvterm_name, $accession) = $sth->fetchrow_array() ) {
         push @response_list, $cvterm_name . "|" . $accession ;

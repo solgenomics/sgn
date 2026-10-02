@@ -20,7 +20,7 @@ use Moose;
 use Try::Tiny;
 use DateTime;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use File::Copy;
 use List::MoreUtils qw /any /;
 use SGN::View::ArrayElements qw/array_elements_simple_view/;
@@ -163,7 +163,7 @@ sub create_phenotype_spreadsheet_POST : Args(0) {
 
 sub _parse_list_from_json {
   my $list_json = shift;
-  my $json = new JSON;
+  my $json = JSON->new();
   if ($list_json) {
       #my $decoded_list = $json->allow_nonref->utf8->relaxed->escape_slash->loose->allow_singlequote->allow_barekey->decode($list_json);
       my $decoded_list = decode_json($list_json);

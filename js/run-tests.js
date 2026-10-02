@@ -51,10 +51,9 @@ test('Webpack Build '+Object.keys(webpackConfig.entry).join(", "), function (t) 
   // Run webpack
   webpack(webpackConfig).run((err,stats)=>{
     if(err) t.fail(err);
+    else if(stats.hasErrors()) t.fail(JSON.stringify(stats.toJson("errors-only")));
     else {
-      var st = JSON.stringify(stats.toJson("minimal"));
-      if(st.errors) t.fail(st);
-      t.pass(st);
+      t.pass(JSON.stringify(stats.toJson("minimal")));
       // Once the scripts build, we can run the rest of the tests.
       runTests(JSON.parse(fs.readFileSync(path.resolve(buildPath,'./mapping.json'))));
     }
@@ -86,6 +85,8 @@ function runTests(mapping){
     nock.disableNetConnect();
     // Polyfill JSDOM fetch using node-fetch
     dom.window.fetch = node_fetch;
+    // JSDOM doesn't implement SVG layout, so stub getBBox for code that measures SVG elements
+    dom.window.SVGElement.prototype.getBBox = () => ({ x: 0, y: 0, width: 0, height: 0 });
     // Ensure console.log/info/debug statements inside virtual DOM print to stderr
     // by replacing the default console with one which routes to stderr
     // This ensures "pure" tap stdout

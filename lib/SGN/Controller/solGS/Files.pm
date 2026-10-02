@@ -7,7 +7,7 @@ use File::Basename;
 use File::Copy;
 use File::Path qw / make_path /;
 use File::Temp qw / tempfile tempdir /;
-use File::Spec::Functions qw / catfile catdir/;
+use File::Spec;
 use File::Slurp qw /write_file read_file/;
 use Cache::File;
 use CXGN::People::Person;
@@ -747,7 +747,7 @@ sub template {
     $file =~ s/(^\/)//;
     my $dir = '/solgs';
 
-    return  catfile($dir, $file);
+    return  File::Spec->catfile($dir, $file);
 
 }
 
@@ -771,7 +771,7 @@ sub cache_file {
     no warnings 'uninitialized';
 
     unless (-s $file) { 
-        $file = catfile($cache_dir, $cache_data->{file});
+        $file = File::Spec->catfile($cache_dir, $cache_data->{file});
 
         if ($file !~ /(\.\w+)/) {
             my $ext = $cache_data->{ext};
@@ -795,13 +795,13 @@ sub cache_file {
 sub copy_to_tempfiles_subdir {
     my ($self, $c, $file, $dir_name) = @_;
 
-    my $tmp_dir      = catfile($c->config->{tempfiles_subdir}, $dir_name);
-    my $base_tmp_dir = catfile($c->config->{basepath}, $tmp_dir);
+    my $tmp_dir      = File::Spec->catfile($c->config->{tempfiles_subdir}, $dir_name);
+    my $base_tmp_dir = File::Spec->catfile($c->config->{basepath}, $tmp_dir);
 
     make_path($base_tmp_dir, { mode => oct('0755') });
 
     $self->copy_file($file, $base_tmp_dir);
-    $file = catfile($tmp_dir, basename($file));
+    $file = File::Spec->catfile($tmp_dir, basename($file));
 
     return $file;
 
@@ -948,7 +948,7 @@ sub copy_file {
     copy($file, $dir)
 	or die "could not copy $file to $dir";
 
-    return catfile($dir, basename($file));
+    return File::Spec->catfile($dir, basename($file));
 }
 
 
@@ -962,7 +962,7 @@ sub grep_file {
     close $dh;
 
     if ($file) {
-        $file = catfile($dir, $file);
+        $file = File::Spec->catfile($dir, $file);
     }
 
     return $file;
@@ -975,7 +975,7 @@ sub solgs_cache_dir {
         $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{model_id} || $c->stash->{pop_id};
     }
 
-    my $cache_dir = catdir($c->stash->{solgs_dir}, $pop_id, 'cache');
+    my $cache_dir = File::Spec->catdir($c->stash->{solgs_dir}, $pop_id, 'cache');
     make_path($cache_dir, { mode => oct('0755') });
 
     $c->stash->{solgs_cache_dir} = $cache_dir;
@@ -990,7 +990,7 @@ sub solgs_tempfiles_dir {
         $pop_id = $c->stash->{training_pop_id} || $c->stash->{combo_pops_id} || $c->stash->{pop_id};
     }
 
-    my $tempfiles_dir = catdir($c->stash->{solgs_dir}, $pop_id, 'tempfiles');
+    my $tempfiles_dir = File::Spec->catdir($c->stash->{solgs_dir}, $pop_id, 'tempfiles');
     make_path($tempfiles_dir, { mode => oct('0755') });
 
     $c->stash->{solgs_tempfiles_dir} = $tempfiles_dir;
@@ -1005,7 +1005,7 @@ sub get_solgs_dirs {
     $geno_version       = 'analysis-data' if ($geno_version =~ /undefined/) || !$geno_version;
     $geno_version       =~ s/\s+//g;
     my $cluster_shared_dir = $c->site_cluster_shared_dir;
-    $cluster_shared_dir = catdir($cluster_shared_dir, $geno_version);
+    $cluster_shared_dir = File::Spec->catdir($cluster_shared_dir, $geno_version);
 
     my @analysis_types = qw(
         solgs histogram anova
@@ -1015,17 +1015,17 @@ sub get_solgs_dirs {
     );
 
     for my $analysis_type (@analysis_types) {
-        my $analysis_dir = catdir($cluster_shared_dir, $analysis_type, 'trials');
+        my $analysis_dir = File::Spec->catdir($cluster_shared_dir, $analysis_type, 'trials');
 
         make_path($analysis_dir, { mode => oct('0755') });
         $c->stash->{"${analysis_type}_dir"} = $analysis_dir;
     }
 
-    my $analysis_log_dir = catdir($cluster_shared_dir, 'log');
-    #my $solgs_dir       = catdir($cluster_shared_dir, "solgs");
-    # my $solgs_temp_dir   = catdir($solgs_dir, 'tempfiles');
-    my $solgs_lists     = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'lists');
-    my $solgs_datasets  = catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'datasets');
+    my $analysis_log_dir = File::Spec->catdir($cluster_shared_dir, 'log');
+    #my $solgs_dir       = File::Spec->catdir($cluster_shared_dir, "solgs");
+    # my $solgs_temp_dir   = File::Spec->catdir($solgs_dir, 'tempfiles');
+    my $solgs_lists     = File::Spec->catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'lists');
+    my $solgs_datasets  = File::Spec->catdir($cluster_shared_dir, 'solgs', 'tempfiles', 'datasets');
 
     make_path(($solgs_lists, $solgs_datasets, $analysis_log_dir), { mode => oct('0755') });
     $c->stash->{solgs_lists_dir} = $solgs_lists;
