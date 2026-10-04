@@ -122,6 +122,11 @@ jQuery(document).ready(function() {
 
     jQuery('#repetitive_measurement_select_button').click(function(event) {
         event.preventDefault();
+        var end_date = jQuery('#repetitive_measurement_end_date').val();
+        if (!end_date) {
+            alert('Please select an end date to view repetitive measurements.');
+            return;
+        }
         jQuery('#working_modal').modal('show');
 
         if (!selectedTraitId) { 
@@ -130,7 +135,6 @@ jQuery(document).ready(function() {
 
         //console.log("check updated trait ID:", selectedTraitId);
         var repetitive_start_date = jQuery('#repetitive_measurement_start_date').val();
-        var end_date = jQuery('#repetitive_measurement_end_date').val();
         
         //add an extra day to make all the range inclusive !!!
         var repetitive_endDate = new Date(end_date);
