@@ -170,36 +170,22 @@ has 'alt_filename' => (
     is => 'rw'
 );
 
-=head2 comments()
-
-md_files.comment (comments portion)
-
-md_files.comment is stored as a single JSON string in the database that holds both
-the comments list and the tags hash described below. This accessor exposes just the
-comments half: a list of comment strings left on this file.
+=head2 comment()
 
 This accessor is read-only from outside the module: use add_comment() and
-clear_comments() to modify its contents. This prevents other modules from storing
+clear_comment() to modify its contents. This prevents other modules from storing
 arbitrary structures in this column; only a plain list of strings is allowed.
 
 =cut
 
-has 'comments' => (
-    isa => 'ArrayRef',
+has 'comment' => (
+    isa => 'Maybe[Str]',
     is => 'ro',
-    writer => '_set_comments',
+    writer => '_set_comment',
     default => sub { [] }
 );
 
 =head2 tags()
-
-md_files.comment (tags portion)
-
-md_files.comment is stored as a single JSON string in the database that holds both
-the comments list described above and the tags hash. This accessor exposes just the
-tags half: a hash of unique attribute tags applied to this file, keyed by tag name
-and pointing to 1 (e.g. tags => { tag_1 => 1 }), so that a given tag can only be
-applied to a file once.
 
 This accessor is read-only from outside the module: use add_tag(), clear_tags(),
 and delete_tag() to modify its contents. This prevents other modules from storing
@@ -320,10 +306,10 @@ sub BUILD {
     $self->user_id($file_rs->get_column('create_person_id'));
     $self->filetype($file_rs->get_column('filetype'));
 
-    my $comment_json = $file_rs->get_column('comment');
-    my $comment = $comment_json ? JSON::Any->decode($comment_json) : {};
-    $self->_set_comments($comment->{comments} || []);
-    $self->_set_tags($comment->{tags} || {});
+    my $tags_str = $file_rs->get_column('tags') || '';
+    my %tags = map {$_ => 1} split(",", $tags_str)
+    $self->_set_comment($file_rs->get_column('comment'));
+    $self->_set_tags(\%tags);
 
     $self->alt_filename($file_rs->get_column('alt_filename'));
     $self->md5checksum($file_rs->get_column('md5checksum'));
@@ -343,7 +329,8 @@ sub store {
             dirname => $self->dirname(),
             filetype => $self->filetype(),
             alt_filename => $self->alt_filename(),
-            comment => JSON::Any->encode({ comments => $self->comments(), tags => $self->tags() }),
+            comment => $self->comments(),
+            tags => join(',', keys(%{$self->tags()})),
             md5checksum => $self->md5checksum(),
             metadata_id => $self->metadata_id(),
             urlsource => $self->urlsource(),
@@ -370,18 +357,18 @@ sub set_file_type {
 
 =head2 add_comment($comment)
 
-Appends $comment (a string) to the list of comments stored on this file, and saves
+Appends $comment (a string) to the comment(s) stored on this file, and saves
 the change to the database.
 
 =cut
 
 sub add_comment {
     my $self = shift;
-    my $comment_text = shift;
+    my $new_comment = shift;
 
-    my $comments = $self->comments();
-    push @$comments, $comment_text;
-    $self->_set_comments($comments);
+    my $comment = $self->comment();
+    $comment .= "; $new_comment"
+    $self->_set_comments($comment);
     $self->store();
 }
 
@@ -411,14 +398,14 @@ to the database.
 NOTE: This function should be used sparingly, if at all. There are very few cases
 where deleting a comment is appropriate, and even fewer where deleting every
 comment on a file is appropriate. Prefer leaving the comment history intact unless
-you have a specific reason to purge it.
+you have a specific reason to delete it.
 
 =cut
 
 sub clear_comments {
     my $self = shift;
 
-    $self->_set_comments([]);
+    $self->_set_comments('');
     $self->store();
 }
 
@@ -495,10 +482,6 @@ sub delete_file {
     };
 }
 
-sub obsolete_file {
-    
-}
-
 =head1 CLASS METHODS
 
 =head2 get_user_archived_files($bcs_schema, $user_id)
@@ -515,7 +498,9 @@ sub get_user_archived_files {
     my $q = "SELECT file_id, basename, filetype, comment FROM metadata.md_files
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
-        WHERE sp_person_id=? AND basename != 'none'";
+        WHERE sp_person_id=? 
+        AND basename != 'none'
+        AND create_timestamp > NOW() - '3 months' :: interval";
 
     my $h = $schema->storage()->dbh()->prepare($q);
     $h->execute($user_id);
@@ -549,7 +534,8 @@ sub get_all_archived_files {
     my $q = "SELECT file_id, basename, sp_person_id, first_name, last_name, filetype, comment FROM metadata.md_files
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
-        WHERE basename != 'none'";
+        WHERE basename != 'none'
+        AND create_timestamp > NOW() - '3 months' :: interval";
 
     my $h = $schema->storage()->dbh()->prepare($q);
     $h->execute();

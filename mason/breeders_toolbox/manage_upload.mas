@@ -261,7 +261,7 @@ jQuery(document).ready(function(){
     jsMod["upload_factory"].load_archived_files_table('<% $sp_person_id %>');
     jsMod["upload_factory"].refresh_upload_tables('<% $sp_person_id %>');
 
-    setInterval(fire_refresh, 60000);
+    setInterval(fire_refresh, 120000);
 
     jQuery('#upload_factory_new_file_btn').click(function(event){
         event.preventDefault();
