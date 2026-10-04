@@ -48,10 +48,19 @@ foreach my $tz ('UTC', 'Europe/Kyiv', 'America/Los_Angeles', 'Pacific/Kiritimati
 
     is_deeply($r->{initial_dates}, ['2030-08-16', '2030-08-20'], "$tz: date filters start at the collect date range");
     is_deeply($r->{dates_after_slide}, ['2030-08-17', '2030-08-18'], "$tz: end date picked from the calendar is kept when the slider moves");
+    is_deeply($r->{submit}, {
+        error => undef, alerts => [], modal_actions => ['show'],
+        requests => [{ start => '2030-08-17', end => '2030-08-19' }],
+    }, "$tz: Submit starts the request for the selected range");
 }
 
 my $r = run_page('Europe/Kyiv', { trial_id => 1, start_date => undef, end_date => undef });
 is_deeply($r->{initial_dates}, ['', ''], 'no date filters for a trial without collect dates');
+is_deeply($r->{submit}, {
+    error => undef,
+    alerts => ['Please select an end date to view repetitive measurements.'],
+    modal_actions => [], requests => [],
+}, 'Submit without collect dates explains the missing date without opening a modal or making a request');
 
 done_testing();
 
@@ -73,6 +82,7 @@ const script = source.slice(source.lastIndexOf('<script>') + '<script>'.length, 
 
 const elements = {};
 const ajax_calls = [];
+const alerts = [];
 let ready;
 
 function Element() {
@@ -81,6 +91,7 @@ function Element() {
     this.picker = null;
     this.slider_options = null;
     this.slider_values = null;
+    this.modal_actions = [];
 }
 Element.prototype.val = function (value) {
     if (arguments.length) { this.value = value; return this; }
@@ -94,7 +105,11 @@ Element.prototype.on = function (event) {
 Element.prototype.change = function (handler) { return handler ? this.on('change', handler) : this.trigger('change'); };
 Element.prototype.click = function (handler) { return handler ? this.on('click', handler) : this.trigger('click'); };
 Element.prototype.trigger = function (event) {
-    (this.handlers[event] || []).forEach(handler => handler.call(this, {}));
+    (this.handlers[event] || []).forEach(handler => handler.call(this, { preventDefault: function () {} }));
+    return this;
+};
+Element.prototype.modal = function (action) {
+    this.modal_actions.push(action);
     return this;
 };
 Element.prototype.daterangepicker = function (options, callback) {
@@ -132,6 +147,7 @@ function jQuery(selector) {
 jQuery.ajax = function (options) {
     const request = {
         url: options.url,
+        data: options.data,
         done: function (handler) { request.done_handler = handler; return request; },
         fail: function () { return request; },
         then: function () { return request; },
@@ -152,6 +168,7 @@ function moment(day) {
 const document = {};
 vm.runInNewContext(script, {
     jQuery: jQuery, document: document, console: console,
+    alert: function (message) { alerts.push(message); },
 });
 
 ready();
@@ -173,5 +190,25 @@ if (slider.slider_options) {
 
     result.dates_after_slide = [start_date.val(), end_date.val()];
 }
+
+// Exercise the page's actual Submit handler after selecting a trait.
+jQuery('#selectRawDataTrait option:selected').val('1');
+const request_count = ajax_calls.length;
+let submit_error = null;
+try {
+    jQuery('#repetitive_measurement_select_button').trigger('click');
+}
+catch (error) {
+    submit_error = error.name;
+}
+result.submit = {
+    error: submit_error,
+    alerts: alerts,
+    modal_actions: jQuery('#working_modal').modal_actions,
+    requests: ajax_calls.slice(request_count).map(request => ({
+        start: request.data.observationTimeStampRangeStart,
+        end: request.data.observationTimeStampRangeEnd,
+    })),
+};
 
 console.log(JSON.stringify(result));
