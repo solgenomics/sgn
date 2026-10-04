@@ -471,7 +471,7 @@ sub get_path {
 
 Deletes the file and unlinks file in archive, but does not delete metadata row. 
 Useful for some uploads (like images) that don't need to be clogging the database 
-after they have been parsed.
+after they have been parsed. NOT ALWAYS SAFE! USE WISELY!
 
 =cut
 
@@ -493,6 +493,10 @@ sub delete_file {
     } catch {
         die "Error deleting file: $_";
     };
+}
+
+sub obsolete_file {
+    
 }
 
 =head1 CLASS METHODS
