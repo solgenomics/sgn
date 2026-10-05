@@ -1,17 +1,17 @@
 <& /page/page_title.mas, title => "Collection Search" &>
 
-<&| /page/info_section.mas, title=>"Folder Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "Search folders by name, description, creator, or associated project."&>
+<&| /page/info_section.mas, title=>"Collection Search Criteria",  collapsible => 1, collapsed=>0, subtitle => "Search collections by name, description, creator, or associated project."&>
 
     <div id="collection_search_form" class="well well-sm">
         <div class="form-horizontal" >
             <div class="form-group">
-                <label class="col-sm-6 control-label">Folder name: </label>
+                <label class="col-sm-6 control-label">Collection name: </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="collection_name" name="collection_name" placeholder="e.g. Field Photos 2026" />
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-6 control-label">Folder description: </label>
+                <label class="col-sm-6 control-label">Collection description: </label>
                 <div class="col-sm-6" >
                     <input class="form-control" type="text" id="collection_description" name="collection_description" placeholder="e.g. Gels from June extraction" />
                 </div>
@@ -38,7 +38,7 @@
                 <label class="col-sm-6 control-label">&nbsp;</label>
                 <div class="col-sm-6" >
                     <label style="font-weight:normal;">
-                        <input type="checkbox" id="collection_mine_only" /> Show only my folders
+                        <input type="checkbox" id="collection_mine_only" /> Show only my collections
                     </label>
                 </div>
             </div>
@@ -46,12 +46,12 @@
 
         <center>
         <button class="btn btn-primary" id="collection_search_submit" >Search</button>
-        <button class="btn btn-default" id="new_folder_button" >New Folder</button>
+        <button class="btn btn-default" id="new_folder_button" >New Collection</button>
         </center>
     </div>
 </&>
 
-<&| /page/info_section.mas, title=>"Folders",  collapsible => 1, collapsed=>0 &>
+<&| /page/info_section.mas, title=>"Collections",  collapsible => 1, collapsed=>0 &>
     <div class="well well-sm">
         <div class="panel panel-default">
             <div class="panel-body">
