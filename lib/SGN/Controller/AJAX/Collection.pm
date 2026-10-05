@@ -237,7 +237,7 @@ sub add_items_POST : Args(0) {
     my $ids  = $self->_item_ids($c);
     my $cobj = $self->_collection_object($c);
 
-    my $added = eval {
+    my $result = eval {
         $type eq 'image' ? $cobj->add_images($collection_id, $ids)
                          : $cobj->add_files($collection_id, $ids);
     };
@@ -248,10 +248,11 @@ sub add_items_POST : Args(0) {
     }
 
     $c->stash->{rest} = {
-        success     => 1,
-        items_added => $added,
-        image_count => scalar @{ $cobj->get_image_ids($collection_id) },
-        file_count  => scalar @{ $cobj->get_file_ids($collection_id) },
+        success        => 1,
+        items_added    => scalar @{ $result->{added_ids} },
+        duplicate_ids  => $result->{duplicate_ids},   # ids already in the folder, skipped
+        image_count    => scalar @{ $cobj->get_image_ids($collection_id) },
+        file_count     => scalar @{ $cobj->get_file_ids($collection_id) },
     };
 }
 

@@ -8,7 +8,7 @@ $user_can_modify => 0
 
 <& /util/import_javascript.mas, classes => ['jquery', 'thickbox', 'jquery.dataTables'] &>
 
-<& /page/page_title.mas, title => "Folder: " . $collection_name &>
+<& /page/page_title.mas, title => "Collection: " . $collection_name &>
 
 <&| /page/info_section.mas, title => "Folder Details", collapsible => 1, collapsed => 0 &>
   <table class="table table-bordered table-condensed">

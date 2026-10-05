@@ -402,13 +402,14 @@ sub _add_items {
     my ($self, $collection_id, $ids, $type) = @_;
     $self->_assert_exists($collection_id);
     my $clean = $self->_clean_ids($ids);
-    return 0 unless @$clean;
+    return { added_ids => [], duplicate_ids => [] } unless @$clean;
 
     my ($table, $column) = $type eq 'image'
         ? ('metadata.md_collection_image', 'image_id')
         : ('metadata.md_collection_file',  'file_id');
 
-    my $added = 0;
+    my (@added_ids, @duplicate_ids);
+
     $self->bcs_schema->txn_do(sub {
         my $next_rank_h = $self->_dbh->prepare(
             "SELECT COALESCE(max(rank), -1) + 1 FROM $table WHERE collection_id = ?"
@@ -423,13 +424,21 @@ sub _add_items {
         );
 
         foreach my $id (@$clean) {
-            $insert->execute($collection_id, $id, $next_rank++);
-            $added++;
+            my $rows = $insert->execute($collection_id, $id, $next_rank);
+            if ($rows && $rows > 0) {
+                push @added_ids, $id;
+                $next_rank++;
+            } else {
+                push @duplicate_ids, $id;
+            }
         }
     });
 
-    return $added;
+    return { added_ids => \@added_ids, duplicate_ids => \@duplicate_ids };
 }
+
+sub add_images { return $_[0]->_add_items($_[1], $_[2], 'image'); }
+sub add_files  { return $_[0]->_add_items($_[1], $_[2], 'file');  }
 
 sub _remove_items {
     my ($self, $collection_id, $ids, $type) = @_;
