@@ -41,6 +41,16 @@ has 'transformation_stock_id' => (
     is => 'rw',
 );
 
+has 'transformation_name' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
+has 'transformation_notes' => (
+    isa => 'Maybe[Str]',
+    is => 'rw',
+);
+
 has 'transformants' => (
     isa => 'ArrayRef|Undef',
     is => 'rw',
@@ -571,6 +581,48 @@ sub get_transformant_details {
 
     $self->transformants(\@transformant_details);
 }
+
+
+sub update_transformation_metadata {
+    my $self = shift;
+    my $schema = $self->schema();
+    my $dbh = $self->schema()->storage()->dbh();
+    my $transformation_stock_id = $self->transformation_stock_id();
+    my $new_transformation_name = $self->transformation_name();
+    my $new_transformation_notes = $self->transformation_notes();
+
+    eval {
+        if ($new_transformation_name) {
+            my $check_new_name_rs = $schema->resultset('Stock::Stock')->find({ 'uniquename' => $new_transformation_name});
+            if ($check_new_name_rs){
+                die "This new transformation ID already exists in the database. Please use another name.\n";
+            } else {
+                my $transformation_rs = $schema->resultset('Stock::Stock')->find({ 'stock_id' => $transformation_stock_id});
+                $transformation_rs->uniquename($new_transformation_name);
+                $transformation_rs->update();
+            }
+        }
+
+        my $transformation_notes_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'transformation_notes', 'stock_property')->cvterm_id();
+        if ($new_transformation_notes) {
+            my $notes_update = $schema->resultset('Stock::Stockprop')->update_or_create({
+                type_id=>$transformation_notes_cvterm_id,
+                stock_id=>$transformation_stock_id,
+                rank=>0,
+                value=>$new_transformation_notes
+            }),
+        };
+    };
+
+    if ($@) {
+        print STDERR "An error occurred while updating information for transformation stock id ".$transformation_stock_id."$@\n";
+        return $@;
+    } else {
+        return 0;
+    }
+
+}
+
 
 
 ###

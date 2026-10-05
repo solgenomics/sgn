@@ -213,6 +213,9 @@ sub upload_nirs_phenotypes {
     }
 
     my $output_csv_filepath = run_filter_aggregate($parsed_data);
+    if (!$output_csv_filepath) {
+        return;
+    }
 
     if ($mode eq 'verify') {
         verify_nirs_phenotypes($parser, $file_path, $output_csv_filepath);
@@ -306,6 +309,10 @@ sub run_filter_aggregate {
     my $cmd_s = "Rscript ".$basepath."/R/Nirs/nirs_upload_filter_aggregate.R '$filter_json_filepath' '$output_csv_filepath' '$output_raw_csv_filepath' '$output_plot_filepath' '$output_outliers_filepath' ";
     print STDERR $cmd_s;
     my $cmd_status = system($cmd_s);
+    if ($cmd_status != 0) {
+        abort("Error filtering and aggregating NIRS spectra (outlier detection failed).");
+        return;
+    }
 
     return $output_csv_filepath;
 }

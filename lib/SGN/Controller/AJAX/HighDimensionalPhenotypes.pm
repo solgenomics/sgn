@@ -7,7 +7,7 @@ use Data::Dumper;
 use Try::Tiny;
 use File::Temp qw | tempfile |;
 # use File::Slurp;
-use File::Spec qw | catfile|;
+use File::Spec;
 use File::Basename qw | basename |;
 use File::Copy;
 use CXGN::Dataset;

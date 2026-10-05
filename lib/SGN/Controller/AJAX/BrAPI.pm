@@ -3973,6 +3973,7 @@ sub observations_GET {
         seasonDbId => $clean_inputs->{seasonDbId},
         locationDbId => $clean_inputs->{locationDbId},
         studyDbId => $clean_inputs->{studyDbId},
+		trialDbId => $clean_inputs->{trialDbId},
         germplasmDbId => $clean_inputs->{germplasmDbId},
         programDbId => $clean_inputs->{programDbId},
         observationTimeStampRangeStart => $clean_inputs->{observationTimeStampRangeStart},

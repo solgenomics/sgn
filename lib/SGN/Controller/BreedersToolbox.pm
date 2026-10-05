@@ -17,7 +17,7 @@ use File::Temp;
 use CXGN::Trial::TrialLayout;
 use Try::Tiny;
 use File::Basename qw | basename dirname|;
-use File::Spec::Functions;
+use File::Spec;
 use CXGN::People::Roles;
 use CXGN::Trial::TrialLayout;
 use CXGN::Genotype::Search;
@@ -602,7 +602,7 @@ sub manage_phenotyping_download : Path("/breeders/phenotyping/download") Args(1)
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
     #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my $contents = read_file($file_destination);
     my $file_name = $file_row->basename;
@@ -618,7 +618,7 @@ sub manage_phenotyping_view : Path("/breeders/phenotyping/view") Args(1) {
 
     my $metadata_schema = $c->dbic_schema('CXGN::Metadata::Schema');
     my $file_row = $metadata_schema->resultset("MdFiles")->find({file_id => $file_id});
-    my $file_destination =  catfile($file_row->dirname, $file_row->basename);
+    my $file_destination =  File::Spec->catfile($file_row->dirname, $file_row->basename);
     #print STDERR "\n\n\nfile name:".$file_row->basename."\n";
     my @contents = ReadData ($file_destination);
     #print STDERR Dumper \@contents;

@@ -25,7 +25,7 @@ use DateTime;
 use File::Basename qw | basename dirname|;
 use File::Copy;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use File::Temp 'tempfile';
 use Digest::MD5;
 use List::MoreUtils qw /any /;

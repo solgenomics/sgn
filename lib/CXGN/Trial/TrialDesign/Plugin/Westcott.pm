@@ -71,7 +71,9 @@ sub create_design {
     $r_block->add_command('westcott<-as.matrix(westcott)');
     $r_block->run_block();
     $result_matrix = R::YapRI::Data::Matrix->read_rbase( $rbase,'r_block','westcott');
-    @plot_numbers = $result_matrix->get_column("plot.num");
+    my @colnames = @{$result_matrix->get_colnames() || []};
+    my $plot_col = (grep { $_ eq 'plot.num' } @colnames) ? 'plot.num' : 'plot';
+    @plot_numbers = $result_matrix->get_column($plot_col);
     @stock_names = $result_matrix->get_column("geno");
 
     my @vector_trt = (1..scalar(@stock_list));

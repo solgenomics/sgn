@@ -24,7 +24,7 @@ use Try::Tiny;
 use DateTime;
 use Date::Parse;
 use File::Slurp;
-use File::Spec::Functions;
+use File::Spec;
 use File::Copy;
 use Data::Dumper;
 use CXGN::Phenotypes::StorePhenotypes;
