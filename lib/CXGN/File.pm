@@ -307,7 +307,7 @@ sub BUILD {
     $self->filetype($file_rs->get_column('filetype'));
 
     my $tags_str = $file_rs->get_column('tags') || '';
-    my %tags = map {$_ => 1} split(",", $tags_str)
+    my %tags = map {$_ => 1} split(",", $tags_str);
     $self->_set_comment($file_rs->get_column('comment'));
     $self->_set_tags(\%tags);
 
@@ -367,7 +367,7 @@ sub add_comment {
     my $new_comment = shift;
 
     my $comment = $self->comment();
-    $comment .= "; $new_comment"
+    $comment .= "; $new_comment";
     $self->_set_comments($comment);
     $self->store();
 }
@@ -495,7 +495,7 @@ sub get_user_archived_files {
     my $schema = shift;
     my $user_id = shift;
 
-    my $q = "SELECT file_id, basename, filetype, comment FROM metadata.md_files
+    my $q = "SELECT file_id, basename, filetype, tags FROM metadata.md_files
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
         WHERE sp_person_id=? 
@@ -507,14 +507,14 @@ sub get_user_archived_files {
 
     my @data;
 
-    while (my ($file_id, $file_name, $filetype, $comment_json) = $h->fetchrow_array()){
+    while (my ($file_id, $file_name, $filetype, $tags) = $h->fetchrow_array()){
         $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
         push @data, {
             file_id => $file_id,
             timestamp => $+{TIMESTAMP},
             filename => $+{FILENAME},
             type => $filetype,
-            tags => _parse_tags_string($comment_json)
+            tags => $tags
         };
     }
 
@@ -531,7 +531,7 @@ sub get_all_archived_files {
     my $class = shift;
     my $schema = shift;
 
-    my $q = "SELECT file_id, basename, sp_person_id, first_name, last_name, filetype, comment FROM metadata.md_files
+    my $q = "SELECT file_id, basename, sp_person_id, first_name, last_name, filetype, tags FROM metadata.md_files
         JOIN metadata.md_metadata ON (md_files.metadata_id=md_metadata.metadata_id)
         JOIN sgn_people.sp_person ON (sp_person.sp_person_id=md_metadata.create_person_id)
         WHERE basename != 'none'
@@ -542,7 +542,7 @@ sub get_all_archived_files {
 
     my @data;
 
-    while (my ($file_id, $file_name, $user_id, $first_name, $last_name, $filetype, $comment_json) = $h->fetchrow_array()){
+    while (my ($file_id, $file_name, $user_id, $first_name, $last_name, $filetype, $tags) = $h->fetchrow_array()){
         $file_name =~ m/(?<TIMESTAMP>\d+-\d+-\d+_\d+:\d+:\d+)_(?<FILENAME>.*)$/;
         push @data, {
             file_id => $file_id,
@@ -551,31 +551,11 @@ sub get_all_archived_files {
             user_id => $user_id,
             user_name => "$first_name $last_name",
             type => $filetype,
-            tags => _parse_tags_string($comment_json)
+            tags => $tags
         };
     }
 
     return \@data;
-}
-
-=head2 _parse_tags_string($comment_json)
-
-Given the raw JSON string stored in a md_files row's comment column, returns
-a comma-separated string of the tags applied to that file (or an empty string
-if there are none). Used by get_user_archived_files and get_all_archived_files
-so callers don't need to know about the {comments=>[], tags=>{}} JSON shape.
-
-=cut
-
-sub _parse_tags_string {
-    my $comment_json = shift;
-
-    return '' unless $comment_json;
-
-    my $comment = JSON::Any->decode($comment_json);
-    my $tags = $comment->{tags} || {};
-
-    return join(', ', sort keys %$tags);
 }
 
 1;
