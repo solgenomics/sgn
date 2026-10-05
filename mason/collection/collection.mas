@@ -77,10 +77,10 @@
 <div class="modal fade" id="create_collection_dialog" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header"><h4 class="modal-title">New Folder</h4></div>
+      <div class="modal-header"><h4 class="modal-title">New Collection</h4></div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Folder name</label>
+          <label>Collection name</label>
           <input type="text" class="form-control" id="new_collection_name">
         </div>
         <div class="form-group">

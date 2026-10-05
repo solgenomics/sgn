@@ -10,7 +10,7 @@ $user_can_modify => 0
 
 <& /page/page_title.mas, title => "Collection: " . $collection_name &>
 
-<&| /page/info_section.mas, title => "Folder Details", collapsible => 1, collapsed => 0 &>
+<&| /page/info_section.mas, title => "Collection Details", collapsible => 1, collapsed => 0 &>
   <table class="table table-bordered table-condensed">
     <tr>
       <td style="width:25%;"><b>Name</b></td>
@@ -27,12 +27,12 @@ $user_can_modify => 0
   </table>
 
 % if ($user_can_modify) {
-  <button class="btn btn-default btn-sm" id="rename_collection_button">Rename folder</button>
-  <button class="btn btn-danger btn-sm" id="delete_collection_button">Delete folder</button>
+  <button class="btn btn-default btn-sm" id="rename_collection_button">Rename collection</button>
+  <button class="btn btn-danger btn-sm" id="delete_collection_button">Delete collection</button>
 % }
 </&>
 
-<&| /page/info_section.mas, title => "Images in this Folder", collapsible => 1, collapsed => 0 &>
+<&| /page/info_section.mas, title => "Images in this collection", collapsible => 1, collapsed => 0 &>
 
 % if ($user_can_modify) {
   <div style="margin-bottom:10px;">
@@ -40,7 +40,7 @@ $user_can_modify => 0
       <span class="glyphicon glyphicon-plus"></span> Add Images
     </button>
     <button class="btn btn-danger btn-sm" id="remove_selected_button">
-      Remove selected images from folder
+      Remove selected images from collection
     </button>
   </div>
 % }
@@ -64,7 +64,7 @@ $user_can_modify => 0
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal">&times;</button>
-        <h4 class="modal-title">Add Images to Folder</h4>
+        <h4 class="modal-title">Add Images to collection</h4>
       </div>
       <div class="modal-body">
 
@@ -162,7 +162,7 @@ jQuery(document).ready(function () {
             alert('Please select at least one image to remove.');
             return;
         }
-        if (!confirm('Remove ' + ids.length + ' image(s) from this folder? '
+        if (!confirm('Remove ' + ids.length + ' image(s) from this collection? '
                    + 'The images themselves are not deleted.')) {
             return;
         }
@@ -184,7 +184,7 @@ jQuery(document).ready(function () {
 
     jQuery('#rename_collection_button').click(function () {
         var current  = jQuery('#collection_name_display').text();
-        var new_name = prompt('New folder name:', current);
+        var new_name = prompt('New collection name:', current);
         if (new_name === null) { return; }
 
         jQuery.ajax({
@@ -195,12 +195,12 @@ jQuery(document).ready(function () {
                 if (response.error) { alert(response.error); return; }
                 location.reload();
             },
-            error: function () { alert('An error occurred renaming the folder.'); }
+            error: function () { alert('An error occurred renaming the collection.'); }
         });
     });
 
     jQuery('#delete_collection_button').click(function () {
-        if (!confirm('Delete this folder? The images in it are not deleted.')) { return; }
+        if (!confirm('Delete this collection? The images in it are not deleted.')) { return; }
         jQuery.ajax({
             url:  '/ajax/image_collection/delete',
             type: 'POST',
@@ -209,7 +209,7 @@ jQuery(document).ready(function () {
                 if (response.error) { alert(response.error); return; }
                 window.location.href = '/image/collections';
             },
-            error: function () { alert('An error occurred deleting the folder.'); }
+            error: function () { alert('An error occurred deleting the collection.'); }
         });
     });
 
@@ -316,7 +316,7 @@ jQuery(document).ready(function () {
 
                 jQuery('#add_images_to_collection_dialog').modal('hide');
 
-                // Refresh the folder's own image grid (from collection_images_table
+                // Refresh the collection's own image grid (from collection_images_table
                 // earlier in this file) and any visible counts.
                 if (jQuery.fn.DataTable.isDataTable('#collection_images_table')) {
                     jQuery('#collection_images_table').DataTable().ajax.reload(null, false);
@@ -324,7 +324,7 @@ jQuery(document).ready(function () {
                 jQuery(document).trigger('collection:contents_changed', [collection_id]);
             },
             error: function () {
-                alert('An error occurred adding images to this folder.');
+                alert('An error occurred adding images to this collection.');
             }
         });
     });
