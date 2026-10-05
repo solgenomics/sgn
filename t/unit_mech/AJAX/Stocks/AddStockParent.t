@@ -60,6 +60,7 @@ my $male_parent_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_pare
 my $relationships = $schema->resultset('Stock::StockRelationship')->search({ object_id => $child_id });
 is($relationships->search({ subject_id => $female_parent->stock_id(), type_id => $female_parent_type_id })->count(), 1, 'female parent is stored');
 is($relationships->search({ subject_id => $male_parent->stock_id(), type_id => $male_parent_type_id })->count(), 1, 'male parent is stored');
+is($relationships->search({ subject_id => $female_parent->stock_id(), type_id => $female_parent_type_id })->first()->value(), 'biparental', 'the requested cross type is stored with the female parent');
 is($relationships->count(), 2, 'failed requests store no relationship');
 
 # remove the relationships and the accession created by this test
