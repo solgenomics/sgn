@@ -52,13 +52,14 @@ sub patch {
 
 --- do your sql here
 CREATE TABLE metadata.md_collection (
-    collection_id  serial PRIMARY KEY,
-    name           varchar(255) NOT NULL,
-    description    text,
-    sp_person_id   bigint REFERENCES sgn_people.sp_person (sp_person_id),
-    create_date    timestamp without time zone DEFAULT now(),
-    modified_date  timestamp without time zone,
-    obsolete       boolean NOT NULL DEFAULT false
+    collection_id   serial PRIMARY KEY,
+    name            varchar(255) NOT NULL,
+    description     text,
+    collection_type varchar(32),
+    sp_person_id    bigint REFERENCES sgn_people.sp_person (sp_person_id),
+    create_date     timestamp without time zone DEFAULT now(),
+    modified_date   timestamp without time zone,
+    obsolete        boolean NOT NULL DEFAULT false
 );
 
 COMMENT ON TABLE metadata.md_collection IS
@@ -69,6 +70,9 @@ COMMENT ON TABLE metadata.md_collection IS
 -- single partial index cannot express across the project_md_collection join.
 CREATE INDEX md_collection_name_idx        ON metadata.md_collection (lower(name));
 CREATE INDEX md_collection_sp_person_idx   ON metadata.md_collection (sp_person_id);
+CREATE INDEX md_collection_type_idx        ON metadata.md_collection (collection_type);
+
+-- collection_type is nullable, no default: will be 'image' or  'file'
 
 CREATE TABLE metadata.md_collection_image (
     collection_image_id serial PRIMARY KEY,

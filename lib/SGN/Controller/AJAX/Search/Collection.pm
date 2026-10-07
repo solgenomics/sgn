@@ -22,6 +22,58 @@ __PACKAGE__->config(
 
 sub collection_search : Path('/ajax/search/collections') : ActionClass('REST') { }
 
+sub collection_tree_search : Path('/ajax/search/collections/tree') : ActionClass('REST') { }
+
+sub collection_tree_search_GET : Args(0) {
+    my ($self, $c) = @_;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado', $sp_person_id);
+
+    my $collection_search = CXGN::Collection::Search->new({
+        bcs_schema           => $schema,
+        collection_type_list => [_split_param_list($c->req->param('collection_type'))],
+    });
+
+    my (undef, $groups) = eval { $collection_search->search_grouped_by_program() };
+    if ($@) {
+        my $e = $@; chomp $e;
+        $c->stash->{rest} = { error => "Search failed: $e" };
+        $c->detach();
+    }
+
+    my $is_curator = $c->user() ? $c->user->check_roles('curator') : 0;
+    my $tag_can_modify = sub {
+        foreach my $row (@{ $_[0] }) {
+            if ($row->{collections}) {
+                foreach my $col (@{ $row->{collections} }) {
+                    $col->{user_can_modify} =
+                        ($is_curator || (defined $sp_person_id
+                                         && defined $col->{sp_person_id}
+                                         && $col->{sp_person_id} == $sp_person_id)) ? 1 : 0;
+                }
+            }
+        }
+    };
+    $tag_can_modify->($groups->{programs});
+    $tag_can_modify->($groups->{no_program});
+    foreach my $row (@{ $groups->{standalone} }) {
+        $row->{user_can_modify} =
+            ($is_curator || (defined $sp_person_id
+                             && defined $row->{sp_person_id}
+                             && $row->{sp_person_id} == $sp_person_id)) ? 1 : 0;
+    }
+
+    $c->stash->{rest} = $groups;
+}
+
+# Accepts repeated params, a comma string, or a single value; returns a list.
+sub _split_param_list {
+    my ($raw) = @_;
+    return () unless defined $raw && length $raw;
+    return ref($raw) eq 'ARRAY' ? map { split /,/, $_ } @$raw : split /,/, $raw;
+}
+
 sub collection_search_POST : Args(0) {
     my ($self, $c) = @_;
 

@@ -37,6 +37,7 @@ use warnings;
 use Moose;
 use Try::Tiny;
 use Data::Dumper;
+use SGN::Model::Cvterm;
 
 has 'bcs_schema' => (
     isa      => 'Bio::Chado::Schema',
@@ -72,6 +73,38 @@ sub _clean_name {
     die "Folder names must be $MAX_NAME_LENGTH characters or fewer.\n"
         if length($name) > $MAX_NAME_LENGTH;
     return $name;
+}
+
+# Valid values match the collection_type filter in get_collections. Undef or
+# empty string yields undef (stored as NULL) for programmatic callers.
+sub _clean_collection_type {
+    my ($self, $type) = @_;
+    return undef unless defined $type && length $type;
+    $type =~ s/^\s+|\s+$//g;
+    unless ($type =~ /^(image|file|mixed)$/) {
+        die "collection_type must be image, file, or mixed.\n";
+    }
+    return $type;
+}
+
+# Confirms the project is a breeding program (carries the breeding_program
+# projectprop) and returns its id, or dies.
+sub _assert_breeding_program_id {
+    my ($self, $project_id) = @_;
+    die "breeding_program_id must be numeric.\n"
+        unless defined $project_id && $project_id =~ /^\d+$/;
+
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row(
+        $self->bcs_schema, 'breeding_program', 'project_property'
+    )->cvterm_id();
+
+    my $h = $self->_dbh->prepare(
+        "SELECT 1 FROM projectprop WHERE project_id = ? AND type_id = ?"
+    );
+    $h->execute($project_id, $cvterm_id);
+    my ($found) = $h->fetchrow_array();
+    die "Project $project_id is not a breeding program.\n" unless $found;
+    return 1;
 }
 
 sub _clean_ids {
@@ -146,13 +179,15 @@ sub _assert_exists {
 
 sub create_collection {
     my ($self, $args) = @_;
-    my $name       = $self->_clean_name($args->{name});
-    my $project_id = $args->{project_id};
+    my $name            = $self->_clean_name($args->{name});
+    my $project_id      = $args->{project_id};
+    my $collection_type = $self->_clean_collection_type($args->{collection_type});
 
-    #if (defined $project_id && $project_id !~ /^\d+$/) {
-     #   return "project_id must be numeric";
-    #};
-
+    my $program_id;
+    if (defined $args->{breeding_program_id} && length $args->{breeding_program_id}) {
+        $program_id = $args->{breeding_program_id};
+        $self->_assert_breeding_program_id($program_id);
+    }
 
     $self->_assert_name_available($name, $project_id);
 
@@ -160,18 +195,26 @@ sub create_collection {
     $self->bcs_schema->txn_do(sub {
         my $h = $self->_dbh->prepare(
             "INSERT INTO metadata.md_collection
-                    (name, description, sp_person_id, obsolete)
-             VALUES (?, ?, ?, 'f')
+                    (name, description, collection_type, sp_person_id, obsolete)
+             VALUES (?, ?, ?, ?, 'f')
              RETURNING collection_id"
         );
-        $h->execute($name, $args->{description}, $args->{sp_person_id});
+        $h->execute($name, $args->{description}, $collection_type, $args->{sp_person_id});
         ($collection_id) = $h->fetchrow_array();
 
-        if ($project_id) {
-            $self->_dbh->prepare(
-                "INSERT INTO phenome.project_md_collection (project_id, collection_id)
-                 VALUES (?, ?)"
-            )->execute($project_id, $collection_id);
+        # A breeding program is itself a project row, so attaching one uses
+        # the same project_md_collection scope as a trial. A collection may
+        # be scoped to a program and to trials within it.
+        my %project_links;
+        $project_links{$project_id} = 1 if $project_id;
+        $project_links{$program_id} = 1 if $program_id;
+
+        my $link_h = $self->_dbh->prepare(
+            "INSERT INTO phenome.project_md_collection (project_id, collection_id)
+             VALUES (?, ?)"
+        );
+        foreach my $pid (keys %project_links) {
+            $link_h->execute($pid, $collection_id);
         }
     });
 
@@ -185,8 +228,8 @@ sub get_collection {
     return undef unless defined $collection_id && $collection_id =~ /^\d+$/;
 
     my $h = $self->_dbh->prepare(
-        "SELECT c.collection_id, c.name, c.description, c.sp_person_id,
-                person.username,
+        "SELECT c.collection_id, c.name, c.description, c.collection_type,
+                c.sp_person_id, person.username,
                 to_char(c.create_date,   'YYYY-MM-DD') AS create_date,
                 to_char(c.modified_date, 'YYYY-MM-DD') AS modified_date
            FROM metadata.md_collection AS c
@@ -250,8 +293,8 @@ sub get_collections {
     # Counts come from correlated subqueries rather than joins: two LEFT JOINs
     # onto the membership tables would multiply rows and inflate both counts.
     my $h = $self->_dbh->prepare(
-        "SELECT c.collection_id, c.name, c.description, c.sp_person_id,
-                person.username,
+        "SELECT c.collection_id, c.name, c.description, c.collection_type,
+                c.sp_person_id, person.username,
                 to_char(c.create_date,   'YYYY-MM-DD') AS create_date,
                 to_char(c.modified_date, 'YYYY-MM-DD') AS modified_date,
                 (SELECT count(*)
@@ -458,8 +501,6 @@ sub _remove_items {
     return ($removed && $removed =~ /^\d+$/) ? $removed : 0;
 }
 
-sub add_images    { return $_[0]->_add_items($_[1], $_[2], 'image'); }
-sub add_files     { return $_[0]->_add_items($_[1], $_[2], 'file');  }
 sub remove_images { return $_[0]->_remove_items($_[1], $_[2], 'image'); }
 sub remove_files  { return $_[0]->_remove_items($_[1], $_[2], 'file');  }
 
@@ -564,6 +605,88 @@ sub _collections_for_item {
     my @out;
     while (my $row = $h->fetchrow_hashref()) { push @out, { %$row }; }
     return \@out;
+}
+
+=head2 get_collections_for_trial
+
+ Args: { trial_id => $id, collection_type => 'image'|'file'|'mixed' }
+
+Returns collections holding at least one live image associated with the
+trial, matching the same link semantics the trial page's image table uses:
+an image is "in" the trial when it is attached to one of the trial's stocks
+(phenome.stock_image) or directly to the trial (phenome.project_md_image).
+
+Each row carries n_trial_images, the number of trial images in the
+collection.
+
+=cut
+
+sub get_collections_for_trial {
+    my ($self, $args) = @_;
+    $args ||= {};
+    my $trial_id = $args->{trial_id};
+    die "A valid trial_id is required.\n"
+        unless defined $trial_id && $trial_id =~ /^\d+$/;
+
+    my @where = ("c.obsolete = 'f'");
+
+    # Images linked to the trial through any of its stocks...
+    my $trial_images_sql = "
+        SELECT si.image_id
+          FROM phenome.stock_image AS si
+          JOIN metadata.md_image AS i ON (i.image_id = si.image_id)
+          JOIN stock AS s ON (s.stock_id = si.stock_id)
+          JOIN nd_experiment_stock AS nes ON (nes.stock_id = s.stock_id)
+          JOIN nd_experiment AS ne ON (ne.nd_experiment_id = nes.nd_experiment_id)
+          JOIN nd_experiment_project AS nep ON (nep.nd_experiment_id = ne.nd_experiment_id)
+         WHERE nep.project_id = ? AND i.obsolete = 'f'
+    ";
+    my @vals = ($trial_id);
+
+    # ...or linked to the trial directly.
+    $trial_images_sql .= "
+        UNION
+        SELECT pmi.image_id
+          FROM phenome.project_md_image AS pmi
+          JOIN metadata.md_image AS i ON (i.image_id = pmi.image_id)
+         WHERE pmi.project_id = ? AND i.obsolete = 'f'
+    ";
+    push @vals, $trial_id;
+
+    if (my $type = $args->{collection_type}) {
+        die "collection_type must be image, file, or mixed.\n"
+            unless $type =~ /^(image|file|mixed)$/;
+        # NULL-type (legacy/untyped) collections are never excluded: they
+        # predate the column, so they can't be mislabeled.
+        push @where, "(c.collection_type = ? OR c.collection_type IS NULL)";
+        push @vals, $type;
+    }
+
+    my $where = join(' AND ', @where);
+
+    my $h = $self->_dbh->prepare("
+        SELECT c.collection_id, c.name, c.description, c.collection_type,
+               c.sp_person_id, person.username,
+               to_char(c.create_date,   'YYYY-MM-DD') AS create_date,
+               to_char(c.modified_date, 'YYYY-MM-DD') AS modified_date,
+               count(ci.image_id) AS n_trial_images
+          FROM metadata.md_collection AS c
+          JOIN metadata.md_collection_image AS ci
+            ON (ci.collection_id = c.collection_id)
+          JOIN ($trial_images_sql) AS trial_images
+            ON (trial_images.image_id = ci.image_id)
+          LEFT JOIN sgn_people.sp_person AS person
+            ON (person.sp_person_id = c.sp_person_id)
+         WHERE $where
+         GROUP BY c.collection_id, c.name, c.description, c.collection_type,
+                  c.sp_person_id, person.username, c.create_date, c.modified_date
+         ORDER BY lower(c.name)
+    ");
+    $h->execute(@vals);
+
+    my @collections;
+    while (my $row = $h->fetchrow_hashref()) { push @collections, { %$row }; }
+    return \@collections;
 }
 
 1;

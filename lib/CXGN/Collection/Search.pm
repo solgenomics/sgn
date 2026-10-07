@@ -55,6 +55,7 @@ use Moose;
 use Try::Tiny;
 use Data::Dumper;
 use JSON;
+use SGN::Model::Cvterm;
 use CXGN::Collection;   # for $FILE_OBSOLETE_SQL / $FILE_LABEL_COLUMN
 
 has 'bcs_schema' => (
@@ -139,6 +140,11 @@ has 'project_names_exact' => (
     default => 0,
 );
 
+has 'collection_type_list' => (
+    isa => 'ArrayRef[Str]|Undef',
+    is  => 'rw',
+);
+
 # Only collections with no project scoping at all.
 has 'standalone_only' => (
     isa     => 'Bool|Undef',
@@ -179,6 +185,7 @@ sub search {
     my $project_id_list               = $self->project_id_list;
     my $project_name_list             = $self->project_name_list;
     my $project_names_exact           = $self->project_names_exact;
+    my $collection_type_list          = $self->collection_type_list;
     my $standalone_only               = $self->standalone_only;
     my $include_obsolete_collections  = $self->include_obsolete_collections;
 
@@ -306,6 +313,12 @@ sub search {
                           WHERE standalone_pc.collection_id = collection.collection_id)";
     }
 
+    if ($collection_type_list && scalar(@$collection_type_list) > 0) {
+        my $placeholders = join(",", ("?") x scalar(@$collection_type_list));
+        push @where_clause, "collection.collection_type in ($placeholders)";
+        push @question_mark_values, @$collection_type_list;
+    }
+
     if (!$include_obsolete_collections) {
         push @where_clause, "collection.obsolete = 'f'";
     }
@@ -326,6 +339,7 @@ sub search {
     my $file_label_column = $CXGN::Collection::FILE_LABEL_COLUMN;
 
     my $q = "SELECT collection.collection_id, collection.name, collection.description,
+        collection.collection_type,
         collection.sp_person_id, creator.username,
         to_char (collection.create_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD') as create_date,
         to_char (collection.modified_date::timestamp at time zone current_setting('TIMEZONE'), 'YYYY-MM-DD') as modified_date,
@@ -362,13 +376,15 @@ sub search {
 
     my @result;
     my $total_count = 0;
-    while (my ($collection_id, $name, $description, $sp_person_id, $username,
+    while (my ($collection_id, $name, $description, $collection_type,
+               $sp_person_id, $username,
                $create_date, $modified_date, $image_count, $file_count,
                $projects_json, $full_count) = $h->fetchrow_array()) {
         push @result, {
             collection_id  => $collection_id,
             name           => $name,
             description    => $description,
+            collection_type => $collection_type,
             sp_person_id   => $sp_person_id,
             username       => $username,
             create_date    => $create_date,
@@ -381,6 +397,218 @@ sub search {
     }
 
     return (\@result, $total_count);
+}
+
+=head2 search_grouped_by_program()
+
+ Returns ( undef, $groups ) where $groups is:
+
+ {
+   programs => [
+     { program_id, program_name, projects => [
+         { project_id, project_name, collections => [ <collection rows> ] }
+     ] }
+   ],
+   no_program => [ { project_id, project_name, collections => [...] } ],
+   standalone => [ <collection rows> ],
+ }
+
+ A project maps to its breeding program via project_relationship; a project
+ that IS a breeding program (direct attach) maps to itself. Projects with no
+ program land in no_program; collections with no project land in standalone.
+
+=cut
+
+sub search_grouped_by_program {
+    my $self = shift;
+    my $schema = $self->bcs_schema();
+
+    my $collection_type_list = $self->collection_type_list;
+
+    my @where_clause = ("collection.obsolete = 'f'");
+    my @question_mark_values;
+
+    if ($collection_type_list && scalar(@$collection_type_list) > 0) {
+        my $placeholders = join(",", ("?") x scalar(@$collection_type_list));
+        push @where_clause, "collection.collection_type in ($placeholders)";
+        push @question_mark_values, @$collection_type_list;
+    }
+
+    my $where_clause = " WHERE " . (join(" AND ", @where_clause));
+
+    my $file_obsolete_sql = $CXGN::Collection::FILE_OBSOLETE_SQL;
+
+    # Each (collection, project) pair becomes one row: program_id is that
+    # project's breeding program (the project itself when it IS a program),
+    # NULL when the project has none; collections with no project scope get a
+    # single all-NULL row via the LEFT JOINs.
+    my $bp_rel_cvterm_sql =
+        "(SELECT cvterm_id FROM cvterm JOIN cv USING(cv_id)
+          WHERE cv.name = 'project_relationship'
+            AND cvterm.name = 'breeding_program_trial_relationship')";
+    my $q = "SELECT collection.collection_id, collection.name, collection.description,
+        collection.collection_type,
+        collection.sp_person_id, creator.username,
+        to_char (collection.create_date, 'YYYY-MM-DD') as create_date,
+        to_char (collection.modified_date, 'YYYY-MM-DD') as modified_date,
+        (SELECT count(*)
+           FROM metadata.md_collection_image AS ci
+           JOIN metadata.md_image AS i ON (i.image_id = ci.image_id)
+          WHERE ci.collection_id = collection.collection_id
+            AND i.obsolete = 'f') AS image_count,
+        (SELECT count(*)
+           FROM metadata.md_collection_file AS cf
+           JOIN metadata.md_files AS files ON (files.file_id = cf.file_id)
+           LEFT JOIN metadata.md_metadata AS file_metadata
+                  ON (file_metadata.metadata_id = files.metadata_id)
+          WHERE cf.collection_id = collection.collection_id
+            AND $file_obsolete_sql) AS file_count,
+        COALESCE(
+            (SELECT json_agg(json_build_object('project_id', proj.project_id, 'name', proj.name))
+               FROM phenome.project_md_collection AS pc
+               JOIN project AS proj ON (proj.project_id = pc.project_id)
+              WHERE pc.collection_id = collection.collection_id),
+            '[]'
+        ) AS projects_json,
+        proj.project_id AS linked_project_id,
+        proj.name AS linked_project_name,
+        COALESCE(pr.object_project_id, proj.project_id) AS program_id,
+        COALESCE(bp.name, proj.name) AS program_name
+        FROM metadata.md_collection AS collection
+        LEFT JOIN sgn_people.sp_person AS creator ON (creator.sp_person_id = collection.sp_person_id)
+        LEFT JOIN phenome.project_md_collection AS pc
+               ON (pc.collection_id = collection.collection_id)
+        LEFT JOIN project AS proj ON (proj.project_id = pc.project_id)
+        LEFT JOIN project_relationship AS pr
+               ON (pr.subject_project_id = proj.project_id
+                   AND pr.type_id = $bp_rel_cvterm_sql)
+        LEFT JOIN project AS bp ON (bp.project_id = pr.object_project_id)
+        $where_clause
+        ORDER BY collection.collection_id
+    ";
+
+    my $h = $schema->storage->dbh()->prepare($q);
+    $h->execute(@question_mark_values);
+
+    my $cvterm_id = SGN::Model::Cvterm->get_cvterm_row(
+        $schema, 'breeding_program', 'project_property'
+    )->cvterm_id();
+    my %is_program;
+    my $prop_h = $schema->storage->dbh()->prepare(
+        "SELECT project_id FROM projectprop WHERE type_id = ?"
+    );
+    $prop_h->execute($cvterm_id);
+    while (my ($pid) = $prop_h->fetchrow_array()) { $is_program{$pid} = 1; }
+
+    my %collection_by_id;
+    my %programs;
+    my %program_order;
+    my %projects_in_program;
+    my @no_program;
+    my %project_in_no_program;
+    my @standalone;
+    my %pushed;   # "$cid:$where" guards so a collection appears once per branch
+
+    my $add_collection_row = sub {
+        my ($row) = @_;
+        my $projects = decode_json($row->{projects_json});
+        # Projects that are breeding programs themselves are shown as tree
+        # parents, not as trial links on the collection row.
+        @$projects = grep { !$is_program{ $_->{project_id} } } @$projects;
+        return {
+            collection_id   => $row->{collection_id},
+            name            => $row->{name},
+            description     => $row->{description},
+            collection_type => $row->{collection_type},
+            sp_person_id    => $row->{sp_person_id},
+            username        => $row->{username},
+            create_date     => $row->{create_date},
+            modified_date   => $row->{modified_date},
+            image_count     => $row->{image_count},
+            file_count      => $row->{file_count},
+            projects        => $projects,
+        };
+    };
+
+    while (my $row = $h->fetchrow_hashref()) {
+        my $cid = $row->{collection_id};
+
+        my $base = $collection_by_id{$cid}
+            ||= $add_collection_row->($row);
+
+        my $linked_project_id = $row->{linked_project_id};
+
+        if (!defined $linked_project_id) {
+            push @standalone, $base unless $pushed{"$cid:standalone"}++;
+            next;
+        }
+
+        # Direct program attach: hang the collection straight off the
+        # program node, no intermediate project node.
+        if ($is_program{$linked_project_id}) {
+            my $program = ($programs{ $row->{program_id} } ||= {
+                program_id   => $row->{program_id},
+                program_name => $row->{program_name},
+                projects     => [],
+                collections  => [],
+            });
+            $program_order{ $row->{program_id} } ||= scalar(keys %program_order) + 1;
+            push @{ $program->{collections} }, $base unless $pushed{"$cid:program"}++;
+            next;
+        }
+
+        my $program_id = $row->{program_id};
+
+        if (!defined $program_id) {
+            unless ($project_in_no_program{$linked_project_id}++) {
+                push @no_program, {
+                    project_id   => $linked_project_id,
+                    project_name => $row->{linked_project_name},
+                    collections  => [],
+                };
+            }
+            push @{ $no_program[-1]->{collections} }, $base
+                unless $pushed{"$cid:noprogram"}++;
+            next;
+        }
+
+        my $program = ($programs{$program_id} ||= {
+            program_id   => $program_id,
+            program_name => $row->{program_name},
+            projects     => [],
+            collections  => [],
+        });
+        $program_order{$program_id} ||= scalar(keys %program_order) + 1;
+
+        my $project_key = $program_id . ':' . $linked_project_id;
+        my $project_entry;
+        if (exists $projects_in_program{$project_key}) {
+            $project_entry = $projects_in_program{$project_key};
+        }
+        else {
+            $project_entry = {
+                project_id   => $linked_project_id,
+                project_name => $row->{linked_project_name},
+                collections  => [],
+            };
+            $projects_in_program{$project_key} = $project_entry;
+            push @{ $program->{projects} }, $project_entry;
+        }
+        push @{ $project_entry->{collections} }, $base
+            unless $pushed{"$cid:$project_key"}++;
+    }
+
+    my @programs_sorted = map { $programs{$_} }
+        sort { $program_order{$a} <=> $program_order{$b} || $a <=> $b }
+        keys %program_order;
+
+    my $groups = {
+        programs   => \@programs_sorted,
+        no_program => \@no_program,
+        standalone => \@standalone,
+    };
+
+    return (undef, $groups);
 }
 
 1;

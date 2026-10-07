@@ -54,12 +54,12 @@ sub _require_edit_privileges {
     my $cobj = $self->_collection_object($c);
     my $collection = $cobj->get_collection($collection_id);
     unless ($collection) {
-        $c->stash->{rest} = { error => "Folder was not found." };
+        $c->stash->{rest} = { error => "collection was not found." };
         $c->detach();
     }
     unless ($self->_can_modify($c, $collection)) {
         $c->stash->{rest} = {
-            error => "Only the folder's creator or a curator can modify it."
+            error => "Only the collection's creator or a curator can modify it."
         };
         $c->detach();
     }
@@ -106,7 +106,7 @@ sub _item_type {
     return $type;
 }
 
-# ------------------------------------------------------------------- list
+# list
 
 sub collections : Path('/ajax/collection/list') : ActionClass('REST') { }
 
@@ -125,6 +125,9 @@ sub collections_GET : Args(0) {
     elsif ($c->req->param('standalone_only')) {
         $args{standalone_only} = 1;
     }
+    if (my $collection_type = $c->req->param('collection_type')) {
+        $args{collection_type} = $collection_type;
+    }
     if ($c->req->param('mine_only') && $c->user()) {
         $args{sp_person_id} = $c->user->get_object()->get_sp_person_id();
     }
@@ -137,7 +140,7 @@ sub collections_GET : Args(0) {
     $c->stash->{rest} = { success => 1, collections => $collections };
 }
 
-# --------------------------------------------------------------- contents
+#  contents
 
 sub contents : Path('/ajax/collection/contents') : ActionClass('REST') { }
 
@@ -148,7 +151,7 @@ sub contents_GET : Args(0) {
 
     my $collection = $cobj->get_collection($collection_id);
     unless ($collection) {
-        $c->stash->{rest} = { error => "Folder was not found.", contents => [] };
+        $c->stash->{rest} = { error => "collection was not found.", contents => [] };
         $c->detach();
     }
 
@@ -160,7 +163,7 @@ sub contents_GET : Args(0) {
     };
 }
 
-# ----------------------------------------------------------------- create
+#  create
 
 sub create : Path('/ajax/collection/create') : ActionClass('REST') { }
 
@@ -173,13 +176,34 @@ sub create_POST : Args(0) {
         $cobj->create_collection({
             name         => $c->req->param('name'),
             description  => $c->req->param('description'),
-            #project_id   => $c->req->param('project_id'),
+            collection_type => $c->req->param('collection_type'),
             sp_person_id => $user_id,
         });
     };
     if ($@) { my $e = $@; chomp $e; $c->stash->{rest} = { error => $e }; $c->detach(); }
 
-    # Optionally seed the new folder in the same request.
+    # Optional breeding program scoping, attached after the collection exists.
+    my $bp_id = $c->req->param('breeding_program_id');
+    if (defined $bp_id && length $bp_id) {
+        unless ($bp_id =~ /^\d+$/) {
+            $c->stash->{rest} = {
+                error => "Collection created, but breeding_program_id must be numeric.",
+                collection_id => $collection_id,
+            };
+            $c->detach();
+        }
+        eval { $cobj->attach_to_project($collection_id, $bp_id) };
+        if ($@) {
+            my $e = $@; chomp $e;
+            $c->stash->{rest} = {
+                error => "collection created, but it could not be linked to the breeding program: $e",
+                collection_id => $collection_id,
+            };
+            $c->detach();
+        }
+    }
+
+    # Optionally seed the new collection in the same request.
     my $added = 0;
     if ($c->req->param('item_ids') || $c->req->param('item_ids_json')) {
         my $type = $self->_item_type($c);
@@ -191,7 +215,7 @@ sub create_POST : Args(0) {
         if ($@) {
             my $e = $@; chomp $e;
             $c->stash->{rest} = {
-                error => "Folder created, but items could not be added: $e",
+                error => "collection created, but items could not be added: $e",
                 collection_id => $collection_id,
             };
             $c->detach();
@@ -205,7 +229,7 @@ sub create_POST : Args(0) {
     };
 }
 
-# ----------------------------------------------------------------- rename
+# rename
 
 sub rename : Path('/ajax/collection/rename') : ActionClass('REST') { }
 
@@ -224,7 +248,7 @@ sub rename_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
-# ---------------------------------------------------------- add / remove
+# add / remove
 
 sub add_items : Path('/ajax/collection/add_items') : ActionClass('REST') { }
 
@@ -250,7 +274,7 @@ sub add_items_POST : Args(0) {
     $c->stash->{rest} = {
         success        => 1,
         items_added    => scalar @{ $result->{added_ids} },
-        duplicate_ids  => $result->{duplicate_ids},   # ids already in the folder, skipped
+        duplicate_ids  => $result->{duplicate_ids},   # ids already in the collection, skipped
         image_count    => scalar @{ $cobj->get_image_ids($collection_id) },
         file_count     => scalar @{ $cobj->get_file_ids($collection_id) },
     };
@@ -285,7 +309,7 @@ sub remove_items_POST : Args(0) {
     };
 }
 
-# ------------------------------------------------------------------ order
+# order
 
 sub set_order : Path('/ajax/collection/set_order') : ActionClass('REST') { }
 
@@ -304,7 +328,7 @@ sub set_order_POST : Args(0) {
     $c->stash->{rest} = { success => 1, items_ordered => $count };
 }
 
-# ----------------------------------------------------------------- delete
+# delete
 
 sub delete_collection : Path('/ajax/collection/delete') : ActionClass('REST') { }
 
@@ -320,7 +344,7 @@ sub delete_collection_POST : Args(0) {
     $c->stash->{rest} = { success => 1 };
 }
 
-# ------------------------------------------------- folders for one item
+# collections for one item
 
 sub for_item : Path('/ajax/collection/for_item') : ActionClass('REST') { }
 
@@ -340,6 +364,38 @@ sub for_item_GET : Args(0) {
             ? $cobj->get_collections_for_image($item_id)
             : $cobj->get_collections_for_file($item_id),
     };
+}
+
+# collections for one trial
+
+sub for_trial : Path('/ajax/collection/for_trial') : ActionClass('REST') { }
+
+sub for_trial_GET : Args(0) {
+    my ($self, $c) = @_;
+    my $trial_id = $c->req->param('trial_id');
+    unless (defined $trial_id && $trial_id =~ /^\d+$/) {
+        $c->stash->{rest} = { error => "A valid trial_id is required." };
+        $c->detach();
+    }
+
+    my $cobj = $self->_collection_object($c);
+    my $collections = eval {
+        $cobj->get_collections_for_trial({
+            trial_id        => $trial_id,
+            collection_type => $c->req->param('collection_type'),
+        })
+    };
+    if ($@) {
+        my $e = $@; chomp $e;
+        $c->stash->{rest} = { error => $e };
+        $c->detach();
+    }
+
+    foreach my $col (@$collections) {
+        $col->{user_can_modify} = $self->_can_modify($c, $col);
+    }
+
+    $c->stash->{rest} = { success => 1, collections => $collections };
 }
 
 1;

@@ -693,7 +693,7 @@ jQuery(document).ready(function () {
         jQuery.ajax({
             url: '/ajax/collection/create',
             type: 'POST',
-            data: { name: name }
+            data: { name: name, collection_type: 'image' }
         }).done(function (response) {
             if (response.error) { alert(response.error); return; }
             mi_add_images_to_collection(response.collection_id, name);
