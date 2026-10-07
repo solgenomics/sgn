@@ -396,6 +396,10 @@ sub _include_observations {
     my $self = shift;
     my $observation_units = shift;
 
+    # With no units there are no observations to attach. Running the phenotype search anyway
+    # would drop its unit filter and scan every phenotype in the database.
+    return {} unless $observation_units && scalar(@$observation_units) > 0;
+
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
     'Native',
     {
