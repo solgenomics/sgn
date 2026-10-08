@@ -154,11 +154,7 @@ elements:
                     - type: Block
                       content: "Targets:"
                       attributes:
-                          title: "If one or more Targets is specified then a legal primer pair must flank at least one of them. A Target might be a simple sequence repeat site (for example a CA repeat) or a single-base-pair polymorphism. The value should be a space-separated list of
-
-start,length
-
-pairs where start is the index of the first base of a Target, and length is its length."
+                          title: "If one or more Targets is specified then a legal primer pair must flank at least one of them. A Target might be a simple sequence repeat site (for example a CA repeat) or a single-base-pair polymorphism. The value should be a space-separated list of start,length pairs where start is the index of the first base of a Target, and length is its length."
                 - type: Block
                   tag: td
                   elements:
