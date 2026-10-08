@@ -274,6 +274,11 @@ sub manage_images : Path("/breeders/images") Args(0) {
 
     $c->stash->{user_id} = $c->user()->get_object()->get_sp_person_id();
 
+    # Any logged-in user may create collections (the AJAX create endpoint
+    # only requires login); editing an existing collection is re-checked
+    # server-side per collection as creator-or-curator.
+    $c->stash->{user_can_modify} = 1;
+
     $c->stash->{template} = '/breeders_toolbox/manage_images.mas';
 
 }

@@ -1,0 +1,184 @@
+<%doc>
+
+=head1 NAME
+
+/collection/collections_tree.mas - jsTree of collections grouped by breeding
+program, then project, then collection.
+
+=head1 USAGE
+
+  <& /collection/collections_tree.mas &>
+  <& /collection/collections_tree.mas, collection_type => 'image' &>
+
+collection_type optionally filters both tree and table server-side. The
+component expects jstree (jstree.dist.jstree) and its CSS to already be
+imported by the page that includes it.
+
+A collection may appear in more than one place (program root, project
+branch). Double click a collection node to open its detail page; the search
+box filters nodes live.
+
+=cut
+
+</%doc>
+
+<%args>
+$collection_type => undef
+$instance_id => 'collections_tree'
+</%args>
+
+<div class="well well-sm">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th style="width:30%;">Search</th>
+                <th>Breeding Programs -- Projects -- Collections
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <button class="btn btn-sm btn-default" id="<% $instance %>_refresh_button">Refresh</button>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <input type="text" class="form-control input-sm" id="<% $instance %>_search" placeholder="Search" />
+                    <hr>
+                    <h5><i>Double click a collection to view its detail page.</i></h5>
+                    <h5><i>Breeding programs (&nbsp;<span class="glyphicon glyphicon-briefcase text-info"></span>&nbsp;),
+                        projects (&nbsp;<span class="glyphicon glyphicon-folder-open text-danger"></span>&nbsp;),
+                        collections (&nbsp;<span class="glyphicon glyphicon-folder-close text-warning"></span>&nbsp;)</i></h5>
+                </td>
+                <td>
+                    <div id="<% $instance %>_loading" class="text-muted" style="padding:10px;">
+                        <span class="glyphicon glyphicon-refresh"></span> Loading collections&hellip;
+                    </div>
+                    <div id="<% $instance %>" >[loading...]</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<%init>
+my $instance = $instance_id;
+</%init>
+
+<script>
+
+var <% $instance %>_ready = false;
+
+function <% $instance %>_collection_li(c) {
+    return '<li data-jstree=\'{"type":"collection"}\' id="collection_' + c.collection_id + '">' +
+        '<a href="/collection/' + c.collection_id + '">' +
+        c.name + ' <span class="text-muted" style="font-size:11px;">(' + (c.image_count || 0) + ')</span></a>';
+}
+
+function <% $instance %>_project_li(p) {
+    var html = '<li data-jstree=\'{"type":"project"}\' id="project_' + p.project_id + '">' +
+        '<a href="/breeders/trial/' + p.project_id + '">' + p.name + '</a><ul>';
+    (p.collections || []).forEach(function (c) {
+        html += <% $instance %>_collection_li(c);
+        html += '</li>';
+    });
+    html += '</ul></li>';
+    return html;
+}
+
+function <% $instance %>_program_li(p) {
+    var html = '<li data-jstree=\'{"type":"breeding_program"}\' id="bp_' + p.program_id + '">' +
+        '<a href="/breeders/program/' + p.program_id + '">' + p.program_name + '</a><ul>';
+    (p.collections || []).forEach(function (c) {
+        html += <% $instance %>_collection_li(c);
+        html += '</li>';
+    });
+    (p.projects || []).forEach(function (proj) {
+        html += <% $instance %>_project_li(proj);
+    });
+    html += '</ul></li>';
+    return html;
+}
+
+function _render_<% $instance %>(groups) {
+    var html = '<ul>';
+    (groups.programs || []).forEach(function (p) {
+        html += <% $instance %>_program_li(p);
+    });
+    (groups.no_program || []).forEach(function (p) {
+        html += <% $instance %>_project_li(p);
+    });
+    (groups.standalone || []).forEach(function (c) {
+        html += <% $instance %>_collection_li(c);
+        html += '</li>';
+    });
+    html += '</ul>';
+
+    var $tree = jQuery('#<% $instance %>');
+    if (<% $instance %>_ready) {
+        $tree.jstree('destroy');
+        <% $instance %>_ready = false;
+    }
+    $tree.html(html);
+
+    $tree.jstree({
+        "core": { 'themes': { 'responsive': true } },
+        "types": {
+            "collection":       { "icon": 'glyphicon glyphicon-folder-close text-warning' },
+            "project":          { "icon": 'glyphicon glyphicon-folder-open text-danger' },
+            "breeding_program": { "icon": 'glyphicon glyphicon-briefcase text-info' }
+        },
+        "search": { "case_insensitive": true },
+        "plugins": ["html_data", "types", "search"]
+    });
+    <% $instance %>_ready = true;
+    $tree.jstree('open_all');
+}
+
+function _load_<% $instance %>(refresh) {
+    jQuery('#<% $instance %>_loading').show();
+    jQuery('#<% $instance %>').hide();
+
+    var data = {};
+    if (refresh) { data.refresh = 1; }
+% if ($collection_type) {
+    data.collection_type = '<% $collection_type %>';
+% }
+
+    jQuery.ajax({
+        url: '/ajax/search/collections/tree',
+        type: 'GET',
+        data: data,
+        success: function (groups) {
+            jQuery('#<% $instance %>_loading').hide();
+            jQuery('#<% $instance %>').show();
+            if (groups && groups.error) { alert(groups.error); return; }
+            _render_<% $instance %>(groups);
+        },
+        error: function () {
+            jQuery('#<% $instance %>_loading').hide();
+            jQuery('#<% $instance %>').show();
+            jQuery('#<% $instance %>').text('Could not load the collections tree.');
+        }
+    });
+}
+
+jQuery(function () {
+    jQuery('#<% $instance %>_refresh_button').click(function () {
+        _load_<% $instance %>(true);
+    });
+
+    jQuery('#<% $instance %>_search').keyup(function () {
+        var v = jQuery('#<% $instance %>_search').val();
+        if (<% $instance %>_ready) {
+            jQuery('#<% $instance %>').jstree(true).search(v);
+        }
+    });
+
+    jQuery('#<% $instance %>').on('dblclick', 'a', function (e) {
+        e.preventDefault();
+        window.location.href = jQuery(this).attr('href');
+    });
+
+    _load_<% $instance %>(false);
+});
+
+</script>

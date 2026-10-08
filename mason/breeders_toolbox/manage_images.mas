@@ -17,11 +17,11 @@ the full searchable tables live on their own pages (/search/images,
 </%doc>
 
 <%args>
-$user_can_modify => 0
+$user_can_modify => 1
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'jstree.dist.jstree' ] &>
+<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css', '/static/documents/inc/jstree_theme/jstree-bstheme-min.css'] &>
 
 <& /page/page_title.mas, title => "Manage Images" &>
 <& /breeders_toolbox/upload_images.mas &>
@@ -165,6 +165,17 @@ $user_can_modify => 0
           Browse all image collections &rarr;
         </a>
       </div>
+
+      <hr/>
+      <h4 style="margin-top:0;">All image collections by breeding program</h4>
+% if ($user_can_modify) {
+      <p>
+        <button class="btn btn-primary btn-sm" id="new_image_collection_button_2">
+          <span class="glyphicon glyphicon-plus"></span> New collection
+        </button>
+      </p>
+% }
+      <& /collection/collections_tree.mas, collection_type => 'image', instance_id => 'collections_tree_mi' &>
 
     </div>
   </div>
@@ -479,11 +490,14 @@ jQuery(document).ready(function () {
     loadRecentcollections();
 
     // ------------------------------------------------- create a collection
-    jQuery('#new_image_collection_button').click(function () {
+    function mi_show_new_collection_dialog() {
         jQuery('#new_collection_name_input').val('');
         jQuery('#new_collection_description_input').val('');
         jQuery('#new_image_collection_dialog').modal('show');
-    });
+    }
+
+    jQuery('#new_image_collection_button').click(mi_show_new_collection_dialog);
+    jQuery('#new_image_collection_button_2').click(mi_show_new_collection_dialog);
 
     jQuery('#new_collection_submit').click(function () {
         var name = jQuery('#new_collection_name_input').val();
