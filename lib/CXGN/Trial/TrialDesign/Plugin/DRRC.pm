@@ -120,10 +120,10 @@ sub create_design {
 
 
   my $design_file = $tempfile.".design";
-  open my $design, $design_file or die "Could not open $design_file: $!";
+  open my $design,"<", $design_file or die "Could not open $design_file: $!";
 
-  my $design_file = $tempfile.".design";
-  open my $design, $design_file or die "Could not open $design_file: $!";
+  # my $design_file = $tempfile.".design";
+  # open my $design, $design_file or die "Could not open $design_file: $!";
 
 if (-e $design_file) {
     my @lines = read_file($design_file);
