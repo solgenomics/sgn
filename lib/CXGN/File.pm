@@ -182,7 +182,7 @@ has 'comment' => (
     isa => 'Maybe[Str]',
     is => 'ro',
     writer => '_set_comment',
-    default => sub { [] }
+    default => sub { '' }
 );
 
 =head2 tags()
